@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load database tables
     loadAppliancesDatabase();
-    loadElectronicsDatabase();
+    loadWaterHeatersDatabase();
 });
 
 function setupTabs() {
@@ -174,30 +174,30 @@ function loadAppliancesDatabase() {
     });
 }
 
-function loadElectronicsDatabase() {
-    const container = document.getElementById('electronicsTable');
-    const searchBox = document.getElementById('electronicsSearch');
-    
-    const brands = decoderData.electronics.decoders;
-    
+function loadWaterHeatersDatabase() {
+    const container = document.getElementById('waterHeatersTable');
+    const searchBox = document.getElementById('waterHeatersSearch');
+
+    const brands = decoderData.waterHeaters.decoders;
+
     function renderBrands(filterText = '') {
         container.innerHTML = '';
-        
+
         let matchFound = false;
-        
+
         Object.keys(brands).forEach(key => {
             const brand = brands[key];
-            
+
             // Filter
             if (filterText && !brand.name.toLowerCase().includes(filterText.toLowerCase())) {
                 return;
             }
-            
+
             matchFound = true;
-            
+
             const section = document.createElement('div');
             section.className = 'brand-section';
-            
+
             section.innerHTML = `
                 <div class="brand-header">${brand.name}</div>
                 <div class="brand-content">
@@ -209,17 +209,17 @@ function loadElectronicsDatabase() {
                     </div>
                 </div>
             `;
-            
+
             container.appendChild(section);
         });
-        
+
         if (!matchFound) {
             container.innerHTML = '<div class="no-results">No brands found matching your search.</div>';
         }
     }
-    
+
     renderBrands();
-    
+
     searchBox.addEventListener('input', function() {
         renderBrands(this.value);
     });
