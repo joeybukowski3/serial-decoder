@@ -268,15 +268,42 @@ function toggleAlt() {
   toggle.classList.toggle('open');
 }
 
+// ===== EMOJI CURSOR =====
+function setEmojiCursor(emoji) {
+  try {
+    var size = 48;
+    var canvas = document.createElement('canvas');
+    canvas.width  = size;
+    canvas.height = size;
+    var ctx = canvas.getContext('2d');
+    ctx.font          = (size - 4) + 'px serif';
+    ctx.textBaseline  = 'middle';
+    ctx.textAlign     = 'center';
+    ctx.fillText(emoji, size / 2, size / 2);
+    // hotspot at centre of the emoji
+    document.body.style.cursor = 'url(' + canvas.toDataURL() + ') ' + (size / 2) + ' ' + (size / 2) + ', auto';
+  } catch (e) {
+    document.body.style.cursor = 'wait';
+  }
+}
+
+function clearEmojiCursor() {
+  document.body.style.cursor = '';
+}
+
 // ===== LOADING STATE (🌩️ → ☀️) =====
 function setLoadingActive() {
   var emoji   = document.getElementById('loadingEmoji');
   var loading = document.getElementById('ageLoading');
+  // Hide placeholder once a search has started
+  var placeholder = document.getElementById('resultsPlaceholder');
+  if (placeholder) placeholder.classList.add('hidden');
   if (emoji) {
     emoji.textContent = '🌩️';
     emoji.className   = 'loading-emoji lightning';
   }
   loading.classList.remove('hidden');
+  setEmojiCursor('🌩️');
 }
 
 function setLoadingSuccess(callback) {
@@ -285,14 +312,17 @@ function setLoadingSuccess(callback) {
     emoji.textContent = '☀️';
     emoji.className   = 'loading-emoji sun';
   }
+  setEmojiCursor('☀️');
   setTimeout(function() {
     document.getElementById('ageLoading').classList.add('hidden');
+    clearEmojiCursor();
     if (callback) callback();
   }, 600);
 }
 
 function setLoadingHidden() {
   document.getElementById('ageLoading').classList.add('hidden');
+  clearEmojiCursor();
 }
 
 // ===== BRAND LOGO =====
