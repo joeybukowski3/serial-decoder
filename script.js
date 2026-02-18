@@ -145,7 +145,7 @@ async function estimateAge() {
         document.getElementById('ageResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (e) {
         document.getElementById('ageLoading').classList.add('hidden');
-        alert('Error estimating age. Please try again.');
+        alert('Error estimating age: ' + (e.message || e) + '. Please try again.');
     }
 }
 
