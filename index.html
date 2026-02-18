@@ -19,7 +19,7 @@
         <!-- Header -->
         <div class="header">
             <h1><span class="accent">&#9889;</span> Serial Number <span class="accent">Decoder</span></h1>
-            <p class="subtitle">Decode appliance & water heater manufacturing dates for insurance claims</p>
+            <p class="subtitle">The Universal Serial Number Decoder &amp; Age Estimator.</p>
             <div class="org-badge">&#9889; Precision Claims Technology</div>
         </div>
 
@@ -40,6 +40,19 @@
                     </select>
                 </div>
 
+                <!-- Era Dropdown (shown for brands with repeating serial cycles) -->
+                <div class="form-group era-group hidden" id="eraGroup">
+                    <div class="step-label">
+                        Manufacture Era
+                        <span class="info-icon" title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">ⓘ</span>
+                    </div>
+                    <select id="eraSelect" class="form-select">
+                        <option value="">-- Select Era --</option>
+                        <option value="post">Post-2006 (manufactured after 2006)</option>
+                        <option value="pre">Pre-2006 (manufactured before 2006)</option>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <div class="step-label">Enter Serial Number</div>
                     <input type="text" id="serial" class="form-input" placeholder="Enter serial number (e.g., CB2501800)">
@@ -49,11 +62,11 @@
                 <button id="decodeBtn" class="decode-btn" disabled onclick="decodeSerial()">Decode Serial Number</button>
 
                 <!-- Alt Lookup Toggle -->
-                <span class="alt-toggle" onclick="toggleAlt()">
+                <span class="alt-toggle open" onclick="toggleAlt()">
                     <span class="arrow">&#9654;</span> No serial number? Search by model or description
                 </span>
 
-                <div id="altSection" class="alt-section">
+                <div id="altSection" class="alt-section open">
                     <div class="alt-inner">
                         <div class="alt-divider"><span>Alternative Lookup</span></div>
                         <div class="form-group">
@@ -61,6 +74,7 @@
                             <input type="text" id="altQuery" class="form-input" placeholder="e.g., GE Profile PFE28KSKSS or Whirlpool side-by-side refrigerator">
                             <div class="helper-text">Enter a model number, brand + model, or description to estimate the age</div>
                         </div>
+                        <p class="alt-disclaimer">Note: Serial numbers are the most reliable way to date an item. This tool estimates age ranges using online research data—the more specific your info, the better the results. Keep in mind that general search terms may yield broader date ranges for long-running models.</p>
                         <button class="decode-btn" onclick="estimateAge()">Estimate Age</button>
                     </div>
                 </div>
@@ -69,7 +83,10 @@
 
         <!-- Serial Decode Results -->
         <div id="serialResults" class="results-card hidden">
-            <div class="results-header"><h3>&#128202; Decoded Results</h3></div>
+            <div class="results-header">
+                <h3>&#128202; Decoded Results</h3>
+                <div class="brand-logo-wrap" id="serialBrandLogo"></div>
+            </div>
             <div class="results-body">
                 <div class="result-row">
                     <span class="result-label">Manufacture Year</span>
@@ -100,17 +117,29 @@
                     <p id="resultSources"></p>
                 </div>
             </div>
+            <div class="results-footer">
+                <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible error?</button>
+            </div>
         </div>
 
         <!-- Age Estimate Results -->
         <div id="ageResults" class="results-card hidden">
-            <div class="results-header"><h3>&#128337; Estimated Age</h3></div>
+            <div class="results-header">
+                <h3>&#128337; Estimated Age</h3>
+                <div class="brand-logo-wrap" id="ageBrandLogo"></div>
+            </div>
             <div class="results-body" id="ageResultsBody"></div>
+            <div class="results-footer">
+                <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible error?</button>
+            </div>
         </div>
 
         <!-- Age Loading -->
         <div id="ageLoading" class="results-card hidden">
-            <div class="loading-text">Researching product information...</div>
+            <div class="loading-inner">
+                <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
+                <div class="loading-text">Researching product information...</div>
+            </div>
         </div>
 
         <!-- How to Use -->
@@ -148,6 +177,46 @@
         <div class="footer">
             <p>For insurance claims use. Verify results for claim accuracy.</p>
             <p>Database updated February 2026 | Sources: Manufacturer documentation, homespy.io, electrical-forensics.com</p>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>&#9888; Report an Issue</h3>
+                <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-field">
+                    <label>Brand</label>
+                    <input type="text" id="fbBrand" class="form-input" readonly>
+                </div>
+                <div class="modal-field">
+                    <label>Serial Number / Search Query</label>
+                    <input type="text" id="fbSerial" class="form-input" readonly>
+                </div>
+                <div class="modal-field">
+                    <label>Issue Type</label>
+                    <select id="fbType" class="form-select">
+                        <option value="">-- Select issue type --</option>
+                        <option value="wrong_year">Wrong year / date</option>
+                        <option value="wrong_month">Wrong month</option>
+                        <option value="wrong_brand">Wrong brand identified</option>
+                        <option value="format_error">Format / decode error</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="modal-field">
+                    <label>Details (optional)</label>
+                    <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong? What is the correct date if known?"></textarea>
+                </div>
+                <div id="fbThanks" class="fb-thanks hidden">&#10003; Thank you! Your feedback helps improve this tool.</div>
+                <div class="modal-actions">
+                    <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
+                    <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 
