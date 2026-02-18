@@ -146,7 +146,12 @@ function populateBrands(category) {
 function onBrandChange() {
   var sel = document.getElementById('brand');
   var opt = sel.options[sel.selectedIndex];
-  if (opt && opt.dataset.cycling === '1' && opt.value) {
+  var brandId = opt ? opt.value : '';
+  var cyclingCat = CYCLING_BRANDS[currentCategory] || {};
+  var cfg = cyclingCat[brandId];
+  // Only show era dropdown for brands with SEPARATE pre/post-2006 decoders (type:'split')
+  // Advisory brands (Whirlpool, GE, etc.) already return both possible years in their output
+  if (cfg && cfg.type === 'split' && brandId) {
     showEraGroup();
   } else {
     hideEraGroup();
