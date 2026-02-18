@@ -65,36 +65,36 @@ body {
 
 /* ── Header ── */
 .header {
-    text-align: center;
-    padding: 0.75rem 1.5rem 0.75rem;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; padding: 0.75rem 0;
 }
+.header-brand { flex: 1; min-width: 0; }
 .header h1 {
     font-size: 1.75rem; font-weight: 800; color: var(--text-white);
     letter-spacing: -0.02em; text-shadow: 0 0 30px rgba(0,180,216,0.3);
 }
 .header h1 .accent { color: var(--accent); }
 .header .subtitle {
-    font-size: 0.9rem; color: var(--text-muted); margin-top: 0.25rem;
+    font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;
 }
 
-/* ── "How to Use" Guide Button ── */
-.guide-open-btn {
-    display: inline-flex; align-items: center; gap: 0.45rem;
-    margin-top: 0.5rem;
-    padding: 0.5rem 1.25rem;
-    background: #f97316;
-    color: #fff;
-    border: none;
-    border-radius: 50px;
-    font-size: 0.88rem; font-weight: 700; font-family: inherit;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(249,115,22,0.4);
-    transition: transform 0.18s, box-shadow 0.18s;
-    letter-spacing: 0.01em;
+/* ── Header Nav ── */
+.header-nav { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+.header-nav-link {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.45rem 0.875rem;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    color: var(--text-white);
+    font-size: 0.8rem; font-weight: 600; font-family: inherit;
+    cursor: pointer; text-decoration: none; white-space: nowrap;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
-.guide-open-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(249,115,22,0.5);
+.header-nav-link:hover {
+    background: rgba(0,180,216,0.12);
+    border-color: rgba(0,180,216,0.4);
+    color: var(--accent);
 }
 
 /* ── Main Card ── */
@@ -466,7 +466,10 @@ body {
 
 @media (max-width: 768px) {
     .app-container { padding: 0.75rem; }
-    .header h1 { font-size: 1.5rem; }
+    .header { flex-wrap: wrap; }
+    .header h1 { font-size: 1.4rem; }
+    .header-nav { gap: 0.35rem; }
+    .header-nav-link { font-size: 0.75rem; padding: 0.4rem 0.65rem; }
     .form-area { padding: 1rem; }
     .results-body { padding: 1rem; }
     .result-row { flex-direction: column; align-items: flex-start; gap: 0.3rem; }

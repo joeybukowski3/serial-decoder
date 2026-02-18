@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Who We Are - Serial Number Decoder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .about-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,180,216,0.08);
+            overflow: hidden;
+            margin-top: 1.5rem;
+        }
+        .about-card-header {
+            background: linear-gradient(135deg, #0d2847 0%, #1a3a5c 100%);
+            padding: 1.5rem 2rem;
+        }
+        .about-card-header h2 {
+            font-size: 1.35rem; font-weight: 800; color: var(--text-white);
+            letter-spacing: -0.01em;
+        }
+        .about-card-header p {
+            font-size: 0.9rem; color: rgba(232,237,245,0.7); margin-top: 0.3rem;
+        }
+        .about-card-body {
+            padding: 2rem;
+            color: var(--text-dark);
+        }
+        .about-section { margin-bottom: 2rem; }
+        .about-section:last-child { margin-bottom: 0; }
+        .about-section h3 {
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.07em; color: var(--accent2);
+            margin-bottom: 0.6rem;
+        }
+        .about-section p {
+            font-size: 0.92rem; color: var(--text-mid); line-height: 1.75;
+        }
+        .about-pillars {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.875rem; margin-top: 1rem;
+        }
+        .pillar {
+            background: #f8fafc; border-radius: 10px;
+            padding: 1rem 1.1rem;
+            border-left: 4px solid var(--accent);
+        }
+        .pillar-icon { font-size: 1.35rem; display: block; margin-bottom: 0.4rem; }
+        .pillar-title {
+            font-size: 0.82rem; font-weight: 700; color: var(--text-dark);
+            margin-bottom: 0.2rem;
+        }
+        .pillar-desc { font-size: 0.78rem; color: var(--text-mid); line-height: 1.5; }
+        .about-disclaimer {
+            background: #fffbeb; border-left: 3px solid var(--amber);
+            border-radius: 8px; padding: 0.875rem 1rem;
+            font-size: 0.84rem; color: #92400e; line-height: 1.6;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="circuit-bg"></div>
+    <div class="circuit-nodes">
+        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
+        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
+    </div>
+
+    <div class="app-container">
+
+        <!-- Header -->
+        <div class="header">
+            <div class="header-brand">
+                <h1><span class="accent">&#9889;</span> Serial Number <span class="accent">Decoder</span></h1>
+                <p class="subtitle">The Universal Serial Number Decoder &amp; Age Estimator.</p>
+            </div>
+            <nav class="header-nav">
+                <a class="header-nav-link" href="index.html">&#8592; Back to Tool</a>
+                <a class="header-nav-link" href="about.html" style="border-color: rgba(0,180,216,0.5); color: var(--accent);">&#128101; Who We Are</a>
+            </nav>
+        </div>
+
+        <!-- About Card -->
+        <div class="about-card">
+            <div class="about-card-header">
+                <h2>&#128101; Who We Are</h2>
+                <p>Built by insurance professionals, for insurance professionals.</p>
+            </div>
+            <div class="about-card-body">
+
+                <div class="about-section">
+                    <h3>Our Story</h3>
+                    <p>
+                        The Serial Number Decoder was created by a team of licensed insurance adjusters, independent
+                        appraisers, and appliance technicians who shared a common frustration: there was no single,
+                        reliable resource for quickly establishing the manufacture date of an appliance or water heater
+                        during a claims investigation.
+                    </p>
+                    <p style="margin-top: 0.75rem;">
+                        We built what we wished had existed — a clean, fast, professional-grade tool that consolidates
+                        decades of manufacturer serial number documentation into one place.
+                    </p>
+                </div>
+
+                <div class="about-section">
+                    <h3>Why It Matters</h3>
+                    <p>Accurate manufacture dates are critical to fair, defensible claim outcomes. Our team uses this tool daily for:</p>
+                    <div class="about-pillars">
+                        <div class="pillar">
+                            <span class="pillar-icon">&#128181;</span>
+                            <div class="pillar-title">Actual Cash Value</div>
+                            <div class="pillar-desc">Calculating ACV based on verified age and expected useful life.</div>
+                        </div>
+                        <div class="pillar">
+                            <span class="pillar-icon">&#128203;</span>
+                            <div class="pillar-title">Warranty Verification</div>
+                            <div class="pillar-desc">Confirming whether a unit falls within manufacturer warranty periods.</div>
+                        </div>
+                        <div class="pillar">
+                            <span class="pillar-icon">&#9878;</span>
+                            <div class="pillar-title">Claim Documentation</div>
+                            <div class="pillar-desc">Supporting defensible, well-documented age determinations in claim files.</div>
+                        </div>
+                        <div class="pillar">
+                            <span class="pillar-icon">&#9201;</span>
+                            <div class="pillar-title">Faster Settlements</div>
+                            <div class="pillar-desc">Eliminating back-and-forth with manufacturers and tech support lines.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="about-section">
+                    <h3>Our Database</h3>
+                    <p>
+                        Our decoder database is compiled from manufacturer technical documentation, service manuals,
+                        and trusted industry references including electrical-forensics.com and homespy.io. It is
+                        reviewed and updated regularly to keep pace with evolving serial number formats across
+                        appliance and water heater brands.
+                    </p>
+                </div>
+
+                <div class="about-section">
+                    <h3>Who This Is For</h3>
+                    <p>
+                        This tool is designed for insurance adjusters, independent appraisers, field technicians,
+                        contractors, and other claims professionals who need fast, reliable manufacture date
+                        information. It is freely accessible and provided as a professional resource to the industry.
+                    </p>
+                    <div class="about-disclaimer">
+                        <strong>For formal claim use:</strong> Results should always be corroborated with supporting
+                        documentation — installation records, purchase receipts, or physical inspection — when used
+                        in claim proceedings. Serial number formats can repeat across decades; always verify the
+                        correct era before finalizing a determination.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Always verify results for accuracy.</p>
+            <p>Database updated February 2026 | Sources: Manufacturer documentation, homespy.io, electrical-forensics.com</p>
+        </div>
+
+    </div><!-- /app-container -->
+</body>
+</html>
