@@ -1,226 +1,157 @@
-// Main application JavaScript
+// State
+var currentCategory = 'appliances';
 
+// Init — populate brands for default category
 document.addEventListener('DOMContentLoaded', function() {
-    // Elements
-    const categorySelect = document.getElementById('category');
-    const brandSelect = document.getElementById('brand');
-    const serialInput = document.getElementById('serial');
-    const decodeBtn = document.getElementById('decodeBtn');
-    const resultsDiv = document.getElementById('results');
-    
-    // Tab functionality
-    setupTabs();
-    
-    // Category change handler
-    categorySelect.addEventListener('change', function() {
-        const category = this.value;
-        brandSelect.disabled = !category;
-        serialInput.disabled = !category;
-        
-        if (category) {
-            populateBrands(category);
-        } else {
-            brandSelect.innerHTML = '<option value="">-- Select Category First --</option>';
-            serialInput.value = '';
-            decodeBtn.disabled = true;
-            resultsDiv.classList.add('hidden');
-        }
+    populateBrands('appliances');
+
+    document.getElementById('brand').addEventListener('change', updateDecodeBtn);
+    document.getElementById('serial').addEventListener('input', updateDecodeBtn);
+    document.getElementById('serial').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') decodeSerial();
     });
-    
-    // Brand change handler
-    brandSelect.addEventListener('change', function() {
-        decodeBtn.disabled = !this.value;
-        resultsDiv.classList.add('hidden');
+    document.getElementById('altQuery').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') estimateAge();
     });
-    
-    // Serial input handler
-    serialInput.addEventListener('input', function() {
-        if (this.value && brandSelect.value) {
-            decodeBtn.disabled = false;
-        }
-    });
-    
-    // Decode button handler
-    decodeBtn.addEventListener('click', decodeSerial);
-    
-    // Enter key support
-    serialInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && !decodeBtn.disabled) {
-            decodeSerial();
-        }
-    });
-    
-    // Load database tables
-    loadAppliancesDatabase();
-    loadWaterHeatersDatabase();
 });
 
-function setupTabs() {
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-    
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const tabName = this.dataset.tab;
-            
-            // Remove active class from all buttons and contents
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-            
-            // Add active class to clicked button and corresponding content
-            this.classList.add('active');
-            document.getElementById(tabName).classList.add('active');
-        });
-    });
+function selectCategory(cat, btn) {
+    currentCategory = cat;
+    document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.remove('active'); });
+    btn.classList.add('active');
+    populateBrands(cat);
+    document.getElementById('serial').value = '';
+    document.getElementById('serialResults').classList.add('hidden');
+    document.getElementById('ageResults').classList.add('hidden');
+    updateDecodeBtn();
 }
 
 function populateBrands(category) {
-    const brandSelect = document.getElementById('brand');
-    const brands = decoderData[category].brands;
-    
-    brandSelect.innerHTML = '<option value="">-- Select Brand --</option>';
-    brands.forEach(brand => {
-        const option = document.createElement('option');
-        option.value = brand.id;
-        option.textContent = brand.name;
-        brandSelect.appendChild(option);
+    var sel = document.getElementById('brand');
+    var brands = decoderData[category].brands;
+    sel.innerHTML = '<option value="">-- Select Brand --</option>';
+    brands.forEach(function(b) {
+        var opt = document.createElement('option');
+        opt.value = b.id;
+        opt.textContent = b.name;
+        sel.appendChild(opt);
     });
+}
+
+function updateDecodeBtn() {
+    var brand = document.getElementById('brand').value;
+    var serial = document.getElementById('serial').value.trim();
+    document.getElementById('decodeBtn').disabled = !(brand && serial);
 }
 
 function decodeSerial() {
-    const category = document.getElementById('category').value;
-    const brandId = document.getElementById('brand').value;
-    const serial = document.getElementById('serial').value.trim();
-    
-    if (!category || !brandId || !serial) {
-        alert('Please fill in all fields');
-        return;
-    }
-    
-    const decoder = decoderData[category].decoders[brandId];
-    if (!decoder) {
-        alert('Decoder not found for this brand');
-        return;
-    }
-    
-    const result = decoder.decode(serial);
-    
-    if (!result) {
-        alert('Invalid serial number format. Please check the serial number and try again.');
-        return;
-    }
-    
-    // Display results
+    var brandId = document.getElementById('brand').value;
+    var serial = document.getElementById('serial').value.trim();
+    if (!brandId || !serial) return;
+
+    var decoder = decoderData[currentCategory].decoders[brandId];
+    if (!decoder) { alert('Decoder not found for this brand'); return; }
+
+    var result = decoder.decode(serial);
+    if (!result) { alert('Could not decode this serial number. Please check the format and try again.'); return; }
+
     document.getElementById('resultYear').textContent = result.year;
     document.getElementById('resultMonth').textContent = result.month;
-    document.getElementById('resultMethod').textContent = decoder.method;
-    document.getElementById('resultNotes').textContent = decoder.notes;
-    
-    // Show results section
-    document.getElementById('results').classList.remove('hidden');
-    
-    // Scroll to results
-    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    document.getElementById('resultBrand').textContent = decoder.name;
+    document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'N/A';
+    document.getElementById('resultNotes').textContent = decoder.notes || decoder.decodeNotes || 'N/A';
+    document.getElementById('resultExample').textContent = decoder.exampleSerial
+        ? decoder.exampleSerial + ' → ' + decoder.exampleResult
+        : 'N/A';
+    document.getElementById('resultSources').textContent = decoder.source || decoder.sources || 'N/A';
+
+    document.getElementById('serialResults').classList.remove('hidden');
+    document.getElementById('ageResults').classList.add('hidden');
+    document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function loadAppliancesDatabase() {
-    const container = document.getElementById('appliancesTable');
-    const searchBox = document.getElementById('applianceSearch');
-    
-    const brands = decoderData.appliances.decoders;
-    
-    function renderBrands(filterText = '') {
-        container.innerHTML = '';
-        
-        let matchFound = false;
-        
-        Object.keys(brands).forEach(key => {
-            const brand = brands[key];
-            
-            // Filter
-            if (filterText && !brand.name.toLowerCase().includes(filterText.toLowerCase())) {
-                return;
-            }
-            
-            matchFound = true;
-            
-            const section = document.createElement('div');
-            section.className = 'brand-section';
-            
-            section.innerHTML = `
-                <div class="brand-header">${brand.name}</div>
-                <div class="brand-content">
-                    <div class="decode-info">
-                        <p><strong>Products:</strong> ${brand.products}</p>
-                        <p><strong>Decoding Method:</strong> ${brand.method}</p>
-                        <p><strong>Notes:</strong> ${brand.notes}</p>
-                        <p><strong>Source:</strong> ${brand.source}</p>
-                    </div>
-                </div>
-            `;
-            
-            container.appendChild(section);
-        });
-        
-        if (!matchFound) {
-            container.innerHTML = '<div class="no-results">No brands found matching your search.</div>';
-        }
-    }
-    
-    renderBrands();
-    
-    searchBox.addEventListener('input', function() {
-        renderBrands(this.value);
-    });
+// Alt lookup
+function toggleAlt() {
+    var section = document.getElementById('altSection');
+    var toggle = document.querySelector('.alt-toggle');
+    section.classList.toggle('open');
+    toggle.classList.toggle('open');
 }
 
-function loadWaterHeatersDatabase() {
-    const container = document.getElementById('waterHeatersTable');
-    const searchBox = document.getElementById('waterHeatersSearch');
+function toggleHowTo() {
+    var content = document.getElementById('howToContent');
+    var toggle = document.querySelector('.how-to-toggle');
+    content.classList.toggle('open');
+    toggle.classList.toggle('open');
+}
 
-    const brands = decoderData.waterHeaters.decoders;
+async function estimateAge() {
+    var query = document.getElementById('altQuery').value.trim();
+    if (!query) return;
 
-    function renderBrands(filterText = '') {
-        container.innerHTML = '';
+    document.getElementById('ageResults').classList.add('hidden');
+    document.getElementById('serialResults').classList.add('hidden');
+    document.getElementById('ageLoading').classList.remove('hidden');
 
-        let matchFound = false;
+    try {
+        var res = await fetch('/api/age-lookup?query=' + encodeURIComponent(query));
+        var data = await res.json();
 
-        Object.keys(brands).forEach(key => {
-            const brand = brands[key];
-
-            // Filter
-            if (filterText && !brand.name.toLowerCase().includes(filterText.toLowerCase())) {
-                return;
-            }
-
-            matchFound = true;
-
-            const section = document.createElement('div');
-            section.className = 'brand-section';
-
-            section.innerHTML = `
-                <div class="brand-header">${brand.name}</div>
-                <div class="brand-content">
-                    <div class="decode-info">
-                        <p><strong>Products:</strong> ${brand.products}</p>
-                        <p><strong>Decoding Method:</strong> ${brand.method}</p>
-                        <p><strong>Notes:</strong> ${brand.notes}</p>
-                        <p><strong>Source:</strong> ${brand.source}</p>
-                    </div>
-                </div>
-            `;
-
-            container.appendChild(section);
-        });
-
-        if (!matchFound) {
-            container.innerHTML = '<div class="no-results">No brands found matching your search.</div>';
+        if (data.error) {
+            document.getElementById('ageLoading').classList.add('hidden');
+            alert('Error: ' + data.error);
+            return;
         }
+
+        var body = document.getElementById('ageResultsBody');
+        var html = '';
+
+        if (data.brand) {
+            html += '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + esc(data.brand) + '</span></div>';
+        }
+        if (data.model) {
+            html += '<div class="result-row"><span class="result-label">Model</span><span class="result-value">' + esc(data.model) + '</span></div>';
+        }
+        if (data.estimatedYear) {
+            html += '<div class="result-row"><span class="result-label">Estimated Year</span><span class="result-value">' + esc(data.estimatedYear) + '</span></div>';
+        }
+        if (data.yearRange) {
+            html += '<div class="result-row"><span class="result-label">Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
+        }
+        if (data.confidence) {
+            var cls = data.confidence.toLowerCase();
+            html += '<div class="result-row"><span class="result-label">Confidence</span><span class="confidence-badge ' + cls + '">' + esc(data.confidence) + '</span></div>';
+        }
+
+        if (data.evidence && data.evidence.length > 0) {
+            html += '<div class="info-block method"><h4>Evidence</h4><div class="evidence-list">';
+            data.evidence.forEach(function(ev) {
+                html += '<div class="evidence-item">';
+                html += '<span class="ev-source">' + esc(ev.source) + '</span>';
+                if (ev.date) html += '<span class="ev-date">' + esc(ev.date) + '</span>';
+                html += '<span>' + esc(ev.detail) + '</span>';
+                html += '</div>';
+            });
+            html += '</div></div>';
+        }
+
+        if (data.notes) {
+            html += '<div class="info-block notes"><h4>Notes</h4><p>' + esc(data.notes) + '</p></div>';
+        }
+
+        body.innerHTML = html;
+        document.getElementById('ageLoading').classList.add('hidden');
+        document.getElementById('ageResults').classList.remove('hidden');
+        document.getElementById('ageResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (e) {
+        document.getElementById('ageLoading').classList.add('hidden');
+        alert('Error estimating age. Please try again.');
     }
+}
 
-    renderBrands();
-
-    searchBox.addEventListener('input', function() {
-        renderBrands(this.value);
-    });
+function esc(s) {
+    if (!s) return '';
+    var div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
 }
