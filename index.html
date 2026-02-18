@@ -4,173 +4,151 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Serial Number Decoder - Insurance Claims Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🔍 Serial Number Decoder</h1>
-            <p class="subtitle">Decode appliance and electronics manufacturing dates for insurance claims</p>
-        </header>
+    <div class="circuit-bg"></div>
+    <div class="circuit-nodes">
+        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
+        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
+    </div>
 
-        <div class="calculator-section">
-            <h2>Quick Decoder Calculator</h2>
-            
-            <div class="input-group">
-                <label for="category">Step 1: Select Category</label>
-                <select id="category" class="form-control">
-                    <option value="">-- Select Category --</option>
-                    <option value="appliances">Appliances</option>
-                    <option value="waterHeaters">Water Heaters</option>
-                </select>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <h1><span class="accent">&#9889;</span> Serial Number <span class="accent">Decoder</span></h1>
+            <p class="subtitle">Decode appliance & water heater manufacturing dates for insurance claims</p>
+            <div class="org-badge">&#9889; Precision Claims Technology</div>
+        </div>
+
+        <!-- Main Decoder Card -->
+        <div class="main-card">
+            <!-- Category Tabs -->
+            <div class="category-tabs">
+                <button class="cat-tab active" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
+                <button class="cat-tab" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
             </div>
 
-            <div class="input-group">
-                <label for="brand">Step 2: Select Brand</label>
-                <select id="brand" class="form-control" disabled>
-                    <option value="">-- Select Category First --</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label for="serial">Step 3: Enter Serial Number</label>
-                <input type="text" id="serial" class="form-control" placeholder="Enter serial number (e.g., GA123456A)" disabled>
-                <small class="helper-text">Enter the serial number exactly as shown on the appliance label</small>
-            </div>
-
-            <button id="decodeBtn" class="btn-primary" disabled>Decode Serial Number</button>
-
-            <div id="results" class="results-section hidden">
-                <h3>📊 Decoded Results</h3>
-                
-                <div class="result-item">
-                    <span class="result-label">Manufacture Year:</span>
-                    <span id="resultYear" class="result-value"></span>
+            <!-- Form -->
+            <div class="form-area">
+                <div class="form-group">
+                    <div class="step-label">Select Brand</div>
+                    <select id="brand" class="form-select">
+                        <option value="">-- Select Brand --</option>
+                    </select>
                 </div>
 
-                <div class="result-item">
-                    <span class="result-label">Manufacture Month:</span>
-                    <span id="resultMonth" class="result-value"></span>
+                <div class="form-group">
+                    <div class="step-label">Enter Serial Number</div>
+                    <input type="text" id="serial" class="form-input" placeholder="Enter serial number (e.g., CB2501800)">
+                    <div class="helper-text">Enter the serial number exactly as shown on the product label</div>
                 </div>
 
-                <div class="result-box method-box">
-                    <h4>🔧 Decoding Method</h4>
-                    <p id="resultMethod"></p>
-                </div>
+                <button id="decodeBtn" class="decode-btn" disabled onclick="decodeSerial()">Decode Serial Number</button>
 
-                <div class="result-box notes-box">
-                    <h4>⚠️ Important Notes</h4>
-                    <p id="resultNotes"></p>
+                <!-- Alt Lookup Toggle -->
+                <span class="alt-toggle" onclick="toggleAlt()">
+                    <span class="arrow">&#9654;</span> No serial number? Search by model or description
+                </span>
+
+                <div id="altSection" class="alt-section">
+                    <div class="alt-inner">
+                        <div class="alt-divider"><span>Alternative Lookup</span></div>
+                        <div class="form-group">
+                            <div class="step-label">Model Number or Description</div>
+                            <input type="text" id="altQuery" class="form-input" placeholder="e.g., GE Profile PFE28KSKSS or Whirlpool side-by-side refrigerator">
+                            <div class="helper-text">Enter a model number, brand + model, or description to estimate the age</div>
+                        </div>
+                        <button class="decode-btn" onclick="estimateAge()">Estimate Age</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="tabs-section">
-            <div class="tab-buttons">
-                <button class="tab-btn active" data-tab="examples">Examples</button>
-                <button class="tab-btn" data-tab="appliances">Appliances Database</button>
-                <button class="tab-btn" data-tab="waterHeaters">Water Heaters Database</button>
-                <button class="tab-btn" data-tab="instructions">How to Use</button>
-            </div>
-
-            <div id="examples" class="tab-content active">
-                <h3>Quick Start Examples</h3>
-                <div class="examples-grid">
-                    <div class="example-card">
-                        <h4>GE Refrigerator</h4>
-                        <p><strong>Serial:</strong> GA123456A</p>
-                        <p><strong>Result:</strong> April 2001/2013/2025</p>
-                        <p class="example-note">Use appliance condition to determine decade</p>
-                    </div>
-                    <div class="example-card">
-                        <h4>Whirlpool Washer</h4>
-                        <p><strong>Serial:</strong> CB2501800</p>
-                        <p><strong>Result:</strong> 1992/2004/2016, Week 25</p>
-                        <p class="example-note">9-digit serial uses 2nd character</p>
-                    </div>
-                    <div class="example-card">
-                        <h4>Samsung TV</h4>
-                        <p><strong>Serial:</strong> 07R5CAZHB00123</p>
-                        <p><strong>Result:</strong> May 2021</p>
-                        <p class="example-note">8th char = year, 9th = month</p>
-                    </div>
-                    <div class="example-card">
-                        <h4>Rheem Water Heater</h4>
-                        <p><strong>Serial:</strong> 1291A39968</p>
-                        <p><strong>Result:</strong> December 1991</p>
-                        <p class="example-note">First 4 digits: MM-YY</p>
-                    </div>
+        <!-- Serial Decode Results -->
+        <div id="serialResults" class="results-card hidden">
+            <div class="results-header"><h3>&#128202; Decoded Results</h3></div>
+            <div class="results-body">
+                <div class="result-row">
+                    <span class="result-label">Manufacture Year</span>
+                    <span class="result-value" id="resultYear"></span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Manufacture Month</span>
+                    <span class="result-value" id="resultMonth"></span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Brand</span>
+                    <span class="result-value" id="resultBrand"></span>
+                </div>
+                <div class="info-block method">
+                    <h4>Decoding Method</h4>
+                    <p id="resultMethod"></p>
+                </div>
+                <div class="info-block notes">
+                    <h4>Important Notes</h4>
+                    <p id="resultNotes"></p>
+                </div>
+                <div class="info-block" id="resultExampleBlock">
+                    <h4>Example</h4>
+                    <p id="resultExample"></p>
+                </div>
+                <div class="info-block sources">
+                    <h4>Sources</h4>
+                    <p id="resultSources"></p>
                 </div>
             </div>
+        </div>
 
-            <div id="appliances" class="tab-content">
-                <h3>Appliances Database</h3>
-                <input type="text" id="applianceSearch" class="search-box" placeholder="Search for brand...">
-                <div id="appliancesTable" class="data-table"></div>
-            </div>
+        <!-- Age Estimate Results -->
+        <div id="ageResults" class="results-card hidden">
+            <div class="results-header"><h3>&#128337; Estimated Age</h3></div>
+            <div class="results-body" id="ageResultsBody"></div>
+        </div>
 
-            <div id="waterHeaters" class="tab-content">
-                <h3>Water Heaters Database</h3>
-                <input type="text" id="waterHeatersSearch" class="search-box" placeholder="Search for brand...">
-                <div id="waterHeatersTable" class="data-table"></div>
-            </div>
+        <!-- Age Loading -->
+        <div id="ageLoading" class="results-card hidden">
+            <div class="loading-text">Researching product information...</div>
+        </div>
 
-            <div id="instructions" class="tab-content">
-                <h3>How to Use This Tool</h3>
-                
-                <div class="instruction-section">
-                    <h4>For Quick Decoding:</h4>
+        <!-- How to Use -->
+        <div class="how-to-section">
+            <span class="how-to-toggle" onclick="toggleHowTo()">
+                <span class="arrow">&#9654;</span> How to Use This Tool
+            </span>
+            <div id="howToContent" class="how-to-content">
+                <div class="how-to-inner">
+                    <h4>Quick Decoding</h4>
                     <ol>
-                        <li>Select whether you're decoding an <strong>Appliance</strong> or <strong>Electronic</strong> item</li>
-                        <li>Choose the <strong>brand</strong> from the dropdown menu</li>
-                        <li>Enter the <strong>serial number</strong> exactly as shown on the product label</li>
-                        <li>Click <strong>Decode Serial Number</strong> to see the results</li>
+                        <li>Click <strong>Appliances</strong> or <strong>Water Heaters</strong></li>
+                        <li>Choose the <strong>brand</strong> from the dropdown</li>
+                        <li>Enter the <strong>serial number</strong> as shown on the label</li>
+                        <li>Click <strong>Decode Serial Number</strong></li>
                     </ol>
-                </div>
 
-                <div class="instruction-section">
-                    <h4>Finding Serial Numbers:</h4>
+                    <h4>Finding Serial Numbers</h4>
                     <ul>
                         <li><strong>Refrigerators:</strong> Inside on the left or right wall</li>
                         <li><strong>Ovens/Ranges:</strong> Inside the door or on the back panel</li>
                         <li><strong>Dishwashers:</strong> Top edge of the door or side panel</li>
                         <li><strong>Washers/Dryers:</strong> Inside the door or on the back</li>
                         <li><strong>Water Heaters:</strong> On a sticker/plate on the side of the tank</li>
-                        <li><strong>TVs:</strong> Back panel or in settings menu</li>
                     </ul>
-                </div>
 
-                <div class="instruction-section">
-                    <h4>Important for Insurance Claims:</h4>
-                    <div class="warning-box">
-                        <p>⚠️ Many serial number codes <strong>repeat every 10-20 years</strong>. Always verify the decade using:</p>
-                        <ul>
-                            <li>Physical condition and wear of the appliance</li>
-                            <li>Model number and feature comparison</li>
-                            <li>Purchase receipts or installation records</li>
-                            <li>Owner's manual print date</li>
-                        </ul>
-                        <p><strong>For claims processing:</strong> Document which method you used to determine the final manufacture date.</p>
+                    <div class="warning-note">
+                        <strong>For Insurance Claims:</strong> Many serial number codes repeat every 10-20 years. Always verify the decade using physical condition, model features, purchase receipts, or installation records. Document which method you used to determine the final manufacture date.
                     </div>
-                </div>
-
-                <div class="instruction-section">
-                    <h4>Brands Not Listed?</h4>
-                    <p>If a brand is not in our database:</p>
-                    <ul>
-                        <li>Check if it's a rebrand (e.g., Kenmore uses Whirlpool, LG, or Frigidaire coding)</li>
-                        <li>Look for the actual manufacturer on the model number label</li>
-                        <li>Contact the manufacturer's customer service with the serial number</li>
-                        <li>For water heaters, the manufacture date is often printed directly on the label</li>
-                    </ul>
                 </div>
             </div>
         </div>
 
-        <footer>
-            <p>⚠️ <strong>For Insurance Claims:</strong> This tool provides estimates based on publicly available decoding information. Always verify results for claim accuracy. The difference in manufacture year can significantly impact claim settlements.</p>
-            <p class="footer-note">Database last updated: February 2026 | Sources: Manufacturer documentation, homespy.io, electrical-forensics.com, and other public resources</p>
-        </footer>
+        <!-- Footer -->
+        <div class="footer">
+            <p>For insurance claims use. Verify results for claim accuracy.</p>
+            <p>Database updated February 2026 | Sources: Manufacturer documentation, homespy.io, electrical-forensics.com</p>
+        </div>
     </div>
 
     <script src="decoder-data.js"></script>
