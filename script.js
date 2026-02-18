@@ -231,7 +231,7 @@ function decodeSerial() {
   document.getElementById('ageResults').classList.add('hidden');
   setLoadingActive();
 
-  // Brief timeout lets the browser paint the loading state before synchronous work
+  // Hold the cloud for at least 1400ms so the sun transition reaches ~2 s total
   setTimeout(function() {
     var result = decoder.decode(serial);
     if (!result) {
@@ -257,7 +257,7 @@ function decodeSerial() {
       document.getElementById('serialResults').classList.remove('hidden');
       document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
-  }, 320);
+  }, 1400);
 }
 
 // ===== ALT LOOKUP TOGGLE =====
@@ -344,6 +344,7 @@ async function estimateAge() {
   document.getElementById('ageResults').classList.add('hidden');
   document.getElementById('serialResults').classList.add('hidden');
   setLoadingActive();
+  var loadStart = Date.now();
 
   try {
     var res  = await fetch('/api/age-lookup?query=' + encodeURIComponent(query));
@@ -393,10 +394,15 @@ async function estimateAge() {
     showBrandLogo('ageBrandLogo', brandId, data.brand || '');
     currentFeedbackContext = { brand: data.brand || '', serial: query };
 
-    setLoadingSuccess(function() {
-      document.getElementById('ageResults').classList.remove('hidden');
-      document.getElementById('ageResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
+    // Ensure the cloud shows for at least 1400ms so the full 2 s sequence completes
+    var elapsed   = Date.now() - loadStart;
+    var remaining = Math.max(0, 1400 - elapsed);
+    setTimeout(function() {
+      setLoadingSuccess(function() {
+        document.getElementById('ageResults').classList.remove('hidden');
+        document.getElementById('ageResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    }, remaining);
 
   } catch (e) {
     setLoadingHidden();
