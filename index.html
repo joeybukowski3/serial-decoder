@@ -20,7 +20,7 @@
         <div class="header">
             <h1><span class="accent">&#9889;</span> Serial Number <span class="accent">Decoder</span></h1>
             <p class="subtitle">The Universal Serial Number Decoder &amp; Age Estimator.</p>
-            <div class="org-badge">&#9889; Precision Claims Technology</div>
+            <button class="guide-open-btn" onclick="openGuide()">&#9432; How to Use This Tool</button>
         </div>
 
         <!-- Main Decoder Card -->
@@ -51,6 +51,7 @@
                         <option value="post">Post-2006 (manufactured after 2006)</option>
                         <option value="pre">Pre-2006 (manufactured before 2006)</option>
                     </select>
+                    <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
                 </div>
 
                 <div class="form-group">
@@ -78,6 +79,14 @@
                         <button class="decode-btn" onclick="estimateAge()">Estimate Age</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Age Loading -->
+        <div id="ageLoading" class="results-card hidden">
+            <div class="loading-inner">
+                <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
+                <div class="loading-text">Researching product information...</div>
             </div>
         </div>
 
@@ -118,7 +127,7 @@
                 </div>
             </div>
             <div class="results-footer">
-                <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible error?</button>
+                <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
             </div>
         </div>
 
@@ -130,46 +139,7 @@
             </div>
             <div class="results-body" id="ageResultsBody"></div>
             <div class="results-footer">
-                <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible error?</button>
-            </div>
-        </div>
-
-        <!-- Age Loading -->
-        <div id="ageLoading" class="results-card hidden">
-            <div class="loading-inner">
-                <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
-                <div class="loading-text">Researching product information...</div>
-            </div>
-        </div>
-
-        <!-- How to Use -->
-        <div class="how-to-section">
-            <span class="how-to-toggle" onclick="toggleHowTo()">
-                <span class="arrow">&#9654;</span> How to Use This Tool
-            </span>
-            <div id="howToContent" class="how-to-content">
-                <div class="how-to-inner">
-                    <h4>Quick Decoding</h4>
-                    <ol>
-                        <li>Click <strong>Appliances</strong> or <strong>Water Heaters</strong></li>
-                        <li>Choose the <strong>brand</strong> from the dropdown</li>
-                        <li>Enter the <strong>serial number</strong> as shown on the label</li>
-                        <li>Click <strong>Decode Serial Number</strong></li>
-                    </ol>
-
-                    <h4>Finding Serial Numbers</h4>
-                    <ul>
-                        <li><strong>Refrigerators:</strong> Inside on the left or right wall</li>
-                        <li><strong>Ovens/Ranges:</strong> Inside the door or on the back panel</li>
-                        <li><strong>Dishwashers:</strong> Top edge of the door or side panel</li>
-                        <li><strong>Washers/Dryers:</strong> Inside the door or on the back</li>
-                        <li><strong>Water Heaters:</strong> On a sticker/plate on the side of the tank</li>
-                    </ul>
-
-                    <div class="warning-note">
-                        <strong>For Insurance Claims:</strong> Many serial number codes repeat every 10-20 years. Always verify the decade using physical condition, model features, purchase receipts, or installation records. Document which method you used to determine the final manufacture date.
-                    </div>
-                </div>
+                <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
             </div>
         </div>
 
@@ -177,6 +147,43 @@
         <div class="footer">
             <p>For insurance claims use. Verify results for claim accuracy.</p>
             <p>Database updated February 2026 | Sources: Manufacturer documentation, homespy.io, electrical-forensics.com</p>
+        </div>
+    </div>
+
+    <!-- Guide Drawer Overlay -->
+    <div id="guideOverlay" class="guide-overlay" onclick="closeGuide()"></div>
+
+    <!-- Guide Drawer -->
+    <div id="guideDrawer" class="guide-drawer">
+        <div class="guide-drawer-header">
+            <h3>&#9432; How to Use This Tool</h3>
+            <button class="guide-drawer-close" onclick="closeGuide()">&#x2715;</button>
+        </div>
+        <div class="guide-drawer-body">
+            <h4>Quick Decoding</h4>
+            <ol>
+                <li>Click <strong>Appliances</strong> or <strong>Water Heaters</strong></li>
+                <li>Choose the <strong>brand</strong> from the dropdown</li>
+                <li>If an <strong>Era selector</strong> appears, choose Pre-2006 or Post-2006</li>
+                <li>Enter the <strong>serial number</strong> exactly as shown on the label</li>
+                <li>Click <strong>Decode Serial Number</strong></li>
+            </ol>
+
+            <h4>No Serial Number?</h4>
+            <p>Use the <strong>Alternative Lookup</strong> section. Enter a model number, brand name, or description (e.g., "GE Profile PFE28KSKSS") to get an AI-powered age estimate.</p>
+
+            <h4>Finding Serial Numbers</h4>
+            <ul>
+                <li><strong>Refrigerators:</strong> Inside on the left or right wall</li>
+                <li><strong>Ovens/Ranges:</strong> Inside the door or on the back panel</li>
+                <li><strong>Dishwashers:</strong> Top edge of the door or side panel</li>
+                <li><strong>Washers/Dryers:</strong> Inside the door or on the back</li>
+                <li><strong>Water Heaters:</strong> On a sticker/plate on the side of the tank</li>
+            </ul>
+
+            <div class="warning-note">
+                <strong>For Insurance Claims:</strong> Many serial number codes repeat every 10–20 years. Always verify the decade using physical condition, model features, purchase receipts, or installation records. Document which method you used to determine the final manufacture date.
+            </div>
         </div>
     </div>
 
@@ -212,7 +219,7 @@
                     <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong? What is the correct date if known?"></textarea>
                 </div>
                 <div id="fbThanks" class="fb-thanks hidden">&#10003; Thank you! Your feedback helps improve this tool.</div>
-                <div class="modal-actions">
+                <div id="fbActions" class="modal-actions">
                     <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
                     <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
                 </div>
