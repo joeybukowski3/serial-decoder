@@ -95,6 +95,8 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('altQuery').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') estimateAge();
   });
+  document.getElementById('altQuery').addEventListener('focus', showAltDisclaimer);
+  document.getElementById('altQuery').addEventListener('input', showAltDisclaimer);
 });
 
 // ===== CATEGORY SELECTION =====
@@ -240,11 +242,22 @@ function decodeSerial() {
       return;
     }
 
-    document.getElementById('resultYear').textContent    = capYear(result.year);
-    document.getElementById('resultMonth').textContent   = result.month;
-    document.getElementById('resultBrand').textContent   = decoder.name;
-    document.getElementById('resultMethod').textContent  = decoder.method || decoder.serialLengthNote || 'N/A';
-    document.getElementById('resultNotes').textContent   = decoder.notes  || decoder.decodeNotes     || 'N/A';
+    var isKenmore = (brandId === 'kenmore');
+    var monthRow  = document.getElementById('resultMonthRow');
+    if (monthRow) monthRow.style.display = isKenmore ? 'none' : '';
+
+    if (isKenmore) {
+      document.getElementById('resultYear').textContent   = 'Varies by Manufacturer (OEM Brand)';
+      document.getElementById('resultBrand').textContent  = decoder.name;
+      document.getElementById('resultMethod').textContent = 'Kenmore is manufactured by multiple OEM partners. Use the first 3 digits of the MODEL number (not the serial number) to identify the actual manufacturer, then decode using their serial format.';
+      document.getElementById('resultNotes').textContent  = result.month || decoder.notes || '';
+    } else {
+      document.getElementById('resultYear').textContent    = capYear(result.year);
+      document.getElementById('resultMonth').textContent   = result.month;
+      document.getElementById('resultBrand').textContent   = decoder.name;
+      document.getElementById('resultMethod').textContent  = decoder.method || decoder.serialLengthNote || 'N/A';
+      document.getElementById('resultNotes').textContent   = decoder.notes  || decoder.decodeNotes     || 'N/A';
+    }
     document.getElementById('resultExample').textContent = decoder.exampleSerial
       ? decoder.exampleSerial + ' → ' + decoder.exampleResult
       : 'N/A';
@@ -471,10 +484,30 @@ function closeFeedbackModal() {
   document.body.style.overflow = '';
 }
 
-function submitFeedback() {
+async function submitFeedback() {
+  var brand     = document.getElementById('fbBrand').value;
+  var serial    = document.getElementById('fbSerial').value;
+  var issueType = document.getElementById('fbType').value;
+  var details   = document.getElementById('fbDetails').value;
+
+  try {
+    await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brand: brand, serial: serial, issueType: issueType, details: details }),
+    });
+  } catch (e) {
+    // fail silently — still show thank-you
+  }
+
   document.getElementById('fbThanks').classList.remove('hidden');
   document.getElementById('fbActions').style.display = 'none';
   setTimeout(closeFeedbackModal, 2200);
+}
+
+function showAltDisclaimer() {
+  var d = document.querySelector('.alt-disclaimer');
+  if (d) d.classList.remove('hidden');
 }
 
 // ===== UTILITY =====

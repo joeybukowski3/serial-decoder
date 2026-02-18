@@ -17,155 +17,136 @@
 
     <div class="app-container">
 
-        <!-- Header (full width) -->
+        <!-- Header -->
         <div class="header">
             <h1><span class="accent">&#9889;</span> Serial Number <span class="accent">Decoder</span></h1>
             <p class="subtitle">The Universal Serial Number Decoder &amp; Age Estimator.</p>
             <button class="guide-open-btn" onclick="openGuide()">&#9432; How to Use This Tool</button>
         </div>
 
-        <!-- Two-column layout -->
-        <div class="page-layout">
+        <!-- Search Form -->
+        <div class="main-card">
+            <!-- Category Tabs -->
+            <div class="category-tabs">
+                <button class="cat-tab active" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
+                <button class="cat-tab" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
+            </div>
 
-            <!-- LEFT — Search Form -->
-            <div class="search-col">
-                <div class="main-card">
-                    <!-- Category Tabs -->
-                    <div class="category-tabs">
-                        <button class="cat-tab active" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
-                        <button class="cat-tab" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
+            <!-- Form -->
+            <div class="form-area">
+                <div class="form-group">
+                    <div class="step-label">Select Brand</div>
+                    <select id="brand" class="form-select">
+                        <option value="">-- Select Brand --</option>
+                    </select>
+                </div>
+
+                <!-- Era Dropdown -->
+                <div class="form-group era-group hidden" id="eraGroup">
+                    <div class="step-label">
+                        Manufacture Era
+                        <span class="info-icon" title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">ⓘ</span>
                     </div>
+                    <select id="eraSelect" class="form-select">
+                        <option value="">-- Select Era --</option>
+                        <option value="post">Post-2006 (manufactured after 2006)</option>
+                        <option value="pre">Pre-2006 (manufactured before 2006)</option>
+                    </select>
+                    <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
+                </div>
 
-                    <!-- Form -->
-                    <div class="form-area">
+                <div class="form-group">
+                    <div class="step-label">Enter Serial Number</div>
+                    <input type="text" id="serial" class="form-input" placeholder="Enter serial number (e.g., CB2501800)">
+                    <div class="helper-text">Enter the serial number exactly as shown on the product label</div>
+                </div>
+
+                <button id="decodeBtn" class="decode-btn" disabled onclick="decodeSerial()">Decode Serial Number</button>
+
+                <!-- Alt Lookup Toggle -->
+                <span class="alt-toggle open" onclick="toggleAlt()">
+                    <span class="arrow">&#9654;</span> No serial number? Search by model or description
+                </span>
+
+                <div id="altSection" class="alt-section open">
+                    <div class="alt-inner">
+                        <div class="alt-divider"><span>Alternative Lookup</span></div>
                         <div class="form-group">
-                            <div class="step-label">Select Brand</div>
-                            <select id="brand" class="form-select">
-                                <option value="">-- Select Brand --</option>
-                            </select>
+                            <div class="step-label">Model Number or Description</div>
+                            <input type="text" id="altQuery" class="form-input" placeholder="e.g., GE Profile PFE28KSKSS or Whirlpool side-by-side refrigerator">
+                            <div class="helper-text">Enter a model number, brand + model, or description to estimate the age</div>
                         </div>
-
-                        <!-- Era Dropdown -->
-                        <div class="form-group era-group hidden" id="eraGroup">
-                            <div class="step-label">
-                                Manufacture Era
-                                <span class="info-icon" title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">ⓘ</span>
-                            </div>
-                            <select id="eraSelect" class="form-select">
-                                <option value="">-- Select Era --</option>
-                                <option value="post">Post-2006 (manufactured after 2006)</option>
-                                <option value="pre">Pre-2006 (manufactured before 2006)</option>
-                            </select>
-                            <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
-                        </div>
-
-                        <div class="form-group">
-                            <div class="step-label">Enter Serial Number</div>
-                            <input type="text" id="serial" class="form-input" placeholder="Enter serial number (e.g., CB2501800)">
-                            <div class="helper-text">Enter the serial number exactly as shown on the product label</div>
-                        </div>
-
-                        <button id="decodeBtn" class="decode-btn" disabled onclick="decodeSerial()">Decode Serial Number</button>
-
-                        <!-- Alt Lookup Toggle -->
-                        <span class="alt-toggle open" onclick="toggleAlt()">
-                            <span class="arrow">&#9654;</span> No serial number? Search by model or description
-                        </span>
-
-                        <div id="altSection" class="alt-section open">
-                            <div class="alt-inner">
-                                <div class="alt-divider"><span>Alternative Lookup</span></div>
-                                <div class="form-group">
-                                    <div class="step-label">Model Number or Description</div>
-                                    <input type="text" id="altQuery" class="form-input" placeholder="e.g., GE Profile PFE28KSKSS or Whirlpool side-by-side refrigerator">
-                                    <div class="helper-text">Enter a model number, brand + model, or description to estimate the age</div>
-                                </div>
-                                <p class="alt-disclaimer">Note: Serial numbers are the most reliable way to date an item. This tool estimates age ranges using online research data—the more specific your info, the better the results. Keep in mind that general search terms may yield broader date ranges for long-running models.</p>
-                                <button class="decode-btn" onclick="estimateAge()">Estimate Age</button>
-                            </div>
-                        </div>
+                        <p class="alt-disclaimer hidden">Note: Serial numbers are the most reliable way to date an item. This tool estimates age ranges using online research data—the more specific your info, the better the results. Keep in mind that general search terms may yield broader date ranges for long-running models.</p>
+                        <button class="decode-btn" onclick="estimateAge()">Estimate Age</button>
                     </div>
                 </div>
-            </div><!-- /search-col -->
+            </div>
+        </div>
 
-            <!-- RIGHT — Results -->
-            <div class="results-col">
+        <!-- Loading -->
+        <div id="ageLoading" class="results-card hidden">
+            <div class="loading-inner">
+                <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
+                <div class="loading-text">Researching product information...</div>
+            </div>
+        </div>
 
-                <!-- Empty-state placeholder -->
-                <div id="resultsPlaceholder" class="results-placeholder">
-                    <div class="placeholder-emoji">🔍</div>
-                    <p class="placeholder-title">Results appear here</p>
-                    <p class="placeholder-sub">Enter a serial number or model description on the left and hit Decode.</p>
+        <!-- Serial Decode Results -->
+        <div id="serialResults" class="results-card hidden">
+            <div class="results-header">
+                <h3>&#128202; Decoded Results</h3>
+                <div class="brand-logo-wrap" id="serialBrandLogo"></div>
+            </div>
+            <div class="results-body">
+                <div class="result-row">
+                    <span class="result-label">Manufacture Year</span>
+                    <span class="result-value" id="resultYear"></span>
                 </div>
-
-                <!-- Loading -->
-                <div id="ageLoading" class="results-card hidden">
-                    <div class="loading-inner">
-                        <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
-                        <div class="loading-text">Researching product information...</div>
-                    </div>
+                <div class="result-row" id="resultMonthRow">
+                    <span class="result-label">Manufacture Month</span>
+                    <span class="result-value" id="resultMonth"></span>
                 </div>
-
-                <!-- Serial Decode Results -->
-                <div id="serialResults" class="results-card hidden">
-                    <div class="results-header">
-                        <h3>&#128202; Decoded Results</h3>
-                        <div class="brand-logo-wrap" id="serialBrandLogo"></div>
-                    </div>
-                    <div class="results-body">
-                        <div class="result-row">
-                            <span class="result-label">Manufacture Year</span>
-                            <span class="result-value" id="resultYear"></span>
-                        </div>
-                        <div class="result-row">
-                            <span class="result-label">Manufacture Month</span>
-                            <span class="result-value" id="resultMonth"></span>
-                        </div>
-                        <div class="result-row">
-                            <span class="result-label">Brand</span>
-                            <span class="result-value" id="resultBrand"></span>
-                        </div>
-                        <div class="info-block method">
-                            <h4>Decoding Method</h4>
-                            <p id="resultMethod"></p>
-                        </div>
-                        <div class="info-block notes">
-                            <h4>Important Notes</h4>
-                            <p id="resultNotes"></p>
-                        </div>
-                        <div class="info-block" id="resultExampleBlock">
-                            <h4>Example</h4>
-                            <p id="resultExample"></p>
-                        </div>
-                        <div class="info-block sources">
-                            <h4>Sources</h4>
-                            <p id="resultSources"></p>
-                        </div>
-                    </div>
-                    <div class="results-footer">
-                        <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
-                    </div>
+                <div class="result-row">
+                    <span class="result-label">Brand</span>
+                    <span class="result-value" id="resultBrand"></span>
                 </div>
-
-                <!-- Age Estimate Results -->
-                <div id="ageResults" class="results-card hidden">
-                    <div class="results-header">
-                        <h3>&#128337; Estimated Age</h3>
-                        <div class="brand-logo-wrap" id="ageBrandLogo"></div>
-                    </div>
-                    <div class="results-body" id="ageResultsBody"></div>
-                    <div class="results-footer">
-                        <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
-                    </div>
+                <div class="info-block method">
+                    <h4>Decoding Method</h4>
+                    <p id="resultMethod"></p>
                 </div>
+                <div class="info-block notes">
+                    <h4>Important Notes</h4>
+                    <p id="resultNotes"></p>
+                </div>
+                <div class="info-block" id="resultExampleBlock">
+                    <h4>Example</h4>
+                    <p id="resultExample"></p>
+                </div>
+                <div class="info-block sources">
+                    <h4>Sources</h4>
+                    <p id="resultSources"></p>
+                </div>
+            </div>
+            <div class="results-footer">
+                <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
+            </div>
+        </div>
 
-            </div><!-- /results-col -->
+        <!-- Age Estimate Results -->
+        <div id="ageResults" class="results-card hidden">
+            <div class="results-header">
+                <h3>&#128337; Estimated Age</h3>
+                <div class="brand-logo-wrap" id="ageBrandLogo"></div>
+            </div>
+            <div class="results-body" id="ageResultsBody"></div>
+            <div class="results-footer">
+                <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
+            </div>
+        </div>
 
-        </div><!-- /page-layout -->
-
-        <!-- Footer (full width) -->
+        <!-- Footer -->
         <div class="footer">
-            <p>For insurance claims use. Verify results for claim accuracy.</p>
+            <p>Always verify results for accuracy.</p>
             <p>Database updated February 2026 | Sources: Manufacturer documentation, homespy.io, electrical-forensics.com</p>
         </div>
 
