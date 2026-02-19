@@ -221,17 +221,7 @@ function capYear(yearStr) {
   return str;
 }
 
-// ===== CONFIDENCE & AGE HELPERS (based on output shape only) =====
-function classifyConfidence(displayedYear, isKenmore) {
-  if (isKenmore) return 'low';
-  if (!displayedYear) return 'low';
-  var s = String(displayedYear);
-  if (s.indexOf('Unable') !== -1 || s.indexOf('Unknown') !== -1 ||
-      s.indexOf('Varies') !== -1 || s === '—') return 'low';
-  if (s.indexOf('/') !== -1) return 'medium';
-  return 'high';
-}
-
+// ===== AGE HELPER =====
 function computeEstimatedAge(displayedYear) {
   if (!displayedYear) return '—';
   var s = String(displayedYear).trim();
@@ -249,14 +239,6 @@ function computeEstimatedAge(displayedYear) {
     return age >= 0 ? age + ' year' + (age !== 1 ? 's' : '') : '—';
   }
   return '—';
-}
-
-function setConfidenceBadge(level) {
-  var el = document.getElementById('resultConfidenceBadge');
-  if (!el) return;
-  var labels = { high: 'High', medium: 'Medium', low: 'Low' };
-  el.textContent = labels[level] || '—';
-  el.className = 'confidence-badge ' + (level || '');
 }
 
 // ===== SERIAL DECODE =====
@@ -308,8 +290,6 @@ function decodeSerial() {
         'The serial number entered could not be decoded. Make sure it is complete and entered exactly as shown on the label. ' +
         'If you do not have the full serial number, use the Smart Lookup section to search by model number or description instead.';
       document.getElementById('resultExample').textContent = exampleText;
-      document.getElementById('resultSources').textContent = decoder.source || decoder.sources || 'N/A';
-      setConfidenceBadge('low');
       document.getElementById('resultEstimatedAge').textContent = '—';
       showBrandLogo('serialBrandLogo', brandId, decoder.name);
       currentFeedbackContext = { brand: decoder.name, serial: serial };
@@ -331,17 +311,28 @@ function decodeSerial() {
       document.getElementById('resultMonth').textContent   = result.month;
       document.getElementById('resultBrand').textContent   = decoder.name;
       document.getElementById('resultMethod').textContent  = decoder.method || decoder.serialLengthNote || 'N/A';
+      // Append decode detail (specific codes used for this decode)
+      (function() {
+        var parts = [];
+        if (result.yearCode !== undefined) parts.push('Year code: ' + result.yearCode + ' \u2192 ' + capYear(result.year));
+        if (result.weekDigits !== undefined) parts.push('Week: ' + result.weekDigits);
+        if (result.monthCode !== undefined) parts.push('Month code: ' + result.monthCode + ' \u2192 ' + result.month);
+        if (parts.length > 0) {
+          var dd = document.createElement('span');
+          dd.className = 'decode-detail';
+          dd.textContent = parts.join('  \u00b7  ');
+          document.getElementById('resultMethod').appendChild(dd);
+        }
+      })();
       document.getElementById('resultNotes').textContent   = decoder.notes  || decoder.decodeNotes     || 'N/A';
     }
     // Compute derived display fields from output shape (no decode rules exposed)
     var _displayedYear = document.getElementById('resultYear').textContent;
-    setConfidenceBadge(classifyConfidence(_displayedYear, isKenmore));
     document.getElementById('resultEstimatedAge').textContent = computeEstimatedAge(_displayedYear);
 
     document.getElementById('resultExample').textContent = decoder.exampleSerial
       ? decoder.exampleSerial + ' → ' + decoder.exampleResult
       : 'N/A';
-    document.getElementById('resultSources').textContent = decoder.source || decoder.sources || 'N/A';
 
     showBrandLogo('serialBrandLogo', brandId, decoder.name);
     currentFeedbackContext = { brand: decoder.name, serial: serial };
@@ -459,21 +450,6 @@ function makeBrandBadge(name) {
   return span;
 }
 
-// ===== CONFIDENCE BAR =====
-function buildConfidenceBar(level) {
-  var levels = ['low', 'medium', 'high'];
-  var labels = ['Low', 'Medium', 'High'];
-  var idx    = levels.indexOf((level || '').toLowerCase());
-  if (idx === -1) return '';
-  var html = '<div class="confidence-bar-wrap"><div class="confidence-bar-label">Confidence Score</div><div class="confidence-bar">';
-  levels.forEach(function(l, i) {
-    var cls = 'conf-seg' + (i <= idx ? ' active ' + level.toLowerCase() : '');
-    html += '<div class="' + cls + '">' + labels[i] + '</div>';
-  });
-  html += '</div></div>';
-  return html;
-}
-
 // ===== ESTIMATE AGE =====
 async function estimateAge() {
   var query = document.getElementById('altQuery').value.trim();
@@ -517,11 +493,6 @@ async function estimateAge() {
     if (data.yearRange) {
       html += '<div class="result-row"><span class="result-label">Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
     }
-    if (data.confidence) {
-      var cls = data.confidence.toLowerCase();
-      html += '<div class="result-row"><span class="result-label">Confidence</span><span class="confidence-badge ' + cls + '">' + esc(data.confidence) + '</span></div>';
-      html += buildConfidenceBar(cls);
-    }
     if (data.notes) {
       html += '<div class="info-block notes"><h4>Notes</h4><p>' + esc(data.notes) + '</p></div>';
     }
@@ -531,10 +502,13 @@ async function estimateAge() {
     if (data.serialRule) {
       html += '<div class="info-block serial-rule"><h4>Serial Number Decoding Hint</h4><p>' + esc(data.serialRule) + '</p></div>';
     }
-    html += '<div class="info-block sources"><h4>Sources</h4><p>Manufacturer documentation and authorized publication materials.</p></div>';
+    html += '<div class="info-block sources"><h4>Sources</h4><p>Manufacturer documentation and authorized publications.</p></div>';
+
+    // Suppress model tips if query looks like a serial number (9+ compact alphanumeric, no spaces)
+    var queryIsSerialLike = /^[a-zA-Z0-9]{9,}$/.test(query);
 
     // Tip: generic description → show one example model number as a clickable chip
-    if (data.exampleModelNumber) {
+    if (!queryIsSerialLike && data.exampleModelNumber) {
       html += '<div class="tip-block">';
       html += '<div class="tip-row"><span class="tip-label">&#128161; Tip</span><span class="tip-text">You\'ll get more accurate results if you enter the model number.</span></div>';
       html += '<div class="tip-chips"><button class="suggestion-chip" data-model="' + esc(data.exampleModelNumber) + '" onclick="clickSuggestion(this.dataset.model)">' + esc(data.exampleModelNumber) + '</button></div>';
@@ -542,7 +516,7 @@ async function estimateAge() {
     }
 
     // Tip: partial model prefix → show 2–3 completions as clickable chips
-    if (data.suggestedModelNumbers && data.suggestedModelNumbers.length > 0) {
+    if (!queryIsSerialLike && data.suggestedModelNumbers && data.suggestedModelNumbers.length > 0) {
       html += '<div class="tip-block">';
       html += '<div class="tip-row"><span class="tip-label">&#128161;</span><span class="tip-text">Try one of these similar model numbers:</span></div>';
       html += '<div class="tip-chips">';

@@ -85,10 +85,6 @@ Respond with ONLY valid JSON in this exact format:
   "model": "Model number if identifiable",
   "estimatedYear": "Most likely manufacture year or null",
   "yearRange": "e.g. 2015-2018 or null",
-  "confidence": "high, medium, or low",
-  "evidence": [
-    {"date": "Date if known", "detail": "Brief explanation of the evidence"}
-  ],
   "notes": "Any important context about this determination",
   "serialLocation": "Brief description of where to physically find the serial number on this type of product (e.g. 'Back panel, lower-left sticker' or 'Inside door frame' or 'Bottom of device')",
   "serialRule": "One-sentence general rule for how to decode the serial number for this brand and product type, if known (e.g. 'Samsung TVs: character 8 encodes the year, character 9 the month' or 'Use the Serial Decoder tab above for precise dating' if a standard format is unknown)",
