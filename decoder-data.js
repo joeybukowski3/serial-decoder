@@ -902,7 +902,7 @@ var decoderData = {
       if (s.length < 4) return null;
       var fdYear = s.substring(0, 2);
       var fdMonth = s.substring(2, 4);
-      var y = this.yearMap[fdYear];
+      var y = this.yearMap['FD' + fdYear];
       var m = this.monthMap[fdMonth];
       if (!y) { var num = parseInt(fdYear); y = (num < 50) ? '20' + fdYear : '19' + fdYear; }
       return { year: y || fdYear, month: m || 'Unknown code: ' + fdMonth };
@@ -934,7 +934,7 @@ var decoderData = {
       if (s.length < 4) return null;
       var fdYear = s.substring(0, 2);
       var fdMonth = s.substring(2, 4);
-      var y = this.yearMap[fdYear];
+      var y = this.yearMap['FD' + fdYear];
       var m = this.monthMap[fdMonth];
       if (!y) { var num = parseInt(fdYear); y = (num < 50) ? '20' + fdYear : '19' + fdYear; }
       return { year: y || fdYear, month: m || 'Unknown code: ' + fdMonth };
@@ -966,7 +966,7 @@ var decoderData = {
       if (s.length < 4) return null;
       var fdYear = s.substring(0, 2);
       var fdMonth = s.substring(2, 4);
-      var y = this.yearMap[fdYear];
+      var y = this.yearMap['FD' + fdYear];
       var m = this.monthMap[fdMonth];
       if (!y) { var num = parseInt(fdYear); y = (num < 50) ? '20' + fdYear : '19' + fdYear; }
       return { year: y || fdYear, month: m || 'Unknown code: ' + fdMonth };
@@ -1590,6 +1590,75 @@ var decoderData = {
       var y = this.yearMap[yearChar];
       var m = this.monthMap[monthChar];
       return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar };
+    }
+    }
+    }
+  },
+  electronics: {
+    brands: [
+      { id: 'samsung_tv', name: 'Samsung' },
+      { id: 'lg_tv', name: 'LG' },
+    ],
+    decoders: {
+    'samsung_tv': {
+      name: 'Samsung Electronics',
+      parentManufacturer: 'Samsung Electronics Co., Ltd.',
+      groupId: '4A',
+      products: 'TV; Monitor; Soundbar; Home Theater; Tablet; Camera',
+      serialEra: '2001-Present',
+      serialLengthNote: '15-char serial: year at char 8, month at char 9. 11-char serial: year at char 4, month at char 5.',
+      decodeMethod: 'Char 8 (15-digit serial) or Char 4 (11-digit serial)',
+      yearCodePosition: 'Char 8 (15-digit serial) or Char 4 (11-digit serial)',
+      monthCodePosition: 'Char 9 (15-digit) or Char 5 (11-digit)',
+      outputType: 'Month + Year',
+      decodeNotes: 'Samsung TVs, monitors, and home theater devices use the same serial format as Samsung appliances. Serial number is on a label on the back of the device or on the original box. Some year codes repeat every 20 years (R, T, W, X, Y, A).',
+      exampleSerial: '07R5CAHJB001234',
+      exampleResult: 'J=2017 B=November',
+      sources: 'homespy.io; electrical-forensics.com; samsung.com',
+      method: '15-char serial: year at char 8, month at char 9. 11-char serial: year at char 4, month at char 5.',
+      notes: 'Samsung TVs and monitors use the same serial format as Samsung appliances. Serial label is on the back of the device. Some codes have a 20-year cycle — verify decade using model generation or condition.',
+      source: 'homespy.io; electrical-forensics.com; samsung.com',
+      yearMap: { 'R': '2001/2021', 'T': '2002/2022', 'W': '2003/2023', 'X': '2004/2024', 'Y': '2005/2025', 'A': '2006/2026', 'P': '2007', 'Q': '2008', 'S': '2009', 'Z': '2010', 'B': '2011', 'C': '2012', 'D': '2013', 'F': '2014', 'G': '2015', 'H': '2016', 'J': '2017', 'K': '2018', 'M': '2019', 'N': '2020' },
+      monthMap: { '1': 'January', '2': 'February', '3': 'March', '4': 'April', '5': 'May', '6': 'June', '7': 'July', '8': 'August', '9': 'September', 'A': 'October', 'B': 'November', 'C': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 5) return null;
+      var yearPos, monthPos;
+      if (serial.length >= 15) { yearPos = 7; monthPos = 8; }
+      else { yearPos = 3; monthPos = 4; }
+      var yearChar = serial[yearPos].toUpperCase();
+      var monthChar = serial[monthPos].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar };
+    }
+    },
+    'lg_tv': {
+      name: 'LG Electronics',
+      parentManufacturer: 'LG Electronics Inc.',
+      groupId: '4B',
+      products: 'TV; Monitor; Soundbar; Home Theater; Projector',
+      serialEra: '2000-Present',
+      serialLengthNote: 'Serial: [Year digit][2-digit month code][remaining alphanumeric]',
+      decodeMethod: 'Character 1',
+      yearCodePosition: 'Character 1',
+      monthCodePosition: 'Characters 2-3',
+      outputType: 'Month + Year',
+      decodeNotes: 'LG TVs and monitors use the same serial format as LG appliances. Serial number is on the back of the device or on the original box. Decade must be inferred from physical condition or model research.',
+      exampleSerial: '310MR12345678',
+      exampleResult: '3=2003/2013/2023 10=October',
+      sources: 'homespy.io; lumayeconsulting.com; lg.com',
+      method: 'Serial: [Year digit][2-digit month code][remaining alphanumeric]',
+      notes: 'LG TVs use the same serial format as LG appliances. Serial is on the back of the unit. Decade must be inferred from physical condition or model history.',
+      source: 'homespy.io; lumayeconsulting.com; lg.com',
+      yearMap: { '0': '2000/2010/2020', '1': '2001/2011/2021', '2': '2002/2012/2022', '3': '2003/2013/2023', '4': '2004/2014/2024', '5': '2005/2015/2025', '6': '2006/2016', '7': '2007/2017', '8': '2008/2018', '9': '2009/2019' },
+      monthMap: { '10': 'October', '11': 'November', '12': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
+      decode: function(serial) {
+      if (!serial || serial.length < 5) return null;
+      var yearDigit = serial[0];
+      var monthCode = serial.substring(1, 3).toUpperCase();
+      var y = this.yearMap[yearDigit];
+      var m = this.monthMap[monthCode];
+      return { year: y || 'Unknown code: ' + yearDigit, month: m || 'Unknown code: ' + monthCode };
     }
     }
     }

@@ -30,7 +30,9 @@ Respond with ONLY valid JSON in this exact format:
   "evidence": [
     {"source": "Source name", "date": "Date if known", "detail": "Brief explanation"}
   ],
-  "notes": "Any important context about this determination"
+  "notes": "Any important context about this determination",
+  "serialLocation": "Brief description of where to physically find the serial number on this type of product (e.g. 'Back panel, lower-left sticker' or 'Inside door frame' or 'Bottom of device')",
+  "serialRule": "One-sentence general rule for how to decode the serial number for this brand and product type, if known (e.g. 'Samsung TVs: character 8 encodes the year, character 9 the month' or 'Use the Serial Decoder tab above for precise dating' if a standard format is unknown)"
 }`;
 
   try {
