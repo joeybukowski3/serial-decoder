@@ -482,7 +482,11 @@ async function estimateAge() {
   var loadStart = Date.now();
 
   try {
-    var res  = await fetch('/api/age-lookup?query=' + encodeURIComponent(query));
+    var res  = await fetch('/api/age-lookup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: query }),
+    });
     var data = await res.json();
 
     if (data.error) {
@@ -636,7 +640,11 @@ async function generateAISection(type, btn) {
   if (resultEl) resultEl.classList.add('hidden');
 
   try {
-    var res  = await fetch('/api/age-lookup?query=' + encodeURIComponent(query));
+    var res  = await fetch('/api/age-lookup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: query }),
+    });
     var data = await res.json();
     if (resultEl) {
       var lines = [];
