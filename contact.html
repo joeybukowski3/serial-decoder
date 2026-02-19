@@ -71,6 +71,20 @@
             font-size: 0.84rem; color: #92400e; line-height: 1.6;
             margin-top: 1.25rem;
         }
+        .cf-field { margin-bottom: 0.875rem; }
+        .cf-field label {
+            display: block; font-size: 0.7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            color: var(--text-light); margin-bottom: 0.3rem;
+        }
+        .cf-field textarea.form-input { resize: vertical; min-height: 110px; }
+        .cf-required { color: var(--red); }
+        .cf-status {
+            padding: 0.75rem 1rem; border-radius: 8px;
+            font-size: 0.85rem; font-weight: 600; margin-bottom: 0.75rem;
+        }
+        .cf-status.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+        .cf-status.error   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
     </style>
 </head>
 <body>
@@ -100,49 +114,33 @@
             <div class="static-card-body">
 
                 <div class="static-section">
-                    <h3>Reach Us</h3>
-
-                    <div class="contact-option">
-                        <span class="contact-option-icon">&#9993;</span>
-                        <div>
-                            <div class="contact-option-label">General Inquiries</div>
-                            <div class="contact-option-value">
-                                <a href="mailto:support@itemassist.com">support@itemassist.com</a>
-                            </div>
-                            <div class="contact-option-desc">Questions about the tool, methodology, or data coverage.</div>
+                    <h3>Send a Message</h3>
+                    <form id="contactForm" onsubmit="submitContact(event)">
+                        <div class="cf-field">
+                            <label for="cfName">Name</label>
+                            <input type="text" id="cfName" class="form-input" placeholder="Your name" autocomplete="name">
                         </div>
-                    </div>
-
-                    <div class="contact-option">
-                        <span class="contact-option-icon">&#128202;</span>
-                        <div>
-                            <div class="contact-option-label">Data &amp; Accuracy</div>
-                            <div class="contact-option-value">
-                                <a href="mailto:data@itemassist.com">data@itemassist.com</a>
-                            </div>
-                            <div class="contact-option-desc">Report an incorrect decode result or request a brand addition.</div>
+                        <div class="cf-field">
+                            <label for="cfEmail">Email <span class="cf-required">*</span></label>
+                            <input type="email" id="cfEmail" class="form-input" placeholder="you@example.com" required autocomplete="email">
                         </div>
-                    </div>
-
+                        <div class="cf-field">
+                            <label for="cfMessage">Message <span class="cf-required">*</span></label>
+                            <textarea id="cfMessage" class="form-input" rows="5" placeholder="Questions, corrections, brand requests..." required></textarea>
+                        </div>
+                        <div id="cfStatus" class="cf-status hidden"></div>
+                        <button type="submit" id="cfBtn" class="decode-btn" style="margin-top:0.25rem;">Send Message</button>
+                    </form>
                 </div>
 
                 <div class="static-section">
                     <h3>Report a Decode Error</h3>
                     <p>
                         The fastest way to flag an incorrect result is to use the built-in error reporting
-                        tool, available directly in the results card after any decode. It pre-fills the brand
-                        and serial number automatically, so your report reaches us with full context.
+                        tool directly in the results card after any decode — it pre-fills the brand and
+                        serial number automatically.
                     </p>
                     <a class="feedback-link" href="index.html">&#8592; Go to Decoder &amp; Use Feedback Button</a>
-                </div>
-
-                <div class="static-section">
-                    <h3>Brand Coverage Requests</h3>
-                    <p>
-                        If a brand you need is not currently supported, email us with the brand name and
-                        any available documentation or references. We review all requests and prioritize
-                        additions based on demand and data availability.
-                    </p>
                 </div>
 
                 <div class="note-block">
@@ -166,5 +164,42 @@
         </div>
 
     </div>
+    <script>
+    async function submitContact(e) {
+        e.preventDefault();
+        var btn    = document.getElementById('cfBtn');
+        var status = document.getElementById('cfStatus');
+        var name    = document.getElementById('cfName').value.trim();
+        var email   = document.getElementById('cfEmail').value.trim();
+        var message = document.getElementById('cfMessage').value.trim();
+
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+        status.className = 'cf-status hidden';
+        status.textContent = '';
+
+        try {
+            var res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, email: email, message: message }),
+            });
+            var data = await res.json();
+            if (data.ok) {
+                status.className = 'cf-status success';
+                status.textContent = '✓ Message sent! We\'ll get back to you soon.';
+                document.getElementById('contactForm').reset();
+            } else {
+                throw new Error(data.error || 'Send failed');
+            }
+        } catch (err) {
+            status.className = 'cf-status error';
+            status.textContent = 'Something went wrong. Please try again.';
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Send Message';
+    }
+    </script>
 </body>
 </html>
