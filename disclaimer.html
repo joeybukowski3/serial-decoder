@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disclaimer – Serial Number Decoder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .static-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,180,216,0.08);
+            overflow: hidden;
+            margin-top: 1.5rem;
+        }
+        .static-card-header {
+            background: linear-gradient(135deg, #0d2847 0%, #1a3a5c 100%);
+            padding: 1.5rem 2rem;
+        }
+        .static-card-header h2 {
+            font-size: 1.25rem; font-weight: 800; color: var(--text-white);
+        }
+        .static-card-header p {
+            font-size: 0.88rem; color: rgba(232,237,245,0.7); margin-top: 0.3rem;
+        }
+        .static-card-body { padding: 2rem; color: var(--text-dark); }
+        .static-section { margin-bottom: 1.75rem; }
+        .static-section:last-child { margin-bottom: 0; }
+        .static-section h3 {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.07em; color: var(--accent2); margin-bottom: 0.55rem;
+        }
+        .static-section p {
+            font-size: 0.9rem; color: var(--text-mid); line-height: 1.75;
+        }
+        .static-section p + p { margin-top: 0.65rem; }
+        .disclaimer-block {
+            background: #fef2f2; border-left: 3px solid var(--red);
+            border-radius: 8px; padding: 1rem 1.1rem;
+            font-size: 0.88rem; color: #7f1d1d; line-height: 1.65;
+            margin-bottom: 1.25rem;
+        }
+        .disclaimer-block strong { color: #991b1b; }
+        .note-block {
+            background: #fffbeb; border-left: 3px solid var(--amber);
+            border-radius: 8px; padding: 0.875rem 1rem;
+            font-size: 0.84rem; color: #92400e; line-height: 1.6;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="circuit-bg"></div>
+    <div class="circuit-nodes">
+        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
+        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
+    </div>
+
+    <div class="app-container">
+
+        <div class="header">
+            <div class="header-brand">
+                <h1><span class="accent">&#9889;</span> Serial Number <span class="accent">Decoder</span></h1>
+                <p class="subtitle">Professional Serial Number Age Decoder for Appliances &amp; Equipment</p>
+            </div>
+            <nav class="header-nav">
+                <a class="header-nav-link" href="index.html">&#8592; Back to Tool</a>
+            </nav>
+        </div>
+
+        <div class="static-card">
+            <div class="static-card-header">
+                <h2>&#9888; Disclaimer</h2>
+                <p>Accuracy limitations and user responsibilities.</p>
+            </div>
+            <div class="static-card-body">
+
+                <div class="disclaimer-block">
+                    <strong>For informational purposes only.</strong> Results produced by this tool are intended
+                    to assist in the research and estimation of manufacture dates. They do not constitute a
+                    certified appraisal, legal determination, or professional opinion and should not be relied
+                    upon as the sole basis for any financial, legal, or insurance decision.
+                </div>
+
+                <div class="static-section">
+                    <h3>Accuracy Limitations</h3>
+                    <p>
+                        Serial number formats vary by brand, product line, and production era. Many manufacturers
+                        reuse year codes on repeating cycles of 10 to 30 years, meaning a single serial number
+                        may correspond to multiple possible manufacture years. While we flag these cases and
+                        assign a confidence level, we cannot guarantee the result will always match the actual
+                        manufacture date of the specific unit.
+                    </p>
+                    <p>
+                        Our database is maintained to the best of our ability but may not reflect every serial
+                        format variation, regional manufacturing difference, or mid-cycle format change
+                        introduced by a manufacturer.
+                    </p>
+                </div>
+
+                <div class="static-section">
+                    <h3>AI-Assisted Results</h3>
+                    <p>
+                        The Alternative Lookup feature uses an AI language model to estimate product age when
+                        no serial number is available. AI-generated results are estimates based on general
+                        product knowledge and publicly available information. They are more likely to contain
+                        errors than direct serial number decodes and should be treated as a starting point
+                        for further research, not a definitive answer.
+                    </p>
+                </div>
+
+                <div class="static-section">
+                    <h3>User Responsibility</h3>
+                    <p>
+                        Users are solely responsible for verifying all results before using them in any formal
+                        context. For insurance claims, legal proceedings, or other situations requiring a
+                        defensible determination, we strongly recommend corroborating any result with
+                        supporting documentation such as purchase receipts, installation records, or
+                        manufacturer verification.
+                    </p>
+                </div>
+
+                <div class="static-section">
+                    <h3>No Warranties</h3>
+                    <p>
+                        This tool is provided "as is" without warranties of any kind, express or implied.
+                        We make no representations regarding the completeness, accuracy, or fitness for a
+                        particular purpose of any results produced. Use of this tool is at your own risk.
+                    </p>
+                </div>
+
+                <div class="note-block">
+                    <strong>Best practice for claims use:</strong> Treat a High-confidence result as supporting
+                    evidence, not as definitive proof. Medium and Low results should always be supplemented with
+                    additional documentation before appearing in a claim file.
+                </div>
+
+            </div>
+        </div>
+
+        <div class="footer">
+            <p class="footer-tagline">Built for fast, defensible equipment age lookups.</p>
+            <div class="footer-links">
+                <a href="methodology.html">Methodology</a>
+                <span class="footer-sep">|</span>
+                <a href="disclaimer.html">Disclaimer</a>
+                <span class="footer-sep">|</span>
+                <a href="contact.html">Contact</a>
+            </div>
+            <p>&copy; 2026 Serial Number Decoder. Always verify results for accuracy.</p>
+        </div>
+
+    </div>
+</body>
+</html>
