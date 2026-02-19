@@ -203,6 +203,16 @@ body {
     text-transform: uppercase; letter-spacing: 0.08em;
 }
 
+/* ── Alt Scope Note (electronics coverage) ── */
+.alt-scope-note {
+    font-size: 0.78rem; color: var(--accent);
+    background: rgba(0,180,216,0.07);
+    border: 1px solid rgba(0,180,216,0.2);
+    border-radius: 6px; padding: 0.45rem 0.7rem;
+    margin-bottom: 0.6rem; line-height: 1.5;
+}
+.alt-scope-note strong { color: var(--accent); }
+
 /* ── Alt Disclaimer (dark text for readability) ── */
 .alt-disclaimer {
     font-size: 0.8rem;
@@ -267,9 +277,11 @@ body {
     margin-top: 1rem; padding: 1rem; background: #f8fafc;
     border-radius: 10px; border-left: 4px solid var(--card-border);
 }
-.info-block.method  { border-left-color: var(--amber); background: #fffbeb; }
-.info-block.notes   { border-left-color: var(--red);   background: #fef2f2; }
-.info-block.sources { border-left-color: var(--green);  background: #f0fdf4; }
+.info-block.method      { border-left-color: var(--amber); background: #fffbeb; }
+.info-block.notes       { border-left-color: var(--red);   background: #fef2f2; }
+.info-block.sources     { border-left-color: var(--green);  background: #f0fdf4; }
+.info-block.serial-loc  { border-left-color: #6366f1; background: #f5f3ff; }
+.info-block.serial-rule { border-left-color: var(--accent); background: #ecfeff; }
 .info-block h4 {
     font-size: 0.78rem; font-weight: 700; color: var(--text-mid);
     text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;

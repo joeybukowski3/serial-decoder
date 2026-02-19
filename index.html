@@ -35,6 +35,7 @@
             <div class="category-tabs">
                 <button class="cat-tab active" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
                 <button class="cat-tab" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
+                <button class="cat-tab" data-cat="electronics" onclick="selectCategory('electronics', this)">Electronics</button>
             </div>
 
             <!-- Form -->
@@ -81,6 +82,7 @@
                             <input type="text" id="altQuery" class="form-input" placeholder="e.g., GE Profile PFE28KSKSS or Whirlpool side-by-side refrigerator">
                             <div class="helper-text">Enter a model number, brand + model, or description to estimate the age</div>
                         </div>
+                        <p class="alt-scope-note">&#128268; Works for appliances, water heaters, <strong>and electronics</strong> — TVs, computers, phones, and any brand not listed in the tabs above.</p>
                         <p class="alt-disclaimer hidden">Note: Serial numbers are the most reliable way to date an item. This tool estimates age ranges using online research data—the more specific your info, the better the results. Keep in mind that general search terms may yield broader date ranges for long-running models.</p>
                         <button class="decode-btn" onclick="estimateAge()">Estimate Age</button>
                     </div>

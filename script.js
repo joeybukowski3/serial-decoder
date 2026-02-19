@@ -18,7 +18,11 @@ var CYCLING_BRANDS = {
   },
   waterHeaters: {
     'bradford_white': { label: 'Bradford White', single: 'bradford_white', type: 'advisory' },
-  }
+  },
+  electronics: {
+    'samsung_tv': { label: 'Samsung', single: 'samsung_tv', type: 'advisory' },
+    'lg_tv':      { label: 'LG',      single: 'lg_tv',      type: 'advisory' },
+  },
 };
 
 var ERA_ID_TO_BASE = {};
@@ -62,6 +66,8 @@ var BRAND_LOGOS = {
   'samsung': 'samsung.com',
   'lg': 'lg.com',
   'kenmore': 'kenmore.com',
+  'samsung_tv': 'samsung.com',
+  'lg_tv': 'lg.com',
   'hotpoint': 'hotpointservice.com',
   'roper': 'whirlpool.com',
   'estate': 'whirlpool.com',
@@ -430,6 +436,12 @@ async function estimateAge() {
     }
     if (data.notes) {
       html += '<div class="info-block notes"><h4>Notes</h4><p>' + esc(data.notes) + '</p></div>';
+    }
+    if (data.serialLocation) {
+      html += '<div class="info-block serial-loc"><h4>Where to Find the Serial Number</h4><p>' + esc(data.serialLocation) + '</p></div>';
+    }
+    if (data.serialRule) {
+      html += '<div class="info-block serial-rule"><h4>Serial Number Decoding Hint</h4><p>' + esc(data.serialRule) + '</p></div>';
     }
 
     body.innerHTML = html;
