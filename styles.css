@@ -60,7 +60,7 @@ body {
 /* ── App Container ── */
 .app-container {
     position: relative; z-index: 1;
-    max-width: 800px; margin: 0 auto; padding: 1.5rem;
+    max-width: 920px; margin: 0 auto; padding: 1.5rem;
 }
 
 /* ── Header ── */

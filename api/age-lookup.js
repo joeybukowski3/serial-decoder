@@ -9,7 +9,7 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(20, '1 h'),
+  limiter: Ratelimit.slidingWindow(15, '1 m'),
   analytics: false,
 });
 
@@ -48,13 +48,25 @@ export default async function handler(req, res) {
     // Redis unavailable — allow request rather than blocking legitimate users
   }
 
+  const sanitizedQuery = query.trim();
+  const normalizedQuery = sanitizedQuery.toLowerCase().replace(/\s+/g, ' ');
+  const queryCacheKey = `age-lookup:${normalizedQuery}`;
+
+  // ── Query-level cache (14-day TTL) ────────────────────────────────────────
+  try {
+    const cached = await redis.get(queryCacheKey);
+    if (cached) {
+      return res.status(200).json(cached);
+    }
+  } catch (_) {
+    // Cache miss or unavailable — proceed to AI
+  }
+
   // ── API key ───────────────────────────────────────────────────────────────
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'Service unavailable' });
   }
-
-  const sanitizedQuery = query.trim();
 
   const prompt = `You are a product research specialist. Given the following appliance or water heater model number, brand, or description, determine the most likely manufacture date or production era.
 
@@ -75,7 +87,7 @@ Respond with ONLY valid JSON in this exact format:
   "yearRange": "e.g. 2015-2018 or null",
   "confidence": "high, medium, or low",
   "evidence": [
-    {"source": "Source name", "date": "Date if known", "detail": "Brief explanation"}
+    {"date": "Date if known", "detail": "Brief explanation of the evidence"}
   ],
   "notes": "Any important context about this determination",
   "serialLocation": "Brief description of where to physically find the serial number on this type of product (e.g. 'Back panel, lower-left sticker' or 'Inside door frame' or 'Bottom of device')",
@@ -110,6 +122,25 @@ Respond with ONLY valid JSON in this exact format:
     }
 
     const result = JSON.parse(text);
+
+    // ── Write query cache (14-day TTL) ────────────────────────────────────
+    try {
+      await redis.set(queryCacheKey, result, { ex: 14 * 24 * 60 * 60 });
+    } catch (_) {}
+
+    // ── Write brand cache — stable fields only (90-day TTL) ──────────────
+    if (result.brand && result.brand !== 'Unknown') {
+      try {
+        const brandKey = `brand-info:${result.brand.toLowerCase().replace(/\s+/g, '_')}`;
+        const brandData = {};
+        if (result.serialLocation) brandData.serialLocation = result.serialLocation;
+        if (result.serialRule)     brandData.serialRule     = result.serialRule;
+        if (Object.keys(brandData).length > 0) {
+          await redis.set(brandKey, brandData, { ex: 90 * 24 * 60 * 60 });
+        }
+      } catch (_) {}
+    }
+
     return res.status(200).json(result);
   } catch (_) {
     return res.status(500).json({ error: 'Internal server error' });

@@ -306,7 +306,7 @@ function decodeSerial() {
       document.getElementById('resultMethod').textContent = formatHint;
       document.getElementById('resultNotes').textContent  =
         'The serial number entered could not be decoded. Make sure it is complete and entered exactly as shown on the label. ' +
-        'If you do not have the full serial number, use the Alternative Lookup section to search by model number or description instead.';
+        'If you do not have the full serial number, use the Smart Lookup section to search by model number or description instead.';
       document.getElementById('resultExample').textContent = exampleText;
       document.getElementById('resultSources').textContent = decoder.source || decoder.sources || 'N/A';
       setConfidenceBadge('low');
@@ -479,6 +479,7 @@ async function estimateAge() {
   document.getElementById('ageResults').classList.add('hidden');
   document.getElementById('serialResults').classList.add('hidden');
   setLoadingActive();
+  document.getElementById('ageLoading').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   var loadStart = Date.now();
 
   try {
@@ -515,15 +516,6 @@ async function estimateAge() {
       html += '<div class="result-row"><span class="result-label">Confidence</span><span class="confidence-badge ' + cls + '">' + esc(data.confidence) + '</span></div>';
       html += buildConfidenceBar(cls);
     }
-    if (data.evidence && data.evidence.length > 0) {
-      html += '<div class="info-block method"><h4>Evidence</h4><div class="evidence-list">';
-      data.evidence.forEach(function(ev) {
-        html += '<div class="evidence-item"><span class="ev-source">' + esc(ev.source) + '</span>';
-        if (ev.date) html += '<span class="ev-date">' + esc(ev.date) + '</span>';
-        html += '<span>' + esc(ev.detail) + '</span></div>';
-      });
-      html += '</div></div>';
-    }
     if (data.notes) {
       html += '<div class="info-block notes"><h4>Notes</h4><p>' + esc(data.notes) + '</p></div>';
     }
@@ -533,6 +525,7 @@ async function estimateAge() {
     if (data.serialRule) {
       html += '<div class="info-block serial-rule"><h4>Serial Number Decoding Hint</h4><p>' + esc(data.serialRule) + '</p></div>';
     }
+    html += '<div class="info-block sources"><h4>Sources</h4><p>Manufacturer documentation and authorized publication materials.</p></div>';
 
     body.innerHTML = html;
     var brandId = (data.brand || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -651,7 +644,7 @@ async function generateAISection(type, btn) {
       if (data.notes) lines.push(data.notes);
       if (data.evidence && data.evidence.length > 0) {
         data.evidence.forEach(function(ev) {
-          lines.push((ev.source ? ev.source + ': ' : '') + ev.detail);
+          if (ev.detail) lines.push(ev.detail);
         });
       }
       resultEl.textContent = lines.join('\n\n') || 'No additional data found for this product.';
