@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supported Brands – Serial Number Decoder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .static-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,180,216,0.08);
+            overflow: hidden;
+            margin-top: 1.5rem;
+        }
+        .static-card-header {
+            background: linear-gradient(135deg, #0d2847 0%, #1a3a5c 100%);
+            padding: 1.5rem 2rem;
+        }
+        .static-card-header h2 {
+            font-size: 1.25rem; font-weight: 800; color: var(--text-white);
+        }
+        .static-card-header p {
+            font-size: 0.88rem; color: rgba(232,237,245,0.7); margin-top: 0.3rem;
+        }
+        .static-card-body { padding: 2rem; color: var(--text-dark); }
+        .brands-intro {
+            font-size: 0.9rem; color: var(--text-mid); line-height: 1.7; margin-bottom: 1.5rem;
+        }
+        .brands-category { margin-bottom: 2rem; }
+        .brands-category:last-child { margin-bottom: 0; }
+        .brands-category h3 {
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--accent2);
+            margin-bottom: 0.75rem; padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .brand-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+            gap: 0.5rem;
+        }
+        .brand-pill {
+            background: #f8fafc; border: 1px solid var(--card-border);
+            border-left: 3px solid var(--accent);
+            border-radius: 8px; padding: 0.55rem 0.875rem;
+            font-size: 0.84rem; font-weight: 600; color: var(--text-dark);
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .brand-pill .brand-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--green); flex-shrink: 0;
+        }
+        .brand-pill .brand-dot.note { background: var(--amber); }
+        .brands-note {
+            background: #fffbeb; border-left: 3px solid var(--amber);
+            border-radius: 8px; padding: 0.875rem 1rem;
+            font-size: 0.82rem; color: #92400e; line-height: 1.6;
+            margin-top: 1.5rem;
+        }
+        .coverage-note {
+            background: #eff6ff; border-left: 3px solid #3b82f6;
+            border-radius: 8px; padding: 0.875rem 1rem;
+            font-size: 0.82rem; color: #1e40af; line-height: 1.6;
+            margin-top: 0.75rem;
+        }
+        .legend { display: flex; gap: 1.25rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+        .legend-item {
+            display: flex; align-items: center; gap: 0.4rem;
+            font-size: 0.75rem; color: var(--text-mid); font-weight: 500;
+        }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .legend-dot.green  { background: var(--green); }
+        .legend-dot.amber  { background: var(--amber); }
+    </style>
+</head>
+<body>
+    <div class="circuit-bg"></div>
+    <div class="circuit-nodes">
+        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
+        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
+    </div>
+
+    <div class="app-container">
+
+        <div class="header">
+            <div class="header-brand">
+                <h1><span class="accent">&#9889;</span> Serial Number <span class="accent">Decoder</span></h1>
+                <p class="subtitle">Professional Serial Number Age Decoder for Appliances &amp; Equipment</p>
+            </div>
+            <nav class="header-nav">
+                <a class="header-nav-link" href="index.html">&#8592; Back to Tool</a>
+            </nav>
+        </div>
+
+        <div class="static-card">
+            <div class="static-card-header">
+                <h2>&#128202; Supported Brands</h2>
+                <p>All brands with direct serial number decoding support.</p>
+            </div>
+            <div class="static-card-body">
+
+                <p class="brands-intro">
+                    The brands below support direct serial number decoding — enter the serial number and get
+                    an immediate manufacture date. Brands not listed here can still be researched using the
+                    <strong>Alternative Lookup</strong> (AI-assisted) on the main tool.
+                </p>
+
+                <div class="legend">
+                    <div class="legend-item"><span class="legend-dot green"></span> Single unambiguous decode</div>
+                    <div class="legend-item"><span class="legend-dot amber"></span> Decade ambiguity — era selection or verification may be needed</div>
+                </div>
+
+                <!-- Appliances -->
+                <div class="brands-category">
+                    <h3>Appliances</h3>
+                    <div class="brand-grid">
+                        <div class="brand-pill"><span class="brand-dot"></span>Admiral</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Amana</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Bosch</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Crosley</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Electrolux</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Estate</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Frigidaire</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Gaggenau</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>GE</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>GE Café</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>GE Monogram</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>GE Profile</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Gibson</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Hotpoint</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Inglis</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Jenn-Air</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Kelvinator</div>
+                        <div class="brand-pill"><span class="brand-dot note"></span>Kenmore</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>KitchenAid</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>LG</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Maytag</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>RCA</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Roper</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Samsung</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Tappan</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Thermador</div>
+                        <div class="brand-pill"><span class="brand-dot note"></span>Whirlpool</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>White Consolidated Industries</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>White-Westinghouse</div>
+                    </div>
+                </div>
+
+                <!-- Water Heaters -->
+                <div class="brands-category">
+                    <h3>Water Heaters</h3>
+                    <div class="brand-grid">
+                        <div class="brand-pill"><span class="brand-dot"></span>A.O. Smith</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>American Water Heater</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Bradford White</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>GE Water Heaters</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Rheem</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Ruud</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>State Industries</div>
+                    </div>
+                </div>
+
+                <!-- Electronics -->
+                <div class="brands-category">
+                    <h3>Electronics</h3>
+                    <div class="brand-grid">
+                        <div class="brand-pill"><span class="brand-dot"></span>Apple</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>LG (TVs)</div>
+                        <div class="brand-pill"><span class="brand-dot"></span>Samsung (TVs)</div>
+                    </div>
+                </div>
+
+                <div class="coverage-note">
+                    &#128268; <strong>Not seeing your brand?</strong> The Alternative Lookup on the main tool
+                    accepts any brand or model number and uses AI-assisted research to estimate manufacture era.
+                    It covers appliances, electronics, HVAC, and more.
+                </div>
+
+                <div class="brands-note">
+                    <strong>Kenmore note:</strong> Kenmore is manufactured by multiple OEM partners. Use the
+                    first 3 digits of the <em>model</em> number (not the serial) to identify the actual
+                    manufacturer, then decode using their brand's serial format.
+                </div>
+
+            </div>
+        </div>
+
+        <div class="footer">
+            <p class="footer-tagline">Built for fast, defensible equipment age lookups.</p>
+            <div class="footer-links">
+                <a href="methodology.html">Methodology</a>
+                <span class="footer-sep">|</span>
+                <a href="disclaimer.html">Disclaimer</a>
+                <span class="footer-sep">|</span>
+                <a href="contact.html">Contact</a>
+            </div>
+            <p>&copy; 2026 Serial Number Decoder. Always verify results for accuracy.</p>
+        </div>
+
+    </div>
+</body>
+</html>

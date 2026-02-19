@@ -22,6 +22,7 @@ var CYCLING_BRANDS = {
   electronics: {
     'samsung_tv': { label: 'Samsung', single: 'samsung_tv', type: 'advisory' },
     'lg_tv':      { label: 'LG',      single: 'lg_tv',      type: 'advisory' },
+    'apple':      { label: 'Apple',   single: 'apple',      type: 'advisory' },
   },
 };
 
@@ -68,6 +69,7 @@ var BRAND_LOGOS = {
   'kenmore': 'kenmore.com',
   'samsung_tv': 'samsung.com',
   'lg_tv': 'lg.com',
+  'apple': 'apple.com',
   'hotpoint': 'hotpointservice.com',
   'roper': 'whirlpool.com',
   'estate': 'whirlpool.com',
@@ -219,6 +221,44 @@ function capYear(yearStr) {
   return str;
 }
 
+// ===== CONFIDENCE & AGE HELPERS (based on output shape only) =====
+function classifyConfidence(displayedYear, isKenmore) {
+  if (isKenmore) return 'low';
+  if (!displayedYear) return 'low';
+  var s = String(displayedYear);
+  if (s.indexOf('Unable') !== -1 || s.indexOf('Unknown') !== -1 ||
+      s.indexOf('Varies') !== -1 || s === '—') return 'low';
+  if (s.indexOf('/') !== -1) return 'medium';
+  return 'high';
+}
+
+function computeEstimatedAge(displayedYear) {
+  if (!displayedYear) return '—';
+  var s = String(displayedYear).trim();
+  // Dual year "1992/2022"
+  if (/^\d{4}\/\d{4}$/.test(s)) {
+    var parts = s.split('/');
+    var a1 = CURRENT_YEAR - parseInt(parts[0]);
+    var a2 = CURRENT_YEAR - parseInt(parts[1]);
+    if (a2 < 0) return a1 + ' years';
+    return a2 + ' or ' + a1 + ' years';
+  }
+  // Single year
+  if (/^\d{4}$/.test(s)) {
+    var age = CURRENT_YEAR - parseInt(s);
+    return age >= 0 ? age + ' year' + (age !== 1 ? 's' : '') : '—';
+  }
+  return '—';
+}
+
+function setConfidenceBadge(level) {
+  var el = document.getElementById('resultConfidenceBadge');
+  if (!el) return;
+  var labels = { high: 'High', medium: 'Medium', low: 'Low' };
+  el.textContent = labels[level] || '—';
+  el.className = 'confidence-badge ' + (level || '');
+}
+
 // ===== SERIAL DECODE =====
 function decodeSerial() {
   var metaBrandId = document.getElementById('brand').value;
@@ -237,19 +277,48 @@ function decodeSerial() {
   // Show loading animation immediately
   document.getElementById('serialResults').classList.add('hidden');
   document.getElementById('ageResults').classList.add('hidden');
+  // Reset progressive disclosure state
+  var _moreBody = document.getElementById('moreOptionsBody');
+  if (_moreBody) _moreBody.classList.add('hidden');
+  var _moreArrow = document.getElementById('moreOptionsArrow');
+  if (_moreArrow) _moreArrow.classList.remove('open');
+  ['replacements', 'specs', 'market'].forEach(function(t) {
+    var el = document.getElementById('ai-result-' + t);
+    if (el) { el.classList.add('hidden'); el.textContent = ''; }
+  });
   setLoadingActive();
 
   // Hold the cloud for at least 1400ms so the sun transition reaches ~2 s total
   setTimeout(function() {
     var result = decoder.decode(serial);
-    if (!result) {
-      setLoadingHidden();
-      alert('Could not decode this serial number. Please check the format and try again.');
-      return;
-    }
 
     var isKenmore = (brandId === 'kenmore');
     var monthRow  = document.getElementById('resultMonthRow');
+
+    if (!result) {
+      var formatHint = decoder.method || decoder.serialLengthNote || 'Check the product label and ensure the full serial number is entered.';
+      var exampleText = decoder.exampleSerial
+        ? decoder.exampleSerial + ' \u2192 ' + decoder.exampleResult
+        : 'N/A';
+      if (monthRow) monthRow.style.display = 'none';
+      document.getElementById('resultYear').textContent   = 'Unable to Decode';
+      document.getElementById('resultBrand').textContent  = decoder.name;
+      document.getElementById('resultMethod').textContent = formatHint;
+      document.getElementById('resultNotes').textContent  =
+        'The serial number entered could not be decoded. Make sure it is complete and entered exactly as shown on the label. ' +
+        'If you do not have the full serial number, use the Alternative Lookup section to search by model number or description instead.';
+      document.getElementById('resultExample').textContent = exampleText;
+      document.getElementById('resultSources').textContent = decoder.source || decoder.sources || 'N/A';
+      setConfidenceBadge('low');
+      document.getElementById('resultEstimatedAge').textContent = '—';
+      showBrandLogo('serialBrandLogo', brandId, decoder.name);
+      currentFeedbackContext = { brand: decoder.name, serial: serial };
+      setLoadingSuccess(function() {
+        document.getElementById('serialResults').classList.remove('hidden');
+        document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+      return;
+    }
     if (monthRow) monthRow.style.display = isKenmore ? 'none' : '';
 
     if (isKenmore) {
@@ -264,6 +333,11 @@ function decodeSerial() {
       document.getElementById('resultMethod').textContent  = decoder.method || decoder.serialLengthNote || 'N/A';
       document.getElementById('resultNotes').textContent   = decoder.notes  || decoder.decodeNotes     || 'N/A';
     }
+    // Compute derived display fields from output shape (no decode rules exposed)
+    var _displayedYear = document.getElementById('resultYear').textContent;
+    setConfidenceBadge(classifyConfidence(_displayedYear, isKenmore));
+    document.getElementById('resultEstimatedAge').textContent = computeEstimatedAge(_displayedYear);
+
     document.getElementById('resultExample').textContent = decoder.exampleSerial
       ? decoder.exampleSerial + ' → ' + decoder.exampleResult
       : 'N/A';
@@ -532,6 +606,57 @@ async function submitFeedback() {
 function showAltDisclaimer() {
   var d = document.querySelector('.alt-disclaimer');
   if (d) d.classList.remove('hidden');
+}
+
+// ===== MORE OPTIONS TOGGLE =====
+function toggleMoreOptions() {
+  var body  = document.getElementById('moreOptionsBody');
+  var arrow = document.getElementById('moreOptionsArrow');
+  if (!body) return;
+  var isOpen = !body.classList.contains('hidden');
+  body.classList.toggle('hidden', isOpen);
+  if (arrow) arrow.classList.toggle('open', !isOpen);
+}
+
+// ===== PROGRESSIVE DISCLOSURE — AI SECTION GENERATOR =====
+async function generateAISection(type, btn) {
+  var brand  = currentFeedbackContext.brand  || '';
+  var serial = currentFeedbackContext.serial || '';
+  var year   = document.getElementById('resultYear').textContent || '';
+
+  var queries = {
+    replacements: brand + ' appliance manufactured around ' + year + ' — current replacement models and comparable units',
+    specs:        brand + ' appliance serial ' + serial + ' manufactured around ' + year + ' — technical specifications and product features',
+    market:       brand + ' appliance manufactured around ' + year + ' — current market pricing and availability'
+  };
+  var query = queries[type] || (brand + ' appliance ' + year);
+
+  var resultEl = document.getElementById('ai-result-' + type);
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+  if (resultEl) resultEl.classList.add('hidden');
+
+  try {
+    var res  = await fetch('/api/age-lookup?query=' + encodeURIComponent(query));
+    var data = await res.json();
+    if (resultEl) {
+      var lines = [];
+      if (data.notes) lines.push(data.notes);
+      if (data.evidence && data.evidence.length > 0) {
+        data.evidence.forEach(function(ev) {
+          lines.push((ev.source ? ev.source + ': ' : '') + ev.detail);
+        });
+      }
+      resultEl.textContent = lines.join('\n\n') || 'No additional data found for this product.';
+      resultEl.classList.remove('hidden');
+    }
+  } catch (e) {
+    if (resultEl) {
+      resultEl.textContent = 'Unable to load data. Please try again.';
+      resultEl.classList.remove('hidden');
+    }
+  }
+
+  if (btn) { btn.disabled = false; btn.innerHTML = '&#128161; Generate (uses AI)'; }
 }
 
 // ===== UTILITY =====

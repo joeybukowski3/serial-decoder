@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serial Number Decoder - Insurance Claims Tool</title>
+    <title>Serial Number Decoder – Professional Equipment Age Dating</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
@@ -21,11 +21,14 @@
         <div class="header">
             <div class="header-brand">
                 <h1><span class="accent">&#9889;</span> Serial Number <span class="accent">Decoder</span></h1>
-                <p class="subtitle">The Universal Serial Number Decoder &amp; Age Estimator.</p>
+                <p class="subtitle">Professional Serial Number Age Decoder for Appliances &amp; Equipment</p>
                 <span class="header-attribution">Brought to you by <strong>Item Assist</strong></span>
             </div>
             <nav class="header-nav">
                 <button class="header-nav-link" onclick="openGuide()">&#9432; How to Use</button>
+                <a class="header-nav-link header-nav-secondary" href="methodology.html">Methodology</a>
+                <a class="header-nav-link header-nav-secondary" href="brands.html">Brands</a>
+                <a class="header-nav-link header-nav-secondary" href="contact.html">Contact</a>
             </nav>
         </div>
 
@@ -105,17 +108,25 @@
                 <div class="brand-logo-wrap" id="serialBrandLogo"></div>
             </div>
             <div class="results-body">
-                <div class="result-row">
-                    <span class="result-label">Manufacture Year</span>
+                <div class="result-row result-row--primary">
+                    <span class="result-label">Manufacture Date</span>
                     <span class="result-value" id="resultYear"></span>
                 </div>
                 <div class="result-row" id="resultMonthRow">
-                    <span class="result-label">Manufacture Month</span>
+                    <span class="result-label">Month / Period</span>
                     <span class="result-value" id="resultMonth"></span>
                 </div>
                 <div class="result-row">
                     <span class="result-label">Brand</span>
                     <span class="result-value" id="resultBrand"></span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Estimated Age</span>
+                    <span class="result-value" id="resultEstimatedAge">—</span>
+                </div>
+                <div class="result-row" id="resultConfidenceRow">
+                    <span class="result-label">Confidence</span>
+                    <span id="resultConfidenceBadge" class="confidence-badge"></span>
                 </div>
                 <div class="info-block method">
                     <h4>Decoding Method</h4>
@@ -133,9 +144,49 @@
                     <h4>Sources</h4>
                     <p id="resultSources"></p>
                 </div>
+                <details class="determination-details">
+                    <summary>How this was determined</summary>
+                    <div class="determination-body">
+                        We use manufacturer serial format rules and published industry references to extract manufacture date information from serial numbers. Some brands reuse year codes across decades, which is why multiple valid years may appear. When two years are shown, the correct decade can typically be confirmed using physical condition, purchase records, or known installation dates.
+                    </div>
+                </details>
             </div>
             <div class="results-footer">
                 <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
+            </div>
+            <div class="more-options-section">
+                <button class="more-options-toggle" onclick="toggleMoreOptions()">
+                    <span class="more-options-arrow" id="moreOptionsArrow">&#9654;</span> More options
+                </button>
+                <div class="more-options-body hidden" id="moreOptionsBody">
+                    <details class="options-drawer">
+                        <summary>Replacement Options</summary>
+                        <div class="options-drawer-body">
+                            <p class="placeholder-note">This section loads on demand.</p>
+                            <p class="placeholder-hint">Find current-market replacement units for this brand and product type.</p>
+                            <button class="ai-generate-btn" onclick="generateAISection('replacements', this)">&#128161; Generate (uses AI)</button>
+                            <div class="ai-generate-result hidden" id="ai-result-replacements"></div>
+                        </div>
+                    </details>
+                    <details class="options-drawer">
+                        <summary>Detailed Specifications</summary>
+                        <div class="options-drawer-body">
+                            <p class="placeholder-note">This section loads on demand.</p>
+                            <p class="placeholder-hint">Technical specifications and features for this product class.</p>
+                            <button class="ai-generate-btn" onclick="generateAISection('specs', this)">&#128161; Generate (uses AI)</button>
+                            <div class="ai-generate-result hidden" id="ai-result-specs"></div>
+                        </div>
+                    </details>
+                    <details class="options-drawer">
+                        <summary>Market Data</summary>
+                        <div class="options-drawer-body">
+                            <p class="placeholder-note">This section loads on demand.</p>
+                            <p class="placeholder-hint">Current pricing and market availability for this product category.</p>
+                            <button class="ai-generate-btn" onclick="generateAISection('market', this)">&#128161; Generate (uses AI)</button>
+                            <div class="ai-generate-result hidden" id="ai-result-market"></div>
+                        </div>
+                    </details>
+                </div>
             </div>
         </div>
 
@@ -153,8 +204,16 @@
 
         <!-- Footer -->
         <div class="footer">
-            <p>Always verify results for accuracy.</p>
-            <p>Database updated February 2026 | Sources: Manufacturer documentation, homespy.io, electrical-forensics.com</p>
+            <p class="footer-tagline">Built for fast, defensible equipment age lookups.</p>
+            <div class="footer-links">
+                <a href="methodology.html">Methodology</a>
+                <span class="footer-sep">|</span>
+                <a href="disclaimer.html">Disclaimer</a>
+                <span class="footer-sep">|</span>
+                <a href="contact.html">Contact</a>
+            </div>
+            <p>&copy; 2026 Serial Number Decoder. Always verify results for accuracy.</p>
+            <p class="footer-db">Database updated February 2026 &nbsp;&middot;&nbsp; Sources: Manufacturer documentation, homespy.io, electrical-forensics.com</p>
         </div>
 
     </div><!-- /app-container -->

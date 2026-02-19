@@ -501,4 +501,193 @@ body {
     .modal-body    { padding: 1rem; }
     .brand-logo    { height: 28px; }
     .error-btn     { font-size: 0.9rem; padding: 0.75rem 1rem; }
+    .header-nav-secondary { display: none; }
 }
+
+/* ── Primary result row — larger year display ── */
+.result-row--primary .result-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+/* ── "How this was determined" disclosure ── */
+.determination-details {
+    margin-top: 0.875rem;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.determination-details summary {
+    padding: 0.6rem 1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    cursor: pointer;
+    background: #f8fafc;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    user-select: none;
+    transition: background 0.15s;
+}
+.determination-details summary::-webkit-details-marker { display: none; }
+.determination-details summary::before {
+    content: '▶';
+    font-size: 0.55rem;
+    color: var(--accent);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+.determination-details[open] summary::before { transform: rotate(90deg); }
+.determination-details summary:hover { background: #f1f5f9; }
+.determination-body {
+    padding: 0.875rem 1rem;
+    font-size: 0.82rem;
+    color: var(--text-mid);
+    line-height: 1.65;
+    border-top: 1px solid var(--card-border);
+    background: #fff;
+}
+
+/* ── More Options progressive disclosure ── */
+.more-options-section {
+    border-top: 1px solid var(--card-border);
+    padding: 0.6rem 1.5rem 1rem;
+}
+.more-options-toggle {
+    background: none;
+    border: none;
+    padding: 0.25rem 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: color 0.2s;
+    letter-spacing: 0.01em;
+}
+.more-options-toggle:hover { color: var(--accent); }
+.more-options-arrow {
+    font-size: 0.5rem;
+    display: inline-block;
+    transition: transform 0.22s;
+}
+.more-options-arrow.open { transform: rotate(90deg); }
+.more-options-body {
+    margin-top: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+/* ── Options drawer (nested accordion) ── */
+.options-drawer {
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.options-drawer summary {
+    padding: 0.55rem 0.875rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    background: #fafbfc;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: background 0.15s;
+}
+.options-drawer summary::-webkit-details-marker { display: none; }
+.options-drawer summary::before {
+    content: '▶';
+    font-size: 0.5rem;
+    color: var(--text-light);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+.options-drawer[open] summary::before { transform: rotate(90deg); }
+.options-drawer summary:hover { background: #f1f5f9; }
+.options-drawer-body {
+    padding: 0.75rem 0.875rem;
+    border-top: 1px solid var(--card-border);
+    background: #fff;
+}
+.placeholder-note {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-light);
+    font-style: italic;
+    margin-bottom: 0.25rem;
+}
+.placeholder-hint {
+    font-size: 0.78rem;
+    color: var(--text-mid);
+    margin-bottom: 0.65rem;
+    line-height: 1.5;
+}
+.ai-generate-btn {
+    background: none;
+    border: 1px dashed var(--accent);
+    border-radius: 8px;
+    padding: 0.45rem 0.875rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--accent2);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.18s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.ai-generate-btn:hover:not(:disabled) {
+    background: rgba(0,180,216,0.06);
+    border-style: solid;
+}
+.ai-generate-btn:disabled {
+    color: var(--text-light);
+    border-color: var(--card-border);
+    cursor: not-allowed;
+}
+.ai-generate-result {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-mid);
+    line-height: 1.65;
+    padding: 0.75rem 0.875rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 3px solid var(--accent);
+    white-space: pre-wrap;
+}
+
+/* ── Footer update ── */
+.footer-tagline {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 0.45rem;
+}
+.footer-links {
+    margin-bottom: 0.5rem;
+}
+.footer-links a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.75rem;
+    transition: color 0.15s;
+}
+.footer-links a:hover { color: var(--accent2); text-decoration: underline; }
+.footer-sep {
+    color: var(--text-muted);
+    margin: 0 0.45rem;
+    font-size: 0.75rem;
+}
+.footer-db { opacity: 0.65; font-size: 0.72rem; }
