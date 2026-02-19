@@ -288,6 +288,9 @@ function toggleAlt() {
 }
 
 // ===== EMOJI CURSOR =====
+// Injected <style> tag used to override cursor on every element globally
+var _cursorStyleEl = null;
+
 function setEmojiCursor(emoji) {
   try {
     var size = 48;
@@ -295,12 +298,20 @@ function setEmojiCursor(emoji) {
     canvas.width  = size;
     canvas.height = size;
     var ctx = canvas.getContext('2d');
-    ctx.font          = (size - 4) + 'px serif';
-    ctx.textBaseline  = 'middle';
-    ctx.textAlign     = 'center';
+    ctx.font         = (size - 4) + 'px serif';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign    = 'center';
     ctx.fillText(emoji, size / 2, size / 2);
-    // hotspot at centre of the emoji
-    document.body.style.cursor = 'url(' + canvas.toDataURL() + ') ' + (size / 2) + ' ' + (size / 2) + ', auto';
+    var dataUrl  = canvas.toDataURL();
+    var hotspot  = Math.round(size / 2);
+    var cursorCSS = 'url(' + dataUrl + ') ' + hotspot + ' ' + hotspot + ', auto';
+    // Inject/update a global <style> so !important overrides every element's
+    // own cursor rule (buttons, inputs, selects, links, etc.)
+    if (!_cursorStyleEl) {
+      _cursorStyleEl = document.createElement('style');
+      document.head.appendChild(_cursorStyleEl);
+    }
+    _cursorStyleEl.textContent = '* { cursor: ' + cursorCSS + ' !important; }';
   } catch (e) {
     document.body.style.cursor = 'wait';
   }
@@ -308,6 +319,7 @@ function setEmojiCursor(emoji) {
 
 function clearEmojiCursor() {
   document.body.style.cursor = '';
+  if (_cursorStyleEl) { _cursorStyleEl.textContent = ''; }
 }
 
 // ===== LOADING STATE (🌩️ → ☀️) =====
