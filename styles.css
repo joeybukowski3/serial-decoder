@@ -691,3 +691,65 @@ body {
     font-size: 0.75rem;
 }
 .footer-db { opacity: 0.65; font-size: 0.72rem; }
+
+/* ── Smart Lookup tip block + suggestion chips ── */
+.tip-block {
+    margin-top: 0.875rem;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+}
+.tip-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+.tip-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent2);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.tip-text {
+    font-size: 0.8rem;
+    color: var(--text-mid);
+    line-height: 1.5;
+}
+.tip-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+.suggestion-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.8rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
+    box-shadow: 0 2px 6px rgba(0,180,216,0.2);
+}
+.suggestion-chip:hover {
+    background: var(--accent2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,119,182,0.3);
+}
+.suggestion-chip:focus-visible {
+    outline: 2px solid var(--accent2);
+    outline-offset: 2px;
+}
+/* No cursor changes on touch devices */
+@media (hover: none) {
+    .suggestion-chip:hover { transform: none; }
+}
