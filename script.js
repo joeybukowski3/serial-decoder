@@ -407,6 +407,9 @@ function setLoadingActive() {
     emoji.textContent = '🌩️';
     emoji.className   = 'loading-emoji lightning';
   }
+  // Reset loading text to default (estimateAge() overrides this for AI searches)
+  var lt = document.getElementById('loadingText');
+  if (lt) lt.textContent = 'Researching product information...';
   loading.classList.remove('hidden');
   setEmojiCursor('🌩️');
 }
@@ -479,6 +482,9 @@ async function estimateAge() {
   document.getElementById('ageResults').classList.add('hidden');
   document.getElementById('serialResults').classList.add('hidden');
   setLoadingActive();
+  setEmojiCursor('🕵️');  // detective cursor for AI lookup
+  var lt = document.getElementById('loadingText');
+  if (lt) lt.textContent = '🕵️ Investigating...';
   document.getElementById('ageLoading').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   var loadStart = Date.now();
 
@@ -526,6 +532,25 @@ async function estimateAge() {
       html += '<div class="info-block serial-rule"><h4>Serial Number Decoding Hint</h4><p>' + esc(data.serialRule) + '</p></div>';
     }
     html += '<div class="info-block sources"><h4>Sources</h4><p>Manufacturer documentation and authorized publication materials.</p></div>';
+
+    // Tip: generic description → show one example model number as a clickable chip
+    if (data.exampleModelNumber) {
+      html += '<div class="tip-block">';
+      html += '<div class="tip-row"><span class="tip-label">&#128161; Tip</span><span class="tip-text">You\'ll get more accurate results if you enter the model number.</span></div>';
+      html += '<div class="tip-chips"><button class="suggestion-chip" data-model="' + esc(data.exampleModelNumber) + '" onclick="clickSuggestion(this.dataset.model)">' + esc(data.exampleModelNumber) + '</button></div>';
+      html += '</div>';
+    }
+
+    // Tip: partial model prefix → show 2–3 completions as clickable chips
+    if (data.suggestedModelNumbers && data.suggestedModelNumbers.length > 0) {
+      html += '<div class="tip-block">';
+      html += '<div class="tip-row"><span class="tip-label">&#128161;</span><span class="tip-text">Try one of these similar model numbers:</span></div>';
+      html += '<div class="tip-chips">';
+      data.suggestedModelNumbers.forEach(function(m) {
+        html += '<button class="suggestion-chip" data-model="' + esc(m) + '" onclick="clickSuggestion(this.dataset.model)">' + esc(m) + '</button>';
+      });
+      html += '</div></div>';
+    }
 
     body.innerHTML = html;
     var brandId = (data.brand || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -658,6 +683,19 @@ async function generateAISection(type, btn) {
   }
 
   if (btn) { btn.disabled = false; btn.innerHTML = '&#128161; Generate (uses AI)'; }
+}
+
+// ===== SMART LOOKUP SUGGESTION CLICK =====
+function clickSuggestion(modelNum) {
+  // Ensure the Smart Lookup section is expanded
+  var section = document.getElementById('altSection');
+  var toggle  = document.querySelector('.alt-toggle');
+  if (section && !section.classList.contains('open')) {
+    section.classList.add('open');
+    if (toggle) toggle.classList.add('open');
+  }
+  document.getElementById('altQuery').value = modelNum;
+  estimateAge();
 }
 
 // ===== UTILITY =====
