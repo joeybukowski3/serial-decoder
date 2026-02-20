@@ -47,5 +47,47 @@ var BRAND_FACTS = {
     founder: 'Sears, Roebuck and Co.',
     location: 'Chicago, Illinois, USA',
     summary: 'The Kenmore brand was introduced in 1927 by Sears, Roebuck and Co. in Chicago, Illinois, as a house brand for washing machines, later expanding to cover a full range of home appliances sold through Sears stores.'
+  },
+  apple: {
+    founded: '1976',
+    founder: 'Steve Jobs, Steve Wozniak & Ronald Wayne',
+    location: 'Cupertino, California, USA',
+    summary: 'Apple was founded on April 1, 1976 by Steve Jobs, Steve Wozniak, and Ronald Wayne in Cupertino, California, initially selling the hand-built Apple I computer before revolutionizing personal computing, music, phones, and tablets.'
+  },
+  hp: {
+    founded: '1939',
+    founder: 'Bill Hewlett & Dave Packard',
+    location: 'Palo Alto, California, USA',
+    summary: 'Hewlett-Packard was founded in 1939 by Bill Hewlett and Dave Packard in a garage in Palo Alto, California — widely considered the birthplace of Silicon Valley — initially producing electronic test and measurement instruments.'
+  },
+  asus: {
+    founded: '1989',
+    founder: 'T.H. Tung, Ted Hsu, Wayne Tsiah & M.T. Liao',
+    location: 'Taipei, Taiwan',
+    summary: 'ASUS was founded in 1989 by four former Acer engineers in Taipei, Taiwan, initially designing motherboards before expanding into laptops, desktops, monitors, and a full range of consumer and professional computing hardware.'
+  },
+  google_pixel: {
+    founded: '1998',
+    founder: 'Larry Page & Sergey Brin',
+    location: 'Menlo Park, California, USA',
+    summary: 'Google was founded in 1998 by Larry Page and Sergey Brin at Stanford University, growing into Alphabet Inc. The Pixel hardware line, launched in 2016, brought Google\'s vision of a pure Android experience and on-device AI to smartphones and tablets.'
+  },
+  sony: {
+    founded: '1946',
+    founder: 'Masaru Ibuka & Akio Morita',
+    location: 'Tokyo, Japan',
+    summary: 'Sony was founded in 1946 by Masaru Ibuka and Akio Morita in Tokyo, Japan, as Tokyo Tsushin Kogyo (Tokyo Telecommunications Engineering Corporation), and grew into one of the world\'s leading consumer electronics companies, known for the Walkman, Trinitron TV, and PlayStation.'
+  },
+  vizio: {
+    founded: '2002',
+    founder: 'William Wang',
+    location: 'Irvine, California, USA',
+    summary: 'VIZIO was founded in 2002 by William Wang in Irvine, California, with a mission to deliver high-quality flat-panel televisions at accessible prices, quickly becoming one of the top-selling TV brands in the United States by leveraging an efficient direct-to-retail distribution model.'
+  },
+  panasonic: {
+    founded: '1918',
+    founder: 'Kōnosuke Matsushita',
+    location: 'Osaka, Japan',
+    summary: 'Panasonic (originally Matsushita Electric Industrial Co.) was founded in 1918 by Kōnosuke Matsushita in Osaka, Japan, starting with a simple duplex lamp socket and growing into a global electronics giant known for TVs, cameras, batteries, and industrial solutions.'
   }
 };
