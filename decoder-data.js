@@ -1598,7 +1598,6 @@ var decoderData = {
     brands: [
       { id: 'samsung_tv', name: 'Samsung' },
       { id: 'lg_tv', name: 'LG' },
-      { id: 'apple', name: 'Apple' },
     ],
     decoders: {
     'samsung_tv': {
@@ -1661,51 +1660,6 @@ var decoderData = {
       var m = this.monthMap[monthCode];
       return { year: y || 'Unknown code: ' + yearDigit, month: m || 'Unknown code: ' + monthCode, yearCode: yearDigit, monthCode: monthCode };
     }
-    },
-    'apple': {
-      name: 'Apple',
-      parentManufacturer: 'Apple Inc.',
-      groupId: '4C',
-      products: 'iPhone; iPad; MacBook; Mac; Apple Watch; AirPods; Apple TV; iPod',
-      serialEra: '2010–2020 (12-character format)',
-      serialLengthNote: '12-character serial (2010–2020): character 4 encodes the year and half of year. Post-2021 Apple serials are fully randomized and cannot be decoded — use Alternative Lookup.',
-      decodeMethod: 'Character 4 (position 3)',
-      yearCodePosition: 'Character 4 (position 3)',
-      monthCodePosition: 'Character 4 also encodes production half — not month',
-      outputType: 'Year + Production Half',
-      decodeNotes: 'Apple used a 12-character serial format for products made from 2010 to 2020. The 4th character (position 3) encodes the year and production half (H1 = Jan–Jun, H2 = Jul–Dec). In 2021, Apple switched to fully randomized serial numbers that cannot be decoded. Serial location: Settings → General → About (iPhone/iPad/Apple TV); System Information (Mac); or printed on original packaging.',
-      exampleSerial: 'C02P7XXXF9V3',
-      exampleResult: 'P = 2015, First half (Jan–Jun)',
-      sources: 'support.apple.com; beetstech.com; macrumors.com',
-      method: '12-character serial (2010–2020): character 4 encodes year and production half. Post-2021 Apple serials are randomized — use Alternative Lookup.',
-      notes: 'Apple switched to fully randomized serial numbers in 2021. Only 12-character serials (2010–2020) can be decoded. C and D codes repeat in 2020 — verify decade by device model or generation. Serial on iPhone/iPad: Settings → General → About. Serial on Mac: Apple menu → About This Mac.',
-      source: 'support.apple.com; beetstech.com; macrumors.com',
-      yearMap: {
-        'C': '2010 or 2020', 'D': '2010 or 2020',
-        'F': '2011', 'G': '2011',
-        'H': '2012', 'J': '2012',
-        'K': '2013', 'L': '2013',
-        'M': '2014', 'N': '2014',
-        'P': '2015', 'Q': '2015',
-        'R': '2016', 'S': '2016',
-        'T': '2017', 'V': '2017',
-        'W': '2018', 'X': '2018',
-        'Y': '2019', 'Z': '2019'
-      },
-      halfMap: {
-        'C': true, 'F': true, 'H': true, 'K': true, 'M': true,
-        'P': true, 'R': true, 'T': true, 'W': true, 'Y': true
-      },
-      decode: function(serial) {
-        if (!serial) return null;
-        var s = serial.replace(/\s+/g, '').toUpperCase();
-        if (s.length !== 12) return null;
-        var code = s[3];
-        var y = this.yearMap[code];
-        if (!y) return null;
-        var half = this.halfMap[code] ? 'First half (Jan\u2013Jun)' : 'Second half (Jul\u2013Dec)';
-        return { year: y, month: half, yearCode: code };
-      }
     }
     }
   }
