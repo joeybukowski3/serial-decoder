@@ -502,8 +502,6 @@ async function estimateAge() {
     if (data.serialRule) {
       html += '<div class="info-block serial-rule"><h4>Serial Number Decoding Hint</h4><p>' + esc(data.serialRule) + '</p></div>';
     }
-    html += '<div class="info-block sources"><h4>Sources</h4><p>Manufacturer documentation and authorized publications.</p></div>';
-
     // Suppress model tips if query looks like a serial number (9+ compact alphanumeric, no spaces)
     var queryIsSerialLike = /^[a-zA-Z0-9]{9,}$/.test(query);
 
