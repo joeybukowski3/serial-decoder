@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     const { success, reset } = await ratelimit.limit(ip);
     if (!success) {
       res.setHeader('Retry-After', Math.ceil((reset - Date.now()) / 1000));
-      return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+      return res.status(429).json({ error: 'Too many requests. Please try again later.', errorCode: 'RATE_LIMIT' });
     }
   } catch (_) {
     // Redis unavailable — allow request rather than blocking legitimate users
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Service unavailable' });
   }
 
-  const prompt = `You are a product research specialist. Given the following appliance or water heater model number, brand, or description, determine the most likely manufacture date or production era.
+  const prompt = `You are a product research specialist. Given the following appliance, electronics, or equipment model number, brand, or description, determine the most likely manufacture date or production era.
 
 Research approach:
 - Identify the brand and model from the query
@@ -76,6 +76,17 @@ Research approach:
 - Look for earliest known references: product launches, first reviews, first retail listings, manual publication dates
 - If an exact year cannot be determined, provide a production year range
 - Consider model number patterns that indicate year/generation
+
+IMPORTANT — Generic category queries:
+- If the query is ONLY a product category with no brand or model (e.g. "refrigerator", "washer", "dryer", "water heater", "tv", "television", "microwave", "dishwasher", "laptop", "printer", "phone", "tablet", "air conditioner", "freezer", "range", "oven"):
+  - Set specificityLevel to "generic"
+  - Set inventionSummary to a 1-2 sentence description of when this product category was first invented or commercially introduced and by whom
+  - Set refinementSuggestion to a helpful prompt asking the user to specify a brand and model number for more accurate results
+  - Set estimatedYear and yearRange to null (no specific product to date)
+  - Do NOT say the query is "too generic" or refuse to respond — always return the invention history
+- If the query includes a brand but no model number: set specificityLevel to "brand-only"
+- If the query includes a specific model number: set specificityLevel to "specific"
+- refinementSuggestion is ALWAYS required regardless of specificityLevel
 
 Query: "${sanitizedQuery}"
 
@@ -85,6 +96,9 @@ Respond with ONLY valid JSON in this exact format:
   "model": "Model number if identifiable",
   "estimatedYear": "Most likely manufacture year or null",
   "yearRange": "e.g. 2015-2018 or null",
+  "specificityLevel": "generic | brand-only | specific",
+  "inventionSummary": "1-2 sentences on when this product category was first invented/introduced — required when specificityLevel is generic, null otherwise",
+  "refinementSuggestion": "Always present — suggest how user can get more accurate results (e.g. enter brand + model number)",
   "notes": "Any important context about this determination",
   "serialLocation": "Brief description of where to physically find the serial number on this type of product (e.g. 'Back panel, lower-left sticker' or 'Inside door frame' or 'Bottom of device')",
   "serialRule": "One-sentence general rule for how to decode the serial number for this brand and product type, if known (e.g. 'Samsung TVs: character 8 encodes the year, character 9 the month' or 'Use the Serial Decoder tab above for precise dating' if a standard format is unknown)",

@@ -20,8 +20,16 @@ var CYCLING_BRANDS = {
     'bradford_white': { label: 'Bradford White', single: 'bradford_white', type: 'advisory' },
   },
   electronics: {
-    'samsung_tv': { label: 'Samsung', single: 'samsung_tv', type: 'advisory' },
-    'lg_tv':      { label: 'LG',      single: 'lg_tv',      type: 'advisory' },
+    'apple':         { label: 'Apple',                    single: 'apple',         type: 'advisory' },
+    'samsung_tv':    { label: 'Samsung (TVs)',             single: 'samsung_tv',    type: 'advisory' },
+    'samsung_phone': { label: 'Samsung (Phones)',          single: 'samsung_phone', type: 'advisory' },
+    'lg_tv':         { label: 'LG',                       single: 'lg_tv',         type: 'advisory' },
+    'hp':            { label: 'HP',                       single: 'hp',            type: 'advisory' },
+    'asus':          { label: 'ASUS',                     single: 'asus',          type: 'advisory' },
+    'google_pixel':  { label: 'Google Pixel',             single: 'google_pixel',  type: 'advisory' },
+    'sony':          { label: 'Sony',                     single: 'sony',          type: 'advisory' },
+    'vizio':         { label: 'Vizio',                    single: 'vizio',         type: 'advisory' },
+    'panasonic':     { label: 'Panasonic',                single: 'panasonic',     type: 'advisory' },
   },
 };
 
@@ -78,6 +86,14 @@ var BRAND_LOGOS = {
   'bradford_white': 'bradfordwhite.com',
   'american_water_heater_company': 'americanwaterheater.com',
   'state_industries': 'statewaterheaters.com',
+  'apple':         'apple.com',
+  'samsung_phone': 'samsung.com',
+  'hp':            'hp.com',
+  'asus':          'asus.com',
+  'google_pixel':  'store.google.com',
+  'sony':          'sony.com',
+  'vizio':         'vizio.com',
+  'panasonic':     'panasonic.com',
 };
 
 // ===== STATE =====
@@ -472,6 +488,25 @@ function makeBrandBadge(name) {
   return span;
 }
 
+// ===== SMART LOOKUP NOTICE (rate limit / capacity) =====
+function showSmartLookupNotice(type, message) {
+  var body = document.getElementById('ageResultsBody');
+  var isCapacity = (type === 'capacity');
+  var bg    = isCapacity ? '#fffbeb' : '#f0f9ff';
+  var border = isCapacity ? '#f59e0b' : '#00b4d8';
+  var color  = isCapacity ? '#92400e' : '#0c4a6e';
+  if (body) {
+    body.innerHTML =
+      '<div style="background:' + bg + ';border-left:3px solid ' + border + ';border-radius:8px;padding:1rem 1.125rem;font-size:0.875rem;color:' + color + ';line-height:1.65;">' +
+      message + '</div>';
+  }
+  var ageResults = document.getElementById('ageResults');
+  if (ageResults) {
+    ageResults.classList.remove('hidden');
+    ageResults.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
 // ===== ESTIMATE AGE =====
 async function estimateAge() {
   var query = document.getElementById('altQuery').value.trim();
@@ -492,7 +527,35 @@ async function estimateAge() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: query }),
     });
+
+    // Handle structured limit responses before parsing JSON
+    if (res.status === 429) {
+      var limitData = {};
+      try { limitData = await res.json(); } catch(_) {}
+      if (limitData.errorCode === 'RATE_LIMIT' || res.status === 429) {
+        setLoadingHidden();
+        showSmartLookupNotice('limit', 'You\'ve reached the Smart Lookup usage limit. Please wait a few minutes and try again.');
+        return;
+      }
+    }
+    if (res.status === 503) {
+      setLoadingHidden();
+      showSmartLookupNotice('capacity', 'Wow! Due to the popular demand of this tool, the capacity of the free version has been reached. Please utilize the serial number decoder. The smart lookup function will be available again soon. Interested in utilizing smart lookup within personalized data limits? <a href="contact.html" style="color:inherit;font-weight:700;">Contact us today</a> to become a pro member.');
+      return;
+    }
+
     var data = await res.json();
+
+    if (data.errorCode === 'RATE_LIMIT') {
+      setLoadingHidden();
+      showSmartLookupNotice('limit', 'You\'ve reached the Smart Lookup usage limit. Please wait a few minutes and try again.');
+      return;
+    }
+    if (data.errorCode === 'SITE_LIMIT') {
+      setLoadingHidden();
+      showSmartLookupNotice('capacity', 'Wow! Due to the popular demand of this tool, the capacity of the free version has been reached. Please utilize the serial number decoder. The smart lookup function will be available again soon. Interested in utilizing smart lookup within personalized data limits? <a href="contact.html" style="color:inherit;font-weight:700;">Contact us today</a> to become a pro member.');
+      return;
+    }
 
     if (data.error) {
       setLoadingHidden();
@@ -502,6 +565,11 @@ async function estimateAge() {
 
     var body = document.getElementById('ageResultsBody');
     var html = '';
+
+    // Invention summary for generic/category-only queries
+    if (data.inventionSummary) {
+      html += '<div class="info-block invention-summary"><h4>About This Product Category</h4><p>' + esc(data.inventionSummary) + '</p></div>';
+    }
 
     if (data.brand) {
       html += '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + esc(data.brand) + '</span></div>';
@@ -523,6 +591,9 @@ async function estimateAge() {
     }
     if (data.serialRule) {
       html += '<div class="info-block serial-rule"><h4>Serial Number Decoding Hint</h4><p>' + esc(data.serialRule) + '</p></div>';
+    }
+    if (data.refinementSuggestion) {
+      html += '<div class="info-block refinement"><h4>Get More Accurate Results</h4><p>' + esc(data.refinementSuggestion) + '</p></div>';
     }
     // Suppress model tips if query looks like a serial number (9+ compact alphanumeric, no spaces)
     var queryIsSerialLike = /^[a-zA-Z0-9]{9,}$/.test(query);

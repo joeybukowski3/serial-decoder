@@ -1596,8 +1596,16 @@ var decoderData = {
   },
   electronics: {
     brands: [
-      { id: 'samsung_tv', name: 'Samsung' },
+      { id: 'apple', name: 'Apple' },
+      { id: 'samsung_tv', name: 'Samsung (TVs & Monitors)' },
+      { id: 'samsung_phone', name: 'Samsung (Phones & Tablets)' },
       { id: 'lg_tv', name: 'LG' },
+      { id: 'hp', name: 'HP' },
+      { id: 'asus', name: 'ASUS' },
+      { id: 'google_pixel', name: 'Google Pixel' },
+      { id: 'sony', name: 'Sony' },
+      { id: 'vizio', name: 'Vizio' },
+      { id: 'panasonic', name: 'Panasonic' },
     ],
     decoders: {
     'samsung_tv': {
@@ -1660,6 +1668,242 @@ var decoderData = {
       var m = this.monthMap[monthCode];
       return { year: y || 'Unknown code: ' + yearDigit, month: m || 'Unknown code: ' + monthCode, yearCode: yearDigit, monthCode: monthCode };
     }
+    },
+    'apple': {
+      name: 'Apple',
+      parentManufacturer: 'Apple Inc.',
+      products: 'iPhone; iPad; Mac; iPod; Apple Watch',
+      serialEra: '2010-Present',
+      serialLengthNote: '12-char (pre-2021): year at char 4, week at chars 5-6. 10-char (post-2021): randomized serial — no date encoding.',
+      method: '12-char serial: char 4 = Year, chars 5-6 = Week. 10-char serial (post-2021): randomized.',
+      notes: 'Apple moved to randomized 10-character serials around 2021. For randomized serials, year cannot be decoded directly — use Smart Lookup with the model identifier (e.g., A2341). Year codes C and D each map to two possible decades (2010 or 2020).',
+      decodeNotes: 'Apple moved to randomized serials (~2021). For those, Smart Lookup with the model number gives the best result.',
+      exampleSerial: 'C02XG1JFJGH5',
+      exampleResult: 'G=2011, Week 1J (~Week 27)',
+      yearMap: {
+        'C': '2010/2020', 'D': '2010/2020', 'F': '2011', 'G': '2011',
+        'H': '2012', 'J': '2012', 'K': '2013', 'L': '2013',
+        'M': '2014', 'N': '2014', 'P': '2015', 'Q': '2015',
+        'R': '2016', 'S': '2016', 'T': '2017', 'V': '2017',
+        'W': '2018', 'X': '2019', 'Y': '2019', 'Z': '2020'
+      },
+      monthMap: {},
+      decode: function(serial) {
+        var s = serial.replace(/\s/g, '');
+        if (s.length === 10) {
+          return {
+            year: 'Post-2021 (Randomized)',
+            month: 'Apple serial numbers after ~2021 may be randomized. Try Smart Lookup with the model number (e.g., A2341).',
+            yearCode: null, weekDigits: null
+          };
+        }
+        if (s.length < 6) return null;
+        var yearChar = s[3].toUpperCase();
+        var weekChars = s.substring(4, 6);
+        var y = this.yearMap[yearChar];
+        return { year: y || 'Unknown code: ' + yearChar, month: 'Week ' + weekChars, yearCode: yearChar, weekDigits: weekChars };
+      }
+    },
+    'samsung_phone': {
+      name: 'Samsung (Phones & Tablets)',
+      parentManufacturer: 'Samsung Electronics Co., Ltd.',
+      products: 'Galaxy Phone; Galaxy Tablet; Galaxy Watch',
+      serialEra: '2009-Present',
+      serialLengthNote: '15-char serial: year at char 8, month at char 9. Shorter serials: year at char 4, month at char 5.',
+      method: '15-char serial: char 8 = Year. Shorter serials: char 4 = Year. Next char = Month.',
+      notes: 'Year codes B, C, D, E repeat — B=2009 or 2022, C=2010 or 2023, D=2011 or 2024, E=2012 or 2025. Use device model generation to confirm decade.',
+      decodeNotes: 'Some year codes have a 13-year cycle. Use device generation to resolve ambiguity.',
+      exampleSerial: 'RX1K304XXXXXXX',
+      exampleResult: 'K=2016 3=March',
+      yearMap: {
+        'B': '2009/2022', 'C': '2010/2023', 'D': '2011/2024', 'E': '2012/2025',
+        'F': '2013', 'G': '2014', 'H': '2015', 'J': '2015',
+        'K': '2016', 'M': '2017', 'N': '2018', 'R': '2019',
+        'T': '2020', 'A': '2021'
+      },
+      monthMap: { '1': 'January', '2': 'February', '3': 'March', '4': 'April', '5': 'May', '6': 'June', '7': 'July', '8': 'August', '9': 'September', 'A': 'October', 'B': 'November', 'C': 'December' },
+      decode: function(serial) {
+        var s = serial.replace(/\s/g, '').toUpperCase();
+        if (s.length < 5) return null;
+        var yearPos = s.length >= 15 ? 7 : 3;
+        var monthPos = yearPos + 1;
+        var yearChar = s[yearPos];
+        var monthChar = monthPos < s.length ? s[monthPos] : '';
+        var y = this.yearMap[yearChar];
+        var m = this.monthMap[monthChar] || '';
+        return { year: y || 'Unknown code: ' + yearChar, month: m || (monthChar ? 'Code: ' + monthChar : ''), yearCode: yearChar, monthCode: monthChar || undefined };
+      }
+    },
+    'hp': {
+      name: 'HP',
+      parentManufacturer: 'HP Inc.',
+      products: 'Laptop; Desktop; Workstation; Printer',
+      serialEra: '2000s-Present',
+      serialLengthNote: 'Serial: char 4 = Year (last digit), chars 5-6 = Week (01-52).',
+      method: 'Char 4 = Year last digit, chars 5-6 = Week number (01-52).',
+      notes: 'HP encodes only the last digit of the manufacture year. Use device model generation and condition to determine the full year (e.g., 7 = 2007 or 2017).',
+      decodeNotes: 'HP year codes are decade-ambiguous. Use device features or model lineup to confirm the full year.',
+      exampleSerial: 'CNX7120BXX',
+      exampleResult: '7=2017 Week 12',
+      yearMap: {
+        '0': '2010/2020', '1': '2011/2021', '2': '2012/2022', '3': '2013/2023',
+        '4': '2014/2024', '5': '2015/2025', '6': '2016/2026',
+        '7': '2007/2017', '8': '2008/2018', '9': '2009/2019'
+      },
+      monthMap: {},
+      decode: function(serial) {
+        var s = serial.replace(/\s/g, '');
+        if (s.length < 6) return null;
+        var yearDigit = s[3];
+        var weekChars = s.substring(4, 6);
+        var weekNum = parseInt(weekChars, 10);
+        if (isNaN(weekNum) || weekNum < 1 || weekNum > 53) return null;
+        var y = this.yearMap[yearDigit];
+        return { year: y || 'Year digit: ' + yearDigit + ' (decade unknown)', month: 'Week ' + weekChars, yearCode: yearDigit, weekDigits: weekChars };
+      }
+    },
+    'asus': {
+      name: 'ASUS',
+      parentManufacturer: 'ASUSTeK Computer Inc.',
+      products: 'Laptop; Desktop; Motherboard; Monitor',
+      serialEra: '2010-Present',
+      serialLengthNote: 'Serial: char 1 = Year, char 2 = Month.',
+      method: 'Char 1 = Year (alpha code), char 2 = Month (1-9 = Jan-Sep, A=Oct, B=Nov, C=Dec).',
+      notes: 'ASUS skips letters I, O, and Q in the year code sequence to avoid visual confusion with 1, 0.',
+      decodeNotes: 'ASUS encodes year and month cleanly in the first two characters. No decade ambiguity.',
+      exampleSerial: 'N3A1234567',
+      exampleResult: 'N=2022 3=March',
+      yearMap: {
+        'A': '2010', 'B': '2011', 'C': '2012', 'D': '2013', 'E': '2014', 'F': '2015',
+        'G': '2016', 'H': '2017', 'J': '2018', 'K': '2019', 'L': '2020',
+        'M': '2021', 'N': '2022', 'P': '2023', 'R': '2024', 'S': '2025'
+      },
+      monthMap: { '1': 'January', '2': 'February', '3': 'March', '4': 'April', '5': 'May', '6': 'June', '7': 'July', '8': 'August', '9': 'September', 'A': 'October', 'B': 'November', 'C': 'December' },
+      decode: function(serial) {
+        var s = serial.replace(/\s/g, '').toUpperCase();
+        if (s.length < 2) return null;
+        var yearChar = s[0];
+        var monthChar = s[1];
+        var y = this.yearMap[yearChar];
+        var m = this.monthMap[monthChar];
+        return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+      }
+    },
+    'google_pixel': {
+      name: 'Google Pixel',
+      parentManufacturer: 'Google LLC',
+      products: 'Pixel Phone; Pixel Tablet; Pixel Watch',
+      serialEra: '2016-Present',
+      serialLengthNote: 'Serial: char 1 = Year (last digit), chars 2-3 = Week (01-53).',
+      method: 'Char 1 = Year last digit, chars 2-3 = Week number (01-53).',
+      notes: 'Google Pixel launched in 2016. Year digits 0-5 map to 2020-2025; digits 6-9 map to 2016-2019. Week 08 = approximately late February.',
+      decodeNotes: 'Year decade can typically be inferred from the Pixel model number (Pixel 6, 7, 8, 9, etc.).',
+      exampleSerial: '408XXXXXXXXX',
+      exampleResult: '4=2024, Week 08 (~February)',
+      yearMap: {
+        '6': '2016', '7': '2017', '8': '2018', '9': '2019',
+        '0': '2020', '1': '2021', '2': '2022', '3': '2023', '4': '2024', '5': '2025'
+      },
+      monthMap: {},
+      decode: function(serial) {
+        var s = serial.replace(/\s/g, '');
+        if (s.length < 3) return null;
+        var yearDigit = s[0];
+        var weekChars = s.substring(1, 3);
+        var weekNum = parseInt(weekChars, 10);
+        if (isNaN(weekNum) || weekNum < 1 || weekNum > 53) return null;
+        var y = this.yearMap[yearDigit];
+        return { year: y || 'Unknown code: ' + yearDigit, month: 'Week ' + weekChars, yearCode: yearDigit, weekDigits: weekChars };
+      }
+    },
+    'sony': {
+      name: 'Sony',
+      parentManufacturer: 'Sony Corporation',
+      products: 'Bravia TV; OLED TV; Home Theater',
+      serialEra: '2020-Present',
+      serialLengthNote: 'Enter the MODEL number (not serial). The final letter of the model number encodes the year.',
+      method: 'Last letter of MODEL number encodes year: H=2020, J=2021, K=2022, L=2023, M=2024, N=2025.',
+      notes: 'Sony TVs encode the manufacture year in the last letter of the model number, not in the serial number. Enter your full model number (e.g., XR65A90K) to decode. Serial numbers alone do not contain the manufacture year.',
+      decodeNotes: 'Sony uses model suffix dating. Enter the model number (found on the back of the TV) to get the year.',
+      exampleSerial: 'XR65A90K',
+      exampleResult: 'K=2022',
+      suffixMap: { 'H': '2020', 'J': '2021', 'K': '2022', 'L': '2023', 'M': '2024', 'N': '2025' },
+      yearMap: {},
+      monthMap: {},
+      decode: function(serial) {
+        var s = serial.replace(/\s/g, '').toUpperCase();
+        if (!s) return null;
+        var lastChar = s[s.length - 1];
+        var y = this.suffixMap[lastChar];
+        if (y) {
+          return { year: y, month: 'Model suffix: ' + lastChar, yearCode: lastChar, weekDigits: undefined };
+        }
+        return {
+          year: 'No year suffix found',
+          month: 'Enter a Sony model number ending in H, J, K, L, M, or N — e.g., XR65A90K for a 2022 TV.',
+          yearCode: lastChar, weekDigits: undefined
+        };
+      }
+    },
+    'vizio': {
+      name: 'Vizio',
+      parentManufacturer: 'Vizio Inc.',
+      products: 'TV; Soundbar',
+      serialEra: '2010-Present',
+      serialLengthNote: 'Serial: chars 4-5 encode year and week (format varies by series — YYWW or WWYY).',
+      method: 'Chars 4-5 = Year/Week code. Decoded using YYWW and WWYY heuristics; verify with model info.',
+      notes: 'Vizio serial number formats vary by TV series. The decoder applies a best-effort heuristic to chars 4-5. If both interpretations are plausible, both are shown. Always verify with Vizio model documentation.',
+      decodeNotes: 'Vizio formats vary by series. Treat decoded results as estimates and verify when possible.',
+      exampleSerial: 'LFTREP23',
+      exampleResult: 'Chars 4-5: E=year hint, P=week hint (heuristic)',
+      yearMap: {},
+      monthMap: {},
+      decode: function(serial) {
+        var s = serial.replace(/\s/g, '');
+        if (s.length < 5) return null;
+        var c4 = s[3];
+        var c5 = s[4];
+        var n4 = parseInt(c4, 10);
+        var n5 = parseInt(c5, 10);
+        if (isNaN(n4) || isNaN(n5)) {
+          return { year: 'Non-numeric code', month: 'Vizio format varies by series — chars 4-5 are "' + c4 + c5 + '". Verify with model documentation.', yearCode: c4 + c5 };
+        }
+        var results = [];
+        var y1 = (n4 <= 6) ? '202' + c4 : '201' + c4;
+        if (n5 >= 1 && n5 <= 9) results.push(y1 + ', Week ' + c5 + 'x (YYWW read)');
+        var y2 = (n5 <= 6) ? '202' + c5 : '201' + c5;
+        if (n4 >= 1 && n4 <= 9) results.push('Week ' + c4 + 'x, ' + y2 + ' (WWYY read)');
+        if (results.length === 0) {
+          return { year: 'Unable to decode', month: 'Codes "' + c4 + c5 + '" do not match known Vizio patterns. Verify with model documentation.', yearCode: c4 + c5 };
+        }
+        return { year: results.length === 2 ? 'Ambiguous — see note' : (n4 <= 6 ? y1 : y2), month: results.join(' — OR — ') + '. Vizio formats vary; verify with model info.', yearCode: c4 + c5 };
+      }
+    },
+    'panasonic': {
+      name: 'Panasonic',
+      parentManufacturer: 'Panasonic Holdings Corporation',
+      products: 'TV; Projector; Home Theater',
+      serialEra: '2010-Present',
+      serialLengthNote: 'Serial: char 1 = Year (last digit), char 2 = Month/Factory code.',
+      method: 'Char 1 = Year last digit. Char 2 = Month or factory code (mapping varies by product line).',
+      notes: 'Panasonic encodes the last digit of the manufacture year in the first character. The second character represents a month or factory/production-line code depending on the product line. Use device condition and model generation to determine the full year.',
+      decodeNotes: 'Panasonic year is decade-ambiguous. Use device generation or model lineup to confirm full year.',
+      exampleSerial: '4B123456',
+      exampleResult: '4=2014/2024, B=factory/month code',
+      yearMap: {
+        '0': '2010/2020', '1': '2011/2021', '2': '2012/2022', '3': '2013/2023',
+        '4': '2014/2024', '5': '2015/2025', '6': '2016/2026',
+        '7': '2007/2017', '8': '2008/2018', '9': '2009/2019'
+      },
+      monthMap: {},
+      decode: function(serial) {
+        var s = serial.replace(/\s/g, '');
+        if (s.length < 2) return null;
+        var yearDigit = s[0];
+        var factoryChar = s[1];
+        var y = this.yearMap[yearDigit];
+        return { year: y || 'Year digit: ' + yearDigit + ' (decade unknown)', month: 'Factory/month code: ' + factoryChar + ' (varies by product line)', yearCode: yearDigit, weekDigits: undefined };
+      }
     }
     }
   }
