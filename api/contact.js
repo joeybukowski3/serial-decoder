@@ -29,7 +29,7 @@ export default async function handler(req, res) {
   try {
     const payload = {
       from:    'Serial Decoder <onboarding@resend.dev>',
-      to:      ['joeybuk03@gmail.com'],
+      to:      ['joeybukowski3@gmail.com'],
       subject: `[Decoder] Contact from ${name || email || 'visitor'}`,
       text:    bodyText,
     };

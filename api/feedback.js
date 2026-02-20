@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         from:    'Serial Decoder <onboarding@resend.dev>',
-        to:      ['joeybuk03@gmail.com'],
+        to:      ['joeybukowski3@gmail.com'],
         subject: `[Decoder] Possible error — ${brand || 'Unknown Brand'} / ${serial || 'no serial'}`,
         text:    bodyText,
       }),
