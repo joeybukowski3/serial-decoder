@@ -807,3 +807,43 @@ body {
 @media (hover: none) {
     .suggestion-chip:hover { transform: none; }
 }
+
+/* ── Brand Page: Did You Know ── */
+.did-you-know-block {
+    background: #f0f9ff;
+    border: 1px solid rgba(0,180,216,0.18);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.75rem;
+}
+.did-you-know-block h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0c4a6e;
+    margin: 0 0 0.875rem;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.fact-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.3rem 1rem;
+    margin-bottom: 0.875rem;
+}
+.fact-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0c4a6e;
+    white-space: nowrap;
+}
+.fact-value {
+    font-size: 0.82rem;
+    color: #1e3a5f;
+}
+.fact-summary {
+    font-size: 0.84rem;
+    color: #1e3a5f;
+    line-height: 1.65;
+    margin: 0;
+}
