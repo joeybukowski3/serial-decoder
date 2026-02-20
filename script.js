@@ -103,6 +103,30 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   document.getElementById('altQuery').addEventListener('focus', showAltDisclaimer);
   document.getElementById('altQuery').addEventListener('input', showAltDisclaimer);
+
+  // URL parameter: pre-select brand/category from brand landing pages
+  // e.g. index.html?brand=ge&cat=appliances
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var catParam   = params.get('cat');
+    var brandParam = params.get('brand');
+    if (catParam) {
+      var tabBtn = document.querySelector('.cat-tab[data-cat="' + catParam + '"]');
+      if (tabBtn) selectCategory(catParam, tabBtn);
+    }
+    if (brandParam) {
+      var sel = document.getElementById('brand');
+      for (var i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === brandParam) {
+          sel.value = brandParam;
+          onBrandChange();
+          updateDecodeBtn();
+          setTimeout(function() { document.getElementById('serial').focus(); }, 150);
+          break;
+        }
+      }
+    }
+  } catch (e) {}
 });
 
 // ===== CATEGORY SELECTION =====
