@@ -22,7 +22,6 @@ var CYCLING_BRANDS = {
   electronics: {
     'samsung_tv': { label: 'Samsung', single: 'samsung_tv', type: 'advisory' },
     'lg_tv':      { label: 'LG',      single: 'lg_tv',      type: 'advisory' },
-    'apple':      { label: 'Apple',   single: 'apple',      type: 'advisory' },
   },
 };
 
@@ -69,7 +68,6 @@ var BRAND_LOGOS = {
   'kenmore': 'kenmore.com',
   'samsung_tv': 'samsung.com',
   'lg_tv': 'lg.com',
-  'apple': 'apple.com',
   'hotpoint': 'hotpointservice.com',
   'roper': 'whirlpool.com',
   'estate': 'whirlpool.com',
