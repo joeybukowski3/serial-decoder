@@ -1598,6 +1598,7 @@ var decoderData = {
     brands: [
       { id: 'samsung_tv', name: 'Samsung' },
       { id: 'lg_tv', name: 'LG' },
+      { id: 'apple', name: 'Apple' },
     ],
     decoders: {
     'samsung_tv': {
