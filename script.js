@@ -279,6 +279,69 @@ function computeEstimatedAge(displayedYear) {
   return '—';
 }
 
+// ===== SANITY CHECK =====
+function sanitizeDecodeResult(result) {
+  if (!result) return { valid: false, reason: 'No result from decoder' };
+  var yearStr = String(result.year || '').trim();
+  // Non-numeric or empty year strings (e.g. "Post-2021 (Randomized)") — pass through
+  if (!yearStr || !/^\d/.test(yearStr)) return { valid: true };
+  // Dual-year "YYYY/YYYY"
+  if (/^\d{4}\/\d{4}$/.test(yearStr)) {
+    var parts = yearStr.split('/').map(Number);
+    var anyValid = parts.some(function(y) { return y >= 1980 && y <= CURRENT_YEAR; });
+    if (!anyValid) return { valid: false, reason: 'Decoded years ' + yearStr + ' both outside plausible range (1980\u2013' + CURRENT_YEAR + ')' };
+    return { valid: true };
+  }
+  // Single 4-digit year
+  if (/^\d{4}$/.test(yearStr)) {
+    var y = parseInt(yearStr);
+    if (y < 1980 || y > CURRENT_YEAR) {
+      return { valid: false, reason: 'Decoded year ' + yearStr + ' is outside plausible range (1980\u2013' + CURRENT_YEAR + ')' };
+    }
+  }
+  return { valid: true };
+}
+
+// ===== DECODE FALLBACK ALERT (fire-and-forget) =====
+function fireFallbackAlert(brand, serial, category, reason) {
+  try {
+    fetch('/api/decode-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brand: brand, serial: serial, category: category, reason: reason, timestamp: new Date().toISOString() })
+    }).catch(function() {});
+  } catch (_) {}
+}
+
+// ===== DECODE FALLBACK DISPLAY =====
+function showDecodeFallback(decoder, serial, brandId, reason) {
+  var monthRow = document.getElementById('resultMonthRow');
+  if (monthRow) monthRow.style.display = 'none';
+  var yearEl = document.getElementById('resultYear');
+  if (yearEl) {
+    yearEl.textContent = '';
+    if (yearEl.closest) { var yearRow = yearEl.closest('.result-row'); if (yearRow) yearRow.style.display = 'none'; }
+  }
+  var ageEl = document.getElementById('resultEstimatedAge');
+  if (ageEl) {
+    ageEl.textContent = '\u2014';
+    if (ageEl.closest) { var ageRow = ageEl.closest('.result-row'); if (ageRow) ageRow.style.display = 'none'; }
+  }
+  var exBlock = document.getElementById('resultExampleBlock');
+  if (exBlock) exBlock.style.display = 'none';
+  document.getElementById('resultBrand').textContent  = decoder.name;
+  document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'Check the product label and ensure the full serial number is entered.';
+  document.getElementById('resultNotes').textContent  =
+    'We\u2019re sorry, our system is having trouble decoding that number. Please refer to the decoding method above.\n\nSerial entered: ' + serial;
+  showBrandLogo('serialBrandLogo', brandId, decoder.name);
+  currentFeedbackContext = { brand: decoder.name, serial: serial };
+  fireFallbackAlert(decoder.name, serial, currentCategory, reason);
+  setLoadingSuccess(function() {
+    document.getElementById('serialResults').classList.remove('hidden');
+    document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+}
+
 // ===== SERIAL DECODE =====
 function decodeSerial() {
   var metaBrandId = document.getElementById('brand').value;
@@ -310,31 +373,27 @@ function decodeSerial() {
 
   // Hold the cloud for at least 1400ms so the sun transition reaches ~2 s total
   setTimeout(function() {
+    // Reset row/block visibility from any previous fallback state
+    (function() {
+      var _yr = document.getElementById('resultYear');
+      var _ae = document.getElementById('resultEstimatedAge');
+      var _ex = document.getElementById('resultExampleBlock');
+      if (_yr && _yr.closest) { var r1 = _yr.closest('.result-row'); if (r1) r1.style.display = ''; }
+      if (_ae && _ae.closest) { var r2 = _ae.closest('.result-row'); if (r2) r2.style.display = ''; }
+      if (_ex) _ex.style.display = '';
+    })();
+
     var result = decoder.decode(serial);
+    var sanity  = sanitizeDecodeResult(result);
 
     var isKenmore = (brandId === 'kenmore');
     var monthRow  = document.getElementById('resultMonthRow');
 
-    if (!result) {
-      var formatHint = decoder.method || decoder.serialLengthNote || 'Check the product label and ensure the full serial number is entered.';
-      var exampleText = decoder.exampleSerial
-        ? decoder.exampleSerial + ' \u2192 ' + decoder.exampleResult
-        : 'N/A';
-      if (monthRow) monthRow.style.display = 'none';
-      document.getElementById('resultYear').textContent   = 'Unable to Decode';
-      document.getElementById('resultBrand').textContent  = decoder.name;
-      document.getElementById('resultMethod').textContent = formatHint;
-      document.getElementById('resultNotes').textContent  =
-        'The serial number entered could not be decoded. Make sure it is complete and entered exactly as shown on the label. ' +
-        'If you do not have the full serial number, use the Smart Lookup section to search by model number or description instead.';
-      document.getElementById('resultExample').textContent = exampleText;
-      document.getElementById('resultEstimatedAge').textContent = '—';
-      showBrandLogo('serialBrandLogo', brandId, decoder.name);
-      currentFeedbackContext = { brand: decoder.name, serial: serial };
-      setLoadingSuccess(function() {
-        document.getElementById('serialResults').classList.remove('hidden');
-        document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      });
+    if (!result || !sanity.valid) {
+      var _reason = !result
+        ? 'Decoder returned null for serial: ' + serial
+        : (sanity.reason || 'Sanity check failed');
+      showDecodeFallback(decoder, serial, brandId, _reason);
       return;
     }
     if (monthRow) monthRow.style.display = isKenmore ? 'none' : '';

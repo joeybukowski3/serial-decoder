@@ -1317,34 +1317,57 @@ var decoderData = {
       groupId: '7B',
       products: 'Water Heater (tank)',
       serialEra: 'Pre-2008',
-      serialLengthNote: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
+      serialLengthNote: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
       decodeMethod: 'Characters 3-4 (pre-2008 era)',
       yearCodePosition: 'Characters 3-4 (pre-2008 era)',
       monthCodePosition: 'Character 2 (pre-2008 era)',
       outputType: 'Month + Year',
-      decodeNotes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
-      exampleSerial: 'BG9908XXXXX (pre-2008)',
-      exampleResult: 'G=July 99=1999 -> July 1999',
+      decodeNotes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
+      exampleSerial: 'BG9908XXXXX (pre-2008) or 1504A023527 (post-2008)',
+      exampleResult: 'B=factory, G=July, 99=1999 \u2192 July 1999 | 15=2015, 04=week 4 \u2192 2015 week 4',
       sources: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
-      method: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
-      notes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
+      method: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
+      notes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
       source: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
       yearMap: { 'YY (e.g. 06 = 2006)': 'Prefix with 19XX or 20XX based on context', 'YYYY (e.g. 2018)': 'Read directly (e.g. 2018)' },
       monthMap: { '10': 'October', '11': 'November', '12': 'December', 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'J': 'September', 'K': 'October', 'L': 'November', 'M': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
-      if (/^\d{4}/.test(serial) && serial.length >= 6) {
-        var year = serial.substring(0, 4);
-        var month = serial.substring(4, 6);
-        var m = this.monthMap[month];
-        return { year: year, month: m || 'Month ' + month, yearCode: year, monthCode: month };
-      } else {
+      var YEAR_NOW = new Date().getFullYear();
+      // Pre-2008 format: starts with a letter — [Factory][Month code][2-digit year][...]
+      if (/^[A-Za-z]/.test(serial)) {
+        if (serial.length < 4) return null;
         var monthChar = serial[1].toUpperCase();
         var yearDigits = serial.substring(2, 4);
-        var fullYear = parseInt(yearDigits) >= 84 ? '19' + yearDigits : '20' + yearDigits;
+        if (!/^\d{2}$/.test(yearDigits)) return null;
+        var yr = parseInt(yearDigits);
+        var fullYear = yr >= 84 ? '19' + yearDigits : '20' + yearDigits;
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
       }
+      // Post-2008 numeric Format A: YYYYMM... — full 4-digit year (2000–present), then 2-digit month.
+      if (/^\d{4}/.test(serial) && serial.length >= 6) {
+        var yr4 = parseInt(serial.substring(0, 4));
+        if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
+          var monthStr = serial.substring(4, 6);
+          var m = this.monthMap[monthStr];
+          return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
+        }
+      }
+      // Post-2008 numeric Format B: YYWW... — 2-digit year then 2-digit production week (01–53).
+      var yy = serial.substring(0, 2);
+      var ww = serial.substring(2, 4);
+      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
+        var yr2 = parseInt(yy);
+        var fullYear2 = 2000 + yr2;
+        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
+          var week = parseInt(ww);
+          if (week >= 1 && week <= 53) {
+            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
+          }
+        }
+      }
+      return null;
     }
     },
     'state_industries': {
@@ -1353,34 +1376,57 @@ var decoderData = {
       groupId: '7B',
       products: 'Water Heater (tank)',
       serialEra: 'Pre-2008',
-      serialLengthNote: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
+      serialLengthNote: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
       decodeMethod: 'Characters 3-4 (pre-2008 era)',
       yearCodePosition: 'Characters 3-4 (pre-2008 era)',
       monthCodePosition: 'Character 2 (pre-2008 era)',
       outputType: 'Month + Year',
-      decodeNotes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
-      exampleSerial: 'BG9908XXXXX (pre-2008)',
-      exampleResult: 'G=July 99=1999 -> July 1999',
+      decodeNotes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
+      exampleSerial: 'BG9908XXXXX (pre-2008) or 1504A023527 (post-2008)',
+      exampleResult: 'B=factory, G=July, 99=1999 \u2192 July 1999 | 15=2015, 04=week 4 \u2192 2015 week 4',
       sources: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
-      method: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
-      notes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
+      method: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
+      notes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
       source: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
       yearMap: { 'YY (e.g. 06 = 2006)': 'Prefix with 19XX or 20XX based on context', 'YYYY (e.g. 2018)': 'Read directly (e.g. 2018)' },
       monthMap: { '10': 'October', '11': 'November', '12': 'December', 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'J': 'September', 'K': 'October', 'L': 'November', 'M': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
-      if (/^\d{4}/.test(serial) && serial.length >= 6) {
-        var year = serial.substring(0, 4);
-        var month = serial.substring(4, 6);
-        var m = this.monthMap[month];
-        return { year: year, month: m || 'Month ' + month, yearCode: year, monthCode: month };
-      } else {
+      var YEAR_NOW = new Date().getFullYear();
+      // Pre-2008 format: starts with a letter — [Factory][Month code][2-digit year][...]
+      if (/^[A-Za-z]/.test(serial)) {
+        if (serial.length < 4) return null;
         var monthChar = serial[1].toUpperCase();
         var yearDigits = serial.substring(2, 4);
-        var fullYear = parseInt(yearDigits) >= 84 ? '19' + yearDigits : '20' + yearDigits;
+        if (!/^\d{2}$/.test(yearDigits)) return null;
+        var yr = parseInt(yearDigits);
+        var fullYear = yr >= 84 ? '19' + yearDigits : '20' + yearDigits;
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
       }
+      // Post-2008 numeric Format A: YYYYMM... — full 4-digit year (2000–present), then 2-digit month.
+      if (/^\d{4}/.test(serial) && serial.length >= 6) {
+        var yr4 = parseInt(serial.substring(0, 4));
+        if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
+          var monthStr = serial.substring(4, 6);
+          var m = this.monthMap[monthStr];
+          return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
+        }
+      }
+      // Post-2008 numeric Format B: YYWW... — 2-digit year then 2-digit production week (01–53).
+      var yy = serial.substring(0, 2);
+      var ww = serial.substring(2, 4);
+      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
+        var yr2 = parseInt(yy);
+        var fullYear2 = 2000 + yr2;
+        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
+          var week = parseInt(ww);
+          if (week >= 1 && week <= 53) {
+            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
+          }
+        }
+      }
+      return null;
     }
     },
     'reliance_water_heaters': {
@@ -1389,34 +1435,57 @@ var decoderData = {
       groupId: '7B',
       products: 'Water Heater (tank)',
       serialEra: 'Pre-2008',
-      serialLengthNote: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
+      serialLengthNote: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
       decodeMethod: 'Characters 3-4 (pre-2008 era)',
       yearCodePosition: 'Characters 3-4 (pre-2008 era)',
       monthCodePosition: 'Character 2 (pre-2008 era)',
       outputType: 'Month + Year',
-      decodeNotes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
-      exampleSerial: 'BG9908XXXXX (pre-2008)',
-      exampleResult: 'G=July 99=1999 -> July 1999',
+      decodeNotes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
+      exampleSerial: 'BG9908XXXXX (pre-2008) or 1504A023527 (post-2008)',
+      exampleResult: 'B=factory, G=July, 99=1999 \u2192 July 1999 | 15=2015, 04=week 4 \u2192 2015 week 4',
       sources: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
-      method: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
-      notes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
+      method: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
+      notes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
       source: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
       yearMap: { 'YY (e.g. 06 = 2006)': 'Prefix with 19XX or 20XX based on context', 'YYYY (e.g. 2018)': 'Read directly (e.g. 2018)' },
       monthMap: { '10': 'October', '11': 'November', '12': 'December', 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'J': 'September', 'K': 'October', 'L': 'November', 'M': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
-      if (/^\d{4}/.test(serial) && serial.length >= 6) {
-        var year = serial.substring(0, 4);
-        var month = serial.substring(4, 6);
-        var m = this.monthMap[month];
-        return { year: year, month: m || 'Month ' + month, yearCode: year, monthCode: month };
-      } else {
+      var YEAR_NOW = new Date().getFullYear();
+      // Pre-2008 format: starts with a letter — [Factory][Month code][2-digit year][...]
+      if (/^[A-Za-z]/.test(serial)) {
+        if (serial.length < 4) return null;
         var monthChar = serial[1].toUpperCase();
         var yearDigits = serial.substring(2, 4);
-        var fullYear = parseInt(yearDigits) >= 84 ? '19' + yearDigits : '20' + yearDigits;
+        if (!/^\d{2}$/.test(yearDigits)) return null;
+        var yr = parseInt(yearDigits);
+        var fullYear = yr >= 84 ? '19' + yearDigits : '20' + yearDigits;
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
       }
+      // Post-2008 numeric Format A: YYYYMM... — full 4-digit year (2000–present), then 2-digit month.
+      if (/^\d{4}/.test(serial) && serial.length >= 6) {
+        var yr4 = parseInt(serial.substring(0, 4));
+        if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
+          var monthStr = serial.substring(4, 6);
+          var m = this.monthMap[monthStr];
+          return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
+        }
+      }
+      // Post-2008 numeric Format B: YYWW... — 2-digit year then 2-digit production week (01–53).
+      var yy = serial.substring(0, 2);
+      var ww = serial.substring(2, 4);
+      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
+        var yr2 = parseInt(yy);
+        var fullYear2 = 2000 + yr2;
+        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
+          var week = parseInt(ww);
+          if (week >= 1 && week <= 53) {
+            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
+          }
+        }
+      }
+      return null;
     }
     },
     'american_water_heater_company': {
@@ -1425,34 +1494,57 @@ var decoderData = {
       groupId: '7B',
       products: 'Water Heater (tank)',
       serialEra: 'Pre-2008',
-      serialLengthNote: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
+      serialLengthNote: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
       decodeMethod: 'Characters 3-4 (pre-2008 era)',
       yearCodePosition: 'Characters 3-4 (pre-2008 era)',
       monthCodePosition: 'Character 2 (pre-2008 era)',
       outputType: 'Month + Year',
-      decodeNotes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
-      exampleSerial: 'BG9908XXXXX (pre-2008)',
-      exampleResult: 'G=July 99=1999 -> July 1999',
+      decodeNotes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
+      exampleSerial: 'BG9908XXXXX (pre-2008) or 1504A023527 (post-2008)',
+      exampleResult: 'B=factory, G=July, 99=1999 \u2192 July 1999 | 15=2015, 04=week 4 \u2192 2015 week 4',
       sources: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
-      method: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
-      notes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
+      method: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
+      notes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
       source: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
       yearMap: { 'YY (e.g. 06 = 2006)': 'Prefix with 19XX or 20XX based on context', 'YYYY (e.g. 2018)': 'Read directly (e.g. 2018)' },
       monthMap: { '10': 'October', '11': 'November', '12': 'December', 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'J': 'September', 'K': 'October', 'L': 'November', 'M': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
-      if (/^\d{4}/.test(serial) && serial.length >= 6) {
-        var year = serial.substring(0, 4);
-        var month = serial.substring(4, 6);
-        var m = this.monthMap[month];
-        return { year: year, month: m || 'Month ' + month, yearCode: year, monthCode: month };
-      } else {
+      var YEAR_NOW = new Date().getFullYear();
+      // Pre-2008 format: starts with a letter — [Factory][Month code][2-digit year][...]
+      if (/^[A-Za-z]/.test(serial)) {
+        if (serial.length < 4) return null;
         var monthChar = serial[1].toUpperCase();
         var yearDigits = serial.substring(2, 4);
-        var fullYear = parseInt(yearDigits) >= 84 ? '19' + yearDigits : '20' + yearDigits;
+        if (!/^\d{2}$/.test(yearDigits)) return null;
+        var yr = parseInt(yearDigits);
+        var fullYear = yr >= 84 ? '19' + yearDigits : '20' + yearDigits;
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
       }
+      // Post-2008 numeric Format A: YYYYMM... — full 4-digit year (2000–present), then 2-digit month.
+      if (/^\d{4}/.test(serial) && serial.length >= 6) {
+        var yr4 = parseInt(serial.substring(0, 4));
+        if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
+          var monthStr = serial.substring(4, 6);
+          var m = this.monthMap[monthStr];
+          return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
+        }
+      }
+      // Post-2008 numeric Format B: YYWW... — 2-digit year then 2-digit production week (01–53).
+      var yy = serial.substring(0, 2);
+      var ww = serial.substring(2, 4);
+      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
+        var yr2 = parseInt(yy);
+        var fullYear2 = 2000 + yr2;
+        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
+          var week = parseInt(ww);
+          if (week >= 1 && week <= 53) {
+            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
+          }
+        }
+      }
+      return null;
     }
     },
     'u_s_craftmaster': {
@@ -1461,34 +1553,57 @@ var decoderData = {
       groupId: '7B',
       products: 'Water Heater (tank)',
       serialEra: 'Pre-2008',
-      serialLengthNote: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
+      serialLengthNote: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
       decodeMethod: 'Characters 3-4 (pre-2008 era)',
       yearCodePosition: 'Characters 3-4 (pre-2008 era)',
       monthCodePosition: 'Character 2 (pre-2008 era)',
       outputType: 'Month + Year',
-      decodeNotes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
-      exampleSerial: 'BG9908XXXXX (pre-2008)',
-      exampleResult: 'G=July 99=1999 -> July 1999',
+      decodeNotes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
+      exampleSerial: 'BG9908XXXXX (pre-2008) or 1504A023527 (post-2008)',
+      exampleResult: 'B=factory, G=July, 99=1999 \u2192 July 1999 | 15=2015, 04=week 4 \u2192 2015 week 4',
       sources: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
-      method: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
-      notes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
+      method: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
+      notes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
       source: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
       yearMap: { 'YY (e.g. 06 = 2006)': 'Prefix with 19XX or 20XX based on context', 'YYYY (e.g. 2018)': 'Read directly (e.g. 2018)' },
       monthMap: { '10': 'October', '11': 'November', '12': 'December', 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'J': 'September', 'K': 'October', 'L': 'November', 'M': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
-      if (/^\d{4}/.test(serial) && serial.length >= 6) {
-        var year = serial.substring(0, 4);
-        var month = serial.substring(4, 6);
-        var m = this.monthMap[month];
-        return { year: year, month: m || 'Month ' + month, yearCode: year, monthCode: month };
-      } else {
+      var YEAR_NOW = new Date().getFullYear();
+      // Pre-2008 format: starts with a letter — [Factory][Month code][2-digit year][...]
+      if (/^[A-Za-z]/.test(serial)) {
+        if (serial.length < 4) return null;
         var monthChar = serial[1].toUpperCase();
         var yearDigits = serial.substring(2, 4);
-        var fullYear = parseInt(yearDigits) >= 84 ? '19' + yearDigits : '20' + yearDigits;
+        if (!/^\d{2}$/.test(yearDigits)) return null;
+        var yr = parseInt(yearDigits);
+        var fullYear = yr >= 84 ? '19' + yearDigits : '20' + yearDigits;
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
       }
+      // Post-2008 numeric Format A: YYYYMM... — full 4-digit year (2000–present), then 2-digit month.
+      if (/^\d{4}/.test(serial) && serial.length >= 6) {
+        var yr4 = parseInt(serial.substring(0, 4));
+        if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
+          var monthStr = serial.substring(4, 6);
+          var m = this.monthMap[monthStr];
+          return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
+        }
+      }
+      // Post-2008 numeric Format B: YYWW... — 2-digit year then 2-digit production week (01–53).
+      var yy = serial.substring(0, 2);
+      var ww = serial.substring(2, 4);
+      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
+        var yr2 = parseInt(yy);
+        var fullYear2 = 2000 + yr2;
+        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
+          var week = parseInt(ww);
+          if (week >= 1 && week <= 53) {
+            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
+          }
+        }
+      }
+      return null;
     }
     },
     'gsw': {
@@ -1497,34 +1612,57 @@ var decoderData = {
       groupId: '7B',
       products: 'Water Heater (tank)',
       serialEra: 'Pre-2008',
-      serialLengthNote: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
+      serialLengthNote: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
       decodeMethod: 'Characters 3-4 (pre-2008 era)',
       yearCodePosition: 'Characters 3-4 (pre-2008 era)',
       monthCodePosition: 'Character 2 (pre-2008 era)',
       outputType: 'Month + Year',
-      decodeNotes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
-      exampleSerial: 'BG9908XXXXX (pre-2008)',
-      exampleResult: 'G=July 99=1999 -> July 1999',
+      decodeNotes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
+      exampleSerial: 'BG9908XXXXX (pre-2008) or 1504A023527 (post-2008)',
+      exampleResult: 'B=factory, G=July, 99=1999 \u2192 July 1999 | 15=2015, 04=week 4 \u2192 2015 week 4',
       sources: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
-      method: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
-      notes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
+      method: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
+      notes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
       source: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
       yearMap: { 'YY (e.g. 06 = 2006)': 'Prefix with 19XX or 20XX based on context', 'YYYY (e.g. 2018)': 'Read directly (e.g. 2018)' },
       monthMap: { '10': 'October', '11': 'November', '12': 'December', 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'J': 'September', 'K': 'October', 'L': 'November', 'M': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
-      if (/^\d{4}/.test(serial) && serial.length >= 6) {
-        var year = serial.substring(0, 4);
-        var month = serial.substring(4, 6);
-        var m = this.monthMap[month];
-        return { year: year, month: m || 'Month ' + month, yearCode: year, monthCode: month };
-      } else {
+      var YEAR_NOW = new Date().getFullYear();
+      // Pre-2008 format: starts with a letter — [Factory][Month code][2-digit year][...]
+      if (/^[A-Za-z]/.test(serial)) {
+        if (serial.length < 4) return null;
         var monthChar = serial[1].toUpperCase();
         var yearDigits = serial.substring(2, 4);
-        var fullYear = parseInt(yearDigits) >= 84 ? '19' + yearDigits : '20' + yearDigits;
+        if (!/^\d{2}$/.test(yearDigits)) return null;
+        var yr = parseInt(yearDigits);
+        var fullYear = yr >= 84 ? '19' + yearDigits : '20' + yearDigits;
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
       }
+      // Post-2008 numeric Format A: YYYYMM... — full 4-digit year (2000–present), then 2-digit month.
+      if (/^\d{4}/.test(serial) && serial.length >= 6) {
+        var yr4 = parseInt(serial.substring(0, 4));
+        if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
+          var monthStr = serial.substring(4, 6);
+          var m = this.monthMap[monthStr];
+          return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
+        }
+      }
+      // Post-2008 numeric Format B: YYWW... — 2-digit year then 2-digit production week (01–53).
+      var yy = serial.substring(0, 2);
+      var ww = serial.substring(2, 4);
+      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
+        var yr2 = parseInt(yy);
+        var fullYear2 = 2000 + yr2;
+        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
+          var week = parseInt(ww);
+          if (week >= 1 && week <= 53) {
+            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
+          }
+        }
+      }
+      return null;
     }
     },
     'whirlpool_water_heaters': {
@@ -1533,34 +1671,57 @@ var decoderData = {
       groupId: '7B',
       products: 'Water Heater (tank)',
       serialEra: 'Pre-2008',
-      serialLengthNote: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
+      serialLengthNote: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
       decodeMethod: 'Characters 3-4 (pre-2008 era)',
       yearCodePosition: 'Characters 3-4 (pre-2008 era)',
       monthCodePosition: 'Character 2 (pre-2008 era)',
       outputType: 'Month + Year',
-      decodeNotes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
-      exampleSerial: 'BG9908XXXXX (pre-2008)',
-      exampleResult: 'G=July 99=1999 -> July 1999',
+      decodeNotes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
+      exampleSerial: 'BG9908XXXXX (pre-2008) or 1504A023527 (post-2008)',
+      exampleResult: 'B=factory, G=July, 99=1999 \u2192 July 1999 | 15=2015, 04=week 4 \u2192 2015 week 4',
       sources: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
-      method: 'Pre-2008: [Factory letter][Month letter][2-digit year][XXXXXX]. Post-2008: [YYYY][MM][XXXXXXX].',
-      notes: 'I is skipped in month codes. Post-2008 format: first 4 digits = full year (e.g. 2018); next 2 digits = month (01-12). American Water Heater pre-2008: first 2 digits = year next 2 = week. AO Smith acquired State Industries and American Water Heater in 2001.',
+      method: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Post-2008 format: [YY][WW][...] where YY = 2-digit year (e.g. 15 = 2015) and WW = production week (01\u201353).',
+      notes: 'I is skipped in month codes (pre-2008). Post-2008 serials: first 2 digits = year (20XX, e.g. 15 = 2015), next 2 digits = production week (01\u201353). If the first 4 digits form a valid 4-digit calendar year (e.g. 2018), they are read directly as year + month. AO Smith acquired State Industries and American Water Heater in 2001.',
       source: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
       yearMap: { 'YY (e.g. 06 = 2006)': 'Prefix with 19XX or 20XX based on context', 'YYYY (e.g. 2018)': 'Read directly (e.g. 2018)' },
       monthMap: { '10': 'October', '11': 'November', '12': 'December', 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'J': 'September', 'K': 'October', 'L': 'November', 'M': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
-      if (/^\d{4}/.test(serial) && serial.length >= 6) {
-        var year = serial.substring(0, 4);
-        var month = serial.substring(4, 6);
-        var m = this.monthMap[month];
-        return { year: year, month: m || 'Month ' + month, yearCode: year, monthCode: month };
-      } else {
+      var YEAR_NOW = new Date().getFullYear();
+      // Pre-2008 format: starts with a letter — [Factory][Month code][2-digit year][...]
+      if (/^[A-Za-z]/.test(serial)) {
+        if (serial.length < 4) return null;
         var monthChar = serial[1].toUpperCase();
         var yearDigits = serial.substring(2, 4);
-        var fullYear = parseInt(yearDigits) >= 84 ? '19' + yearDigits : '20' + yearDigits;
+        if (!/^\d{2}$/.test(yearDigits)) return null;
+        var yr = parseInt(yearDigits);
+        var fullYear = yr >= 84 ? '19' + yearDigits : '20' + yearDigits;
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
       }
+      // Post-2008 numeric Format A: YYYYMM... — full 4-digit year (2000–present), then 2-digit month.
+      if (/^\d{4}/.test(serial) && serial.length >= 6) {
+        var yr4 = parseInt(serial.substring(0, 4));
+        if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
+          var monthStr = serial.substring(4, 6);
+          var m = this.monthMap[monthStr];
+          return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
+        }
+      }
+      // Post-2008 numeric Format B: YYWW... — 2-digit year then 2-digit production week (01–53).
+      var yy = serial.substring(0, 2);
+      var ww = serial.substring(2, 4);
+      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
+        var yr2 = parseInt(yy);
+        var fullYear2 = 2000 + yr2;
+        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
+          var week = parseInt(ww);
+          if (week >= 1 && week <= 53) {
+            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
+          }
+        }
+      }
+      return null;
     }
     },
     'bradford_white': {
