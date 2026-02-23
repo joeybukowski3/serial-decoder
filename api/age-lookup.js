@@ -13,6 +13,97 @@ const ratelimit = new Ratelimit({
   analytics: false,
 });
 
+const HVAC_SERIAL_CONFIG = [
+  { brand: 'Goodman', aliases: ['goodman'], type: 'yyMM' },
+  { brand: 'Amana', aliases: ['amana'], type: 'yyMM' },
+  { brand: 'Carrier', aliases: ['carrier'], type: 'wwYY' },
+  { brand: 'Bryant', aliases: ['bryant'], type: 'wwYY' },
+  { brand: 'Payne', aliases: ['payne'], type: 'wwYY' },
+  { brand: 'Rheem', aliases: ['rheem'], type: 'letterWWYY' },
+  { brand: 'Ruud', aliases: ['ruud'], type: 'letterWWYY' },
+  { brand: 'Trane', aliases: ['trane'], type: 'wwYY' },
+  { brand: 'Lennox', aliases: ['lennox'], type: 'wwYY' },
+  { brand: 'York', aliases: ['york'], type: 'wwYY' },
+];
+
+const HVAC_MONTHS = {
+  '01': 'January', '02': 'February', '03': 'March', '04': 'April',
+  '05': 'May', '06': 'June', '07': 'July', '08': 'August',
+  '09': 'September', '10': 'October', '11': 'November', '12': 'December',
+};
+
+function findHvacBrand(normalizedQuery) {
+  for (const cfg of HVAC_SERIAL_CONFIG) {
+    for (const alias of cfg.aliases) {
+      const re = new RegExp(`\\b${alias}\\b`, 'i');
+      if (re.test(normalizedQuery)) return cfg;
+    }
+  }
+  return null;
+}
+
+function resolveFullYear(yy) {
+  const yearNum = parseInt(yy, 10);
+  const currentTwo = new Date().getFullYear() % 100;
+  return (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+}
+
+function decodeHvacSerial(query, normalizedQuery) {
+  const cfg = findHvacBrand(normalizedQuery);
+  if (!cfg) return null;
+
+  if (cfg.type === 'yyMM') {
+    const match = query.match(/(?:^|\D)(\d{2})(\d{2})/);
+    if (!match) return null;
+    const yy = match[1];
+    const mm = match[2];
+    if (!/^\d{2}$/.test(yy) || !/^\d{2}$/.test(mm)) return null;
+    const monthName = HVAC_MONTHS[mm];
+    if (!monthName) return null;
+    const fullYear = resolveFullYear(yy);
+    return {
+      brand: cfg.brand,
+      estimatedYear: String(fullYear),
+      notes: `Month: ${monthName} (code ${mm}). Source: Manufacturer Technical Specifications.`,
+      serialRule: `${cfg.brand}: first two digits are year, next two digits are month (YYMM). Source: Manufacturer Technical Specifications.`,
+    };
+  }
+
+  if (cfg.type === 'wwYY') {
+    const match = query.match(/(?:^|\D)(\d{2})(\d{2})/);
+    if (!match) return null;
+    const ww = match[1];
+    const yy = match[2];
+    const week = parseInt(ww, 10);
+    if (week < 1 || week > 53) return null;
+    const fullYear = resolveFullYear(yy);
+    return {
+      brand: cfg.brand,
+      estimatedYear: String(fullYear),
+      notes: `Week: ${ww} (production week). Source: Manufacturer Technical Specifications.`,
+      serialRule: `${cfg.brand}: first two digits are week, next two digits are year (WWYY). Source: Manufacturer Technical Specifications.`,
+    };
+  }
+
+  if (cfg.type === 'letterWWYY') {
+    const match = query.match(/[A-Za-z](\d{2})(\d{2})/);
+    if (!match) return null;
+    const ww = match[1];
+    const yy = match[2];
+    const week = parseInt(ww, 10);
+    if (week < 1 || week > 53) return null;
+    const fullYear = resolveFullYear(yy);
+    return {
+      brand: cfg.brand,
+      estimatedYear: String(fullYear),
+      notes: `Week: ${ww} (from 4 digits after letter). Source: Manufacturer Technical Specifications.`,
+      serialRule: `${cfg.brand}: 4 digits following a letter represent week and year (WWYY). Source: Manufacturer Technical Specifications.`,
+    };
+  }
+
+  return null;
+}
+
 function getClientIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded) return forwarded.split(',')[0].trim();
@@ -63,6 +154,29 @@ export default async function handler(req, res) {
   }
 
   // ── API key ───────────────────────────────────────────────────────────────
+  // HVAC Serial Quick Decode — bypass AI when pattern matches
+  const hvacQuick = decodeHvacSerial(sanitizedQuery, normalizedQuery);
+  if (hvacQuick) {
+    const result = {
+      brand: hvacQuick.brand,
+      model: null,
+      estimatedYear: hvacQuick.estimatedYear,
+      yearRange: null,
+      specificityLevel: 'specific',
+      inventionSummary: null,
+      refinementSuggestion: 'For the most accurate results, enter the full serial number and model number from the rating plate.',
+      notes: hvacQuick.notes,
+      serialLocation: null,
+      serialRule: hvacQuick.serialRule,
+      exampleModelNumber: null,
+      suggestedModelNumbers: []
+    };
+    try {
+      await redis.set(queryCacheKey, result, { ex: 14 * 24 * 60 * 60 });
+    } catch (_) {}
+    return res.status(200).json(result);
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'Service unavailable' });

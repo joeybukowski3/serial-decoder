@@ -45,25 +45,24 @@ var decoderData = {
       groupId: '1A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
-      serialLengthNote: '9-digit: year at char 2. 10-digit: year at char 3. Week follows year code (next 2 digits).',
-      decodeMethod: 'Char 2 (9-digit) or Char 3 (10-digit)',
-      yearCodePosition: 'Char 2 (9-digit) or Char 3 (10-digit)',
+      serialLengthNote: 'Year at char 3. Week at char 4.',
+      decodeMethod: 'Char 3 (year code) + Char 4 (week)',
+      yearCodePosition: 'Char 3',
       monthCodePosition: 'N/A',
       outputType: 'Year + Week of Year',
       decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022 Week 25 (~June)',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
-      method: '9-digit: year at char 2. 10-digit: year at char 3. Week follows year code (next 2 digits).',
+      method: 'Year at char 3. Week at char 4.',
       notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
-      var yearChar, week;
-      if (serial.length <= 9) { yearChar = serial[1]; week = serial.substring(2,4); }
-      else { yearChar = serial[2]; week = serial.substring(3,5); }
+      var yearChar = serial[2];
+      var week = serial[3];
       var y = this.yearMap[yearChar.toUpperCase()];
       return { year: y || 'Unknown code: ' + yearChar, month: 'Week ' + week, yearCode: yearChar.toUpperCase(), weekDigits: week };
     }
@@ -74,25 +73,24 @@ var decoderData = {
       groupId: '1A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
-      serialLengthNote: '9-digit: year at char 2. 10-digit: year at char 3. Week follows year code (next 2 digits).',
-      decodeMethod: 'Char 2 (9-digit) or Char 3 (10-digit)',
-      yearCodePosition: 'Char 2 (9-digit) or Char 3 (10-digit)',
+      serialLengthNote: 'Year at char 3. Week at char 4.',
+      decodeMethod: 'Char 3 (year code) + Char 4 (week)',
+      yearCodePosition: 'Char 3',
       monthCodePosition: 'N/A',
       outputType: 'Year + Week of Year',
       decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022 Week 25 (~June)',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
-      method: '9-digit: year at char 2. 10-digit: year at char 3. Week follows year code (next 2 digits).',
+      method: 'Year at char 3. Week at char 4.',
       notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
-      var yearChar, week;
-      if (serial.length <= 9) { yearChar = serial[1]; week = serial.substring(2,4); }
-      else { yearChar = serial[2]; week = serial.substring(3,5); }
+      var yearChar = serial[2];
+      var week = serial[3];
       var y = this.yearMap[yearChar.toUpperCase()];
       return { year: y || 'Unknown code: ' + yearChar, month: 'Week ' + week, yearCode: yearChar.toUpperCase(), weekDigits: week };
     }
@@ -103,25 +101,24 @@ var decoderData = {
       groupId: '1A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
-      serialLengthNote: '9-digit: year at char 2. 10-digit: year at char 3. Week follows year code (next 2 digits).',
-      decodeMethod: 'Char 2 (9-digit) or Char 3 (10-digit)',
-      yearCodePosition: 'Char 2 (9-digit) or Char 3 (10-digit)',
+      serialLengthNote: 'Year at char 3. Week at char 4.',
+      decodeMethod: 'Char 3 (year code) + Char 4 (week)',
+      yearCodePosition: 'Char 3',
       monthCodePosition: 'N/A',
       outputType: 'Year + Week of Year',
       decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022 Week 25 (~June)',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
-      method: '9-digit: year at char 2. 10-digit: year at char 3. Week follows year code (next 2 digits).',
+      method: 'Year at char 3. Week at char 4.',
       notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
-      var yearChar, week;
-      if (serial.length <= 9) { yearChar = serial[1]; week = serial.substring(2,4); }
-      else { yearChar = serial[2]; week = serial.substring(3,5); }
+      var yearChar = serial[2];
+      var week = serial[3];
       var y = this.yearMap[yearChar.toUpperCase()];
       return { year: y || 'Unknown code: ' + yearChar, month: 'Week ' + week, yearCode: yearChar.toUpperCase(), weekDigits: week };
     }
@@ -821,27 +818,24 @@ var decoderData = {
       groupId: '4A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
       serialEra: '2001-Present',
-      serialLengthNote: '15-char serial: year at char 8 month at char 9. 11-char serial: year at char 4 month at char 5.',
-      decodeMethod: 'Char 8 (15-digit serial) or Char 4 (11-digit serial)',
-      yearCodePosition: 'Char 8 (15-digit serial) or Char 4 (11-digit serial)',
-      monthCodePosition: 'Char 9 (15-digit) or Char 5 (11-digit)',
+      serialLengthNote: 'Year at char 8. Month at char 9.',
+      decodeMethod: 'Char 8 (year code) + Char 9 (month)',
+      yearCodePosition: 'Char 8',
+      monthCodePosition: 'Char 9',
       outputType: 'Month + Year',
       decodeNotes: '20-year repeating cycle for some codes (R T W X Y A). Identify serial length before decoding.',
       exampleSerial: '07R5CAZHB001234 (15-char)',
       exampleResult: 'Char 8=A=2006/2026 Char 9=Z -> invalid; use actual serial',
       sources: 'homespy.io; electrical-forensics.com; lumayeconsulting.com',
-      method: '15-char serial: year at char 8 month at char 9. 11-char serial: year at char 4 month at char 5.',
+      method: 'Year at char 8. Month at char 9.',
       notes: '20-year repeating cycle for some codes (R T W X Y A). Identify serial length before decoding.',
       source: 'homespy.io; electrical-forensics.com; lumayeconsulting.com',
       yearMap: { 'R': '2001/2021', 'T': '2002/2022', 'W': '2003/2023', 'X': '2004/2024', 'Y': '2005/2025', 'A': '2006/2026', 'P': '2007', 'Q': '2008', 'S': '2009', 'Z': '2010', 'B': '2011', 'C': '2012', 'D': '2013', 'F': '2014', 'G': '2015', 'H': '2016', 'J': '2017', 'K': '2018', 'M': '2019', 'N': '2020' },
       monthMap: { '1': 'January', '2': 'February', '3': 'March', '4': 'April', '5': 'May', '6': 'June', '7': 'July', '8': 'August', '9': 'September', 'A': 'October', 'B': 'November', 'C': 'December' },
       decode: function(serial) {
-      if (!serial || serial.length < 5) return null;
-      var yearPos, monthPos;
-      if (serial.length >= 15) { yearPos = 7; monthPos = 8; }
-      else { yearPos = 3; monthPos = 4; }
-      var yearChar = serial[yearPos].toUpperCase();
-      var monthChar = serial[monthPos].toUpperCase();
+      if (!serial || serial.length < 8) return null;
+      var yearChar = serial[7].toUpperCase();
+      var monthChar = serial.length > 8 ? serial[8].toUpperCase() : '';
       var y = this.yearMap[yearChar];
       var m = this.monthMap[monthChar];
       return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
@@ -1751,6 +1745,379 @@ var decoderData = {
       var y = this.yearMap[yearChar];
       var m = this.monthMap[monthChar];
       return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    }
+    }
+  },
+  hvac: {
+    brands: [
+      { id: 'goodman', name: 'Goodman' },
+      { id: 'amana', name: 'Amana' },
+      { id: 'carrier', name: 'Carrier' },
+      { id: 'bryant', name: 'Bryant' },
+      { id: 'payne', name: 'Payne' },
+      { id: 'rheem', name: 'Rheem' },
+      { id: 'ruud', name: 'Ruud' },
+      { id: 'trane', name: 'Trane' },
+      { id: 'american_standard', name: 'American Standard' },
+      { id: 'lennox', name: 'Lennox' },
+      { id: 'york', name: 'York' }
+    ],
+    decoders: {
+    'goodman': {
+      name: 'Goodman',
+      parentManufacturer: 'Goodman Manufacturing Company',
+      groupId: 'HVAC-1',
+      products: 'Air Conditioner; Heat Pump; Furnace; Air Handler',
+      serialEra: 'N/A',
+      serialLengthNote: 'Serials typically start with 4 digits. Format: YYMM....',
+      decodeMethod: 'Digits 1-2 (year), digits 3-4 (month). Source: Manufacturer Technical Specifications.',
+      yearCodePosition: 'Digits 1-2',
+      monthCodePosition: 'Digits 3-4',
+      outputType: 'Month + Year',
+      decodeNotes: 'First two digits represent the year and the next two digits represent the month.',
+      exampleSerial: '1506XXXX',
+      exampleResult: '15=2015 and 06=June -> June 2015',
+      sources: 'Manufacturer Technical Specifications',
+      method: 'First two digits represent the year and the next two digits represent the month. Source: Manufacturer Technical Specifications.',
+      notes: 'Use the first four digits of the serial number to determine the manufacture date.',
+      source: 'Manufacturer Technical Specifications',
+      yearMap: {  },
+      monthMap: { '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September', '10': 'October', '11': 'November', '12': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 4) return null;
+      var yy = serial.substring(0, 2);
+      var mm = serial.substring(2, 4);
+      if (!/^\d{2}$/.test(yy) || !/^\d{2}$/.test(mm)) return null;
+      var yearNum = parseInt(yy, 10);
+      var currentTwo = new Date().getFullYear() % 100;
+      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      var m = this.monthMap[mm];
+      return { year: String(fullYear), month: m || 'Month ' + mm, yearCode: yy, monthCode: mm };
+    }
+    },
+    'amana': {
+      name: 'Amana',
+      parentManufacturer: 'Goodman Manufacturing Company',
+      groupId: 'HVAC-1',
+      products: 'Air Conditioner; Heat Pump; Furnace; Air Handler',
+      serialEra: 'N/A',
+      serialLengthNote: 'Serials typically start with 4 digits. Format: YYMM....',
+      decodeMethod: 'Digits 1-2 (year), digits 3-4 (month). Source: Manufacturer Technical Specifications.',
+      yearCodePosition: 'Digits 1-2',
+      monthCodePosition: 'Digits 3-4',
+      outputType: 'Month + Year',
+      decodeNotes: 'First two digits represent the year and the next two digits represent the month.',
+      exampleSerial: '1506XXXX',
+      exampleResult: '15=2015 and 06=June -> June 2015',
+      sources: 'Manufacturer Technical Specifications',
+      method: 'First two digits represent the year and the next two digits represent the month. Source: Manufacturer Technical Specifications.',
+      notes: 'Use the first four digits of the serial number to determine the manufacture date.',
+      source: 'Manufacturer Technical Specifications',
+      yearMap: {  },
+      monthMap: { '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September', '10': 'October', '11': 'November', '12': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 4) return null;
+      var yy = serial.substring(0, 2);
+      var mm = serial.substring(2, 4);
+      if (!/^\d{2}$/.test(yy) || !/^\d{2}$/.test(mm)) return null;
+      var yearNum = parseInt(yy, 10);
+      var currentTwo = new Date().getFullYear() % 100;
+      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      var m = this.monthMap[mm];
+      return { year: String(fullYear), month: m || 'Month ' + mm, yearCode: yy, monthCode: mm };
+    }
+    },
+    'carrier': {
+      name: 'Carrier',
+      parentManufacturer: 'Carrier Global Corporation',
+      groupId: 'HVAC-2',
+      products: 'Air Conditioner; Heat Pump; Furnace; Air Handler',
+      serialEra: 'N/A',
+      serialLengthNote: 'Use digits 3-4 for year.',
+      decodeMethod: 'Digits 3-4 (year). Source: Manufacturer Technical Specifications.',
+      yearCodePosition: 'Digits 3-4',
+      monthCodePosition: 'N/A',
+      outputType: 'Year',
+      decodeNotes: 'Digits 3-4 represent the year.',
+      exampleSerial: 'XX19XXXX',
+      exampleResult: '19=2019',
+      sources: 'Manufacturer Technical Specifications',
+      method: 'Digits 3-4 represent the year. Source: Manufacturer Technical Specifications.',
+      notes: 'Use digits 3-4 of the serial number to determine the year.',
+      source: 'Manufacturer Technical Specifications',
+      yearMap: {  },
+      monthMap: {  },
+      decode: function(serial) {
+      if (!serial || serial.length < 4) return null;
+      var yy = serial.substring(2, 4);
+      if (!/^\d{2}$/.test(yy)) return null;
+      var yearNum = parseInt(yy, 10);
+      var currentTwo = new Date().getFullYear() % 100;
+      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      return { year: String(fullYear), month: 'Year only', yearCode: yy };
+    }
+    },
+    'bryant': {
+      name: 'Bryant',
+      parentManufacturer: 'Carrier Global Corporation',
+      groupId: 'HVAC-2',
+      products: 'Air Conditioner; Heat Pump; Furnace; Air Handler',
+      serialEra: 'N/A',
+      serialLengthNote: 'Serials start with 4 digits. Format: WWYY....',
+      decodeMethod: 'Digits 1-2 (week), digits 3-4 (year). Source: Manufacturer Technical Specifications.',
+      yearCodePosition: 'Digits 3-4',
+      monthCodePosition: 'N/A',
+      outputType: 'Week + Year',
+      decodeNotes: 'First two digits represent production week; next two digits represent the year.',
+      exampleSerial: '4519XXXX',
+      exampleResult: '45=Week 45 and 19=2019 -> Week 45, 2019',
+      sources: 'Manufacturer Technical Specifications',
+      method: 'First two digits represent the production week; next two digits represent the year. Source: Manufacturer Technical Specifications.',
+      notes: 'Use the first four digits of the serial number to determine production week and year.',
+      source: 'Manufacturer Technical Specifications',
+      yearMap: {  },
+      monthMap: {  },
+      decode: function(serial) {
+      if (!serial || serial.length < 4) return null;
+      var ww = serial.substring(0, 2);
+      var yy = serial.substring(2, 4);
+      if (!/^\d{2}$/.test(ww) || !/^\d{2}$/.test(yy)) return null;
+      var week = parseInt(ww, 10);
+      if (week < 1 || week > 53) return null;
+      var yearNum = parseInt(yy, 10);
+      var currentTwo = new Date().getFullYear() % 100;
+      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      return { year: String(fullYear), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
+    }
+    },
+    'payne': {
+      name: 'Payne',
+      parentManufacturer: 'Carrier Global Corporation',
+      groupId: 'HVAC-2',
+      products: 'Air Conditioner; Heat Pump; Furnace; Air Handler',
+      serialEra: 'N/A',
+      serialLengthNote: 'Serials start with 4 digits. Format: WWYY....',
+      decodeMethod: 'Digits 1-2 (week), digits 3-4 (year). Source: Manufacturer Technical Specifications.',
+      yearCodePosition: 'Digits 3-4',
+      monthCodePosition: 'N/A',
+      outputType: 'Week + Year',
+      decodeNotes: 'First two digits represent production week; next two digits represent the year.',
+      exampleSerial: '4519XXXX',
+      exampleResult: '45=Week 45 and 19=2019 -> Week 45, 2019',
+      sources: 'Manufacturer Technical Specifications',
+      method: 'First two digits represent the production week; next two digits represent the year. Source: Manufacturer Technical Specifications.',
+      notes: 'Use the first four digits of the serial number to determine production week and year.',
+      source: 'Manufacturer Technical Specifications',
+      yearMap: {  },
+      monthMap: {  },
+      decode: function(serial) {
+      if (!serial || serial.length < 4) return null;
+      var ww = serial.substring(0, 2);
+      var yy = serial.substring(2, 4);
+      if (!/^\d{2}$/.test(ww) || !/^\d{2}$/.test(yy)) return null;
+      var week = parseInt(ww, 10);
+      if (week < 1 || week > 53) return null;
+      var yearNum = parseInt(yy, 10);
+      var currentTwo = new Date().getFullYear() % 100;
+      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      return { year: String(fullYear), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
+    }
+    },
+    'rheem': {
+      name: 'Rheem',
+      parentManufacturer: 'Rheem Manufacturing',
+      groupId: 'HVAC-3',
+      products: 'Air Conditioner; Heat Pump; Furnace; Air Handler',
+      serialEra: 'N/A',
+      serialLengthNote: 'Contains a letter followed by 4 digits. Format: XWWYY....',
+      decodeMethod: '4 digits following a letter (week + year). Source: Manufacturer Technical Specifications.',
+      yearCodePosition: 'Digits 3-4 after letter',
+      monthCodePosition: 'N/A',
+      outputType: 'Week + Year',
+      decodeNotes: 'Example: x4502x -> week 45 of 2002.',
+      exampleSerial: 'X4502XXXX',
+      exampleResult: '45=Week 45 and 02=2002 -> Week 45, 2002',
+      sources: 'Manufacturer Technical Specifications',
+      method: 'Four digits following a letter represent week and year (WWYY). Source: Manufacturer Technical Specifications.',
+      notes: 'Find the first letter followed by four digits in the serial number.',
+      source: 'Manufacturer Technical Specifications',
+      yearMap: {  },
+      monthMap: {  },
+      decode: function(serial) {
+      if (!serial || serial.length < 5) return null;
+      var match = serial.match(/[A-Za-z](\d{4})/);
+      if (!match) return null;
+      var digits = match[1];
+      var ww = digits.substring(0, 2);
+      var yy = digits.substring(2, 4);
+      var week = parseInt(ww, 10);
+      if (week < 1 || week > 53) return null;
+      var yearNum = parseInt(yy, 10);
+      var currentTwo = new Date().getFullYear() % 100;
+      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      return { year: String(fullYear), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
+    }
+    },
+    'ruud': {
+      name: 'Ruud',
+      parentManufacturer: 'Rheem Manufacturing',
+      groupId: 'HVAC-3',
+      products: 'Air Conditioner; Heat Pump; Furnace; Air Handler',
+      serialEra: 'N/A',
+      serialLengthNote: 'Contains a letter followed by 4 digits. Format: XWWYY....',
+      decodeMethod: '4 digits following a letter (week + year). Source: Manufacturer Technical Specifications.',
+      yearCodePosition: 'Digits 3-4 after letter',
+      monthCodePosition: 'N/A',
+      outputType: 'Week + Year',
+      decodeNotes: 'Example: x4502x -> week 45 of 2002.',
+      exampleSerial: 'X4502XXXX',
+      exampleResult: '45=Week 45 and 02=2002 -> Week 45, 2002',
+      sources: 'Manufacturer Technical Specifications',
+      method: 'Four digits following a letter represent week and year (WWYY). Source: Manufacturer Technical Specifications.',
+      notes: 'Find the first letter followed by four digits in the serial number.',
+      source: 'Manufacturer Technical Specifications',
+      yearMap: {  },
+      monthMap: {  },
+      decode: function(serial) {
+      if (!serial || serial.length < 5) return null;
+      var match = serial.match(/[A-Za-z](\d{4})/);
+      if (!match) return null;
+      var digits = match[1];
+      var ww = digits.substring(0, 2);
+      var yy = digits.substring(2, 4);
+      var week = parseInt(ww, 10);
+      if (week < 1 || week > 53) return null;
+      var yearNum = parseInt(yy, 10);
+      var currentTwo = new Date().getFullYear() % 100;
+      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      return { year: String(fullYear), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
+    }
+    },
+    'trane': {
+      name: 'Trane',
+      parentManufacturer: 'Trane Technologies',
+      groupId: 'HVAC-4',
+      products: 'Air Conditioner; Heat Pump; Furnace; Air Handler',
+      serialEra: 'N/A',
+      serialLengthNote: 'Use digits 3-4 for year.',
+      decodeMethod: 'Digits 3-4 (year). Source: Manufacturer Technical Specifications.',
+      yearCodePosition: 'Digits 3-4',
+      monthCodePosition: 'N/A',
+      outputType: 'Year',
+      decodeNotes: 'Digits 3-4 represent the year.',
+      exampleSerial: 'XX19XXXX',
+      exampleResult: '19=2019',
+      sources: 'Manufacturer Technical Specifications',
+      method: 'Digits 3-4 represent the year. Source: Manufacturer Technical Specifications.',
+      notes: 'Use digits 3-4 of the serial number to determine the year.',
+      source: 'Manufacturer Technical Specifications',
+      yearMap: {  },
+      monthMap: {  },
+      decode: function(serial) {
+      if (!serial || serial.length < 4) return null;
+      var yy = serial.substring(2, 4);
+      if (!/^\d{2}$/.test(yy)) return null;
+      var yearNum = parseInt(yy, 10);
+      var currentTwo = new Date().getFullYear() % 100;
+      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      return { year: String(fullYear), month: 'Year only', yearCode: yy };
+    }
+    },
+    'american_standard': {
+      name: 'American Standard',
+      parentManufacturer: 'Trane Technologies',
+      groupId: 'HVAC-4',
+      products: 'Air Conditioner; Heat Pump; Furnace; Air Handler',
+      serialEra: 'N/A',
+      serialLengthNote: 'Use digits 3-4 for year.',
+      decodeMethod: 'Digits 3-4 (year). Source: Manufacturer Technical Specifications.',
+      yearCodePosition: 'Digits 3-4',
+      monthCodePosition: 'N/A',
+      outputType: 'Year',
+      decodeNotes: 'Digits 3-4 represent the year.',
+      exampleSerial: 'XX19XXXX',
+      exampleResult: '19=2019',
+      sources: 'Manufacturer Technical Specifications',
+      method: 'Digits 3-4 represent the year. Source: Manufacturer Technical Specifications.',
+      notes: 'Use digits 3-4 of the serial number to determine the year.',
+      source: 'Manufacturer Technical Specifications',
+      yearMap: {  },
+      monthMap: {  },
+      decode: function(serial) {
+      if (!serial || serial.length < 4) return null;
+      var yy = serial.substring(2, 4);
+      if (!/^\d{2}$/.test(yy)) return null;
+      var yearNum = parseInt(yy, 10);
+      var currentTwo = new Date().getFullYear() % 100;
+      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      return { year: String(fullYear), month: 'Year only', yearCode: yy };
+    }
+    },
+    'lennox': {
+      name: 'Lennox',
+      parentManufacturer: 'Lennox International Inc.',
+      groupId: 'HVAC-4',
+      products: 'Air Conditioner; Heat Pump; Furnace; Air Handler',
+      serialEra: 'N/A',
+      serialLengthNote: 'Serials start with 4 digits. Format: WWYY....',
+      decodeMethod: 'Digits 1-2 (week), digits 3-4 (year). Source: Manufacturer Technical Specifications.',
+      yearCodePosition: 'Digits 3-4',
+      monthCodePosition: 'N/A',
+      outputType: 'Week + Year',
+      decodeNotes: 'First two digits represent production week; next two digits represent the year.',
+      exampleSerial: '4519XXXX',
+      exampleResult: '45=Week 45 and 19=2019 -> Week 45, 2019',
+      sources: 'Manufacturer Technical Specifications',
+      method: 'First two digits represent the production week; next two digits represent the year. Source: Manufacturer Technical Specifications.',
+      notes: 'Use the first four digits of the serial number to determine production week and year.',
+      source: 'Manufacturer Technical Specifications',
+      yearMap: {  },
+      monthMap: {  },
+      decode: function(serial) {
+      if (!serial || serial.length < 4) return null;
+      var ww = serial.substring(0, 2);
+      var yy = serial.substring(2, 4);
+      if (!/^\d{2}$/.test(ww) || !/^\d{2}$/.test(yy)) return null;
+      var week = parseInt(ww, 10);
+      if (week < 1 || week > 53) return null;
+      var yearNum = parseInt(yy, 10);
+      var currentTwo = new Date().getFullYear() % 100;
+      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      return { year: String(fullYear), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
+    }
+    },
+    'york': {
+      name: 'York',
+      parentManufacturer: 'Johnson Controls',
+      groupId: 'HVAC-4',
+      products: 'Air Conditioner; Heat Pump; Furnace; Air Handler',
+      serialEra: 'N/A',
+      serialLengthNote: 'Serials start with 4 digits. Format: WWYY....',
+      decodeMethod: 'Digits 1-2 (week), digits 3-4 (year). Source: Manufacturer Technical Specifications.',
+      yearCodePosition: 'Digits 3-4',
+      monthCodePosition: 'N/A',
+      outputType: 'Week + Year',
+      decodeNotes: 'First two digits represent production week; next two digits represent the year.',
+      exampleSerial: '4519XXXX',
+      exampleResult: '45=Week 45 and 19=2019 -> Week 45, 2019',
+      sources: 'Manufacturer Technical Specifications',
+      method: 'First two digits represent the production week; next two digits represent the year. Source: Manufacturer Technical Specifications.',
+      notes: 'Use the first four digits of the serial number to determine production week and year.',
+      source: 'Manufacturer Technical Specifications',
+      yearMap: {  },
+      monthMap: {  },
+      decode: function(serial) {
+      if (!serial || serial.length < 4) return null;
+      var ww = serial.substring(0, 2);
+      var yy = serial.substring(2, 4);
+      if (!/^\d{2}$/.test(ww) || !/^\d{2}$/.test(yy)) return null;
+      var week = parseInt(ww, 10);
+      if (week < 1 || week > 53) return null;
+      var yearNum = parseInt(yy, 10);
+      var currentTwo = new Date().getFullYear() % 100;
+      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      return { year: String(fullYear), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
     }
     }
     }

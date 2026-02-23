@@ -31,6 +31,7 @@ var CYCLING_BRANDS = {
     'vizio':         { label: 'Vizio',                    single: 'vizio',         type: 'advisory' },
     'panasonic':     { label: 'Panasonic',                single: 'panasonic',     type: 'advisory' },
   },
+  hvac: {},
 };
 
 var ERA_ID_TO_BASE = {};
@@ -94,6 +95,15 @@ var BRAND_LOGOS = {
   'sony':          'sony.com',
   'vizio':         'vizio.com',
   'panasonic':     'panasonic.com',
+  'goodman':       'goodmanmfg.com',
+  'carrier':       'carrier.com',
+  'bryant':        'bryant.com',
+  'payne':         'payne.com',
+  'amana':         'amana-hac.com',
+  'trane':         'trane.com',
+  'lennox':        'lennox.com',
+  'york':          'york.com',
+  'american_standard': 'americanstandardair.com',
 };
 
 // ===== STATE =====
@@ -101,48 +111,128 @@ var currentCategory = 'appliances';
 var currentFeedbackContext = {};
 var CURRENT_YEAR = new Date().getFullYear();
 
-// ===== INIT =====
-document.addEventListener('DOMContentLoaded', function() {
-  populateBrands('appliances');
-
-  document.getElementById('brand').addEventListener('change', function() {
-    onBrandChange();
-    updateDecodeBtn();
-  });
-  document.getElementById('serial').addEventListener('input', updateDecodeBtn);
-  document.getElementById('serial').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') decodeSerial();
-  });
-  document.getElementById('eraSelect').addEventListener('change', updateDecodeBtn);
-  document.getElementById('altQuery').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') estimateAge();
-  });
-  document.getElementById('altQuery').addEventListener('focus', showAltDisclaimer);
-  document.getElementById('altQuery').addEventListener('input', showAltDisclaimer);
-
-  // URL parameter: pre-select brand/category from brand landing pages
-  // e.g. index.html?brand=ge&cat=appliances
+// ===== BRAND CONTEXT (brand pages) =====
+function loadBrandContext() {
   try {
-    var params = new URLSearchParams(window.location.search);
-    var catParam   = params.get('cat');
-    var brandParam = params.get('brand');
-    if (catParam) {
-      var tabBtn = document.querySelector('.cat-tab[data-cat="' + catParam + '"]');
-      if (tabBtn) selectCategory(catParam, tabBtn);
-    }
-    if (brandParam) {
-      var sel = document.getElementById('brand');
-      for (var i = 0; i < sel.options.length; i++) {
-        if (sel.options[i].value === brandParam) {
-          sel.value = brandParam;
-          onBrandChange();
-          updateDecodeBtn();
-          setTimeout(function() { document.getElementById('serial').focus(); }, 150);
-          break;
-        }
+    var path = (window.location.pathname || '').split('/').pop() || '';
+    if (!/\.html$/.test(path)) return;
+    var slug = path.replace('.html', '');
+    var BRAND_PAGE_MAP = {
+      'goodman': { name: 'Goodman', category: 'hvac', brandId: 'goodman' },
+      'carrier': { name: 'Carrier', category: 'hvac', brandId: 'carrier' },
+      'rheem': { name: 'Rheem', category: 'hvac', brandId: 'rheem' },
+      'trane': { name: 'Trane', category: 'hvac', brandId: 'trane' },
+      'ge': { name: 'GE', category: 'appliances', brandId: 'ge' },
+      'samsung': { name: 'Samsung', category: 'appliances', brandId: 'samsung' },
+      'lg': { name: 'LG', category: 'appliances', brandId: 'lg' },
+      'bosch': { name: 'Bosch', category: 'appliances', brandId: 'bosch' },
+      'maytag': { name: 'Maytag', category: 'appliances', brandId: 'maytag' },
+      'frigidaire': { name: 'Frigidaire', category: 'appliances', brandId: 'frigidaire' },
+      'kenmore': { name: 'Kenmore', category: 'appliances', brandId: 'kenmore' },
+      'whirlpool': { name: 'Whirlpool', category: 'appliances', brandId: 'whirlpool' },
+      'apple': { name: 'Apple', category: 'electronics', brandId: 'apple' },
+      'hp': { name: 'HP', category: 'electronics', brandId: 'hp' },
+      'asus': { name: 'ASUS', category: 'electronics', brandId: 'asus' },
+      'google-pixel': { name: 'Google Pixel', category: 'electronics', brandId: 'google_pixel' },
+      'sony': { name: 'Sony', category: 'electronics', brandId: 'sony' },
+      'vizio': { name: 'Vizio', category: 'electronics', brandId: 'vizio' },
+      'panasonic': { name: 'Panasonic', category: 'electronics', brandId: 'panasonic' },
+    };
+    var ctx = BRAND_PAGE_MAP[slug];
+    if (!ctx) return;
+
+    var brandSelect = document.getElementById('brand');
+    if (!brandSelect) return;
+
+    if (ctx.category) {
+      var tabBtn = document.querySelector('.cat-tab[data-cat="' + ctx.category + '"]');
+      if (tabBtn && typeof selectCategory === 'function') {
+        selectCategory(ctx.category, tabBtn);
+      } else if (typeof populateBrands === 'function') {
+        currentCategory = ctx.category;
+        populateBrands(ctx.category);
       }
     }
-  } catch (e) {}
+
+    for (var i = 0; i < brandSelect.options.length; i++) {
+      if (brandSelect.options[i].value === ctx.brandId) {
+        brandSelect.value = ctx.brandId;
+        if (typeof onBrandChange === 'function') onBrandChange();
+        if (typeof updateDecodeBtn === 'function') updateDecodeBtn();
+        break;
+      }
+    }
+
+    // Lock brand + category on brand pages
+    brandSelect.disabled = true;
+    brandSelect.classList.add('brand-locked');
+    var tabs = document.querySelectorAll('.cat-tab');
+    tabs.forEach(function(t) {
+      t.disabled = true;
+      t.classList.add('cat-tab-locked');
+    });
+
+    var serialInput = document.getElementById('serial');
+    if (serialInput && serialInput.focus) {
+      setTimeout(function() { serialInput.focus(); }, 120);
+    }
+  } catch (_) {}
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', function() {
+  var brandSelect = document.getElementById('brand');
+  var serialInput = document.getElementById('serial');
+  var eraSelect   = document.getElementById('eraSelect');
+  var altQuery    = document.getElementById('altQuery');
+
+  if (brandSelect && serialInput) {
+    populateBrands('appliances');
+
+    brandSelect.addEventListener('change', function() {
+      onBrandChange();
+      updateDecodeBtn();
+    });
+    serialInput.addEventListener('input', updateDecodeBtn);
+    serialInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') decodeSerial();
+    });
+    if (eraSelect) eraSelect.addEventListener('change', updateDecodeBtn);
+
+    // URL parameter: pre-select brand/category from brand landing pages
+    // e.g. index.html?brand=ge&cat=appliances
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var catParam   = params.get('cat');
+      var brandParam = params.get('brand');
+      if (catParam) {
+        var tabBtn = document.querySelector('.cat-tab[data-cat="' + catParam + '"]');
+        if (tabBtn) selectCategory(catParam, tabBtn);
+      }
+      if (brandParam) {
+        var sel = document.getElementById('brand');
+        for (var i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value === brandParam) {
+            sel.value = brandParam;
+            onBrandChange();
+            updateDecodeBtn();
+            setTimeout(function() { document.getElementById('serial').focus(); }, 150);
+            break;
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (altQuery) {
+    altQuery.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') estimateAge();
+    });
+    altQuery.addEventListener('focus', showAltDisclaimer);
+    altQuery.addEventListener('input', showAltDisclaimer);
+  }
+
+  loadBrandContext();
 });
 
 // ===== CATEGORY SELECTION =====
@@ -230,10 +320,14 @@ function resolveDecoderId(metaBrandId) {
 }
 
 function updateDecodeBtn() {
-  var brand  = document.getElementById('brand').value;
-  var serial = document.getElementById('serial').value.trim();
+  var brandEl  = document.getElementById('brand');
+  var serialEl = document.getElementById('serial');
+  var btnEl    = document.getElementById('decodeBtn');
+  if (!brandEl || !serialEl || !btnEl) return;
+  var brand  = brandEl.value;
+  var serial = serialEl.value.trim();
   var decoderId = brand ? resolveDecoderId(brand) : null;
-  document.getElementById('decodeBtn').disabled = !(brand && serial && decoderId);
+  btnEl.disabled = !(brand && serial && decoderId);
 }
 
 // ===== YEAR CAP (never return future dates) =====
@@ -439,6 +533,96 @@ function decodeSerial() {
       document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
   }, 1400);
+}
+
+// ===== COPY CLAIM FILE =====
+function copyClaimFile() {
+  var yearEl = document.getElementById('resultYear');
+  if (!yearEl) return;
+  var year = yearEl.textContent.trim();
+  if (!year) return;
+  var monthEl = document.getElementById('resultMonth');
+  var brandEl = document.getElementById('resultBrand');
+  var ageEl = document.getElementById('resultEstimatedAge');
+  var methodEl = document.getElementById('resultMethod');
+  var notesEl = document.getElementById('resultNotes');
+  var exampleEl = document.getElementById('resultExample');
+  var month = monthEl ? monthEl.textContent.trim() : '';
+  var brand = brandEl ? brandEl.textContent.trim() : '';
+  var age = ageEl ? ageEl.textContent.trim() : '';
+  var method = methodEl ? methodEl.textContent.trim() : '';
+  var notes = notesEl ? notesEl.textContent.trim() : '';
+  var example = exampleEl ? exampleEl.textContent.trim() : '';
+  var monthRow = document.getElementById('resultMonthRow');
+  var monthVisible = true;
+  if (monthRow && window.getComputedStyle) {
+    monthVisible = window.getComputedStyle(monthRow).display !== 'none';
+  }
+
+  var lines = [
+    'Decoded Results',
+    'Brand: ' + brand,
+    'Manufacture Date: ' + year,
+  ];
+  if (monthVisible && month) lines.push('Month / Period: ' + month);
+  if (age) lines.push('Estimated Age: ' + age);
+  if (method) lines.push('Methodology: ' + method);
+  if (notes) lines.push('Important Notes: ' + notes);
+  if (example) lines.push('Example: ' + example);
+
+  var text = lines.join('\n');
+  var btn = document.querySelector('.copy-btn');
+  var original = btn ? btn.textContent : 'Copy Information';
+
+  function setLabel(label) { if (btn) btn.textContent = label; }
+  function resetLabel() { if (btn) setTimeout(function() { setLabel(original); }, 1600); }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(function() { setLabel('Copied!'); resetLabel(); })
+      .catch(function() { setLabel('Copy Failed'); resetLabel(); });
+  } else {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'absolute';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      setLabel(ok ? 'Copied!' : 'Copy Failed');
+      resetLabel();
+    } catch (e) {
+      setLabel('Copy Failed');
+      resetLabel();
+    }
+  }
+}
+
+// ===== DECODE ANOTHER ITEM =====
+function decodeAnotherItem() {
+  var serialResults = document.getElementById('serialResults');
+  var ageResults = document.getElementById('ageResults');
+  var ageLoading = document.getElementById('ageLoading');
+  var serialInput = document.getElementById('serial');
+  var altQuery = document.getElementById('altQuery');
+  if (serialResults) serialResults.classList.add('hidden');
+  if (ageResults) ageResults.classList.add('hidden');
+  if (ageLoading) ageLoading.classList.add('hidden');
+  if (serialInput) serialInput.value = '';
+  if (altQuery) altQuery.value = '';
+  if (document.getElementById('eraGroup')) hideEraGroup();
+  updateDecodeBtn();
+  var main = document.querySelector('.main-card');
+  if (main && main.scrollIntoView) {
+    main.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  setTimeout(function() {
+    if (serialInput) serialInput.focus();
+    else if (altQuery) altQuery.focus();
+  }, 300);
 }
 
 // ===== ALT LOOKUP TOGGLE =====

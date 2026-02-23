@@ -6,77 +6,97 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/ge-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/ge.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/whirlpool-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/whirlpool.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/samsung-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/goodman.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/lg-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/carrier.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/bosch-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/rheem.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/maytag-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/trane.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/frigidaire-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/samsung.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/kenmore-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/lg.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/apple-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/bosch.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/hp-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/maytag.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/asus-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/frigidaire.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/google-pixel-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/kenmore.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/sony-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/apple.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/vizio-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/hp.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/panasonic-serial-number-decoder.html</loc>
+    <loc>https://www.decodemyitem.com/asus.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/google-pixel.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/sony.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/vizio.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/panasonic.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -101,3 +121,4 @@
     <priority>0.4</priority>
   </url>
 </urlset>
+
