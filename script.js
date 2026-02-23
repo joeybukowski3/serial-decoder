@@ -295,8 +295,39 @@ function moveSidebarCategoryToTop(categoryName) {
   container.insertBefore(target, container.firstChild);
 }
 
+function setWaterHeaterTopTierExpanded(active) {
+  var container = document.querySelector('.sidebar-brand-groups');
+  if (!container) return;
+  var group = container.querySelector('.sidebar-brand-group[data-category="Water Heaters"]');
+  if (!group) return;
+  var primaryList = group.querySelector('.sidebar-group-links');
+  var moreWrap = group.querySelector('.sidebar-more-brands');
+  var moreBtn = moreWrap ? moreWrap.querySelector('.sidebar-more-toggle') : null;
+  var moreList = moreWrap ? moreWrap.querySelector('.sidebar-more-list') : null;
+  if (!primaryList || !moreWrap || !moreList) return;
+
+  if (active) {
+    Array.prototype.slice.call(moreList.querySelectorAll('a.sidebar-link')).forEach(function(link) {
+      link.setAttribute('data-promoted-from-more', '1');
+      primaryList.appendChild(link);
+    });
+    moreWrap.hidden = true;
+    moreWrap.classList.remove('open');
+    moreList.hidden = true;
+    if (moreBtn) moreBtn.setAttribute('aria-expanded', 'false');
+    return;
+  }
+
+  Array.prototype.slice.call(primaryList.querySelectorAll('a[data-promoted-from-more="1"]')).forEach(function(link) {
+    link.removeAttribute('data-promoted-from-more');
+    moreList.appendChild(link);
+  });
+  moreWrap.hidden = moreList.children.length === 0;
+}
+
 function prioritizeSidebarCategory(catKey) {
   var normalizedKey = categoryNameToKey(catKey);
+  setWaterHeaterTopTierExpanded(normalizedKey === 'water-heaters');
   var categoryName = CATEGORY_KEY_TO_NAME[normalizedKey] || 'Appliances';
   moveSidebarCategoryToTop(categoryName);
   expandSidebarCategory(categoryName);
@@ -336,7 +367,14 @@ function enhanceSidebarNavigation() {
   var order = ['HVAC', 'Water Heaters', 'Appliances', 'Electronics', 'Other'];
   var persisted = getSidebarExpandedCategories();
   var currentSlug = getBrandPageSlug();
-  var currentCategory = sidebarCategoryForSlug(currentSlug);
+  var currentSidebarCategory = sidebarCategoryForSlug(currentSlug);
+  var activeCategoryKey = null;
+  try {
+    var params = new URLSearchParams(window.location.search || '');
+    activeCategoryKey = categoryNameToKey(params.get('cat') || '');
+  } catch (_) {}
+  if (!activeCategoryKey) activeCategoryKey = categoryNameToKey(currentCategory);
+  if (!activeCategoryKey && currentSidebarCategory) activeCategoryKey = categoryNameToKey(currentSidebarCategory);
   var container = document.createElement('div');
   container.className = 'sidebar-brand-groups';
 
@@ -444,7 +482,7 @@ function enhanceSidebarNavigation() {
       moreWrap.appendChild(moreList);
     }
 
-    var shouldOpen = persisted.indexOf(catName) !== -1 || (currentCategory && currentCategory === catName);
+    var shouldOpen = persisted.indexOf(catName) !== -1 || (currentSidebarCategory && currentSidebarCategory === catName);
     setSidebarGroupOpen(group, shouldOpen);
 
     btn.addEventListener('click', function() {
@@ -463,6 +501,7 @@ function enhanceSidebarNavigation() {
 
   brandLinks.forEach(function(link) { link.remove(); });
   brandsSection.appendChild(container);
+  if (activeCategoryKey) prioritizeSidebarCategory(activeCategoryKey);
 }
 
 function enhanceSmartLookupSidebarTop() {
