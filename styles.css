@@ -45,7 +45,7 @@ body {
 .circuit-nodes { display: none; }
 /* ── App Container ── */
 .page-shell {
-    padding-left: 250px;
+    padding-left: 270px;
     padding-right: 160px;
 }
 .app-container {
@@ -57,12 +57,13 @@ body {
     left: 0;
     top: 0;
     bottom: 0;
+    height: 100vh;
     width: 250px;
     background: #f1f5f9;
     border-right: 1px solid var(--border);
     padding: 1.25rem 1rem;
     overflow-y: auto;
-    z-index: 200;
+    z-index: 100;
 }
 .sidebar-header {
     margin-bottom: 1rem;

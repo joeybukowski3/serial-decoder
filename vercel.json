@@ -1,6 +1,31 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/brands", "destination": "/brands.html" },
+    { "source": "/carrier", "destination": "/carrier.html" },
+    { "source": "/rheem", "destination": "/rheem.html" },
+    { "source": "/goodman", "destination": "/goodman.html" },
+    { "source": "/trane", "destination": "/trane.html" },
+    { "source": "/whirlpool", "destination": "/whirlpool.html" },
+    { "source": "/ge", "destination": "/ge.html" },
+    { "source": "/samsung", "destination": "/samsung.html" },
+    { "source": "/lg", "destination": "/lg.html" },
+    { "source": "/sony", "destination": "/sony.html" },
+    { "source": "/bosch", "destination": "/bosch.html" },
+    { "source": "/maytag", "destination": "/maytag.html" },
+    { "source": "/frigidaire", "destination": "/frigidaire.html" },
+    { "source": "/kenmore", "destination": "/kenmore.html" },
+    { "source": "/apple", "destination": "/apple.html" },
+    { "source": "/hp", "destination": "/hp.html" },
+    { "source": "/asus", "destination": "/asus.html" },
+    { "source": "/google-pixel", "destination": "/google-pixel.html" },
+    { "source": "/vizio", "destination": "/vizio.html" },
+    { "source": "/panasonic", "destination": "/panasonic.html" },
+    { "source": "/smart-lookup", "destination": "/smart-lookup.html" },
+    { "source": "/methodology", "destination": "/methodology.html" },
+    { "source": "/disclaimer", "destination": "/disclaimer.html" },
+    { "source": "/contact", "destination": "/contact.html" }
   ],
   "crons": [
     {
