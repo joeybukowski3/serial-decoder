@@ -7,6 +7,45 @@
     <meta name="description" content="Use Smart Lookup to estimate product age when you don't have a serial number. Enter a model number or description and get an instant estimate.">
     <link rel="canonical" href="https://www.decodemyitem.com/smart-lookup.html">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .technical-methodology-card {
+            margin-top: 1rem;
+            background: #f1f5f9;
+            border: 1px solid #dbe4ee;
+            border-radius: 14px;
+            padding: 1rem 1.1rem;
+        }
+        .technical-methodology-card h2 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 0.35rem;
+        }
+        .technical-methodology-subhead {
+            font-style: italic;
+            font-size: 0.92rem;
+            color: #334155;
+            margin-bottom: 0.6rem;
+        }
+        .technical-methodology-copy {
+            font-size: 0.9rem;
+            color: #334155;
+            line-height: 1.65;
+            margin-bottom: 0.55rem;
+        }
+        .technical-methodology-list {
+            margin: 0 0 0.55rem 1.05rem;
+            color: #334155;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .technical-methodology-note {
+            margin-top: 0.45rem;
+            font-size: 0.8rem;
+            color: #475569;
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body>
     <div class="circuit-bg"></div>
@@ -110,15 +149,17 @@
             </div>
         </div>
 
-        <div class="static-card">
-            <div class="static-card-header">
-                <h2>About Smart Lookup</h2>
-                <p>How this tool estimates age without a serial number.</p>
-            </div>
-            <div class="static-card-body">
-                <p>Smart Lookup uses AI to estimate an item's age when a serial number is unavailable. Results range from general historical data (e.g., searching "TV" provides the era of television invention) to high-specificity estimates as you provide more detail. For the most accurate results, include the Brand, Series, and Model Number.</p>
-            </div>
-        </div>
+        <section class="technical-methodology-card">
+            <h2>About Smart Lookup</h2>
+            <p class="technical-methodology-subhead">Proprietary Intelligence for Missing Data</p>
+            <p class="technical-methodology-copy">When serial numbers are missing, incomplete, or unreadable, Smart Lookup applies proprietary intelligence across model patterns, manufacturer timelines, and known product release cycles to estimate manufacture windows with practical confidence.</p>
+            <ul class="technical-methodology-list">
+                <li><strong>Broad Search Tier:</strong> Interprets general product descriptions to identify likely era ranges and historical launch periods.</li>
+                <li><strong>Professional Search Tier:</strong> Uses brand, model family, series, and variant-level clues to refine results for claim-ready age estimates.</li>
+            </ul>
+            <p class="technical-methodology-copy">For best results, include the brand, full model number, and any visible version or series details from the data plate.</p>
+            <p class="technical-methodology-note">Designed for insurance claim accuracy and equipment lifecycle audits.</p>
+        </section>
 
         <div class="footer">
             <p class="footer-tagline">Built for fast, reliable equipment age lookups.</p>

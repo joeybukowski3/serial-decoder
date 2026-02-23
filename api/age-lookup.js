@@ -32,6 +32,83 @@ const HVAC_MONTHS = {
   '09': 'September', '10': 'October', '11': 'November', '12': 'December',
 };
 
+const HVAC_ERA_DATA = {
+  carrier: {
+    defaultNote: 'Carrier cabinet heuristic: Round cabinets are generally pre-1980; square cabinets are typically 1980 and newer.',
+    rules: [
+      { key: 'round', yearRange: 'Pre-1980', note: 'Carrier Round cabinet era points to pre-1980 production.' },
+      { key: 'square', yearRange: '1980-Present', note: 'Carrier Square cabinet era points to post-1980 production.' }
+    ]
+  },
+  rheem: {
+    defaultNote: 'Rheem series heuristic: Classic lines trend earlier; Prestige lines are modern-era production.',
+    rules: [
+      { key: 'classic', yearRange: '1985-2005', note: 'Rheem Classic series typically aligns with older production windows.' },
+      { key: 'prestige', yearRange: '2006-Present', note: 'Rheem Prestige series typically aligns with newer production windows.' }
+    ]
+  },
+  ruud: {
+    defaultNote: 'Ruud series heuristic: Classic lines trend earlier; Prestige lines are modern-era production.',
+    rules: [
+      { key: 'classic', yearRange: '1985-2005', note: 'Ruud Classic series typically aligns with older production windows.' },
+      { key: 'prestige', yearRange: '2006-Present', note: 'Ruud Prestige series typically aligns with newer production windows.' }
+    ]
+  },
+  goodman: {
+    defaultNote: 'Goodman legacy heuristic: Janitrol-branded units generally indicate pre-2000 production.',
+    rules: [
+      { key: 'janitrol', yearRange: 'Pre-2000', note: 'Janitrol legacy branding indicates earlier Goodman-era equipment (typically pre-2000).' }
+    ]
+  },
+  trane: {
+    defaultNote: 'Trane model-family heuristic: XE lines are earlier; XR lines are later generations.',
+    rules: [
+      { key: 'xe', yearRange: '1990-2009', note: 'Trane XE series is generally associated with 1990s to late-2000s production.' },
+      { key: 'xr', yearRange: '2000-Present', note: 'Trane XR series is generally associated with 2000s and later production.' }
+    ]
+  },
+  york: {
+    defaultNote: 'York family heuristic: Affinity and Latitude lines are commonly mapped to mid-2000s to mid-2010s cycles.',
+    rules: [
+      { key: 'affinity', yearRange: '2005-2015', note: 'York Affinity series commonly maps to 2005-2015 production cycles.' },
+      { key: 'latitude', yearRange: '2005-2015', note: 'York Latitude series commonly maps to 2005-2015 production cycles.' }
+    ]
+  }
+};
+
+const APPLIANCE_ERA_DATA = {
+  whirlpool: {
+    defaultNote: 'Whirlpool washer-era heuristic: Direct Drive platforms are generally older; Vertical Modular platforms are newer.',
+    rules: [
+      { key: 'direct drive', yearRange: '1980s-2010', note: 'Whirlpool Direct Drive washer platforms are commonly associated with 1980s through around 2010.' },
+      { key: 'vertical modular', yearRange: '2010-Present', note: 'Whirlpool Vertical Modular washer platforms are commonly associated with 2010 and newer production.' },
+      { key: 'vmw', yearRange: '2010-Present', note: 'Whirlpool VMW (Vertical Modular Washer) architecture generally aligns with 2010 and newer production.' }
+    ]
+  },
+  ge: {
+    defaultNote: 'GE family heuristic: Profile and Monogram lines follow different premium/flagship timelines; legacy Camelback consoles indicate older GE washer generations.',
+    rules: [
+      { key: 'profile', yearRange: '2000-Present', note: 'GE Profile lines are generally modern-era production (commonly 2000 and newer).' },
+      { key: 'monogram', yearRange: '1990s-Present', note: 'GE Monogram lines are generally premium long-running production, commonly from the late 1990s onward.' },
+      { key: 'camelback', yearRange: 'Pre-2000', note: 'GE Camelback console styling generally indicates older, pre-2000 era washer design.' }
+    ]
+  },
+  samsung: {
+    defaultNote: 'Samsung washer-feature heuristic: VRT appears in modern generations; AddWash is a post-2016 feature era.',
+    rules: [
+      { key: 'vrt', yearRange: 'Post-2006', note: 'Samsung VRT (Vibration Reduction Technology) is generally associated with post-2006 production.' },
+      { key: 'addwash', yearRange: 'Post-2016', note: 'Samsung AddWash models are generally associated with post-2016 production.' }
+    ]
+  },
+  lg: {
+    defaultNote: 'LG washer-feature heuristic: Inverter DirectDrive branding generally aligns with production cycles starting in 2009.',
+    rules: [
+      { key: 'inverter directdrive', yearRange: '2009-Present', note: 'LG Inverter DirectDrive branding is generally associated with 2009 and newer production cycles.' },
+      { key: 'directdrive', yearRange: '2009-Present', note: 'LG DirectDrive branding in modern appliance lines is commonly associated with 2009 and newer cycles.' }
+    ]
+  }
+};
+
 function findHvacBrand(normalizedQuery) {
   for (const cfg of HVAC_SERIAL_CONFIG) {
     for (const alias of cfg.aliases) {
@@ -48,6 +125,66 @@ function resolveFullYear(yy) {
   return (yearNum > currentTwo ? 1900 : 2000) + yearNum;
 }
 
+function normalizeBrandKey(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z]/g, '');
+}
+
+function applyHvacEraHints(base, normalizedQuery) {
+  const out = { ...base };
+  const brandKey = normalizeBrandKey(out.brand);
+  const era = HVAC_ERA_DATA[brandKey];
+  if (!era) return out;
+
+  const matched = [];
+  for (const rule of era.rules) {
+    const re = new RegExp(`\\b${rule.key}\\b`, 'i');
+    if (re.test(normalizedQuery)) matched.push(rule);
+  }
+
+  const noteParts = [];
+  if (out.notes) noteParts.push(out.notes);
+  noteParts.push(era.defaultNote);
+  matched.forEach((m) => noteParts.push(m.note));
+  out.notes = noteParts.join(' ');
+
+  // Preserve precise serial-derived estimatedYear; add/override broader production window when era hints match.
+  if (matched.length > 0) {
+    out.yearRange = matched.map((m) => m.yearRange).filter(Boolean).join(' / ');
+  } else if (!out.yearRange && era.defaultNote) {
+    out.yearRange = out.yearRange || null;
+  }
+
+  return out;
+}
+
+function applyApplianceEraHints(base, normalizedQuery) {
+  const out = { ...base };
+  const brandKey = normalizeBrandKey(out.brand);
+  const era = APPLIANCE_ERA_DATA[brandKey];
+  if (!era) return out;
+
+  const matched = [];
+  for (const rule of era.rules) {
+    const escaped = rule.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`\\b${escaped}\\b`, 'i');
+    if (re.test(normalizedQuery)) matched.push(rule);
+  }
+
+  const noteParts = [];
+  if (out.notes) noteParts.push(out.notes);
+  noteParts.push(era.defaultNote);
+  matched.forEach((m) => noteParts.push(m.note));
+  out.notes = noteParts.join(' ');
+
+  if (matched.length > 0) {
+    out.yearRange = matched.map((m) => m.yearRange).filter(Boolean).join(' / ');
+  } else if (!out.yearRange) {
+    out.yearRange = out.yearRange || null;
+  }
+
+  return out;
+}
+
 function decodeHvacSerial(query, normalizedQuery) {
   const cfg = findHvacBrand(normalizedQuery);
   if (!cfg) return null;
@@ -61,12 +198,13 @@ function decodeHvacSerial(query, normalizedQuery) {
     const monthName = HVAC_MONTHS[mm];
     if (!monthName) return null;
     const fullYear = resolveFullYear(yy);
-    return {
+    return applyHvacEraHints({
       brand: cfg.brand,
       estimatedYear: String(fullYear),
       notes: `Month: ${monthName} (code ${mm}). Source: Manufacturer Technical Specifications.`,
       serialRule: `${cfg.brand}: first two digits are year, next two digits are month (YYMM). Source: Manufacturer Technical Specifications.`,
-    };
+      yearRange: null
+    }, normalizedQuery);
   }
 
   if (cfg.type === 'wwYY') {
@@ -77,12 +215,13 @@ function decodeHvacSerial(query, normalizedQuery) {
     const week = parseInt(ww, 10);
     if (week < 1 || week > 53) return null;
     const fullYear = resolveFullYear(yy);
-    return {
+    return applyHvacEraHints({
       brand: cfg.brand,
       estimatedYear: String(fullYear),
       notes: `Week: ${ww} (production week). Source: Manufacturer Technical Specifications.`,
       serialRule: `${cfg.brand}: first two digits are week, next two digits are year (WWYY). Source: Manufacturer Technical Specifications.`,
-    };
+      yearRange: null
+    }, normalizedQuery);
   }
 
   if (cfg.type === 'letterWWYY') {
@@ -93,12 +232,13 @@ function decodeHvacSerial(query, normalizedQuery) {
     const week = parseInt(ww, 10);
     if (week < 1 || week > 53) return null;
     const fullYear = resolveFullYear(yy);
-    return {
+    return applyHvacEraHints({
       brand: cfg.brand,
       estimatedYear: String(fullYear),
       notes: `Week: ${ww} (from 4 digits after letter). Source: Manufacturer Technical Specifications.`,
       serialRule: `${cfg.brand}: 4 digits following a letter represent week and year (WWYY). Source: Manufacturer Technical Specifications.`,
-    };
+      yearRange: null
+    }, normalizedQuery);
   }
 
   return null;
@@ -161,7 +301,7 @@ export default async function handler(req, res) {
       brand: hvacQuick.brand,
       model: null,
       estimatedYear: hvacQuick.estimatedYear,
-      yearRange: null,
+      yearRange: hvacQuick.yearRange || null,
       specificityLevel: 'specific',
       inventionSummary: null,
       refinementSuggestion: 'For the most accurate results, enter the full serial number and model number from the rating plate.',
@@ -190,6 +330,17 @@ Research approach:
 - Look for earliest known references: product launches, first reviews, first retail listings, manual publication dates
 - If an exact year cannot be determined, provide a production year range
 - Consider model number patterns that indicate year/generation
+- Apply these HVAC era mappings when relevant:
+  - Carrier: Round cabinet is generally pre-1980; Square cabinet is generally post-1980.
+  - Rheem/Ruud: Classic series generally maps to earlier windows; Prestige series generally maps to newer windows.
+  - Goodman: Janitrol legacy branding generally indicates pre-2000 equipment.
+  - Trane: XE series generally maps to 1990-2009; XR series maps to 2000-present.
+  - York: Affinity and Latitude series commonly map to 2005-2015 cycles.
+- Apply these appliance-era mappings when relevant:
+  - Whirlpool washers: Direct Drive is generally 1980s-2010; Vertical Modular (VMW) is generally 2010-present.
+  - GE: Profile and Monogram follow different production windows; Camelback console styling indicates older legacy generations.
+  - Samsung washers: VRT indicates post-2006 era; AddWash indicates post-2016 era.
+  - LG washers: Inverter DirectDrive branding aligns with cycles starting in 2009.
 
 IMPORTANT — Generic category queries:
 - If the query is ONLY a product category with no brand or model (e.g. "refrigerator", "washer", "dryer", "water heater", "tv", "television", "microwave", "dishwasher", "laptop", "printer", "phone", "tablet", "air conditioner", "freezer", "range", "oven"):
@@ -252,7 +403,7 @@ Rules for exampleModelNumber and suggestedModelNumbers:
       return res.status(502).json({ error: 'No response from AI service' });
     }
 
-    const result = JSON.parse(text);
+    const result = applyApplianceEraHints(applyHvacEraHints(JSON.parse(text), normalizedQuery), normalizedQuery);
 
     // ── Write query cache (14-day TTL) ────────────────────────────────────
     try {

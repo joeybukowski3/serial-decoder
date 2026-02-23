@@ -23,6 +23,7 @@
     { "source": "/vizio", "destination": "/vizio.html" },
     { "source": "/panasonic", "destination": "/panasonic.html" },
     { "source": "/smart-lookup", "destination": "/smart-lookup.html" },
+    { "source": "/universal-decoder", "destination": "/universal-decoder.html" },
     { "source": "/methodology", "destination": "/methodology.html" },
     { "source": "/disclaimer", "destination": "/disclaimer.html" },
     { "source": "/contact", "destination": "/contact.html" }

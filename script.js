@@ -136,6 +136,32 @@ var SIDEBAR_BRAND_CATEGORY_MAP = {
   'vizio': 'Electronics',
   'panasonic': 'Electronics'
 };
+var CATEGORY_KEY_TO_NAME = {
+  'hvac': 'HVAC',
+  'appliances': 'Appliances',
+  'electronics': 'Electronics'
+};
+var BRAND_PAGE_BY_ID = {
+  'goodman': 'goodman',
+  'carrier': 'carrier',
+  'rheem': 'rheem',
+  'trane': 'trane',
+  'ge': 'ge',
+  'samsung': 'samsung',
+  'lg': 'lg',
+  'bosch': 'bosch',
+  'maytag': 'maytag',
+  'frigidaire': 'frigidaire',
+  'kenmore': 'kenmore',
+  'whirlpool': 'whirlpool',
+  'apple': 'apple',
+  'hp': 'hp',
+  'asus': 'asus',
+  'google_pixel': 'google-pixel',
+  'sony': 'sony',
+  'vizio': 'vizio',
+  'panasonic': 'panasonic'
+};
 
 function isBrandPage() {
   return !!sidebarCategoryForSlug(getBrandPageSlug());
@@ -182,6 +208,14 @@ function sidebarCategoryForSlug(slug) {
   return SIDEBAR_BRAND_CATEGORY_MAP[slug] || null;
 }
 
+function categoryNameToKey(name) {
+  if (!name) return 'appliances';
+  var s = String(name).toLowerCase();
+  if (s === 'hvac') return 'hvac';
+  if (s === 'electronics') return 'electronics';
+  return 'appliances';
+}
+
 function setSidebarGroupOpen(groupEl, open) {
   var btn = groupEl ? groupEl.querySelector('.sidebar-group-toggle') : null;
   var links = groupEl ? groupEl.querySelector('.sidebar-group-links') : null;
@@ -209,6 +243,25 @@ function expandSidebarCategory(categoryName) {
   if (!target) return;
   setSidebarGroupOpen(target, true);
   persistSidebarOpenState(sidebarRoot);
+}
+
+function moveSidebarCategoryToTop(categoryName) {
+  if (!categoryName) return;
+  var container = document.querySelector('.sidebar-brand-groups');
+  if (!container) return;
+  var target = container.querySelector('.sidebar-brand-group[data-category="' + categoryName + '"]');
+  if (!target) return;
+  container.insertBefore(target, container.firstChild);
+}
+
+function prioritizeSidebarCategory(catKey) {
+  var categoryName = CATEGORY_KEY_TO_NAME[catKey] || 'Appliances';
+  moveSidebarCategoryToTop(categoryName);
+  expandSidebarCategory(categoryName);
+}
+
+function toUniversalCategoryUrl(categoryName) {
+  return '/universal-decoder?cat=' + encodeURIComponent(categoryNameToKey(categoryName));
 }
 
 function enhanceSidebarNavigation() {
@@ -247,10 +300,21 @@ function enhanceSidebarNavigation() {
     group.className = 'sidebar-brand-group';
     group.setAttribute('data-category', catName);
 
+    var header = document.createElement('div');
+    header.className = 'sidebar-group-header';
+    var link = document.createElement('a');
+    link.className = 'sidebar-group-link';
+    link.href = toUniversalCategoryUrl(catName);
+    link.textContent = catName;
+    link.addEventListener('click', function() {
+      prioritizeSidebarCategory(categoryNameToKey(catName));
+    });
+
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'sidebar-group-toggle';
-    btn.innerHTML = '<span class="sidebar-group-name">' + catName + '</span><span class="sidebar-group-arrow" aria-hidden="true">&#9654;</span>';
+    btn.setAttribute('aria-label', 'Toggle ' + catName + ' brands');
+    btn.innerHTML = '<span class="sidebar-group-arrow" aria-hidden="true">&#9654;</span>';
 
     var list = document.createElement('div');
     list.className = 'sidebar-group-links';
@@ -265,7 +329,9 @@ function enhanceSidebarNavigation() {
       persistSidebarOpenState(container);
     });
 
-    group.appendChild(btn);
+    header.appendChild(link);
+    header.appendChild(btn);
+    group.appendChild(header);
     group.appendChild(list);
     container.appendChild(group);
   });
@@ -327,6 +393,28 @@ function addGuidedSearchButtonToBrandDecoderCard() {
 
   formArea.appendChild(btn);
   formArea.appendChild(note);
+}
+
+function enhanceHeaderBranding() {
+  var headerBrand = document.querySelector('.header .header-brand');
+  if (!headerBrand) return;
+  if (!headerBrand.querySelector('.item-assist-logo')) {
+    var logo = document.createElement('div');
+    logo.className = 'item-assist-logo';
+    logo.innerHTML = 'ITEM <span class="assist-accent">ASSIST</span>';
+    headerBrand.insertBefore(logo, headerBrand.firstChild);
+  }
+  if (!headerBrand.querySelector('.item-assist-tagline')) {
+    var tag = document.createElement('div');
+    tag.className = 'item-assist-tagline';
+    tag.textContent = 'Brought to you by Item Assist';
+    var afterLogo = headerBrand.querySelector('.item-assist-logo');
+    if (afterLogo && afterLogo.nextSibling) {
+      headerBrand.insertBefore(tag, afterLogo.nextSibling);
+    } else {
+      headerBrand.appendChild(tag);
+    }
+  }
 }
 
 function pulseGuidedSearchButton() {
@@ -392,15 +480,6 @@ function loadBrandContext() {
       }
     }
 
-    // Lock brand + category on brand pages
-    brandSelect.disabled = true;
-    brandSelect.classList.add('brand-locked');
-    var tabs = document.querySelectorAll('.cat-tab');
-    tabs.forEach(function(t) {
-      t.disabled = true;
-      t.classList.add('cat-tab-locked');
-    });
-
     var serialInput = dom.serialEl;
     if (serialInput && serialInput.focus) {
       setTimeout(function() { serialInput.focus(); }, 120);
@@ -410,6 +489,7 @@ function loadBrandContext() {
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', function() {
+  enhanceHeaderBranding();
   enhanceSmartLookupSidebarTop();
   enhanceSidebarNavigation();
   addGuidedSearchButtonToBrandDecoderCard();
@@ -477,6 +557,15 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   loadBrandContext();
+
+  try {
+    var q = new URLSearchParams(window.location.search || '');
+    var serialParam = q.get('serial');
+    if (serialParam && dom.serialEl) {
+      dom.serialEl.value = serialParam;
+      updateDecodeBtn();
+    }
+  } catch (_) {}
 });
 
 // ===== CATEGORY SELECTION =====
@@ -484,6 +573,7 @@ function selectCategory(cat, btn) {
   currentCategory = cat;
   document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.remove('active'); });
   btn.classList.add('active');
+  prioritizeSidebarCategory(cat);
   populateBrands(cat);
   var serialEl = getDecodeDom().serialEl;
   if (serialEl) serialEl.value = '';
@@ -690,6 +780,15 @@ function decodeSerial() {
   var metaBrandId = dom.brandEl.value;
   var serial = dom.serialEl.value.trim();
   if (!metaBrandId || !serial) return;
+
+  if (isBrandPage()) {
+    var currentSlug = getBrandPageSlug();
+    var targetSlug = BRAND_PAGE_BY_ID[metaBrandId] || BRAND_PAGE_BY_ID[(metaBrandId || '').replace(/-/g, '_')];
+    if (targetSlug && currentSlug && targetSlug !== currentSlug) {
+      window.location.href = '/' + targetSlug + '?serial=' + encodeURIComponent(serial);
+      return;
+    }
+  }
 
   var brandId = resolveDecoderId(metaBrandId);
   if (!brandId) {
