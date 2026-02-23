@@ -138,6 +138,9 @@ var SIDEBAR_BRAND_CATEGORY_MAP = {
 };
 var CATEGORY_KEY_TO_NAME = {
   'hvac': 'HVAC',
+  'water-heaters': 'Water Heaters',
+  'waterheaters': 'Water Heaters',
+  'waterHeaters': 'Water Heaters',
   'appliances': 'Appliances',
   'electronics': 'Electronics'
 };
@@ -162,6 +165,43 @@ var BRAND_PAGE_BY_ID = {
   'vizio': 'vizio',
   'panasonic': 'panasonic'
 };
+var MORE_BRANDS_BY_CATEGORY = {
+  HVAC: [
+    { id: 'amana', label: 'Amana' },
+    { id: 'bryant', label: 'Bryant' },
+    { id: 'lennox', label: 'Lennox' },
+    { id: 'york', label: 'York' },
+    { id: 'payne', label: 'Payne' },
+    { id: 'ruud', label: 'Ruud' },
+    { id: 'american_standard', label: 'American Standard' }
+  ],
+  Appliances: [
+    { id: 'electrolux', label: 'Electrolux' },
+    { id: 'hotpoint', label: 'Hotpoint' },
+    { id: 'kitchenaid', label: 'KitchenAid' },
+    { id: 'amana', label: 'Amana' },
+    { id: 'thermador', label: 'Thermador' }
+  ],
+  Electronics: [
+    { id: 'samsung_phone', label: 'Samsung (Phones)' },
+    { id: 'samsung_tv', label: 'Samsung (TVs)' },
+    { id: 'lg_tv', label: 'LG (TVs)' },
+    { id: 'google_pixel', label: 'Google Pixel' }
+  ],
+  'Water Heaters': []
+};
+var PRIMARY_BRANDS_VISIBLE = {
+  HVAC: 3,
+  'Water Heaters': 4,
+  Appliances: 6,
+  Electronics: 4
+};
+var WATER_HEATER_BRANDS = [
+  { id: 'rheem', label: 'Rheem', href: '/universal-decoder?cat=water-heaters&brand=rheem' },
+  { id: 'bradford_white', label: 'Bradford White', href: '/universal-decoder?cat=water-heaters&brand=bradford_white' },
+  { id: 'a_o_smith', label: 'A.O. Smith', href: '/universal-decoder?cat=water-heaters&brand=a_o_smith' },
+  { id: 'state_industries', label: 'State', href: '/universal-decoder?cat=water-heaters&brand=state_industries' }
+];
 
 function isBrandPage() {
   return !!sidebarCategoryForSlug(getBrandPageSlug());
@@ -212,6 +252,7 @@ function categoryNameToKey(name) {
   if (!name) return 'appliances';
   var s = String(name).toLowerCase();
   if (s === 'hvac') return 'hvac';
+  if (s === 'waterheaters' || s === 'water-heaters' || s === 'water heaters') return 'water-heaters';
   if (s === 'electronics') return 'electronics';
   return 'appliances';
 }
@@ -255,13 +296,20 @@ function moveSidebarCategoryToTop(categoryName) {
 }
 
 function prioritizeSidebarCategory(catKey) {
-  var categoryName = CATEGORY_KEY_TO_NAME[catKey] || 'Appliances';
+  var normalizedKey = categoryNameToKey(catKey);
+  var categoryName = CATEGORY_KEY_TO_NAME[normalizedKey] || 'Appliances';
   moveSidebarCategoryToTop(categoryName);
   expandSidebarCategory(categoryName);
 }
 
 function toUniversalCategoryUrl(categoryName) {
   return '/universal-decoder?cat=' + encodeURIComponent(categoryNameToKey(categoryName));
+}
+
+function brandTargetHref(brandId, categoryName) {
+  const pageSlug = BRAND_PAGE_BY_ID[brandId];
+  if (pageSlug) return '/' + pageSlug;
+  return '/universal-decoder?cat=' + encodeURIComponent(categoryNameToKey(categoryName)) + '&brand=' + encodeURIComponent(brandId);
 }
 
 function enhanceSidebarNavigation() {
@@ -277,7 +325,7 @@ function enhanceSidebarNavigation() {
   var brandLinks = Array.prototype.slice.call(brandsSection.querySelectorAll('a.sidebar-link'));
   if (!brandLinks.length) return;
 
-  var grouped = { HVAC: [], Appliances: [], Electronics: [], Other: [] };
+  var grouped = { HVAC: [], 'Water Heaters': [], Appliances: [], Electronics: [], Other: [] };
   brandLinks.forEach(function(link) {
     var href = link.getAttribute('href') || '';
     var slug = href.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
@@ -285,7 +333,7 @@ function enhanceSidebarNavigation() {
     grouped[cat].push(link.cloneNode(true));
   });
 
-  var order = ['HVAC', 'Appliances', 'Electronics', 'Other'];
+  var order = ['HVAC', 'Water Heaters', 'Appliances', 'Electronics', 'Other'];
   var persisted = getSidebarExpandedCategories();
   var currentSlug = getBrandPageSlug();
   var currentCategory = sidebarCategoryForSlug(currentSlug);
@@ -293,8 +341,22 @@ function enhanceSidebarNavigation() {
   container.className = 'sidebar-brand-groups';
 
   order.forEach(function(catName) {
-    var links = grouped[catName];
+    var links = (grouped[catName] || []).slice();
+    if (catName === 'Water Heaters') {
+      WATER_HEATER_BRANDS.forEach(function(wb) {
+        var wa = document.createElement('a');
+        wa.className = 'sidebar-link';
+        wa.href = wb.href;
+        wa.textContent = wb.label;
+        wa.setAttribute('data-brand', wb.id);
+        wa.setAttribute('data-category', 'water-heaters');
+        links.push(wa);
+      });
+    }
     if (!links || !links.length) return;
+    var primaryCount = PRIMARY_BRANDS_VISIBLE[catName] || links.length;
+    var primaryLinks = links.slice(0, primaryCount);
+    var overflowLinks = links.slice(primaryCount);
 
     var group = document.createElement('div');
     group.className = 'sidebar-brand-group';
@@ -318,7 +380,69 @@ function enhanceSidebarNavigation() {
 
     var list = document.createElement('div');
     list.className = 'sidebar-group-links';
-    links.forEach(function(a) { list.appendChild(a); });
+    primaryLinks.forEach(function(a) { list.appendChild(a); });
+
+    var primarySlugs = {};
+    primaryLinks.forEach(function(a) {
+      a.setAttribute('data-category', categoryNameToKey(catName));
+      var href = a.getAttribute('href') || '';
+      var slug = href.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
+      if (slug) primarySlugs[slug] = true;
+    });
+
+    var extras = MORE_BRANDS_BY_CATEGORY[catName] || [];
+    var remaining = overflowLinks.map(function(a) {
+      var href = a.getAttribute('href') || '';
+      var slug = href.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
+      return { slug: slug, label: a.textContent || slug, href: href };
+    });
+    extras.forEach(function(item) {
+      var slug = (BRAND_PAGE_BY_ID[item.id] || item.id).replace(/_/g, '-');
+      if (!primarySlugs[slug]) {
+        remaining.push({ slug: slug, label: item.label, href: brandTargetHref(item.id, catName) });
+      }
+    });
+    var seenRemaining = {};
+    remaining = remaining.filter(function(item) {
+      if (!item.slug || seenRemaining[item.slug]) return false;
+      seenRemaining[item.slug] = true;
+      return true;
+    });
+
+    var moreWrap = null;
+    if (remaining.length > 0) {
+      moreWrap = document.createElement('div');
+      moreWrap.className = 'sidebar-more-brands';
+
+      var moreBtn = document.createElement('button');
+      moreBtn.type = 'button';
+      moreBtn.className = 'sidebar-more-toggle';
+      moreBtn.innerHTML = '<span class="more-brands-icon" aria-hidden="true"></span><span class="more-brands-text">More Brands</span>';
+      moreBtn.setAttribute('aria-expanded', 'false');
+
+      var moreList = document.createElement('div');
+      moreList.className = 'sidebar-more-list';
+      moreList.hidden = true;
+
+      remaining.forEach(function(item) {
+        var a = document.createElement('a');
+        a.className = 'sidebar-link sidebar-link-secondary';
+        a.href = item.href;
+        a.textContent = item.label;
+        a.setAttribute('data-category', categoryNameToKey(catName));
+        moreList.appendChild(a);
+      });
+
+      moreBtn.addEventListener('click', function() {
+        var isOpen = moreWrap.classList.contains('open');
+        moreWrap.classList.toggle('open', !isOpen);
+        moreList.hidden = isOpen;
+        moreBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+      });
+
+      moreWrap.appendChild(moreBtn);
+      moreWrap.appendChild(moreList);
+    }
 
     var shouldOpen = persisted.indexOf(catName) !== -1 || (currentCategory && currentCategory === catName);
     setSidebarGroupOpen(group, shouldOpen);
@@ -333,6 +457,7 @@ function enhanceSidebarNavigation() {
     header.appendChild(btn);
     group.appendChild(header);
     group.appendChild(list);
+    if (moreWrap) group.appendChild(moreWrap);
     container.appendChild(group);
   });
 
@@ -369,7 +494,7 @@ function addGuidedSearchButtonToBrandDecoderCard() {
   var btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'guided-search-btn';
-  btn.textContent = 'Guided Search';
+  btn.textContent = 'Smart Lookup (Powered by AI)';
   btn.addEventListener('click', function() {
     var altSection = document.getElementById('altSection');
     var altQuery = document.getElementById('altQuery');
@@ -389,31 +514,29 @@ function addGuidedSearchButtonToBrandDecoderCard() {
 
   var note = document.createElement('p');
   note.className = 'guided-search-note';
-  note.textContent = 'Serial not recognized yet? Use Guided Search for model-based help.';
+  note.textContent = 'Serial not recognized yet? Use Smart Lookup (Powered by AI) for model-based help.';
 
   formArea.appendChild(btn);
   formArea.appendChild(note);
 }
 
 function enhanceHeaderBranding() {
-  var headerBrand = document.querySelector('.header .header-brand');
-  if (!headerBrand) return;
-  if (!headerBrand.querySelector('.item-assist-logo')) {
-    var logo = document.createElement('div');
-    logo.className = 'item-assist-logo';
-    logo.innerHTML = 'ITEM <span class="assist-accent">ASSIST</span>';
-    headerBrand.insertBefore(logo, headerBrand.firstChild);
+  var header = document.querySelector('.header');
+  if (!header) return;
+  header.querySelectorAll('svg').forEach(function(el) { el.remove(); });
+  var headerBrand = header.querySelector('.header-brand');
+  if (headerBrand) {
+    headerBrand.querySelectorAll('h1, .subtitle, .header-tagline, .header-logo').forEach(function(el) { el.remove(); });
   }
-  if (!headerBrand.querySelector('.item-assist-tagline')) {
-    var tag = document.createElement('div');
-    tag.className = 'item-assist-tagline';
-    tag.textContent = 'Brought to you by Item Assist';
-    var afterLogo = headerBrand.querySelector('.item-assist-logo');
-    if (afterLogo && afterLogo.nextSibling) {
-      headerBrand.insertBefore(tag, afterLogo.nextSibling);
-    } else {
-      headerBrand.appendChild(tag);
-    }
+  var oldLogo = header.querySelector('.item-assist-logo');
+  if (oldLogo) oldLogo.remove();
+  var oldTag = header.querySelector('.item-assist-tagline');
+  if (oldTag) oldTag.remove();
+  if (!header.querySelector('.header-center-tagline')) {
+    var centerTag = document.createElement('div');
+    centerTag.className = 'header-center-tagline';
+    centerTag.textContent = 'Brought to you by Item Assist';
+    header.appendChild(centerTag);
   }
 }
 

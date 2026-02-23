@@ -91,6 +91,12 @@
                     { name: 'Rheem', slug: 'rheem' },
                     { name: 'Trane', slug: 'trane' }
                 ],
+                'water-heaters': [
+                    { name: 'Rheem', slug: 'rheem' },
+                    { name: 'Bradford White', slug: 'bradford_white' },
+                    { name: 'A.O. Smith', slug: 'a_o_smith' },
+                    { name: 'State', slug: 'state_industries' }
+                ],
                 appliances: [
                     { name: 'GE', slug: 'ge' },
                     { name: 'Whirlpool', slug: 'whirlpool' },
@@ -120,7 +126,9 @@
             Object.keys(map).forEach(function(key) {
                 var opt = document.createElement('option');
                 opt.value = key;
-                opt.textContent = key.toUpperCase() === 'HVAC' ? 'HVAC' : (key.charAt(0).toUpperCase() + key.slice(1));
+                if (key === 'hvac') opt.textContent = 'HVAC';
+                else if (key === 'water-heaters') opt.textContent = 'Water Heaters';
+                else opt.textContent = key.charAt(0).toUpperCase() + key.slice(1);
                 categorySel.appendChild(opt);
             });
 
@@ -143,14 +151,31 @@
                 if (!slug) return;
                 var serial = (serialEl.value || '').trim();
                 var target = '/' + slug;
+                if (slug.indexOf('_') !== -1) {
+                    target = '/universal-decoder?cat=' + encodeURIComponent(categorySel.value) + '&brand=' + encodeURIComponent(slug);
+                    if (serial) target += '&serial=' + encodeURIComponent(serial);
+                    window.location.href = target;
+                    return;
+                }
                 if (serial) target += '?serial=' + encodeURIComponent(serial);
                 window.location.href = target;
             });
 
             var params = new URLSearchParams(window.location.search || '');
             var startCat = params.get('cat');
+            var startBrand = params.get('brand');
+            var startSerial = params.get('serial');
             if (startCat && map[startCat]) categorySel.value = startCat;
             fillBrands(categorySel.value || 'appliances');
+            if (startBrand) {
+                for (var i = 0; i < brandSel.options.length; i++) {
+                    if (brandSel.options[i].value === startBrand) {
+                        brandSel.value = startBrand;
+                        break;
+                    }
+                }
+            }
+            if (startSerial) serialEl.value = startSerial;
         })();
     </script>
 </body>
