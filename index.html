@@ -15,46 +15,67 @@
         <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
     </div>
 
+        <aside class="sidebar">
+        <div class="sidebar-header">
+            <a class="sidebar-logo" href="/">Serial Number Decoder</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-title">Categories</div>
+            <button class="cat-tab active" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
+            <button class="cat-tab" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
+            <button class="cat-tab" data-cat="hvac" onclick="selectCategory('hvac', this)">HVAC</button>
+            <button class="cat-tab" data-cat="electronics" onclick="selectCategory('electronics', this)">Electronics</button>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-title">Brands</div>
+            <a class="sidebar-link" href="/goodman">Goodman</a>
+            <a class="sidebar-link" href="/carrier">Carrier</a>
+            <a class="sidebar-link" href="/rheem">Rheem</a>
+            <a class="sidebar-link" href="/trane">Trane</a>
+            <a class="sidebar-link" href="/whirlpool">Whirlpool</a>
+            <a class="sidebar-link" href="/ge">GE</a>
+            <a class="sidebar-link" href="/samsung">Samsung</a>
+            <a class="sidebar-link" href="/lg">LG</a>
+            <a class="sidebar-link" href="/sony">Sony</a>
+            <a class="sidebar-link" href="/bosch">Bosch</a>
+            <a class="sidebar-link" href="/maytag">Maytag</a>
+            <a class="sidebar-link" href="/frigidaire">Frigidaire</a>
+            <a class="sidebar-link" href="/kenmore">Kenmore</a>
+            <a class="sidebar-link" href="/apple">Apple</a>
+            <a class="sidebar-link" href="/hp">HP</a>
+            <a class="sidebar-link" href="/asus">ASUS</a>
+            <a class="sidebar-link" href="/google-pixel">Google Pixel</a>
+            <a class="sidebar-link" href="/vizio">Vizio</a>
+            <a class="sidebar-link" href="/panasonic">Panasonic</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-title">Resources</div>
+            <a class="sidebar-link" href="/smart-lookup">Smart Lookup</a>
+            <a class="sidebar-link" href="/methodology">Methodology</a>
+            <a class="sidebar-link" href="/disclaimer">Disclaimer</a>
+            <a class="sidebar-link" href="/contact">Contact</a>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <div class="ad-zone"><div class="ad-label">Data Partner</div></div>
+    <div class="page-shell">
     <div class="app-container">
 
         <!-- Header -->
         <div class="header">
+            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle navigation">&#9776;</button>
             <div class="header-brand">
                 <h1><span class="accent">&#9889;</span> Serial Number Age <span class="accent">Decoder</span></h1>
                 <p class="subtitle">Find manufacture dates for appliances, water heaters &amp; electronics</p>
                 <p class="header-tagline">Trusted by <strong>homeowners</strong> and <strong>insurance professionals</strong> to determine equipment age from serial numbers — no account required.</p>
             </div>
-            <nav class="header-nav">
-                <button class="header-nav-link" onclick="openGuide()">&#9432; How to Use</button>
-                <a class="header-nav-link header-nav-secondary" href="smart-lookup.html">Smart Lookup</a>
-                <a class="header-nav-link header-nav-secondary" href="methodology.html">Methodology</a>
-                <div class="nav-dropdown">
-                    <button class="header-nav-link header-nav-secondary nav-dropdown-toggle">Brands</button>
-                    <div class="nav-dropdown-menu">
-                        <a href="goodman.html">Goodman</a>
-                        <a href="carrier.html">Carrier</a>
-                        <a href="rheem.html">Rheem</a>
-                        <a href="trane.html">Trane</a>
-                        <a href="whirlpool.html">Whirlpool</a>
-                        <a href="ge.html">GE</a>
-                        <a href="samsung.html">Samsung</a>
-                        <a href="lg.html">LG</a>
-                        <a href="sony.html">Sony</a>
-                    </div>
-                </div>
-                <a class="header-nav-link header-nav-secondary" href="contact.html">Contact</a>
-            </nav>
+            
         </div>
 
         <!-- Search Form -->
 <div class="main-card">
             <!-- Category Tabs -->
-            <div class="category-tabs">
-                <button class="cat-tab active" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
-                <button class="cat-tab" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
-                <button class="cat-tab" data-cat="hvac" onclick="selectCategory('hvac', this)">HVAC</button>
-                <button class="cat-tab" data-cat="electronics" onclick="selectCategory('electronics', this)">Electronics</button>
-            </div>
+            
 
             <!-- Form -->
             <div class="form-area">
@@ -219,63 +240,63 @@
             <h2 class="brands-section-title">Decode by Brand</h2>
             <p class="brands-section-desc">Dedicated serial number decode guides for major appliance and electronics brands.</p>
             <div class="brands-grid">
-                <a href="ge.html" class="brand-tile">
+                <a href="/ge" class="brand-tile">
                     <span class="brand-tile-name">GE</span>
                     <span class="brand-tile-desc">Refrigerators, ranges, washers</span>
                 </a>
-                <a href="whirlpool.html" class="brand-tile">
+                <a href="/whirlpool" class="brand-tile">
                     <span class="brand-tile-name">Whirlpool</span>
                     <span class="brand-tile-desc">All Whirlpool family brands</span>
                 </a>
-                <a href="samsung.html" class="brand-tile">
+                <a href="/samsung" class="brand-tile">
                     <span class="brand-tile-name">Samsung</span>
                     <span class="brand-tile-desc">Appliances &amp; TVs</span>
                 </a>
-                <a href="lg.html" class="brand-tile">
+                <a href="/lg" class="brand-tile">
                     <span class="brand-tile-name">LG</span>
                     <span class="brand-tile-desc">Appliances &amp; TVs</span>
                 </a>
-                <a href="bosch.html" class="brand-tile">
+                <a href="/bosch" class="brand-tile">
                     <span class="brand-tile-name">Bosch</span>
                     <span class="brand-tile-desc">Dishwashers, washers, ranges</span>
                 </a>
-                <a href="maytag.html" class="brand-tile">
+                <a href="/maytag" class="brand-tile">
                     <span class="brand-tile-name">Maytag</span>
                     <span class="brand-tile-desc">Pre &amp; post-2006 formats</span>
                 </a>
-                <a href="frigidaire.html" class="brand-tile">
+                <a href="/frigidaire" class="brand-tile">
                     <span class="brand-tile-name">Frigidaire</span>
                     <span class="brand-tile-desc">Refrigerators, ranges, washers</span>
                 </a>
-                <a href="kenmore.html" class="brand-tile">
+                <a href="/kenmore" class="brand-tile">
                     <span class="brand-tile-name">Kenmore</span>
                     <span class="brand-tile-desc">OEM identification guide</span>
                 </a>
-                <a href="apple.html" class="brand-tile">
+                <a href="/apple" class="brand-tile">
                     <span class="brand-tile-name">Apple</span>
                     <span class="brand-tile-desc">iPhones, iPads, Macs</span>
                 </a>
-                <a href="hp.html" class="brand-tile">
+                <a href="/hp" class="brand-tile">
                     <span class="brand-tile-name">HP</span>
                     <span class="brand-tile-desc">Laptops, desktops, printers</span>
                 </a>
-                <a href="asus.html" class="brand-tile">
+                <a href="/asus" class="brand-tile">
                     <span class="brand-tile-name">ASUS</span>
                     <span class="brand-tile-desc">Laptops, motherboards, desktops</span>
                 </a>
-                <a href="google-pixel.html" class="brand-tile">
+                <a href="/google-pixel" class="brand-tile">
                     <span class="brand-tile-name">Google Pixel</span>
                     <span class="brand-tile-desc">Pixel phones &amp; tablets</span>
                 </a>
-                <a href="sony.html" class="brand-tile">
+                <a href="/sony" class="brand-tile">
                     <span class="brand-tile-name">Sony</span>
                     <span class="brand-tile-desc">Bravia TVs &amp; home theater</span>
                 </a>
-                <a href="vizio.html" class="brand-tile">
+                <a href="/vizio" class="brand-tile">
                     <span class="brand-tile-name">Vizio</span>
                     <span class="brand-tile-desc">Vizio TVs all series</span>
                 </a>
-                <a href="panasonic.html" class="brand-tile">
+                <a href="/panasonic" class="brand-tile">
                     <span class="brand-tile-name">Panasonic</span>
                     <span class="brand-tile-desc">TVs &amp; home theater</span>
                 </a>
@@ -286,11 +307,11 @@
         <div class="footer">
             <p class="footer-tagline">Built for fast, reliable equipment age lookups.</p>
             <div class="footer-links">
-                <a href="methodology.html">Methodology</a>
+                <a href="/methodology">Methodology</a>
                 <span class="footer-sep">|</span>
-                <a href="disclaimer.html">Disclaimer</a>
+                <a href="/disclaimer">Disclaimer</a>
                 <span class="footer-sep">|</span>
-                <a href="contact.html">Contact</a>
+                <a href="/contact">Contact</a>
             </div>
             <p class="footer-verify">Database Last Verified: February 2026. All decoding logic is cross-referenced with manufacturer technical bulletins.</p>
             <p>&copy; 2026 Serial Number Decoder. Always verify results for accuracy.</p>
@@ -298,6 +319,7 @@
         </div>
 
     </div><!-- /app-container -->
+    </div><!-- /page-shell -->
 
     <!-- Guide Drawer -->
     <div id="guideOverlay" class="guide-overlay" onclick="closeGuide()"></div>
@@ -427,6 +449,19 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

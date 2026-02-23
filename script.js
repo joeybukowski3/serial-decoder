@@ -108,6 +108,10 @@ var BRAND_LOGOS = {
 
 // ===== STATE =====
 var currentCategory = 'appliances';
+
+function toggleSidebar() {
+  document.body.classList.toggle('sidebar-open');
+}
 var currentFeedbackContext = {};
 var CURRENT_YEAR = new Date().getFullYear();
 
