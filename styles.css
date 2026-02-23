@@ -4,7 +4,7 @@
 
 :root {
     --primary: #2563eb;
-    --bg-main: #f8fafc;
+    --bg-main: #eef2f5;
     --card-bg: #ffffff;
     --text-main: #1e293b;
     --text-muted: #64748b;
@@ -59,8 +59,8 @@ body {
     bottom: 0;
     height: 100vh;
     width: 250px;
-    background: #f1f5f9;
-    border-right: 1px solid var(--border);
+    background: #0f172a;
+    border-right: 1px solid #334155;
     padding: 1.25rem 1rem;
     overflow-y: auto;
     z-index: 100;
@@ -71,39 +71,105 @@ body {
 .sidebar-logo {
     font-weight: 800;
     font-size: 1rem;
-    color: var(--text-main);
+    color: #f8fafc;
     text-decoration: none;
 }
 .sidebar-section {
     margin-bottom: 1.25rem;
+}
+.sidebar-smart-top {
+    margin-bottom: 0.8rem;
+}
+.sidebar-smart-top-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-weight: 800;
+    background: rgba(234, 179, 8, 0.16);
+    border: 1px solid rgba(234, 179, 8, 0.5);
+}
+.new-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    padding: 0.16rem 0.5rem;
+    border-radius: 999px;
+    background: #dc2626;
+    color: #ffffff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.sidebar-brand-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.sidebar-brand-group {
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    overflow: hidden;
+}
+.sidebar-group-toggle {
+    width: 100%;
+    border: 0;
+    background: rgba(148, 163, 184, 0.14);
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+.sidebar-group-arrow {
+    font-size: 0.65rem;
+    color: #cbd5e1;
+    transition: transform 0.18s ease;
+}
+.sidebar-brand-group.open .sidebar-group-arrow {
+    transform: rotate(90deg);
+}
+.sidebar-group-links {
+    padding: 0.35rem;
+}
+.sidebar-group-links .sidebar-link {
+    margin: 0;
 }
 .sidebar-title {
     font-size: 0.7rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     font-weight: 700;
-    color: var(--text-muted);
+    color: #cbd5e1;
     margin-bottom: 0.5rem;
 }
 .sidebar-link {
     display: block;
     padding: 0.4rem 0.5rem;
     border-radius: 8px;
-    color: var(--text-main);
+    color: #f1f5f9;
     text-decoration: none;
     font-size: 0.85rem;
     font-weight: 600;
 }
 .sidebar-link:hover {
-    background: rgba(37, 99, 235, 0.08);
-    color: var(--primary);
+    background: rgba(148, 163, 184, 0.16);
+    color: #ffffff;
 }
 .sidebar .cat-tab {
     width: 100%;
     text-align: left;
     border-radius: 8px;
     background: transparent;
-    color: var(--text-main);
+    color: #e2e8f0;
     padding: 0.45rem 0.6rem;
     border: 1px solid transparent;
     margin-bottom: 0.35rem;
@@ -111,9 +177,9 @@ body {
     letter-spacing: 0;
 }
 .sidebar .cat-tab.active {
-    background: rgba(37, 99, 235, 0.12);
-    color: var(--primary);
-    border-color: rgba(37, 99, 235, 0.25);
+    background: rgba(59, 130, 246, 0.2);
+    color: #ffffff;
+    border-color: rgba(147, 197, 253, 0.45);
 }
 .sidebar-overlay {
     display: none;
@@ -266,8 +332,9 @@ body {
 /* ── Main Card ── */
 .main-card {
     background: var(--card-bg);
+    border: 1px solid #cbd5e1;
     border-radius: var(--radius);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
     overflow: hidden;
 }
 
@@ -284,6 +351,7 @@ body {
 .cat-tab.active { color: var(--accent2); background: var(--card-bg); border-bottom-color: var(--accent); }
 .decoder-card {
     margin-bottom: 0.65rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
 }
 .smart-lookup-standalone {
     background: #f1f5f9;
@@ -377,6 +445,35 @@ body {
     transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,180,216,0.35);
 }
 .decode-btn:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
+.guided-search-btn {
+    width: 100%;
+    margin-top: 0.45rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid #f59e0b;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+}
+.guided-search-btn:hover {
+    filter: brightness(1.06);
+}
+.guided-search-btn.pulse {
+    animation: guidedPulse 0.8s ease 2;
+}
+@keyframes guidedPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+    50% { transform: scale(1.015); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.2); }
+    100% { transform: scale(1); box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+}
+.guided-search-note {
+    margin-top: 0.35rem;
+    font-size: 0.76rem;
+    color: var(--text-mid);
+}
 
 /* ── Alt Lookup Toggle ── */
 .smart-lookup-container {
