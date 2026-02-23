@@ -185,6 +185,59 @@ function applyApplianceEraHints(base, normalizedQuery) {
   return out;
 }
 
+function applyNintendoSwitch2Hints(base, normalizedQuery) {
+  const out = { ...base };
+  const brandKey = normalizeBrandKey(out.brand);
+  const queryText = String(normalizedQuery || '');
+  const modelText = String(out.model || '').toLowerCase();
+  const notesText = String(out.notes || '').toLowerCase();
+  const rangeText = String(out.yearRange || '').toLowerCase();
+  const isSwitch2 =
+    /\bswitch\s*2\b/.test(queryText) ||
+    /\bns2\b/.test(queryText) ||
+    (brandKey === 'nintendo' && /\bswitch\s*2\b/.test(modelText)) ||
+    /\bswitch\s*2\b/.test(notesText) ||
+    /\bswitch\s*2\b/.test(rangeText);
+
+  if (!isSwitch2) return out;
+
+  const currentGenLabel = 'Current Generation (Released late 2025)';
+  const serialRuleText = 'Nintendo Switch 2 serial numbers typically follow the new 14-digit alphanumeric standard used for modern Nintendo hardware.';
+
+  if (!out.brand || String(out.brand).toLowerCase() === 'unknown') out.brand = 'Nintendo';
+  if (!out.model) out.model = 'Switch 2';
+
+  out.yearRange = currentGenLabel;
+  if (!out.estimatedYear || /not yet released/i.test(String(out.estimatedYear))) {
+    out.estimatedYear = '2025';
+  }
+
+  out.notes = String(out.notes || '').replace(/not yet released/ig, 'released late 2025').trim();
+  if (!out.notes) {
+    out.notes = 'Nintendo Switch 2 is the current generation, released in late 2025.';
+  } else if (!/released late 2025/i.test(out.notes)) {
+    out.notes += ' Nintendo Switch 2 is the current generation, released in late 2025.';
+  }
+
+  if (!out.serialRule) {
+    out.serialRule = serialRuleText;
+  } else if (!/14-digit alphanumeric/i.test(String(out.serialRule))) {
+    out.serialRule = `${out.serialRule} ${serialRuleText}`;
+  }
+
+  return out;
+}
+
+function applyEraHints(base, normalizedQuery) {
+  return applyNintendoSwitch2Hints(
+    applyApplianceEraHints(
+      applyHvacEraHints(base, normalizedQuery),
+      normalizedQuery
+    ),
+    normalizedQuery
+  );
+}
+
 function decodeHvacSerial(query, normalizedQuery) {
   const cfg = findHvacBrand(normalizedQuery);
   if (!cfg) return null;
@@ -287,7 +340,7 @@ export default async function handler(req, res) {
   try {
     const cached = await redis.get(queryCacheKey);
     if (cached) {
-      return res.status(200).json(cached);
+      return res.status(200).json(applyEraHints(cached, normalizedQuery));
     }
   } catch (_) {
     // Cache miss or unavailable — proceed to AI
@@ -341,6 +394,9 @@ Research approach:
   - GE: Profile and Monogram follow different production windows; Camelback console styling indicates older legacy generations.
   - Samsung washers: VRT indicates post-2006 era; AddWash indicates post-2016 era.
   - LG washers: Inverter DirectDrive branding aligns with cycles starting in 2009.
+- Apply this Nintendo-console mapping when relevant:
+  - Nintendo Switch 2 is current generation and released in late 2025 (do not classify it as unreleased).
+  - Mention that Switch 2 serial numbers typically follow a modern 14-digit alphanumeric standard.
 
 IMPORTANT — Generic category queries:
 - If the query is ONLY a product category with no brand or model (e.g. "refrigerator", "washer", "dryer", "water heater", "tv", "television", "microwave", "dishwasher", "laptop", "printer", "phone", "tablet", "air conditioner", "freezer", "range", "oven"):
@@ -403,7 +459,7 @@ Rules for exampleModelNumber and suggestedModelNumbers:
       return res.status(502).json({ error: 'No response from AI service' });
     }
 
-    const result = applyApplianceEraHints(applyHvacEraHints(JSON.parse(text), normalizedQuery), normalizedQuery);
+    const result = applyEraHints(JSON.parse(text), normalizedQuery);
 
     // ── Write query cache (14-day TTL) ────────────────────────────────────
     try {
