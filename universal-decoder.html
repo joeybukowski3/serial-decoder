@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Decoder | Select by Category</title>
+    <meta name="description" content="Choose a category and brand to open the correct decoder page.">
+    <link rel="canonical" href="https://www.decodemyitem.com/universal-decoder.html">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .universal-wrap {
+            max-width: 760px;
+            margin: 2.5rem auto;
+            padding: 0 1rem;
+        }
+        .universal-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            padding: 1.25rem 1.2rem 1.35rem;
+        }
+        .universal-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 0.35rem;
+        }
+        .universal-sub {
+            font-size: 0.9rem;
+            color: #475569;
+            margin-bottom: 0.95rem;
+        }
+        .universal-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+        .universal-actions {
+            margin-top: 0.8rem;
+            display: flex;
+            gap: 0.55rem;
+            flex-wrap: wrap;
+        }
+        .universal-btn {
+            border: 1px solid #94a3b8;
+            background: #0f172a;
+            color: #ffffff;
+            border-radius: 10px;
+            padding: 0.62rem 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="circuit-bg"></div>
+    <div class="page-shell" style="padding-left:0;padding-right:0;">
+        <div class="app-container">
+            <div class="universal-wrap">
+                <div class="universal-card">
+                    <h1 class="universal-title">Universal Category Decoder</h1>
+                    <p class="universal-sub">Select a brand within this category to jump to its dedicated decoder page.</p>
+                    <div class="universal-grid">
+                        <div class="form-group">
+                            <div class="step-label">Category</div>
+                            <select id="uCategory" class="form-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <div class="step-label">Brand</div>
+                            <select id="uBrand" class="form-select"></select>
+                        </div>
+                        <div class="form-group">
+                            <div class="step-label">Serial Number (optional)</div>
+                            <input id="uSerial" class="form-input" type="text" placeholder="Carry serial to selected brand page">
+                        </div>
+                    </div>
+                    <div class="universal-actions">
+                        <button id="uGo" class="universal-btn" type="button">Open Brand Decoder</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            var map = {
+                hvac: [
+                    { name: 'Goodman', slug: 'goodman' },
+                    { name: 'Carrier', slug: 'carrier' },
+                    { name: 'Rheem', slug: 'rheem' },
+                    { name: 'Trane', slug: 'trane' }
+                ],
+                appliances: [
+                    { name: 'GE', slug: 'ge' },
+                    { name: 'Whirlpool', slug: 'whirlpool' },
+                    { name: 'Samsung', slug: 'samsung' },
+                    { name: 'LG', slug: 'lg' },
+                    { name: 'Bosch', slug: 'bosch' },
+                    { name: 'Maytag', slug: 'maytag' },
+                    { name: 'Frigidaire', slug: 'frigidaire' },
+                    { name: 'Kenmore', slug: 'kenmore' }
+                ],
+                electronics: [
+                    { name: 'Apple', slug: 'apple' },
+                    { name: 'HP', slug: 'hp' },
+                    { name: 'ASUS', slug: 'asus' },
+                    { name: 'Google Pixel', slug: 'google-pixel' },
+                    { name: 'Sony', slug: 'sony' },
+                    { name: 'Vizio', slug: 'vizio' },
+                    { name: 'Panasonic', slug: 'panasonic' }
+                ]
+            };
+
+            var categorySel = document.getElementById('uCategory');
+            var brandSel = document.getElementById('uBrand');
+            var serialEl = document.getElementById('uSerial');
+            var goBtn = document.getElementById('uGo');
+
+            Object.keys(map).forEach(function(key) {
+                var opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = key.toUpperCase() === 'HVAC' ? 'HVAC' : (key.charAt(0).toUpperCase() + key.slice(1));
+                categorySel.appendChild(opt);
+            });
+
+            function fillBrands(cat) {
+                brandSel.innerHTML = '';
+                (map[cat] || []).forEach(function(item) {
+                    var opt = document.createElement('option');
+                    opt.value = item.slug;
+                    opt.textContent = item.name;
+                    brandSel.appendChild(opt);
+                });
+            }
+
+            categorySel.addEventListener('change', function() {
+                fillBrands(categorySel.value);
+            });
+
+            goBtn.addEventListener('click', function() {
+                var slug = brandSel.value;
+                if (!slug) return;
+                var serial = (serialEl.value || '').trim();
+                var target = '/' + slug;
+                if (serial) target += '?serial=' + encodeURIComponent(serial);
+                window.location.href = target;
+            });
+
+            var params = new URLSearchParams(window.location.search || '');
+            var startCat = params.get('cat');
+            if (startCat && map[startCat]) categorySel.value = startCat;
+            fillBrands(categorySel.value || 'appliances');
+        })();
+    </script>
+</body>
+</html>
