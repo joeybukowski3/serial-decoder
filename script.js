@@ -115,12 +115,30 @@ function toggleSidebar() {
 var currentFeedbackContext = {};
 var CURRENT_YEAR = new Date().getFullYear();
 
+function getDecodeDom() {
+  var scope = document.querySelector('.decoder-card') || document.querySelector('.main-card') || document;
+  var brandEl = document.getElementById('brand') ||
+    scope.querySelector('select#brand, select[name="brand"], .form-area select.form-select');
+  var serialEl = document.getElementById('serial') ||
+    scope.querySelector('input#serial, input[name="serial"], .form-area input.form-input[type="text"]');
+  var btnEl = document.getElementById('decodeBtn') ||
+    scope.querySelector('button#decodeBtn, button.decode-btn[onclick*="decodeSerial"]');
+  return { brandEl: brandEl, serialEl: serialEl, btnEl: btnEl };
+}
+
+function getBrandPageSlug() {
+  var parts = (window.location.pathname || '')
+    .split('/')
+    .filter(Boolean);
+  if (parts.length === 0) return '';
+  return parts[parts.length - 1].replace(/\.html$/i, '');
+}
+
 // ===== BRAND CONTEXT (brand pages) =====
 function loadBrandContext() {
   try {
-    var path = (window.location.pathname || '').split('/').pop() || '';
-    if (!/\.html$/.test(path)) return;
-    var slug = path.replace('.html', '');
+    var slug = getBrandPageSlug();
+    if (!slug) return;
     var BRAND_PAGE_MAP = {
       'goodman': { name: 'Goodman', category: 'hvac', brandId: 'goodman' },
       'carrier': { name: 'Carrier', category: 'hvac', brandId: 'carrier' },
@@ -145,7 +163,8 @@ function loadBrandContext() {
     var ctx = BRAND_PAGE_MAP[slug];
     if (!ctx) return;
 
-    var brandSelect = document.getElementById('brand');
+    var dom = getDecodeDom();
+    var brandSelect = dom.brandEl;
     if (!brandSelect) return;
 
     if (ctx.category) {
@@ -176,7 +195,7 @@ function loadBrandContext() {
       t.classList.add('cat-tab-locked');
     });
 
-    var serialInput = document.getElementById('serial');
+    var serialInput = dom.serialEl;
     if (serialInput && serialInput.focus) {
       setTimeout(function() { serialInput.focus(); }, 120);
     }
@@ -185,8 +204,9 @@ function loadBrandContext() {
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', function() {
-  var brandSelect = document.getElementById('brand');
-  var serialInput = document.getElementById('serial');
+  var dom = getDecodeDom();
+  var brandSelect = dom.brandEl;
+  var serialInput = dom.serialEl;
   var eraSelect   = document.getElementById('eraSelect');
   var altQuery    = document.getElementById('altQuery');
 
@@ -214,14 +234,19 @@ document.addEventListener('DOMContentLoaded', function() {
         if (tabBtn) selectCategory(catParam, tabBtn);
       }
       if (brandParam) {
-        var sel = document.getElementById('brand');
-        for (var i = 0; i < sel.options.length; i++) {
-          if (sel.options[i].value === brandParam) {
-            sel.value = brandParam;
-            onBrandChange();
-            updateDecodeBtn();
-            setTimeout(function() { document.getElementById('serial').focus(); }, 150);
-            break;
+        var sel = getDecodeDom().brandEl;
+        if (sel) {
+          for (var i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value === brandParam) {
+              sel.value = brandParam;
+              onBrandChange();
+              updateDecodeBtn();
+              setTimeout(function() {
+                var s = getDecodeDom().serialEl;
+                if (s && s.focus) s.focus();
+              }, 150);
+              break;
+            }
           }
         }
       }
@@ -245,7 +270,8 @@ function selectCategory(cat, btn) {
   document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.remove('active'); });
   btn.classList.add('active');
   populateBrands(cat);
-  document.getElementById('serial').value = '';
+  var serialEl = getDecodeDom().serialEl;
+  if (serialEl) serialEl.value = '';
   document.getElementById('serialResults').classList.add('hidden');
   document.getElementById('ageResults').classList.add('hidden');
   hideEraGroup();
@@ -324,9 +350,10 @@ function resolveDecoderId(metaBrandId) {
 }
 
 function updateDecodeBtn() {
-  var brandEl  = document.getElementById('brand');
-  var serialEl = document.getElementById('serial');
-  var btnEl    = document.getElementById('decodeBtn');
+  var dom = getDecodeDom();
+  var brandEl  = dom.brandEl;
+  var serialEl = dom.serialEl;
+  var btnEl    = dom.btnEl;
   if (!brandEl || !serialEl || !btnEl) return;
   var brand  = brandEl.value;
   var serial = serialEl.value.trim();
@@ -442,8 +469,10 @@ function showDecodeFallback(decoder, serial, brandId, reason) {
 
 // ===== SERIAL DECODE =====
 function decodeSerial() {
-  var metaBrandId = document.getElementById('brand').value;
-  var serial = document.getElementById('serial').value.trim();
+  var dom = getDecodeDom();
+  if (!dom.brandEl || !dom.serialEl) return;
+  var metaBrandId = dom.brandEl.value;
+  var serial = dom.serialEl.value.trim();
   if (!metaBrandId || !serial) return;
 
   var brandId = resolveDecoderId(metaBrandId);
