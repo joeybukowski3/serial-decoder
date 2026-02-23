@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Lookup | Decode by Model or Description</title>
+    <meta name="description" content="Use Smart Lookup to estimate product age when you don't have a serial number. Enter a model number or description and get an instant estimate.">
+    <link rel="canonical" href="https://www.decodemyitem.com/smart-lookup.html">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="circuit-bg"></div>
+    <div class="circuit-nodes">
+        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
+        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
+    </div>
+
+    <div class="app-container">
+        <div class="header">
+            <div class="header-brand">
+                <h1><span class="accent">&#9889;</span> Smart Lookup <span class="accent">Tool</span></h1>
+                <p class="subtitle">Estimate manufacture dates by model number or description</p>
+                <p class="header-tagline">No serial number needed — get an instant estimate for appliances, water heaters, electronics, and HVAC.</p>
+            </div>
+            <nav class="header-nav">
+                <a class="header-nav-link" href="index.html">&#8592; Back to Tool</a>
+                <a class="header-nav-link" href="smart-lookup.html" style="border-color: rgba(0,180,216,0.5); color: var(--accent);">Smart Lookup</a>
+                <a class="header-nav-link header-nav-secondary" href="methodology.html">Methodology</a>
+                <div class="nav-dropdown">
+                    <button class="header-nav-link header-nav-secondary nav-dropdown-toggle">Brands</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="goodman.html">Goodman</a>
+                        <a href="carrier.html">Carrier</a>
+                        <a href="rheem.html">Rheem</a>
+                        <a href="trane.html">Trane</a>
+                        <a href="whirlpool.html">Whirlpool</a>
+                        <a href="ge.html">GE</a>
+                        <a href="samsung.html">Samsung</a>
+                        <a href="lg.html">LG</a>
+                        <a href="sony.html">Sony</a>
+                    </div>
+                </div>
+                <a class="header-nav-link header-nav-secondary" href="contact.html">Contact</a>
+            </nav>
+        </div>
+
+        <div class="main-card">
+            <div class="form-area">
+                <div class="smart-lookup-container">
+                    <div class="smart-lookup-header">No Serial Number? Use Smart Lookup</div>
+                    <div id="altSection" class="alt-section open">
+                        <div class="alt-inner">
+                            <div class="alt-divider"><span>Smart Lookup</span></div>
+                            <div class="form-group">
+                                <div class="step-label">Model Number or Description</div>
+                                <input type="text" id="altQuery" class="form-input" placeholder="e.g., GE Profile PFE28KSKSS or LG 55&quot; C3 series TV">
+                                <div class="helper-text">Enter a model number, brand + model, or description to estimate the age</div>
+                            </div>
+                            <p class="alt-scope-note">&#128268; Works for appliances, water heaters, <strong>electronics</strong>, and HVAC — even if the brand is not listed.</p>
+                            <p class="alt-disclaimer hidden">Note: Serial numbers are the most reliable way to date an item. This tool estimates age ranges using online research data—the more specific your info, the better the results. Keep in mind that general search terms may yield broader date ranges for long-running models.</p>
+                            <button class="decode-btn" onclick="estimateAge()">Estimate Age</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="ageLoading" class="results-card hidden">
+            <div class="loading-inner">
+                <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
+                <div class="loading-text" id="loadingText">Researching product information...</div>
+            </div>
+        </div>
+
+        <div id="ageResults" class="results-card hidden">
+            <div class="results-header">
+                <h3>&#128337; Estimated Age</h3>
+                <div class="brand-logo-wrap" id="ageBrandLogo"></div>
+            </div>
+            <div class="results-body" id="ageResultsBody"></div>
+            <div class="results-footer">
+                <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
+                <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>&#9888; Report an Issue</h3>
+                <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-field">
+                    <label>Brand</label>
+                    <input type="text" id="fbBrand" class="form-input" readonly>
+                </div>
+                <div class="modal-field">
+                    <label>Serial Number / Search Query</label>
+                    <input type="text" id="fbSerial" class="form-input" readonly>
+                </div>
+                <div class="modal-field">
+                    <label>Issue Type</label>
+                    <select id="fbType" class="form-select">
+                        <option value="">-- Select issue type --</option>
+                        <option value="wrong_year">Wrong year / date</option>
+                        <option value="wrong_month">Wrong month</option>
+                        <option value="wrong_brand">Wrong brand identified</option>
+                        <option value="format_error">Format / decode error</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="modal-field">
+                    <label>Details (optional)</label>
+                    <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong? What is the correct date if known?"></textarea>
+                </div>
+                <div id="fbThanks" class="fb-thanks hidden">&#10003; Thank you! Your feedback helps improve this tool.</div>
+                <div id="fbActions" class="modal-actions">
+                    <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
+                    <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="decoder-data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
+

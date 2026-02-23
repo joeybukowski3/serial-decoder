@@ -3,12 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serial Number Age Decoder | Find Appliance &amp; Equipment Manufacture Date</title>
-    <meta name="description" content="Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.">
-    <link rel="canonical" href="https://www.decodemyitem.com/">
+    <title>Trane Serial Number Decoder | Find Manufacture Date</title>
+    <meta name="description" content="Decode your Trane serial number to find the manufacture date and equipment age.">
+    <link rel="canonical" href="https://www.decodemyitem.com/trane.html">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .header-logo { font-size: 1.5rem; font-weight: 800; color: var(--text-white); letter-spacing: -0.02em; text-shadow: 0 0 30px rgba(0,180,216,0.3); margin: 0; }
+        .header-logo .accent { color: var(--accent); }
+        .header-logo a { color: inherit; text-decoration: none; }
+        .static-card { background: var(--card-bg); border-radius: var(--radius); box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,180,216,0.08); overflow: hidden; margin-top: 1.5rem; }
+        .static-card-header { background: linear-gradient(135deg, #0d2847 0%, #1a3a5c 100%); padding: 1.5rem 2rem; }
+        .static-card-header h1 { font-size: 1.25rem; font-weight: 800; color: var(--text-white); }
+        .static-card-header p { font-size: 0.88rem; color: rgba(232,237,245,0.7); margin-top: 0.3rem; }
+        .static-card-body { padding: 2rem; color: var(--text-dark); }
+        .static-section { margin-bottom: 1.75rem; }
+        .static-section h2 { font-size: 1rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.6rem; padding-bottom: 0.4rem; border-bottom: 2px solid #e2e8f0; }
+        .static-section p { font-size: 0.9rem; color: var(--text-mid); line-height: 1.75; margin-bottom: 0.6rem; }
+        .cta-block { background: linear-gradient(135deg, #ecfeff 0%, #f0f9ff 100%); border: 1px solid rgba(0,180,216,0.25); border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 1.75rem; }
+        .cta-block h2 { font-size: 1.05rem; font-weight: 700; color: #1e293b; margin-bottom: 0.4rem; border: none; padding: 0; }
+        .cta-block p { font-size: 0.875rem; color: #475569; margin-bottom: 1rem; }
+    </style>
 </head>
 <body>
     <div class="circuit-bg"></div>
@@ -16,20 +32,16 @@
         <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
         <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
     </div>
-
     <div class="app-container">
 
-        <!-- Header -->
         <div class="header">
             <div class="header-brand">
-                <h1><span class="accent">&#9889;</span> Serial Number Age <span class="accent">Decoder</span></h1>
-                <p class="subtitle">Find manufacture dates for appliances, water heaters &amp; electronics</p>
-                <p class="header-tagline">Trusted by <strong>homeowners</strong> and <strong>insurance professionals</strong> to determine equipment age from serial numbers — no account required.</p>
+                <p class="header-logo"><a href="index.html"><span class="accent">&#9889;</span> Serial Number <span class="accent">Decoder</span></a></p>
+                <p class="subtitle">Professional Equipment Age Dating</p>
             </div>
             <nav class="header-nav">
-                <button class="header-nav-link" onclick="openGuide()">&#9432; How to Use</button>
+                <a class="header-nav-link" href="index.html">&#8592; Back to Tool</a>
                 <a class="header-nav-link header-nav-secondary" href="smart-lookup.html">Smart Lookup</a>
-                <a class="header-nav-link header-nav-secondary" href="methodology.html">Methodology</a>
                 <div class="nav-dropdown">
                     <button class="header-nav-link header-nav-secondary nav-dropdown-toggle">Brands</button>
                     <div class="nav-dropdown-menu">
@@ -44,12 +56,11 @@
                         <a href="sony.html">Sony</a>
                     </div>
                 </div>
-                <a class="header-nav-link header-nav-secondary" href="contact.html">Contact</a>
             </nav>
         </div>
 
         <!-- Search Form -->
-<div class="main-card">
+<div class="main-card decoder-card">
             <!-- Category Tabs -->
             <div class="category-tabs">
                 <button class="cat-tab active" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
@@ -83,37 +94,33 @@
 
                 <div class="form-group">
                     <div class="step-label">Enter Serial Number</div>
-                    <input type="text" id="serial" class="form-input" placeholder="Enter serial number (e.g., CB2501800)">
+                    <input type="text" id="serial" class="form-input" placeholder="Enter Trane Serial Number..." autofocus>
                     <div class="helper-text">Enter the serial number exactly as shown on the product label</div>
                 </div>
 
                 <button id="decodeBtn" class="decode-btn" disabled onclick="decodeSerial()">Decode Serial Number</button>
-                <div class="smart-lookup-container">
-                    <div class="smart-lookup-header">No Serial Number? Use Smart Lookup</div>
-                    <!-- Alt Lookup Toggle -->
-                    <span class="alt-toggle open" onclick="toggleAlt()">
-                        <span class="arrow">&#9654;</span> No serial number? Search by model or description
-                    </span>
+            </div>
+        </div>
 
-                    <div id="altSection" class="alt-section open">
-                        <div class="alt-inner">
-                            <div class="alt-divider"><span>Smart Lookup</span></div>
-                            <div class="form-group">
-                                <div class="step-label">Model Number or Description</div>
-                                <input type="text" id="altQuery" class="form-input" placeholder="e.g., GE Profile PFE28KSKSS or LG 55&quot; C3 series TV">
-                                <div class="helper-text">Enter a model number, brand + model, or description to estimate the age</div>
-                            </div>
-                            <p class="alt-scope-note">&#128268; Works for appliances, water heaters, <strong>and electronics</strong> — TVs, computers, phones, and any brand not listed in the tabs above.</p>
-                            <p class="alt-disclaimer hidden">Note: Serial numbers are the most reliable way to date an item. This tool estimates age ranges using online research data—the more specific your info, the better the results. Keep in mind that general search terms may yield broader date ranges for long-running models.</p>
-                            <button class="decode-btn" onclick="estimateAge()">Estimate Age</button>
-                        </div>
+        <div class="smart-lookup-standalone">
+            <div class="smart-lookup-standalone-header">No Serial? Use Smart Lookup</div>
+            <div id="altSection" class="alt-section open">
+                <div class="alt-inner">
+                    <div class="alt-divider"><span>Smart Lookup</span></div>
+                    <div class="form-group">
+                        <div class="step-label">Model Number or Description</div>
+                        <input type="text" id="altQuery" class="form-input" placeholder="Search Trane model or description...">
+                        <div class="helper-text">Enter a model number, brand + model, or description to estimate the age</div>
                     </div>
+                    <p class="alt-scope-note">&#128268; Works for appliances, water heaters, <strong>and electronics</strong> — TVs, computers, phones, and any brand not listed in the tabs above.</p>
+                    <p class="alt-disclaimer hidden">Note: Serial numbers are the most reliable way to date an item. This tool estimates age ranges using online research data—the more specific your info, the better the results. Keep in mind that general search terms may yield broader date ranges for long-running models.</p>
+                    <button class="decode-btn" onclick="estimateAge()">Estimate Age</button>
                 </div>
             </div>
         </div>
 
 <!-- Loading -->
-        <div id="ageLoading" class="results-card hidden">
+<div id="ageLoading" class="results-card hidden">
             <div class="loading-inner">
                 <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
                 <div class="loading-text" id="loadingText">Researching product information...</div>
@@ -216,119 +223,32 @@
             </div>
         </div>
 
-        <!-- Popular Brands SEO Section -->
-        <section class="popular-brands-section" aria-label="Decode by brand">
-            <h2 class="brands-section-title">Decode by Brand</h2>
-            <p class="brands-section-desc">Dedicated serial number decode guides for major appliance and electronics brands.</p>
-            <div class="brands-grid">
-                <a href="ge.html" class="brand-tile">
-                    <span class="brand-tile-name">GE</span>
-                    <span class="brand-tile-desc">Refrigerators, ranges, washers</span>
-                </a>
-                <a href="whirlpool.html" class="brand-tile">
-                    <span class="brand-tile-name">Whirlpool</span>
-                    <span class="brand-tile-desc">All Whirlpool family brands</span>
-                </a>
-                <a href="samsung.html" class="brand-tile">
-                    <span class="brand-tile-name">Samsung</span>
-                    <span class="brand-tile-desc">Appliances &amp; TVs</span>
-                </a>
-                <a href="lg.html" class="brand-tile">
-                    <span class="brand-tile-name">LG</span>
-                    <span class="brand-tile-desc">Appliances &amp; TVs</span>
-                </a>
-                <a href="bosch.html" class="brand-tile">
-                    <span class="brand-tile-name">Bosch</span>
-                    <span class="brand-tile-desc">Dishwashers, washers, ranges</span>
-                </a>
-                <a href="maytag.html" class="brand-tile">
-                    <span class="brand-tile-name">Maytag</span>
-                    <span class="brand-tile-desc">Pre &amp; post-2006 formats</span>
-                </a>
-                <a href="frigidaire.html" class="brand-tile">
-                    <span class="brand-tile-name">Frigidaire</span>
-                    <span class="brand-tile-desc">Refrigerators, ranges, washers</span>
-                </a>
-                <a href="kenmore.html" class="brand-tile">
-                    <span class="brand-tile-name">Kenmore</span>
-                    <span class="brand-tile-desc">OEM identification guide</span>
-                </a>
-                <a href="apple.html" class="brand-tile">
-                    <span class="brand-tile-name">Apple</span>
-                    <span class="brand-tile-desc">iPhones, iPads, Macs</span>
-                </a>
-                <a href="hp.html" class="brand-tile">
-                    <span class="brand-tile-name">HP</span>
-                    <span class="brand-tile-desc">Laptops, desktops, printers</span>
-                </a>
-                <a href="asus.html" class="brand-tile">
-                    <span class="brand-tile-name">ASUS</span>
-                    <span class="brand-tile-desc">Laptops, motherboards, desktops</span>
-                </a>
-                <a href="google-pixel.html" class="brand-tile">
-                    <span class="brand-tile-name">Google Pixel</span>
-                    <span class="brand-tile-desc">Pixel phones &amp; tablets</span>
-                </a>
-                <a href="sony.html" class="brand-tile">
-                    <span class="brand-tile-name">Sony</span>
-                    <span class="brand-tile-desc">Bravia TVs &amp; home theater</span>
-                </a>
-                <a href="vizio.html" class="brand-tile">
-                    <span class="brand-tile-name">Vizio</span>
-                    <span class="brand-tile-desc">Vizio TVs all series</span>
-                </a>
-                <a href="panasonic.html" class="brand-tile">
-                    <span class="brand-tile-name">Panasonic</span>
-                    <span class="brand-tile-desc">TVs &amp; home theater</span>
-                </a>
+<div class="static-card">
+            <div class="static-card-header">
+                <h1>Trane Serial Number Decoder</h1>
+                <p>Find the manufacture date and age of your Trane equipment.</p>
             </div>
-        </section>
+            <div class="static-card-body">
+                <div class="cta-block">
+                    <h2>Decode Your Trane Serial Number</h2>
+                    <p>Enter your full Trane serial number for an instant manufacture date — no account needed.</p>
+                </div>
+                <div class="static-section">
+                    <h2>Tag Location Guide</h2>
+                    <p>Find the nameplate on the top corner of the unit; look specifically for the MFR DATE printed next to the serial.</p>
+                </div>
+            </div>
+        </div>
 
-        <!-- Footer -->
         <div class="footer">
             <p class="footer-tagline">Built for fast, reliable equipment age lookups.</p>
             <div class="footer-links">
-                <a href="methodology.html">Methodology</a>
-                <span class="footer-sep">|</span>
-                <a href="disclaimer.html">Disclaimer</a>
-                <span class="footer-sep">|</span>
+                <a href="index.html">Home</a><span class="footer-sep">|</span>
+                <a href="methodology.html">Methodology</a><span class="footer-sep">|</span>
+                <a href="disclaimer.html">Disclaimer</a><span class="footer-sep">|</span>
                 <a href="contact.html">Contact</a>
             </div>
             <p>&copy; 2026 Serial Number Decoder. Always verify results for accuracy.</p>
-            <p class="footer-db">Database updated February 2026 &nbsp;&middot;&nbsp; Sources: Manufacturer documentation and authorized publications</p>
-        </div>
-
-    </div><!-- /app-container -->
-
-    <!-- Guide Drawer -->
-    <div id="guideOverlay" class="guide-overlay" onclick="closeGuide()"></div>
-    <div id="guideDrawer" class="guide-drawer">
-        <div class="guide-drawer-header">
-            <h3>&#9432; How to Use This Tool</h3>
-            <button class="guide-drawer-close" onclick="closeGuide()">&#x2715;</button>
-        </div>
-        <div class="guide-drawer-body">
-            <h4>Quick Decoding</h4>
-            <ol>
-                <li>Click <strong>Appliances</strong> or <strong>Water Heaters</strong></li>
-                <li>Choose the <strong>brand</strong> from the dropdown</li>
-                <li>If an <strong>Era selector</strong> appears, choose Pre-2006 or Post-2006</li>
-                <li>Enter the <strong>serial number</strong> exactly as shown on the label</li>
-                <li>Click <strong>Decode Serial Number</strong></li>
-            </ol>
-            <h4>No Serial Number?</h4>
-            <p>Use the <strong>Smart Lookup</strong> section. Enter a model number, brand name, or description (e.g., "GE Profile PFE28KSKSS") to get an AI-powered age estimate.</p>
-            <h4>Finding Serial Numbers</h4>
-            <ul>
-                <li><strong>Refrigerators:</strong> Inside on the left or right wall</li>
-                <li><strong>Ovens/Ranges:</strong> Inside the door or on the back panel</li>
-                <li><strong>Dishwashers:</strong> Top edge of the door or side panel</li>
-                <li><strong>Washers/Dryers:</strong> Inside the door or on the back</li>
-                <li><strong>Water Heaters:</strong> On a sticker/plate on the side of the tank</li>
-            </ul>
-            <div class="warning-note">
-                <strong>For Insurance Claims:</strong> Many serial number codes repeat every 10–20 years. Always verify the decade using physical condition, model features, purchase receipts, or installation records. Document which method you used to determine the final manufacture date.
-            </div>
         </div>
     </div>
 
@@ -374,58 +294,6 @@
 
     <script src="decoder-data.js"></script>
     <script src="script.js"></script>
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Serial Number Age Decoder",
-      "url": "https://www.decodemyitem.com",
-      "description": "Decode appliance and electronics serial numbers to find manufacture date and age. Free, instant results for GE, Whirlpool, Samsung, LG, Bosch and more.",
-      "applicationCategory": "UtilityApplication",
-      "operatingSystem": "Any",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
-    }
-    </script>
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "How do I decode a serial number?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Select your appliance brand from the dropdown, enter the full serial number exactly as shown on the product label, and click Decode. The tool applies the manufacturer's encoding rules to extract the manufacture date instantly."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Where is the serial number located on my appliance?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Serial number location varies by appliance. On refrigerators, check inside the fresh food compartment wall. On dishwashers, look on the inner edge of the door. Washers and dryers typically have it on the door frame. Ranges show it on the oven door frame. Water heaters display it on a label on the side of the tank."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How accurate is this serial number decoder?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "For supported brands, accuracy is high when the full serial number is entered correctly. Some manufacturers reuse year codes on repeating cycles, which may result in two possible manufacture years being shown. In those cases, physical condition and model features can help confirm the correct decade."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Does this tool work for both appliances and electronics?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. The decoder supports major home appliances including refrigerators, washers, dryers, dishwashers, and ranges, plus water heaters and electronics including Samsung and LG TVs. Use the Smart Lookup feature for brands or models not listed in the main tabs."
-          }
-        }
-      ]
-    }
-    </script>
 </body>
 </html>
 
