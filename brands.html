@@ -84,31 +84,59 @@
         <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
     </div>
 
+        <aside class="sidebar">
+        <div class="sidebar-header">
+            <a class="sidebar-logo" href="/">Serial Number Decoder</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-title">Categories</div>
+            <button class="cat-tab active" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
+            <button class="cat-tab" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
+            <button class="cat-tab" data-cat="hvac" onclick="selectCategory('hvac', this)">HVAC</button>
+            <button class="cat-tab" data-cat="electronics" onclick="selectCategory('electronics', this)">Electronics</button>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-title">Brands</div>
+            <a class="sidebar-link" href="/goodman">Goodman</a>
+            <a class="sidebar-link" href="/carrier">Carrier</a>
+            <a class="sidebar-link" href="/rheem">Rheem</a>
+            <a class="sidebar-link" href="/trane">Trane</a>
+            <a class="sidebar-link" href="/whirlpool">Whirlpool</a>
+            <a class="sidebar-link" href="/ge">GE</a>
+            <a class="sidebar-link" href="/samsung">Samsung</a>
+            <a class="sidebar-link" href="/lg">LG</a>
+            <a class="sidebar-link" href="/sony">Sony</a>
+            <a class="sidebar-link" href="/bosch">Bosch</a>
+            <a class="sidebar-link" href="/maytag">Maytag</a>
+            <a class="sidebar-link" href="/frigidaire">Frigidaire</a>
+            <a class="sidebar-link" href="/kenmore">Kenmore</a>
+            <a class="sidebar-link" href="/apple">Apple</a>
+            <a class="sidebar-link" href="/hp">HP</a>
+            <a class="sidebar-link" href="/asus">ASUS</a>
+            <a class="sidebar-link" href="/google-pixel">Google Pixel</a>
+            <a class="sidebar-link" href="/vizio">Vizio</a>
+            <a class="sidebar-link" href="/panasonic">Panasonic</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-title">Resources</div>
+            <a class="sidebar-link" href="/smart-lookup">Smart Lookup</a>
+            <a class="sidebar-link" href="/methodology">Methodology</a>
+            <a class="sidebar-link" href="/disclaimer">Disclaimer</a>
+            <a class="sidebar-link" href="/contact">Contact</a>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <div class="ad-zone"><div class="ad-label">Data Partner</div></div>
+    <div class="page-shell">
     <div class="app-container">
 
         <div class="header">
+            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle navigation">&#9776;</button>
             <div class="header-brand">
                 <h1><span class="accent">&#9889;</span> Serial Number <span class="accent">Decoder</span></h1>
                 <p class="subtitle">Professional Serial Number Age Decoder for Appliances &amp; Equipment</p>
             </div>
-            <nav class="header-nav">
-                <a class="header-nav-link" href="index.html">&#8592; Back to Tool</a>
-                <a class="header-nav-link header-nav-secondary" href="smart-lookup.html">Smart Lookup</a>
-                <div class="nav-dropdown">
-                    <button class="header-nav-link header-nav-secondary nav-dropdown-toggle">Brands</button>
-                    <div class="nav-dropdown-menu">
-                        <a href="goodman.html">Goodman</a>
-                        <a href="carrier.html">Carrier</a>
-                        <a href="rheem.html">Rheem</a>
-                        <a href="trane.html">Trane</a>
-                        <a href="whirlpool.html">Whirlpool</a>
-                        <a href="ge.html">GE</a>
-                        <a href="samsung.html">Samsung</a>
-                        <a href="lg.html">LG</a>
-                        <a href="sony.html">Sony</a>
-                    </div>
-                </div>
-            </nav>
+            
         </div>
 
         <div class="static-card">
@@ -135,31 +163,31 @@
                     <div class="brand-grid">
                         <div class="brand-pill"><span class="brand-dot"></span>Admiral</div>
                         <div class="brand-pill"><span class="brand-dot"></span>Amana</div>
-                        <a href="bosch.html" class="brand-pill"><span class="brand-dot"></span>Bosch</a>
+                        <a href="/bosch" class="brand-pill"><span class="brand-dot"></span>Bosch</a>
                         <div class="brand-pill"><span class="brand-dot"></span>Crosley</div>
                         <div class="brand-pill"><span class="brand-dot"></span>Electrolux</div>
                         <div class="brand-pill"><span class="brand-dot"></span>Estate</div>
-                        <a href="frigidaire.html" class="brand-pill"><span class="brand-dot"></span>Frigidaire</a>
+                        <a href="/frigidaire" class="brand-pill"><span class="brand-dot"></span>Frigidaire</a>
                         <div class="brand-pill"><span class="brand-dot"></span>Gaggenau</div>
-                        <a href="ge.html" class="brand-pill"><span class="brand-dot"></span>GE</a>
-                        <a href="ge.html" class="brand-pill"><span class="brand-dot"></span>GE Café</a>
-                        <a href="ge.html" class="brand-pill"><span class="brand-dot"></span>GE Monogram</a>
-                        <a href="ge.html" class="brand-pill"><span class="brand-dot"></span>GE Profile</a>
+                        <a href="/ge" class="brand-pill"><span class="brand-dot"></span>GE</a>
+                        <a href="/ge" class="brand-pill"><span class="brand-dot"></span>GE Café</a>
+                        <a href="/ge" class="brand-pill"><span class="brand-dot"></span>GE Monogram</a>
+                        <a href="/ge" class="brand-pill"><span class="brand-dot"></span>GE Profile</a>
                         <div class="brand-pill"><span class="brand-dot"></span>Gibson</div>
                         <div class="brand-pill"><span class="brand-dot"></span>Hotpoint</div>
                         <div class="brand-pill"><span class="brand-dot"></span>Inglis</div>
                         <div class="brand-pill"><span class="brand-dot"></span>Jenn-Air</div>
                         <div class="brand-pill"><span class="brand-dot"></span>Kelvinator</div>
-                        <a href="kenmore.html" class="brand-pill"><span class="brand-dot note"></span>Kenmore</a>
+                        <a href="/kenmore" class="brand-pill"><span class="brand-dot note"></span>Kenmore</a>
                         <div class="brand-pill"><span class="brand-dot"></span>KitchenAid</div>
-                        <a href="lg.html" class="brand-pill"><span class="brand-dot"></span>LG</a>
-                        <a href="maytag.html" class="brand-pill"><span class="brand-dot"></span>Maytag</a>
+                        <a href="/lg" class="brand-pill"><span class="brand-dot"></span>LG</a>
+                        <a href="/maytag" class="brand-pill"><span class="brand-dot"></span>Maytag</a>
                         <div class="brand-pill"><span class="brand-dot"></span>RCA</div>
                         <div class="brand-pill"><span class="brand-dot"></span>Roper</div>
-                        <a href="samsung.html" class="brand-pill"><span class="brand-dot"></span>Samsung</a>
+                        <a href="/samsung" class="brand-pill"><span class="brand-dot"></span>Samsung</a>
                         <div class="brand-pill"><span class="brand-dot"></span>Tappan</div>
                         <div class="brand-pill"><span class="brand-dot"></span>Thermador</div>
-                        <a href="whirlpool.html" class="brand-pill"><span class="brand-dot note"></span>Whirlpool</a>
+                        <a href="/whirlpool" class="brand-pill"><span class="brand-dot note"></span>Whirlpool</a>
                         <div class="brand-pill"><span class="brand-dot"></span>White Consolidated Industries</div>
                         <div class="brand-pill"><span class="brand-dot"></span>White-Westinghouse</div>
                     </div>
@@ -183,10 +211,10 @@
                 <div class="brands-category">
                     <h3>HVAC</h3>
                     <div class="brand-grid">
-                        <a href="goodman.html" class="brand-pill"><span class="brand-dot"></span>Goodman</a>
-                        <a href="carrier.html" class="brand-pill"><span class="brand-dot"></span>Carrier</a>
-                        <a href="rheem.html" class="brand-pill"><span class="brand-dot"></span>Rheem</a>
-                        <a href="trane.html" class="brand-pill"><span class="brand-dot"></span>Trane</a>
+                        <a href="/goodman" class="brand-pill"><span class="brand-dot"></span>Goodman</a>
+                        <a href="/carrier" class="brand-pill"><span class="brand-dot"></span>Carrier</a>
+                        <a href="/rheem" class="brand-pill"><span class="brand-dot"></span>Rheem</a>
+                        <a href="/trane" class="brand-pill"><span class="brand-dot"></span>Trane</a>
                     </div>
                 </div>
 
@@ -194,15 +222,15 @@
                 <div class="brands-category">
                     <h3>Electronics</h3>
                     <div class="brand-grid">
-                        <a href="apple.html" class="brand-pill"><span class="brand-dot"></span>Apple</a>
-                        <a href="asus.html" class="brand-pill"><span class="brand-dot"></span>ASUS</a>
-                        <a href="google-pixel.html" class="brand-pill"><span class="brand-dot"></span>Google Pixel</a>
-                        <a href="hp.html" class="brand-pill"><span class="brand-dot"></span>HP</a>
-                        <a href="lg.html" class="brand-pill"><span class="brand-dot"></span>LG (TVs)</a>
-                        <a href="panasonic.html" class="brand-pill"><span class="brand-dot note"></span>Panasonic</a>
-                        <a href="samsung.html" class="brand-pill"><span class="brand-dot"></span>Samsung (TVs)</a>
-                        <a href="sony.html" class="brand-pill"><span class="brand-dot"></span>Sony</a>
-                        <a href="vizio.html" class="brand-pill"><span class="brand-dot note"></span>Vizio</a>
+                        <a href="/apple" class="brand-pill"><span class="brand-dot"></span>Apple</a>
+                        <a href="/asus" class="brand-pill"><span class="brand-dot"></span>ASUS</a>
+                        <a href="/google-pixel" class="brand-pill"><span class="brand-dot"></span>Google Pixel</a>
+                        <a href="/hp" class="brand-pill"><span class="brand-dot"></span>HP</a>
+                        <a href="/lg" class="brand-pill"><span class="brand-dot"></span>LG (TVs)</a>
+                        <a href="/panasonic" class="brand-pill"><span class="brand-dot note"></span>Panasonic</a>
+                        <a href="/samsung" class="brand-pill"><span class="brand-dot"></span>Samsung (TVs)</a>
+                        <a href="/sony" class="brand-pill"><span class="brand-dot"></span>Sony</a>
+                        <a href="/vizio" class="brand-pill"><span class="brand-dot note"></span>Vizio</a>
                     </div>
                 </div>
 
@@ -224,20 +252,40 @@
         <div class="footer">
             <p class="footer-tagline">Built for fast, reliable equipment age lookups.</p>
             <div class="footer-links">
-                <a href="methodology.html">Methodology</a>
+                <a href="/methodology">Methodology</a>
                 <span class="footer-sep">|</span>
-                <a href="disclaimer.html">Disclaimer</a>
+                <a href="/disclaimer">Disclaimer</a>
                 <span class="footer-sep">|</span>
-                <a href="contact.html">Contact</a>
+                <a href="/contact">Contact</a>
             </div>
             <p class="footer-verify">Database Last Verified: February 2026. All decoding logic is cross-referenced with manufacturer technical bulletins.</p>
             <p>&copy; 2026 Serial Number Decoder. Always verify results for accuracy.</p>
             <p class="footer-db">Database updated February 2026 &nbsp;&middot;&nbsp; Sources: Manufacturer documentation and authorized publications</p>
         </div>
 
-    </div>
+    </div><!-- /app-container -->
+    </div><!-- /page-shell -->
+
+    <script src="script.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

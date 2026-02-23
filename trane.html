@@ -30,42 +30,65 @@
         <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
         <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
     </div>
+        <aside class="sidebar">
+        <div class="sidebar-header">
+            <a class="sidebar-logo" href="/">Serial Number Decoder</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-title">Categories</div>
+            <button class="cat-tab active" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
+            <button class="cat-tab" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
+            <button class="cat-tab" data-cat="hvac" onclick="selectCategory('hvac', this)">HVAC</button>
+            <button class="cat-tab" data-cat="electronics" onclick="selectCategory('electronics', this)">Electronics</button>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-title">Brands</div>
+            <a class="sidebar-link" href="/goodman">Goodman</a>
+            <a class="sidebar-link" href="/carrier">Carrier</a>
+            <a class="sidebar-link" href="/rheem">Rheem</a>
+            <a class="sidebar-link" href="/trane">Trane</a>
+            <a class="sidebar-link" href="/whirlpool">Whirlpool</a>
+            <a class="sidebar-link" href="/ge">GE</a>
+            <a class="sidebar-link" href="/samsung">Samsung</a>
+            <a class="sidebar-link" href="/lg">LG</a>
+            <a class="sidebar-link" href="/sony">Sony</a>
+            <a class="sidebar-link" href="/bosch">Bosch</a>
+            <a class="sidebar-link" href="/maytag">Maytag</a>
+            <a class="sidebar-link" href="/frigidaire">Frigidaire</a>
+            <a class="sidebar-link" href="/kenmore">Kenmore</a>
+            <a class="sidebar-link" href="/apple">Apple</a>
+            <a class="sidebar-link" href="/hp">HP</a>
+            <a class="sidebar-link" href="/asus">ASUS</a>
+            <a class="sidebar-link" href="/google-pixel">Google Pixel</a>
+            <a class="sidebar-link" href="/vizio">Vizio</a>
+            <a class="sidebar-link" href="/panasonic">Panasonic</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-title">Resources</div>
+            <a class="sidebar-link" href="/smart-lookup">Smart Lookup</a>
+            <a class="sidebar-link" href="/methodology">Methodology</a>
+            <a class="sidebar-link" href="/disclaimer">Disclaimer</a>
+            <a class="sidebar-link" href="/contact">Contact</a>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <div class="ad-zone"><div class="ad-label">Data Partner</div></div>
+    <div class="page-shell">
     <div class="app-container">
 
         <div class="header">
+            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle navigation">&#9776;</button>
             <div class="header-brand">
-                <p class="header-logo"><a href="index.html"><span class="accent">&#9889;</span> Serial Number <span class="accent">Decoder</span></a></p>
+                <p class="header-logo"><a href="/"><span class="accent">&#9889;</span> Serial Number <span class="accent">Decoder</span></a></p>
                 <p class="subtitle">Professional Equipment Age Dating</p>
             </div>
-            <nav class="header-nav">
-                <a class="header-nav-link" href="index.html">&#8592; Back to Tool</a>
-                <a class="header-nav-link header-nav-secondary" href="smart-lookup.html">Smart Lookup</a>
-                <div class="nav-dropdown">
-                    <button class="header-nav-link header-nav-secondary nav-dropdown-toggle">Brands</button>
-                    <div class="nav-dropdown-menu">
-                        <a href="goodman.html">Goodman</a>
-                        <a href="carrier.html">Carrier</a>
-                        <a href="rheem.html">Rheem</a>
-                        <a href="trane.html">Trane</a>
-                        <a href="whirlpool.html">Whirlpool</a>
-                        <a href="ge.html">GE</a>
-                        <a href="samsung.html">Samsung</a>
-                        <a href="lg.html">LG</a>
-                        <a href="sony.html">Sony</a>
-                    </div>
-                </div>
-            </nav>
+            
         </div>
 
         <!-- Search Form -->
 <div class="main-card decoder-card">
             <!-- Category Tabs -->
-            <div class="category-tabs">
-                <button class="cat-tab active" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
-                <button class="cat-tab" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
-                <button class="cat-tab" data-cat="hvac" onclick="selectCategory('hvac', this)">HVAC</button>
-                <button class="cat-tab" data-cat="electronics" onclick="selectCategory('electronics', this)">Electronics</button>
-            </div>
+            
 
             <!-- Form -->
             <div class="form-area">
@@ -241,18 +264,19 @@
         <div class="footer">
             <p class="footer-tagline">Built for fast, reliable equipment age lookups.</p>
             <div class="footer-links">
-                <a href="methodology.html">Methodology</a>
+                <a href="/methodology">Methodology</a>
                 <span class="footer-sep">|</span>
-                <a href="disclaimer.html">Disclaimer</a>
+                <a href="/disclaimer">Disclaimer</a>
                 <span class="footer-sep">|</span>
-                <a href="contact.html">Contact</a>
+                <a href="/contact">Contact</a>
             </div>
             <p class="footer-verify">Database Last Verified: February 2026. All decoding logic is cross-referenced with manufacturer technical bulletins.</p>
             <p>&copy; 2026 Serial Number Decoder. Always verify results for accuracy.</p>
             <p class="footer-db">Database updated February 2026 &nbsp;&middot;&nbsp; Sources: Manufacturer documentation and authorized publications</p>
         </div>
 
-    </div>
+    </div><!-- /app-container -->
+    </div><!-- /page-shell -->
 
     <!-- Feedback Modal -->
     <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
@@ -298,6 +322,21 @@
     <script src="script.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
