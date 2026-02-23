@@ -50,7 +50,7 @@ body {
 }
 .app-container {
     position: relative; z-index: 1;
-    max-width: 1200px; margin: 0 auto; padding: 6.2rem 1.5rem 1.5rem;
+    max-width: 1200px; margin: 0 auto; padding: 3.8rem 1.5rem 1.5rem;
 }
 .sidebar {
     position: fixed;
@@ -160,6 +160,53 @@ body {
 .sidebar-group-links .sidebar-link {
     margin: 0;
 }
+.sidebar-more-brands {
+    border-top: 1px dashed rgba(148, 163, 184, 0.35);
+    margin-top: 0.2rem;
+    padding: 0.2rem 0.35rem 0.35rem;
+}
+.sidebar-more-toggle {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: #cbd5e1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.28rem 0.2rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: left;
+}
+.more-brands-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+.sidebar-more-brands.open .more-brands-icon {
+    transform: rotate(180deg);
+}
+.sidebar-more-brands.open .more-brands-icon::after {
+    content: '-';
+}
+.sidebar-more-brands:not(.open) .more-brands-icon::after {
+    content: '+';
+}
+.sidebar-more-brands .more-brands-icon {
+    color: #93c5fd;
+}
+.sidebar-more-list {
+    margin-top: 0.15rem;
+}
+.sidebar-link-secondary {
+    font-size: 0.8rem;
+    opacity: 0.95;
+}
 .sidebar-title {
     font-size: 0.7rem;
     letter-spacing: 0.08em;
@@ -213,6 +260,10 @@ body {
     color: #ffffff;
     font-size: 1.1rem;
     cursor: pointer;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 .ad-zone {
     position: fixed;
@@ -264,31 +315,14 @@ body {
     right: 160px;
     z-index: 120;
     display: flex; align-items: center; justify-content: space-between;
-    gap: 1rem; padding: 0.75rem 1rem;
+    gap: 1rem; padding: 15px 1rem;
     background: #1a202c;
     border-bottom: 1px solid rgba(148, 163, 184, 0.35);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-}
-.header-brand { flex: 1; min-width: 0; }
-.item-assist-logo {
-    font-family: "Segoe UI", Arial, sans-serif;
-    font-size: 1.05rem;
-    font-weight: 900;
-    letter-spacing: 0.02em;
     color: #ffffff;
-    line-height: 1.1;
-    margin-bottom: 0.2rem;
 }
-.item-assist-logo .assist-accent {
-    color: #3182ce;
-}
-.item-assist-tagline {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    font-style: italic;
-    margin-bottom: 0.25rem;
-}
+.header-brand { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; }
 .header h1 {
     font-size: 1.75rem; font-weight: 800; color: #ffffff;
     letter-spacing: -0.02em; text-shadow: 0 0 20px rgba(37, 99, 235, 0.15);
@@ -301,6 +335,24 @@ body {
 .header .header-tagline {
     color: #cbd5e1;
 }
+.header .header-brand h1,
+.header .header-brand .subtitle,
+.header .header-brand .header-tagline,
+.header .header-brand .header-logo {
+    display: none;
+}
+.header-center-tagline {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: #ffffff;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    font-weight: 500;
+    white-space: nowrap;
+}
 .header-attribution {
     display: block; font-size: 0.72rem; color: #cbd5e1;
     margin-top: 0.25rem; opacity: 0.8;
@@ -308,7 +360,7 @@ body {
 .header-attribution strong { color: var(--accent); font-weight: 600; }
 
 /* ── Header Nav ── */
-.header-nav { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+.header-nav { display: none; align-items: center; gap: 0.5rem; flex-shrink: 0; }
 .header-nav-link {
     display: inline-flex; align-items: center; gap: 0.35rem;
     padding: 0.45rem 0.875rem;
@@ -927,8 +979,8 @@ body {
 /* ── Responsive ── */
 
 @media (max-width: 768px) {
-    .app-container { padding: 5.6rem 0.75rem 0.75rem; }
-    .header { flex-wrap: wrap; }
+    .app-container { padding: 3.6rem 0.75rem 0.75rem; }
+    .header { flex-wrap: nowrap; }
     .header h1 { font-size: 1.4rem; }
     .header-nav { gap: 0.35rem; }
     .header-nav-link { font-size: 0.75rem; padding: 0.4rem 0.65rem; }
