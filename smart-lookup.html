@@ -6,8 +6,6 @@
     <title>Smart Lookup | Decode by Model or Description</title>
     <meta name="description" content="Use Smart Lookup to estimate product age when you don't have a serial number. Enter a model number or description and get an instant estimate.">
     <link rel="canonical" href="https://www.decodemyitem.com/smart-lookup.html">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -49,7 +47,7 @@
         <div class="main-card">
             <div class="form-area">
                 <div class="smart-lookup-container">
-                    <div class="smart-lookup-header">No Serial Number? Use Smart Lookup</div>
+                    <div class="smart-lookup-header"><span class="ai-icon">&#10024;</span> No Serial Number? Use Smart Lookup</div>
                     <div id="altSection" class="alt-section open">
                         <div class="alt-inner">
                             <div class="alt-divider"><span>Smart Lookup</span></div>
@@ -84,6 +82,29 @@
                 <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
                 <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
             </div>
+        </div>
+
+        <div class="static-card">
+            <div class="static-card-header">
+                <h2>About Smart Lookup</h2>
+                <p>How this tool estimates age without a serial number.</p>
+            </div>
+            <div class="static-card-body">
+                <p>Smart Lookup uses AI to estimate an item's age when a serial number is unavailable. Results range from general historical data (e.g., searching "TV" provides the era of television invention) to high-specificity estimates as you provide more detail. For the most accurate results, include the Brand, Series, and Model Number.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p class="footer-tagline">Built for fast, reliable equipment age lookups.</p>
+            <div class="footer-links">
+                <a href="methodology.html">Methodology</a>
+                <span class="footer-sep">|</span>
+                <a href="disclaimer.html">Disclaimer</a>
+                <span class="footer-sep">|</span>
+                <a href="contact.html">Contact</a>
+            </div>
+            <p>&copy; 2026 Serial Number Decoder. Always verify results for accuracy.</p>
+            <p class="footer-db">Database updated February 2026 â€” 30,000+ serial formats &amp; model references.</p>
         </div>
     </div>
 
@@ -131,6 +152,13 @@
     <script src="script.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 
