@@ -114,6 +114,32 @@ function toggleSidebar() {
 }
 var currentFeedbackContext = {};
 var CURRENT_YEAR = new Date().getFullYear();
+var SIDEBAR_EXPANDED_KEY = 'sidebarExpandedCategories';
+var SIDEBAR_BRAND_CATEGORY_MAP = {
+  'goodman': 'HVAC',
+  'carrier': 'HVAC',
+  'rheem': 'HVAC',
+  'trane': 'HVAC',
+  'ge': 'Appliances',
+  'samsung': 'Appliances',
+  'lg': 'Appliances',
+  'bosch': 'Appliances',
+  'maytag': 'Appliances',
+  'frigidaire': 'Appliances',
+  'kenmore': 'Appliances',
+  'whirlpool': 'Appliances',
+  'apple': 'Electronics',
+  'hp': 'Electronics',
+  'asus': 'Electronics',
+  'google-pixel': 'Electronics',
+  'sony': 'Electronics',
+  'vizio': 'Electronics',
+  'panasonic': 'Electronics'
+};
+
+function isBrandPage() {
+  return !!sidebarCategoryForSlug(getBrandPageSlug());
+}
 
 function getDecodeDom() {
   var scope = document.querySelector('.decoder-card') || document.querySelector('.main-card') || document;
@@ -132,6 +158,182 @@ function getBrandPageSlug() {
     .filter(Boolean);
   if (parts.length === 0) return '';
   return parts[parts.length - 1].replace(/\.html$/i, '');
+}
+
+function getSidebarExpandedCategories() {
+  try {
+    var raw = localStorage.getItem(SIDEBAR_EXPANDED_KEY);
+    if (!raw) return [];
+    var parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function setSidebarExpandedCategories(categories) {
+  try {
+    localStorage.setItem(SIDEBAR_EXPANDED_KEY, JSON.stringify(categories || []));
+  } catch (_) {}
+}
+
+function sidebarCategoryForSlug(slug) {
+  if (!slug) return null;
+  return SIDEBAR_BRAND_CATEGORY_MAP[slug] || null;
+}
+
+function setSidebarGroupOpen(groupEl, open) {
+  var btn = groupEl ? groupEl.querySelector('.sidebar-group-toggle') : null;
+  var links = groupEl ? groupEl.querySelector('.sidebar-group-links') : null;
+  if (!groupEl || !btn || !links) return;
+  groupEl.classList.toggle('open', !!open);
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  links.hidden = !open;
+}
+
+function persistSidebarOpenState(sidebarRoot) {
+  if (!sidebarRoot) return;
+  var openNames = [];
+  sidebarRoot.querySelectorAll('.sidebar-brand-group.open').forEach(function(group) {
+    var name = group.getAttribute('data-category');
+    if (name) openNames.push(name);
+  });
+  setSidebarExpandedCategories(openNames);
+}
+
+function expandSidebarCategory(categoryName) {
+  if (!categoryName) return;
+  var sidebarRoot = document.querySelector('.sidebar-brand-groups');
+  if (!sidebarRoot) return;
+  var target = sidebarRoot.querySelector('.sidebar-brand-group[data-category="' + categoryName + '"]');
+  if (!target) return;
+  setSidebarGroupOpen(target, true);
+  persistSidebarOpenState(sidebarRoot);
+}
+
+function enhanceSidebarNavigation() {
+  var brandsSection = null;
+  document.querySelectorAll('.sidebar .sidebar-section').forEach(function(section) {
+    var title = section.querySelector('.sidebar-title');
+    if (!title) return;
+    if (title.textContent.trim().toLowerCase() === 'brands') brandsSection = section;
+  });
+  if (!brandsSection) return;
+  if (brandsSection.querySelector('.sidebar-brand-groups')) return;
+
+  var brandLinks = Array.prototype.slice.call(brandsSection.querySelectorAll('a.sidebar-link'));
+  if (!brandLinks.length) return;
+
+  var grouped = { HVAC: [], Appliances: [], Electronics: [], Other: [] };
+  brandLinks.forEach(function(link) {
+    var href = link.getAttribute('href') || '';
+    var slug = href.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
+    var cat = sidebarCategoryForSlug(slug) || 'Other';
+    grouped[cat].push(link.cloneNode(true));
+  });
+
+  var order = ['HVAC', 'Appliances', 'Electronics', 'Other'];
+  var persisted = getSidebarExpandedCategories();
+  var currentSlug = getBrandPageSlug();
+  var currentCategory = sidebarCategoryForSlug(currentSlug);
+  var container = document.createElement('div');
+  container.className = 'sidebar-brand-groups';
+
+  order.forEach(function(catName) {
+    var links = grouped[catName];
+    if (!links || !links.length) return;
+
+    var group = document.createElement('div');
+    group.className = 'sidebar-brand-group';
+    group.setAttribute('data-category', catName);
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'sidebar-group-toggle';
+    btn.innerHTML = '<span class="sidebar-group-name">' + catName + '</span><span class="sidebar-group-arrow" aria-hidden="true">&#9654;</span>';
+
+    var list = document.createElement('div');
+    list.className = 'sidebar-group-links';
+    links.forEach(function(a) { list.appendChild(a); });
+
+    var shouldOpen = persisted.indexOf(catName) !== -1 || (currentCategory && currentCategory === catName);
+    setSidebarGroupOpen(group, shouldOpen);
+
+    btn.addEventListener('click', function() {
+      var isOpen = group.classList.contains('open');
+      setSidebarGroupOpen(group, !isOpen);
+      persistSidebarOpenState(container);
+    });
+
+    group.appendChild(btn);
+    group.appendChild(list);
+    container.appendChild(group);
+  });
+
+  brandLinks.forEach(function(link) { link.remove(); });
+  brandsSection.appendChild(container);
+}
+
+function enhanceSmartLookupSidebarTop() {
+  var sidebar = document.querySelector('.sidebar');
+  if (!sidebar) return;
+  if (sidebar.querySelector('.sidebar-smart-top')) return;
+
+  var section = document.createElement('div');
+  section.className = 'sidebar-section sidebar-smart-top';
+  section.innerHTML =
+    '<a class="sidebar-link sidebar-smart-top-link" href="/smart-lookup">' +
+    'Smart Lookup <span class="new-badge">NEW</span>' +
+    '</a>';
+
+  var firstSection = sidebar.querySelector('.sidebar-section');
+  if (firstSection && firstSection.parentNode) {
+    firstSection.parentNode.insertBefore(section, firstSection);
+  } else {
+    sidebar.appendChild(section);
+  }
+}
+
+function addGuidedSearchButtonToBrandDecoderCard() {
+  if (!isBrandPage()) return;
+  var formArea = document.querySelector('.decoder-card .form-area') || document.querySelector('.main-card .form-area');
+  if (!formArea) return;
+  if (formArea.querySelector('.guided-search-btn')) return;
+
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'guided-search-btn';
+  btn.textContent = 'Guided Search';
+  btn.addEventListener('click', function() {
+    var altSection = document.getElementById('altSection');
+    var altQuery = document.getElementById('altQuery');
+    var slug = getBrandPageSlug();
+    if (altSection && !altSection.classList.contains('open')) {
+      altSection.classList.add('open');
+    }
+    if (altQuery) {
+      if (!altQuery.value && slug) altQuery.value = slug.replace(/-/g, ' ') + ' model number';
+      altQuery.focus();
+    }
+    var smartWrap = document.querySelector('.smart-lookup-standalone') || altSection;
+    if (smartWrap && smartWrap.scrollIntoView) {
+      smartWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+
+  var note = document.createElement('p');
+  note.className = 'guided-search-note';
+  note.textContent = 'Serial not recognized yet? Use Guided Search for model-based help.';
+
+  formArea.appendChild(btn);
+  formArea.appendChild(note);
+}
+
+function pulseGuidedSearchButton() {
+  var btn = document.querySelector('.guided-search-btn');
+  if (!btn) return;
+  btn.classList.add('pulse');
+  setTimeout(function() { btn.classList.remove('pulse'); }, 1600);
 }
 
 // ===== BRAND CONTEXT (brand pages) =====
@@ -162,6 +364,10 @@ function loadBrandContext() {
     };
     var ctx = BRAND_PAGE_MAP[slug];
     if (!ctx) return;
+    if (ctx.brandId) {
+      var sidebarCat = sidebarCategoryForSlug(ctx.brandId);
+      if (sidebarCat) expandSidebarCategory(sidebarCat);
+    }
 
     var dom = getDecodeDom();
     var brandSelect = dom.brandEl;
@@ -204,6 +410,9 @@ function loadBrandContext() {
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', function() {
+  enhanceSmartLookupSidebarTop();
+  enhanceSidebarNavigation();
+  addGuidedSearchButtonToBrandDecoderCard();
   var dom = getDecodeDom();
   var brandSelect = dom.brandEl;
   var serialInput = dom.serialEl;
@@ -215,6 +424,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     brandSelect.addEventListener('change', function() {
       onBrandChange();
+      var selected = brandSelect.value || '';
+      if (selected) {
+        var clean = selected.replace(/_/g, '-');
+        var sidebarCat = sidebarCategoryForSlug(clean) || sidebarCategoryForSlug(selected);
+        if (sidebarCat) expandSidebarCategory(sidebarCat);
+      }
       updateDecodeBtn();
     });
     serialInput.addEventListener('input', updateDecodeBtn);
@@ -461,6 +676,7 @@ function showDecodeFallback(decoder, serial, brandId, reason) {
   showBrandLogo('serialBrandLogo', brandId, decoder.name);
   currentFeedbackContext = { brand: decoder.name, serial: serial };
   fireFallbackAlert(decoder.name, serial, currentCategory, reason);
+  pulseGuidedSearchButton();
   setLoadingSuccess(function() {
     document.getElementById('serialResults').classList.remove('hidden');
     document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
