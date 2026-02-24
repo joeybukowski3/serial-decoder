@@ -307,6 +307,41 @@ body {
     line-height: 1.6;
 }
 
+.category-page-head {
+    margin: 0.25rem 0 0.8rem;
+}
+.category-page-head h1 {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.65rem;
+}
+.category-tab-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    border-bottom: 1px solid #dbe4ee;
+    padding-bottom: 0.15rem;
+}
+.category-tab-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    color: #475569;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-bottom: 3px solid transparent;
+    transition: color 0.18s ease, border-color 0.18s ease;
+}
+.category-tab-link:hover {
+    color: #1e293b;
+}
+.category-tab-link.active {
+    color: #3182ce;
+    border-bottom-color: #3182ce;
+}
+
 /* ── Header ── */
 .header {
     position: fixed;

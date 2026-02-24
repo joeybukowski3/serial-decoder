@@ -144,6 +144,12 @@ var CATEGORY_KEY_TO_NAME = {
   'appliances': 'Appliances',
   'electronics': 'Electronics'
 };
+var CATEGORY_PAGE_BY_KEY = {
+  'hvac': '/hvac',
+  'appliances': '/appliances',
+  'electronics': '/electronics',
+  'water-heaters': '/water-heaters'
+};
 var BRAND_PAGE_BY_ID = {
   'goodman': 'goodman',
   'carrier': 'carrier',
@@ -216,6 +222,25 @@ function getDecodeDom() {
   var btnEl = document.getElementById('decodeBtn') ||
     scope.querySelector('button#decodeBtn, button.decode-btn[onclick*="decodeSerial"]');
   return { brandEl: brandEl, serialEl: serialEl, btnEl: btnEl };
+}
+
+function ensureSmartLookupDom() {
+  var legacyInput = document.getElementById('altQuery');
+  if (legacyInput && !document.getElementById('smart-lookup-input')) {
+    legacyInput.id = 'smart-lookup-input';
+  }
+  var legacyResults = document.getElementById('ageResultsBody');
+  if (legacyResults && !document.getElementById('smart-lookup-results')) {
+    legacyResults.id = 'smart-lookup-results';
+  }
+}
+
+function getSmartLookupInputEl() {
+  return document.getElementById('smart-lookup-input') || document.getElementById('altQuery');
+}
+
+function getSmartLookupResultsEl() {
+  return document.getElementById('smart-lookup-results') || document.getElementById('ageResultsBody');
 }
 
 function getBrandPageSlug() {
@@ -536,7 +561,7 @@ function addGuidedSearchButtonToBrandDecoderCard() {
   btn.textContent = 'Smart Lookup (Powered by AI)';
   btn.addEventListener('click', function() {
     var altSection = document.getElementById('altSection');
-    var altQuery = document.getElementById('altQuery');
+    var altQuery = getSmartLookupInputEl();
     var slug = getBrandPageSlug();
     if (altSection && !altSection.classList.contains('open')) {
       altSection.classList.add('open');
@@ -577,6 +602,55 @@ function enhanceHeaderBranding() {
     centerTag.textContent = 'Brought to you by Item Assist';
     header.appendChild(centerTag);
   }
+}
+
+function enhanceSidebarCategoryLinks() {
+  var section = null;
+  document.querySelectorAll('.sidebar .sidebar-section').forEach(function(node) {
+    var title = node.querySelector('.sidebar-title');
+    if (title && title.textContent.trim().toLowerCase() === 'categories') section = node;
+  });
+  if (!section) return;
+  if (section.querySelector('.cat-tab-link')) return;
+
+  var slug = getBrandPageSlug();
+  var urlCat = null;
+  try { urlCat = categoryNameToKey(new URLSearchParams(window.location.search).get('cat') || ''); } catch (_) {}
+  var activeKey = urlCat || categoryNameToKey(window.DEFAULT_CATEGORY || '');
+  if (!activeKey && (slug === 'hvac' || slug === 'appliances' || slug === 'electronics' || slug === 'water-heaters')) {
+    activeKey = slug;
+  }
+
+  var cats = [
+    { key: 'hvac', label: 'HVAC' },
+    { key: 'appliances', label: 'Appliances' },
+    { key: 'electronics', label: 'Electronics' },
+    { key: 'water-heaters', label: 'Water Heaters' }
+  ];
+
+  section.querySelectorAll('.cat-tab, .cat-tab-link').forEach(function(el) { el.remove(); });
+  cats.forEach(function(cat) {
+    var a = document.createElement('a');
+    a.className = 'cat-tab cat-tab-link';
+    if (activeKey === cat.key) a.classList.add('active');
+    a.href = CATEGORY_PAGE_BY_KEY[cat.key] || '/';
+    a.textContent = cat.label;
+    section.appendChild(a);
+  });
+}
+
+function ensureFooterPrivacyPolicyLink() {
+  document.querySelectorAll('.footer-links').forEach(function(links) {
+    if (links.querySelector('a[href="/privacy-policy"], a[href="/privacy-policy.html"]')) return;
+    var sep = document.createElement('span');
+    sep.className = 'footer-sep';
+    sep.textContent = '|';
+    var a = document.createElement('a');
+    a.href = '/privacy-policy';
+    a.textContent = 'Privacy Policy';
+    links.appendChild(sep);
+    links.appendChild(a);
+  });
 }
 
 function pulseGuidedSearchButton() {
@@ -651,15 +725,18 @@ function loadBrandContext() {
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', function() {
+  ensureSmartLookupDom();
   enhanceHeaderBranding();
+  enhanceSidebarCategoryLinks();
   enhanceSmartLookupSidebarTop();
   enhanceSidebarNavigation();
+  ensureFooterPrivacyPolicyLink();
   addGuidedSearchButtonToBrandDecoderCard();
   var dom = getDecodeDom();
   var brandSelect = dom.brandEl;
   var serialInput = dom.serialEl;
   var eraSelect   = document.getElementById('eraSelect');
-  var altQuery    = document.getElementById('altQuery');
+  var altQuery    = getSmartLookupInputEl();
 
   if (brandSelect && serialInput) {
     populateBrands('appliances');
@@ -686,9 +763,16 @@ document.addEventListener('DOMContentLoaded', function() {
       var params = new URLSearchParams(window.location.search);
       var catParam   = params.get('cat');
       var brandParam = params.get('brand');
+      if (!catParam && window.DEFAULT_CATEGORY) catParam = window.DEFAULT_CATEGORY;
       if (catParam) {
         var tabBtn = document.querySelector('.cat-tab[data-cat="' + catParam + '"]');
         if (tabBtn) selectCategory(catParam, tabBtn);
+        else if (decoderData[catParam]) {
+          currentCategory = catParam;
+          populateBrands(catParam);
+          prioritizeSidebarCategory(catParam);
+          updateDecodeBtn();
+        }
       }
       if (brandParam) {
         var sel = getDecodeDom().brandEl;
@@ -734,7 +818,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function selectCategory(cat, btn) {
   currentCategory = cat;
   document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.remove('active'); });
-  btn.classList.add('active');
+  if (btn && btn.classList) btn.classList.add('active');
   prioritizeSidebarCategory(cat);
   populateBrands(cat);
   var serialEl = getDecodeDom().serialEl;
@@ -1117,7 +1201,7 @@ function decodeAnotherItem() {
   var ageResults = document.getElementById('ageResults');
   var ageLoading = document.getElementById('ageLoading');
   var serialInput = document.getElementById('serial');
-  var altQuery = document.getElementById('altQuery');
+  var altQuery = getSmartLookupInputEl();
   if (serialResults) serialResults.classList.add('hidden');
   if (ageResults) ageResults.classList.add('hidden');
   if (ageLoading) ageLoading.classList.add('hidden');
@@ -1243,7 +1327,7 @@ function makeBrandBadge(name) {
 
 // ===== SMART LOOKUP NOTICE (rate limit / capacity) =====
 function showSmartLookupNotice(type, message) {
-  var body = document.getElementById('ageResultsBody');
+  var body = getSmartLookupResultsEl();
   var isCapacity = (type === 'capacity');
   var bg    = isCapacity ? '#fffbeb' : '#f0f9ff';
   var border = isCapacity ? '#f59e0b' : '#00b4d8';
@@ -1262,7 +1346,9 @@ function showSmartLookupNotice(type, message) {
 
 // ===== ESTIMATE AGE =====
 async function estimateAge() {
-  var query = document.getElementById('altQuery').value.trim();
+  var inputEl = getSmartLookupInputEl();
+  if (!inputEl || !document.getElementById('smart-lookup-input')) return;
+  var query = inputEl.value.trim();
   if (!query) return;
 
   document.getElementById('ageResults').classList.add('hidden');
@@ -1316,7 +1402,7 @@ async function estimateAge() {
       return;
     }
 
-    var body = document.getElementById('ageResultsBody');
+    var body = getSmartLookupResultsEl();
     var html = '';
 
     // Invention summary for generic/category-only queries
@@ -1512,7 +1598,8 @@ function clickSuggestion(modelNum) {
     section.classList.add('open');
     if (toggle) toggle.classList.add('open');
   }
-  document.getElementById('altQuery').value = modelNum;
+  var input = getSmartLookupInputEl();
+  if (input) input.value = modelNum;
   estimateAge();
 }
 

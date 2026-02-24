@@ -135,7 +135,7 @@
                     <div class="alt-divider"><span>Smart Lookup (Powered by AI)</span></div>
                     <div class="form-group">
                         <div class="step-label">Model Number or Description</div>
-                        <input type="text" id="altQuery" class="form-input" placeholder="Search Goodman model or description...">
+                        <input type="text" id="smart-lookup-input" class="form-input" placeholder="Search Goodman model or description...">
                         <div class="helper-text">Enter a model number, brand + model, or description to estimate the age</div>
                     </div>
                     <p class="alt-scope-note">&#128268; Works for appliances, water heaters, <strong>and electronics</strong> — TVs, computers, phones, and any brand not listed in the tabs above.</p>
@@ -242,7 +242,7 @@
                 <h3>&#128337; Estimated Age</h3>
                 <div class="brand-logo-wrap" id="ageBrandLogo"></div>
             </div>
-            <div class="results-body" id="ageResultsBody"></div>
+            <div class="results-body" id="smart-lookup-results"></div>
             <div class="results-footer">
                 <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
                 <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
@@ -274,6 +274,8 @@
                 <a href="/disclaimer">Disclaimer</a>
                 <span class="footer-sep">|</span>
                 <a href="/contact">Contact</a>
+                            <span class="footer-sep">|</span>
+                <a href="/privacy-policy">Privacy Policy</a>
             </div>
             <p class="footer-verify">Database Last Verified: February 2026. All decoding logic is cross-referenced with manufacturer technical bulletins.</p>
             <p>&copy; 2026 Serial Number Decoder. Always verify results for accuracy.</p>
@@ -325,6 +327,7 @@
 
     <script src="decoder-data.js"></script>
     <script src="script.js"></script>
+    <script src="smart-lookup.js"></script>
 </body>
 </html>
 

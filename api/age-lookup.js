@@ -228,10 +228,44 @@ function applyNintendoSwitch2Hints(base, normalizedQuery) {
   return out;
 }
 
+function applyIphone17Hints(base, normalizedQuery) {
+  const out = { ...base };
+  const brandKey = normalizeBrandKey(out.brand);
+  const queryText = String(normalizedQuery || '');
+  const modelText = String(out.model || '').toLowerCase();
+  const notesText = String(out.notes || '').toLowerCase();
+  const rangeText = String(out.yearRange || '').toLowerCase();
+  const isIphone17 =
+    /\biphone\s*17\b/.test(queryText) ||
+    (brandKey === 'apple' && /\biphone\s*17\b/.test(modelText)) ||
+    /\biphone\s*17\b/.test(notesText) ||
+    /\biphone\s*17\b/.test(rangeText);
+
+  if (!isIphone17) return out;
+
+  if (!out.brand || String(out.brand).toLowerCase() === 'unknown') out.brand = 'Apple';
+  if (!out.model) out.model = 'iPhone 17';
+  out.yearRange = 'Current Generation (Released September 2025)';
+  if (!out.estimatedYear || /not yet released/i.test(String(out.estimatedYear))) {
+    out.estimatedYear = '2025';
+  }
+  out.notes = String(out.notes || '').replace(/not yet released/ig, 'released September 2025').trim();
+  if (!out.notes) {
+    out.notes = 'iPhone 17 launched in September 2025 as Apple\'s current-generation iPhone platform.';
+  } else if (!/september 2025/i.test(out.notes)) {
+    out.notes += ' iPhone 17 launched in September 2025.';
+  }
+
+  return out;
+}
+
 function applyEraHints(base, normalizedQuery) {
-  return applyNintendoSwitch2Hints(
-    applyApplianceEraHints(
-      applyHvacEraHints(base, normalizedQuery),
+  return applyIphone17Hints(
+    applyNintendoSwitch2Hints(
+      applyApplianceEraHints(
+        applyHvacEraHints(base, normalizedQuery),
+        normalizedQuery
+      ),
       normalizedQuery
     ),
     normalizedQuery
@@ -397,6 +431,8 @@ Research approach:
 - Apply this Nintendo-console mapping when relevant:
   - Nintendo Switch 2 is current generation and released in late 2025 (do not classify it as unreleased).
   - Mention that Switch 2 serial numbers typically follow a modern 14-digit alphanumeric standard.
+- Apply this mobile-device mapping when relevant:
+  - Apple iPhone 17 released in September 2025; classify it as current generation rather than unreleased.
 
 IMPORTANT — Generic category queries:
 - If the query is ONLY a product category with no brand or model (e.g. "refrigerator", "washer", "dryer", "water heater", "tv", "television", "microwave", "dishwasher", "laptop", "printer", "phone", "tablet", "air conditioner", "freezer", "range", "oven"):
