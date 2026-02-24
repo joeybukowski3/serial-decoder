@@ -587,21 +587,66 @@ function addGuidedSearchButtonToBrandDecoderCard() {
 function enhanceHeaderBranding() {
   var header = document.querySelector('.header');
   if (!header) return;
-  header.querySelectorAll('svg').forEach(function(el) { el.remove(); });
-  var headerBrand = header.querySelector('.header-brand');
-  if (headerBrand) {
-    headerBrand.querySelectorAll('h1, .subtitle, .header-tagline, .header-logo').forEach(function(el) { el.remove(); });
-  }
-  var oldLogo = header.querySelector('.item-assist-logo');
-  if (oldLogo) oldLogo.remove();
-  var oldTag = header.querySelector('.item-assist-tagline');
+  var oldTag = header.querySelector('.header-center-tagline');
   if (oldTag) oldTag.remove();
-  if (!header.querySelector('.header-center-tagline')) {
-    var centerTag = document.createElement('div');
-    centerTag.className = 'header-center-tagline';
-    centerTag.textContent = 'Brought to you by Item Assist';
-    header.appendChild(centerTag);
-  }
+  var oldBrand = header.querySelector('.header-brand');
+  if (oldBrand) oldBrand.remove();
+  var oldWrap = header.querySelector('.ia-header-wrap');
+  if (oldWrap) oldWrap.remove();
+
+  var wrap = document.createElement('div');
+  wrap.className = 'ia-header-wrap';
+
+  var link = document.createElement('a');
+  link.className = 'ia-header-brand';
+  link.href = '/';
+  link.innerHTML = '' +
+    '<img class="ia-header-logo" src="/assets/item-assist-logo.png" alt="Item Assist logo">' +
+    '<span class="ia-header-text">' +
+      '<span class="ia-header-name">ITEM ASSIST</span>' +
+      '<span class="ia-header-sub">Personalized Research Technology</span>' +
+    '</span>';
+
+  var cta = document.createElement('a');
+  cta.className = 'ia-header-cta';
+  cta.href = '/smart-lookup';
+  cta.textContent = 'LEARN MORE';
+
+  wrap.appendChild(link);
+  wrap.appendChild(cta);
+  header.appendChild(wrap);
+}
+
+function enhanceSidebarLogo() {
+  var logo = document.querySelector('.sidebar-logo');
+  if (!logo) return;
+  if (logo.querySelector('.ia-sidebar-brand')) return;
+  logo.innerHTML = '' +
+    '<span class="ia-sidebar-brand">' +
+      '<img class="ia-sidebar-logo" src="/assets/item-assist-logo.png" alt="Item Assist logo">' +
+      '<span class="ia-sidebar-text">ITEM ASSIST</span>' +
+    '</span>';
+}
+
+function injectHeroBanner() {
+  var app = document.querySelector('.app-container');
+  var header = document.querySelector('.header');
+  if (!app || !header) return;
+  if (document.querySelector('.ia-hero-banner')) return;
+  var slug = getBrandPageSlug();
+  if (slug === 'privacy-policy' || slug === 'universal-decoder') return;
+  var banner = document.createElement('section');
+  banner.className = 'ia-hero-banner';
+  banner.innerHTML = '' +
+    '<div class="ia-hero-inner">' +
+      '<img class="ia-hero-mark" src="/assets/item-assist-logo.png" alt="Item Assist">' +
+      '<div class="ia-hero-copy">' +
+        '<h2>RESEARCH, SIMPLIFIED.</h2>' +
+        '<p>Intuitive Data Aggregation</p>' +
+      '</div>' +
+      '<a class="ia-hero-btn" href="/smart-lookup">LEARN MORE</a>' +
+    '</div>';
+  header.insertAdjacentElement('afterend', banner);
 }
 
 function enhanceSidebarCategoryLinks() {
@@ -727,6 +772,8 @@ function loadBrandContext() {
 document.addEventListener('DOMContentLoaded', function() {
   ensureSmartLookupDom();
   enhanceHeaderBranding();
+  enhanceSidebarLogo();
+  injectHeroBanner();
   enhanceSidebarCategoryLinks();
   enhanceSmartLookupSidebarTop();
   enhanceSidebarNavigation();
