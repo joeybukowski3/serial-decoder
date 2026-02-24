@@ -115,6 +115,7 @@ function toggleSidebar() {
 var currentFeedbackContext = {};
 var CURRENT_YEAR = new Date().getFullYear();
 var SIDEBAR_EXPANDED_KEY = 'sidebarExpandedCategories';
+var LAST_CATEGORY_KEY = 'lastSelectedCategory';
 var SIDEBAR_BRAND_CATEGORY_MAP = {
   'goodman': 'HVAC',
   'carrier': 'HVAC',
@@ -145,11 +146,11 @@ var CATEGORY_KEY_TO_NAME = {
   'electronics': 'Electronics'
 };
 var CATEGORY_PAGE_BY_KEY = {
-  'hvac': '/hvac',
-  'appliances': '/appliances',
-  'electronics': '/electronics',
-  'water-heaters': '/water-heaters',
-  'smart-lookup': '/smart-lookup'
+  'hvac': '/hvac.html',
+  'appliances': '/appliances.html',
+  'electronics': '/electronics.html',
+  'water-heaters': '/water-heaters.html',
+  'smart-lookup': '/smart-lookup.html'
 };
 var BRAND_PAGE_BY_ID = {
   'goodman': 'goodman',
@@ -281,6 +282,32 @@ function categoryNameToKey(name) {
   if (s === 'waterheaters' || s === 'water-heaters' || s === 'water heaters') return 'water-heaters';
   if (s === 'electronics') return 'electronics';
   return 'appliances';
+}
+
+function getSavedCategoryKey() {
+  try {
+    return categoryNameToKey(localStorage.getItem(LAST_CATEGORY_KEY) || '');
+  } catch (_) {
+    return 'appliances';
+  }
+}
+
+function saveCategoryKey(catKey) {
+  try {
+    localStorage.setItem(LAST_CATEGORY_KEY, categoryNameToKey(catKey || ''));
+  } catch (_) {}
+}
+
+function categoryPageHrefByKey(catKey) {
+  var key = categoryNameToKey(catKey || '');
+  return CATEGORY_PAGE_BY_KEY[key] || '/';
+}
+
+function normalizeDecoderCategory(catKey) {
+  var key = String(catKey || '').trim();
+  if (!key) return 'appliances';
+  if (key === 'water-heaters') return 'waterHeaters';
+  return key;
 }
 
 function setSidebarGroupOpen(groupEl, open) {
@@ -530,6 +557,30 @@ function enhanceSidebarNavigation() {
   if (activeCategoryKey) prioritizeSidebarCategory(activeCategoryKey);
 }
 
+function syncSidebarActiveState() {
+  var slug = getBrandPageSlug();
+  var activeBrandSlug = slug && sidebarCategoryForSlug(slug) ? slug : '';
+  var activeCategoryKey = getActiveTopCategoryKey();
+
+  document.querySelectorAll('.sidebar-link, .sidebar-group-link, .cat-tab-link').forEach(function(el) {
+    el.classList.remove('active');
+  });
+
+  var activeCatSectionLink = document.querySelector('.cat-tab-link[href="' + categoryPageHrefByKey(activeCategoryKey) + '"]');
+  if (activeCatSectionLink) activeCatSectionLink.classList.add('active');
+
+  var activeGroup = document.querySelector('.sidebar-brand-group[data-category="' + (CATEGORY_KEY_TO_NAME[activeCategoryKey] || '') + '"] .sidebar-group-link');
+  if (activeGroup) activeGroup.classList.add('active');
+
+  if (activeBrandSlug) {
+    document.querySelectorAll('.sidebar-link').forEach(function(link) {
+      var href = (link.getAttribute('href') || '').replace(/\/+$/, '');
+      var targetSlug = href.split('/').pop().replace(/\.html$/i, '');
+      if (targetSlug === activeBrandSlug) link.classList.add('active');
+    });
+  }
+}
+
 function enhanceSmartLookupSidebarTop() {
   var sidebar = document.querySelector('.sidebar');
   if (!sidebar) return;
@@ -645,12 +696,20 @@ function enhanceSidebarCategoryLinks() {
   if (section.querySelector('.cat-tab-link')) return;
 
   var slug = getBrandPageSlug();
-  var urlCat = null;
-  try { urlCat = categoryNameToKey(new URLSearchParams(window.location.search).get('cat') || ''); } catch (_) {}
-  var activeKey = urlCat || categoryNameToKey(window.DEFAULT_CATEGORY || '');
+  var activeKey = null;
+  try {
+    var urlCatRaw = new URLSearchParams(window.location.search).get('cat') || '';
+    if (urlCatRaw) activeKey = categoryNameToKey(urlCatRaw);
+  } catch (_) {}
   if (!activeKey && (slug === 'hvac' || slug === 'appliances' || slug === 'electronics' || slug === 'water-heaters')) {
-    activeKey = slug;
+    activeKey = categoryNameToKey(slug);
   }
+  if (!activeKey) {
+    var byBrand = sidebarCategoryForSlug(slug);
+    if (byBrand) activeKey = categoryNameToKey(byBrand);
+  }
+  if (!activeKey && window.DEFAULT_CATEGORY) activeKey = categoryNameToKey(window.DEFAULT_CATEGORY);
+  if (!activeKey) activeKey = getSavedCategoryKey();
 
   var cats = [
     { key: 'hvac', label: 'HVAC' },
@@ -664,7 +723,7 @@ function enhanceSidebarCategoryLinks() {
     var a = document.createElement('a');
     a.className = 'cat-tab cat-tab-link';
     if (activeKey === cat.key) a.classList.add('active');
-    a.href = CATEGORY_PAGE_BY_KEY[cat.key] || '/';
+    a.href = categoryPageHrefByKey(cat.key);
     a.textContent = cat.label;
     section.appendChild(a);
   });
@@ -695,11 +754,11 @@ function enhanceGlobalCategoryTabs() {
 
   var activeKey = getActiveTopCategoryKey();
   var tabs = [
-    { key: 'hvac', label: 'HVAC', href: '/hvac' },
-    { key: 'appliances', label: 'Appliances', href: '/appliances' },
-    { key: 'electronics', label: 'Electronics', href: '/electronics' },
-    { key: 'water-heaters', label: 'Water Heaters', href: '/water-heaters' },
-    { key: 'smart-lookup', label: 'Smart Lookup', href: '/smart-lookup' }
+    { key: 'hvac', label: 'HVAC', href: categoryPageHrefByKey('hvac') },
+    { key: 'appliances', label: 'Appliances', href: categoryPageHrefByKey('appliances') },
+    { key: 'electronics', label: 'Electronics', href: categoryPageHrefByKey('electronics') },
+    { key: 'water-heaters', label: 'Water Heaters', href: categoryPageHrefByKey('water-heaters') },
+    { key: 'smart-lookup', label: 'Smart Lookup', href: categoryPageHrefByKey('smart-lookup') }
   ];
 
   var nav = document.createElement('nav');
@@ -711,6 +770,21 @@ function enhanceGlobalCategoryTabs() {
     if (tab.key === activeKey) a.classList.add('active');
     a.href = tab.href;
     a.textContent = tab.label;
+    a.addEventListener('click', function(e) {
+      if (tab.key !== 'hvac') return;
+      e.preventDefault();
+      fetch(categoryPageHrefByKey('hvac'), { method: 'HEAD' })
+        .then(function(res) {
+          if (res && res.ok) {
+            window.location.href = categoryPageHrefByKey('hvac');
+            return;
+          }
+          window.location.href = '/?cat=hvac';
+        })
+        .catch(function() {
+          window.location.href = '/?cat=hvac';
+        });
+    });
     nav.appendChild(a);
   });
 
@@ -734,6 +808,15 @@ function openEmbeddedBrandDecoder(panel, triggerEl) {
   if (triggerEl && triggerEl.scrollIntoView) {
     triggerEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
+}
+
+function syncGlobalCategoryTabs(activeKey) {
+  var key = categoryNameToKey(activeKey || getActiveTopCategoryKey());
+  document.querySelectorAll('.global-category-tab').forEach(function(tab) {
+    var href = tab.getAttribute('href') || '';
+    var tabKey = href.replace(/^\//, '').replace(/\.html$/i, '');
+    tab.classList.toggle('active', tabKey === key);
+  });
 }
 
 function enhanceBrandPageEmbeddedDecoder() {
@@ -804,7 +887,7 @@ function enhanceBrandPageEmbeddedDecoder() {
 
 function updateMainPageSmartLookupHelperText() {
   var slug = getBrandPageSlug();
-  if (slug !== '') return;
+  if (slug !== '' && slug !== 'index') return;
   var input = document.getElementById('smart-lookup-input');
   if (!input) return;
   var formGroup = input.closest('.form-group');
@@ -812,6 +895,36 @@ function updateMainPageSmartLookupHelperText() {
   var helper = formGroup.querySelector('.helper-text');
   if (!helper) return;
   helper.textContent = 'Enter a model number, brand + model, brand + series, or general description to estimate the age. The more information you provide, the better the result.';
+}
+
+function smartLookupAboutInnerHtml() {
+  return '' +
+    '<h2>About Smart Lookup (Powered by AI)</h2>' +
+    '<p class="technical-methodology-subhead">Proprietary Intelligence for Missing Data</p>' +
+    '<p class="technical-methodology-copy">When serial numbers are missing, incomplete, or unreadable, Smart Lookup applies proprietary intelligence across model patterns, manufacturer timelines, and known product release cycles to estimate manufacture windows with practical confidence.</p>' +
+    '<ul class="technical-methodology-list">' +
+      '<li><strong>Broad Search Tier:</strong> Interprets general product descriptions to identify likely era ranges and historical launch periods.</li>' +
+      '<li><strong>Professional Search Tier:</strong> Uses brand, model family, series, and variant-level clues to refine results for claim-ready age estimates.</li>' +
+    '</ul>' +
+    '<p class="technical-methodology-copy">For best results, include the brand, full model number, and any visible version or series details from the data plate.</p>' +
+    '<p class="technical-methodology-note">Designed for insurance claim accuracy and equipment lifecycle audits.</p>';
+}
+
+function mountSharedSmartLookupAboutSection() {
+  var slug = getBrandPageSlug();
+  var existing = document.querySelector('.technical-methodology-card');
+  if (slug === 'smart-lookup') {
+    if (existing) existing.innerHTML = smartLookupAboutInnerHtml();
+    return;
+  }
+  if (slug !== '' && slug !== 'index') return;
+  if (existing) return;
+  var mainCard = document.querySelector('.main-card');
+  if (!mainCard || !mainCard.parentNode) return;
+  var card = document.createElement('section');
+  card.className = 'technical-methodology-card';
+  card.innerHTML = smartLookupAboutInnerHtml();
+  mainCard.insertAdjacentElement('afterend', card);
 }
 
 function ensureFooterPrivacyPolicyLink() {
@@ -908,8 +1021,10 @@ document.addEventListener('DOMContentLoaded', function() {
   enhanceSidebarCategoryLinks();
   enhanceSmartLookupSidebarTop();
   enhanceSidebarNavigation();
+  syncSidebarActiveState();
   enhanceBrandPageEmbeddedDecoder();
   updateMainPageSmartLookupHelperText();
+  mountSharedSmartLookupAboutSection();
   ensureFooterPrivacyPolicyLink();
   addGuidedSearchButtonToBrandDecoderCard();
   var dom = getDecodeDom();
@@ -919,7 +1034,20 @@ document.addEventListener('DOMContentLoaded', function() {
   var altQuery    = getSmartLookupInputEl();
 
   if (brandSelect && serialInput) {
-    populateBrands('appliances');
+    var initialCategory = 'appliances';
+    try {
+      var initParams = new URLSearchParams(window.location.search || '');
+      var initCat = initParams.get('cat');
+      if (initCat) initialCategory = categoryNameToKey(initCat);
+      else if (window.DEFAULT_CATEGORY) initialCategory = categoryNameToKey(window.DEFAULT_CATEGORY);
+      else initialCategory = getSavedCategoryKey() || 'appliances';
+    } catch (_) {
+      initialCategory = getSavedCategoryKey() || 'appliances';
+    }
+    currentCategory = normalizeDecoderCategory(initialCategory);
+    populateBrands(currentCategory);
+    syncGlobalCategoryTabs(initialCategory);
+    saveCategoryKey(initialCategory);
 
     brandSelect.addEventListener('change', function() {
       onBrandChange();
@@ -930,6 +1058,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sidebarCat) expandSidebarCategory(sidebarCat);
       }
       updateDecodeBtn();
+      syncSidebarActiveState();
     });
     serialInput.addEventListener('input', updateDecodeBtn);
     serialInput.addEventListener('keypress', function(e) {
@@ -947,10 +1076,13 @@ document.addEventListener('DOMContentLoaded', function() {
       if (catParam) {
         var tabBtn = document.querySelector('.cat-tab[data-cat="' + catParam + '"]');
         if (tabBtn) selectCategory(catParam, tabBtn);
-        else if (decoderData[catParam]) {
-          currentCategory = catParam;
-          populateBrands(catParam);
+        else if (decoderData[normalizeDecoderCategory(catParam)]) {
+          currentCategory = normalizeDecoderCategory(catParam);
+          saveCategoryKey(catParam);
+          populateBrands(currentCategory);
           prioritizeSidebarCategory(catParam);
+          syncGlobalCategoryTabs(catParam);
+          syncSidebarActiveState();
           updateDecodeBtn();
         }
       }
@@ -983,6 +1115,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   loadBrandContext();
+  syncSidebarActiveState();
 
   try {
     var q = new URLSearchParams(window.location.search || '');
@@ -996,11 +1129,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ===== CATEGORY SELECTION =====
 function selectCategory(cat, btn) {
-  currentCategory = cat;
+  currentCategory = normalizeDecoderCategory(cat);
+  saveCategoryKey(cat);
   document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.remove('active'); });
   if (btn && btn.classList) btn.classList.add('active');
+  syncGlobalCategoryTabs(cat);
   prioritizeSidebarCategory(cat);
-  populateBrands(cat);
+  syncSidebarActiveState();
+  populateBrands(currentCategory);
   var serialEl = getDecodeDom().serialEl;
   if (serialEl) serialEl.value = '';
   document.getElementById('serialResults').classList.add('hidden');
@@ -1171,6 +1307,8 @@ function fireFallbackAlert(brand, serial, category, reason) {
 
 // ===== DECODE FALLBACK DISPLAY =====
 function showDecodeFallback(decoder, serial, brandId, reason) {
+  var refinePanel = document.querySelector('.narrow-date-panel');
+  if (refinePanel) refinePanel.classList.add('hidden');
   var monthRow = document.getElementById('resultMonthRow');
   if (monthRow) monthRow.style.display = 'none';
   var yearEl = document.getElementById('resultYear');
@@ -1197,6 +1335,133 @@ function showDecodeFallback(decoder, serial, brandId, reason) {
     document.getElementById('serialResults').classList.remove('hidden');
     document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
+}
+
+function parseCandidateYears(yearText) {
+  var matches = String(yearText || '').match(/\b(19|20)\d{2}\b/g) || [];
+  var seen = {};
+  return matches
+    .map(function(y) { return parseInt(y, 10); })
+    .filter(function(y) {
+      if (seen[y]) return false;
+      seen[y] = true;
+      return true;
+    });
+}
+
+function isAmbiguousResultYear(yearText) {
+  var years = parseCandidateYears(yearText);
+  return years.length > 1 || String(yearText || '').indexOf('/') !== -1 || /\bor\b/i.test(String(yearText || ''));
+}
+
+function ensureRefinementPanel() {
+  var serialResults = document.getElementById('serialResults');
+  if (!serialResults) return null;
+  var panel = serialResults.querySelector('.narrow-date-panel');
+  if (panel) return panel;
+  panel = document.createElement('div');
+  panel.className = 'narrow-date-panel hidden';
+  panel.innerHTML = '' +
+    '<h4>Narrow the Date (Recommended)</h4>' +
+    '<p class="narrow-date-note">Multiple possible dates were found. Add model/context to refine.</p>' +
+    '<div class="narrow-date-fields">' +
+      '<input type="text" id="narrowModelInput" class="form-input" placeholder="Model number">' +
+      '<input type="text" id="narrowContextInput" class="form-input" placeholder="Optional description/context">' +
+      '<button type="button" id="narrowDateBtn" class="decode-btn">Refine Result</button>' +
+    '</div>' +
+    '<div id="narrowDateOutput" class="narrow-date-output"></div>';
+  var moreOptions = serialResults.querySelector('.more-options-section');
+  if (moreOptions) moreOptions.insertAdjacentElement('beforebegin', panel);
+  else serialResults.appendChild(panel);
+  panel.querySelector('#narrowDateBtn').addEventListener('click', refineAmbiguousResult);
+  return panel;
+}
+
+function deterministicRefinement(candidates, model, context) {
+  var combined = (model + ' ' + context).trim();
+  var yearsMentioned = parseCandidateYears(combined);
+  if (yearsMentioned.length) {
+    var target = yearsMentioned[0];
+    var best = candidates.reduce(function(prev, cur) {
+      return Math.abs(cur - target) < Math.abs(prev - target) ? cur : prev;
+    }, candidates[0]);
+    return {
+      chosenYear: best,
+      summary: 'Using your provided year clue (' + target + '), the nearest serial-valid option is ' + best + '.',
+      confidence: 'Heuristic'
+    };
+  }
+  return {
+    chosenYear: null,
+    summary: 'Not enough model/context detail to confidently narrow the date. Keep current candidates and add more specifics.',
+    confidence: 'Low'
+  };
+}
+
+function chooseCandidateFromLookup(candidates, lookupData) {
+  if (!lookupData) return null;
+  var targetYears = [];
+  if (lookupData.estimatedYear) {
+    targetYears = targetYears.concat(parseCandidateYears(String(lookupData.estimatedYear)));
+  }
+  if (lookupData.yearRange) {
+    targetYears = targetYears.concat(parseCandidateYears(String(lookupData.yearRange)));
+  }
+  if (!targetYears.length || !candidates.length) return null;
+  var target = targetYears[0];
+  var best = candidates.reduce(function(prev, cur) {
+    return Math.abs(cur - target) < Math.abs(prev - target) ? cur : prev;
+  }, candidates[0]);
+  return {
+    chosenYear: best,
+    summary: 'Smart Lookup suggests around ' + target + '; closest serial-valid candidate is ' + best + '.',
+    confidence: 'Medium'
+  };
+}
+
+async function refineAmbiguousResult() {
+  var output = document.getElementById('narrowDateOutput');
+  var modelEl = document.getElementById('narrowModelInput');
+  var contextEl = document.getElementById('narrowContextInput');
+  var yearEl = document.getElementById('resultYear');
+  var brandEl = document.getElementById('resultBrand');
+  if (!output || !yearEl) return;
+
+  var model = modelEl ? modelEl.value.trim() : '';
+  var context = contextEl ? contextEl.value.trim() : '';
+  var candidates = parseCandidateYears(yearEl.textContent);
+  if (!candidates.length) return;
+
+  output.innerHTML = '<p>Refining...</p>';
+  var query = (brandEl ? brandEl.textContent : '') + ' ' + model + ' ' + context + ' candidate years: ' + candidates.join(', ');
+  var selected = null;
+
+  try {
+    var res = await fetch('/api/age-lookup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: query.trim() })
+    });
+    var data = await parseJsonResponseSafe(res, 'refine-ambiguous');
+    selected = chooseCandidateFromLookup(candidates, data);
+    if (!selected) selected = deterministicRefinement(candidates, model, context);
+    output.innerHTML =
+      '<div class="info-block refinement">' +
+        '<h4>How we decided</h4>' +
+        '<p>' + esc(selected.summary) + '</p>' +
+        '<p><strong>Confidence:</strong> ' + esc(selected.confidence) + '</p>' +
+        (selected.chosenYear ? '<p><strong>Recommended date:</strong> ' + esc(String(selected.chosenYear)) + '</p>' : '') +
+      '</div>';
+  } catch (e) {
+    console.error('[Refinement] Failed to refine candidates:', e);
+    selected = deterministicRefinement(candidates, model, context);
+    output.innerHTML =
+      '<div class="info-block refinement">' +
+        '<h4>How we decided</h4>' +
+        '<p>' + esc(selected.summary) + '</p>' +
+        '<p><strong>Confidence:</strong> ' + esc(selected.confidence) + '</p>' +
+      '</div>';
+  }
 }
 
 // ===== SERIAL DECODE =====
@@ -1302,6 +1567,17 @@ function decodeSerial() {
     showBrandLogo('serialBrandLogo', brandId, decoder.name);
     currentFeedbackContext = { brand: decoder.name, serial: serial };
 
+    var refinePanel = ensureRefinementPanel();
+    if (refinePanel) {
+      if (isAmbiguousResultYear(_displayedYear)) {
+        refinePanel.classList.remove('hidden');
+      } else {
+        refinePanel.classList.add('hidden');
+        var refineOut = document.getElementById('narrowDateOutput');
+        if (refineOut) refineOut.innerHTML = '';
+      }
+    }
+
     setLoadingSuccess(function() {
       document.getElementById('serialResults').classList.remove('hidden');
       document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1388,6 +1664,10 @@ function decodeAnotherItem() {
   if (serialInput) serialInput.value = '';
   if (altQuery) altQuery.value = '';
   if (document.getElementById('eraGroup')) hideEraGroup();
+  var refinePanel = document.querySelector('.narrow-date-panel');
+  if (refinePanel) refinePanel.classList.add('hidden');
+  var refineOut = document.getElementById('narrowDateOutput');
+  if (refineOut) refineOut.innerHTML = '';
   updateDecodeBtn();
   var main = document.querySelector('.main-card');
   if (main && main.scrollIntoView) {
@@ -1524,6 +1804,25 @@ function showSmartLookupNotice(type, message) {
   }
 }
 
+async function parseJsonResponseSafe(res, contextLabel) {
+  var contentType = (res.headers && res.headers.get('content-type')) || '';
+  if (contentType.toLowerCase().indexOf('application/json') !== -1) {
+    return await res.json();
+  }
+  var raw = '';
+  try { raw = await res.text(); } catch (_) {}
+  console.error('[Smart Lookup] Non-JSON response for ' + contextLabel + ':', {
+    status: res.status,
+    contentType: contentType,
+    preview: (raw || '').slice(0, 240)
+  });
+  return {
+    error: 'Smart Lookup is temporarily unavailable. Please try again in a moment.',
+    errorCode: 'NON_JSON_RESPONSE',
+    raw: raw
+  };
+}
+
 // ===== ESTIMATE AGE =====
 async function estimateAge() {
   var inputEl = getSmartLookupInputEl();
@@ -1550,7 +1849,7 @@ async function estimateAge() {
     // Handle structured limit responses before parsing JSON
     if (res.status === 429) {
       var limitData = {};
-      try { limitData = await res.json(); } catch(_) {}
+      try { limitData = await parseJsonResponseSafe(res, 'rate-limit'); } catch(_) {}
       if (limitData.errorCode === 'RATE_LIMIT' || res.status === 429) {
         setLoadingHidden();
         showSmartLookupNotice('limit', 'You\'ve reached the Smart Lookup usage limit. Please wait a few minutes and try again.');
@@ -1563,7 +1862,7 @@ async function estimateAge() {
       return;
     }
 
-    var data = await res.json();
+    var data = await parseJsonResponseSafe(res, 'age-lookup');
 
     if (data.errorCode === 'RATE_LIMIT') {
       setLoadingHidden();
@@ -1578,7 +1877,7 @@ async function estimateAge() {
 
     if (data.error) {
       setLoadingHidden();
-      alert('Error: ' + data.error);
+      showSmartLookupNotice('limit', esc(data.error));
       return;
     }
 
@@ -1653,7 +1952,8 @@ async function estimateAge() {
 
   } catch (e) {
     setLoadingHidden();
-    alert('Error estimating age: ' + (e.message || e) + '. Please try again.');
+    console.error('[Smart Lookup] estimateAge failed:', e);
+    showSmartLookupNotice('limit', 'Smart Lookup is temporarily unavailable. Please try again.');
   }
 }
 
@@ -1747,7 +2047,7 @@ async function generateAISection(type, btn) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: query }),
     });
-    var data = await res.json();
+    var data = await parseJsonResponseSafe(res, 'ai-section-' + type);
     if (resultEl) {
       var lines = [];
       if (data.notes) lines.push(data.notes);
