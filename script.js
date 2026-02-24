@@ -205,11 +205,12 @@ var PRIMARY_BRANDS_VISIBLE = {
   Electronics: 4
 };
 var WATER_HEATER_BRANDS = [
-  { id: 'rheem', label: 'Rheem', href: '/universal-decoder?cat=water-heaters&brand=rheem' },
-  { id: 'bradford_white', label: 'Bradford White', href: '/universal-decoder?cat=water-heaters&brand=bradford_white' },
-  { id: 'a_o_smith', label: 'A.O. Smith', href: '/universal-decoder?cat=water-heaters&brand=a_o_smith' },
-  { id: 'state_industries', label: 'State', href: '/universal-decoder?cat=water-heaters&brand=state_industries' }
+  { id: 'rheem', label: 'Rheem' },
+  { id: 'bradford_white', label: 'Bradford White' },
+  { id: 'a_o_smith', label: 'A.O. Smith' },
+  { id: 'state_industries', label: 'State' }
 ];
+var WATER_HEATER_BRAND_IDS = WATER_HEATER_BRANDS.map(function(brand) { return brand.id; });
 
 function isBrandPage() {
   return !!sidebarCategoryForSlug(getBrandPageSlug());
@@ -386,10 +387,46 @@ function prioritizeSidebarCategory(catKey) {
   expandSidebarCategory(categoryName);
 }
 
-function brandTargetHref(brandId, categoryName) {
-  const pageSlug = BRAND_PAGE_BY_ID[brandId];
-  if (pageSlug) return '/' + pageSlug;
-  return '/universal-decoder?cat=' + encodeURIComponent(categoryNameToKey(categoryName)) + '&brand=' + encodeURIComponent(brandId);
+function categoryKeyForBrandId(brandId) {
+  if (!brandId) return '';
+  if (WATER_HEATER_BRAND_IDS.indexOf(brandId) !== -1) return 'water-heaters';
+  var slug = brandId.replace(/_/g, '-');
+  var catName = SIDEBAR_BRAND_TO_CATEGORY[slug];
+  if (catName) return categoryNameToKey(catName);
+  return 'appliances';
+}
+
+function brandTargetHref(brandId) {
+  if (!brandId) return '/';
+  var catKey = categoryKeyForBrandId(brandId) || 'appliances';
+  return '/?cat=' + encodeURIComponent(catKey) + '&brand=' + encodeURIComponent(brandId);
+}
+
+function brandLinkHrefFromSlug(slug) {
+  if (!slug) return '';
+  var brandId = slugToBrandId(slug);
+  return brandTargetHref(brandId);
+}
+
+function rewriteBrandLinks(root) {
+  var scope = root || document;
+  var brandSlugs = {};
+  Object.keys(BRAND_PAGE_BY_ID).forEach(function(key) {
+    brandSlugs[BRAND_PAGE_BY_ID[key]] = true;
+  });
+  Array.prototype.slice.call(scope.querySelectorAll('a[href]')).forEach(function(link) {
+    var href = link.getAttribute('href') || '';
+    if (!href || href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
+    try {
+      var url = new URL(href, window.location.origin);
+      if (url.origin !== window.location.origin) return;
+      var slug = url.pathname.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
+      if (!brandSlugs[slug]) return;
+      var target = brandLinkHrefFromSlug(slug);
+      if (target) link.setAttribute('href', target);
+      link.setAttribute('data-brand', slugToBrandId(slug));
+    } catch (_) {}
+  });
 }
 
 function enhanceSidebarNavigation() {
@@ -433,7 +470,7 @@ function enhanceSidebarNavigation() {
       WATER_HEATER_BRANDS.forEach(function(wb) {
         var wa = document.createElement('a');
         wa.className = 'sidebar-link';
-        wa.href = wb.href;
+        wa.href = brandTargetHref(wb.id);
         wa.textContent = wb.label;
         wa.setAttribute('data-brand', wb.id);
         wa.setAttribute('data-category', 'water-heaters');
@@ -482,6 +519,9 @@ function enhanceSidebarNavigation() {
       a.setAttribute('data-category', categoryNameToKey(catName));
       var href = a.getAttribute('href') || '';
       var slug = href.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
+      var targetHref = brandLinkHrefFromSlug(slug);
+      if (targetHref) a.setAttribute('href', targetHref);
+      if (slug) a.setAttribute('data-brand', slugToBrandId(slug));
       if (slug) primarySlugs[slug] = true;
     });
 
@@ -489,12 +529,13 @@ function enhanceSidebarNavigation() {
     var remaining = overflowLinks.map(function(a) {
       var href = a.getAttribute('href') || '';
       var slug = href.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
-      return { slug: slug, label: a.textContent || slug, href: href };
+      var targetHref = brandLinkHrefFromSlug(slug) || href;
+      return { slug: slug, label: a.textContent || slug, href: targetHref };
     });
     extras.forEach(function(item) {
       var slug = (BRAND_PAGE_BY_ID[item.id] || item.id).replace(/_/g, '-');
       if (!primarySlugs[slug]) {
-        remaining.push({ slug: slug, label: item.label, href: brandTargetHref(item.id, catName) });
+        remaining.push({ slug: slug, label: item.label, href: brandTargetHref(item.id) });
       }
     });
     var seenRemaining = {};
@@ -829,7 +870,8 @@ function updateMainPageSmartLookupHelperText() {
   helper.textContent = 'Enter a model number, brand + model, brand + series, or general description to estimate the age. The more information you provide, the better the result.';
 }
 
-function titleForCategoryKey(key) {
+function titleForCategoryKey(key, slug) {
+  if (slug === '' || slug === 'index') return 'Serial Number Decoder';
   if (key === 'hvac') return 'HVAC Serial Number Decoder';
   if (key === 'electronics') return 'Electronics Serial Number Decoder';
   if (key === 'water-heaters') return 'Water Heater Serial Number Decoder';
@@ -875,7 +917,7 @@ function ensurePageTitleAndCategoryTabs() {
     mainCard.parentNode.insertBefore(head, mainCard);
   }
   head.innerHTML = '' +
-    '<h1>' + titleForCategoryKey(activeKey) + '</h1>' +
+    '<h1>' + titleForCategoryKey(activeKey, slug) + '</h1>' +
     '<nav class="category-tab-bar" aria-label="Category Navigation">' +
       buildCategoryTabBarHtml(activeKey) +
     '</nav>';
@@ -1157,6 +1199,7 @@ function initPage() {
   mountSharedSmartLookupAboutSection();
   ensureFooterPrivacyPolicyLink();
   addGuidedSearchButtonToBrandDecoderCard();
+  rewriteBrandLinks();
   var dom = getDecodeDom();
   var brandSelect = dom.brandEl;
   var serialInput = dom.serialEl;
