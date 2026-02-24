@@ -148,7 +148,8 @@ var CATEGORY_PAGE_BY_KEY = {
   'hvac': '/hvac',
   'appliances': '/appliances',
   'electronics': '/electronics',
-  'water-heaters': '/water-heaters'
+  'water-heaters': '/water-heaters',
+  'smart-lookup': '/smart-lookup'
 };
 var BRAND_PAGE_BY_ID = {
   'goodman': 'goodman',
@@ -539,6 +540,9 @@ function enhanceSmartLookupSidebarTop() {
   section.innerHTML =
     '<a class="sidebar-link sidebar-smart-top-link" href="/smart-lookup">' +
     'Smart Lookup <span class="new-badge">NEW</span>' +
+    '</a>' +
+    '<a class="sidebar-link sidebar-smart-sub-link" href="/">' +
+    'Serial Number Decoder' +
     '</a>';
 
   var firstSection = sidebar.querySelector('.sidebar-section');
@@ -666,6 +670,150 @@ function enhanceSidebarCategoryLinks() {
   });
 }
 
+function getActiveTopCategoryKey() {
+  var slug = getBrandPageSlug();
+  if (slug === 'smart-lookup') return 'smart-lookup';
+  if (slug === 'hvac' || slug === 'appliances' || slug === 'electronics' || slug === 'water-heaters') {
+    return categoryNameToKey(slug);
+  }
+
+  var brandCat = sidebarCategoryForSlug(slug);
+  if (brandCat) return categoryNameToKey(brandCat);
+
+  try {
+    var cat = new URLSearchParams(window.location.search || '').get('cat');
+    if (cat) return categoryNameToKey(cat);
+  } catch (_) {}
+  return 'appliances';
+}
+
+function enhanceGlobalCategoryTabs() {
+  var app = document.querySelector('.app-container');
+  var header = app ? app.querySelector('.header') : null;
+  if (!app || !header) return;
+  if (app.querySelector('.global-category-tabs')) return;
+
+  var activeKey = getActiveTopCategoryKey();
+  var tabs = [
+    { key: 'hvac', label: 'HVAC', href: '/hvac' },
+    { key: 'appliances', label: 'Appliances', href: '/appliances' },
+    { key: 'electronics', label: 'Electronics', href: '/electronics' },
+    { key: 'water-heaters', label: 'Water Heaters', href: '/water-heaters' },
+    { key: 'smart-lookup', label: 'Smart Lookup', href: '/smart-lookup' }
+  ];
+
+  var nav = document.createElement('nav');
+  nav.className = 'global-category-tabs';
+  nav.setAttribute('aria-label', 'Category navigation');
+  tabs.forEach(function(tab) {
+    var a = document.createElement('a');
+    a.className = 'global-category-tab';
+    if (tab.key === activeKey) a.classList.add('active');
+    a.href = tab.href;
+    a.textContent = tab.label;
+    nav.appendChild(a);
+  });
+
+  header.insertAdjacentElement('afterend', nav);
+}
+
+function slugToBrandId(slug) {
+  if (!slug) return '';
+  if (slug === 'google-pixel') return 'google_pixel';
+  return slug.replace(/-/g, '_');
+}
+
+function openEmbeddedBrandDecoder(panel, triggerEl) {
+  if (!panel) return;
+  panel.hidden = false;
+  panel.classList.add('open');
+  var serialInput = getDecodeDom().serialEl;
+  if (serialInput && serialInput.focus) {
+    setTimeout(function() { serialInput.focus(); }, 120);
+  }
+  if (triggerEl && triggerEl.scrollIntoView) {
+    triggerEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function enhanceBrandPageEmbeddedDecoder() {
+  if (!isBrandPage()) return;
+  var decoderCard = document.querySelector('.main-card.decoder-card');
+  var staticCard = document.querySelector('.static-card');
+  if (!decoderCard || !staticCard) return;
+  if (document.querySelector('.embedded-brand-decoder')) return;
+
+  var smartCard = document.querySelector('.smart-lookup-standalone');
+  var ageLoading = document.getElementById('ageLoading');
+  var serialResults = document.getElementById('serialResults');
+  var ageResults = document.getElementById('ageResults');
+
+  var panel = document.createElement('section');
+  panel.className = 'embedded-brand-decoder';
+  panel.hidden = true;
+  panel.innerHTML = '' +
+    '<div class="embedded-brand-decoder-head">' +
+      '<span class="embedded-brand-decoder-title">Decoder</span>' +
+      '<button type="button" class="embedded-brand-decoder-close" aria-label="Close decoder">Close</button>' +
+    '</div>';
+
+  var ctaBlock = staticCard.querySelector('.cta-block');
+  if (ctaBlock) ctaBlock.insertAdjacentElement('afterend', panel);
+  else staticCard.insertAdjacentElement('afterbegin', panel);
+
+  panel.appendChild(decoderCard);
+  if (smartCard) panel.appendChild(smartCard);
+  if (ageLoading) panel.appendChild(ageLoading);
+  if (serialResults) panel.appendChild(serialResults);
+  if (ageResults) panel.appendChild(ageResults);
+
+  panel.querySelector('.embedded-brand-decoder-close').addEventListener('click', function() {
+    panel.hidden = true;
+    panel.classList.remove('open');
+  });
+
+  var slug = getBrandPageSlug();
+  var brandId = slugToBrandId(slug);
+  var pageBrandName = (slug || '').split('-').map(function(part) {
+    return part ? part.charAt(0).toUpperCase() + part.slice(1) : part;
+  }).join(' ');
+
+  var ctas = Array.prototype.slice.call(staticCard.querySelectorAll('.cta-btn'));
+  if (!ctas.length && ctaBlock) {
+    var fallback = document.createElement('a');
+    fallback.href = '#';
+    fallback.className = 'cta-btn';
+    fallback.innerHTML = '&#9889; Open ' + pageBrandName + ' Decoder';
+    ctaBlock.appendChild(fallback);
+    ctas.push(fallback);
+  }
+
+  ctas.forEach(function(cta) {
+    cta.addEventListener('click', function(e) {
+      e.preventDefault();
+      var dom = getDecodeDom();
+      if (dom.brandEl && brandId) {
+        dom.brandEl.value = brandId;
+        if (typeof onBrandChange === 'function') onBrandChange();
+        if (typeof updateDecodeBtn === 'function') updateDecodeBtn();
+      }
+      openEmbeddedBrandDecoder(panel, cta);
+    });
+  });
+}
+
+function updateMainPageSmartLookupHelperText() {
+  var slug = getBrandPageSlug();
+  if (slug !== '') return;
+  var input = document.getElementById('smart-lookup-input');
+  if (!input) return;
+  var formGroup = input.closest('.form-group');
+  if (!formGroup) return;
+  var helper = formGroup.querySelector('.helper-text');
+  if (!helper) return;
+  helper.textContent = 'Enter a model number, brand + model, brand + series, or general description to estimate the age. The more information you provide, the better the result.';
+}
+
 function ensureFooterPrivacyPolicyLink() {
   document.querySelectorAll('.footer-links').forEach(function(links) {
     if (links.querySelector('a[href="/privacy-policy"], a[href="/privacy-policy.html"]')) return;
@@ -754,11 +902,14 @@ function loadBrandContext() {
 document.addEventListener('DOMContentLoaded', function() {
   ensureSmartLookupDom();
   enhanceHeaderBranding();
+  enhanceGlobalCategoryTabs();
   enhanceSidebarLogo();
   injectHeroBanner();
   enhanceSidebarCategoryLinks();
   enhanceSmartLookupSidebarTop();
   enhanceSidebarNavigation();
+  enhanceBrandPageEmbeddedDecoder();
+  updateMainPageSmartLookupHelperText();
   ensureFooterPrivacyPolicyLink();
   addGuidedSearchButtonToBrandDecoderCard();
   var dom = getDecodeDom();
