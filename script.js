@@ -1198,6 +1198,8 @@ function extractMainContentFromDoc(doc) {
   var temp = doc.createElement('div');
   if (!header) {
     temp.innerHTML = app.innerHTML;
+    var strayHeader = temp.querySelector('.header');
+    if (strayHeader) strayHeader.remove();
     return temp.innerHTML;
   }
   var node = header.nextSibling;
@@ -1382,6 +1384,8 @@ function navigateSpa(url, options) {
       var main = ensureMainContentShell();
       if (!main) throw new Error('Missing main container');
       main.innerHTML = extractMainContentFromDoc(doc);
+      var nestedHeader = main.querySelector('.header');
+      if (nestedHeader) nestedHeader.remove();
       syncDocumentMetadata(doc);
       syncDefaultCategoryFromDoc(doc);
       if (!options || !options.replace) {
