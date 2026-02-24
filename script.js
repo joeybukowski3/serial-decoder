@@ -655,7 +655,7 @@ function enhanceHeaderBranding() {
   wrap.innerHTML = '' +
     '<div class="ia-header-left">' +
       '<a href="/" class="ia-header-brand-link" aria-label="Item Assist home">' +
-        '<span class="ia-header-title">Item Assist</span>' +
+        '<span class="ia-header-title ia-wordmark">Item Assist</span>' +
         '<span class="ia-header-subtitle">Intuitive Data Aggregation</span>' +
       '</a>' +
     '</div>' +
