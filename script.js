@@ -597,9 +597,10 @@ function enhanceHeaderBranding() {
   var wrap = document.createElement('div');
   wrap.className = 'ia-header-wrap';
 
-  var left = document.createElement('div');
-  left.className = 'ia-header-left';
-  left.textContent = 'Brought to you by Item Assist';
+  var left = document.createElement('a');
+  left.className = 'ia-header-left ia-header-logo-link';
+  left.href = '/';
+  left.innerHTML = '<img class="ia-header-logo-top" src="/ItemAssistTransparent.png" alt="Item Assist logo">';
 
   var right = document.createElement('div');
   right.className = 'ia-header-right';
@@ -608,10 +609,7 @@ function enhanceHeaderBranding() {
       '<a href="/smart-lookup">Smart Lookup</a>' +
       '<a href="/methodology">Methodology</a>' +
       '<a href="/contact">Contact</a>' +
-    '</nav>' +
-    '<a class="ia-header-logo-link" href="/">' +
-      '<img class="ia-header-logo-top" src="/assets/ItemAssistLogo.jpg" alt="Item Assist logo">' +
-    '</a>';
+    '</nav>';
 
   wrap.appendChild(left);
   wrap.appendChild(right);
@@ -624,7 +622,7 @@ function enhanceSidebarLogo() {
   if (logo.querySelector('.ia-sidebar-brand')) return;
   logo.innerHTML = '' +
     '<span class="ia-sidebar-brand">' +
-      '<img class="ia-sidebar-logo" src="/assets/ItemAssistLogo.jpg" alt="Item Assist logo">' +
+      '<img class="ia-sidebar-logo" src="/ItemAssistTransparent.png" alt="Item Assist logo">' +
       '<span class="ia-sidebar-text">ITEM ASSIST</span>' +
     '</span>';
 }
@@ -640,7 +638,7 @@ function injectHeroBanner() {
   banner.className = 'ia-hero-banner';
   banner.innerHTML = '' +
     '<div class="ia-hero-inner">' +
-      '<img class="ia-hero-mark" src="/assets/item-assist-logo.png" alt="Item Assist">' +
+      '<img class="ia-hero-mark" src="/ItemAssistTransparent.png" alt="Item Assist">' +
       '<div class="ia-hero-copy">' +
         '<h2>RESEARCH, SIMPLIFIED.</h2>' +
         '<p>Intuitive Data Aggregation</p>' +
