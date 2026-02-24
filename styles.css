@@ -1046,6 +1046,10 @@ body {
     .ia-header-nav { gap: 0.55rem; }
     .ia-header-nav a { font-size: 0.74rem; }
     .ia-header-logo-top { height: 45px; width: auto; }
+    .ia-inline-banner { padding: 0.65rem 0.75rem; }
+    .ia-inline-banner-logo { width: 90px; }
+    .ia-inline-banner-copy h2 { font-size: 1.3rem; }
+    .ia-inline-banner-copy p { font-size: 0.82rem; }
     .ia-hero-inner { padding: 0.9rem; min-height: 148px; }
     .ia-hero-mark { width: 84px; }
     .ia-hero-copy h2 { font-size: 1.2rem; }
@@ -1300,11 +1304,13 @@ body {
     box-shadow: none;
 }
 .ia-sidebar-logo {
-    width: 24px;
-    height: 24px;
+    width: 44px;
+    height: 44px;
     object-fit: contain;
 }
 .ia-sidebar-text {
+    font-size: 1rem;
+    font-weight: 800;
     letter-spacing: 0.06em;
 }
 .ia-header-wrap {
@@ -1370,18 +1376,36 @@ body {
     border-bottom: 1px solid #3182ce;
 }
 .ia-inline-banner {
-    max-width: 300px;
-    margin: 0 auto 18px auto;
+    width: 100%;
+    margin: 0 auto 20px auto;
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 0.4rem;
+    padding: 0.75rem 1rem;
 }
-.ia-inline-banner img {
-    display: block;
-    width: 100%;
+.ia-inline-banner-inner {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+}
+.ia-inline-banner-logo {
+    width: 140px;
     height: auto;
     object-fit: contain;
+    flex: 0 0 auto;
+}
+.ia-inline-banner-copy h2 {
+    margin: 0;
+    color: #1a202c;
+    font-size: 2rem;
+    line-height: 1.05;
+    text-transform: none;
+}
+.ia-inline-banner-copy p {
+    margin: 0.25rem 0 0;
+    color: #475569;
+    font-size: 0.95rem;
 }
 .ia-hero-banner {
     margin: 0.9rem auto 1rem;

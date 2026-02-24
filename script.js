@@ -639,7 +639,14 @@ function injectHeroBanner() {
 
   var wrap = document.createElement('div');
   wrap.className = 'ia-inline-banner';
-  wrap.innerHTML = '<img src="/assets/ItemAssistBanner.jpg" alt="Item Assist banner">';
+  wrap.innerHTML = '' +
+    '<div class="ia-inline-banner-inner">' +
+      '<img class="ia-inline-banner-logo" src="/ItemAssistTransparent.png" alt="Item Assist logo">' +
+      '<div class="ia-inline-banner-copy">' +
+        '<h2>Research, Simplified</h2>' +
+        '<p>Intuitive Data Aggregation</p>' +
+      '</div>' +
+    '</div>';
   target.parentNode.insertBefore(wrap, target);
 }
 
