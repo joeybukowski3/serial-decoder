@@ -157,6 +157,8 @@ body {
     flex: 1;
     display: block;
     width: 100%;
+    background: transparent;
+    border: 0;
     color: #ffffff;
     text-decoration: none;
     font-size: 0.75rem;
@@ -165,6 +167,8 @@ body {
     text-transform: uppercase;
     padding: 10px 0.6rem;
     margin-bottom: 10px;
+    text-align: left;
+    cursor: pointer;
 }
 .sidebar-group-link:hover {
     color: #93c5fd;
