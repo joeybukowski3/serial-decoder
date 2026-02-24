@@ -438,12 +438,11 @@ function enhanceSidebarNavigation() {
   });
   if (!brandsSection) return;
   var existingGroups = brandsSection.querySelector('.sidebar-brand-groups');
-  if (existingGroups && existingGroups.querySelector('.sidebar-group-header')) return;
 
   var brandLinks = Array.prototype.slice.call(brandsSection.querySelectorAll('a.sidebar-link'));
   if (!brandLinks.length) return;
 
-  var grouped = { HVAC: [], 'Water Heaters': [], Appliances: [], Electronics: [], Other: [] };
+  var grouped = { Appliances: [], HVAC: [], Electronics: [], 'Water Heaters': [] };
   brandLinks.forEach(function(link) {
     var brandAttr = link.getAttribute('data-brand') || '';
     var slug = '';
@@ -458,11 +457,12 @@ function enhanceSidebarNavigation() {
         slug = href.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
       }
     }
-    var cat = sidebarCategoryForSlug(slug) || 'Other';
+    var cat = sidebarCategoryForSlug(slug) || 'Appliances';
+    if (!grouped[cat]) cat = 'Appliances';
     grouped[cat].push(link.cloneNode(true));
   });
 
-  var order = ['HVAC', 'Water Heaters', 'Appliances', 'Electronics', 'Other'];
+  var order = ['Appliances', 'HVAC', 'Electronics', 'Water Heaters'];
   var persisted = getSidebarExpandedCategories();
   var currentSlug = getBrandPageSlug();
   var currentSidebarCategory = sidebarCategoryForSlug(currentSlug);
@@ -500,20 +500,18 @@ function enhanceSidebarNavigation() {
 
     var header = document.createElement('div');
     header.className = 'sidebar-group-header';
-    var link = document.createElement('a');
+    var link = document.createElement('button');
+    link.type = 'button';
     link.className = 'sidebar-group-link';
     var catKey = categoryNameToKey(catName);
-    link.href = categoryPageHrefByKey(catKey);
     link.textContent = catName;
-    link.addEventListener('click', function(event) {
-      var tabKey = normalizeDecoderCategory(catKey);
-      var tabBtn = document.querySelector('.cat-tab[data-cat="' + tabKey + '"]');
-      if (tabBtn && typeof selectCategory === 'function') {
-        event.preventDefault();
-        selectCategory(tabKey, tabBtn);
-        return;
-      }
-      prioritizeSidebarCategory(catKey);
+    link.addEventListener('click', function() {
+      var isOpen = group.classList.contains('open');
+      container.querySelectorAll('.sidebar-brand-group').forEach(function(other) {
+        if (other !== group) setSidebarGroupOpen(other, false);
+      });
+      setSidebarGroupOpen(group, !isOpen);
+      persistSidebarOpenState(container);
     });
 
     var btn = document.createElement('button');
@@ -597,11 +595,16 @@ function enhanceSidebarNavigation() {
       shouldOpen = persisted.indexOf(catName) !== -1;
     } else if (currentSidebarCategory) {
       shouldOpen = currentSidebarCategory === catName;
+    } else if (activeCategoryKey) {
+      shouldOpen = categoryNameToKey(catName) === activeCategoryKey;
     }
     setSidebarGroupOpen(group, shouldOpen);
 
     btn.addEventListener('click', function() {
       var isOpen = group.classList.contains('open');
+      container.querySelectorAll('.sidebar-brand-group').forEach(function(other) {
+        if (other !== group) setSidebarGroupOpen(other, false);
+      });
       setSidebarGroupOpen(group, !isOpen);
       persistSidebarOpenState(container);
     });
