@@ -628,12 +628,8 @@ function enhanceSidebarLogo() {
 }
 
 function injectHeroBanner() {
-  if (document.querySelector('.ia-top-banner')) return;
-  var slug = getBrandPageSlug();
-  if (slug === 'privacy-policy' || slug === 'universal-decoder') return;
-  var banner = document.createElement('div');
-  banner.className = 'ia-top-banner';
-  document.body.insertBefore(banner, document.body.firstChild);
+  var existing = document.querySelector('.ia-top-banner');
+  if (existing) existing.remove();
 }
 
 function enhanceSidebarCategoryLinks() {
