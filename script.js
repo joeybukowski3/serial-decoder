@@ -597,23 +597,24 @@ function enhanceHeaderBranding() {
   var wrap = document.createElement('div');
   wrap.className = 'ia-header-wrap';
 
-  var link = document.createElement('a');
-  link.className = 'ia-header-brand';
-  link.href = '/';
-  link.innerHTML = '' +
-    '<img class="ia-header-logo" src="/assets/item-assist-logo.png" alt="Item Assist logo">' +
-    '<span class="ia-header-text">' +
-      '<span class="ia-header-name">ITEM ASSIST</span>' +
-      '<span class="ia-header-sub">Personalized Research Technology</span>' +
-    '</span>';
+  var left = document.createElement('div');
+  left.className = 'ia-header-left';
+  left.textContent = 'Brought to you by Item Assist';
 
-  var cta = document.createElement('a');
-  cta.className = 'ia-header-cta';
-  cta.href = '/smart-lookup';
-  cta.textContent = 'LEARN MORE';
+  var right = document.createElement('div');
+  right.className = 'ia-header-right';
+  right.innerHTML = '' +
+    '<nav class="ia-header-nav" aria-label="Top navigation">' +
+      '<a href="/smart-lookup">Smart Lookup</a>' +
+      '<a href="/methodology">Methodology</a>' +
+      '<a href="/contact">Contact</a>' +
+    '</nav>' +
+    '<a class="ia-header-logo-link" href="/">' +
+      '<img class="ia-header-logo-top" src="/assets/ItemAssistLogo.jpg" alt="Item Assist logo">' +
+    '</a>';
 
-  wrap.appendChild(link);
-  wrap.appendChild(cta);
+  wrap.appendChild(left);
+  wrap.appendChild(right);
   header.appendChild(wrap);
 }
 
@@ -623,7 +624,7 @@ function enhanceSidebarLogo() {
   if (logo.querySelector('.ia-sidebar-brand')) return;
   logo.innerHTML = '' +
     '<span class="ia-sidebar-brand">' +
-      '<img class="ia-sidebar-logo" src="/assets/item-assist-logo.png" alt="Item Assist logo">' +
+      '<img class="ia-sidebar-logo" src="/assets/ItemAssistLogo.jpg" alt="Item Assist logo">' +
       '<span class="ia-sidebar-text">ITEM ASSIST</span>' +
     '</span>';
 }
