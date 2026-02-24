@@ -675,7 +675,7 @@ function enhanceSidebarLogo() {
   if (logo.querySelector('.ia-sidebar-brand')) return;
   logo.innerHTML = '' +
     '<span class="ia-sidebar-brand">' +
-      '<img class="ia-sidebar-logo" src="/ItemAssistTransparent.png" width="124" height="124" alt="Item Assist logo">' +
+      '<img class="ia-sidebar-logo" src="/ItemAssistTransparent.png" width="220" height="220" alt="Item Assist logo">' +
     '</span>';
 }
 
@@ -747,48 +747,7 @@ function getActiveTopCategoryKey() {
 }
 
 function enhanceGlobalCategoryTabs() {
-  var app = document.querySelector('.app-container');
-  var header = app ? app.querySelector('.header') : null;
-  if (!app || !header) return;
-  if (app.querySelector('.global-category-tabs')) return;
-
-  var activeKey = getActiveTopCategoryKey();
-  var tabs = [
-    { key: 'hvac', label: 'HVAC', href: categoryPageHrefByKey('hvac') },
-    { key: 'appliances', label: 'Appliances', href: categoryPageHrefByKey('appliances') },
-    { key: 'electronics', label: 'Electronics', href: categoryPageHrefByKey('electronics') },
-    { key: 'water-heaters', label: 'Water Heaters', href: categoryPageHrefByKey('water-heaters') },
-    { key: 'smart-lookup', label: 'Smart Lookup', href: categoryPageHrefByKey('smart-lookup') }
-  ];
-
-  var nav = document.createElement('nav');
-  nav.className = 'global-category-tabs';
-  nav.setAttribute('aria-label', 'Category navigation');
-  tabs.forEach(function(tab) {
-    var a = document.createElement('a');
-    a.className = 'global-category-tab';
-    if (tab.key === activeKey) a.classList.add('active');
-    a.href = tab.href;
-    a.textContent = tab.label;
-    a.addEventListener('click', function(e) {
-      if (tab.key !== 'hvac') return;
-      e.preventDefault();
-      fetch(categoryPageHrefByKey('hvac'), { method: 'HEAD' })
-        .then(function(res) {
-          if (res && res.ok) {
-            window.location.href = categoryPageHrefByKey('hvac');
-            return;
-          }
-          window.location.href = '/?cat=hvac';
-        })
-        .catch(function() {
-          window.location.href = '/?cat=hvac';
-        });
-    });
-    nav.appendChild(a);
-  });
-
-  header.insertAdjacentElement('afterend', nav);
+  // Intentionally disabled to avoid duplicate top category rows.
 }
 
 function slugToBrandId(slug) {
@@ -812,9 +771,9 @@ function openEmbeddedBrandDecoder(panel, triggerEl) {
 
 function syncGlobalCategoryTabs(activeKey) {
   var key = categoryNameToKey(activeKey || getActiveTopCategoryKey());
-  document.querySelectorAll('.global-category-tab').forEach(function(tab) {
+  document.querySelectorAll('.category-tab-link').forEach(function(tab) {
     var href = tab.getAttribute('href') || '';
-    var tabKey = href.replace(/^\//, '').replace(/\.html$/i, '');
+    var tabKey = href.replace(/^\//, '').replace(/\.html$/i, '').replace(/\/+$/, '');
     tab.classList.toggle('active', tabKey === key);
   });
 }
@@ -861,6 +820,58 @@ function updateMainPageSmartLookupHelperText() {
   var helper = formGroup.querySelector('.helper-text');
   if (!helper) return;
   helper.textContent = 'Enter a model number, brand + model, brand + series, or general description to estimate the age. The more information you provide, the better the result.';
+}
+
+function titleForCategoryKey(key) {
+  if (key === 'hvac') return 'HVAC Serial Number Decoder';
+  if (key === 'electronics') return 'Electronics Serial Number Decoder';
+  if (key === 'water-heaters') return 'Water Heater Serial Number Decoder';
+  if (key === 'smart-lookup') return 'Smart Lookup (Powered by AI)';
+  return 'Appliances Serial Number Decoder';
+}
+
+function buildCategoryTabBarHtml(activeKey) {
+  var tabs = [
+    { key: 'hvac', label: 'HVAC', href: '/hvac' },
+    { key: 'appliances', label: 'Appliances', href: '/appliances' },
+    { key: 'electronics', label: 'Electronics', href: '/electronics' },
+    { key: 'water-heaters', label: 'Water Heaters', href: '/water-heaters' },
+    { key: 'smart-lookup', label: 'Smart Lookup', href: '/smart-lookup' }
+  ];
+  return tabs.map(function(t) {
+    return '<a href="' + t.href + '" class="category-tab-link' + (t.key === activeKey ? ' active' : '') + '">' + t.label + '</a>';
+  }).join('');
+}
+
+function ensurePageTitleAndCategoryTabs() {
+  var app = document.querySelector('.app-container');
+  if (!app) return;
+  var slug = getBrandPageSlug();
+  var allowed = {
+    '': true,
+    'index': true,
+    'hvac': true,
+    'appliances': true,
+    'electronics': true,
+    'water-heaters': true,
+    'smart-lookup': true
+  };
+  if (!allowed[slug]) return;
+  var activeKey = getActiveTopCategoryKey();
+  var mainCard = app.querySelector('.main-card');
+  if (!mainCard) return;
+
+  var head = app.querySelector('.category-page-head');
+  if (!head) {
+    head = document.createElement('section');
+    head.className = 'category-page-head';
+    mainCard.parentNode.insertBefore(head, mainCard);
+  }
+  head.innerHTML = '' +
+    '<h1>' + titleForCategoryKey(activeKey) + '</h1>' +
+    '<nav class="category-tab-bar" aria-label="Category Navigation">' +
+      buildCategoryTabBarHtml(activeKey) +
+    '</nav>';
 }
 
 function applyBrandDefaultFromSlug() {
@@ -1010,9 +1021,9 @@ function loadBrandContext() {
 document.addEventListener('DOMContentLoaded', function() {
   ensureSmartLookupDom();
   enhanceHeaderBranding();
-  enhanceGlobalCategoryTabs();
   enhanceSidebarLogo();
   injectHeroBanner();
+  ensurePageTitleAndCategoryTabs();
   enhanceSidebarCategoryLinks();
   enhanceSmartLookupSidebarTop();
   enhanceSidebarNavigation();
