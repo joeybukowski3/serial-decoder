@@ -212,6 +212,7 @@ var WATER_HEATER_BRANDS = [
 ];
 var WATER_HEATER_BRAND_IDS = WATER_HEATER_BRANDS.map(function(brand) { return brand.id; });
 var BRAND_CATEGORY_BY_ID = null;
+var CATEGORY_TO_BRANDS = null;
 
 function isBrandPage() {
   return !!sidebarCategoryForSlug(getBrandPageSlug());
@@ -389,19 +390,37 @@ function prioritizeSidebarCategory(catKey) {
 }
 
 function ensureBrandCategoryMap() {
-  if (BRAND_CATEGORY_BY_ID) return BRAND_CATEGORY_BY_ID;
+  if (BRAND_CATEGORY_BY_ID && CATEGORY_TO_BRANDS) return BRAND_CATEGORY_BY_ID;
   var map = {};
+  var byCategory = { 'appliances': [], 'hvac': [], 'electronics': [], 'water-heaters': [] };
+  var seenBrand = {};
   try {
     Object.keys(decoderData || {}).forEach(function(catKey) {
+      var normalizedKey = categoryNameToKey(catKey);
       var group = decoderData[catKey];
       if (!group || !group.brands) return;
       group.brands.forEach(function(brand) {
-        if (brand && brand.id) map[brand.id] = catKey;
+        if (!brand || !brand.id) return;
+        if (seenBrand[brand.id] && seenBrand[brand.id] !== normalizedKey) {
+          console.warn('Brand appears in multiple categories:', brand.id, seenBrand[brand.id], normalizedKey);
+        }
+        seenBrand[brand.id] = normalizedKey;
+        map[brand.id] = normalizedKey;
+        if (byCategory[normalizedKey]) byCategory[normalizedKey].push(brand.id);
       });
     });
   } catch (_) {}
-  WATER_HEATER_BRAND_IDS.forEach(function(id) { map[id] = 'waterHeaters'; });
+  WATER_HEATER_BRAND_IDS.forEach(function(id) {
+    map[id] = 'water-heaters';
+    if (byCategory['water-heaters']) byCategory['water-heaters'].push(id);
+  });
   BRAND_CATEGORY_BY_ID = map;
+  CATEGORY_TO_BRANDS = byCategory;
+  Object.keys(byCategory).forEach(function(key) {
+    if (!byCategory[key] || byCategory[key].length === 0) {
+      console.warn('Category has no brands:', key);
+    }
+  });
   return map;
 }
 
@@ -461,22 +480,25 @@ function enhanceSidebarNavigation() {
 
   var grouped = { Appliances: [], HVAC: [], Electronics: [], 'Water Heaters': [] };
   brandLinks.forEach(function(link) {
-    var brandAttr = link.getAttribute('data-brand') || '';
+    var brandId = link.getAttribute('data-brand') || '';
     var slug = '';
-    if (brandAttr) {
-      slug = BRAND_PAGE_BY_ID[brandAttr] || brandAttr.replace(/_/g, '-');
-    } else {
-      var href = link.getAttribute('href') || '';
+    var href = link.getAttribute('href') || '';
+    if (!brandId) {
       try {
         var url = new URL(href, window.location.origin);
+        brandId = url.searchParams.get('brand') || '';
         slug = url.pathname.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
       } catch (_) {
         slug = href.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
       }
     }
-    var cat = sidebarCategoryForSlug(slug) || 'Appliances';
+    if (!brandId && slug) brandId = slugToBrandId(slug);
+    var catKey = categoryKeyForBrandId(brandId);
+    var cat = CATEGORY_KEY_TO_NAME[catKey] || 'Appliances';
     if (!grouped[cat]) cat = 'Appliances';
-    grouped[cat].push(link.cloneNode(true));
+    var clone = link.cloneNode(true);
+    if (brandId) clone.setAttribute('data-brand', brandId);
+    grouped[cat].push(clone);
   });
 
   var order = ['Appliances', 'HVAC', 'Electronics', 'Water Heaters'];
