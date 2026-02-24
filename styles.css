@@ -366,11 +366,20 @@ body {
     line-height: 1.6;
 }
 .embedded-brand-decoder {
-    margin: 0 0 1rem;
+    margin: 0.75rem 0 0;
     border: 1px solid #dbe4ee;
     border-radius: 12px;
     background: #ffffff;
     padding: 0.75rem;
+}
+.embedded-brand-decoder .form-input,
+.embedded-brand-decoder .form-select,
+.embedded-brand-decoder .decode-btn {
+    min-height: 48px;
+}
+.embedded-brand-decoder .decode-btn {
+    background: #3182ce;
+    color: #ffffff;
 }
 .embedded-brand-decoder-head {
     display: flex;
