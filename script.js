@@ -213,6 +213,13 @@ var WATER_HEATER_BRANDS = [
 var WATER_HEATER_BRAND_IDS = WATER_HEATER_BRANDS.map(function(brand) { return brand.id; });
 var BRAND_CATEGORY_BY_ID = null;
 var CATEGORY_TO_BRANDS = null;
+var STATIC_SIDEBAR_RENDERED = false;
+var TOP_BRANDS_BY_CATEGORY = {
+  'appliances': ['whirlpool', 'ge', 'frigidaire', 'lg', 'samsung'],
+  'hvac': ['goodman', 'carrier', 'trane', 'rheem', 'lennox'],
+  'electronics': ['samsung', 'sony', 'lg', 'vizio', 'panasonic'],
+  'water-heaters': ['rheem', 'a_o_smith', 'bradford_white', 'state_industries', 'whirlpool_water_heaters']
+};
 
 function isBrandPage() {
   return !!sidebarCategoryForSlug(getBrandPageSlug());
@@ -339,7 +346,6 @@ function expandSidebarCategory(categoryName) {
   var target = sidebarRoot.querySelector('.sidebar-brand-group[data-category="' + categoryName + '"]');
   if (!target) return;
   setSidebarGroupOpen(target, true);
-  persistSidebarOpenState(sidebarRoot);
 }
 
 function moveSidebarCategoryToTop(categoryName) {
@@ -383,9 +389,7 @@ function setWaterHeaterTopTierExpanded(active) {
 
 function prioritizeSidebarCategory(catKey) {
   var normalizedKey = categoryNameToKey(catKey);
-  setWaterHeaterTopTierExpanded(normalizedKey === 'water-heaters');
   var categoryName = CATEGORY_KEY_TO_NAME[normalizedKey] || 'Appliances';
-  moveSidebarCategoryToTop(categoryName);
   expandSidebarCategory(categoryName);
 }
 
@@ -434,6 +438,8 @@ function categoryKeyForBrandId(brandId) {
 
 function brandTargetHref(brandId) {
   if (!brandId) return '/';
+  var slug = BRAND_PAGE_BY_ID[brandId] || brandId.replace(/_/g, '-');
+  if (slug) return '/' + slug;
   var catKey = categoryKeyForBrandId(brandId) || 'appliances';
   return '/?cat=' + encodeURIComponent(catKey) + '&brand=' + encodeURIComponent(brandId);
 }
@@ -463,6 +469,145 @@ function rewriteBrandLinks(root) {
       link.setAttribute('data-brand', slugToBrandId(slug));
     } catch (_) {}
   });
+}
+
+function getCategoryGroupData(catKey) {
+  var normalized = categoryNameToKey(catKey);
+  var decoderKey = normalized === 'water-heaters' ? 'waterHeaters' : normalized;
+  var group = decoderData && decoderData[decoderKey];
+  if (!group || !group.brands) return [];
+  return group.brands.map(function(brand) {
+    return { id: brand.id, name: brand.name };
+  });
+}
+
+function renderStaticSidebar() {
+  if (STATIC_SIDEBAR_RENDERED) return;
+  var sidebar = document.querySelector('.sidebar');
+  if (!sidebar) return;
+
+  var categoriesSection = null;
+  var brandsSection = null;
+  sidebar.querySelectorAll('.sidebar-section').forEach(function(section) {
+    var title = section.querySelector('.sidebar-title');
+    if (!title) return;
+    var text = title.textContent.trim().toLowerCase();
+    if (text === 'categories') categoriesSection = section;
+    if (text === 'brands') brandsSection = section;
+  });
+
+  if (categoriesSection) {
+    categoriesSection.innerHTML = '<div class="sidebar-title">Categories</div>';
+    var catLinks = [
+      { key: 'appliances', label: 'Appliances', href: '/appliances' },
+      { key: 'hvac', label: 'HVAC', href: '/hvac' },
+      { key: 'electronics', label: 'Electronics', href: '/electronics' },
+      { key: 'water-heaters', label: 'Water Heaters', href: '/water-heaters' },
+      { key: 'smart-lookup', label: 'Smart Lookup ✨', href: '/smart-lookup' }
+    ];
+    catLinks.forEach(function(item) {
+      var a = document.createElement('a');
+      a.className = 'sidebar-link sidebar-category-link';
+      a.href = item.href;
+      a.setAttribute('data-category', item.key);
+      a.textContent = item.label;
+      categoriesSection.appendChild(a);
+    });
+  }
+
+  if (brandsSection) {
+    brandsSection.innerHTML = '<div class="sidebar-title">Brands</div>';
+    var container = document.createElement('div');
+    container.className = 'sidebar-brand-groups';
+    var categoryOrder = ['appliances', 'hvac', 'electronics', 'water-heaters'];
+
+    categoryOrder.forEach(function(catKey) {
+      var brandData = getCategoryGroupData(catKey);
+      if (!brandData.length) return;
+
+      var topIds = (TOP_BRANDS_BY_CATEGORY[catKey] || []).filter(function(id) {
+        return brandData.some(function(b) { return b.id === id; });
+      });
+      var topSet = {};
+      topIds.forEach(function(id) { topSet[id] = true; });
+
+      var remaining = brandData.filter(function(b) { return !topSet[b.id]; });
+      remaining.sort(function(a, b) {
+        return a.name.localeCompare(b.name);
+      });
+
+      var group = document.createElement('div');
+      group.className = 'sidebar-brand-group';
+      group.setAttribute('data-category', CATEGORY_KEY_TO_NAME[catKey] || catKey);
+
+      var header = document.createElement('div');
+      header.className = 'sidebar-group-header';
+      var label = document.createElement('div');
+      label.className = 'sidebar-group-link';
+      label.textContent = CATEGORY_KEY_TO_NAME[catKey] || catKey;
+      header.appendChild(label);
+      group.appendChild(header);
+
+      var list = document.createElement('div');
+      list.className = 'sidebar-group-links';
+      topIds.forEach(function(id) {
+        var brand = brandData.find(function(b) { return b.id === id; });
+        if (!brand) return;
+        var a = document.createElement('a');
+        a.className = 'sidebar-link sidebar-brand-link';
+        a.href = brandTargetHref(brand.id);
+        a.textContent = brand.name;
+        a.setAttribute('data-brand', brand.id);
+        a.setAttribute('data-category', catKey);
+        list.appendChild(a);
+      });
+      group.appendChild(list);
+
+      if (remaining.length) {
+        var moreWrap = document.createElement('div');
+        moreWrap.className = 'sidebar-more-brands';
+        var moreBtn = document.createElement('button');
+        moreBtn.type = 'button';
+        moreBtn.className = 'sidebar-more-toggle';
+        moreBtn.textContent = '+ More Brands';
+        var moreList = document.createElement('div');
+        moreList.className = 'sidebar-more-list';
+        moreList.hidden = true;
+        remaining.forEach(function(brand) {
+          var a = document.createElement('a');
+          a.className = 'sidebar-link sidebar-link-secondary sidebar-brand-link';
+          a.href = brandTargetHref(brand.id);
+          a.textContent = brand.name;
+          a.setAttribute('data-brand', brand.id);
+          a.setAttribute('data-category', catKey);
+          moreList.appendChild(a);
+        });
+        var key = 'sidebar_morebrands_' + catKey;
+        try {
+          var saved = localStorage.getItem(key);
+          if (saved === 'true') {
+            moreList.hidden = false;
+            moreWrap.classList.add('open');
+          }
+        } catch (_) {}
+        moreBtn.addEventListener('click', function() {
+          var isOpen = !moreList.hidden;
+          moreList.hidden = isOpen;
+          moreWrap.classList.toggle('open', !isOpen);
+          try { localStorage.setItem(key, String(!isOpen)); } catch (_) {}
+        });
+        moreWrap.appendChild(moreBtn);
+        moreWrap.appendChild(moreList);
+        group.appendChild(moreWrap);
+      }
+
+      container.appendChild(group);
+    });
+
+    brandsSection.appendChild(container);
+  }
+
+  STATIC_SIDEBAR_RENDERED = true;
 }
 
 function enhanceSidebarNavigation() {
@@ -667,22 +812,17 @@ function syncSidebarActiveState() {
   var activeBrandSlug = slug && sidebarCategoryForSlug(slug) ? slug : '';
   var activeCategoryKey = getActiveTopCategoryKey();
 
-  document.querySelectorAll('.sidebar-link, .sidebar-group-link, .cat-tab-link').forEach(function(el) {
+  document.querySelectorAll('.sidebar-link, .sidebar-group-link, .cat-tab-link, .sidebar-category-link, .sidebar-brand-link').forEach(function(el) {
     el.classList.remove('active');
   });
 
-  var activeCatSectionLink = document.querySelector('.cat-tab-link[href="' + categoryPageHrefByKey(activeCategoryKey) + '"]');
-  if (activeCatSectionLink) activeCatSectionLink.classList.add('active');
-
-  var activeGroup = document.querySelector('.sidebar-brand-group[data-category="' + (CATEGORY_KEY_TO_NAME[activeCategoryKey] || '') + '"] .sidebar-group-link');
-  if (activeGroup) activeGroup.classList.add('active');
+  var activeCatLink = document.querySelector('.sidebar-category-link[data-category="' + activeCategoryKey + '"]');
+  if (activeCatLink) activeCatLink.classList.add('active');
 
   if (activeBrandSlug) {
-    document.querySelectorAll('.sidebar-link').forEach(function(link) {
-      var href = (link.getAttribute('href') || '').replace(/\/+$/, '');
-      var targetSlug = href.split('/').pop().replace(/\.html$/i, '');
-      if (targetSlug === activeBrandSlug) link.classList.add('active');
-    });
+    var brandId = slugToBrandId(activeBrandSlug);
+    var brandLink = document.querySelector('.sidebar-brand-link[data-brand="' + brandId + '"]');
+    if (brandLink) brandLink.classList.add('active');
   }
 }
 
@@ -1262,13 +1402,8 @@ function initPage() {
   enhanceSidebarLogo();
   injectHeroBanner();
   ensurePageTitleAndCategoryTabs();
-  enhanceSidebarCategoryLinks();
   enhanceSmartLookupSidebarTop();
-  try {
-    enhanceSidebarNavigation();
-  } catch (e) {
-    console.error('Sidebar init failed:', e);
-  }
+  renderStaticSidebar();
   syncSidebarActiveState();
   syncHeaderNavActive();
   enhanceBrandPageEmbeddedDecoder();

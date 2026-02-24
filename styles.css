@@ -170,6 +170,12 @@ body {
     text-align: left;
     cursor: pointer;
 }
+.sidebar-category-link.active,
+.sidebar-brand-link.active {
+    background: rgba(49, 130, 206, 0.28);
+    color: #ffffff;
+    border-color: rgba(49, 130, 206, 0.7);
+}
 .sidebar-group-link:hover {
     color: #93c5fd;
     text-decoration: underline;
