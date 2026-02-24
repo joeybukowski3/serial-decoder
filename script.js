@@ -628,24 +628,12 @@ function enhanceSidebarLogo() {
 }
 
 function injectHeroBanner() {
-  var app = document.querySelector('.app-container');
-  var header = document.querySelector('.header');
-  if (!app || !header) return;
-  if (document.querySelector('.ia-hero-banner')) return;
+  if (document.querySelector('.ia-top-banner')) return;
   var slug = getBrandPageSlug();
   if (slug === 'privacy-policy' || slug === 'universal-decoder') return;
-  var banner = document.createElement('section');
-  banner.className = 'ia-hero-banner';
-  banner.innerHTML = '' +
-    '<div class="ia-hero-inner">' +
-      '<img class="ia-hero-mark" src="/ItemAssistTransparent.png" alt="Item Assist">' +
-      '<div class="ia-hero-copy">' +
-        '<h2>RESEARCH, SIMPLIFIED.</h2>' +
-        '<p>Intuitive Data Aggregation</p>' +
-      '</div>' +
-      '<a class="ia-hero-btn" href="/smart-lookup">LEARN MORE</a>' +
-    '</div>';
-  header.insertAdjacentElement('afterend', banner);
+  var banner = document.createElement('div');
+  banner.className = 'ia-top-banner';
+  document.body.insertBefore(banner, document.body.firstChild);
 }
 
 function enhanceSidebarCategoryLinks() {
