@@ -437,15 +437,27 @@ function enhanceSidebarNavigation() {
     if (title.textContent.trim().toLowerCase() === 'brands') brandsSection = section;
   });
   if (!brandsSection) return;
-  if (brandsSection.querySelector('.sidebar-brand-groups')) return;
+  var existingGroups = brandsSection.querySelector('.sidebar-brand-groups');
+  if (existingGroups && existingGroups.querySelector('.sidebar-group-header')) return;
 
   var brandLinks = Array.prototype.slice.call(brandsSection.querySelectorAll('a.sidebar-link'));
   if (!brandLinks.length) return;
 
   var grouped = { HVAC: [], 'Water Heaters': [], Appliances: [], Electronics: [], Other: [] };
   brandLinks.forEach(function(link) {
-    var href = link.getAttribute('href') || '';
-    var slug = href.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
+    var brandAttr = link.getAttribute('data-brand') || '';
+    var slug = '';
+    if (brandAttr) {
+      slug = BRAND_PAGE_BY_ID[brandAttr] || brandAttr.replace(/_/g, '-');
+    } else {
+      var href = link.getAttribute('href') || '';
+      try {
+        var url = new URL(href, window.location.origin);
+        slug = url.pathname.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
+      } catch (_) {
+        slug = href.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
+      }
+    }
     var cat = sidebarCategoryForSlug(slug) || 'Other';
     grouped[cat].push(link.cloneNode(true));
   });
@@ -598,6 +610,7 @@ function enhanceSidebarNavigation() {
   });
 
   brandLinks.forEach(function(link) { link.remove(); });
+  if (existingGroups) existingGroups.remove();
   brandsSection.appendChild(container);
   if (activeCategoryKey) prioritizeSidebarCategory(activeCategoryKey);
 }
@@ -699,19 +712,12 @@ function enhanceHeaderBranding() {
   wrap.className = 'ia-header-wrap';
 
   wrap.innerHTML = '' +
-    '<div class="ia-header-left">' +
-      '<a href="/" class="ia-header-brand-link" aria-label="Item Assist home">' +
-        '<span class="ia-header-title ia-wordmark">Item Assist</span>' +
-        '<span class="ia-header-subtitle">Intuitive Data Aggregation</span>' +
-      '</a>' +
-    '</div>' +
-    '<div class="ia-header-right">' +
-      '<nav class="ia-header-nav" aria-label="Top navigation">' +
-        '<a class="ia-nav-primary" href="/smart-lookup">Smart Lookup</a>' +
-        '<a class="ia-nav-secondary" href="/methodology">Methodology</a>' +
-        '<a class="ia-nav-secondary" href="/contact">Contact</a>' +
-      '</nav>' +
-    '</div>';
+    '<nav class="ia-header-nav ia-header-nav-center" aria-label="Top navigation">' +
+      '<a class="ia-nav-secondary" href="/smart-lookup">Smart Lookup</a>' +
+      '<a class="ia-nav-primary" href="/">Serial Number Decoder</a>' +
+      '<a class="ia-nav-secondary" href="/methodology">Methodology</a>' +
+      '<a class="ia-nav-secondary" href="/contact">Contact</a>' +
+    '</nav>';
   header.appendChild(wrap);
   header.setAttribute('data-ia-header-ready', '1');
 }

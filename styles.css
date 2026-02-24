@@ -1539,7 +1539,7 @@ body {
     margin: 0 auto;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: 1.2rem;
 }
 .ia-header-left {
@@ -1578,9 +1578,13 @@ body {
 .ia-header-nav {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 0.55rem;
     margin-left: 0;
+}
+.ia-header-nav-center {
+    width: 100%;
+    justify-content: center;
 }
 .ia-header-nav a {
     color: #ffffff;
