@@ -592,7 +592,12 @@ function enhanceSidebarNavigation() {
       moreWrap.appendChild(moreList);
     }
 
-    var shouldOpen = persisted.indexOf(catName) !== -1 || (currentSidebarCategory && currentSidebarCategory === catName);
+    var shouldOpen = true;
+    if (persisted && persisted.length) {
+      shouldOpen = persisted.indexOf(catName) !== -1;
+    } else if (currentSidebarCategory) {
+      shouldOpen = currentSidebarCategory === catName;
+    }
     setSidebarGroupOpen(group, shouldOpen);
 
     btn.addEventListener('click', function() {
@@ -851,7 +856,6 @@ function syncHeaderNavActive() {
 }
 
 function enhanceBrandPageEmbeddedDecoder() {
-  if (!isBrandPage()) return;
   var decoderCard = document.querySelector('.main-card.decoder-card');
   var staticCard = document.querySelector('.static-card');
   if (!decoderCard || !staticCard) return;
