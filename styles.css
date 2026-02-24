@@ -71,7 +71,7 @@ body {
     z-index: 100;
 }
 .sidebar-header {
-    margin-bottom: 1.1rem;
+    margin-bottom: 1.6rem;
     display: flex;
     justify-content: center;
 }
@@ -1312,8 +1312,8 @@ body {
         display: none;
     }
     .ia-sidebar-logo {
-        width: 102px;
-        height: 102px;
+        width: 150px;
+        height: 150px;
     }
 }
 
@@ -1521,8 +1521,8 @@ body {
     width: 100%;
 }
 .ia-sidebar-logo {
-    width: 124px;
-    height: 124px;
+    width: 220px;
+    height: 220px;
     object-fit: contain;
     image-rendering: -webkit-optimize-contrast;
 }
