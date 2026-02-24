@@ -13,14 +13,21 @@
     if (typeof window.estimateAge === 'function') window.estimateAge();
   }
 
-  window.runSmartLookup = runSmartLookup;
-
-  document.addEventListener('DOMContentLoaded', function () {
+  function initSmartLookupPage() {
     var input = getInput();
     var results = getResults();
     if (!input || !results) return;
+    if (input.getAttribute('data-smart-lookup-bound') === '1') return;
+    input.setAttribute('data-smart-lookup-bound', '1');
     input.addEventListener('keypress', function (e) {
       if (e.key === 'Enter') runSmartLookup();
     });
+  }
+
+  window.runSmartLookup = runSmartLookup;
+  window.initSmartLookupPage = initSmartLookupPage;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    initSmartLookupPage();
   });
 })();

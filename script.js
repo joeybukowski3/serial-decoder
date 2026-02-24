@@ -646,6 +646,7 @@ function addGuidedSearchButtonToBrandDecoderCard() {
 function enhanceHeaderBranding() {
   var header = document.querySelector('.header');
   if (!header) return;
+  if (header.getAttribute('data-ia-header-ready') === '1') return;
   var oldTag = header.querySelector('.header-center-tagline');
   if (oldTag) oldTag.remove();
   var oldBrand = header.querySelector('.header-brand');
@@ -671,6 +672,7 @@ function enhanceHeaderBranding() {
       '</nav>' +
     '</div>';
   header.appendChild(wrap);
+  header.setAttribute('data-ia-header-ready', '1');
 }
 
 function enhanceSidebarLogo() {
@@ -1022,8 +1024,125 @@ function loadBrandContext() {
   } catch (_) {}
 }
 
-// ===== INIT =====
-document.addEventListener('DOMContentLoaded', function() {
+function ensureMainContentShell() {
+  var app = document.querySelector('.app-container');
+  if (!app) return null;
+  var main = app.querySelector('#ia-main');
+  if (main) return main;
+  var header = app.querySelector('.header');
+  main = document.createElement('div');
+  main.id = 'ia-main';
+  main.className = 'ia-main';
+
+  if (!header) {
+    while (app.firstChild) {
+      main.appendChild(app.firstChild);
+    }
+    app.appendChild(main);
+    return main;
+  }
+
+  while (header.nextSibling) {
+    main.appendChild(header.nextSibling);
+  }
+  header.insertAdjacentElement('afterend', main);
+  return main;
+}
+
+function syncDocumentMetadata(doc) {
+  if (doc && doc.title) document.title = doc.title;
+  var currentCanonical = document.querySelector('link[rel="canonical"]');
+  var nextCanonical = doc ? doc.querySelector('link[rel="canonical"]') : null;
+  if (currentCanonical && nextCanonical && nextCanonical.getAttribute('href')) {
+    currentCanonical.setAttribute('href', nextCanonical.getAttribute('href'));
+  }
+  var currentDesc = document.querySelector('meta[name="description"]');
+  var nextDesc = doc ? doc.querySelector('meta[name="description"]') : null;
+  if (currentDesc && nextDesc && nextDesc.getAttribute('content')) {
+    currentDesc.setAttribute('content', nextDesc.getAttribute('content'));
+  }
+  if (doc && doc.body) document.body.className = doc.body.className || '';
+}
+
+function syncDefaultCategoryFromDoc(doc) {
+  var scripts = doc ? doc.querySelectorAll('script') : [];
+  var found = null;
+  Array.prototype.slice.call(scripts).forEach(function(script) {
+    if (script.src) return;
+    var text = script.textContent || '';
+    var match = text.match(/window\.DEFAULT_CATEGORY\s*=\s*["']([^"']+)["']/);
+    if (match && match[1]) found = match[1];
+  });
+  if (found) window.DEFAULT_CATEGORY = found;
+  else delete window.DEFAULT_CATEGORY;
+}
+
+function normalizeScriptSrc(src) {
+  try {
+    var url = new URL(src, window.location.origin);
+    return url.pathname + url.search;
+  } catch (_) {
+    return src;
+  }
+}
+
+function collectLoadedScripts() {
+  var loaded = {};
+  document.querySelectorAll('script[src]').forEach(function(script) {
+    var key = normalizeScriptSrc(script.getAttribute('src'));
+    loaded[key] = true;
+  });
+  return loaded;
+}
+
+function loadScript(src) {
+  return new Promise(function(resolve, reject) {
+    var script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.onload = function() { resolve(); };
+    script.onerror = function() { reject(new Error('Failed to load ' + src)); };
+    document.body.appendChild(script);
+  });
+}
+
+function ensureScriptsForDoc(doc) {
+  var loaded = window.__iaLoadedScripts || (window.__iaLoadedScripts = collectLoadedScripts());
+  var scripts = doc ? doc.querySelectorAll('script[src]') : [];
+  var toLoad = [];
+  Array.prototype.slice.call(scripts).forEach(function(script) {
+    var src = script.getAttribute('src');
+    if (!src) return;
+    if (src.indexOf('script.js') !== -1) return;
+    var key = normalizeScriptSrc(src);
+    if (loaded[key]) return;
+    loaded[key] = true;
+    toLoad.push(src);
+  });
+  if (!toLoad.length) return Promise.resolve();
+  return toLoad.reduce(function(chain, src) {
+    return chain.then(function() { return loadScript(src); });
+  }, Promise.resolve());
+}
+
+function extractMainContentFromDoc(doc) {
+  var app = doc ? doc.querySelector('.app-container') : null;
+  if (!app) return '';
+  var header = app.querySelector('.header');
+  var temp = doc.createElement('div');
+  if (!header) {
+    temp.innerHTML = app.innerHTML;
+    return temp.innerHTML;
+  }
+  var node = header.nextSibling;
+  while (node) {
+    temp.appendChild(node.cloneNode(true));
+    node = node.nextSibling;
+  }
+  return temp.innerHTML;
+}
+
+function initPage() {
   ensureSmartLookupDom();
   enhanceHeaderBranding();
   enhanceSidebarLogo();
@@ -1061,22 +1180,31 @@ document.addEventListener('DOMContentLoaded', function() {
     saveCategoryKey(initialCategory);
     applyBrandDefaultFromSlug();
 
-    brandSelect.addEventListener('change', function() {
-      onBrandChange();
-      var selected = brandSelect.value || '';
-      if (selected) {
-        var clean = selected.replace(/_/g, '-');
-        var sidebarCat = sidebarCategoryForSlug(clean) || sidebarCategoryForSlug(selected);
-        if (sidebarCat) expandSidebarCategory(sidebarCat);
-      }
-      updateDecodeBtn();
-      syncSidebarActiveState();
-    });
-    serialInput.addEventListener('input', updateDecodeBtn);
-    serialInput.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') decodeSerial();
-    });
-    if (eraSelect) eraSelect.addEventListener('change', updateDecodeBtn);
+    if (brandSelect.getAttribute('data-brand-bound') !== '1') {
+      brandSelect.setAttribute('data-brand-bound', '1');
+      brandSelect.addEventListener('change', function() {
+        onBrandChange();
+        var selected = brandSelect.value || '';
+        if (selected) {
+          var clean = selected.replace(/_/g, '-');
+          var sidebarCat = sidebarCategoryForSlug(clean) || sidebarCategoryForSlug(selected);
+          if (sidebarCat) expandSidebarCategory(sidebarCat);
+        }
+        updateDecodeBtn();
+        syncSidebarActiveState();
+      });
+    }
+    if (serialInput.getAttribute('data-serial-bound') !== '1') {
+      serialInput.setAttribute('data-serial-bound', '1');
+      serialInput.addEventListener('input', updateDecodeBtn);
+      serialInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') decodeSerial();
+      });
+    }
+    if (eraSelect && eraSelect.getAttribute('data-era-bound') !== '1') {
+      eraSelect.setAttribute('data-era-bound', '1');
+      eraSelect.addEventListener('change', updateDecodeBtn);
+    }
 
     // URL parameter: pre-select brand/category from brand landing pages
     // e.g. index.html?brand=ge&cat=appliances
@@ -1119,11 +1247,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   if (altQuery) {
-    altQuery.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') estimateAge();
-    });
-    altQuery.addEventListener('focus', showAltDisclaimer);
-    altQuery.addEventListener('input', showAltDisclaimer);
+    if (altQuery.getAttribute('data-alt-bound') !== '1') {
+      altQuery.setAttribute('data-alt-bound', '1');
+      altQuery.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') estimateAge();
+      });
+      altQuery.addEventListener('focus', showAltDisclaimer);
+      altQuery.addEventListener('input', showAltDisclaimer);
+    }
   }
 
   loadBrandContext();
@@ -1137,6 +1268,79 @@ document.addEventListener('DOMContentLoaded', function() {
       updateDecodeBtn();
     }
   } catch (_) {}
+}
+
+function initSpaNavigation() {
+  if (window.__iaSpaInit) return;
+  window.__iaSpaInit = true;
+
+  document.addEventListener('click', function(event) {
+    var link = event.target.closest('a');
+    if (!link) return;
+    if (link.target && link.target !== '_self') return;
+    if (event.defaultPrevented) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    var href = link.getAttribute('href') || '';
+    if (!href || href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
+    if (href.indexOf('javascript:') === 0) return;
+    if (link.hasAttribute('download')) return;
+    if (href.indexOf('#') === 0) return;
+    var url = new URL(href, window.location.origin);
+    if (url.origin !== window.location.origin) return;
+    event.preventDefault();
+    navigateSpa(url.href, { replace: false, scroll: true });
+  });
+
+  window.addEventListener('popstate', function() {
+    navigateSpa(window.location.href, { replace: true, scroll: false });
+  });
+}
+
+function navigateSpa(url, options) {
+  if (window.__iaSpaLoading) return;
+  window.__iaSpaLoading = true;
+  var target = new URL(url, window.location.origin);
+
+  fetch(target.pathname + target.search, { credentials: 'same-origin' })
+    .then(function(res) {
+      if (!res.ok) throw new Error('Fetch failed');
+      return res.text();
+    })
+    .then(function(html) {
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      return ensureScriptsForDoc(doc).then(function() { return doc; });
+    })
+    .then(function(doc) {
+      var main = ensureMainContentShell();
+      if (!main) throw new Error('Missing main container');
+      main.innerHTML = extractMainContentFromDoc(doc);
+      syncDocumentMetadata(doc);
+      syncDefaultCategoryFromDoc(doc);
+      if (!options || !options.replace) {
+        history.pushState({}, '', target.pathname + target.search);
+      }
+      if (options && options.scroll) window.scrollTo(0, 0);
+      initPage();
+      if (typeof window.initSmartLookupPage === 'function') {
+        window.initSmartLookupPage();
+      }
+    })
+    .catch(function() {
+      window.location.href = target.href;
+    })
+    .finally(function() {
+      window.__iaSpaLoading = false;
+    });
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', function() {
+  ensureMainContentShell();
+  initSpaNavigation();
+  initPage();
+  if (typeof window.initSmartLookupPage === 'function') {
+    window.initSmartLookupPage();
+  }
 });
 
 // ===== CATEGORY SELECTION =====
