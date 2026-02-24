@@ -833,15 +833,10 @@ function enhanceBrandPageEmbeddedDecoder() {
 
   var panel = document.createElement('section');
   panel.className = 'embedded-brand-decoder';
-  panel.hidden = true;
-  panel.innerHTML = '' +
-    '<div class="embedded-brand-decoder-head">' +
-      '<span class="embedded-brand-decoder-title">Decoder</span>' +
-      '<button type="button" class="embedded-brand-decoder-close" aria-label="Close decoder">Close</button>' +
-    '</div>';
+  panel.hidden = false;
 
   var ctaBlock = staticCard.querySelector('.cta-block');
-  if (ctaBlock) ctaBlock.insertAdjacentElement('afterend', panel);
+  if (ctaBlock) ctaBlock.appendChild(panel);
   else staticCard.insertAdjacentElement('afterbegin', panel);
 
   panel.appendChild(decoderCard);
@@ -849,39 +844,10 @@ function enhanceBrandPageEmbeddedDecoder() {
   if (ageLoading) panel.appendChild(ageLoading);
   if (serialResults) panel.appendChild(serialResults);
   if (ageResults) panel.appendChild(ageResults);
+  panel.classList.add('open');
 
-  panel.querySelector('.embedded-brand-decoder-close').addEventListener('click', function() {
-    panel.hidden = true;
-    panel.classList.remove('open');
-  });
-
-  var slug = getBrandPageSlug();
-  var brandId = slugToBrandId(slug);
-  var pageBrandName = (slug || '').split('-').map(function(part) {
-    return part ? part.charAt(0).toUpperCase() + part.slice(1) : part;
-  }).join(' ');
-
-  var ctas = Array.prototype.slice.call(staticCard.querySelectorAll('.cta-btn'));
-  if (!ctas.length && ctaBlock) {
-    var fallback = document.createElement('a');
-    fallback.href = '#';
-    fallback.className = 'cta-btn';
-    fallback.innerHTML = '&#9889; Open ' + pageBrandName + ' Decoder';
-    ctaBlock.appendChild(fallback);
-    ctas.push(fallback);
-  }
-
-  ctas.forEach(function(cta) {
-    cta.addEventListener('click', function(e) {
-      e.preventDefault();
-      var dom = getDecodeDom();
-      if (dom.brandEl && brandId) {
-        dom.brandEl.value = brandId;
-        if (typeof onBrandChange === 'function') onBrandChange();
-        if (typeof updateDecodeBtn === 'function') updateDecodeBtn();
-      }
-      openEmbeddedBrandDecoder(panel, cta);
-    });
+  Array.prototype.slice.call(staticCard.querySelectorAll('.cta-btn')).forEach(function(btn) {
+    btn.remove();
   });
 }
 
@@ -895,6 +861,35 @@ function updateMainPageSmartLookupHelperText() {
   var helper = formGroup.querySelector('.helper-text');
   if (!helper) return;
   helper.textContent = 'Enter a model number, brand + model, brand + series, or general description to estimate the age. The more information you provide, the better the result.';
+}
+
+function applyBrandDefaultFromSlug() {
+  if (!isBrandPage()) return;
+  var slug = getBrandPageSlug();
+  var brandId = slugToBrandId(slug);
+  var categoryName = sidebarCategoryForSlug(slug);
+  var categoryKey = categoryName ? categoryNameToKey(categoryName) : '';
+  var dom = getDecodeDom();
+  if (!dom.brandEl) return;
+
+  if (categoryKey && decoderData[normalizeDecoderCategory(categoryKey)]) {
+    currentCategory = normalizeDecoderCategory(categoryKey);
+    populateBrands(currentCategory);
+    syncGlobalCategoryTabs(categoryKey);
+  }
+
+  var hasBrandOption = false;
+  for (var i = 0; i < dom.brandEl.options.length; i++) {
+    if (dom.brandEl.options[i].value === brandId) {
+      hasBrandOption = true;
+      break;
+    }
+  }
+  if (!hasBrandOption) return;
+
+  dom.brandEl.value = brandId;
+  if (typeof onBrandChange === 'function') onBrandChange();
+  if (typeof updateDecodeBtn === 'function') updateDecodeBtn();
 }
 
 function smartLookupAboutInnerHtml() {
@@ -1048,6 +1043,7 @@ document.addEventListener('DOMContentLoaded', function() {
     populateBrands(currentCategory);
     syncGlobalCategoryTabs(initialCategory);
     saveCategoryKey(initialCategory);
+    applyBrandDefaultFromSlug();
 
     brandSelect.addEventListener('change', function() {
       onBrandChange();
