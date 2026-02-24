@@ -676,7 +676,7 @@ function enhanceSidebarLogo() {
   if (logo.querySelector('.ia-sidebar-brand')) return;
   logo.innerHTML = '' +
     '<span class="ia-sidebar-brand">' +
-      '<img class="ia-sidebar-logo" src="/ItemAssistTransparent.png" width="220" height="220" alt="Item Assist logo">' +
+      '<img class="ia-sidebar-logo" src="/assets/item-assist-logo.png" width="220" height="220" alt="Item Assist logo">' +
     '</span>';
 }
 
