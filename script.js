@@ -1,3 +1,11 @@
+// ===== ROUTE NORMALIZATION =====
+(function normalizeHtmlRoutes() {
+  var path = window.location.pathname;
+  if (path === '/' || path.endsWith('.html') || path.indexOf('.') !== -1) return;
+  var normalized = path.replace(/\/$/, '') + '.html';
+  window.location.replace(normalized + window.location.search);
+})();
+
 // ===== ERA & CYCLING BRAND CONFIG =====
 var CYCLING_BRANDS = {
   appliances: {
@@ -219,6 +227,12 @@ var TOP_BRANDS_BY_CATEGORY = {
   'hvac': ['goodman', 'carrier', 'trane', 'rheem', 'lennox'],
   'electronics': ['samsung', 'sony', 'lg', 'vizio', 'panasonic'],
   'water-heaters': ['rheem', 'a_o_smith', 'bradford_white', 'state_industries', 'whirlpool_water_heaters']
+};
+var SIDEBAR_CATEGORY_LABELS = {
+  'appliances': 'Appliances ️',
+  'hvac': 'HVAC ️',
+  'electronics': 'Electronics ',
+  'water-heaters': 'Water Heaters '
 };
 var BRAND_SLUG_OVERRIDES = {
   'whirlpool_water_heaters': 'whirlpool',
@@ -451,6 +465,12 @@ function brandTargetHref(brandId) {
   return '/' + slug;
 }
 
+function categoryBrandHref(catKey, brandId) {
+  if (!brandId) return categoryPageHrefByKey(catKey);
+  var base = categoryPageHrefByKey(catKey);
+  return base + (base.indexOf('?') === -1 ? '?' : '&') + 'brand=' + encodeURIComponent(brandId);
+}
+
 function brandLinkHrefFromSlug(slug) {
   if (!slug) return '';
   var brandId = slugToBrandId(slug);
@@ -459,6 +479,7 @@ function brandLinkHrefFromSlug(slug) {
 
 function rewriteBrandLinks(root) {
   var scope = root || document;
+  if (scope.closest && scope.closest('.sidebar')) return;
   var brandSlugs = {};
   Object.keys(BRAND_PAGE_BY_ID).forEach(function(key) {
     brandSlugs[BRAND_PAGE_BY_ID[key]] = true;
@@ -526,7 +547,8 @@ function renderStaticSidebar() {
       a.className = 'sidebar-link sidebar-category-link';
       a.href = item.href;
       a.setAttribute('data-category', item.key);
-      a.textContent = item.label;
+      var label = SIDEBAR_CATEGORY_LABELS[item.key] || item.label;
+      a.textContent = label;
       categoriesSection.appendChild(a);
     });
   }
@@ -569,11 +591,9 @@ function renderStaticSidebar() {
       topIds.forEach(function(id) {
         var brand = brandData.find(function(b) { return b.id === id; });
         if (!brand) return;
-        var slug = getBrandPageSlug(brand.id);
-        if (!slug) return;
         var a = document.createElement('a');
         a.className = 'sidebar-link sidebar-brand-link';
-        a.href = '/' + slug;
+        a.href = categoryBrandHref(catKey, brand.id);
         a.textContent = getBrandDisplayName(brand);
         a.setAttribute('data-brand', brand.id);
         a.setAttribute('data-category', catKey);
@@ -592,11 +612,9 @@ function renderStaticSidebar() {
         moreList.className = 'sidebar-more-list';
         moreList.hidden = true;
         remaining.forEach(function(brand) {
-          var slug = getBrandPageSlug(brand.id);
-          if (!slug) return;
           var a = document.createElement('a');
           a.className = 'sidebar-link sidebar-link-secondary sidebar-brand-link';
-          a.href = '/' + slug;
+          a.href = categoryBrandHref(catKey, brand.id);
           a.textContent = getBrandDisplayName(brand);
           a.setAttribute('data-brand', brand.id);
           a.setAttribute('data-category', catKey);
@@ -608,12 +626,14 @@ function renderStaticSidebar() {
           if (saved === 'true') {
             moreList.hidden = false;
             moreWrap.classList.add('open');
+            moreBtn.textContent = '– Less Brands';
           }
         } catch (_) {}
         moreBtn.addEventListener('click', function() {
           var isOpen = !moreList.hidden;
           moreList.hidden = isOpen;
           moreWrap.classList.toggle('open', !isOpen);
+          moreBtn.textContent = isOpen ? '+ More Brands' : '– Less Brands';
           try { localStorage.setItem(key, String(!isOpen)); } catch (_) {}
         });
         moreWrap.appendChild(moreBtn);
@@ -831,6 +851,11 @@ function syncSidebarActiveState() {
   var slug = getBrandPageSlug();
   var activeBrandSlug = slug && sidebarCategoryForSlug(slug) ? slug : '';
   var activeCategoryKey = getActiveTopCategoryKey();
+  var activeBrandId = '';
+  try {
+    var params = new URLSearchParams(window.location.search || '');
+    activeBrandId = params.get('brand') || '';
+  } catch (_) {}
 
   document.querySelectorAll('.sidebar-link, .sidebar-group-link, .cat-tab-link, .sidebar-category-link, .sidebar-brand-link').forEach(function(el) {
     el.classList.remove('active');
@@ -838,6 +863,15 @@ function syncSidebarActiveState() {
 
   var activeCatLink = document.querySelector('.sidebar-category-link[data-category="' + activeCategoryKey + '"]');
   if (activeCatLink) activeCatLink.classList.add('active');
+
+  if (activeBrandId) {
+    var brandLink = document.querySelector('.sidebar-brand-link[data-brand="' + activeBrandId + '"][data-category="' + activeCategoryKey + '"]');
+    if (!brandLink) {
+      brandLink = document.querySelector('.sidebar-brand-link[data-brand="' + activeBrandId + '"]');
+    }
+    if (brandLink) brandLink.classList.add('active');
+    return;
+  }
 
   if (activeBrandSlug) {
     var brandId = slugToBrandId(activeBrandSlug);
