@@ -211,6 +211,7 @@ var WATER_HEATER_BRANDS = [
   { id: 'state_industries', label: 'State' }
 ];
 var WATER_HEATER_BRAND_IDS = WATER_HEATER_BRANDS.map(function(brand) { return brand.id; });
+var BRAND_CATEGORY_BY_ID = null;
 
 function isBrandPage() {
   return !!sidebarCategoryForSlug(getBrandPageSlug());
@@ -387,13 +388,29 @@ function prioritizeSidebarCategory(catKey) {
   expandSidebarCategory(categoryName);
 }
 
+function ensureBrandCategoryMap() {
+  if (BRAND_CATEGORY_BY_ID) return BRAND_CATEGORY_BY_ID;
+  var map = {};
+  try {
+    Object.keys(decoderData || {}).forEach(function(catKey) {
+      var group = decoderData[catKey];
+      if (!group || !group.brands) return;
+      group.brands.forEach(function(brand) {
+        if (brand && brand.id) map[brand.id] = catKey;
+      });
+    });
+  } catch (_) {}
+  WATER_HEATER_BRAND_IDS.forEach(function(id) { map[id] = 'waterHeaters'; });
+  BRAND_CATEGORY_BY_ID = map;
+  return map;
+}
+
 function categoryKeyForBrandId(brandId) {
-  if (!brandId) return '';
-  if (WATER_HEATER_BRAND_IDS.indexOf(brandId) !== -1) return 'water-heaters';
-  var slug = brandId.replace(/_/g, '-');
-  var catName = SIDEBAR_BRAND_TO_CATEGORY[slug];
-  if (catName) return categoryNameToKey(catName);
-  return 'appliances';
+  if (!brandId) return currentCategory || 'appliances';
+  var map = ensureBrandCategoryMap();
+  var raw = map[brandId];
+  if (raw) return categoryNameToKey(raw);
+  return currentCategory || 'appliances';
 }
 
 function brandTargetHref(brandId) {
@@ -1225,7 +1242,11 @@ function initPage() {
   ensurePageTitleAndCategoryTabs();
   enhanceSidebarCategoryLinks();
   enhanceSmartLookupSidebarTop();
-  enhanceSidebarNavigation();
+  try {
+    enhanceSidebarNavigation();
+  } catch (e) {
+    console.error('Sidebar init failed:', e);
+  }
   syncSidebarActiveState();
   syncHeaderNavActive();
   enhanceBrandPageEmbeddedDecoder();
