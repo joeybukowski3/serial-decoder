@@ -1479,12 +1479,12 @@ function decodeSerial() {
 
   var brandId = resolveDecoderId(metaBrandId);
   if (!brandId) {
-    alert('Please select the manufacture era for this brand.');
-    return;
-  }
+        showCustomAlert('Please select the manufacture era for this brand.');
+        return;
+      }
 
-  var decoder = decoderData[currentCategory].decoders[brandId];
-  if (!decoder) { alert('Decoder not found for this brand'); return; }
+      var decoder = decoderData[currentCategory].decoders[brandId];
+      if (!decoder) { showCustomAlert('Decoder not found for this brand'); return; }
 
   // Show loading animation immediately
   document.getElementById('serialResults').classList.add('hidden');
@@ -2085,4 +2085,67 @@ function esc(s) {
   var div = document.createElement('div');
   div.textContent = s;
   return div.innerHTML;
+}
+
+// ===== CUSTOM ALERT MODAL =====
+function showCustomAlert(message) {
+  var existing = document.getElementById('customAlertModal');
+  if (existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'customAlertModal';
+  modal.style.position = 'fixed';
+  modal.style.inset = '0';
+  modal.style.background = 'rgba(0,0,0,0.45)';
+  modal.style.display = 'flex';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
+  modal.style.zIndex = '9999';
+
+  var box = document.createElement('div');
+  box.style.background = '#ffffff';
+  box.style.borderRadius = '12px';
+  box.style.padding = '24px 20px';
+  box.style.maxWidth = '420px';
+  box.style.width = 'calc(100vw - 32px)';
+  box.style.boxShadow = '0 16px 40px rgba(0,0,0,0.28)';
+  box.style.textAlign = 'center';
+
+  var msg = document.createElement('div');
+  msg.textContent = message;
+  msg.style.color = '#1f2937';
+  msg.style.fontSize = '1rem';
+  msg.style.lineHeight = '1.45';
+  msg.style.marginBottom = '16px';
+
+  var okBtn = document.createElement('button');
+  okBtn.type = 'button';
+  okBtn.textContent = 'OK';
+  okBtn.style.minHeight = '40px';
+  okBtn.style.padding = '8px 20px';
+  okBtn.style.border = 'none';
+  okBtn.style.borderRadius = '8px';
+  okBtn.style.background = '#3182ce';
+  okBtn.style.color = '#ffffff';
+  okBtn.style.fontWeight = '700';
+  okBtn.style.cursor = 'pointer';
+
+  function close() {
+    modal.remove();
+    document.removeEventListener('keydown', onEsc);
+  }
+  function onEsc(e) {
+    if (e.key === 'Escape') close();
+  }
+
+  okBtn.addEventListener('click', close);
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) close();
+  });
+  document.addEventListener('keydown', onEsc);
+
+  box.appendChild(msg);
+  box.appendChild(okBtn);
+  modal.appendChild(box);
+  document.body.appendChild(modal);
 }
