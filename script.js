@@ -597,22 +597,12 @@ function enhanceHeaderBranding() {
   var wrap = document.createElement('div');
   wrap.className = 'ia-header-wrap';
 
-  var left = document.createElement('a');
-  left.className = 'ia-header-left ia-header-logo-link';
-  left.href = '/';
-  left.innerHTML = '<img class="ia-header-logo-top" src="/ItemAssistTransparent.png" alt="Item Assist logo">';
-
-  var right = document.createElement('div');
-  right.className = 'ia-header-right';
-  right.innerHTML = '' +
+  wrap.innerHTML = '' +
     '<nav class="ia-header-nav" aria-label="Top navigation">' +
       '<a href="/smart-lookup">Smart Lookup</a>' +
       '<a href="/methodology">Methodology</a>' +
       '<a href="/contact">Contact</a>' +
     '</nav>';
-
-  wrap.appendChild(left);
-  wrap.appendChild(right);
   header.appendChild(wrap);
 }
 
@@ -623,7 +613,6 @@ function enhanceSidebarLogo() {
   logo.innerHTML = '' +
     '<span class="ia-sidebar-brand">' +
       '<img class="ia-sidebar-logo" src="/ItemAssistTransparent.png" alt="Item Assist logo">' +
-      '<span class="ia-sidebar-text">ITEM ASSIST</span>' +
     '</span>';
 }
 
