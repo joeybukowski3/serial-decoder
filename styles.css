@@ -4,7 +4,7 @@
 
 :root {
     --primary: #3182ce;
-    --bg-main: #f3f5f8;
+    --bg-main: #f8fafc;
     --card-bg: #ffffff;
     --text-main: #173756;
     --text-muted: #64748b;
@@ -29,7 +29,7 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: linear-gradient(180deg, #f4f6f8 0%, #edf2f7 100%);
+    background: #f8fafc;
     color: var(--text-main);
     min-height: 100vh;
     font-size: 16px;
@@ -49,7 +49,7 @@ body {
 .page-shell {
     padding-left: 270px;
     padding-right: 160px;
-    padding-top: 300px;
+    padding-top: 240px;
 }
 .app-container {
     position: relative; z-index: 1;
@@ -259,9 +259,9 @@ body {
     letter-spacing: 0;
 }
 .sidebar .cat-tab.active {
-    background: rgba(49, 130, 206, 0.14);
+    background: #3182ce;
     color: #ffffff;
-    border-color: rgba(49, 130, 206, 0.42);
+    border-color: #3182ce;
 }
 .sidebar-overlay {
     display: none;
@@ -356,14 +356,15 @@ body {
     color: #1e293b;
 }
 .category-tab-link.active {
-    color: #3182ce;
+    color: #ffffff;
+    background: #3182ce;
     border-bottom-color: #3182ce;
 }
 
 /* ── Header ── */
 .header {
     position: fixed;
-    top: 230px;
+    top: 0;
     left: 270px;
     right: 160px;
     z-index: 120;
@@ -371,7 +372,7 @@ body {
     padding: 0.35rem 1rem;
     border-radius: 0;
     background: #1a202c;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+    border-bottom: 1px solid #3182ce;
     box-shadow: 0 4px 18px rgba(12, 36, 65, 0.25);
     color: #ffffff;
 }
@@ -575,7 +576,7 @@ body {
 /* ── Decode Button ── */
 .decode-btn {
     width: 100%; padding: 0.7rem;
-    background: linear-gradient(135deg, #3182ce 0%, #1a202c 100%);
+    background: #3182ce;
     color: #fff; border: 1px solid #1a202c; border-radius: 10px;
     font-size: 1rem; font-weight: 700; font-family: inherit;
     cursor: pointer; transition: all 0.2s;
@@ -584,6 +585,7 @@ body {
 .decode-btn:hover:not(:disabled) {
     transform: translateY(-1px); box-shadow: 0 10px 24px rgba(26, 32, 44, 0.38);
     border-color: #3182ce;
+    background: #2b6cb0;
 }
 .decode-btn:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
 .guided-search-btn {
@@ -1050,7 +1052,7 @@ body {
 
 @media (max-width: 1024px) {
     .header {
-        top: 230px;
+        top: 0;
         left: 0;
         right: 0;
         max-width: none;
@@ -1059,7 +1061,7 @@ body {
     .page-shell {
         padding-left: 270px;
         padding-right: 0;
-        padding-top: 300px;
+        padding-top: 240px;
     }
     .sidebar {
         transform: none;
@@ -1349,11 +1351,11 @@ body {
 }
 .ia-top-banner {
     position: fixed;
-    top: 0;
+    top: 58px;
     left: 0;
     right: 0;
     width: 100%;
-    height: 250px;
+    height: 180px;
     z-index: 115;
     background-image: url('/assets/ItemAssistBanner.jpg');
     background-size: contain;
