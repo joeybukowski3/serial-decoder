@@ -598,11 +598,19 @@ function enhanceHeaderBranding() {
   wrap.className = 'ia-header-wrap';
 
   wrap.innerHTML = '' +
-    '<nav class="ia-header-nav" aria-label="Top navigation">' +
-      '<a href="/smart-lookup">Smart Lookup</a>' +
-      '<a href="/methodology">Methodology</a>' +
-      '<a href="/contact">Contact</a>' +
-    '</nav>';
+    '<div class="ia-header-left">' +
+      '<a href="/" class="ia-header-brand-link" aria-label="Item Assist home">' +
+        '<span class="ia-header-title">Item Assist</span>' +
+        '<span class="ia-header-subtitle">Intuitive Data Aggregation</span>' +
+      '</a>' +
+    '</div>' +
+    '<div class="ia-header-right">' +
+      '<nav class="ia-header-nav" aria-label="Top navigation">' +
+        '<a class="ia-nav-primary" href="/smart-lookup">Smart Lookup</a>' +
+        '<a class="ia-nav-secondary" href="/methodology">Methodology</a>' +
+        '<a class="ia-nav-secondary" href="/contact">Contact</a>' +
+      '</nav>' +
+    '</div>';
   header.appendChild(wrap);
 }
 
@@ -612,7 +620,7 @@ function enhanceSidebarLogo() {
   if (logo.querySelector('.ia-sidebar-brand')) return;
   logo.innerHTML = '' +
     '<span class="ia-sidebar-brand">' +
-      '<img class="ia-sidebar-logo" src="/ItemAssistTransparent.png" alt="Item Assist logo">' +
+      '<img class="ia-sidebar-logo" src="/ItemAssistTransparent.png" width="124" height="124" alt="Item Assist logo">' +
     '</span>';
 }
 
@@ -620,23 +628,7 @@ function injectHeroBanner() {
   var existingTop = document.querySelector('.ia-top-banner');
   if (existingTop) existingTop.remove();
   var existingInline = document.querySelector('.ia-inline-banner');
-  if (existingInline) return;
-  var app = document.querySelector('.app-container');
-  if (!app) return;
-  var target = app.querySelector('.main-card') || app.firstElementChild;
-  if (!target) return;
-
-  var wrap = document.createElement('div');
-  wrap.className = 'ia-inline-banner';
-  wrap.innerHTML = '' +
-    '<div class="ia-inline-banner-inner">' +
-      '<img class="ia-inline-banner-logo" src="/ItemAssistTransparent.png" alt="Item Assist logo">' +
-      '<div class="ia-inline-banner-copy">' +
-        '<h2>Research, Simplified</h2>' +
-        '<p>Intuitive Data Aggregation</p>' +
-      '</div>' +
-    '</div>';
-  target.parentNode.insertBefore(wrap, target);
+  if (existingInline) existingInline.remove();
 }
 
 function enhanceSidebarCategoryLinks() {
