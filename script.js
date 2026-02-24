@@ -713,10 +713,10 @@ function enhanceHeaderBranding() {
 
   wrap.innerHTML = '' +
     '<nav class="ia-header-nav ia-header-nav-center" aria-label="Top navigation">' +
-      '<a class="ia-nav-secondary" href="/smart-lookup">Smart Lookup</a>' +
-      '<a class="ia-nav-primary" href="/">Serial Number Decoder</a>' +
-      '<a class="ia-nav-secondary" href="/methodology">Methodology</a>' +
-      '<a class="ia-nav-secondary" href="/contact">Contact</a>' +
+      '<a class="ia-header-nav-link" href="/smart-lookup">Smart Lookup</a>' +
+      '<a class="ia-header-nav-link" href="/">Serial Number Decoder</a>' +
+      '<a class="ia-header-nav-link" href="/methodology">Methodology</a>' +
+      '<a class="ia-header-nav-link" href="/contact">Contact</a>' +
     '</nav>';
   header.appendChild(wrap);
   header.setAttribute('data-ia-header-ready', '1');
@@ -829,6 +829,24 @@ function syncGlobalCategoryTabs(activeKey) {
     var href = tab.getAttribute('href') || '';
     var tabKey = href.replace(/^\//, '').replace(/\.html$/i, '').replace(/\/+$/, '');
     tab.classList.toggle('active', tabKey === key);
+  });
+}
+
+function syncHeaderNavActive() {
+  var slug = getBrandPageSlug();
+  var activeKey = slug || 'index';
+  if (activeKey === '') activeKey = 'index';
+
+  var map = {
+    'index': '/',
+    'smart-lookup': '/smart-lookup',
+    'methodology': '/methodology',
+    'contact': '/contact'
+  };
+  var activeHref = map[activeKey] || '/';
+  document.querySelectorAll('.ia-header-nav .ia-header-nav-link').forEach(function(link) {
+    var href = link.getAttribute('href') || '';
+    link.classList.toggle('active', href === activeHref);
   });
 }
 
@@ -1200,6 +1218,7 @@ function initPage() {
   enhanceSmartLookupSidebarTop();
   enhanceSidebarNavigation();
   syncSidebarActiveState();
+  syncHeaderNavActive();
   enhanceBrandPageEmbeddedDecoder();
   updateMainPageSmartLookupHelperText();
   mountSharedSmartLookupAboutSection();

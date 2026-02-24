@@ -1601,23 +1601,18 @@ body {
     border: 1px solid transparent;
     transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
-.ia-header-nav a.ia-nav-primary {
-    background: #3182ce;
-    border-color: #3182ce;
-}
-.ia-header-nav a.ia-nav-secondary {
+.ia-header-nav a {
     background: transparent;
     border-color: rgba(148, 163, 184, 0.55);
     color: #e2e8f0;
 }
+.ia-header-nav a.active {
+    background: #3182ce;
+    border-color: #3182ce;
+    color: #ffffff;
+}
 .ia-header-nav a:hover {
     transform: translateY(-1px);
-}
-.ia-header-nav a.ia-nav-primary:hover {
-    background: #2b6fb3;
-    border-color: #2b6fb3;
-}
-.ia-header-nav a.ia-nav-secondary:hover {
     background: rgba(49, 130, 206, 0.18);
     border-color: rgba(49, 130, 206, 0.7);
     color: #ffffff;
