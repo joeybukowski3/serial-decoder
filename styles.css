@@ -49,7 +49,7 @@ body {
 .page-shell {
     padding-left: 270px;
     padding-right: 160px;
-    padding-top: 240px;
+    padding-top: 70px;
 }
 .app-container {
     position: relative; z-index: 1;
@@ -473,7 +473,7 @@ body {
 /* ── Main Card ── */
 .main-card {
     background: var(--card-bg);
-    border: 1px solid #dbe4ee;
+    border: 1px solid #e2e8f0;
     border-radius: 14px;
     box-shadow: 0 12px 28px rgba(15, 42, 74, 0.08);
     overflow: hidden;
@@ -1061,7 +1061,7 @@ body {
     .page-shell {
         padding-left: 270px;
         padding-right: 0;
-        padding-top: 240px;
+        padding-top: 70px;
     }
     .sidebar {
         transform: none;
@@ -1363,6 +1363,17 @@ body {
     background-repeat: no-repeat;
     background-color: #ffffff;
     border-bottom: 1px solid #3182ce;
+}
+.ia-inline-banner {
+    max-width: 600px;
+    margin: 0 auto 20px auto;
+    background: #ffffff;
+}
+.ia-inline-banner img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
 }
 .ia-hero-banner {
     margin: 0.9rem auto 1rem;

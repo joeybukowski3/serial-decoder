@@ -628,8 +628,19 @@ function enhanceSidebarLogo() {
 }
 
 function injectHeroBanner() {
-  var existing = document.querySelector('.ia-top-banner');
-  if (existing) existing.remove();
+  var existingTop = document.querySelector('.ia-top-banner');
+  if (existingTop) existingTop.remove();
+  var existingInline = document.querySelector('.ia-inline-banner');
+  if (existingInline) return;
+  var app = document.querySelector('.app-container');
+  if (!app) return;
+  var target = app.querySelector('.main-card') || app.firstElementChild;
+  if (!target) return;
+
+  var wrap = document.createElement('div');
+  wrap.className = 'ia-inline-banner';
+  wrap.innerHTML = '<img src="/assets/ItemAssistBanner.jpg" alt="Item Assist banner">';
+  target.parentNode.insertBefore(wrap, target);
 }
 
 function enhanceSidebarCategoryLinks() {
