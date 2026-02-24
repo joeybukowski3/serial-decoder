@@ -48,7 +48,7 @@ body {
 /* ── App Container ── */
 .page-shell {
     padding-left: 270px;
-    padding-right: 24px;
+    padding-right: 184px;
     padding-top: 72px;
 }
 .app-container {
@@ -72,6 +72,8 @@ body {
 }
 .sidebar-header {
     margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
 }
 .sidebar-logo {
     font-weight: 800;
@@ -81,6 +83,9 @@ body {
     background: transparent;
     border: none;
     box-shadow: none;
+    display: inline-flex;
+    justify-content: center;
+    width: 100%;
 }
 .sidebar-section {
     display: flex;
@@ -172,6 +177,9 @@ body {
     flex-direction: column;
     padding: 0.35rem;
 }
+.sidebar-group-links[hidden] {
+    display: none !important;
+}
 .sidebar-group-links .sidebar-link {
     margin: 0 0 10px;
 }
@@ -219,6 +227,9 @@ body {
     display: flex;
     flex-direction: column;
     margin-top: 0.15rem;
+}
+.sidebar-more-list[hidden] {
+    display: none !important;
 }
 .sidebar-link-secondary {
     font-size: 0.8rem;
@@ -368,7 +379,7 @@ body {
     position: fixed;
     top: 0;
     left: 270px;
-    right: 24px;
+    right: 184px;
     z-index: 120;
     margin: 0;
     min-height: 64px;
@@ -1304,8 +1315,8 @@ body {
     box-shadow: none;
 }
 .ia-sidebar-logo {
-    width: 66px;
-    height: 66px;
+    width: 88px;
+    height: 88px;
     object-fit: contain;
 }
 .ia-sidebar-text {
@@ -1344,10 +1355,19 @@ body {
     font-size: 0.82rem;
     font-weight: 600;
     letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    background: #3182ce;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     transition: opacity 0.15s ease;
 }
 .ia-header-nav a:hover {
-    opacity: 0.8;
+    opacity: 0.9;
 }
 .ia-header-logo-link {
     display: inline-flex;
