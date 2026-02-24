@@ -652,14 +652,6 @@ function renderStaticSidebar() {
           moreList.appendChild(a);
         });
         var key = 'sidebar_morebrands_' + catKey;
-        try {
-          var saved = localStorage.getItem(key);
-          if (saved === 'true') {
-            moreList.hidden = false;
-            moreWrap.classList.add('open');
-            moreBtn.textContent = '– Less Brands';
-          }
-        } catch (_) {}
         moreBtn.addEventListener('click', function() {
           var isOpen = !moreList.hidden;
           moreList.hidden = isOpen;
