@@ -386,10 +386,6 @@ function prioritizeSidebarCategory(catKey) {
   expandSidebarCategory(categoryName);
 }
 
-function toUniversalCategoryUrl(categoryName) {
-  return '/universal-decoder?cat=' + encodeURIComponent(categoryNameToKey(categoryName));
-}
-
 function brandTargetHref(brandId, categoryName) {
   const pageSlug = BRAND_PAGE_BY_ID[brandId];
   if (pageSlug) return '/' + pageSlug;
@@ -457,10 +453,18 @@ function enhanceSidebarNavigation() {
     header.className = 'sidebar-group-header';
     var link = document.createElement('a');
     link.className = 'sidebar-group-link';
-    link.href = toUniversalCategoryUrl(catName);
+    var catKey = categoryNameToKey(catName);
+    link.href = categoryPageHrefByKey(catKey);
     link.textContent = catName;
-    link.addEventListener('click', function() {
-      prioritizeSidebarCategory(categoryNameToKey(catName));
+    link.addEventListener('click', function(event) {
+      var tabKey = normalizeDecoderCategory(catKey);
+      var tabBtn = document.querySelector('.cat-tab[data-cat="' + tabKey + '"]');
+      if (tabBtn && typeof selectCategory === 'function') {
+        event.preventDefault();
+        selectCategory(tabKey, tabBtn);
+        return;
+      }
+      prioritizeSidebarCategory(catKey);
     });
 
     var btn = document.createElement('button');
