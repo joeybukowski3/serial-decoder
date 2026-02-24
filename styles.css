@@ -382,6 +382,22 @@ body {
     background: #ffffff;
     padding: 0.75rem;
 }
+.brand-page .embedded-brand-decoder {
+    margin: 0.65rem 0 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+}
+.brand-page .embedded-brand-decoder .main-card {
+    box-shadow: none;
+    margin-bottom: 0.6rem;
+}
+.brand-page .embedded-brand-decoder .smart-lookup-standalone {
+    margin-bottom: 0;
+}
+.brand-page .cta-block {
+    text-align: left;
+}
 .embedded-brand-decoder .form-input,
 .embedded-brand-decoder .form-select,
 .embedded-brand-decoder .decode-btn {
