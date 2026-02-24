@@ -504,14 +504,45 @@ function getCategoryGroupData(catKey) {
   var decoderKey = normalized === 'water-heaters' ? 'waterHeaters' : normalized;
   var group = decoderData && decoderData[decoderKey];
   if (!group || !group.brands) return [];
-  return group.brands.map(function(brand) {
-    return { id: brand.id, name: brand.name };
+  var canonical = {};
+  group.brands.forEach(function(brand) {
+    if (!brand || !brand.id) return;
+    var canonId = canonicalizeBrandId(brand.id);
+    var canonName = canonicalizeBrandName(brand.name || canonId);
+    if (!canonId || !canonName) return;
+    if (!canonical[canonId]) {
+      canonical[canonId] = { id: canonId, name: canonName };
+    }
   });
+  return Object.keys(canonical).map(function(key) { return canonical[key]; });
 }
 
 function getBrandDisplayName(brand) {
   if (!brand) return '';
   return BRAND_NAME_OVERRIDES[brand.id] || brand.name || '';
+}
+
+function canonicalizeBrandId(id) {
+  var raw = String(id || '');
+  if (!raw) return '';
+  return raw
+    .replace(/(_pre_?\d{4}|_post_?\d{4})$/i, '')
+    .replace(/(_pre|_post|_before|_after|_era_[a-z0-9]+)$/i, '')
+    .replace(/-pre\d{4}$/i, '')
+    .replace(/-post\d{4}$/i, '');
+}
+
+function canonicalizeBrandName(name) {
+  var raw = String(name || '').trim();
+  if (!raw) return '';
+  return raw
+    .replace(/\((pre|post)[^)]+\)/gi, '')
+    .replace(/\b(pre|post)\s*\d{4}\b/gi, '')
+    .replace(/\b(pre|post)\b/gi, '')
+    .replace(/\bera\b/gi, '')
+    .replace(/\s*-\s*(pre|post|before|after)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function getBrandPageSlug(brandId) {
@@ -571,7 +602,7 @@ function renderStaticSidebar() {
 
       var remaining = brandData.filter(function(b) { return !topSet[b.id]; });
       remaining.sort(function(a, b) {
-        return a.name.localeCompare(b.name);
+        return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
       });
 
       var group = document.createElement('div');
