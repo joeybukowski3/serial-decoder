@@ -672,6 +672,7 @@ function enhanceHeaderBranding() {
 function enhanceSidebarLogo() {
   var logo = document.querySelector('.sidebar-logo');
   if (!logo) return;
+  if (logo.querySelector('.ia-sidebar-logo')) return;
   if (logo.querySelector('.ia-sidebar-brand')) return;
   logo.innerHTML = '' +
     '<span class="ia-sidebar-brand">' +
