@@ -220,6 +220,14 @@ var TOP_BRANDS_BY_CATEGORY = {
   'electronics': ['samsung', 'sony', 'lg', 'vizio', 'panasonic'],
   'water-heaters': ['rheem', 'a_o_smith', 'bradford_white', 'state_industries', 'whirlpool_water_heaters']
 };
+var BRAND_SLUG_OVERRIDES = {
+  'whirlpool_water_heaters': 'whirlpool',
+  'ge_water_heaters': 'ge'
+};
+var BRAND_NAME_OVERRIDES = {
+  'whirlpool_water_heaters': 'Whirlpool',
+  'ge_water_heaters': 'GE'
+};
 
 function isBrandPage() {
   return !!sidebarCategoryForSlug(getBrandPageSlug());
@@ -438,10 +446,9 @@ function categoryKeyForBrandId(brandId) {
 
 function brandTargetHref(brandId) {
   if (!brandId) return '/';
-  var slug = BRAND_PAGE_BY_ID[brandId] || brandId.replace(/_/g, '-');
-  if (slug) return '/' + slug;
-  var catKey = categoryKeyForBrandId(brandId) || 'appliances';
-  return '/?cat=' + encodeURIComponent(catKey) + '&brand=' + encodeURIComponent(brandId);
+  var slug = BRAND_SLUG_OVERRIDES[brandId] || BRAND_PAGE_BY_ID[brandId] || '';
+  if (!slug) return '';
+  return '/' + slug;
 }
 
 function brandLinkHrefFromSlug(slug) {
@@ -479,6 +486,15 @@ function getCategoryGroupData(catKey) {
   return group.brands.map(function(brand) {
     return { id: brand.id, name: brand.name };
   });
+}
+
+function getBrandDisplayName(brand) {
+  if (!brand) return '';
+  return BRAND_NAME_OVERRIDES[brand.id] || brand.name || '';
+}
+
+function getBrandPageSlug(brandId) {
+  return BRAND_SLUG_OVERRIDES[brandId] || BRAND_PAGE_BY_ID[brandId] || '';
 }
 
 function renderStaticSidebar() {
@@ -553,10 +569,12 @@ function renderStaticSidebar() {
       topIds.forEach(function(id) {
         var brand = brandData.find(function(b) { return b.id === id; });
         if (!brand) return;
+        var slug = getBrandPageSlug(brand.id);
+        if (!slug) return;
         var a = document.createElement('a');
         a.className = 'sidebar-link sidebar-brand-link';
-        a.href = brandTargetHref(brand.id);
-        a.textContent = brand.name;
+        a.href = '/' + slug;
+        a.textContent = getBrandDisplayName(brand);
         a.setAttribute('data-brand', brand.id);
         a.setAttribute('data-category', catKey);
         list.appendChild(a);
@@ -574,10 +592,12 @@ function renderStaticSidebar() {
         moreList.className = 'sidebar-more-list';
         moreList.hidden = true;
         remaining.forEach(function(brand) {
+          var slug = getBrandPageSlug(brand.id);
+          if (!slug) return;
           var a = document.createElement('a');
           a.className = 'sidebar-link sidebar-link-secondary sidebar-brand-link';
-          a.href = brandTargetHref(brand.id);
-          a.textContent = brand.name;
+          a.href = '/' + slug;
+          a.textContent = getBrandDisplayName(brand);
           a.setAttribute('data-brand', brand.id);
           a.setAttribute('data-category', catKey);
           moreList.appendChild(a);
@@ -1404,6 +1424,7 @@ function initPage() {
   ensurePageTitleAndCategoryTabs();
   enhanceSmartLookupSidebarTop();
   renderStaticSidebar();
+  document.body.classList.toggle('brand-page', isBrandPage());
   syncSidebarActiveState();
   syncHeaderNavActive();
   enhanceBrandPageEmbeddedDecoder();
