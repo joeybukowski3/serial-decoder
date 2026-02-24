@@ -1482,6 +1482,7 @@ function initPage() {
   enhanceSmartLookupSidebarTop();
   renderStaticSidebar();
   document.body.classList.toggle('brand-page', isBrandPage());
+  document.body.classList.toggle('methodology-page', getBrandPageSlug() === 'methodology');
   syncSidebarActiveState();
   syncHeaderNavActive();
   enhanceBrandPageEmbeddedDecoder();
