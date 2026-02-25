@@ -33,6 +33,21 @@ var decoderData = {
       { id: 'partners_plus', name: 'Partners Plus' },
       { id: 'jordan', name: 'Jordan' },
       { id: 'sinkguard', name: 'SinkGuard' },
+      { id: 'caloric', name: 'Caloric' },
+      { id: 'hardwick', name: 'Hardwick' },
+      { id: 'norge', name: 'Norge' },
+      { id: 'speed_queen', name: 'Speed Queen' },
+      { id: 'magic_chef', name: 'Magic Chef' },
+      { id: 'modern_maid', name: 'Modern Maid' },
+      { id: 'glenwood', name: 'Glenwood' },
+      { id: 'sunray', name: 'Sunray' },
+      { id: 'litton', name: 'Litton' },
+      { id: 'menumaster', name: 'Menumaster' },
+      { id: 'bravos', name: 'Bravos' },
+      { id: 'maycor', name: 'Maycor' },
+      { id: 'neptune', name: 'Neptune' },
+      { id: 'imperial', name: 'Imperial' },
+      { id: 'philco', name: 'Philco' },
       { id: 'lg', name: 'LG' },
       { id: 'maytag_post_2006', name: 'Maytag (post-2006)' },
       { id: 'maytag_pre_2006', name: 'Maytag (pre-2006)' },
@@ -625,6 +640,412 @@ var decoderData = {
       return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
     }
     },
+    'caloric': {
+      name: 'Caloric',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
+    'hardwick': {
+      name: 'Hardwick',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
+    'norge': {
+      name: 'Norge',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
+    'speed_queen': {
+      name: 'Speed Queen',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
+    'magic_chef': {
+      name: 'Magic Chef',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
+    'modern_maid': {
+      name: 'Modern Maid',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
+    'glenwood': {
+      name: 'Glenwood',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
+    'sunray': {
+      name: 'Sunray',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
+    'litton': {
+      name: 'Litton',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
+    'menumaster': {
+      name: 'Menumaster',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
+    'bravos': {
+      name: 'Bravos',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
+    'maycor': {
+      name: 'Maycor',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
+    'neptune': {
+      name: 'Neptune',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
+    'imperial': {
+      name: 'Imperial',
+      parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
+      groupId: '1B',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: 'Pre-2006',
+      serialLengthNote: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      decodeMethod: 'Second-to-last character of serial',
+      yearCodePosition: 'Second-to-last character of serial',
+      monthCodePosition: 'Last character of serial',
+      outputType: 'Month + Year',
+      decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      exampleSerial: '(any serial ending in NC)',
+      exampleResult: 'N=1984/2008/2020 + C=March',
+      sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
+      notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
+      source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
+      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 2) return null;
+      var yearChar = serial[serial.length - 2].toUpperCase();
+      var monthChar = serial[serial.length - 1].toUpperCase();
+      var y = this.yearMap[yearChar];
+      var m = this.monthMap[monthChar];
+      return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
+    }
+    },
     'jenn_air_pre_2006': {
       name: 'Jenn-Air (pre-2006)',
       parentManufacturer: 'Whirlpool Corporation (legacy Maytag)',
@@ -800,6 +1221,34 @@ var decoderData = {
     },
     'electrolux': {
       name: 'Electrolux',
+      parentManufacturer: 'Electrolux AB (Sweden)',
+      groupId: '3',
+      products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
+      serialEra: '1988-Present',
+      serialLengthNote: 'Serial: [2-letter factory code][year digit][2-digit week][remaining digits]',
+      decodeMethod: 'Character 3 (first digit after 2-letter factory code)',
+      yearCodePosition: 'Character 3 (first digit after 2-letter factory code)',
+      monthCodePosition: 'Characters 4-5',
+      outputType: 'Year + Week (approximate month)',
+      decodeNotes: 'Decade must be inferred from physical condition or model history. 10-year repeating cycle on year digit.',
+      exampleSerial: 'NF11910958',
+      exampleResult: '1=2001/2011 Week 19=~April -> April 2001',
+      sources: 'electrical-forensics.com; cannonsappliance.com; lumayeconsulting.com; appliancefactoryparts.com',
+      method: 'Serial: [2-letter factory code][year digit][2-digit week][remaining digits]',
+      notes: 'Decade must be inferred from physical condition or model history. 10-year repeating cycle on year digit.',
+      source: 'electrical-forensics.com; cannonsappliance.com; lumayeconsulting.com; appliancefactoryparts.com',
+      yearMap: { '0': '1990/2000/2010/2020', '1': '1991/2001/2011/2021', '2': '1992/2002/2012/2022', '3': '1993/2003/2013/2023', '4': '1994/2004/2014/2024', '5': '1995/2005/2015/2025', '6': '1996/2006/2016', '7': '1997/2007/2017', '8': '1988/1998/2008/2018', '9': '1989/1999/2009/2019' },
+      monthMap: { 'Week 01-04': '~January', 'Week 05-08': '~February', 'Week 09-13': '~March', 'Week 14-17': '~April', 'Week 18-21': '~May', 'Week 22-26': '~June', 'Week 27-30': '~July', 'Week 31-34': '~August', 'Week 35-39': '~September', 'Week 40-43': '~October', 'Week 44-47': '~November', 'Week 48-52': '~December' },
+      decode: function(serial) {
+      if (!serial || serial.length < 5) return null;
+      var yearDigit = serial[2];
+      var week = serial.substring(3, 5);
+      var y = this.yearMap[yearDigit];
+      return { year: y || 'Unknown code: ' + yearDigit, month: 'Week ' + week + ' (see notes for decade)', yearCode: yearDigit, weekDigits: week };
+    }
+    },
+    'philco': {
+      name: 'Philco',
       parentManufacturer: 'Electrolux AB (Sweden)',
       groupId: '3',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven',
@@ -2606,4 +3055,5 @@ var decoderData = {
     }
   }
 };
+
 

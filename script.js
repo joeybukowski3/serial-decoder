@@ -98,6 +98,21 @@ var BRAND_LOGOS = {
   'partners_plus': 'whirlpool.com',
   'jordan': 'whirlpool.com',
   'sinkguard': 'whirlpool.com',
+  'caloric': 'maytag.com',
+  'hardwick': 'maytag.com',
+  'norge': 'maytag.com',
+  'speed_queen': 'maytag.com',
+  'magic_chef': 'maytag.com',
+  'modern_maid': 'maytag.com',
+  'glenwood': 'maytag.com',
+  'sunray': 'maytag.com',
+  'litton': 'maytag.com',
+  'menumaster': 'maytag.com',
+  'bravos': 'maytag.com',
+  'maycor': 'maytag.com',
+  'neptune': 'maytag.com',
+  'imperial': 'maytag.com',
+  'philco': 'electroluxappliances.com',
   'rheem': 'rheem.com',
   'ruud': 'ruud.com',
   'a_o_smith': 'hotwater.com',
@@ -3146,6 +3161,7 @@ function showCustomAlert(message) {
   modal.appendChild(box);
   document.body.appendChild(modal);
 }
+
 
 
 
