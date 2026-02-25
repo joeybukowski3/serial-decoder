@@ -821,9 +821,9 @@ body {
 .narrow-date-panel {
 
     margin-top: 0.85rem;
-    border: 1px solid #d7e0eb;
+    border: 1px solid #e2e8f0;
     border-radius: 10px;
-    background: #eef3f8;
+    background: #f8fafc;
     padding: 0.85rem;
 
 }
@@ -878,7 +878,7 @@ body {
     margin: 0;
     display: flex;
     align-items: center;
-    min-height: 90px;
+    min-height: 76px;
     padding: 0.7rem 1.25rem;
     border-radius: 0;
     background: #1a202c;
@@ -1525,17 +1525,6 @@ body {
  padding: 1.5rem;
 }
 
-.result-query {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--text-mid);
-    background: #f1f5f9;
-    border: 1px solid var(--card-border);
-    border-radius: 8px;
-    padding: 0.55rem 0.8rem;
-    margin-bottom: 0.75rem;
-}
-
 .result-row {
 
     display: flex; justify-content: space-between; align-items: center;
@@ -1694,21 +1683,9 @@ body {
 .results-footer {
 
     padding: 0.75rem 1.5rem 1.25rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+    display: flex; flex-direction: column; gap: 0.6rem;
     justify-content: center;
 
-}
-
-.results-footer .copy-btn,
-.results-footer .decode-again-btn {
-    flex: 1 1 220px;
-    min-width: 180px;
-}
-
-.results-footer .error-btn {
-    flex: 1 1 100%;
 }
 
 .error-btn {
@@ -2024,7 +2001,7 @@ body {
 @media (max-width: 768px) {
 
     .app-container { padding: 0.75rem 0.75rem 0.75rem; }
-    .header { min-height: 78px; padding: 0.65rem 0.8rem; }
+    .header { min-height: 70px; padding: 0.65rem 0.8rem; }
     .header h1 { font-size: 1.4rem; }
     .header-nav { gap: 0.35rem; }
     .header-nav-link { font-size: 0.75rem; padding: 0.4rem 0.65rem; }
@@ -2039,8 +2016,7 @@ body {
     .ia-header-nav a { font-size: 0.72rem; min-height: 36px; padding: 0.35rem 0.6rem; }
     .ia-hw-right { gap: 0.35rem; }
     .ia-hw-right .ia-header-nav-link { font-size: 0.72rem; padding: 0.35rem 0.6rem; min-height: 36px; }
-    .ia-header-wrap { padding: 0 72px; }
-    .ia-header-logo-top { height: 56px; width: 56px; }
+    .ia-header-logo-top { height: 36px; width: 36px; }
     .global-category-tabs { padding: 0.25rem 0 0.55rem; gap: 0.35rem; }
     .global-category-tab { min-height: 34px; font-size: 0.78rem; padding: 0.34rem 0.58rem; }
     .narrow-date-fields {
@@ -2125,14 +2101,13 @@ body {
     .ia-header-subtitle {
         display: none;
     }
-    .ia-header-wrap { padding: 0 60px; }
     .ia-sidebar-logo {
         width: 150px;
         height: 150px;
     }
     /* On small screens hide nav text labels to save space */
     .ia-hw-right .ia-header-nav-link { font-size: 0.68rem; padding: 0.3rem 0.45rem; }
-    .ia-header-logo-top { height: 48px; width: 48px; }
+    .ia-header-logo-top { height: 32px; width: 32px; }
 }
 
 /* ── Primary result row — larger year display ── */
@@ -2460,10 +2435,8 @@ body {
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     position: relative;
-    gap: 0.75rem;
-    padding: 0 96px;
 
 }
 
@@ -2549,7 +2522,6 @@ body {
     justify-content: center;
     gap: 0.55rem;
     margin-left: 0;
-    flex-wrap: wrap;
 
 }
 
@@ -2613,17 +2585,10 @@ body {
 
 }
 
-.ia-header-logo-right {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
 .ia-header-logo-top {
 
-    height: 78px;
-    width: 78px;
+    height: 45px;
+    width: auto;
     object-fit: contain;
 
 }
