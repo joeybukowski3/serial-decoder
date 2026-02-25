@@ -1155,6 +1155,16 @@ body {
 .footer a { color: #93c8ee; text-decoration: none; }
 
 .hidden { display: none !important; }
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
 
 /* ── Guide Drawer ── */
 .guide-overlay {
@@ -1574,8 +1584,8 @@ body {
     width: 100%;
 }
 .ia-sidebar-logo {
-    width: 220px;
-    height: 220px;
+    width: 150px;
+    height: 150px;
     object-fit: contain;
     image-rendering: -webkit-optimize-contrast;
 }

@@ -8,6 +8,7 @@
     <meta name="description" content="Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.">
     <link rel="canonical" href="https://www.decodemyitem.com/">
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
 </head>
 <body>
     <div class="circuit-bg"></div>
@@ -18,7 +19,7 @@
 
         <aside class="sidebar">
         <div class="sidebar-header">
-            <a class="sidebar-logo" href="/"><img class="ia-sidebar-logo" src="/assets/item-assist-logo.png" width="110" height="110" alt="Item Assist logo"></a>
+            <a class="sidebar-logo" href="/"><img class="ia-sidebar-logo" src="/assets/item-assist-logo.png" width="150" height="150" alt="Item Assist logo"></a>
         </div>
         <div class="sidebar-section">
             <div class="sidebar-title">Categories</div>
@@ -81,7 +82,7 @@
             <!-- Form -->
             <div class="form-area">
                 <div class="form-group">
-                    <div class="step-label">Select Brand</div>
+                    <label class="step-label sr-only" for="brand">Select Brand</label>
                     <select id="brand" class="form-select">
                         <option value="">-- Select Brand --</option>
                     </select>
@@ -89,10 +90,10 @@
 
                 <!-- Era Dropdown -->
                 <div class="form-group era-group hidden" id="eraGroup">
-                    <div class="step-label">
+                    <label class="step-label sr-only" for="eraSelect">
                         Manufacture Era
                         <span class="info-icon" title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">ⓘ</span>
-                    </div>
+                    </label>
                     <select id="eraSelect" class="form-select">
                         <option value="">-- Select Era --</option>
                         <option value="post">Post-2006 (manufactured after 2006)</option>
@@ -102,7 +103,7 @@
                 </div>
 
                 <div class="form-group">
-                    <div class="step-label">Enter Serial Number</div>
+                    <label class="step-label sr-only" for="serial">Enter Serial Number</label>
                     <input type="text" id="serial" class="form-input" placeholder="Enter serial number (e.g., CB2501800)">
                     <div class="helper-text">Enter the serial number exactly as shown on the product label</div>
                 </div>
@@ -119,7 +120,7 @@
                         <div class="alt-inner">
                             <div class="alt-divider"><span>Smart Lookup (Powered by AI)</span></div>
                             <div class="form-group">
-                                <div class="step-label">Model Number or Description</div>
+                                <label class="step-label sr-only" for="smart-lookup-input">Model Number or Description</label>
                                 <input type="text" id="smart-lookup-input" class="form-input" placeholder="e.g., GE Profile PFE28KSKSS or LG 55&quot; C3 series TV">
                                 <div class="helper-text">Enter a model number, brand + model, brand + series, or general description to estimate the age. The more information you provide, the better the result.</div>
                             </div>
@@ -365,15 +366,15 @@
             </div>
             <div class="modal-body">
                 <div class="modal-field">
-                    <label>Brand</label>
+                    <label class="sr-only" for="fbBrand">Brand</label>
                     <input type="text" id="fbBrand" class="form-input" readonly>
                 </div>
                 <div class="modal-field">
-                    <label>Serial Number / Search Query</label>
+                    <label class="sr-only" for="fbSerial">Serial Number / Search Query</label>
                     <input type="text" id="fbSerial" class="form-input" readonly>
                 </div>
                 <div class="modal-field">
-                    <label>Issue Type</label>
+                    <label class="sr-only" for="fbType">Issue Type</label>
                     <select id="fbType" class="form-select">
                         <option value="">-- Select issue type --</option>
                         <option value="wrong_year">Wrong year / date</option>
@@ -384,7 +385,7 @@
                     </select>
                 </div>
                 <div class="modal-field">
-                    <label>Details (optional)</label>
+                    <label class="sr-only" for="fbDetails">Details (optional)</label>
                     <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong? What is the correct date if known?"></textarea>
                 </div>
                 <div id="fbThanks" class="fb-thanks hidden">&#10003; Thank you! Your feedback helps improve this tool.</div>
@@ -453,6 +454,7 @@
     </script>
 </body>
 </html>
+
 
 
 
