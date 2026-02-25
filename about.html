@@ -5,62 +5,8 @@
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Who We Are - Serial Number Decoder</title>
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        .about-card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,180,216,0.08);
-            overflow: hidden;
-            margin-top: 1.5rem;
-        }
-        .about-card-header {
-            background: linear-gradient(135deg, #0d2847 0%, #1a3a5c 100%);
-            padding: 1.5rem 2rem;
-        }
-        .about-card-header h2 {
-            font-size: 1.35rem; font-weight: 800; color: var(--text-white);
-            letter-spacing: -0.01em;
-        }
-        .about-card-header p {
-            font-size: 0.9rem; color: rgba(232,237,245,0.7); margin-top: 0.3rem;
-        }
-        .about-card-body {
-            padding: 2rem;
-            color: var(--text-dark);
-        }
-        .about-section { margin-bottom: 2rem; }
-        .about-section:last-child { margin-bottom: 0; }
-        .about-section h3 {
-            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.07em; color: var(--accent2);
-            margin-bottom: 0.6rem;
-        }
-        .about-section p {
-            font-size: 0.92rem; color: var(--text-mid); line-height: 1.75;
-        }
-        .about-pillars {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 0.875rem; margin-top: 1rem;
-        }
-        .pillar {
-            background: #f8fafc; border-radius: 10px;
-            padding: 1rem 1.1rem;
-            border-left: 4px solid var(--accent);
-        }
-        .pillar-icon { font-size: 1.35rem; display: block; margin-bottom: 0.4rem; }
-        .pillar-title {
-            font-size: 0.82rem; font-weight: 700; color: var(--text-dark);
-            margin-bottom: 0.2rem;
-        }
-        .pillar-desc { font-size: 0.78rem; color: var(--text-mid); line-height: 1.5; }
-        .about-disclaimer {
-            background: #fffbeb; border-left: 3px solid var(--amber);
-            border-radius: 8px; padding: 0.875rem 1rem;
-            font-size: 0.84rem; color: #92400e; line-height: 1.6;
-            margin-top: 1.5rem;
-        }
-    </style>
+    <link rel="stylesheet" href="global.css">
+    
 </head>
 <body>
     <div class="circuit-bg"></div>
@@ -113,7 +59,7 @@
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div class="ad-zone"><div class="ad-label">Data Partner</div></div>
     <div class="page-shell">
-    <div class="app-container">
+    <div class="app-container content-wrapper">
 
         <!-- Header -->
         <div class="header">
@@ -225,6 +171,7 @@
     <script src="smart-lookup.js"></script>
 </body>
 </html>
+
 
 
 

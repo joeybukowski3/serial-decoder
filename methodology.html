@@ -6,71 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Methodology – Serial Number Decoder</title>
     <link rel="canonical" href="https://www.decodemyitem.com/methodology.html">
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        .static-card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,180,216,0.08);
-            overflow: hidden;
-            margin-top: 1.5rem;
-        }
-        .static-card-header {
-            background: linear-gradient(135deg, #0d2847 0%, #1a3a5c 100%);
-            padding: 1.5rem 2rem;
-        }
-        .static-card-header h2 {
-            font-size: 1.25rem; font-weight: 800; color: var(--text-white);
-            letter-spacing: -0.01em;
-        }
-        .static-card-header p {
-            font-size: 0.88rem; color: rgba(232,237,245,0.7); margin-top: 0.3rem;
-        }
-        .static-card-body {
-            padding: 2rem;
-            color: var(--text-dark);
-        }
-        .static-section { margin-bottom: 1.75rem; }
-        .static-section:last-child { margin-bottom: 0; }
-        .static-section h3 {
-            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.07em; color: var(--accent2);
-            margin-bottom: 0.55rem;
-        }
-        .static-section p {
-            font-size: 0.9rem; color: var(--text-mid); line-height: 1.75;
-        }
-        .static-section p + p { margin-top: 0.65rem; }
-        .step-list {
-            list-style: none; padding: 0; margin: 0.5rem 0 0;
-            display: flex; flex-direction: column; gap: 0.5rem;
-        }
-        .step-list li {
-            display: flex; gap: 0.75rem; align-items: flex-start;
-            font-size: 0.88rem; color: var(--text-mid); line-height: 1.6;
-        }
-        .step-num {
-            flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
-            background: var(--accent); color: #fff;
-            font-size: 0.7rem; font-weight: 800;
-            display: inline-flex; align-items: center; justify-content: center;
-            margin-top: 0.1rem;
-        }
-        .caveat-block {
-            background: #fffbeb; border-left: 3px solid var(--amber);
-            border-radius: 8px; padding: 0.875rem 1rem;
-            font-size: 0.84rem; color: #92400e; line-height: 1.6;
-            margin-top: 1.25rem;
-        }
-        .source-chips {
-            display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem;
-        }
-        .source-chip {
-            background: #f1f5f9; border: 1px solid var(--card-border);
-            border-radius: 999px; padding: 0.25rem 0.7rem;
-            font-size: 0.76rem; font-weight: 600; color: var(--text-mid);
-        }
-    </style>
+    <link rel="stylesheet" href="global.css">
+    
 </head>
 <body>
     <div class="circuit-bg"></div>
@@ -123,7 +60,7 @@
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div class="ad-zone"><div class="ad-label">Data Partner</div></div>
     <div class="page-shell">
-    <div class="app-container">
+    <div class="app-container content-wrapper">
 
         <div class="header">
             <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle navigation">&#9776;</button>
@@ -233,6 +170,7 @@
     <script src="smart-lookup.js"></script>
 </body>
 </html>
+
 
 
 
