@@ -545,7 +545,7 @@ function canonicalizeBrandName(name) {
     .trim();
 }
 
-function getBrandPageSlug(brandId) {
+function getPageSlugForBrand(brandId) {
   return BRAND_SLUG_OVERRIDES[brandId] || BRAND_PAGE_BY_ID[brandId] || '';
 }
 
@@ -972,13 +972,17 @@ function enhanceHeaderBranding() {
   var oldWrap = header.querySelector('.ia-header-wrap');
   if (oldWrap) oldWrap.remove();
 
+  // Task 7: centered logo + right-aligned nav links
   var wrap = document.createElement('div');
   wrap.className = 'ia-header-wrap';
-
   wrap.innerHTML = '' +
-    '<nav class="ia-header-nav ia-header-nav-center" aria-label="Top navigation">' +
+    '<div class="ia-hw-left"></div>' +
+    '<a class="ia-hw-center" href="/" aria-label="Item Assist \u2014 Home">' +
+      '<img class="ia-header-logo-top" src="/assets/item-assist-logo.png" alt="Item Assist" height="44" width="44">' +
+    '</a>' +
+    '<nav class="ia-hw-right ia-header-nav" aria-label="Site navigation">' +
+      '<a class="ia-header-nav-link" href="/">Decoder</a>' +
       '<a class="ia-header-nav-link" href="/smart-lookup">Smart Lookup</a>' +
-      '<a class="ia-header-nav-link" href="/">Serial Number Decoder</a>' +
       '<a class="ia-header-nav-link" href="/methodology">Methodology</a>' +
       '<a class="ia-header-nav-link" href="/contact">Contact</a>' +
     '</nav>';
@@ -1061,6 +1065,12 @@ function getActiveTopCategoryKey() {
     var cat = new URLSearchParams(window.location.search || '').get('cat');
     if (cat) return categoryNameToKey(cat);
   } catch (_) {}
+
+  // Use currentCategory (in-page selection) as the source of truth when URL has no hint
+  if (currentCategory) {
+    var key = categoryNameToKey(currentCategory);
+    if (key) return key;
+  }
   return 'appliances';
 }
 
@@ -1107,10 +1117,12 @@ function syncHeaderNavActive() {
     'methodology': '/methodology',
     'contact': '/contact'
   };
-  var activeHref = map[activeKey] || '/';
-  document.querySelectorAll('.ia-header-nav .ia-header-nav-link').forEach(function(link) {
+  var activeHref = map[activeKey] || null;
+  // Also look in .ia-hw-right for the new layout
+  var navLinks = document.querySelectorAll('.ia-header-nav .ia-header-nav-link, .ia-hw-right .ia-header-nav-link');
+  navLinks.forEach(function(link) {
     var href = link.getAttribute('href') || '';
-    link.classList.toggle('active', href === activeHref);
+    link.classList.toggle('active', !!activeHref && href === activeHref);
   });
 }
 
@@ -1267,6 +1279,15 @@ function mountSharedSmartLookupAboutSection() {
   card.className = 'technical-methodology-card';
   card.innerHTML = smartLookupAboutInnerHtml();
   mainCard.insertAdjacentElement('afterend', card);
+}
+
+// ===== FOOTER BRANDING UPDATE (Task 7) =====
+function updateFooterBranding() {
+  document.querySelectorAll('.footer p').forEach(function(p) {
+    if (p.innerHTML.indexOf('\u00a9') !== -1 || p.innerHTML.indexOf('&copy;') !== -1 || p.innerHTML.indexOf('©') !== -1) {
+      p.innerHTML = p.innerHTML.replace(/Serial Number Decoder/g, 'Item Assist');
+    }
+  });
 }
 
 function ensureFooterPrivacyPolicyLink() {
@@ -1489,6 +1510,7 @@ function initPage() {
   updateMainPageSmartLookupHelperText();
   mountSharedSmartLookupAboutSection();
   ensureFooterPrivacyPolicyLink();
+  updateFooterBranding();
   addGuidedSearchButtonToBrandDecoderCard();
   rewriteBrandLinks();
   var dom = getDecodeDom();
@@ -1889,6 +1911,23 @@ function showDecodeFallback(decoder, serial, brandId, reason) {
   });
 }
 
+// ===== ERA YEAR FILTERING (Task 1) =====
+function filterYearsByEra(yearStr, era) {
+  var candidates = parseCandidateYears(yearStr);
+  if (!candidates.length) return yearStr; // non-numeric or unparseable — pass through
+  var filtered;
+  if (era === 'post') {
+    filtered = candidates.filter(function(y) { return y >= 2006; });
+  } else if (era === 'pre') {
+    filtered = candidates.filter(function(y) { return y <= 2005; });
+  } else {
+    return yearStr;
+  }
+  if (!filtered.length) return null; // no valid candidates for this era
+  if (filtered.length === 1) return String(filtered[0]);
+  return filtered.join('/');
+}
+
 function parseCandidateYears(yearText) {
   var matches = String(yearText || '').match(/\b(19|20)\d{2}\b/g) || [];
   var seen = {};
@@ -1922,9 +1961,15 @@ function ensureRefinementPanel() {
       '<button type="button" id="narrowDateBtn" class="decode-btn">Refine Result</button>' +
     '</div>' +
     '<div id="narrowDateOutput" class="narrow-date-output"></div>';
-  var moreOptions = serialResults.querySelector('.more-options-section');
-  if (moreOptions) moreOptions.insertAdjacentElement('beforebegin', panel);
-  else serialResults.appendChild(panel);
+  // Task 2: Insert at the very top of results-body so it appears before Manufacturer Date
+  var resultsBody = serialResults.querySelector('.results-body');
+  if (resultsBody) {
+    resultsBody.insertAdjacentElement('afterbegin', panel);
+  } else {
+    var moreOptions = serialResults.querySelector('.more-options-section');
+    if (moreOptions) moreOptions.insertAdjacentElement('beforebegin', panel);
+    else serialResults.appendChild(panel);
+  }
   panel.querySelector('#narrowDateBtn').addEventListener('click', refineAmbiguousResult);
   return panel;
 }
@@ -2083,6 +2128,45 @@ function decodeSerial() {
     }
     if (monthRow) monthRow.style.display = isKenmore ? 'none' : '';
 
+    // === ERA FILTERING: filter candidate years to the selected era BEFORE display ===
+    var _eraEl = document.getElementById('eraSelect');
+    var _eraVal = _eraEl ? _eraEl.value : '';
+    if (_eraVal && result && result.year) {
+      var _filteredYear = filterYearsByEra(String(result.year), _eraVal);
+      if (_filteredYear === null) {
+        // No candidate years match the selected era — show clear message, no age
+        document.getElementById('resultBrand').textContent  = decoder.name;
+        document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'N/A';
+        document.getElementById('resultNotes').textContent  = 'No matching dates found for the selected era. Try switching to Pre-2006 or Post-2006.';
+        var _yearEl = document.getElementById('resultYear');
+        if (_yearEl) {
+          _yearEl.textContent = 'N/A';
+          var _yearRow = _yearEl.closest ? _yearEl.closest('.result-row') : null;
+          if (_yearRow) _yearRow.style.display = '';
+        }
+        var _ageEl2 = document.getElementById('resultEstimatedAge');
+        if (_ageEl2) {
+          _ageEl2.textContent = 'N/A';
+          var _ageRow2 = _ageEl2.closest ? _ageEl2.closest('.result-row') : null;
+          if (_ageRow2) _ageRow2.style.display = 'none';
+        }
+        if (monthRow) monthRow.style.display = 'none';
+        var _exBlock2 = document.getElementById('resultExampleBlock');
+        if (_exBlock2) _exBlock2.style.display = 'none';
+        var _rp = ensureRefinementPanel();
+        if (_rp) _rp.classList.add('hidden');
+        showBrandLogo('serialBrandLogo', brandId, decoder.name);
+        currentFeedbackContext = { brand: decoder.name, serial: serial };
+        setLoadingSuccess(function() {
+          document.getElementById('serialResults').classList.remove('hidden');
+          document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+        return;
+      }
+      // Assign the era-filtered year back so all downstream display uses it
+      result = Object.assign({}, result, { year: _filteredYear });
+    }
+
     if (isKenmore) {
       document.getElementById('resultYear').textContent   = 'Varies by Manufacturer (OEM Brand)';
       document.getElementById('resultBrand').textContent  = decoder.name;
@@ -2138,39 +2222,39 @@ function decodeSerial() {
 }
 
 // ===== COPY CLAIM FILE =====
+// Copies exactly 5 labeled fields: Brand, Manufacturer Date, Month, Estimated Age, Methodology
 function copyClaimFile() {
-  var yearEl = document.getElementById('resultYear');
-  if (!yearEl) return;
-  var year = yearEl.textContent.trim();
-  if (!year) return;
-  var monthEl = document.getElementById('resultMonth');
-  var brandEl = document.getElementById('resultBrand');
-  var ageEl = document.getElementById('resultEstimatedAge');
-  var methodEl = document.getElementById('resultMethod');
-  var notesEl = document.getElementById('resultNotes');
-  var exampleEl = document.getElementById('resultExample');
-  var month = monthEl ? monthEl.textContent.trim() : '';
-  var brand = brandEl ? brandEl.textContent.trim() : '';
-  var age = ageEl ? ageEl.textContent.trim() : '';
-  var method = methodEl ? methodEl.textContent.trim() : '';
-  var notes = notesEl ? notesEl.textContent.trim() : '';
-  var example = exampleEl ? exampleEl.textContent.trim() : '';
-  var monthRow = document.getElementById('resultMonthRow');
-  var monthVisible = true;
-  if (monthRow && window.getComputedStyle) {
-    monthVisible = window.getComputedStyle(monthRow).display !== 'none';
+  var yearEl    = document.getElementById('resultYear');
+  var monthEl   = document.getElementById('resultMonth');
+  var brandEl   = document.getElementById('resultBrand');
+  var ageEl     = document.getElementById('resultEstimatedAge');
+  var methodEl  = document.getElementById('resultMethod');
+
+  var year  = yearEl   ? yearEl.textContent.trim()  : '';
+  var month = monthEl  ? monthEl.textContent.trim()  : '';
+  var brand = brandEl  ? brandEl.textContent.trim()  : '';
+  var age   = ageEl    ? ageEl.textContent.trim()    : '';
+
+  // Get only the one-line method string — strip the decode-detail span if present
+  var method = '';
+  if (methodEl) {
+    var methodClone = methodEl.cloneNode(true);
+    var detail = methodClone.querySelector('.decode-detail');
+    if (detail) detail.remove();
+    method = methodClone.textContent.trim();
   }
 
+  var monthRow = document.getElementById('resultMonthRow');
+  var monthVisible = !monthRow || !window.getComputedStyle ||
+    window.getComputedStyle(monthRow).display !== 'none';
+
   var lines = [
-    'Decoded Results',
-    'Brand: ' + brand,
-    'Manufacture Date: ' + year,
+    'Brand: '            + (brand || 'N/A'),
+    'Manufacturer Date: '+ (year  || 'N/A'),
+    'Month: '            + (monthVisible && month ? month : 'N/A'),
+    'Estimated Age: '    + (age && age !== '\u2014' ? age : 'N/A'),
+    'Methodology: '      + (method || 'N/A'),
   ];
-  if (monthVisible && month) lines.push('Month / Period: ' + month);
-  if (age) lines.push('Estimated Age: ' + age);
-  if (method) lines.push('Methodology: ' + method);
-  if (notes) lines.push('Important Notes: ' + notes);
-  if (example) lines.push('Example: ' + example);
 
   var text = lines.join('\n');
   var btn = document.querySelector('.copy-btn');
