@@ -2084,6 +2084,8 @@ body {
 }
 
 @media (max-width: 600px) {
+    body { font-size: 15px; }
+    .app-container { padding: 0.75rem; }
     .decode-btn    { padding: 1rem; font-size: 1.05rem; min-height: 52px; }
     .cat-tab       { padding: 0.9rem 0.5rem; font-size: 0.8rem; }
     .form-select,
@@ -2095,8 +2097,22 @@ body {
     .header-nav-secondary { display: none; }
     .page-shell {
         padding-left: 12px;
+        padding-right: 12px;
         padding-top: 84px;
     }
+    .main-card,
+    .results-card,
+    .popular-brands-section,
+    .smart-lookup-container {
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+    }
+    .form-area { padding: 0.875rem; }
+    .results-body { padding: 0.875rem; }
+    .results-footer { padding: 0.75rem 0.875rem 1rem; }
+    .brands-grid { grid-template-columns: repeat(2, 1fr); }
+    .footer { padding: 1.25rem 0.875rem; border-radius: 10px; }
     .sidebar {
         width: 250px;
         transform: translateX(-104%);
@@ -2115,6 +2131,7 @@ body {
         display: block;
     }
     .header {
+        position: fixed;
         left: 0;
         right: 0;
     }
@@ -2749,7 +2766,7 @@ body {
         padding: 1rem;
     }
     .brands-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 0.6rem;
     }
 }
