@@ -6,77 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Supported Brands – Serial Number Decoder</title>
     <link rel="canonical" href="https://www.decodemyitem.com/brands.html">
-    <link rel="stylesheet" href="styles.css">
-    <style>
-        .static-card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,180,216,0.08);
-            overflow: hidden;
-            margin-top: 1.5rem;
-        }
-        .static-card-header {
-            background: linear-gradient(135deg, #0d2847 0%, #1a3a5c 100%);
-            padding: 1.5rem 2rem;
-        }
-        .static-card-header h2 {
-            font-size: 1.25rem; font-weight: 800; color: var(--text-white);
-        }
-        .static-card-header p {
-            font-size: 0.88rem; color: rgba(232,237,245,0.7); margin-top: 0.3rem;
-        }
-        .static-card-body { padding: 2rem; color: var(--text-dark); }
-        .brands-intro {
-            font-size: 0.9rem; color: var(--text-mid); line-height: 1.7; margin-bottom: 1.5rem;
-        }
-        .brands-category { margin-bottom: 2rem; }
-        .brands-category:last-child { margin-bottom: 0; }
-        .brands-category h3 {
-            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.08em; color: var(--accent2);
-            margin-bottom: 0.75rem; padding-bottom: 0.4rem;
-            border-bottom: 1px solid var(--card-border);
-        }
-        .brand-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
-            gap: 0.5rem;
-        }
-        .brand-pill {
-            background: #f8fafc; border: 1px solid var(--card-border);
-            border-left: 3px solid var(--accent);
-            border-radius: 8px; padding: 0.55rem 0.875rem;
-            font-size: 0.84rem; font-weight: 600; color: var(--text-dark);
-            display: flex; align-items: center; gap: 0.5rem;
-        }
-        .brand-pill .brand-dot {
-            width: 6px; height: 6px; border-radius: 50%;
-            background: var(--green); flex-shrink: 0;
-        }
-        .brand-pill .brand-dot.note { background: var(--amber); }
-        .brands-note {
-            background: #fffbeb; border-left: 3px solid var(--amber);
-            border-radius: 8px; padding: 0.875rem 1rem;
-            font-size: 0.82rem; color: #92400e; line-height: 1.6;
-            margin-top: 1.5rem;
-        }
-        .coverage-note {
-            background: #eff6ff; border-left: 3px solid #3b82f6;
-            border-radius: 8px; padding: 0.875rem 1rem;
-            font-size: 0.82rem; color: #1e40af; line-height: 1.6;
-            margin-top: 0.75rem;
-        }
-        .legend { display: flex; gap: 1.25rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
-        .legend-item {
-            display: flex; align-items: center; gap: 0.4rem;
-            font-size: 0.75rem; color: var(--text-mid); font-weight: 500;
-        }
-        .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-        .legend-dot.green  { background: var(--green); }
-        .legend-dot.amber  { background: var(--amber); }
-        a.brand-pill { text-decoration: none; color: var(--text-dark); }
-        a.brand-pill:hover { background: #e0f2fe; border-left-color: var(--accent2); color: var(--accent2); }
-    </style>
+    <link rel="stylesheet" href="global.css">
+    
 </head>
 <body>
     <div class="circuit-bg"></div>
@@ -129,7 +60,7 @@
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div class="ad-zone"><div class="ad-label">Data Partner</div></div>
     <div class="page-shell">
-    <div class="app-container">
+    <div class="app-container content-wrapper">
 
         <div class="header">
             <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle navigation">&#9776;</button>
@@ -273,6 +204,7 @@
     <script src="smart-lookup.js"></script>
 </body>
 </html>
+
 
 
 
