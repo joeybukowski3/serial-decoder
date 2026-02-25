@@ -1588,8 +1588,6 @@ function initPage() {
     syncGlobalCategoryTabs(initialCategory);
     saveCategoryKey(initialCategory);
     applyBrandDefaultFromSlug();
-    ensureBrandAliasSearch();
-
     if (brandSelect.getAttribute('data-brand-bound') !== '1') {
       brandSelect.setAttribute('data-brand-bound', '1');
       brandSelect.addEventListener('change', function() {
@@ -2151,60 +2149,6 @@ function updateResultWarning(result, brandId) {
   }
 }
 
-function ensureBrandAliasSearch() {
-  var brandSelect = document.getElementById('brand');
-  if (!brandSelect) return null;
-  if (document.getElementById('brandAliasInput')) return document.getElementById('brandAliasInput');
-  var brandGroup = brandSelect.closest('.form-group');
-  if (!brandGroup) return null;
-  var group = document.createElement('div');
-  group.className = 'form-group brand-alias-group';
-  group.innerHTML = '' +
-    '<label class="step-label sr-only" for="brandAliasInput">Search Brand</label>' +
-    '<input type="text" id="brandAliasInput" class="form-input" list="brandAliasList" placeholder="Search brand (e.g., GE Profile, Monogram, Café)">' +
-    '<datalist id="brandAliasList">' +
-      '<option value="GE"></option>' +
-      '<option value="Café"></option>' +
-      '<option value="Cafe"></option>' +
-      '<option value="GE Café"></option>' +
-      '<option value="GE Cafe"></option>' +
-      '<option value="Monogram"></option>' +
-      '<option value="Profile"></option>' +
-      '<option value="Hotpoint"></option>' +
-      '<option value="RCA"></option>' +
-    '</datalist>' +
-    '<div class="helper-text">Type a brand or alias to quickly select it in the dropdown.</div>';
-  brandGroup.insertAdjacentElement('beforebegin', group);
-
-  var input = group.querySelector('#brandAliasInput');
-  var applySelection = function() {
-    var query = input.value.trim();
-    if (!query) return;
-    var normalized = normalizeBrandId(query);
-    var targetId = '';
-    if (normalized === 'ge' || normalized === 'cafe') {
-      targetId = normalized;
-    } else {
-      var qLower = query.toLowerCase();
-      for (var i = 0; i < brandSelect.options.length; i++) {
-        var opt = brandSelect.options[i];
-        var text = (opt.textContent || opt.value || '').toLowerCase();
-        if (text === qLower || opt.value.toLowerCase() === qLower) {
-          targetId = opt.value;
-          break;
-        }
-      }
-    }
-    if (targetId) {
-      brandSelect.value = targetId;
-      onBrandChange();
-      updateDecodeBtn();
-    }
-  };
-  input.addEventListener('change', applySelection);
-  input.addEventListener('input', applySelection);
-  return input;
-}
 function ensureKenmorePrefixField() {
   var formArea = document.querySelector('.form-area');
   if (!formArea) return null;
