@@ -1525,6 +1525,14 @@ body {
  padding: 1.5rem;
 }
 
+.result-query {
+
+    margin-bottom: 0.85rem; padding: 0.75rem 1rem;
+    background: #f1f5f9; border-radius: 10px; border-left: 4px solid var(--accent);
+    font-size: 0.9rem; font-weight: 600; color: var(--text-mid);
+
+}
+
 .result-row {
 
     display: flex; justify-content: space-between; align-items: center;
@@ -1566,6 +1574,10 @@ body {
 
 .info-block.serial-rule {
  border-left-color: var(--accent); background: #ecfeff;
+}
+
+.info-block.warning {
+ border-left-color: var(--red); background: #fff1f2;
 }
 
 .info-block h4 {
@@ -3745,3 +3757,4 @@ img.ia-sidebar-logo {
     height: 150px;
 
 }
+
