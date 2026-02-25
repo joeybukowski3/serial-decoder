@@ -2413,8 +2413,11 @@ function decodeSerial() {
   var dom = getDecodeDom();
   if (!dom.brandEl || !dom.serialEl) return;
   var metaBrandId = dom.brandEl.value;
-  var serial = dom.serialEl.value.trim();
-  if (!metaBrandId || !serial) return;
+  var serialInput = dom.serialEl.value.trim();
+  if (!metaBrandId || !serialInput) return;
+  var serial = serialInput.replace(/[^A-Za-z0-9]/g, '');
+  if (!serial) return;
+  if (serial !== serialInput) dom.serialEl.value = serial;
 
   if (isBrandPage()) {
     var currentSlug = getBrandPageSlug();
@@ -2528,6 +2531,7 @@ function decodeSerial() {
     // Append decode detail (specific codes used for this decode)
     (function() {
       var parts = [];
+      parts.push('Serial length: ' + serial.length);
       if (result.yearCharacterPosition !== undefined) parts.push('Year character position: ' + result.yearCharacterPosition);
       if (result.yearCode !== undefined) parts.push('Year code: ' + result.yearCode + ' \u2192 ' + capYear(result.year));
       if (result.weekDigits !== undefined) parts.push('Week: ' + result.weekDigits);
@@ -2892,6 +2896,7 @@ async function estimateAge() {
 
     var body = getSmartLookupResultsEl();
     var html = '';
+    html += '<div class="result-query smart-search-query">Search Query: ' + esc(query) + '</div>';
 
     // Invention summary for generic/category-only queries
     if (data.inventionSummary) {
