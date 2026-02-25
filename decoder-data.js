@@ -66,27 +66,37 @@ var decoderData = {
       groupId: '1A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
-      serialLengthNote: 'Second alpha character = year code (letters only).',
-      decodeMethod: 'Second alpha character = year code',
-      yearCodePosition: 'Second alpha character',
+      serialLengthNote: '9-digit: char 2 = year, chars 3-4 = week. 10-digit: char 3 = year, chars 4-5 = week.',
+      decodeMethod: 'Char 2 (9-digit) or Char 3 (10-digit)',
+      yearCodePosition: 'Char 2 (9-digit) or Char 3 (10-digit)',
       monthCodePosition: 'N/A',
-      outputType: 'Year',
+      outputType: 'Year + Week of Year',
       decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
-      method: 'Second alpha character = year code',
+      method: '9-digit: char 2 = year, chars 3-4 = week. 10-digit: char 3 = year, chars 4-5 = week.',
       notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
             decode: function(serial) {
       if (!serial) return null;
-      var letters = String(serial).match(/[A-Za-z]/g) || [];
-      if (letters.length < 2) return null;
-      var yearChar = letters[1].toUpperCase();
-      var y = this.yearMap[yearChar];
-      return { year: y || 'Unknown code: ' + yearChar, month: 'N/A', yearCode: yearChar };
+      var s = String(serial).trim();
+      var yearChar = '';
+      var week = '';
+      if (s.length === 9) {
+        yearChar = s[1];
+        week = s.substring(2, 4);
+      } else if (s.length === 10) {
+        yearChar = s[2];
+        week = s.substring(3, 5);
+      } else {
+        return null;
+      }
+      var code = yearChar.toUpperCase();
+      var y = this.yearMap[code];
+      return { year: y || 'Unknown code: ' + code, month: 'Week ' + week, yearCode: code, weekDigits: week };
     }
     },
     'norcold': {
@@ -356,27 +366,37 @@ var decoderData = {
       groupId: '1A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
-      serialLengthNote: 'Second alpha character = year code (letters only).',
-      decodeMethod: 'Second alpha character = year code',
-      yearCodePosition: 'Char 3',
+      serialLengthNote: '9-digit: char 2 = year, chars 3-4 = week. 10-digit: char 3 = year, chars 4-5 = week.',
+      decodeMethod: 'Char 2 (9-digit) or Char 3 (10-digit)',
+      yearCodePosition: 'Char 2 (9-digit) or Char 3 (10-digit)',
       monthCodePosition: 'N/A',
-      outputType: 'Year',
+      outputType: 'Year + Week of Year',
       decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
-      method: 'Second alpha character = year code',
+      method: '9-digit: char 2 = year, chars 3-4 = week. 10-digit: char 3 = year, chars 4-5 = week.',
       notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
       if (!serial) return null;
-      var letters = String(serial).match(/[A-Za-z]/g) || [];
-      if (letters.length < 2) return null;
-      var yearChar = letters[1].toUpperCase();
-      var y = this.yearMap[yearChar];
-      return { year: y || 'Unknown code: ' + yearChar, month: 'N/A', yearCode: yearChar };
+      var s = String(serial).trim();
+      var yearChar = '';
+      var week = '';
+      if (s.length === 9) {
+        yearChar = s[1];
+        week = s.substring(2, 4);
+      } else if (s.length === 10) {
+        yearChar = s[2];
+        week = s.substring(3, 5);
+      } else {
+        return null;
+      }
+      var code = yearChar.toUpperCase();
+      var y = this.yearMap[code];
+      return { year: y || 'Unknown code: ' + code, month: 'Week ' + week, yearCode: code, weekDigits: week };
     }
     },
     'roper': {
@@ -385,27 +405,37 @@ var decoderData = {
       groupId: '1A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
-      serialLengthNote: 'Second alpha character = year code (letters only).',
-      decodeMethod: 'Second alpha character = year code',
-      yearCodePosition: 'Char 3',
+      serialLengthNote: '9-digit: char 2 = year, chars 3-4 = week. 10-digit: char 3 = year, chars 4-5 = week.',
+      decodeMethod: 'Char 2 (9-digit) or Char 3 (10-digit)',
+      yearCodePosition: 'Char 2 (9-digit) or Char 3 (10-digit)',
       monthCodePosition: 'N/A',
-      outputType: 'Year',
+      outputType: 'Year + Week of Year',
       decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
-      method: 'Second alpha character = year code',
+      method: '9-digit: char 2 = year, chars 3-4 = week. 10-digit: char 3 = year, chars 4-5 = week.',
       notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
       if (!serial) return null;
-      var letters = String(serial).match(/[A-Za-z]/g) || [];
-      if (letters.length < 2) return null;
-      var yearChar = letters[1].toUpperCase();
-      var y = this.yearMap[yearChar];
-      return { year: y || 'Unknown code: ' + yearChar, month: 'N/A', yearCode: yearChar };
+      var s = String(serial).trim();
+      var yearChar = '';
+      var week = '';
+      if (s.length === 9) {
+        yearChar = s[1];
+        week = s.substring(2, 4);
+      } else if (s.length === 10) {
+        yearChar = s[2];
+        week = s.substring(3, 5);
+      } else {
+        return null;
+      }
+      var code = yearChar.toUpperCase();
+      var y = this.yearMap[code];
+      return { year: y || 'Unknown code: ' + code, month: 'Week ' + week, yearCode: code, weekDigits: week };
     }
     },
     'estate': {
@@ -414,27 +444,37 @@ var decoderData = {
       groupId: '1A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
-      serialLengthNote: 'Second alpha character = year code (letters only).',
-      decodeMethod: 'Second alpha character = year code',
-      yearCodePosition: 'Second alpha character',
+      serialLengthNote: '9-digit: char 2 = year, chars 3-4 = week. 10-digit: char 3 = year, chars 4-5 = week.',
+      decodeMethod: 'Char 2 (9-digit) or Char 3 (10-digit)',
+      yearCodePosition: 'Char 2 (9-digit) or Char 3 (10-digit)',
       monthCodePosition: 'N/A',
-      outputType: 'Year',
+      outputType: 'Year + Week of Year',
       decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
-      method: 'Second alpha character = year code',
+      method: '9-digit: char 2 = year, chars 3-4 = week. 10-digit: char 3 = year, chars 4-5 = week.',
       notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
       if (!serial) return null;
-      var letters = String(serial).match(/[A-Za-z]/g) || [];
-      if (letters.length < 2) return null;
-      var yearChar = letters[1].toUpperCase();
-      var y = this.yearMap[yearChar];
-      return { year: y || 'Unknown code: ' + yearChar, month: 'N/A', yearCode: yearChar };
+      var s = String(serial).trim();
+      var yearChar = '';
+      var week = '';
+      if (s.length === 9) {
+        yearChar = s[1];
+        week = s.substring(2, 4);
+      } else if (s.length === 10) {
+        yearChar = s[2];
+        week = s.substring(3, 5);
+      } else {
+        return null;
+      }
+      var code = yearChar.toUpperCase();
+      var y = this.yearMap[code];
+      return { year: y || 'Unknown code: ' + code, month: 'Week ' + week, yearCode: code, weekDigits: week };
     }
     },
     'inglis': {
@@ -443,27 +483,37 @@ var decoderData = {
       groupId: '1A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
-      serialLengthNote: 'Second alpha character = year code (letters only).',
-      decodeMethod: 'Second alpha character = year code',
-      yearCodePosition: 'Second alpha character',
+      serialLengthNote: '9-digit: char 2 = year, chars 3-4 = week. 10-digit: char 3 = year, chars 4-5 = week.',
+      decodeMethod: 'Char 2 (9-digit) or Char 3 (10-digit)',
+      yearCodePosition: 'Char 2 (9-digit) or Char 3 (10-digit)',
       monthCodePosition: 'N/A',
-      outputType: 'Year',
+      outputType: 'Year + Week of Year',
       decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
-      method: 'Second alpha character = year code',
+      method: '9-digit: char 2 = year, chars 3-4 = week. 10-digit: char 3 = year, chars 4-5 = week.',
       notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
       if (!serial) return null;
-      var letters = String(serial).match(/[A-Za-z]/g) || [];
-      if (letters.length < 2) return null;
-      var yearChar = letters[1].toUpperCase();
-      var y = this.yearMap[yearChar];
-      return { year: y || 'Unknown code: ' + yearChar, month: 'N/A', yearCode: yearChar };
+      var s = String(serial).trim();
+      var yearChar = '';
+      var week = '';
+      if (s.length === 9) {
+        yearChar = s[1];
+        week = s.substring(2, 4);
+      } else if (s.length === 10) {
+        yearChar = s[2];
+        week = s.substring(3, 5);
+      } else {
+        return null;
+      }
+      var code = yearChar.toUpperCase();
+      var y = this.yearMap[code];
+      return { year: y || 'Unknown code: ' + code, month: 'Week ' + week, yearCode: code, weekDigits: week };
     }
     },
     'crosley': {
@@ -472,27 +522,37 @@ var decoderData = {
       groupId: '1A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
-      serialLengthNote: 'Second alpha character = year code (letters only).',
-      decodeMethod: 'Second alpha character = year code',
-      yearCodePosition: 'Second alpha character',
+      serialLengthNote: '9-digit: char 2 = year, chars 3-4 = week. 10-digit: char 3 = year, chars 4-5 = week.',
+      decodeMethod: 'Char 2 (9-digit) or Char 3 (10-digit)',
+      yearCodePosition: 'Char 2 (9-digit) or Char 3 (10-digit)',
       monthCodePosition: 'N/A',
-      outputType: 'Year',
+      outputType: 'Year + Week of Year',
       decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
-      method: 'Second alpha character = year code',
+      method: '9-digit: char 2 = year, chars 3-4 = week. 10-digit: char 3 = year, chars 4-5 = week.',
       notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
       if (!serial) return null;
-      var letters = String(serial).match(/[A-Za-z]/g) || [];
-      if (letters.length < 2) return null;
-      var yearChar = letters[1].toUpperCase();
-      var y = this.yearMap[yearChar];
-      return { year: y || 'Unknown code: ' + yearChar, month: 'N/A', yearCode: yearChar };
+      var s = String(serial).trim();
+      var yearChar = '';
+      var week = '';
+      if (s.length === 9) {
+        yearChar = s[1];
+        week = s.substring(2, 4);
+      } else if (s.length === 10) {
+        yearChar = s[2];
+        week = s.substring(3, 5);
+      } else {
+        return null;
+      }
+      var code = yearChar.toUpperCase();
+      var y = this.yearMap[code];
+      return { year: y || 'Unknown code: ' + code, month: 'Week ' + week, yearCode: code, weekDigits: week };
     }
     },
     'maytag_post_2006': {
@@ -3055,5 +3115,6 @@ var decoderData = {
     }
   }
 };
+
 
 
