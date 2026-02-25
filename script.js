@@ -972,24 +972,22 @@ function enhanceHeaderBranding() {
   var oldWrap = header.querySelector('.ia-header-wrap');
   if (oldWrap) oldWrap.remove();
 
-  // Task 7: centered logo + right-aligned nav links
+  // Task 7: centered nav + right-aligned logo
   var wrap = document.createElement('div');
   wrap.className = 'ia-header-wrap';
   wrap.innerHTML = '' +
-    '<div class="ia-hw-left"></div>' +
-    '<a class="ia-hw-center" href="/" aria-label="Item Assist \u2014 Home">' +
-      '<img class="ia-header-logo-top" src="/assets/item-assist-logo.png" alt="Item Assist" height="44" width="44">' +
-    '</a>' +
-    '<nav class="ia-hw-right ia-header-nav" aria-label="Site navigation">' +
-      '<a class="ia-header-nav-link" href="/">Decoder</a>' +
+    '<nav class="ia-header-nav ia-header-nav-center" aria-label="Site navigation">' +
+      '<a class="ia-header-nav-link" href="/">Serial Number Decoder</a>' +
       '<a class="ia-header-nav-link" href="/smart-lookup">Smart Lookup</a>' +
       '<a class="ia-header-nav-link" href="/methodology">Methodology</a>' +
       '<a class="ia-header-nav-link" href="/contact">Contact</a>' +
-    '</nav>';
+    '</nav>' +
+    '<a class="ia-header-logo-link ia-header-logo-right" href="/" aria-label="Item Assist — Home">' +
+      '<img class="ia-header-logo-top" src="/assets/item-assist-logo.png" alt="Item Assist" height="78" width="78">' +
+    '</a>';
   header.appendChild(wrap);
   header.setAttribute('data-ia-header-ready', '1');
 }
-
 function enhanceSidebarLogo() {
   var logo = document.querySelector('.sidebar-logo');
   if (!logo) return;
@@ -997,7 +995,7 @@ function enhanceSidebarLogo() {
   if (logo.querySelector('.ia-sidebar-brand')) return;
   logo.innerHTML = '' +
     '<span class="ia-sidebar-brand">' +
-      '<img class="ia-sidebar-logo" src="/assets/item-assist-logo.png" width="110" height="110" alt="Item Assist logo">' +
+      '<img class="ia-sidebar-logo" src="/assets/item-assist-logo.png" width="150" height="150" alt="Item Assist logo">' +
     '</span>';
 }
 
@@ -1902,6 +1900,7 @@ function showDecodeFallback(decoder, serial, brandId, reason) {
     ageEl.textContent = '\u2014';
     if (ageEl.closest) { var ageRow = ageEl.closest('.result-row'); if (ageRow) ageRow.style.display = 'none'; }
   }
+  updateSearchQueryLine(decoder.name, serial);
   document.getElementById('resultBrand').textContent  = decoder.name;
   document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'Check the product label and ensure the full serial number is entered.';
   document.getElementById('resultNotes').textContent  =
@@ -1969,7 +1968,9 @@ function ensureRefinementPanel() {
   // Task 2: Insert at the very top of results-body so it appears before Manufacturer Date
   var resultsBody = serialResults.querySelector('.results-body');
   if (resultsBody) {
-    resultsBody.insertAdjacentElement('afterbegin', panel);
+    var queryLine = resultsBody.querySelector('.result-query');
+    if (queryLine) queryLine.insertAdjacentElement('afterend', panel);
+    else resultsBody.insertAdjacentElement('afterbegin', panel);
   } else {
     var moreOptions = serialResults.querySelector('.more-options-section');
     if (moreOptions) moreOptions.insertAdjacentElement('beforebegin', panel);
@@ -1979,6 +1980,26 @@ function ensureRefinementPanel() {
   return panel;
 }
 
+function ensureSearchQueryLine() {
+  var serialResults = document.getElementById('serialResults');
+  if (!serialResults) return null;
+  var resultsBody = serialResults.querySelector('.results-body');
+  if (!resultsBody) return null;
+  var line = resultsBody.querySelector('.result-query');
+  if (line) return line;
+  line = document.createElement('div');
+  line.className = 'result-query';
+  resultsBody.insertAdjacentElement('afterbegin', line);
+  return line;
+}
+
+function updateSearchQueryLine(brandName, serial) {
+  var line = ensureSearchQueryLine();
+  if (!line) return;
+  var b = brandName || 'Unknown';
+  var s = serial || '';
+  line.textContent = 'Search Query: ' + b + ' \u2013 ' + s;
+}
 function deterministicRefinement(candidates, model, context) {
   var combined = (model + ' ' + context).trim();
   var yearsMentioned = parseCandidateYears(combined);
@@ -2092,6 +2113,7 @@ function decodeSerial() {
       var decoder = decoderData[currentCategory].decoders[brandId];
       if (!decoder) { showCustomAlert('Decoder not found for this brand'); return; }
 
+  updateSearchQueryLine(decoder.name, serial);
   // Show loading animation immediately
   document.getElementById('serialResults').classList.add('hidden');
   document.getElementById('ageResults').classList.add('hidden');
@@ -2138,7 +2160,7 @@ function decodeSerial() {
       var _filteredYear = filterYearsByEra(String(result.year), _eraVal);
       if (_filteredYear === null) {
         // No candidate years match the selected era â€” show clear message, no age
-        document.getElementById('resultBrand').textContent  = decoder.name;
+document.getElementById('resultBrand')p
         document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'N/A';
         document.getElementById('resultNotes').textContent  = 'No matching dates found for the selected era. Try switching to Pre-2006 or Post-2006.';
         var _yearEl = document.getElementById('resultYear');
@@ -2170,7 +2192,7 @@ function decodeSerial() {
 
     if (isKenmore) {
       document.getElementById('resultYear').textContent   = 'Varies by Manufacturer (OEM Brand)';
-      document.getElementById('resultBrand').textContent  = decoder.name;
+document.getElementById('resultBrand')p
       document.getElementById('resultMethod').textContent = 'Kenmore is manufactured by multiple OEM partners. Use the first 3 digits of the MODEL number (not the serial number) to identify the actual manufacturer, then decode using their serial format.';
       document.getElementById('resultNotes').textContent  = result.month || decoder.notes || '';
     } else {
@@ -2803,3 +2825,16 @@ function showCustomAlert(message) {
   modal.appendChild(box);
   document.body.appendChild(modal);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
