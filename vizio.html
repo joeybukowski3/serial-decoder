@@ -164,10 +164,6 @@
                     <h4>Important Notes</h4>
                     <p id="resultNotes"></p>
                 </div>
-                <div class="info-block" id="resultExampleBlock">
-                    <h4>Example</h4>
-                    <p id="resultExample"></p>
-                </div>
                 <details class="determination-details">
                     <summary>How this was determined</summary>
                     <div class="determination-body">
@@ -362,29 +358,10 @@
       ]}
     ]
     </script>
-    <script src="facts.js"></script>
-    <script>
-    (function(){
-      var key = 'vizio';
-      var f = typeof BRAND_FACTS !== 'undefined' && BRAND_FACTS[key];
-      if (!f) return;
-      var block = document.createElement('div');
-      block.className = 'did-you-know-block';
-      block.innerHTML =
-        '<h2>Did you know?</h2>' +
-        '<div class="fact-grid">' +
-          '<span class="fact-label">Founded</span><span class="fact-value">' + f.founded + '</span>' +
-          '<span class="fact-label">Founder</span><span class="fact-value">' + f.founder + '</span>' +
-          '<span class="fact-label">Location</span><span class="fact-value">' + f.location + '</span>' +
-        '</div>' +
-        '<p class="fact-summary">' + f.summary + '</p>';
-      var sections = document.querySelectorAll('.static-section');
-      var last = sections[sections.length - 1];
-      if (last && last.parentNode) last.parentNode.insertBefore(block, last);
-    })();
-    </script>
-</body>
+    </body>
 </html>
+
+
 
 
 

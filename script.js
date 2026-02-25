@@ -1358,13 +1358,19 @@ function loadBrandContext() {
       }
     }
 
+    var matched = false;
     for (var i = 0; i < brandSelect.options.length; i++) {
       if (brandSelect.options[i].value === ctx.brandId) {
         brandSelect.value = ctx.brandId;
         if (typeof onBrandChange === 'function') onBrandChange();
         if (typeof updateDecodeBtn === 'function') updateDecodeBtn();
+        matched = true;
         break;
       }
+    }
+    if (!matched && brandSelect.getAttribute('data-brand-retry') !== '1') {
+      brandSelect.setAttribute('data-brand-retry', '1');
+      setTimeout(loadBrandContext, 150);
     }
 
     var serialInput = dom.serialEl;
@@ -1614,6 +1620,7 @@ function initPage() {
   }
 
   loadBrandContext();
+  ensureDidYouKnowBlock();
   syncSidebarActiveState();
 
   try {
@@ -1895,8 +1902,6 @@ function showDecodeFallback(decoder, serial, brandId, reason) {
     ageEl.textContent = '\u2014';
     if (ageEl.closest) { var ageRow = ageEl.closest('.result-row'); if (ageRow) ageRow.style.display = 'none'; }
   }
-  var exBlock = document.getElementById('resultExampleBlock');
-  if (exBlock) exBlock.style.display = 'none';
   document.getElementById('resultBrand').textContent  = decoder.name;
   document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'Check the product label and ensure the full serial number is entered.';
   document.getElementById('resultNotes').textContent  =
@@ -2107,10 +2112,8 @@ function decodeSerial() {
     (function() {
       var _yr = document.getElementById('resultYear');
       var _ae = document.getElementById('resultEstimatedAge');
-      var _ex = document.getElementById('resultExampleBlock');
       if (_yr && _yr.closest) { var r1 = _yr.closest('.result-row'); if (r1) r1.style.display = ''; }
       if (_ae && _ae.closest) { var r2 = _ae.closest('.result-row'); if (r2) r2.style.display = ''; }
-      if (_ex) _ex.style.display = '';
     })();
 
     var result = decoder.decode(serial);
@@ -2151,8 +2154,6 @@ function decodeSerial() {
           if (_ageRow2) _ageRow2.style.display = 'none';
         }
         if (monthRow) monthRow.style.display = 'none';
-        var _exBlock2 = document.getElementById('resultExampleBlock');
-        if (_exBlock2) _exBlock2.style.display = 'none';
         var _rp = ensureRefinementPanel();
         if (_rp) _rp.classList.add('hidden');
         showBrandLogo('serialBrandLogo', brandId, decoder.name);
@@ -2195,10 +2196,6 @@ function decodeSerial() {
     // Compute derived display fields from output shape (no decode rules exposed)
     var _displayedYear = document.getElementById('resultYear').textContent;
     document.getElementById('resultEstimatedAge').textContent = computeEstimatedAge(_displayedYear);
-
-    document.getElementById('resultExample').textContent = decoder.exampleSerial
-      ? decoder.exampleSerial + ' → ' + decoder.exampleResult
-      : 'N/A';
 
     showBrandLogo('serialBrandLogo', brandId, decoder.name);
     currentFeedbackContext = { brand: decoder.name, serial: serial };
@@ -2305,14 +2302,54 @@ function decodeAnotherItem() {
   var refineOut = document.getElementById('narrowDateOutput');
   if (refineOut) refineOut.innerHTML = '';
   updateDecodeBtn();
-  var main = document.querySelector('.main-card');
-  if (main && main.scrollIntoView) {
-    main.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   setTimeout(function() {
     if (serialInput) serialInput.focus();
     else if (altQuery) altQuery.focus();
   }, 300);
+}
+
+function getBrandFactsKey(slug) {
+  if (!slug) return '';
+  if (slug === 'google-pixel') return 'google_pixel';
+  return slug.replace(/-/g, '_');
+}
+
+function injectDidYouKnowBlock() {
+  if (document.querySelector('.did-you-know-block')) return;
+  var slug = getBrandPageSlug();
+  if (!slug) return;
+  var key = getBrandFactsKey(slug);
+  var facts = window.BRAND_FACTS && window.BRAND_FACTS[key];
+  if (!facts) return;
+  var block = document.createElement('div');
+  block.className = 'did-you-know-block';
+  block.innerHTML =
+    '<h2>Did you know?</h2>' +
+    '<div class="fact-grid">' +
+      '<span class="fact-label">Founded</span><span class="fact-value">' + facts.founded + '</span>' +
+      '<span class="fact-label">Founder</span><span class="fact-value">' + facts.founder + '</span>' +
+      '<span class="fact-label">Location</span><span class="fact-value">' + facts.location + '</span>' +
+    '</div>' +
+    '<p class="fact-summary">' + facts.summary + '</p>';
+  var sections = document.querySelectorAll('.static-section');
+  var last = sections[sections.length - 1];
+  if (last && last.parentNode) last.parentNode.insertBefore(block, last);
+}
+
+function ensureDidYouKnowBlock() {
+  if (document.querySelector('.did-you-know-block')) return;
+  var slug = getBrandPageSlug();
+  if (!slug) return;
+  if (window.BRAND_FACTS) {
+    injectDidYouKnowBlock();
+    return;
+  }
+  if (typeof loadScript === 'function') {
+    loadScript('facts.js')
+      .then(injectDidYouKnowBlock)
+      .catch(function() {});
+  }
 }
 
 // ===== ALT LOOKUP TOGGLE =====
@@ -2328,34 +2365,11 @@ function toggleAlt() {
 var _cursorStyleEl = null;
 
 function setEmojiCursor(emoji) {
-  try {
-    var size = 48;
-    var canvas = document.createElement('canvas');
-    canvas.width  = size;
-    canvas.height = size;
-    var ctx = canvas.getContext('2d');
-    ctx.font         = (size - 4) + 'px serif';
-    ctx.textBaseline = 'middle';
-    ctx.textAlign    = 'center';
-    ctx.fillText(emoji, size / 2, size / 2);
-    var dataUrl  = canvas.toDataURL();
-    var hotspot  = Math.round(size / 2);
-    var cursorCSS = 'url(' + dataUrl + ') ' + hotspot + ' ' + hotspot + ', auto';
-    // Inject/update a global <style> so !important overrides every element's
-    // own cursor rule (buttons, inputs, selects, links, etc.)
-    if (!_cursorStyleEl) {
-      _cursorStyleEl = document.createElement('style');
-      document.head.appendChild(_cursorStyleEl);
-    }
-    _cursorStyleEl.textContent = '* { cursor: ' + cursorCSS + ' !important; }';
-  } catch (e) {
-    document.body.style.cursor = 'wait';
-  }
+  return;
 }
 
 function clearEmojiCursor() {
-  document.body.style.cursor = '';
-  if (_cursorStyleEl) { _cursorStyleEl.textContent = ''; }
+  return;
 }
 
 // ===== LOADING STATE (🌩️ → ☀️) =====
