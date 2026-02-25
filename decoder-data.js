@@ -1,3 +1,24 @@
+function decodeWhirlpoolFamilyByLength(serial, yearMap) {
+  if (!serial) return null;
+  var serialNumber = String(serial).replace(/[^A-Za-z0-9]/g, '');
+  if (serialNumber.length !== 9 && serialNumber.length !== 10) return null;
+
+  var yearCharacterPosition = serialNumber.length === 9 ? 2 : 3;
+  var zeroBasedYearIndex = yearCharacterPosition - 1;
+  var yearCharacter = serialNumber[zeroBasedYearIndex];
+  var weekCharacters = serialNumber.substring(zeroBasedYearIndex + 1, zeroBasedYearIndex + 3);
+  var yearCodeCharacter = yearCharacter.toUpperCase();
+  var decodedYear = yearMap[yearCodeCharacter];
+
+  return {
+    year: decodedYear || 'Unknown code: ' + yearCodeCharacter,
+    month: 'Week ' + weekCharacters,
+    yearCode: yearCodeCharacter,
+    weekDigits: weekCharacters,
+    yearCharacterPosition: yearCharacterPosition
+  };
+}
+
 // Serial Number Decoder Database — Auto-generated from CSV
 // Generated: 2026-02-17
 // Source of truth for runtime decoding; CSV files are not loaded by the app.
@@ -81,22 +102,7 @@ var decoderData = {
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
             decode: function(serial) {
-      if (!serial) return null;
-      var serialNumber = String(serial).replace(/[^A-Za-z0-9]/g, '');
-      var yearCharacter = '';
-      var weekCharacters = '';
-      if (serialNumber.length === 9) {
-        yearCharacter = serialNumber[1];
-        weekCharacters = serialNumber.substring(2, 4);
-      } else if (serialNumber.length === 10) {
-        yearCharacter = serialNumber[2];
-        weekCharacters = serialNumber.substring(3, 5);
-      } else {
-        return null;
-      }
-      var yearCodeCharacter = yearCharacter.toUpperCase();
-      var decodedYear = this.yearMap[yearCodeCharacter];
-      return { year: decodedYear || 'Unknown code: ' + yearCodeCharacter, month: 'Week ' + weekCharacters, yearCode: yearCodeCharacter, weekDigits: weekCharacters };
+      return decodeWhirlpoolFamilyByLength(serial, this.yearMap);
     }
     },
     'norcold': {
@@ -381,22 +387,7 @@ var decoderData = {
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
-      if (!serial) return null;
-      var serialNumber = String(serial).replace(/[^A-Za-z0-9]/g, '');
-      var yearCharacter = '';
-      var weekCharacters = '';
-      if (serialNumber.length === 9) {
-        yearCharacter = serialNumber[1];
-        weekCharacters = serialNumber.substring(2, 4);
-      } else if (serialNumber.length === 10) {
-        yearCharacter = serialNumber[2];
-        weekCharacters = serialNumber.substring(3, 5);
-      } else {
-        return null;
-      }
-      var yearCodeCharacter = yearCharacter.toUpperCase();
-      var decodedYear = this.yearMap[yearCodeCharacter];
-      return { year: decodedYear || 'Unknown code: ' + yearCodeCharacter, month: 'Week ' + weekCharacters, yearCode: yearCodeCharacter, weekDigits: weekCharacters };
+      return decodeWhirlpoolFamilyByLength(serial, this.yearMap);
     }
     },
     'roper': {
@@ -420,22 +411,7 @@ var decoderData = {
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
-      if (!serial) return null;
-      var serialNumber = String(serial).replace(/[^A-Za-z0-9]/g, '');
-      var yearCharacter = '';
-      var weekCharacters = '';
-      if (serialNumber.length === 9) {
-        yearCharacter = serialNumber[1];
-        weekCharacters = serialNumber.substring(2, 4);
-      } else if (serialNumber.length === 10) {
-        yearCharacter = serialNumber[2];
-        weekCharacters = serialNumber.substring(3, 5);
-      } else {
-        return null;
-      }
-      var yearCodeCharacter = yearCharacter.toUpperCase();
-      var decodedYear = this.yearMap[yearCodeCharacter];
-      return { year: decodedYear || 'Unknown code: ' + yearCodeCharacter, month: 'Week ' + weekCharacters, yearCode: yearCodeCharacter, weekDigits: weekCharacters };
+      return decodeWhirlpoolFamilyByLength(serial, this.yearMap);
     }
     },
     'estate': {
@@ -459,22 +435,7 @@ var decoderData = {
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
-      if (!serial) return null;
-      var serialNumber = String(serial).replace(/[^A-Za-z0-9]/g, '');
-      var yearCharacter = '';
-      var weekCharacters = '';
-      if (serialNumber.length === 9) {
-        yearCharacter = serialNumber[1];
-        weekCharacters = serialNumber.substring(2, 4);
-      } else if (serialNumber.length === 10) {
-        yearCharacter = serialNumber[2];
-        weekCharacters = serialNumber.substring(3, 5);
-      } else {
-        return null;
-      }
-      var yearCodeCharacter = yearCharacter.toUpperCase();
-      var decodedYear = this.yearMap[yearCodeCharacter];
-      return { year: decodedYear || 'Unknown code: ' + yearCodeCharacter, month: 'Week ' + weekCharacters, yearCode: yearCodeCharacter, weekDigits: weekCharacters };
+      return decodeWhirlpoolFamilyByLength(serial, this.yearMap);
     }
     },
     'inglis': {
@@ -498,22 +459,7 @@ var decoderData = {
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
-      if (!serial) return null;
-      var serialNumber = String(serial).replace(/[^A-Za-z0-9]/g, '');
-      var yearCharacter = '';
-      var weekCharacters = '';
-      if (serialNumber.length === 9) {
-        yearCharacter = serialNumber[1];
-        weekCharacters = serialNumber.substring(2, 4);
-      } else if (serialNumber.length === 10) {
-        yearCharacter = serialNumber[2];
-        weekCharacters = serialNumber.substring(3, 5);
-      } else {
-        return null;
-      }
-      var yearCodeCharacter = yearCharacter.toUpperCase();
-      var decodedYear = this.yearMap[yearCodeCharacter];
-      return { year: decodedYear || 'Unknown code: ' + yearCodeCharacter, month: 'Week ' + weekCharacters, yearCode: yearCodeCharacter, weekDigits: weekCharacters };
+      return decodeWhirlpoolFamilyByLength(serial, this.yearMap);
     }
     },
     'crosley': {
@@ -537,22 +483,7 @@ var decoderData = {
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
-      if (!serial) return null;
-      var serialNumber = String(serial).replace(/[^A-Za-z0-9]/g, '');
-      var yearCharacter = '';
-      var weekCharacters = '';
-      if (serialNumber.length === 9) {
-        yearCharacter = serialNumber[1];
-        weekCharacters = serialNumber.substring(2, 4);
-      } else if (serialNumber.length === 10) {
-        yearCharacter = serialNumber[2];
-        weekCharacters = serialNumber.substring(3, 5);
-      } else {
-        return null;
-      }
-      var yearCodeCharacter = yearCharacter.toUpperCase();
-      var decodedYear = this.yearMap[yearCodeCharacter];
-      return { year: decodedYear || 'Unknown code: ' + yearCodeCharacter, month: 'Week ' + weekCharacters, yearCode: yearCodeCharacter, weekDigits: weekCharacters };
+      return decodeWhirlpoolFamilyByLength(serial, this.yearMap);
     }
     },
     'maytag_post_2006': {

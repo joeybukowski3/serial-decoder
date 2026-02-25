@@ -2528,6 +2528,7 @@ function decodeSerial() {
     // Append decode detail (specific codes used for this decode)
     (function() {
       var parts = [];
+      if (result.yearCharacterPosition !== undefined) parts.push('Year character position: ' + result.yearCharacterPosition);
       if (result.yearCode !== undefined) parts.push('Year code: ' + result.yearCode + ' \u2192 ' + capYear(result.year));
       if (result.weekDigits !== undefined) parts.push('Week: ' + result.weekDigits);
       if (result.monthCode !== undefined) parts.push('Month code: ' + result.monthCode + ' \u2192 ' + result.month);
