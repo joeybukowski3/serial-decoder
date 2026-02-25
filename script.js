@@ -972,16 +972,11 @@ function enhanceHeaderBranding() {
   var oldWrap = header.querySelector('.ia-header-wrap');
   if (oldWrap) oldWrap.remove();
 
-  // Task 7: centered logo + right-aligned nav links
   var wrap = document.createElement('div');
   wrap.className = 'ia-header-wrap';
   wrap.innerHTML = '' +
-    '<div class="ia-hw-left"></div>' +
-    '<a class="ia-hw-center" href="/" aria-label="Item Assist \u2014 Home">' +
-      '<img class="ia-header-logo-top" src="/assets/item-assist-logo.png" alt="Item Assist" height="44" width="44">' +
-    '</a>' +
-    '<nav class="ia-hw-right ia-header-nav" aria-label="Site navigation">' +
-      '<a class="ia-header-nav-link" href="/">Decoder</a>' +
+    '<nav class="ia-header-nav ia-header-nav-center" aria-label="Site navigation">' +
+      '<a class="ia-header-nav-link" href="/">Serial Number Decoder</a>' +
       '<a class="ia-header-nav-link" href="/smart-lookup">Smart Lookup</a>' +
       '<a class="ia-header-nav-link" href="/methodology">Methodology</a>' +
       '<a class="ia-header-nav-link" href="/contact">Contact</a>' +
@@ -989,7 +984,6 @@ function enhanceHeaderBranding() {
   header.appendChild(wrap);
   header.setAttribute('data-ia-header-ready', '1');
 }
-
 function enhanceSidebarLogo() {
   var logo = document.querySelector('.sidebar-logo');
   if (!logo) return;
@@ -2803,3 +2797,4 @@ function showCustomAlert(message) {
   modal.appendChild(box);
   document.body.appendChild(modal);
 }
+
