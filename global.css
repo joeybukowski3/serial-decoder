@@ -878,6 +878,7 @@ body {
     margin: 0;
     display: flex;
     align-items: center;
+    justify-content: center;
     min-height: 76px;
     padding: 0.7rem 1.25rem;
     border-radius: 0;
@@ -1523,6 +1524,13 @@ body {
 
 .results-body {
  padding: 1.5rem;
+}
+
+.header .sidebar-toggle {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .result-query {
@@ -2447,7 +2455,7 @@ body {
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     position: relative;
 
 }
@@ -2467,11 +2475,18 @@ body {
     flex-shrink: 0;
 }
 
+.header .ia-hw-center,
+.header .ia-header-logo-link,
+.header .ia-header-logo-top,
+.header .header-logo {
+    display: none !important;
+}
+
 .ia-hw-right {
-    flex: 1;
+    flex: 0 1 auto;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 0.45rem;
     flex-wrap: wrap;
 }
