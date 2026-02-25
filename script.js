@@ -89,6 +89,15 @@ var BRAND_LOGOS = {
   'roper': 'whirlpool.com',
   'estate': 'whirlpool.com',
   'inglis': 'whirlpool.com',
+  'norcold': 'whirlpool.com',
+  'sub_zero': 'whirlpool.com',
+  'hampton_bay': 'whirlpool.com',
+  'conquest': 'whirlpool.com',
+  'coolerator': 'whirlpool.com',
+  'crystal_tips': 'whirlpool.com',
+  'partners_plus': 'whirlpool.com',
+  'jordan': 'whirlpool.com',
+  'sinkguard': 'whirlpool.com',
   'rheem': 'rheem.com',
   'ruud': 'ruud.com',
   'a_o_smith': 'hotwater.com',
@@ -3039,30 +3048,4 @@ function showCustomAlert(message) {
   modal.appendChild(box);
   document.body.appendChild(modal);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
