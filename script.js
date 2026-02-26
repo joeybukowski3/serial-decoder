@@ -2837,7 +2837,8 @@ async function estimateAge() {
   // (Full unrecognized check happens after API response too)
 
   document.getElementById('ageResults').classList.add('hidden');
-  document.getElementById('serialResults').classList.add('hidden');
+  var sr = document.getElementById('serialResults');
+  if (sr) sr.classList.add('hidden');
   setLoadingActive();
   setEmojiCursor('🕵️');  // detective cursor for AI lookup
   var lt = document.getElementById('loadingText');
@@ -2925,6 +2926,20 @@ async function estimateAge() {
     }
     if (data.notes) {
       html += '<div class="info-block notes"><h4>Notes</h4><p>' + esc(data.notes) + '</p></div>';
+    }
+    if (data.evidence && data.evidence.length > 0) {
+      html += '<div class="info-block sources"><h4>Why We Chose This Date</h4><div class="evidence-list">';
+      data.evidence.forEach(function(item) {
+        var detail = item.detail || '';
+        var source = item.source || '';
+        if (detail || source) {
+          html += '<div class="evidence-item">';
+          if (source) html += '<span class="ev-source">' + esc(source) + '</span>';
+          if (detail) html += '<span>' + esc(detail) + '</span>';
+          html += '</div>';
+        }
+      });
+      html += '</div></div>';
     }
     if (data.serialLocation) {
       html += '<div class="info-block serial-loc"><h4>Where to Find the Serial Number</h4><p>' + esc(data.serialLocation) + '</p></div>';
