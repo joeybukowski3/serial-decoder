@@ -36,8 +36,8 @@ var decoderData = {
       { id: 'estate', name: 'Estate' },
       { id: 'frigidaire', name: 'Frigidaire' },
       { id: 'gaggenau', name: 'Gaggenau' },
-      { id: 'ge', name: 'GE (including Café, Monogram, Profile, Hotpoint, RCA)' },
-      { id: 'cafe', name: 'Café' },
+      { id: 'ge', name: 'GE (including Cafe, Monogram, Profile, Hotpoint, RCA)' },
+      { id: 'cafe', name: 'Cafe' },
       { id: 'gibson', name: 'Gibson' },
       { id: 'inglis', name: 'Inglis' },
       { id: 'jenn_air_post_2006', name: 'Jenn-Air (post-2006)' },
@@ -1125,7 +1125,7 @@ var decoderData = {
     }
     },
     'ge': {
-      name: 'GE (including Café, Monogram, Profile, Hotpoint, RCA)',
+      name: 'GE (including Cafe, Monogram, Profile, Hotpoint, RCA)',
       parentManufacturer: 'GE Appliances (owned by Haier since 2016)',
       groupId: '2',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
@@ -1154,7 +1154,7 @@ var decoderData = {
     }
     },
     'cafe': {
-      name: 'Café',
+      name: 'Cafe',
       parentManufacturer: 'GE Appliances (owned by Haier since 2016)',
       groupId: '2',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',

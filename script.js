@@ -19,7 +19,7 @@ var CYCLING_BRANDS = {
     'estate':      { label: 'Estate',       single: 'estate',       type: 'advisory' },
     'inglis':      { label: 'Inglis',       single: 'inglis',       type: 'advisory' },
     'ge':          { label: 'GE',           single: 'ge',           type: 'advisory' },
-    'ge_caf':      { label: 'GE CafÃ©',      single: 'ge_caf',       type: 'advisory' },
+    'ge_caf':      { label: 'GE Cafe',      single: 'ge_caf',       type: 'advisory' },
     'ge_profile':  { label: 'GE Profile',   single: 'ge_profile',   type: 'advisory' },
     'ge_monogram': { label: 'GE Monogram',  single: 'ge_monogram',  type: 'advisory' },
     'hotpoint':    { label: 'Hotpoint',     single: 'hotpoint',     type: 'advisory' },
@@ -1839,10 +1839,7 @@ function normalizeBrandId(brandId) {
   if (!brandId) return '';
   var raw = String(brandId).trim();
   var s = raw.toLowerCase();
-  var cleaned = s.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
-
-  if (cleaned === 'cafe' || cleaned === 'café') return 'cafe';
-  if (cleaned === 'ge cafe' || cleaned === 'ge café' || cleaned === 'ge caf') return 'cafe';
+  var cleaned = s.replace(/[_-]+/g, ' ').replace(/\\s+/g, ' ').trim();\r\n  var normalized = cleaned;\r\n  if (normalized.normalize) {\r\n    normalized = normalized.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\r\n  }\r\n\r\n  if (normalized === 'cafe') return 'cafe';\r\n  if (normalized === 'ge cafe' || normalized === 'ge caf') return 'cafe';
   if (cleaned === 'ge monogram' || cleaned === 'monogram') return 'ge';
   if (cleaned === 'ge profile' || cleaned === 'profile') return 'ge';
   if (cleaned === 'hotpoint' || cleaned === 'rca') return 'ge';
