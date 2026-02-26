@@ -1839,7 +1839,14 @@ function normalizeBrandId(brandId) {
   if (!brandId) return '';
   var raw = String(brandId).trim();
   var s = raw.toLowerCase();
-  var cleaned = s.replace(/[_-]+/g, ' ').replace(/\\s+/g, ' ').trim();\r\n  var normalized = cleaned;\r\n  if (normalized.normalize) {\r\n    normalized = normalized.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\r\n  }\r\n\r\n  if (normalized === 'cafe') return 'cafe';\r\n  if (normalized === 'ge cafe' || normalized === 'ge caf') return 'cafe';
+  var cleaned = s.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  var normalized = cleaned;
+  if (normalized.normalize) {
+    normalized = normalized.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  if (normalized === 'cafe') return 'cafe';
+  if (normalized === 'ge cafe' || normalized === 'ge caf') return 'cafe';
   if (cleaned === 'ge monogram' || cleaned === 'monogram') return 'ge';
   if (cleaned === 'ge profile' || cleaned === 'profile') return 'ge';
   if (cleaned === 'hotpoint' || cleaned === 'rca') return 'ge';
