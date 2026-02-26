@@ -988,7 +988,7 @@ function addGuidedSearchButtonToBrandDecoderCard() {
   var btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'guided-search-btn';
-  btn.textContent = 'Smart Lookup';
+  btn.textContent = 'Smart Lookup (Powered by AI)';
   btn.addEventListener('click', function() {
     var altSection = document.getElementById('altSection');
     var altQuery = getSmartLookupInputEl();
@@ -1008,7 +1008,7 @@ function addGuidedSearchButtonToBrandDecoderCard() {
 
   var note = document.createElement('p');
   note.className = 'guided-search-note';
-  note.textContent = 'Serial not recognized yet? Use Smart Lookup for model-based help.';
+  note.textContent = 'Serial not recognized yet? Use Smart Lookup (Powered by AI) for model-based help.';
 
   formArea.appendChild(btn);
   formArea.appendChild(note);
@@ -1221,17 +1221,17 @@ function titleForCategoryKey(key, slug) {
   if (key === 'hvac') return 'HVAC Serial Number Decoder';
   if (key === 'electronics') return 'Electronics Serial Number Decoder';
   if (key === 'water-heaters') return 'Water Heater Serial Number Decoder';
-  if (key === 'smart-lookup') return 'Smart Lookup';
+  if (key === 'smart-lookup') return 'Smart Lookup (Powered by AI)';
   return 'Appliances Serial Number Decoder';
 }
 
 function buildCategoryTabBarHtml(activeKey) {
   var tabs = [
-    { key: 'hvac', label: 'HVAC', href: '/hvac' },
     { key: 'appliances', label: 'Appliances', href: '/appliances' },
+    { key: 'hvac', label: 'HVAC', href: '/hvac' },
     { key: 'electronics', label: 'Electronics', href: '/electronics' },
     { key: 'water-heaters', label: 'Water Heaters', href: '/water-heaters' },
-    { key: 'smart-lookup', label: 'Smart Lookup', href: '/smart-lookup' }
+    { key: 'smart-lookup', label: '⭐ Smart Lookup', href: '/smart-lookup' }
   ];
   return tabs.map(function(t) {
     return '<a href="' + t.href + '" class="category-tab-link' + (t.key === activeKey ? ' active' : '') + '">' + t.label + '</a>';
@@ -1300,7 +1300,7 @@ function applyBrandDefaultFromSlug() {
 
 function smartLookupAboutInnerHtml() {
   return '' +
-    '<h2>About Smart Lookup</h2>' +
+    '<h2>About Smart Lookup (Powered by AI)</h2>' +
     '<p class="technical-methodology-subhead">Proprietary Intelligence for Missing Data</p>' +
     '<p class="technical-methodology-copy">When serial numbers are missing, incomplete, or unreadable, Smart Lookup applies proprietary intelligence across model patterns, manufacturer timelines, and known product release cycles to estimate manufacture windows with practical confidence.</p>' +
     '<ul class="technical-methodology-list">' +
@@ -1795,6 +1795,10 @@ function populateBrands(category) {
     }
   });
 
+  consolidated.sort(function(a, b) {
+    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+  });
+
   sel.innerHTML = '<option value="">-- Select Brand --</option>';
   consolidated.forEach(function(b) {
     var opt = document.createElement('option');
@@ -2127,12 +2131,15 @@ function ensureResultWarningBlock() {
 
 function isIncompleteResult(result) {
   if (!result) return true;
-  var text = (String(result.year || '') + ' ' + String(result.month || '')).toLowerCase();
+  var yearStr = String(result.year || '').trim();
+  var monthStr = String(result.month || '').trim();
+  var text = (yearStr + ' ' + monthStr).toLowerCase();
+  // Dual-year format like "1992/2022" is a valid result — do NOT flag as incomplete
+  if (/^\d{4}\/\d{4}$/.test(yearStr)) return false;
   if (text.indexOf('unknown') !== -1) return true;
   if (text.indexOf('ambiguous') !== -1) return true;
   if (text.indexOf('unable') !== -1) return true;
   if (text.indexOf('non-numeric') !== -1) return true;
-  if (text.indexOf('/') !== -1) return true;
   return false;
 }
 
@@ -2146,7 +2153,7 @@ function updateResultWarning(result, brandId) {
     block.classList.remove('hidden');
     var p = block.querySelector('p');
     if (p) {
-      p.textContent = 'Incomplete result � please verify your inputs (brand/serial/model). If the result is still incorrect after verifying inputs, report an issue.';
+      p.textContent = 'Incomplete result � please verify your inputs (brand/serial/model). If the result is still incorrect after verifying inputs, report an issue.';
     }
   } else {
     block.classList.add('hidden');
@@ -2437,7 +2444,7 @@ function decodeSerial() {
     if (_eraVal && result && result.year) {
       var _filteredYear = filterYearsByEra(String(result.year), _eraVal);
       if (_filteredYear === null) {
-        // No candidate years match the selected era � show clear message, no age
+        // No candidate years match the selected era � show clear message, no age
         document.getElementById('resultBrand').textContent  = decoder.name;
         document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'N/A';
         document.getElementById('resultNotes').textContent  = 'No matching dates found for the selected era. Try switching to Pre-2006 or Post-2006.';
@@ -2787,12 +2794,47 @@ async function parseJsonResponseSafe(res, contextLabel) {
   };
 }
 
+// ===== SMART LOOKUP ITEM TYPE DETECTION =====
+var SMART_LOOKUP_CATEGORIES = {
+  appliance: ['washer', 'dryer', 'refrigerator', 'fridge', 'dishwasher', 'range', 'oven', 'microwave', 'freezer', 'ice maker', 'garbage disposal', 'trash compactor', 'cooktop', 'stovetop', 'stove', 'washing machine'],
+  waterHeater: ['water heater', 'hot water heater', 'water tank', 'water boiler'],
+  hvac: ['furnace', 'air conditioner', 'ac unit', 'heat pump', 'hvac', 'air handler', 'condenser', 'boiler', 'thermostat', 'mini split'],
+  electronics: ['tv', 'television', 'monitor', 'phone', 'smartphone', 'tablet', 'laptop', 'computer', 'printer', 'camera', 'speaker', 'soundbar', 'projector', 'headphones', 'earbuds', 'smartwatch', 'watch', 'router', 'modem']
+};
+
+function detectQueryItemType(query) {
+  var q = query.toLowerCase();
+  for (var cat in SMART_LOOKUP_CATEGORIES) {
+    var keywords = SMART_LOOKUP_CATEGORIES[cat];
+    for (var i = 0; i < keywords.length; i++) {
+      if (q.indexOf(keywords[i]) !== -1) return cat;
+    }
+  }
+  return null;
+}
+
+function detectResultItemType(data) {
+  var combined = ((data.notes || '') + ' ' + (data.serialRule || '') + ' ' + (data.model || '') + ' ' + (data.brand || '')).toLowerCase();
+  for (var cat in SMART_LOOKUP_CATEGORIES) {
+    var keywords = SMART_LOOKUP_CATEGORIES[cat];
+    for (var i = 0; i < keywords.length; i++) {
+      if (combined.indexOf(keywords[i]) !== -1) return cat;
+    }
+  }
+  return null;
+}
+
 // ===== ESTIMATE AGE =====
 async function estimateAge() {
   var inputEl = getSmartLookupInputEl();
-  if (!inputEl || !document.getElementById('smart-lookup-input')) return;
+  if (!inputEl) return;
   var query = inputEl.value.trim();
   if (!query) return;
+
+  // Check if query is recognizable before hitting the API
+  var queryType = detectQueryItemType(query);
+  // Allow brand-only or model-number-only queries through — only block if query has item-type keywords from a mismatched category
+  // (Full unrecognized check happens after API response too)
 
   document.getElementById('ageResults').classList.add('hidden');
   document.getElementById('serialResults').classList.add('hidden');
@@ -2842,6 +2884,21 @@ async function estimateAge() {
     if (data.error) {
       setLoadingHidden();
       showSmartLookupNotice('limit', esc(data.error));
+      return;
+    }
+
+    // === ITEM TYPE MISMATCH CHECK ===
+    // If the query clearly identifies an item type and the result notes reference a different type, strip the notes.
+    // If neither query nor result maps to a known category, show unrecognized message.
+    var resultType = detectResultItemType(data);
+    if (queryType && resultType && queryType !== resultType) {
+      // Notes from a different category — suppress them to avoid cross-category bleed
+      data = Object.assign({}, data, { notes: null, serialRule: null });
+    }
+    // If query has no recognized item type keywords AND no brand/model was identified, show unrecognized message
+    if (!queryType && !data.brand && !data.model && !data.estimatedYear && !data.yearRange) {
+      setLoadingHidden();
+      showSmartLookupNotice('limit', 'This input was not recognized by our system. Please try a search that includes a brand name, model number, or product type (e.g., "LG refrigerator", "Whirlpool WTW5000DW", or "Samsung TV").');
       return;
     }
 
@@ -3118,7 +3175,6 @@ function showCustomAlert(message) {
   modal.appendChild(box);
   document.body.appendChild(modal);
 }
-
 
 
 
