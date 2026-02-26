@@ -988,7 +988,7 @@ function addGuidedSearchButtonToBrandDecoderCard() {
   var btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'guided-search-btn';
-  btn.textContent = 'Smart Lookup (Powered by AI)';
+  btn.textContent = 'Smart Lookup';
   btn.addEventListener('click', function() {
     var altSection = document.getElementById('altSection');
     var altQuery = getSmartLookupInputEl();
@@ -1008,7 +1008,7 @@ function addGuidedSearchButtonToBrandDecoderCard() {
 
   var note = document.createElement('p');
   note.className = 'guided-search-note';
-  note.textContent = 'Serial not recognized yet? Use Smart Lookup (Powered by AI) for model-based help.';
+  note.textContent = 'Serial not recognized yet? Use Smart Lookup for model-based help.';
 
   formArea.appendChild(btn);
   formArea.appendChild(note);
@@ -1221,7 +1221,7 @@ function titleForCategoryKey(key, slug) {
   if (key === 'hvac') return 'HVAC Serial Number Decoder';
   if (key === 'electronics') return 'Electronics Serial Number Decoder';
   if (key === 'water-heaters') return 'Water Heater Serial Number Decoder';
-  if (key === 'smart-lookup') return 'Smart Lookup (Powered by AI)';
+  if (key === 'smart-lookup') return 'Smart Lookup';
   return 'Appliances Serial Number Decoder';
 }
 
@@ -1300,8 +1300,8 @@ function applyBrandDefaultFromSlug() {
 
 function smartLookupAboutInnerHtml() {
   return '' +
-    '<h2>About Smart Lookup (Powered by AI)</h2>' +
-    '<p class="technical-methodology-subhead">Proprietary Intelligence for Missing Data</p>' +
+    '<h2>About Smart Lookup</h2>' +
+    '<p class="technical-methodology-subhead">Intelligent Data Aggregation</p>' +
     '<p class="technical-methodology-copy">When serial numbers are missing, incomplete, or unreadable, Smart Lookup applies proprietary intelligence across model patterns, manufacturer timelines, and known product release cycles to estimate manufacture windows with practical confidence.</p>' +
     '<ul class="technical-methodology-list">' +
       '<li><strong>Broad Search Tier:</strong> Interprets general product descriptions to identify likely era ranges and historical launch periods.</li>' +
