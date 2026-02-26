@@ -486,13 +486,17 @@ Rules for exampleModelNumber and suggestedModelNumbers:
     );
 
     if (!response.ok) {
+      const errBody = await response.text().catch(() => '(unreadable)');
+      console.error('[Smart Lookup] Gemini non-OK response', { status: response.status, body: errBody, query: sanitizedQuery });
       return res.status(502).json({ error: 'AI service error' });
     }
 
     const data = await response.json();
+    const finishReason = data.candidates?.[0]?.finishReason;
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
+      console.error('[Smart Lookup] Gemini returned no text', { finishReason, query: sanitizedQuery, candidates: JSON.stringify(data.candidates) });
       return res.status(502).json({ error: 'No response from AI service' });
     }
 
