@@ -2796,10 +2796,10 @@ async function parseJsonResponseSafe(res, contextLabel) {
 
 // ===== SMART LOOKUP ITEM TYPE DETECTION =====
 var SMART_LOOKUP_CATEGORIES = {
-  appliance: ['washer', 'dryer', 'refrigerator', 'fridge', 'dishwasher', 'range', 'oven', 'microwave', 'freezer', 'ice maker', 'garbage disposal', 'trash compactor', 'cooktop', 'stovetop', 'stove', 'washing machine'],
-  waterHeater: ['water heater', 'hot water heater', 'water tank', 'water boiler'],
-  hvac: ['furnace', 'air conditioner', 'ac unit', 'heat pump', 'hvac', 'air handler', 'condenser', 'boiler', 'thermostat', 'mini split'],
-  electronics: ['tv', 'television', 'monitor', 'phone', 'smartphone', 'tablet', 'laptop', 'computer', 'printer', 'camera', 'speaker', 'soundbar', 'projector', 'headphones', 'earbuds', 'smartwatch', 'watch', 'router', 'modem']
+  appliance: ['washer', 'dryer', 'refrigerator', 'fridge', 'dishwasher', 'oven', 'range', 'microwave', 'freezer', 'ice maker', 'cooktop', 'stovetop', 'stove', 'washing machine', 'clothes washer', 'front load', 'top load', 'garbage disposal', 'trash compactor'],
+  waterHeater: ['water heater', 'hot water heater', 'water tank', 'tankless', 'water boiler', 'on-demand water heater'],
+  hvac: ['furnace', 'air conditioner', 'ac', 'heat pump', 'hvac', 'air handler', 'condenser', 'boiler', 'mini split', 'air purifier', 'dehumidifier', 'humidifier', 'thermostat', 'ductless'],
+  electronics: ['tv', 'television', 'monitor', 'phone', 'smartphone', 'tablet', 'laptop', 'computer', 'desktop', 'printer', 'camera', 'speaker', 'soundbar', 'projector', 'headphones', 'earbuds', 'smartwatch', 'watch', 'router', 'modem', 'streaming device', 'game console', 'gaming console']
 };
 
 function detectQueryItemType(query) {
@@ -2807,7 +2807,14 @@ function detectQueryItemType(query) {
   for (var cat in SMART_LOOKUP_CATEGORIES) {
     var keywords = SMART_LOOKUP_CATEGORIES[cat];
     for (var i = 0; i < keywords.length; i++) {
-      if (q.indexOf(keywords[i]) !== -1) return cat;
+      var kw = keywords[i];
+      // For very short keywords like 'ac', use boundary check to avoid false matches in 'back', 'track', etc.
+      if (kw.length <= 2) {
+        var re = new RegExp('\\b' + kw + '\\b', 'i');
+        if (re.test(q)) return cat;
+      } else {
+        if (q.indexOf(kw) !== -1) return cat;
+      }
     }
   }
   return null;
@@ -2827,13 +2834,12 @@ function detectResultItemType(data) {
 // ===== QUERY SPECIFICITY & RESULT BUILDER =====
 
 var KNOWN_BRANDS = [
-  'lg', 'samsung', 'whirlpool', 'ge', 'maytag', 'bosch', 'kitchenaid',
-  'frigidaire', 'amana', 'kenmore', 'sony', 'apple', 'nintendo', 'panasonic',
-  'philips', 'vizio', 'tcl', 'hisense', 'sharp', 'toshiba', 'haier',
-  'electrolux', 'miele', 'rheem', 'lennox', 'carrier', 'trane', 'york',
-  'goodman', 'daikin', 'mitsubishi', 'bradford white', 'ao smith',
-  'jenn-air', 'jennair', 'admiral', 'speed queen', 'sub-zero', 'thermador',
-  'wolf', 'microsoft', 'dell', 'hp', 'lenovo', 'asus', 'acer', 'logitech',
+  'lg', 'samsung', 'whirlpool', 'ge', 'maytag', 'bosch', 'kitchenaid', 'frigidaire', 'electrolux',
+  'sony', 'vizio', 'panasonic', 'apple', 'hp', 'asus', 'google', 'nintendo', 'microsoft',
+  'trane', 'carrier', 'goodman', 'lennox', 'rheem', 'ruud', 'bradford white', 'ao smith', 'state',
+  'american standard', 'bryant', 'york', 'payne', 'amana', 'admiral', 'kenmore', 'roper', 'estate',
+  'inglis', 'thermador', 'sub-zero', 'viking', 'miele', 'jenn-air', 'jennair', 'speed queen', 'tcl',
+  'hisense', 'sharp', 'toshiba', 'haier', 'wolf', 'microsoft', 'dell', 'hp', 'lenovo', 'logitech',
   'bose', 'fisher', 'paykel'
 ];
 
@@ -2856,16 +2862,27 @@ function buildRefineTipBox(tipText) {
     '</div>';
 }
 
+function buildSmartLookupFallbackHtml(query) {
+  var html = '<div class="result-query smart-search-query">Search: ' + esc(query) + '</div>';
+  html += '<div class="info-block invention-summary">';
+  html += '<h4>General Information</h4>';
+  html += '<p>Your search matched a supported product category or brand. For best results, include a specific model number or product series. For example: \'Samsung QLED TV\', \'LG C3 55 inch TV\', or \'Whirlpool front load washer model WFW5000DW\'.</p>';
+  html += '</div>';
+  html += buildRefineTipBox('Try adding a model number, series name, screen type, or product type to get a specific manufacture year.');
+  return html;
+}
+
 function buildSmartLookupResultHtml(query, data, specificity) {
+  // Check if API result is "meaningful" (has a real note or a specific year/range)
+  var notes = String(data.notes || '').trim();
+  var isMeaningful = (notes.length >= 40) || !!data.estimatedYear || !!data.yearRange;
+
+  if (!isMeaningful) {
+    return buildSmartLookupFallbackHtml(query);
+  }
+
   var html = '';
   html += '<div class="result-query smart-search-query">Search: ' + esc(query) + '</div>';
-
-  // Safety net: nothing useful in the response
-  var hasAnyData = data.brand || data.model || data.estimatedYear || data.yearRange || data.notes || data.inventionSummary;
-  if (!hasAnyData) {
-    html += '<div class="info-block notes"><p>This search was not recognized by our system. Please try including a brand name, product type, or model number. Examples: &ldquo;LG 55 inch TV&rdquo;, &ldquo;Whirlpool washer&rdquo;, &ldquo;Nintendo Switch 2&rdquo;</p></div>';
-    return html;
-  }
 
   if (specificity === 'general') {
     if (data.inventionSummary) {
@@ -2987,10 +3004,20 @@ async function estimateAge() {
   var query = inputEl.value.trim();
   if (!query) return;
 
-  // Check if query is recognizable before hitting the API
+  var qLower = query.toLowerCase();
+  var isKnownBrand = KNOWN_BRANDS.some(function(b) { return qLower.indexOf(b) !== -1; });
   var queryType = detectQueryItemType(query);
-  // Allow brand-only or model-number-only queries through — only block if query has item-type keywords from a mismatched category
-  // (Full unrecognized check happens after API response too)
+  var isSupported = isKnownBrand || !!queryType;
+
+  if (!isSupported) {
+    var body = getSmartLookupResultsEl();
+    if (body) {
+      body.innerHTML = '<div class="info-block warning">That search does not match terminology within the scope of our support. Try searching another term or using the serial number decoder. If you feel you reached this message in error, please contact our team with details.</div>';
+    }
+    document.getElementById('ageResults').classList.remove('hidden');
+    document.getElementById('ageResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
 
   document.getElementById('ageResults').classList.add('hidden');
   var sr = document.getElementById('serialResults');
@@ -3051,18 +3078,10 @@ async function estimateAge() {
     }
 
     // === ITEM TYPE MISMATCH CHECK ===
-    // If the query clearly identifies an item type and the result notes reference a different type, strip the notes.
-    // If neither query nor result maps to a known category, show unrecognized message.
     var resultType = detectResultItemType(data);
     if (queryType && resultType && queryType !== resultType) {
       // Notes from a different category — suppress them to avoid cross-category bleed
       data = Object.assign({}, data, { notes: null, serialRule: null });
-    }
-    // If query has no recognized item type keywords AND no brand/model was identified, show unrecognized message
-    if (!queryType && !data.brand && !data.model && !data.estimatedYear && !data.yearRange) {
-      setLoadingHidden();
-      showSmartLookupNotice('limit', 'This input was not recognized by our system. Please try a search that includes a brand name, model number, or product type (e.g., "LG refrigerator", "Whirlpool WTW5000DW", or "Samsung TV").');
-      return;
     }
 
     var body = getSmartLookupResultsEl();
