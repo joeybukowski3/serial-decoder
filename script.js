@@ -2868,12 +2868,22 @@ function buildSmartLookupResultHtml(query, data, specificity) {
   }
 
   if (specificity === 'general') {
-    var historyText = data.inventionSummary || data.notes;
-    if (historyText) {
-      html += '<div class="info-block invention-summary"><h4>Product History</h4><p>' + esc(historyText) + '</p></div>';
+    if (data.inventionSummary) {
+      html += '<div class="info-block invention-summary"><h4>Product History</h4><p>' + esc(data.inventionSummary) + '</p></div>';
+    }
+    if (data.notes) {
+      html += '<div class="info-block notes"><h4>Details</h4><p>' + esc(data.notes) + '</p></div>';
     }
     if (data.yearRange) {
       html += '<div class="result-row"><span class="result-label">Typical Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
+    }
+    if (data.evidence && data.evidence.length > 0) {
+      html += '<div class="info-block sources"><h4>Why We Know This</h4><div class="evidence-list">';
+      data.evidence.forEach(function(item) {
+        var text = item.detail || item.source || '';
+        if (text) html += '<div class="evidence-item"><span>' + esc(text) + '</span></div>';
+      });
+      html += '</div></div>';
     }
     var generalTip = data.refinementSuggestion || 'Try adding a brand name (e.g. \u201CLG 55 inch TV\u201D), include a model number for an exact year, or specify a screen type (CRT, LED, OLED, 4K).';
     html += buildRefineTipBox(generalTip);
@@ -2882,16 +2892,25 @@ function buildSmartLookupResultHtml(query, data, specificity) {
     if (data.brand) {
       html += '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + esc(data.brand) + '</span></div>';
     }
-    if (data.notes) {
-      html += '<div class="info-block notes"><h4>About This Brand</h4><p>' + esc(data.notes) + '</p></div>';
-    } else if (data.inventionSummary) {
+    if (data.inventionSummary) {
       html += '<div class="info-block invention-summary"><h4>Product History</h4><p>' + esc(data.inventionSummary) + '</p></div>';
+    }
+    if (data.notes) {
+      html += '<div class="info-block notes"><h4>Details</h4><p>' + esc(data.notes) + '</p></div>';
     }
     if (data.yearRange) {
       html += '<div class="result-row"><span class="result-label">Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
     }
     if (data.estimatedYear) {
       html += '<div class="result-row"><span class="result-label">Estimated Year</span><span class="result-value">' + esc(capYear(data.estimatedYear)) + '</span></div>';
+    }
+    if (data.evidence && data.evidence.length > 0) {
+      html += '<div class="info-block sources"><h4>Why We Know This</h4><div class="evidence-list">';
+      data.evidence.forEach(function(item) {
+        var text = item.detail || item.source || '';
+        if (text) html += '<div class="evidence-item"><span>' + esc(text) + '</span></div>';
+      });
+      html += '</div></div>';
     }
     var brandTip = data.refinementSuggestion || 'Add a model number or series name for a more precise date.';
     html += buildRefineTipBox(brandTip);
@@ -2908,6 +2927,9 @@ function buildSmartLookupResultHtml(query, data, specificity) {
     }
     if (data.yearRange) {
       html += '<div class="result-row"><span class="result-label">Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
+    }
+    if (data.inventionSummary) {
+      html += '<div class="info-block invention-summary"><h4>Product History</h4><p>' + esc(data.inventionSummary) + '</p></div>';
     }
     if (data.notes) {
       html += '<div class="info-block notes"><h4>Details</h4><p>' + esc(data.notes) + '</p></div>';
@@ -3004,6 +3026,7 @@ async function estimateAge() {
     }
 
     var data = await parseJsonResponseSafe(res, 'age-lookup');
+    console.log('[Smart Lookup API Response]', JSON.stringify(data, null, 2));
 
     if (data.errorCode === 'RATE_LIMIT') {
       setLoadingHidden();
