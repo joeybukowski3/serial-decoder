@@ -2802,6 +2802,35 @@ var SMART_LOOKUP_CATEGORIES = {
   electronics: ['tv', 'television', 'monitor', 'phone', 'smartphone', 'tablet', 'laptop', 'computer', 'desktop', 'printer', 'camera', 'speaker', 'soundbar', 'projector', 'headphones', 'earbuds', 'smartwatch', 'watch', 'router', 'modem', 'streaming device', 'game console', 'gaming console']
 };
 
+// ===== SUPPORTED TERMS REFERENCE =====
+var SUPPORTED_TERMS = {
+  appliances: ['washer', 'dryer', 'refrigerator', 'fridge', 'dishwasher', 'oven', 'range', 'microwave', 'freezer', 'ice maker', 'cooktop', 'stove', 'garbage disposal', 'trash compactor', 'washing machine', 'front load', 'top load'],
+  hvac: ['furnace', 'air conditioner', 'ac', 'heat pump', 'hvac', 'air handler', 'condenser', 'boiler', 'mini split', 'air purifier', 'dehumidifier', 'humidifier', 'thermostat', 'ductless'],
+  waterHeater: ['water heater', 'hot water heater', 'water tank', 'tankless', 'water boiler', 'on-demand water heater'],
+  electronics: ['tv', 'television', 'monitor', 'phone', 'smartphone', 'tablet', 'laptop', 'computer', 'desktop', 'printer', 'camera', 'speaker', 'soundbar', 'projector', 'headphones', 'earbuds', 'smartwatch', 'watch', 'router', 'modem', 'streaming device', 'game console', 'gaming console'],
+  brands: ['LG', 'Samsung', 'Whirlpool', 'GE', 'Frigidaire', 'Maytag', 'KitchenAid', 'Bosch', 'Electrolux', 'Sony', 'Vizio', 'Panasonic', 'Apple', 'HP', 'Asus', 'Google', 'Nintendo', 'Microsoft', 'Trane', 'Carrier', 'Goodman', 'Lennox', 'Rheem', 'Ruud', 'Bradford White', 'AO Smith', 'State', 'American Standard', 'Bryant', 'York', 'Payne', 'Amana', 'Admiral', 'Kenmore', 'Roper', 'Estate', 'Inglis', 'Thermador', 'Sub-Zero', 'Viking', 'Miele']
+};
+
+function isSupportedQuery(query) {
+  var q = query.toLowerCase();
+  for (var i = 0; i < SUPPORTED_TERMS.brands.length; i++) {
+    if (q.indexOf(SUPPORTED_TERMS.brands[i].toLowerCase()) !== -1) return true;
+  }
+  var cats = ['appliances', 'hvac', 'waterHeater', 'electronics'];
+  for (var c = 0; c < cats.length; c++) {
+    var keywords = SUPPORTED_TERMS[cats[c]];
+    for (var k = 0; k < keywords.length; k++) {
+      var kw = keywords[k];
+      if (kw.length <= 2) {
+        if (new RegExp('\\b' + kw + '\\b', 'i').test(q)) return true;
+      } else {
+        if (q.indexOf(kw) !== -1) return true;
+      }
+    }
+  }
+  return false;
+}
+
 function detectQueryItemType(query) {
   var q = query.toLowerCase();
   for (var cat in SMART_LOOKUP_CATEGORIES) {
@@ -2843,6 +2872,75 @@ var KNOWN_BRANDS = [
   'bose', 'fisher', 'paykel'
 ];
 
+// ===== CATEGORY GENERIC CONTENT BLOCKS =====
+var CATEGORY_GENERIC_BLOCKS = {
+  appliance: {
+    description: 'Home appliances are household devices designed to assist in domestic functions such as cleaning, cooking, and food preservation. They are manufactured by many major brands and are a staple of modern residential and commercial settings.',
+    origin: 'Mass-produced home appliances became widely available starting in the early 20th century, with electric models entering mainstream use through the 1940s and 1950s.',
+    productionStatus: 'Still widely produced as of 2026.'
+  },
+  waterHeater: {
+    description: 'Water heaters are appliances used to heat water for residential and commercial use, including bathing, cooking, and space conditioning. They are available in tank-based and tankless configurations.',
+    origin: 'The first commercially practical water heater was patented in the 1880s. Gas and electric models became standard in American homes through the mid-20th century.',
+    productionStatus: 'Still widely produced as of 2026.'
+  },
+  hvac: {
+    description: 'HVAC equipment includes heating, ventilation, and air conditioning systems designed to regulate indoor temperature, humidity, and air quality in residential and commercial buildings.',
+    origin: 'Modern forced-air heating systems emerged in the late 19th century, while central air conditioning systems became widely available for residential use in the 1950s and 1960s.',
+    productionStatus: 'Still widely produced as of 2026.'
+  },
+  electronics: {
+    description: 'Consumer electronics are electronic devices intended for personal and household use, including televisions, audio equipment, computers, and mobile devices. They are among the most rapidly evolving product categories on the market.',
+    origin: 'Consumer electronics as a category began with radio receivers in the early 20th century, expanding to include televisions in the 1940s, personal computers in the 1970s, and smartphones in the 2000s.',
+    productionStatus: 'Still widely produced as of 2026.'
+  }
+};
+
+function deriveProductionStatus(query, data) {
+  var yearRange = (data.yearRange || '').trim();
+  var label = data.model || query;
+  if (!yearRange) return 'Still widely produced as of 2026.';
+  if (/present/i.test(yearRange)) return 'Still widely produced as of 2026.';
+  var match = yearRange.match(/(\d{4})\s*[\u2013\u2014\-]+\s*(\d{4})/);
+  if (match) {
+    var startY = parseInt(match[1]);
+    var endY   = parseInt(match[2]);
+    if (endY >= 2022) return 'Still widely produced as of 2026.';
+    return 'The ' + label + ' was manufactured from ' + startY + ' to ' + endY + ' and is no longer in production.';
+  }
+  return 'Still widely produced as of 2026.';
+}
+
+function buildGuaranteedBlocks(query, data, category) {
+  var html = '';
+
+  // Description block
+  var description = (data.notes && data.notes.trim().length >= 20)
+    ? data.notes.trim()
+    : (category && CATEGORY_GENERIC_BLOCKS[category]
+        ? CATEGORY_GENERIC_BLOCKS[category].description
+        : 'This is a consumer product from a recognized brand or product category.');
+  html += '<div class="info-block result-description"><h4>Description</h4><p>' + esc(description) + '</p></div>';
+
+  // Origin block
+  var origin = (data.inventionSummary && data.inventionSummary.trim().length >= 20)
+    ? data.inventionSummary.trim()
+    : (category && CATEGORY_GENERIC_BLOCKS[category]
+        ? CATEGORY_GENERIC_BLOCKS[category].origin
+        : 'The origin and introduction date of this product varies by brand and region.');
+  html += '<div class="info-block result-origin"><h4>Origin</h4><p>' + esc(origin) + '</p></div>';
+
+  // Production Status block
+  var productionStatus = (data.yearRange)
+    ? deriveProductionStatus(query, data)
+    : (category && CATEGORY_GENERIC_BLOCKS[category]
+        ? CATEGORY_GENERIC_BLOCKS[category].productionStatus
+        : 'Still widely produced as of 2026.');
+  html += '<div class="info-block result-production-status"><h4>Production Status</h4><p>' + esc(productionStatus) + '</p></div>';
+
+  return html;
+}
+
 function getQuerySpecificity(query) {
   var q = query.trim().toLowerCase();
   var hasBrand = KNOWN_BRANDS.some(function(b) { return q.indexOf(b) !== -1; });
@@ -2863,120 +2961,74 @@ function buildRefineTipBox(tipText) {
 }
 
 function buildSmartLookupFallbackHtml(query) {
+  var category = detectQueryItemType(query);
   var html = '<div class="result-query smart-search-query">Search: ' + esc(query) + '</div>';
-  html += '<div class="info-block invention-summary">';
-  html += '<h4>General Information</h4>';
-  html += '<p>Your search matched a supported product category or brand. For best results, include a specific model number or product series. For example: \'Samsung QLED TV\', \'LG C3 55 inch TV\', or \'Whirlpool front load washer model WFW5000DW\'.</p>';
-  html += '</div>';
-  html += buildRefineTipBox('Try adding a model number, series name, screen type, or product type to get a specific manufacture year.');
+  html += buildGuaranteedBlocks(query, {}, category);
+  html += buildRefineTipBox('To get a more specific manufacture year, try adding a model number, series name, or product type to your search. Examples: \u2018LG C3 55 inch TV\u2019, \u2018Samsung QLED QN85B\u2019, \u2018Whirlpool front load washer WFW5000DW\u2019.');
   return html;
 }
 
 function buildSmartLookupResultHtml(query, data, specificity) {
-  // Check if API result is "meaningful" (has a real note or a specific year/range)
-  var notes = String(data.notes || '').trim();
-  var isMeaningful = (notes.length >= 40) || !!data.estimatedYear || !!data.yearRange;
-
-  if (!isMeaningful) {
-    return buildSmartLookupFallbackHtml(query);
-  }
-
+  var category = detectQueryItemType(query);
   var html = '';
+
   html += '<div class="result-query smart-search-query">Search: ' + esc(query) + '</div>';
 
-  if (specificity === 'general') {
-    if (data.inventionSummary) {
-      html += '<div class="info-block invention-summary"><h4>Product History</h4><p>' + esc(data.inventionSummary) + '</p></div>';
-    }
-    if (data.notes) {
-      html += '<div class="info-block notes"><h4>Details</h4><p>' + esc(data.notes) + '</p></div>';
-    }
-    if (data.yearRange) {
-      html += '<div class="result-row"><span class="result-label">Typical Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
-    }
-    if (data.evidence && data.evidence.length > 0) {
-      html += '<div class="info-block sources"><h4>Why We Know This</h4><div class="evidence-list">';
-      data.evidence.forEach(function(item) {
-        var text = item.detail || item.source || '';
-        if (text) html += '<div class="evidence-item"><span>' + esc(text) + '</span></div>';
-      });
-      html += '</div></div>';
-    }
-    var generalTip = data.refinementSuggestion || 'Try adding a brand name (e.g. \u201CLG 55 inch TV\u201D), include a model number for an exact year, or specify a screen type (CRT, LED, OLED, 4K).';
-    html += buildRefineTipBox(generalTip);
-
-  } else if (specificity === 'brand') {
-    if (data.brand) {
-      html += '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + esc(data.brand) + '</span></div>';
-    }
-    if (data.inventionSummary) {
-      html += '<div class="info-block invention-summary"><h4>Product History</h4><p>' + esc(data.inventionSummary) + '</p></div>';
-    }
-    if (data.notes) {
-      html += '<div class="info-block notes"><h4>Details</h4><p>' + esc(data.notes) + '</p></div>';
-    }
-    if (data.yearRange) {
-      html += '<div class="result-row"><span class="result-label">Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
-    }
-    if (data.estimatedYear) {
-      html += '<div class="result-row"><span class="result-label">Estimated Year</span><span class="result-value">' + esc(capYear(data.estimatedYear)) + '</span></div>';
-    }
-    if (data.evidence && data.evidence.length > 0) {
-      html += '<div class="info-block sources"><h4>Why We Know This</h4><div class="evidence-list">';
-      data.evidence.forEach(function(item) {
-        var text = item.detail || item.source || '';
-        if (text) html += '<div class="evidence-item"><span>' + esc(text) + '</span></div>';
-      });
-      html += '</div></div>';
-    }
-    var brandTip = data.refinementSuggestion || 'Add a model number or series name for a more precise date.';
-    html += buildRefineTipBox(brandTip);
-
-  } else { // specific
-    if (data.brand) {
-      html += '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + esc(data.brand) + '</span></div>';
-    }
-    if (data.model) {
-      html += '<div class="result-row"><span class="result-label">Model</span><span class="result-value">' + esc(data.model) + '</span></div>';
-    }
-    if (data.estimatedYear) {
-      html += '<div class="result-row result-row--primary"><span class="result-label">Estimated Year</span><span class="result-value">' + esc(capYear(data.estimatedYear)) + '</span></div>';
-    }
-    if (data.yearRange) {
-      html += '<div class="result-row"><span class="result-label">Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
-    }
-    if (data.inventionSummary) {
-      html += '<div class="info-block invention-summary"><h4>Product History</h4><p>' + esc(data.inventionSummary) + '</p></div>';
-    }
-    if (data.notes) {
-      html += '<div class="info-block notes"><h4>Details</h4><p>' + esc(data.notes) + '</p></div>';
-    }
-    if (data.evidence && data.evidence.length > 0) {
-      html += '<div class="info-block sources"><h4>Why We Know This</h4><div class="evidence-list">';
-      data.evidence.forEach(function(item) {
-        var detail = item.detail || '';
-        var source = item.source || '';
-        if (detail || source) {
-          html += '<div class="evidence-item">';
-          if (source) html += '<span class="ev-source">' + esc(source) + '</span>';
-          if (detail) html += '<span>' + esc(detail) + '</span>';
-          html += '</div>';
-        }
-      });
-      html += '</div></div>';
-    }
-    if (data.serialRule) {
-      html += '<div class="info-block serial-rule"><h4>Serial Number Hint</h4><p>' + esc(data.serialRule) + '</p></div>';
-    }
-    if (data.serialLocation) {
-      html += '<div class="info-block serial-loc"><h4>Where to Find the Serial Number</h4><p>' + esc(data.serialLocation) + '</p></div>';
-    }
-    if (data.refinementSuggestion) {
-      html += buildRefineTipBox(data.refinementSuggestion);
-    }
+  // Identification rows
+  if (data.brand) {
+    html += '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + esc(data.brand) + '</span></div>';
+  }
+  if (data.model && specificity === 'specific') {
+    html += '<div class="result-row"><span class="result-label">Model</span><span class="result-value">' + esc(data.model) + '</span></div>';
   }
 
-  // Suggestion chips (all specificity levels)
+  // GUARANTEED MINIMUM BLOCKS: Description, Origin, Production Status
+  html += buildGuaranteedBlocks(query, data, category);
+
+  // Data rows
+  if (data.estimatedYear) {
+    var isPrimary = specificity === 'specific';
+    html += '<div class="result-row' + (isPrimary ? ' result-row--primary' : '') + '">' +
+      '<span class="result-label">Estimated Year</span>' +
+      '<span class="result-value">' + esc(capYear(data.estimatedYear)) + '</span></div>';
+  }
+  if (data.yearRange) {
+    html += '<div class="result-row"><span class="result-label">Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
+  }
+
+  // Evidence
+  if (data.evidence && data.evidence.length > 0) {
+    html += '<div class="info-block sources"><h4>Why We Know This</h4><div class="evidence-list">';
+    data.evidence.forEach(function(item) {
+      var detail = item.detail || '';
+      var source = item.source || '';
+      if (detail || source) {
+        html += '<div class="evidence-item">';
+        if (source) html += '<span class="ev-source">' + esc(source) + '</span>';
+        if (detail) html += '<span>' + esc(detail) + '</span>';
+        html += '</div>';
+      }
+    });
+    html += '</div></div>';
+  }
+
+  // Serial hints
+  if (data.serialRule) {
+    html += '<div class="info-block serial-rule"><h4>Serial Number Hint</h4><p>' + esc(data.serialRule) + '</p></div>';
+  }
+  if (data.serialLocation) {
+    html += '<div class="info-block serial-loc"><h4>Where to Find the Serial Number</h4><p>' + esc(data.serialLocation) + '</p></div>';
+  }
+
+  // Refine Your Result tip — always shown unless a single confident year was returned
+  var isHighConfidenceSingle = (specificity === 'specific') && !!data.estimatedYear;
+  if (!isHighConfidenceSingle) {
+    html += buildRefineTipBox('To get a more specific manufacture year, try adding a model number, series name, or product type to your search. Examples: \u2018LG C3 55 inch TV\u2019, \u2018Samsung QLED QN85B\u2019, \u2018Whirlpool front load washer WFW5000DW\u2019.');
+  } else if (data.refinementSuggestion) {
+    html += buildRefineTipBox(data.refinementSuggestion);
+  }
+
+  // Suggestion chips
   var queryIsSerialLike = /^[a-zA-Z0-9]{9,}$/.test(query);
   if (!queryIsSerialLike && data.exampleModelNumber) {
     html += '<div class="tip-block">';
@@ -3004,10 +3056,7 @@ async function estimateAge() {
   var query = inputEl.value.trim();
   if (!query) return;
 
-  var qLower = query.toLowerCase();
-  var isKnownBrand = KNOWN_BRANDS.some(function(b) { return qLower.indexOf(b) !== -1; });
-  var queryType = detectQueryItemType(query);
-  var isSupported = isKnownBrand || !!queryType;
+  var isSupported = isSupportedQuery(query);
 
   if (!isSupported) {
     var body = getSmartLookupResultsEl();
