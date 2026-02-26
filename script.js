@@ -2824,6 +2824,140 @@ function detectResultItemType(data) {
   return null;
 }
 
+// ===== QUERY SPECIFICITY & RESULT BUILDER =====
+
+var KNOWN_BRANDS = [
+  'lg', 'samsung', 'whirlpool', 'ge', 'maytag', 'bosch', 'kitchenaid',
+  'frigidaire', 'amana', 'kenmore', 'sony', 'apple', 'nintendo', 'panasonic',
+  'philips', 'vizio', 'tcl', 'hisense', 'sharp', 'toshiba', 'haier',
+  'electrolux', 'miele', 'rheem', 'lennox', 'carrier', 'trane', 'york',
+  'goodman', 'daikin', 'mitsubishi', 'bradford white', 'ao smith',
+  'jenn-air', 'jennair', 'admiral', 'speed queen', 'sub-zero', 'thermador',
+  'wolf', 'microsoft', 'dell', 'hp', 'lenovo', 'asus', 'acer', 'logitech',
+  'bose', 'fisher', 'paykel'
+];
+
+function getQuerySpecificity(query) {
+  var q = query.trim().toLowerCase();
+  var hasBrand = KNOWN_BRANDS.some(function(b) { return q.indexOf(b) !== -1; });
+  // Model pattern: adjacent letter+digit (C3, WF45R), 4+ digit number, or query ends with version number
+  var hasModel = /[a-zA-Z]\d|\d[a-zA-Z]/.test(query) ||
+                 /\b\d{4,}\b/.test(query) ||
+                 /\s\d+$/.test(query.trim());
+  if (!hasBrand) return 'general';
+  if (hasBrand && !hasModel) return 'brand';
+  return 'specific';
+}
+
+function buildRefineTipBox(tipText) {
+  return '<div class="tip-block">' +
+    '<div class="tip-row"><span class="tip-label">&#128161; Refine Your Result</span>' +
+    '<span class="tip-text">' + esc(tipText) + '</span></div>' +
+    '</div>';
+}
+
+function buildSmartLookupResultHtml(query, data, specificity) {
+  var html = '';
+  html += '<div class="result-query smart-search-query">Search: ' + esc(query) + '</div>';
+
+  // Safety net: nothing useful in the response
+  var hasAnyData = data.brand || data.model || data.estimatedYear || data.yearRange || data.notes || data.inventionSummary;
+  if (!hasAnyData) {
+    html += '<div class="info-block notes"><p>This search was not recognized by our system. Please try including a brand name, product type, or model number. Examples: &ldquo;LG 55 inch TV&rdquo;, &ldquo;Whirlpool washer&rdquo;, &ldquo;Nintendo Switch 2&rdquo;</p></div>';
+    return html;
+  }
+
+  if (specificity === 'general') {
+    var historyText = data.inventionSummary || data.notes;
+    if (historyText) {
+      html += '<div class="info-block invention-summary"><h4>Product History</h4><p>' + esc(historyText) + '</p></div>';
+    }
+    if (data.yearRange) {
+      html += '<div class="result-row"><span class="result-label">Typical Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
+    }
+    var generalTip = data.refinementSuggestion || 'Try adding a brand name (e.g. \u201CLG 55 inch TV\u201D), include a model number for an exact year, or specify a screen type (CRT, LED, OLED, 4K).';
+    html += buildRefineTipBox(generalTip);
+
+  } else if (specificity === 'brand') {
+    if (data.brand) {
+      html += '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + esc(data.brand) + '</span></div>';
+    }
+    if (data.notes) {
+      html += '<div class="info-block notes"><h4>About This Brand</h4><p>' + esc(data.notes) + '</p></div>';
+    } else if (data.inventionSummary) {
+      html += '<div class="info-block invention-summary"><h4>Product History</h4><p>' + esc(data.inventionSummary) + '</p></div>';
+    }
+    if (data.yearRange) {
+      html += '<div class="result-row"><span class="result-label">Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
+    }
+    if (data.estimatedYear) {
+      html += '<div class="result-row"><span class="result-label">Estimated Year</span><span class="result-value">' + esc(capYear(data.estimatedYear)) + '</span></div>';
+    }
+    var brandTip = data.refinementSuggestion || 'Add a model number or series name for a more precise date.';
+    html += buildRefineTipBox(brandTip);
+
+  } else { // specific
+    if (data.brand) {
+      html += '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + esc(data.brand) + '</span></div>';
+    }
+    if (data.model) {
+      html += '<div class="result-row"><span class="result-label">Model</span><span class="result-value">' + esc(data.model) + '</span></div>';
+    }
+    if (data.estimatedYear) {
+      html += '<div class="result-row result-row--primary"><span class="result-label">Estimated Year</span><span class="result-value">' + esc(capYear(data.estimatedYear)) + '</span></div>';
+    }
+    if (data.yearRange) {
+      html += '<div class="result-row"><span class="result-label">Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
+    }
+    if (data.notes) {
+      html += '<div class="info-block notes"><h4>Details</h4><p>' + esc(data.notes) + '</p></div>';
+    }
+    if (data.evidence && data.evidence.length > 0) {
+      html += '<div class="info-block sources"><h4>Why We Know This</h4><div class="evidence-list">';
+      data.evidence.forEach(function(item) {
+        var detail = item.detail || '';
+        var source = item.source || '';
+        if (detail || source) {
+          html += '<div class="evidence-item">';
+          if (source) html += '<span class="ev-source">' + esc(source) + '</span>';
+          if (detail) html += '<span>' + esc(detail) + '</span>';
+          html += '</div>';
+        }
+      });
+      html += '</div></div>';
+    }
+    if (data.serialRule) {
+      html += '<div class="info-block serial-rule"><h4>Serial Number Hint</h4><p>' + esc(data.serialRule) + '</p></div>';
+    }
+    if (data.serialLocation) {
+      html += '<div class="info-block serial-loc"><h4>Where to Find the Serial Number</h4><p>' + esc(data.serialLocation) + '</p></div>';
+    }
+    if (data.refinementSuggestion) {
+      html += buildRefineTipBox(data.refinementSuggestion);
+    }
+  }
+
+  // Suggestion chips (all specificity levels)
+  var queryIsSerialLike = /^[a-zA-Z0-9]{9,}$/.test(query);
+  if (!queryIsSerialLike && data.exampleModelNumber) {
+    html += '<div class="tip-block">';
+    html += '<div class="tip-row"><span class="tip-label">&#128161; Tip</span><span class="tip-text">You\'ll get more accurate results if you enter the model number.</span></div>';
+    html += '<div class="tip-chips"><button class="suggestion-chip" data-model="' + esc(data.exampleModelNumber) + '" onclick="clickSuggestion(this.dataset.model)">' + esc(data.exampleModelNumber) + '</button></div>';
+    html += '</div>';
+  }
+  if (!queryIsSerialLike && data.suggestedModelNumbers && data.suggestedModelNumbers.length > 0) {
+    html += '<div class="tip-block">';
+    html += '<div class="tip-row"><span class="tip-label">&#128161;</span><span class="tip-text">Try one of these similar model numbers:</span></div>';
+    html += '<div class="tip-chips">';
+    data.suggestedModelNumbers.forEach(function(m) {
+      html += '<button class="suggestion-chip" data-model="' + esc(m) + '" onclick="clickSuggestion(this.dataset.model)">' + esc(m) + '</button>';
+    });
+    html += '</div></div>';
+  }
+
+  return html;
+}
+
 // ===== ESTIMATE AGE =====
 async function estimateAge() {
   var inputEl = getSmartLookupInputEl();
@@ -2904,75 +3038,8 @@ async function estimateAge() {
     }
 
     var body = getSmartLookupResultsEl();
-    var html = '';
-    html += '<div class="result-query smart-search-query">Search Query: ' + esc(query) + '</div>';
-
-    // Invention summary for generic/category-only queries
-    if (data.inventionSummary) {
-      html += '<div class="info-block invention-summary"><h4>About This Product Category</h4><p>' + esc(data.inventionSummary) + '</p></div>';
-    }
-
-    if (data.brand) {
-      html += '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + esc(data.brand) + '</span></div>';
-    }
-    if (data.model) {
-      html += '<div class="result-row"><span class="result-label">Model</span><span class="result-value">' + esc(data.model) + '</span></div>';
-    }
-    if (data.estimatedYear) {
-      html += '<div class="result-row"><span class="result-label">Estimated Year</span><span class="result-value">' + esc(capYear(data.estimatedYear)) + '</span></div>';
-    }
-    if (data.yearRange) {
-      html += '<div class="result-row"><span class="result-label">Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
-    }
-    if (data.notes) {
-      html += '<div class="info-block notes"><h4>Notes</h4><p>' + esc(data.notes) + '</p></div>';
-    }
-    if (data.evidence && data.evidence.length > 0) {
-      html += '<div class="info-block sources"><h4>Why We Chose This Date</h4><div class="evidence-list">';
-      data.evidence.forEach(function(item) {
-        var detail = item.detail || '';
-        var source = item.source || '';
-        if (detail || source) {
-          html += '<div class="evidence-item">';
-          if (source) html += '<span class="ev-source">' + esc(source) + '</span>';
-          if (detail) html += '<span>' + esc(detail) + '</span>';
-          html += '</div>';
-        }
-      });
-      html += '</div></div>';
-    }
-    if (data.serialLocation) {
-      html += '<div class="info-block serial-loc"><h4>Where to Find the Serial Number</h4><p>' + esc(data.serialLocation) + '</p></div>';
-    }
-    if (data.serialRule) {
-      html += '<div class="info-block serial-rule"><h4>Serial Number Decoding Hint</h4><p>' + esc(data.serialRule) + '</p></div>';
-    }
-    if (data.refinementSuggestion) {
-      html += '<div class="info-block refinement"><h4>Get More Accurate Results</h4><p>' + esc(data.refinementSuggestion) + '</p></div>';
-    }
-    // Suppress model tips if query looks like a serial number (9+ compact alphanumeric, no spaces)
-    var queryIsSerialLike = /^[a-zA-Z0-9]{9,}$/.test(query);
-
-    // Tip: generic description → show one example model number as a clickable chip
-    if (!queryIsSerialLike && data.exampleModelNumber) {
-      html += '<div class="tip-block">';
-      html += '<div class="tip-row"><span class="tip-label">&#128161; Tip</span><span class="tip-text">You\'ll get more accurate results if you enter the model number.</span></div>';
-      html += '<div class="tip-chips"><button class="suggestion-chip" data-model="' + esc(data.exampleModelNumber) + '" onclick="clickSuggestion(this.dataset.model)">' + esc(data.exampleModelNumber) + '</button></div>';
-      html += '</div>';
-    }
-
-    // Tip: partial model prefix → show 2–3 completions as clickable chips
-    if (!queryIsSerialLike && data.suggestedModelNumbers && data.suggestedModelNumbers.length > 0) {
-      html += '<div class="tip-block">';
-      html += '<div class="tip-row"><span class="tip-label">&#128161;</span><span class="tip-text">Try one of these similar model numbers:</span></div>';
-      html += '<div class="tip-chips">';
-      data.suggestedModelNumbers.forEach(function(m) {
-        html += '<button class="suggestion-chip" data-model="' + esc(m) + '" onclick="clickSuggestion(this.dataset.model)">' + esc(m) + '</button>';
-      });
-      html += '</div></div>';
-    }
-
-    body.innerHTML = html;
+    var specificity = getQuerySpecificity(query);
+    body.innerHTML = buildSmartLookupResultHtml(query, data, specificity);
     var brandId = (data.brand || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     showBrandLogo('ageBrandLogo', brandId, data.brand || '');
     currentFeedbackContext = { brand: data.brand || '', serial: query };
