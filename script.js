@@ -3028,6 +3028,11 @@ async function estimateAge() {
     var data = await parseJsonResponseSafe(res, 'age-lookup');
     console.log('[Smart Lookup API Response]', JSON.stringify(data, null, 2));
 
+    // Internal fields starting with "_" (like _source) are for tracking and MUST be hidden from UI
+    for (var key in data) {
+      if (key.indexOf('_') === 0) delete data[key];
+    }
+
     if (data.errorCode === 'RATE_LIMIT') {
       setLoadingHidden();
       showSmartLookupNotice('limit', 'You\'ve reached the Smart Lookup usage limit. Please wait a few minutes and try again.');
@@ -3039,9 +3044,9 @@ async function estimateAge() {
       return;
     }
 
-    if (data.error) {
+    if (data.errorCode === 'AI_UNAVAILABLE' || data.error) {
       setLoadingHidden();
-      showSmartLookupNotice('limit', esc(data.error));
+      showSmartLookupNotice('limit', esc(data.message || data.error || 'Smart Lookup is temporarily unavailable.'));
       return;
     }
 
@@ -3175,6 +3180,12 @@ async function generateAISection(type, btn) {
       body: JSON.stringify({ query: query }),
     });
     var data = await parseJsonResponseSafe(res, 'ai-section-' + type);
+
+    // Filter internal tracking fields (e.g. _source, _fallbackUsed)
+    for (var key in data) {
+      if (key.indexOf('_') === 0) delete data[key];
+    }
+
     if (resultEl) {
       var lines = [];
       if (data.notes) lines.push(data.notes);

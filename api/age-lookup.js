@@ -337,6 +337,48 @@ function getClientIp(req) {
   return req.socket?.remoteAddress || 'unknown';
 }
 
+/**
+ * Groq Fallback Provider
+ * Retries with Groq if Gemini fails or is rate-limited.
+ */
+async function callGroq(prompt) {
+  const groqKey = process.env.GROQ_API_KEY;
+  if (!groqKey) throw new Error('Groq API key missing');
+
+  const model = process.env.GROQ_MODEL || 'llama-3.1-70b-versatile';
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${groqKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a product research specialist. Return VALID JSON ONLY. Follow the requested schema exactly. No conversational text or markdown.'
+        },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.2,
+      response_format: { type: 'json_object' }
+    })
+  });
+
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '(unreadable)');
+    throw new Error(`Groq error: ${response.status} ${errText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error('Groq returned empty content');
+
+  return JSON.parse(content);
+}
+
 export default async function handler(req, res) {
   // ── Method guard ──────────────────────────────────────────────────────────
   if (req.method !== 'POST') {
@@ -380,8 +422,7 @@ export default async function handler(req, res) {
     // Cache miss or unavailable — proceed to AI
   }
 
-  // ── API key ───────────────────────────────────────────────────────────────
-  // HVAC Serial Quick Decode — bypass AI when pattern matches
+  // ── HVAC Serial Quick Decode — bypass AI when pattern matches ─────────────
   const hvacQuick = decodeHvacSerial(sanitizedQuery, normalizedQuery);
   if (hvacQuick) {
     const result = {
@@ -396,7 +437,9 @@ export default async function handler(req, res) {
       serialLocation: null,
       serialRule: hvacQuick.serialRule,
       exampleModelNumber: null,
-      suggestedModelNumbers: []
+      suggestedModelNumbers: [],
+      _source: 'static',
+      _fallbackUsed: false
     };
     try {
       await redis.set(queryCacheKey, result, { ex: 14 * 24 * 60 * 60 });
@@ -405,9 +448,6 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'Service unavailable' });
-  }
 
   const prompt = `You are a product research specialist. Given the following appliance, electronics, or equipment model number, brand, or description, determine the most likely manufacture date or production era.
 
@@ -469,7 +509,14 @@ Rules for exampleModelNumber and suggestedModelNumbers:
 - Query looks like a partial model prefix (e.g. 'GE PFE' or 'WRF535'): set suggestedModelNumbers to 2-3 plausible complete model numbers; leave exampleModelNumber as null.
 - Query is already a complete model number: set both exampleModelNumber to null and suggestedModelNumbers to [].`;
 
+  let result = null;
+  let source = 'gemini';
+  let fallbackUsed = false;
+
+  // ── Provider selection logic: Try Gemini first, fallback to Groq ─────────
   try {
+    if (!apiKey) throw new Error('Gemini API key missing');
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
@@ -487,41 +534,58 @@ Rules for exampleModelNumber and suggestedModelNumbers:
 
     if (!response.ok) {
       const errBody = await response.text().catch(() => '(unreadable)');
-      console.error('[Smart Lookup] Gemini non-OK response', { status: response.status, body: errBody, query: sanitizedQuery });
-      return res.status(502).json({ error: 'AI service error' });
+      throw new Error(`Gemini status ${response.status}: ${errBody}`);
     }
 
     const data = await response.json();
-    const finishReason = data.candidates?.[0]?.finishReason;
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('Gemini returned empty parts');
 
-    if (!text) {
-      console.error('[Smart Lookup] Gemini returned no text', { finishReason, query: sanitizedQuery, candidates: JSON.stringify(data.candidates) });
-      return res.status(502).json({ error: 'No response from AI service' });
-    }
-
-    const result = applyEraHints(JSON.parse(text), normalizedQuery);
-
-    // ── Write query cache (14-day TTL) ────────────────────────────────────
+    result = JSON.parse(text);
+  } catch (err) {
+    console.error('[Smart Lookup] Gemini failed, attempting Groq fallback...', err.message);
     try {
-      await redis.set(queryCacheKey, result, { ex: 14 * 24 * 60 * 60 });
+      result = await callGroq(prompt);
+      source = 'groq';
+      fallbackUsed = true;
+    } catch (groqErr) {
+      console.error('[Smart Lookup] Groq fallback failed also', groqErr.message);
+    }
+  }
+
+  // ── Return final result or safe fallback if both failed ──────────────────
+  if (result) {
+    const finalResult = applyEraHints(result, normalizedQuery);
+    finalResult._source = source;
+    finalResult._fallbackUsed = fallbackUsed;
+
+    // Write cache (14-day TTL)
+    try {
+      await redis.set(queryCacheKey, finalResult, { ex: 14 * 24 * 60 * 60 });
     } catch (_) {}
 
-    // ── Write brand cache — stable fields only (90-day TTL) ──────────────
-    if (result.brand && result.brand !== 'Unknown') {
+    // Brand cache — stable fields only (90-day TTL)
+    if (finalResult.brand && finalResult.brand !== 'Unknown') {
       try {
-        const brandKey = `brand-info:${result.brand.toLowerCase().replace(/\s+/g, '_')}`;
+        const brandKey = `brand-info:${finalResult.brand.toLowerCase().replace(/\s+/g, '_')}`;
         const brandData = {};
-        if (result.serialLocation) brandData.serialLocation = result.serialLocation;
-        if (result.serialRule)     brandData.serialRule     = result.serialRule;
+        if (finalResult.serialLocation) brandData.serialLocation = finalResult.serialLocation;
+        if (finalResult.serialRule)     brandData.serialRule     = finalResult.serialRule;
         if (Object.keys(brandData).length > 0) {
           await redis.set(brandKey, brandData, { ex: 90 * 24 * 60 * 60 });
         }
       } catch (_) {}
     }
 
-    return res.status(200).json(result);
-  } catch (_) {
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(200).json(finalResult);
+  } else {
+    // Both providers failed — return valid structured response with safety message
+    return res.status(200).json({
+      errorCode: "AI_UNAVAILABLE",
+      message: "Smart Lookup is temporarily unavailable. Please try again soon, or use the Serial Number Decoder.",
+      _source: "none",
+      _fallbackUsed: true
+    });
   }
 }
+
