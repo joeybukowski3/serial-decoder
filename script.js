@@ -2690,6 +2690,7 @@ function setLoadingActive() {
   // Hide placeholder once a search has started
   var placeholder = document.getElementById('resultsPlaceholder');
   if (placeholder) placeholder.classList.add('hidden');
+  document.body.style.cursor = 'url("data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\'><text y=\'28\' font-size=\'28\'>\uD83D\uDD75\uFE0F</text></svg>") 16 16, auto';
   if (emoji) {
     emoji.textContent = '🌩️';
     emoji.className   = 'loading-emoji lightning';
@@ -2711,6 +2712,7 @@ function setLoadingSuccess(callback) {
   setTimeout(function() {
     document.getElementById('ageLoading').classList.add('hidden');
     clearEmojiCursor();
+    document.body.style.cursor = '';
     if (callback) callback();
   }, 600);
 }
@@ -2718,6 +2720,7 @@ function setLoadingSuccess(callback) {
 function setLoadingHidden() {
   document.getElementById('ageLoading').classList.add('hidden');
   clearEmojiCursor();
+  document.body.style.cursor = '';
 }
 
 // ===== BRAND LOGO =====
