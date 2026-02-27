@@ -1835,8 +1835,6 @@ function showEraGroup() {
 function hideEraGroup() {
   document.getElementById('eraGroup').classList.add('hidden');
   document.getElementById('eraSelect').value = '';
-  updateModelFieldVisibility(brandId);
-  updateKenmorePrefixVisibility(brandId);
 }
 
 function normalizeBrandId(brandId) {
