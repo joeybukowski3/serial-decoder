@@ -3057,6 +3057,7 @@ async function estimateAge() {
   if (!query) return;
 
   var isSupported = isSupportedQuery(query);
+  var queryType = detectQueryItemType(query);
 
   if (!isSupported) {
     var body = getSmartLookupResultsEl();
