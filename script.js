@@ -1917,7 +1917,13 @@ function updateDecodeBtn() {
   var brand  = brandEl.value;
   var serial = serialEl.value.trim();
   var decoderId = brand ? resolveDecoderId(brand) : null;
-  btnEl.disabled = !(brand && serial && decoderId);
+  // Kenmore also requires a model prefix to be selected before decoding
+  var kenmorePrefixOk = true;
+  if (brand && normalizeBrandId(brand) === 'kenmore') {
+    var _prefixEl = document.getElementById('kenmoreModelPrefix');
+    kenmorePrefixOk = !!(_prefixEl && _prefixEl.value);
+  }
+  btnEl.disabled = !(brand && serial && decoderId && kenmorePrefixOk);
 }
 
 // ===== YEAR CAP (never return future dates) =====
@@ -2199,12 +2205,32 @@ function ensureKenmorePrefixField() {
   if (document.getElementById('kenmoreModelPrefix')) return document.getElementById('kenmoreModelPrefix');
   var serialInput = document.getElementById('serial');
   var serialGroup = serialInput ? serialInput.closest('.form-group') : null;
+  // Build <optgroup> sections from KENMORE_PREFIX_TO_DECODER, grouped by manufacturer
+  var byMfr = {};
+  Object.keys(KENMORE_PREFIX_TO_DECODER).forEach(function(prefix) {
+    var mfr = KENMORE_PREFIX_TO_DECODER[prefix].manufacturer;
+    if (!byMfr[mfr]) byMfr[mfr] = [];
+    byMfr[mfr].push(prefix);
+  });
+  Object.keys(byMfr).forEach(function(mfr) {
+    byMfr[mfr].sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
+  });
+  var optgroupsHtml = Object.keys(byMfr).sort().map(function(mfr) {
+    var opts = byMfr[mfr].map(function(p) {
+      return '<option value="' + p + '">' + p + ' \u2014 ' + mfr + '</option>';
+    }).join('');
+    return '<optgroup label="' + mfr + '">' + opts + '</optgroup>';
+  }).join('');
+
   var group = document.createElement('div');
   group.className = 'form-group kenmore-prefix-group hidden';
   group.innerHTML = '' +
-    '<label class="step-label" for="kenmoreModelPrefix">Kenmore Model Prefix (first 3 digits)</label>' +
-    '<input type="text" id="kenmoreModelPrefix" class="form-input" placeholder="e.g., 106" maxlength="3" inputmode="numeric" pattern="[0-9]*">' +
-    '<div class="helper-text kenmore-prefix-note">Optional but recommended for Kenmore: enter the first 3 digits of the model number.</div>';
+    '<label class="step-label" for="kenmoreModelPrefix">Kenmore Model Prefix (first 3 digits of model number)</label>' +
+    '<select id="kenmoreModelPrefix" class="form-select">' +
+      '<option value="">-- Select model prefix --</option>' +
+      optgroupsHtml +
+    '</select>' +
+    '<div class="helper-text kenmore-prefix-note">Select the first 3 digits of your Kenmore model number to identify who manufactured it.</div>';
   if (serialGroup && serialGroup.parentNode) {
     serialGroup.insertAdjacentElement('afterend', group);
   } else {
@@ -2213,9 +2239,7 @@ function ensureKenmorePrefixField() {
   var input = document.getElementById('kenmoreModelPrefix');
   if (input && input.getAttribute('data-prefix-bound') !== '1') {
     input.setAttribute('data-prefix-bound', '1');
-    input.addEventListener('input', function() {
-      input.value = (input.value || '').replace(/\D/g, '').substring(0, 3);
-    });
+    input.addEventListener('change', updateDecodeBtn);
   }
   return input;
 }
