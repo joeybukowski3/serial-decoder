@@ -2849,12 +2849,20 @@ function detectQueryItemType(query) {
   return null;
 }
 
+// Keywords too generic/common to reliably identify category from free-form API text
+var RESULT_DETECT_EXCLUSIONS = {
+  'range': true, 'oven': true, 'stove': true, 'boiler': true,
+  'condenser': true, 'monitor': true, 'watch': true
+};
+
 function detectResultItemType(data) {
   var combined = ((data.notes || '') + ' ' + (data.serialRule || '') + ' ' + (data.model || '') + ' ' + (data.brand || '')).toLowerCase();
   for (var cat in SMART_LOOKUP_CATEGORIES) {
     var keywords = SMART_LOOKUP_CATEGORIES[cat];
     for (var i = 0; i < keywords.length; i++) {
-      if (combined.indexOf(keywords[i]) !== -1) return cat;
+      var kw = keywords[i];
+      if (RESULT_DETECT_EXCLUSIONS[kw]) continue;
+      if (combined.indexOf(kw) !== -1) return cat;
     }
   }
   return null;
@@ -2923,19 +2931,39 @@ function buildGuaranteedBlocks(query, data, category) {
   html += '<div class="info-block result-description"><h4>Description</h4><p>' + esc(description) + '</p></div>';
 
   // Origin block
-  var origin = (data.inventionSummary && data.inventionSummary.trim().length >= 20)
-    ? data.inventionSummary.trim()
-    : (category && CATEGORY_GENERIC_BLOCKS[category]
-        ? CATEGORY_GENERIC_BLOCKS[category].origin
-        : 'The origin and introduction date of this product varies by brand and region.');
+  var origin;
+  if (data.inventionSummary && data.inventionSummary.trim().length >= 20) {
+    origin = data.inventionSummary.trim();
+  } else if (data.estimatedYear) {
+    var originLabel = (data.brand && data.model)
+      ? data.brand + ' ' + data.model
+      : (data.brand || data.model || query);
+    origin = originLabel + ' was introduced in ' + data.estimatedYear + '.';
+    if (category && CATEGORY_GENERIC_BLOCKS[category]) {
+      origin += ' ' + CATEGORY_GENERIC_BLOCKS[category].origin;
+    }
+  } else if (category && CATEGORY_GENERIC_BLOCKS[category]) {
+    origin = CATEGORY_GENERIC_BLOCKS[category].origin;
+  } else {
+    origin = 'The origin and introduction date of this product varies by brand and region.';
+  }
   html += '<div class="info-block result-origin"><h4>Origin</h4><p>' + esc(origin) + '</p></div>';
 
   // Production Status block
-  var productionStatus = (data.yearRange)
-    ? deriveProductionStatus(query, data)
-    : (category && CATEGORY_GENERIC_BLOCKS[category]
-        ? CATEGORY_GENERIC_BLOCKS[category].productionStatus
-        : 'Still widely produced as of 2026.');
+  var productionStatus;
+  if (data.yearRange) {
+    productionStatus = deriveProductionStatus(query, data);
+  } else if (data.estimatedYear) {
+    var psLabel = data.model || query;
+    var yr = parseInt(data.estimatedYear, 10);
+    productionStatus = yr >= 2020
+      ? 'The ' + psLabel + ' was released in ' + data.estimatedYear + ' and remains in active production as of 2026.'
+      : 'The ' + psLabel + ' was introduced in ' + data.estimatedYear + '. Current production status varies by model and region.';
+  } else if (category && CATEGORY_GENERIC_BLOCKS[category]) {
+    productionStatus = CATEGORY_GENERIC_BLOCKS[category].productionStatus;
+  } else {
+    productionStatus = 'Still widely produced as of 2026.';
+  }
   html += '<div class="info-block result-production-status"><h4>Production Status</h4><p>' + esc(productionStatus) + '</p></div>';
 
   return html;
