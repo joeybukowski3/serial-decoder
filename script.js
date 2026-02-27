@@ -1851,13 +1851,8 @@ function onBrandChange() {
   var brandId = opt ? opt.value : '';
   var cyclingCat = CYCLING_BRANDS[currentCategory] || {};
   var cfg = cyclingCat[brandId];
-  // Only show era dropdown for brands with SEPARATE pre/post-2006 decoders (type:'split')
-  // Advisory brands (Whirlpool, GE, etc.) already return both possible years in their output
-  if (cfg && cfg.type === 'split' && brandId) {
-    showEraGroup();
-  } else {
-    hideEraGroup();
-  }
+  // Era dropdown no longer required — split brands now auto-decode both eras simultaneously
+  hideEraGroup();
   document.getElementById('eraSelect').value = '';
   updateModelFieldVisibility(brandId);
   updateKenmorePrefixVisibility(brandId);
@@ -1917,13 +1912,20 @@ function updateDecodeBtn() {
   var brand  = brandEl.value;
   var serial = serialEl.value.trim();
   var decoderId = brand ? resolveDecoderId(brand) : null;
+  // Split brands (Amana/Maytag/Admiral/Jenn-Air) decode both eras at once — no era selection needed
+  var isSplitBrand = false;
+  if (brand && !decoderId) {
+    var _scc = CYCLING_BRANDS[currentCategory] || {};
+    var _sCfg = _scc[brand] || _scc[normalizeBrandId(brand)];
+    isSplitBrand = !!(_sCfg && _sCfg.type === 'split');
+  }
   // Kenmore also requires a model prefix to be selected before decoding
   var kenmorePrefixOk = true;
   if (brand && normalizeBrandId(brand) === 'kenmore') {
     var _prefixEl = document.getElementById('kenmoreModelPrefix');
     kenmorePrefixOk = !!(_prefixEl && _prefixEl.value);
   }
-  btnEl.disabled = !(brand && serial && decoderId && kenmorePrefixOk);
+  btnEl.disabled = !(brand && serial && (decoderId || isSplitBrand) && kenmorePrefixOk);
 }
 
 // ===== YEAR CAP (never return future dates) =====
@@ -2617,6 +2619,88 @@ function showSerialLengthError(decoder, serial, brandId, req) {
   document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+// ===== DUAL-ERA RESULT (split brands: Amana, Maytag, Admiral, Jenn-Air) =====
+function buildEraBlock(era, label, tag, result, decoder) {
+  var yearStr = result ? String(result.year || '') : '';
+  var hasUnknown = yearStr.indexOf('Unknown') !== -1;
+  var html = '<div class="era-result-block era-result-' + era + (hasUnknown || !result ? ' era-result-uncertain' : '') + '">';
+  html += '<div class="era-result-heading">' + esc(label) + '<span class="era-method-tag">' + esc(tag) + '</span></div>';
+  if (!result) {
+    html += '<div class="era-unknown-note">This serial does not match the ' + esc(label) + ' format.</div>';
+  } else {
+    var displayYear = capYear(yearStr);
+    html += '<div class="result-row"><span class="result-label">Manufacturer Date</span><span class="result-value">' + esc(displayYear) + '</span></div>';
+    if (result.month && result.month !== 'N/A') {
+      html += '<div class="result-row"><span class="result-label">Month / Period</span><span class="result-value">' + esc(result.month) + '</span></div>';
+    }
+    if (!hasUnknown) {
+      var age = computeEstimatedAge(displayYear);
+      if (age && age !== '\u2014') {
+        html += '<div class="result-row"><span class="result-label">Estimated Age</span><span class="result-value">' + esc(age) + '</span></div>';
+      }
+    } else {
+      html += '<div class="era-unknown-note">Year code not recognized \u2014 this method likely does not apply to your serial.</div>';
+    }
+  }
+  if (decoder) {
+    html += '<div class="era-method-note">' + esc(decoder.decodeMethod || decoder.serialLengthNote || '') + '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function showDualEraResult(metaBrandId, cfg, serial) {
+  var decoders = decoderData[currentCategory].decoders;
+  var postDecoder = decoders[cfg.post];
+  var preDecoder  = decoders[cfg.pre];
+  var postResult  = postDecoder ? postDecoder.decode(serial) : null;
+  var preResult   = preDecoder  ? preDecoder.decode(serial)  : null;
+  var brandName   = cfg.label;
+
+  var html = '';
+  html += '<div class="info-block era-split-notice">';
+  html += '<h4>Two Decoding Methods</h4>';
+  html += '<p><strong>' + esc(brandName) + '</strong> changed its serial number format when Whirlpool acquired the brand in 2006. ';
+  html += 'Both methods have been applied to your serial below.</p>';
+  html += '</div>';
+
+  html += '<div class="era-dual-results">';
+  html += buildEraBlock('post', 'Post-2006', 'Whirlpool era', postResult, postDecoder);
+  html += buildEraBlock('pre',  'Pre-2006',  'Legacy era',    preResult,  preDecoder);
+  html += '</div>';
+
+  html += '<details class="determination-details era-determine-guide">';
+  html += '<summary>How to tell which result is correct</summary>';
+  html += '<div class="determination-body">';
+  html += '<p><strong>Post-2006 (Whirlpool era):</strong> Year is encoded at a fixed character position \u2014 position 2 in a 9-character serial, or position 3 in a 10-character serial. The result shows a dual year like \u201c2012/2042\u201d reflecting the 30-year repeating cycle. Units purchased in 2006 or later use this method.</p>';
+  html += '<p><strong>Pre-2006 (Legacy era):</strong> Year and month are encoded as letter codes in the last two characters of the serial. If the Pre-2006 result shows \u201cYear code not recognized,\u201d that method does not apply to your serial.</p>';
+  html += '<p><strong>Quick guide:</strong> If one result shows an unrecognized code and the other shows a valid year, the valid one is almost certainly correct. If you know when the appliance was purchased \u2014 before or after 2006 \u2014 use the matching result.</p>';
+  html += '</div>';
+  html += '</details>';
+
+  // Inject into results-body, hiding all standard rows
+  var resultsBody = document.querySelector('#serialResults .results-body');
+  if (resultsBody) {
+    var dualDisplay = document.getElementById('dualEraDisplay');
+    if (!dualDisplay) {
+      dualDisplay = document.createElement('div');
+      dualDisplay.id = 'dualEraDisplay';
+      resultsBody.insertBefore(dualDisplay, resultsBody.firstChild);
+    }
+    dualDisplay.innerHTML = html;
+    dualDisplay.style.display = '';
+    resultsBody.classList.add('results-body--dual');
+  }
+
+  showBrandLogo('serialBrandLogo', metaBrandId, brandName);
+  currentFeedbackContext = { brand: brandName, serial: serial };
+
+  setLoadingSuccess(function() {
+    document.getElementById('serialResults').classList.remove('hidden');
+    document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+}
+
 // ===== SERIAL DECODE =====
 function decodeSerial() {
   var dom = getDecodeDom();
@@ -2638,9 +2722,16 @@ function decodeSerial() {
   }
 
   var brandId = resolveDecoderId(metaBrandId);
+  var _splitEraConfig = null;
   if (!brandId) {
-    showCustomAlert('Please select the manufacture era for this brand.');
-    return;
+    var _ecc = CYCLING_BRANDS[currentCategory] || {};
+    var _eccCfg = _ecc[metaBrandId] || _ecc[normalizeBrandId(metaBrandId)];
+    if (_eccCfg && _eccCfg.type === 'split') {
+      _splitEraConfig = _eccCfg;
+    } else {
+      showCustomAlert('Please select the manufacture era for this brand.');
+      return;
+    }
   }
 
   var isKenmore = (normalizeBrandId(metaBrandId) === 'kenmore');
@@ -2666,6 +2757,24 @@ function decodeSerial() {
       return;
     }
     brandId = kenmoreResolution.decoderId;
+  }
+
+  // Era-split brands: decode both pre and post methods simultaneously
+  if (_splitEraConfig) {
+    updateSearchQueryLine();
+    document.getElementById('serialResults').classList.add('hidden');
+    document.getElementById('ageResults').classList.add('hidden');
+    var _sb = document.getElementById('moreOptionsBody'); if (_sb) _sb.classList.add('hidden');
+    var _sa = document.getElementById('moreOptionsArrow'); if (_sa) _sa.classList.remove('open');
+    ['replacements', 'specs', 'market'].forEach(function(t) {
+      var _sel = document.getElementById('ai-result-' + t);
+      if (_sel) { _sel.classList.add('hidden'); _sel.textContent = ''; }
+    });
+    setLoadingActive();
+    setTimeout(function() {
+      showDualEraResult(metaBrandId, _splitEraConfig, serial);
+    }, 1400);
+    return;
   }
 
   var decoder = decoderData[currentCategory].decoders[brandId];
@@ -2700,6 +2809,13 @@ function decodeSerial() {
 
   // Hold the cloud for at least 1400ms so the sun transition reaches ~2 s total
   setTimeout(function() {
+    // Clear dual-era mode if previous decode was a split brand
+    (function() {
+      var _drb = document.querySelector('#serialResults .results-body');
+      if (_drb) _drb.classList.remove('results-body--dual');
+      var _ded = document.getElementById('dualEraDisplay');
+      if (_ded) { _ded.innerHTML = ''; _ded.style.display = 'none'; }
+    })();
     // Reset row/block visibility from any previous fallback state
     (function() {
       var _yr = document.getElementById('resultYear');

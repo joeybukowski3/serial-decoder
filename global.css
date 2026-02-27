@@ -1649,6 +1649,83 @@ body {
  background: #dcfce7; color: #166534;
 }
 
+/* ── Dual-Era Result Display ── */
+#dualEraDisplay { display: none; }
+
+/* Hide all standard result rows/blocks when dual mode is active */
+.results-body--dual > *:not(#dualEraDisplay) { display: none !important; }
+
+/* Hide Copy button in dual mode (no single result to copy) */
+.results-body--dual ~ .results-footer .copy-btn { display: none; }
+
+.era-split-notice h4 { margin-bottom: 0.35rem; }
+
+.era-dual-results {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem;
+  margin: 1rem 0;
+}
+
+@media (max-width: 600px) {
+  .era-dual-results { grid-template-columns: 1fr; }
+}
+
+.era-result-block {
+  border-radius: 10px;
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px solid var(--border-light, #e2e8f0);
+}
+
+.era-result-block.era-result-post { border-left: 3px solid #2563eb; }
+.era-result-block.era-result-pre  { border-left: 3px solid #7c3aed; }
+.era-result-block.era-result-uncertain { opacity: 0.65; }
+
+.era-result-heading {
+  font-weight: 700;
+  font-size: 0.88rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.era-method-tag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  background: #e2e8f0;
+  color: var(--text-mid);
+}
+.era-result-post .era-method-tag { background: #dbeafe; color: #1d4ed8; }
+.era-result-pre  .era-method-tag { background: #ede9fe; color: #6d28d9; }
+
+.era-result-block .result-row {
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #e9edf2;
+  font-size: 0.82rem;
+}
+.era-result-block .result-row:last-of-type { border-bottom: none; }
+
+.era-method-note {
+  margin-top: 0.6rem;
+  font-size: 0.7rem;
+  color: var(--text-light);
+  line-height: 1.4;
+}
+
+.era-unknown-note {
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-mid);
+  font-style: italic;
+}
+
+details.era-determine-guide { margin-top: 0.5rem; }
+
 /* ── Sources Checked (collapsible) ── */
 details.sources-checked {
   margin-top: 1rem;
