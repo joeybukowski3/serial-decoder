@@ -2939,9 +2939,6 @@ function buildGuaranteedBlocks(query, data, category) {
       ? data.brand + ' ' + data.model
       : (data.brand || data.model || query);
     origin = originLabel + ' was introduced in ' + data.estimatedYear + '.';
-    if (category && CATEGORY_GENERIC_BLOCKS[category]) {
-      origin += ' ' + CATEGORY_GENERIC_BLOCKS[category].origin;
-    }
   } else if (category && CATEGORY_GENERIC_BLOCKS[category]) {
     origin = CATEGORY_GENERIC_BLOCKS[category].origin;
   } else {
@@ -3314,7 +3311,15 @@ function clickSuggestion(modelNum) {
     if (toggle) toggle.classList.add('open');
   }
   var input = getSmartLookupInputEl();
-  if (input) input.value = modelNum;
+  if (input) {
+    // Preserve brand context so bare model numbers pass the supported-query check
+    var searchTerm = modelNum;
+    var brand = currentFeedbackContext && currentFeedbackContext.brand;
+    if (brand && !isSupportedQuery(modelNum)) {
+      searchTerm = brand + ' ' + modelNum;
+    }
+    input.value = searchTerm;
+  }
   estimateAge();
 }
 
