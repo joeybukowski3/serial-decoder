@@ -146,34 +146,69 @@ function toggleSidebar() {
 }
 var currentFeedbackContext = {};
 var CURRENT_YEAR = new Date().getFullYear();
-var KENMORE_DEFAULT_NOTE = 'For more accurate results, please enter the first 3 digits of your Kenmore model number.';
+var KENMORE_DEFAULT_NOTE = 'Prefix not recognized \u2014 defaulting to Whirlpool method. Results may vary.';
+// Kenmore does not manufacture its own appliances. The serial decode method depends entirely on
+// who actually made the unit, identified by the first 3 digits of the MODEL number.
+// cycle = years in the manufacturer's repeating serial date cycle.
 var KENMORE_PREFIX_TO_DECODER = {
-  '106': { manufacturer: 'Whirlpool', decoderId: 'whirlpool' },
-  '110': { manufacturer: 'Whirlpool', decoderId: 'whirlpool' },
-  '198': { manufacturer: 'Whirlpool', decoderId: 'whirlpool' },
-  '562': { manufacturer: 'Whirlpool', decoderId: 'whirlpool' },
-  '665': { manufacturer: 'Whirlpool', decoderId: 'whirlpool' },
-  '103': { manufacturer: 'Roper', decoderId: 'roper' },
-  '155': { manufacturer: 'Roper', decoderId: 'roper' },
-  '278': { manufacturer: 'Roper', decoderId: 'roper' },
-  '647': { manufacturer: 'Roper', decoderId: 'roper' },
-  '835': { manufacturer: 'Roper', decoderId: 'roper' },
-  '911': { manufacturer: 'Roper', decoderId: 'roper' },
-  '596': { manufacturer: 'Amana', decoderId: 'amana_post_2006' },
-  '174': { manufacturer: 'Caloric', decoderId: 'maytag_pre_2006' },
-  '960': { manufacturer: 'Caloric', decoderId: 'maytag_pre_2006' },
-  '629': { manufacturer: 'Jenn-Air', decoderId: 'jenn_air_pre_2006' },
-  '747': { manufacturer: 'Litton', decoderId: 'maytag_pre_2006' },
-  '925': { manufacturer: 'Maycor', decoderId: 'maytag_pre_2006' },
-  '651': { manufacturer: 'Speed Queen', decoderId: 'maytag_pre_2006' },
-  '253': { manufacturer: 'Gibson', decoderId: 'gibson' },
-  '417': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
-  '662': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
-  '628': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
-  '791': { manufacturer: 'Tappan', decoderId: 'tappan' },
-  '790': { manufacturer: 'WCI', decoderId: 'white_consolidated_industries_wci' },
-  '362': { manufacturer: 'General Electric', decoderId: 'ge' },
-  '363': { manufacturer: 'General Electric', decoderId: 'ge' }
+  // Whirlpool method (char 2 = year letter, chars 3-4 = week) — 30-year cycle
+  '106': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
+  '110': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
+  '198': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
+  '562': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
+  '564': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
+  '565': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
+  '566': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
+  '568': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
+  '664': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
+  '665': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
+  // Roper method (same as Whirlpool) — 30-year cycle
+  '103': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
+  '155': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
+  '278': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
+  '647': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
+  '835': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
+  '911': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
+  '917': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
+  // GE method (char 1 = month letter, char 2 = year letter using GE codes) — 12-year cycle
+  '362': { manufacturer: 'General Electric', decoderId: 'ge', cycle: 12 },
+  '363': { manufacturer: 'General Electric', decoderId: 'ge', cycle: 12 },
+  '464': { manufacturer: 'General Electric', decoderId: 'ge', cycle: 12 },
+  // Frigidaire/Electrolux method (2 letters, then digit 1 = year last digit, digits 2-3 = week) — 10-year cycle
+  '119': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
+  '253': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
+  '417': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
+  '580': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
+  '592': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
+  '628': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
+  '662': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
+  '790': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
+  '791': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
+  '970': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
+  // Kelvinator (uses Frigidaire decode method) — 10-year cycle
+  '416': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
+  '473': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
+  '622': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
+  '630': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
+  '683': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
+  // Amana (Whirlpool post-2006 for modern units) — 30-year cycle
+  '335': { manufacturer: 'Amana', decoderId: 'amana_post_2006', cycle: 30 },
+  '596': { manufacturer: 'Amana', decoderId: 'amana_post_2006', cycle: 30 },
+  // LG method (char 1 = year last digit, chars 2-3 = month as two digits) — 10-year cycle
+  '795': { manufacturer: 'LG', decoderId: 'lg', cycle: 10 },
+  '796': { manufacturer: 'LG', decoderId: 'lg', cycle: 10 },
+  // Samsung method — 10-year cycle
+  '401': { manufacturer: 'Samsung', decoderId: 'samsung', cycle: 10 },
+  // Jenn-Air (post-2006 Whirlpool era) — 30-year cycle
+  '629': { manufacturer: 'Jenn-Air', decoderId: 'jenn_air_post_2006', cycle: 30 },
+  // Maytag-family: Maycor / Speed Queen / Litton / Caloric / Hardwick — 30-year cycle
+  '174': { manufacturer: 'Caloric',     decoderId: 'maytag_pre_2006', cycle: 30 },
+  '587': { manufacturer: 'Speed Queen', decoderId: 'maytag_pre_2006', cycle: 30 },
+  '651': { manufacturer: 'Speed Queen', decoderId: 'maytag_pre_2006', cycle: 30 },
+  '747': { manufacturer: 'Litton',      decoderId: 'maytag_pre_2006', cycle: 30 },
+  '789': { manufacturer: 'Hardwick',    decoderId: 'maytag_pre_2006', cycle: 30 },
+  '925': { manufacturer: 'Maycor',      decoderId: 'maytag_pre_2006', cycle: 30 },
+  '960': { manufacturer: 'Caloric',     decoderId: 'maytag_pre_2006', cycle: 30 },
 };
 var SIDEBAR_EXPANDED_KEY = 'sidebarExpandedCategories';
 var LAST_CATEGORY_KEY = 'lastSelectedCategory';
@@ -2199,19 +2234,34 @@ function resolveKenmoreDecoderFromPrefix() {
   var prefixEl = document.getElementById('kenmoreModelPrefix');
   var prefix = prefixEl ? String(prefixEl.value || '').replace(/\D/g, '').substring(0, 3) : '';
   if (!prefix) {
-    return { prefix: '', manufacturer: 'Whirlpool', decoderId: 'whirlpool', usedDefault: true, note: KENMORE_DEFAULT_NOTE };
+    return {
+      noPrefix: true,
+      decoderId: 'whirlpool',
+      manufacturer: 'Whirlpool',
+      usedDefault: true,
+      cycle: 30,
+      note: 'For Kenmore appliances, the model number prefix (first 3 digits) is required to decode accurately. Please enter the first 3 digits of your model number.'
+    };
   }
   var match = KENMORE_PREFIX_TO_DECODER[prefix];
   if (!match) {
     return {
       prefix: prefix,
-      manufacturer: 'Whirlpool',
       decoderId: 'whirlpool',
+      manufacturer: 'Whirlpool',
       usedDefault: true,
-      note: 'Prefix ' + prefix + ' is not in our Kenmore prefix table. ' + KENMORE_DEFAULT_NOTE
+      cycle: 30,
+      note: 'Prefix ' + prefix + ' not recognized \u2014 defaulting to Whirlpool method. Results may vary.'
     };
   }
-  return { prefix: prefix, manufacturer: match.manufacturer, decoderId: match.decoderId, usedDefault: false, note: '' };
+  return {
+    prefix: prefix,
+    decoderId: match.decoderId,
+    manufacturer: match.manufacturer,
+    usedDefault: false,
+    cycle: match.cycle,
+    note: ''
+  };
 }
 
 function ensureModelField() {
@@ -2573,6 +2623,24 @@ function decodeSerial() {
   var kenmoreResolution = null;
   if (isKenmore) {
     kenmoreResolution = resolveKenmoreDecoderFromPrefix();
+    if (kenmoreResolution.noPrefix) {
+      // Pre-validation: no loading animation — show prompt directly
+      var _km = document.getElementById('resultMonthRow'); if (_km) _km.style.display = 'none';
+      var _ky = document.getElementById('resultYear'); if (_ky) { _ky.textContent = ''; var _kyr = _ky.closest ? _ky.closest('.result-row') : null; if (_kyr) _kyr.style.display = 'none'; }
+      var _ka = document.getElementById('resultEstimatedAge'); if (_ka) { _ka.textContent = '\u2014'; var _kar = _ka.closest ? _ka.closest('.result-row') : null; if (_kar) _kar.style.display = 'none'; }
+      var _kp = document.querySelector('.narrow-date-panel'); if (_kp) _kp.classList.add('hidden');
+      document.getElementById('resultBrand').textContent  = 'Kenmore';
+      document.getElementById('resultMethod').textContent = 'Model prefix required to identify OEM manufacturer';
+      document.getElementById('resultNotes').textContent  = kenmoreResolution.note;
+      updateSearchQueryLine();
+      updateResultWarning({ year: 'Unknown', month: '' }, 'kenmore');
+      showBrandLogo('serialBrandLogo', 'kenmore', 'Kenmore');
+      currentFeedbackContext = { brand: 'Kenmore', serial: serial };
+      document.getElementById('ageResults').classList.add('hidden');
+      document.getElementById('serialResults').classList.remove('hidden');
+      document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
     brandId = kenmoreResolution.decoderId;
   }
 
@@ -2697,8 +2765,14 @@ function decodeSerial() {
     })();
 
     var notesText = decoder.notes || decoder.decodeNotes || 'N/A';
-    if (isKenmore && kenmoreResolution && kenmoreResolution.note) {
-      notesText = kenmoreResolution.note + (notesText ? ' ' + notesText : '');
+    if (isKenmore && kenmoreResolution) {
+      var _kenmoreBaseNote = 'Kenmore appliances are manufactured by third-party companies under contract with Sears. ' +
+        'The decode method and result above are based on the OEM manufacturer (' + kenmoreResolution.manufacturer + ') identified by your model prefix. ' +
+        'Results follow a ' + (kenmoreResolution.cycle || 30) + '-year repeating cycle \u2014 use appliance condition and features to confirm the decade.';
+      var _kenmoreFullNote = kenmoreResolution.note
+        ? kenmoreResolution.note + ' ' + _kenmoreBaseNote
+        : _kenmoreBaseNote;
+      notesText = _kenmoreFullNote + (notesText && notesText !== 'N/A' ? '\n\n' + notesText : '');
     }
     // Prepend a short-serial warning when the input was shorter than the brand's typical length
     if (_serialReq && _serialReq.typical.length > 0) {

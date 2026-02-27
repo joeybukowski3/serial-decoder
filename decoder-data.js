@@ -1193,12 +1193,12 @@ var decoderData = {
       yearCodePosition: 'Character 3 (first digit after 2-letter factory code)',
       monthCodePosition: 'Characters 4-5',
       outputType: 'Year + Week (approximate month)',
-      decodeNotes: 'Year digit can be decade-ambiguous — model/style context often needed. Week-of-year helps pinpoint a date range.',
+      decodeNotes: 'Year digit can be decade-ambiguous ï¿½ model/style context often needed. Week-of-year helps pinpoint a date range.',
       exampleSerial: 'NF11910958',
       exampleResult: '1=2001/2011 Week 19=~April -> April 2001',
       sources: 'electrical-forensics.com; cannonsappliance.com; lumayeconsulting.com; appliancefactoryparts.com',
       method: 'After factory letters: year digit + week digits (use week-of-year to pinpoint date range)',
-      notes: 'Year digit can be decade-ambiguous — model/style context often needed. Week-of-year helps pinpoint a date range.',
+      notes: 'Year digit can be decade-ambiguous ï¿½ model/style context often needed. Week-of-year helps pinpoint a date range.',
       source: 'electrical-forensics.com; cannonsappliance.com; lumayeconsulting.com; appliancefactoryparts.com',
       yearMap: { '0': '1990/2000/2010/2020', '1': '1991/2001/2011/2021', '2': '1992/2002/2012/2022', '3': '1993/2003/2013/2023', '4': '1994/2004/2014/2024', '5': '1995/2005/2015/2025', '6': '1996/2006/2016', '7': '1997/2007/2017', '8': '1988/1998/2008/2018', '9': '1989/1999/2009/2019' },
       monthMap: { 'Week 01-04': '~January', 'Week 05-08': '~February', 'Week 09-13': '~March', 'Week 14-17': '~April', 'Week 18-21': '~May', 'Week 22-26': '~June', 'Week 27-30': '~July', 'Week 31-34': '~August', 'Week 35-39': '~September', 'Week 40-43': '~October', 'Week 44-47': '~November', 'Week 48-52': '~December' },
@@ -1574,32 +1574,34 @@ var decoderData = {
     },
     'kenmore': {
       name: 'Kenmore',
-      parentManufacturer: 'Whirlpool Corporation',
+      parentManufacturer: 'Sears (OEM varies by model prefix)',
       groupId: '1A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
-      serialLengthNote: 'Second alpha character = year code (letters only).',
-      decodeMethod: 'Second alpha character = year code',
-      yearCodePosition: 'Second alpha character',
-      monthCodePosition: 'N/A',
+      serialLengthNote: 'Enter the first 3 digits of the model number to identify the OEM manufacturer.',
+      decodeMethod: 'Prefix-based OEM routing â€” actual method determined by model number prefix',
+      yearCodePosition: 'Varies by OEM manufacturer',
+      monthCodePosition: 'Varies by OEM manufacturer',
       outputType: 'Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: 'Kenmore does not manufacture its own appliances. Enter the first 3 digits of the model number to identify who made the unit. The serial number is then decoded using that manufacturer\'s own method.',
       exampleSerial: 'CB2501800',
-      exampleResult: 'B=1992/2022',
-      sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
-      method: 'Second alpha character = year code',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
-      source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
+      exampleResult: 'Decoded via OEM manufacturer identified by model prefix',
+      sources: 'sears.com; appliancepartspros.com; repairclinic.com',
+      method: 'Model prefix identifies OEM manufacturer; serial is decoded using that manufacturer\'s method',
+      notes: 'Kenmore does not manufacture its own appliances. Enter the first 3 digits of the model number to identify who made the unit. The serial number is then decoded using that manufacturer\'s own method.',
+      source: 'sears.com; appliancepartspros.com; repairclinic.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
-      monthMap: {  },
-            decode: function(serial) {
-      if (!serial) return null;
-      var letters = String(serial).match(/[A-Za-z]/g) || [];
-      if (letters.length < 2) return null;
-      var yearChar = letters[1].toUpperCase();
-      var y = this.yearMap[yearChar];
-      return { year: y || 'Unknown code: ' + yearChar, month: 'N/A', yearCode: yearChar };
-    }
+      monthMap: {},
+      decode: function(serial) {
+        // Fallback only â€” actual decode routes through OEM manufacturer decoder via KENMORE_PREFIX_TO_DECODER.
+        // This function is reached only if OEM routing fails. Uses Whirlpool method as the most common default.
+        if (!serial) return null;
+        var letters = String(serial).match(/[A-Za-z]/g) || [];
+        if (letters.length < 2) return null;
+        var yearChar = letters[1].toUpperCase();
+        var y = this.yearMap[yearChar];
+        return { year: y || 'Unknown code: ' + yearChar, month: 'N/A', yearCode: yearChar };
+      }
     }
     }
   },
