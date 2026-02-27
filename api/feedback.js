@@ -4,7 +4,8 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
+  const alertTo = process.env.ALERT_EMAIL_TO;
+  if (!apiKey || !alertTo) {
     return res.status(500).json({ error: 'Email service not configured' });
   }
 
@@ -38,7 +39,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         from:    'Serial Decoder <onboarding@resend.dev>',
-        to:      ['[redacted]'],
+        to:      [alertTo],
         subject: `[Decoder] Possible error — ${brand || 'Unknown Brand'} / ${serial || 'no serial'}`,
         text:    bodyText,
       }),
