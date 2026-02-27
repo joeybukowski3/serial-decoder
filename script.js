@@ -3115,11 +3115,30 @@ var SUPPORTED_TERMS = {
   brands: ['LG', 'Samsung', 'Whirlpool', 'GE', 'Frigidaire', 'Maytag', 'KitchenAid', 'Bosch', 'Electrolux', 'Sony', 'Vizio', 'Panasonic', 'Apple', 'HP', 'Asus', 'Google', 'Nintendo', 'Microsoft', 'Trane', 'Carrier', 'Goodman', 'Lennox', 'Rheem', 'Ruud', 'Bradford White', 'AO Smith', 'State', 'American Standard', 'Bryant', 'York', 'Payne', 'Amana', 'Admiral', 'Kenmore', 'Roper', 'Estate', 'Inglis', 'Thermador', 'Sub-Zero', 'Viking', 'Miele']
 };
 
+var SMART_LOOKUP_BLOCKLIST = [
+  'wedding', 'birthday', 'recipe', 'baby', 'school', 'weather', 'sports', 'movie',
+  'song', 'stock', 'crypto', 'horoscope', 'politics', 'election', 'concert',
+  'restaurant', 'hotel', 'flight', 'dating', 'diet', 'yoga', 'meditation', 'lottery',
+  'casino', 'gambling', 'tattoo', 'haircut', 'makeup', 'nail', 'perfume', 'cologne'
+];
+
 function isSupportedQuery(query) {
-  var q = query.toLowerCase();
+  var q = query.toLowerCase().trim();
+
+  // Always pass: probable model number (6+ consecutive alphanumeric chars)
+  if (/[a-zA-Z0-9]{6,}/.test(query)) return true;
+
+  // Block clearly off-topic queries
+  for (var b = 0; b < SMART_LOOKUP_BLOCKLIST.length; b++) {
+    if (q.indexOf(SMART_LOOKUP_BLOCKLIST[b]) !== -1) return false;
+  }
+
+  // Pass known brands
   for (var i = 0; i < SUPPORTED_TERMS.brands.length; i++) {
     if (q.indexOf(SUPPORTED_TERMS.brands[i].toLowerCase()) !== -1) return true;
   }
+
+  // Pass known product category keywords
   var cats = ['appliances', 'hvac', 'waterHeater', 'electronics'];
   for (var c = 0; c < cats.length; c++) {
     var keywords = SUPPORTED_TERMS[cats[c]];
@@ -3314,31 +3333,86 @@ function buildSmartLookupResultHtml(query, data, specificity) {
   // GUARANTEED MINIMUM BLOCKS: Description, Origin, Production Status
   html += buildGuaranteedBlocks(query, data, category);
 
-  // Data rows
+  // Parse yearRange for conflict detection and span calculation
+  var yearRangeStart = null, yearRangeEnd = null, yearRangeSpan = 0;
+  if (data.yearRange) {
+    var yrMatch = data.yearRange.match(/(\d{4})\s*[\u2013\u2014\-]+\s*(present|\d{4})/i);
+    if (yrMatch) {
+      yearRangeStart = parseInt(yrMatch[1], 10);
+      yearRangeEnd = /present/i.test(yrMatch[2]) ? 2026 : parseInt(yrMatch[2], 10);
+      yearRangeSpan = yearRangeEnd - yearRangeStart;
+    }
+  }
+
+  var hasConflict = false;
+  if (data.estimatedYear && yearRangeStart !== null) {
+    var eYear = parseInt(data.estimatedYear, 10);
+    if (!isNaN(eYear) && (eYear < yearRangeStart || eYear > yearRangeEnd)) {
+      hasConflict = true;
+    }
+  }
+
+  // Professional labels based on confidence
+  var yearLabel = (specificity === 'specific' && !hasConflict) ? 'Confirmed Manufacture Year' : 'Estimated Manufacture Year';
+  var rangeLabel = hasConflict
+    ? 'Conflicting Date Information'
+    : (yearRangeSpan > 4 ? 'Estimated Date Range (verify recommended)' : 'Confirmed Retail Availability');
+
+  // Estimated year row
   if (data.estimatedYear) {
     var isPrimary = specificity === 'specific';
     html += '<div class="result-row' + (isPrimary ? ' result-row--primary' : '') + '">' +
-      '<span class="result-label">Estimated Year</span>' +
+      '<span class="result-label">' + yearLabel + '</span>' +
       '<span class="result-value">' + esc(capYear(data.estimatedYear)) + '</span></div>';
   }
+
+  // Year range row
   if (data.yearRange) {
-    html += '<div class="result-row"><span class="result-label">Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
+    html += '<div class="result-row"><span class="result-label">' + rangeLabel + '</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
   }
 
-  // Evidence
-  if (data.evidence && data.evidence.length > 0) {
-    html += '<div class="info-block sources"><h4>Why We Know This</h4><div class="evidence-list">';
-    data.evidence.forEach(function(item) {
-      var detail = item.detail || '';
-      var source = item.source || '';
-      if (detail || source) {
-        html += '<div class="evidence-item">';
-        if (source) html += '<span class="ev-source">' + esc(source) + '</span>';
-        if (detail) html += '<span>' + esc(detail) + '</span>';
-        html += '</div>';
-      }
-    });
-    html += '</div></div>';
+  // Conflict or wide-window notice
+  if (hasConflict) {
+    html += '<div class="info-block warning"><p><strong>Note:</strong> The estimated manufacture year (' + esc(String(data.estimatedYear)) + ') falls outside the confirmed retail availability range (' + esc(data.yearRange) + '). This may indicate limited data or a discrepancy between manufacture date and retail listing date. We recommend using the retail availability range as the primary reference.</p></div>';
+  } else if (yearRangeSpan > 4) {
+    html += '<div class="info-block"><p><strong>Wide Date Window:</strong> This product has a confirmed retail availability spanning ' + yearRangeSpan + ' years. The manufacture date of a specific unit may fall anywhere within this range.</p></div>';
+  }
+
+  // Thin result fallback
+  var isThinResult = !data.estimatedYear && !data.yearRange && (!data.notes || data.notes.trim().length < 40);
+  if (isThinResult) {
+    html += '<div class="info-block tip"><h4>&#128161; Limited Information Available</h4><p>We were unable to find complete information for this search. For more specific results, try including the model number, series name, or product type. You can also try the serial number decoder if you have the appliance in front of you.</p></div>';
+  }
+
+  // Sources Checked — collapsible (Change 5)
+  var hasEvidence = data.evidence && data.evidence.length > 0;
+  var hasSources = !!(data.sources && (Array.isArray(data.sources) ? data.sources.length > 0 : true));
+  if (hasEvidence || hasSources) {
+    html += '<details class="sources-checked"><summary>Sources Checked</summary><div class="sources-checked-body">';
+    if (hasEvidence) {
+      html += '<div class="evidence-list">';
+      data.evidence.forEach(function(item) {
+        var detail = item.detail || '';
+        var source = item.source || '';
+        if (detail || source) {
+          html += '<div class="evidence-item">';
+          if (source) html += '<span class="ev-source">' + esc(source) + '</span>';
+          if (detail) html += '<span>' + esc(detail) + '</span>';
+          html += '</div>';
+        }
+      });
+      html += '</div>';
+    }
+    if (hasSources) {
+      var srcList = Array.isArray(data.sources) ? data.sources : [data.sources];
+      html += '<div class="evidence-list">';
+      srcList.forEach(function(src) {
+        var label = typeof src === 'string' ? src : (src.name || src.url || JSON.stringify(src));
+        html += '<div class="evidence-item"><span>' + esc(label) + '</span></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div></details>';
   }
 
   // Serial hints
@@ -3349,8 +3423,8 @@ function buildSmartLookupResultHtml(query, data, specificity) {
     html += '<div class="info-block serial-loc"><h4>Where to Find the Serial Number</h4><p>' + esc(data.serialLocation) + '</p></div>';
   }
 
-  // Refine Your Result tip — always shown unless a single confident year was returned
-  var isHighConfidenceSingle = (specificity === 'specific') && !!data.estimatedYear;
+  // Refine Your Result tip
+  var isHighConfidenceSingle = (specificity === 'specific') && !!data.estimatedYear && !hasConflict;
   if (!isHighConfidenceSingle) {
     html += buildRefineTipBox('To get a more specific manufacture year, try adding a model number, series name, or product type to your search. Examples: \u2018LG C3 55 inch TV\u2019, \u2018Samsung QLED QN85B\u2019, \u2018Whirlpool front load washer WFW5000DW\u2019.');
   } else if (data.refinementSuggestion) {
@@ -3412,7 +3486,10 @@ async function estimateAge() {
     var res  = await fetch('/api/age-lookup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: query }),
+      body: JSON.stringify({
+        query: query,
+        researchInstructions: 'Search for this product across major retail websites including bestbuy.com, walmart.com, amazon.com, homedepot.com, lowes.com, ajmadison.com, target.com, and costco.com. Note the earliest and most recent listing dates found. Also search for the earliest online publications, blog posts, product reviews, owner manuals, and press releases for this product. Use these sources to determine the earliest confirmed availability date and the most recent confirmed listing date. These retailer listing dates are reliable indicators of production range. Do not assume a product is discontinued unless it is confirmed absent from all major retailers and all recent sources.',
+      }),
     });
 
     // Handle structured limit responses before parsing JSON
