@@ -1068,6 +1068,7 @@ function enhanceHeaderBranding() {
       '<a class="ia-header-nav-link" href="/smart-lookup">Smart Lookup</a>' +
       '<a class="ia-header-nav-link" href="/methodology">Methodology</a>' +
       '<a class="ia-header-nav-link" href="/contact">Contact</a>' +
+      '<a class="ia-header-nav-link ia-header-nav-security" href="/privacy-policy#security">Security &amp; Data Notice</a>' +
     '</nav>';
   header.appendChild(wrap);
   header.setAttribute('data-ia-header-ready', '1');

@@ -2111,6 +2111,8 @@ details.sources-checked[open] summary::before {
     .form-area { padding: 1rem; }
     .results-body { padding: 1rem; }
     .result-row { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+    .static-card-body { padding: 1.5rem; }
+    .static-card-header { padding: 1.1rem 1.5rem; }
     .ia-header-wrap { gap: 0.55rem; }
     .ia-header-title { font-size: 1.02rem; }
     .ia-header-subtitle { font-size: 0.66rem; }
@@ -2198,6 +2200,8 @@ details.sources-checked[open] summary::before {
     }
     .form-area { padding: 0.875rem; }
     .results-body { padding: 0.875rem; }
+    .static-card-body { padding: 1rem 0.875rem; }
+    .static-card-header { padding: 0.875rem 1rem; }
     .results-footer { padding: 0.75rem 0.875rem 1rem; }
     .brands-grid { grid-template-columns: repeat(2, 1fr); }
     .footer { padding: 1.25rem 0.875rem; border-radius: 10px; }
@@ -2765,6 +2769,17 @@ details.sources-checked[open] summary::before {
 
 }
 
+.ia-header-nav-security {
+    border-color: rgba(34, 197, 94, 0.5) !important;
+    color: #86efac !important;
+}
+
+.ia-header-nav-security:hover {
+    background: rgba(34, 197, 94, 0.15) !important;
+    border-color: rgba(34, 197, 94, 0.8) !important;
+    color: #ffffff !important;
+}
+
 .ia-header-logo-link {
 
     display: inline-flex;
@@ -3222,8 +3237,16 @@ padding:2rem;color:var(--text-dark)
 margin-bottom:1.75rem
 }
 
-.static-section h2 {
+.static-section h2,
+.static-section h3 {
 font-size:1rem;font-weight:700;color:var(--text-dark);margin-bottom:0.6rem;padding-bottom:0.4rem;border-bottom:2px solid #e2e8f0
+}
+
+.table-scroll {
+overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0.75rem 0 1rem
+}
+.table-scroll .policy-table {
+margin:0;min-width:480px
 }
 
 .static-section p {
