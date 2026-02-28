@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5946778263750869" crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy | Item Assist</title>
@@ -21,6 +20,8 @@
         .tag-no   { display: inline-block; background: #fee2e2; color: #991b1b; font-size: 0.72rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 4px; }
         .tag-note { display: inline-block; background: #fef9c3; color: #713f12; font-size: 0.72rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 4px; }
         .policy-sub { font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin: 1.1rem 0 0.4rem; }
+        .policy-tab-panel { display: none; }
+        .policy-tab-panel.active { display: block; }
     </style>
 </head>
 <body>
@@ -72,7 +73,6 @@
         </div>
     </aside>
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-    <div class="ad-zone"><div class="ad-label">Data Partner</div></div>
     <div class="page-shell">
     <div class="app-container content-wrapper container">
 
@@ -91,283 +91,302 @@
             </div>
             <div class="static-card-body">
 
-                <p>Item Assist (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) operates this website at decodemyitem.com. This Privacy Policy explains what data we collect, how it is processed, which third-party services receive it, and your rights regarding that data. By using Item Assist you agree to the practices described here.</p>
+                <nav class="global-category-tabs" role="tablist">
+                    <button class="global-category-tab active" role="tab" aria-selected="true" onclick="switchPolicyTab('privacy', this)">Privacy Policy</button>
+                    <button class="global-category-tab" role="tab" aria-selected="false" onclick="switchPolicyTab('security', this)">Security &amp; Data Protection</button>
+                </nav>
 
-                <div class="static-section">
-                    <h3>1. Data We Collect</h3>
+                <!-- ── Tab 1: Privacy Policy ── -->
+                <div id="policy-tab-privacy" class="policy-tab-panel active">
 
-                    <p class="policy-sub">a) Search Inputs</p>
-                    <p>When you use the <strong>Serial Number Decoder</strong>, the serial number and brand you select are processed <strong>entirely within your browser</strong>. No serial number is transmitted to our servers during a successful rule-based decode. If the decoder cannot produce a result, a brief alert is sent to our internal monitoring system containing the brand name, serial number entered, product category, and a failure reason. This is used solely to improve decode accuracy.</p>
-                    <p>When you use <strong>Smart Lookup</strong>, the free-text query you submit (maximum 200 characters) is sent to our server and forwarded to an external AI inference service to generate a response. See Section 3 for full details on how AI providers handle this data.</p>
+                    <p>Item Assist (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) operates this website at decodemyitem.com. This Privacy Policy explains what data we collect, how it is processed, which third-party services receive it, and your rights regarding that data. By using Item Assist you agree to the practices described here.</p>
 
-                    <p class="policy-sub">b) Contact and Feedback Forms</p>
-                    <p>If you use our contact form or submit a decoder error report, we collect the information you voluntarily provide: your name (optional), email address (optional), and your message or feedback. This information is delivered to us via email and is not stored in any application database.</p>
+                    <div class="static-section">
+                        <h3>1. Data We Collect</h3>
 
-                    <p class="policy-sub">c) Automatically Collected Technical Data</p>
-                    <p>Our hosting provider (Vercel) and advertising partner (Google AdSense) automatically collect standard technical data when you visit the site, including:</p>
-                    <ul>
-                        <li>IP address (used for rate limiting; not linked to your identity)</li>
-                        <li>Browser type, version, and operating system</li>
-                        <li>Device type and referring URL</li>
-                        <li>Timestamps of page requests</li>
-                    </ul>
-                    <p><strong>Note:</strong> Item Assist does <strong>not</strong> use Google Analytics or any behavioral analytics platform. The only Google integration on this site is Google AdSense for advertising.</p>
+                        <p class="policy-sub">a) Search Inputs</p>
+                        <p>When you use the <strong>Serial Number Decoder</strong>, the serial number and brand you select are processed <strong>entirely within your browser</strong>. No serial number is transmitted to our servers during a successful rule-based decode. If the decoder cannot produce a result, a brief alert is sent to our internal monitoring system containing the brand name, serial number entered, product category, and a failure reason. This is used solely to improve decode accuracy.</p>
+                        <p>When you use <strong>Smart Lookup</strong>, the free-text query you submit (maximum 200 characters) is sent to our server and forwarded to an external AI inference service to generate a response. See the Security &amp; Data Protection tab for full details on how AI providers handle this data.</p>
 
-                    <p class="policy-sub">d) Cookies</p>
-                    <ul>
-                        <li><strong>Functional cookies:</strong> Small values stored in your browser (e.g., your last-selected product category) to improve your experience. These are not shared with third parties.</li>
-                        <li><strong>Advertising cookies:</strong> Google AdSense and its advertising partners may set cookies to serve relevant ads and measure ad performance. These cookies may track activity across websites. You can opt out via Google&rsquo;s Ads Settings (see Section 6).</li>
-                    </ul>
-                </div>
+                        <p class="policy-sub">b) Contact and Feedback Forms</p>
+                        <p>If you use our contact form or submit a decoder error report, we collect the information you voluntarily provide: your name (optional), email address (optional), and your message or feedback. This information is delivered to us via email and is not stored in any application database.</p>
 
-                <div class="static-section">
-                    <h3>2. How We Use Your Data</h3>
-                    <ul>
-                        <li>To operate the Serial Number Decoder and Smart Lookup tools</li>
-                        <li>To cache AI responses for up to 14 days to improve response speed and reduce redundant AI queries</li>
-                        <li>To enforce rate limits and prevent automated abuse (using your IP address, which is not stored beyond the active rate-limit window)</li>
-                        <li>To respond to contact form and feedback submissions</li>
-                        <li>To serve contextually relevant advertising via Google AdSense</li>
-                    </ul>
-                    <p><strong>We do not sell your personal data to third parties. We do not build individual user profiles. We do not use your data for any purpose beyond those listed above.</strong></p>
-                </div>
+                        <p class="policy-sub">c) Automatically Collected Technical Data</p>
+                        <p>Our hosting provider (Vercel) automatically collects standard technical data when you visit the site, including:</p>
+                        <ul>
+                            <li>IP address (used for rate limiting; not linked to your identity)</li>
+                            <li>Browser type, version, and operating system</li>
+                            <li>Device type and referring URL</li>
+                            <li>Timestamps of page requests</li>
+                        </ul>
 
-                <div class="static-section">
-                    <h3>3. Third-Party Services and AI Providers</h3>
-                    <p>Item Assist relies on the following third-party services. Each service receives only the minimum data necessary for its function.</p>
-
-                    <p class="policy-sub">AI Inference Providers (Smart Lookup only)</p>
-                    <p>When you submit a Smart Lookup query, your query text is forwarded to one of the following AI providers:</p>
-
-                    <table class="policy-table">
-                        <thead>
-                            <tr>
-                                <th>Provider</th>
-                                <th>Role</th>
-                                <th>Trains on your data?</th>
-                                <th>Data sent</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>Google Gemini API</strong><br><span style="font-size:0.78rem;color:var(--text-light);">generativelanguage.googleapis.com</span></td>
-                                <td>Primary AI provider</td>
-                                <td><span class="tag-no">NO</span><br><span style="font-size:0.75rem;">Paid API tier — Google&rsquo;s Terms explicitly prohibit use of API prompts or responses to train or improve their models.</span></td>
-                                <td>Your query string only. No IP address or identifying information is included.</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Groq API</strong> (Llama 3.1)<br><span style="font-size:0.78rem;color:var(--text-light);">api.groq.com</span></td>
-                                <td>Fallback AI provider (used only if Gemini is unavailable)</td>
-                                <td><span class="tag-no">NO</span><br><span style="font-size:0.75rem;">Groq&rsquo;s Services Agreement explicitly prohibits use of customer inputs or outputs for model training.</span></td>
-                                <td>Your query string only. Same data as Gemini.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <div class="notice-box">
-                        <div class="notice-box-title">&#128274; AI Data Commitment</div>
-                        <p>Neither AI provider we use will train on your queries. Google&rsquo;s commitment applies specifically to paid-tier Gemini API usage (which this service uses). Groq&rsquo;s prohibition is written into their Services Agreement for all customers. Your searches are used solely to generate a response and are not retained by either provider beyond operational logging windows.</p>
+                        <p class="policy-sub">d) Cookies</p>
+                        <ul>
+                            <li><strong>Functional cookies:</strong> Small values stored in your browser (e.g., your last-selected product category) to improve your experience. These are not shared with third parties.</li>
+                        </ul>
                     </div>
 
-                    <p class="policy-sub">Infrastructure and Operational Services</p>
-                    <table class="policy-table">
-                        <thead>
-                            <tr>
-                                <th>Service</th>
-                                <th>Purpose</th>
-                                <th>Data received</th>
-                                <th>Privacy policy</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>Vercel</strong></td>
-                                <td>Hosting &amp; serverless functions</td>
-                                <td>IP address, request metadata, server-side error logs</td>
-                                <td><a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener" style="color:var(--primary);">vercel.com/legal/privacy-policy</a></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Upstash Redis</strong></td>
-                                <td>Rate limiting &amp; AI response caching</td>
-                                <td>IP address (rate-limit window only); normalized query text stored as a cache key for up to 14 days; brand+serial stored as a deduplication key for up to 24 hours</td>
-                                <td><a href="https://upstash.com/trust/privacy.pdf" target="_blank" rel="noopener" style="color:var(--primary);">upstash.com/trust/privacy.pdf</a></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Resend</strong></td>
-                                <td>Transactional email delivery</td>
-                                <td>Contact form: name, email, message. Feedback form: brand, serial number, issue description. Internal alerts: brand and serial (for failed decode monitoring).</td>
-                                <td><a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener" style="color:var(--primary);">resend.com/legal/privacy-policy</a></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Google AdSense</strong></td>
-                                <td>Display advertising</td>
-                                <td>Standard ad-targeting data per Google&rsquo;s advertising policies. No user-entered search data is shared with Google AdSense.</td>
-                                <td><a href="https://policies.google.com/privacy" target="_blank" rel="noopener" style="color:var(--primary);">policies.google.com/privacy</a></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Google Fonts</strong></td>
-                                <td>Web typography</td>
-                                <td>Standard browser headers (IP, user-agent) sent by your browser on page load</td>
-                                <td><a href="https://policies.google.com/privacy" target="_blank" rel="noopener" style="color:var(--primary);">policies.google.com/privacy</a></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    <div class="static-section">
+                        <h3>2. How We Use Your Data</h3>
+                        <ul>
+                            <li>To operate the Serial Number Decoder and Smart Lookup tools</li>
+                            <li>To cache AI responses for up to 14 days to improve response speed and reduce redundant AI queries</li>
+                            <li>To enforce rate limits and prevent automated abuse (using your IP address, which is not stored beyond the active rate-limit window)</li>
+                            <li>To respond to contact form and feedback submissions</li>
+                        </ul>
+                        <p><strong>We do not sell your personal data to third parties. We do not build individual user profiles. We do not use your data for any purpose beyond those listed above.</strong></p>
+                    </div>
 
-                <div class="static-section">
-                    <h3>4. Data Retention</h3>
-                    <table class="policy-table">
-                        <thead>
-                            <tr>
-                                <th>Data type</th>
-                                <th>Where stored</th>
-                                <th>Retention period</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Smart Lookup query text (as cache key)</td>
-                                <td>Upstash Redis</td>
-                                <td><strong>14 days</strong>, then automatically deleted</td>
-                            </tr>
-                            <tr>
-                                <td>AI response data (cached result)</td>
-                                <td>Upstash Redis</td>
-                                <td><strong>14 days</strong>, then automatically deleted</td>
-                            </tr>
-                            <tr>
-                                <td>Brand + serial (decode alert deduplication key)</td>
-                                <td>Upstash Redis</td>
-                                <td><strong>24 hours</strong>, then automatically deleted</td>
-                            </tr>
-                            <tr>
-                                <td>IP address (rate-limit state)</td>
-                                <td>Upstash Redis</td>
-                                <td>Duration of the sliding rate-limit window (minutes), then automatically deleted</td>
-                            </tr>
-                            <tr>
-                                <td>Contact form and feedback submissions</td>
-                                <td>Resend email logs</td>
-                                <td><strong>1&ndash;7 days</strong> depending on Resend plan, then delivered to our inbox and purged from Resend logs</td>
-                            </tr>
-                            <tr>
-                                <td>Serverless function error logs</td>
-                                <td>Vercel</td>
-                                <td><strong>1 hour&ndash;3 days</strong> depending on Vercel plan; logs do not contain user query content under normal operation</td>
-                            </tr>
-                            <tr>
-                                <td>Gemini API optional developer logs</td>
-                                <td>Google (opt-in only)</td>
-                                <td><strong>55 days</strong> if developer logging is enabled; not enabled by default</td>
-                            </tr>
-                            <tr>
-                                <td>Groq API data</td>
-                                <td>Groq</td>
-                                <td><strong>None by default.</strong> Up to 30 days only if retained for reliability or abuse investigation.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    <div class="static-section">
+                        <h3>3. Third-Party Services</h3>
+                        <p>Item Assist relies on the following third-party services. Each service receives only the minimum data necessary for its function.</p>
 
-                <div class="static-section">
-                    <h3>5. Security and Data Protection</h3>
+                        <p class="policy-sub">AI Inference Providers (Smart Lookup only)</p>
+                        <p>When you submit a Smart Lookup query, your query text is forwarded to one of the following AI providers:</p>
 
-                    <p class="policy-sub">Encryption and Transmission Security</p>
-                    <p>All connections to decodemyitem.com are encrypted using HTTPS. A <strong>Strict-Transport-Security (HSTS)</strong> header with a one-year maximum age, subdomain coverage, and preload status is enforced on every route. Data in transit to all third-party services (Gemini, Groq, Upstash, Resend) is also encrypted using TLS.</p>
+                        <table class="policy-table">
+                            <thead>
+                                <tr>
+                                    <th>Provider</th>
+                                    <th>Role</th>
+                                    <th>Trains on your data?</th>
+                                    <th>Data sent</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Google Gemini API</strong><br><span style="font-size:0.78rem;color:var(--text-light);">generativelanguage.googleapis.com</span></td>
+                                    <td>Primary AI provider</td>
+                                    <td><span class="tag-no">NO</span><br><span style="font-size:0.75rem;">Paid API tier — Google&rsquo;s Terms explicitly prohibit use of API prompts or responses to train or improve their models.</span></td>
+                                    <td>Your query string only. No IP address or identifying information is included.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Groq API</strong> (Llama 3.1)<br><span style="font-size:0.78rem;color:var(--text-light);">api.groq.com</span></td>
+                                    <td>Fallback AI provider (used only if Gemini is unavailable)</td>
+                                    <td><span class="tag-no">NO</span><br><span style="font-size:0.75rem;">Groq&rsquo;s Services Agreement explicitly prohibits use of customer inputs or outputs for model training.</span></td>
+                                    <td>Your query string only. Same data as Gemini.</td>
+                                </tr>
+                            </tbody>
+                        </table>
 
-                    <p class="policy-sub">Infrastructure Security Certifications</p>
-                    <table class="policy-table">
-                        <thead>
-                            <tr>
-                                <th>Service</th>
-                                <th>SOC 2 Type II</th>
-                                <th>ISO 27001</th>
-                                <th>GDPR</th>
-                                <th>Other</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>Vercel</strong></td>
-                                <td><span class="tag-yes">YES</span></td>
-                                <td><span class="tag-yes">YES (2022)</span></td>
-                                <td><span class="tag-yes">YES</span></td>
-                                <td>&mdash;</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Upstash Redis</strong></td>
-                                <td><span class="tag-yes">YES</span></td>
-                                <td><span class="tag-note">In progress</span></td>
-                                <td><span class="tag-yes">YES</span></td>
-                                <td>HIPAA compliant</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Resend</strong></td>
-                                <td><span class="tag-yes">YES</span></td>
-                                <td>&mdash;</td>
-                                <td><span class="tag-yes">YES</span></td>
-                                <td>AES-256 at rest; TLS 1.3 in transit</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Google (Gemini / Fonts / AdSense)</strong></td>
-                                <td><span class="tag-yes">YES</span></td>
-                                <td><span class="tag-yes">YES</span></td>
-                                <td><span class="tag-yes">YES</span></td>
-                                <td>ISO 27017, ISO 27018</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Groq</strong></td>
-                                <td><span class="tag-note">Not published</span></td>
-                                <td>&mdash;</td>
-                                <td><span class="tag-yes">YES (DPA available)</span></td>
-                                <td>Data stored on Google Cloud US</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                        <div class="notice-box">
+                            <div class="notice-box-title">&#128274; AI Data Commitment</div>
+                            <p>Neither AI provider we use will train on your queries. Google&rsquo;s commitment applies specifically to paid-tier Gemini API usage (which this service uses). Groq&rsquo;s prohibition is written into their Services Agreement for all customers. Your searches are used solely to generate a response and are not retained by either provider beyond operational logging windows.</p>
+                        </div>
 
-                    <p class="policy-sub">No Account or Personally Identifiable Information Required</p>
-                    <p>Item Assist does not require user registration, login, or any form of identity verification. No account credentials, payment information, health data, or government-issued identifiers are ever collected. Serial numbers and model numbers submitted by users are not inherently personally identifiable information, though users should avoid submitting data they consider sensitive.</p>
+                        <p class="policy-sub">Infrastructure Services</p>
+                        <table class="policy-table">
+                            <thead>
+                                <tr>
+                                    <th>Service</th>
+                                    <th>Purpose</th>
+                                    <th>Data received</th>
+                                    <th>Privacy policy</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Vercel</strong></td>
+                                    <td>Hosting &amp; serverless functions</td>
+                                    <td>IP address, request metadata, server-side error logs</td>
+                                    <td><a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener" style="color:var(--primary);">vercel.com/legal/privacy-policy</a></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Upstash Redis</strong></td>
+                                    <td>Rate limiting &amp; AI response caching</td>
+                                    <td>IP address (rate-limit window only); normalized query text stored as a cache key for up to 14 days; brand+serial stored as a deduplication key for up to 24 hours</td>
+                                    <td><a href="https://upstash.com/trust/privacy.pdf" target="_blank" rel="noopener" style="color:var(--primary);">upstash.com/trust/privacy.pdf</a></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Resend</strong></td>
+                                    <td>Transactional email delivery</td>
+                                    <td>Contact form: name, email, message. Feedback form: brand, serial number, issue description. Internal alerts: brand and serial (for failed decode monitoring).</td>
+                                    <td><a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener" style="color:var(--primary);">resend.com/legal/privacy-policy</a></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Google Fonts</strong></td>
+                                    <td>Web typography</td>
+                                    <td>Standard browser headers (IP, user-agent) sent by your browser on page load</td>
+                                    <td><a href="https://policies.google.com/privacy" target="_blank" rel="noopener" style="color:var(--primary);">policies.google.com/privacy</a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-                    <p class="policy-sub">Secrets and Credential Management</p>
-                    <p>All API keys and service credentials are stored exclusively as encrypted environment variables in Vercel&rsquo;s infrastructure. No credentials are hardcoded in any source file or committed to version control. The project&rsquo;s git history has been audited and confirmed free of exposed credentials as of February 27, 2026.</p>
+                    <div class="static-section">
+                        <h3>4. Data Retention</h3>
+                        <table class="policy-table">
+                            <thead>
+                                <tr>
+                                    <th>Data type</th>
+                                    <th>Where stored</th>
+                                    <th>Retention period</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Smart Lookup query text (as cache key)</td>
+                                    <td>Upstash Redis</td>
+                                    <td><strong>14 days</strong>, then automatically deleted</td>
+                                </tr>
+                                <tr>
+                                    <td>AI response data (cached result)</td>
+                                    <td>Upstash Redis</td>
+                                    <td><strong>14 days</strong>, then automatically deleted</td>
+                                </tr>
+                                <tr>
+                                    <td>Brand + serial (decode alert deduplication key)</td>
+                                    <td>Upstash Redis</td>
+                                    <td><strong>24 hours</strong>, then automatically deleted</td>
+                                </tr>
+                                <tr>
+                                    <td>IP address (rate-limit state)</td>
+                                    <td>Upstash Redis</td>
+                                    <td>Duration of the sliding rate-limit window (minutes), then automatically deleted</td>
+                                </tr>
+                                <tr>
+                                    <td>Contact form and feedback submissions</td>
+                                    <td>Resend email logs</td>
+                                    <td><strong>1&ndash;7 days</strong> depending on Resend plan, then delivered to our inbox and purged from Resend logs</td>
+                                </tr>
+                                <tr>
+                                    <td>Serverless function error logs</td>
+                                    <td>Vercel</td>
+                                    <td><strong>1 hour&ndash;3 days</strong> depending on Vercel plan; logs do not contain user query content under normal operation</td>
+                                </tr>
+                                <tr>
+                                    <td>Gemini API optional developer logs</td>
+                                    <td>Google (opt-in only)</td>
+                                    <td><strong>55 days</strong> if developer logging is enabled; not enabled by default</td>
+                                </tr>
+                                <tr>
+                                    <td>Groq API data</td>
+                                    <td>Groq</td>
+                                    <td><strong>None by default.</strong> Up to 30 days only if retained for reliability or abuse investigation.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-                    <p class="policy-sub">Content Security Policy</p>
-                    <p>A strict Content Security Policy (CSP) header is active on all pages. It explicitly allowlists only the domains required for the site to function (Google Ads infrastructure, Google Fonts) and blocks all other third-party scripts, frames, and connections by default.</p>
+                    <div class="static-section">
+                        <h3>5. Your Choices</h3>
 
-                    <p class="policy-sub">AI Model Training Commitment</p>
-                    <p>This service uses the <strong>paid tier of the Google Gemini API</strong>. Under Google&rsquo;s API Terms of Service, paid-tier customers&rsquo; prompts and responses are <strong>not used to train or improve Google&rsquo;s models</strong>. The Groq API is bound by the same restriction under its Services Agreement. Neither AI provider we use will incorporate your queries into model training.</p>
+                        <p class="policy-sub">Cookies</p>
+                        <p>You can manage or delete cookies through your browser settings. Disabling cookies will not affect the Serial Decoder or Smart Lookup functionality.</p>
 
-                    <p class="policy-sub">Minimum Data Principle</p>
-                    <p>Each external service receives only the minimum data required for its specific function. AI providers receive only the query string — no IP address, user-agent, or session data is included in AI requests. Cached responses are stored by query text only, with no linkage to the originating user or session.</p>
-                </div>
+                        <p class="policy-sub">Do Not Track</p>
+                        <p>Because this site does not use behavioral analytics or user tracking, Do Not Track signals have no additional effect on our data practices beyond what is described in this policy.</p>
+                    </div>
 
-                <div class="static-section">
-                    <h3>6. Your Choices and Opt-Out</h3>
+                    <div class="static-section">
+                        <h3>6. Children&rsquo;s Privacy</h3>
+                        <p>Item Assist is not directed at children under 13. We do not knowingly collect personal data from children. If you believe a child has submitted personal information, please <a href="/contact" style="color:var(--primary);">contact us</a> so we can remove it promptly.</p>
+                    </div>
 
-                    <p class="policy-sub">Cookies</p>
-                    <p>You can manage or delete cookies through your browser settings. Disabling third-party cookies will prevent Google AdSense from serving personalized ads. This will not affect the Serial Decoder or Smart Lookup functionality.</p>
+                    <div class="static-section">
+                        <h3>7. Changes to This Policy</h3>
+                        <p>We may update this Privacy Policy from time to time as our services or applicable law changes. Updates will be posted on this page with a revised effective date. Continued use of Item Assist after a change constitutes acceptance of the revised policy.</p>
+                    </div>
 
-                    <p class="policy-sub">Google Ad Personalization</p>
-                    <p>To opt out of personalized Google advertising, visit <a href="https://adssettings.google.com" target="_blank" rel="noopener" style="color:var(--primary);">Google&rsquo;s Ads Settings</a> and toggle off ad personalization.</p>
+                    <div class="static-section">
+                        <h3>8. Contact</h3>
+                        <p>For questions or concerns about this Privacy Policy or our data practices, please use our <a href="/contact" style="color:var(--primary); text-decoration:underline;">Contact page</a>.</p>
+                    </div>
 
-                    <p class="policy-sub">Do Not Track</p>
-                    <p>Because this site does not use behavioral analytics or user tracking beyond AdSense, most Do Not Track signals have no additional effect on our data practices. AdSense and Google Fonts are governed by Google&rsquo;s own DNT policies.</p>
-                </div>
+                </div><!-- /tab: privacy -->
 
-                <div class="static-section">
-                    <h3>7. Children&rsquo;s Privacy</h3>
-                    <p>Item Assist is not directed at children under 13. We do not knowingly collect personal data from children. If you believe a child has submitted personal information, please <a href="/contact" style="color:var(--primary);">contact us</a> so we can remove it promptly.</p>
-                </div>
+                <!-- ── Tab 2: Security & Data Protection ── -->
+                <div id="policy-tab-security" class="policy-tab-panel">
 
-                <div class="static-section">
-                    <h3>8. Changes to This Policy</h3>
-                    <p>We may update this Privacy Policy from time to time as our services or applicable law changes. Updates will be posted on this page with a revised effective date. Continued use of Item Assist after a change constitutes acceptance of the revised policy.</p>
-                </div>
+                    <p>This section summarizes the technical and organizational measures in place to protect your data. It is intended for users, employers, and IT departments evaluating this service.</p>
 
-                <div class="static-section">
-                    <h3>9. Contact</h3>
-                    <p>For questions or concerns about this Privacy Policy or our data practices, please use our <a href="/contact" style="color:var(--primary); text-decoration:underline;">Contact page</a>.</p>
-                </div>
+                    <div class="static-section">
+                        <h3>Encryption and Transmission Security</h3>
+                        <p>All connections to decodemyitem.com are encrypted using HTTPS. A <strong>Strict-Transport-Security (HSTS)</strong> header with a one-year maximum age, subdomain coverage, and preload status is enforced on every route, ensuring that browsers always connect over an encrypted channel. Data in transit to all third-party services (Gemini, Groq, Upstash, Resend) is also encrypted using TLS.</p>
+                    </div>
+
+                    <div class="static-section">
+                        <h3>Infrastructure Security Certifications</h3>
+                        <table class="policy-table">
+                            <thead>
+                                <tr>
+                                    <th>Service</th>
+                                    <th>SOC 2 Type II</th>
+                                    <th>ISO 27001</th>
+                                    <th>GDPR</th>
+                                    <th>Other</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Vercel</strong></td>
+                                    <td><span class="tag-yes">YES</span></td>
+                                    <td><span class="tag-yes">YES (2022)</span></td>
+                                    <td><span class="tag-yes">YES</span></td>
+                                    <td>&mdash;</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Upstash Redis</strong></td>
+                                    <td><span class="tag-yes">YES</span></td>
+                                    <td><span class="tag-note">In progress</span></td>
+                                    <td><span class="tag-yes">YES</span></td>
+                                    <td>HIPAA compliant</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Resend</strong></td>
+                                    <td><span class="tag-yes">YES</span></td>
+                                    <td>&mdash;</td>
+                                    <td><span class="tag-yes">YES</span></td>
+                                    <td>AES-256 at rest; TLS 1.3 in transit</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Google (Gemini / Fonts)</strong></td>
+                                    <td><span class="tag-yes">YES</span></td>
+                                    <td><span class="tag-yes">YES</span></td>
+                                    <td><span class="tag-yes">YES</span></td>
+                                    <td>ISO 27017, ISO 27018</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Groq</strong></td>
+                                    <td><span class="tag-note">Not published</span></td>
+                                    <td>&mdash;</td>
+                                    <td><span class="tag-yes">YES (DPA available)</span></td>
+                                    <td>Data stored on Google Cloud US</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="static-section">
+                        <h3>No Account or Personally Identifiable Information Required</h3>
+                        <p>Item Assist does not require user registration, login, or any form of identity verification. No account credentials, payment information, health data, or government-issued identifiers are ever collected. Serial numbers and model numbers submitted by users are not inherently personally identifiable information, though users should avoid submitting data they consider sensitive.</p>
+                    </div>
+
+                    <div class="static-section">
+                        <h3>Secrets and Credential Management</h3>
+                        <p>All API keys and service credentials are stored exclusively as encrypted environment variables in Vercel&rsquo;s infrastructure. No credentials are hardcoded in any source file or committed to version control. The project&rsquo;s git history has been audited and confirmed free of exposed credentials or personal identifiers as of February 27, 2026.</p>
+                    </div>
+
+                    <div class="static-section">
+                        <h3>Content Security Policy</h3>
+                        <p>A strict Content Security Policy (CSP) header is active on all pages. It explicitly allowlists only the domains required for the site to function (Google Fonts) and blocks all other third-party scripts, frames, and connections by default. This reduces the risk of cross-site scripting (XSS) and unauthorized third-party data collection.</p>
+                    </div>
+
+                    <div class="static-section">
+                        <h3>AI Model Training Commitment</h3>
+                        <p>This service uses the <strong>paid tier of the Google Gemini API</strong>. Under Google&rsquo;s API Terms of Service, paid-tier customers&rsquo; prompts and responses are <strong>not used to train or improve Google&rsquo;s models</strong>. The Groq API is bound by the same restriction under its Services Agreement. Neither AI provider will incorporate your queries into model training.</p>
+                    </div>
+
+                    <div class="static-section">
+                        <h3>Minimum Data Principle</h3>
+                        <p>Each external service receives only the minimum data required for its specific function. AI providers receive only the query string — no IP address, user-agent, or session data is included in AI requests. Rate-limiting data (IP address) is handled separately by Upstash and is not shared with AI providers. Cached responses are stored by query text only, with no linkage to the originating user or session.</p>
+                    </div>
+
+                    <div class="caveat-block">
+                        <strong>For IT and employer review:</strong> A full security and data flow document including external service certifications, risk assessment, and recommended next steps is available upon request via our <a href="/contact" style="color:inherit;text-decoration:underline;">Contact page</a>.
+                    </div>
+
+                </div><!-- /tab: security -->
 
             </div>
         </div>
@@ -393,5 +412,17 @@
 
     <script src="script.js"></script>
     <script src="smart-lookup.js"></script>
+    <script>
+        function switchPolicyTab(tabId, btn) {
+            document.querySelectorAll('.policy-tab-panel').forEach(function(p) { p.classList.remove('active'); });
+            document.querySelectorAll('.global-category-tab').forEach(function(b) {
+                b.classList.remove('active');
+                b.setAttribute('aria-selected', 'false');
+            });
+            document.getElementById('policy-tab-' + tabId).classList.add('active');
+            btn.classList.add('active');
+            btn.setAttribute('aria-selected', 'true');
+        }
+    </script>
 </body>
 </html>
