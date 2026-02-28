@@ -1057,7 +1057,7 @@ function enhanceSmartLookupSidebarTop() {
   section.innerHTML =
     '<div class="sidebar-title">Tools</div>' +
     '<a class="sidebar-link sidebar-smart-top-link" href="/smart-lookup">' +
-    'Smart Lookup <span class="new-badge">NEW</span>' +
+    '\u2b50 Smart Lookup' +
     '</a>' +
     '<a class="sidebar-link sidebar-smart-sub-link" href="/">' +
     'Serial Number Decoder' +
