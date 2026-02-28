@@ -677,10 +677,10 @@ function renderStaticSidebar() {
     container.className = 'sidebar-brand-groups';
     var categoryOrder = ['appliances', 'hvac', 'electronics', 'water-heaters'];
     var CAT_BUTTON_LABELS = {
-      'appliances':    '🎛️ Appliance Brands',
-      'hvac':          '🌡️ HVAC Brands',
-      'electronics':   '📺 Electronics Brands',
-      'water-heaters': '🚿 Water Heater Brands'
+      'appliances':    'Appliance Brands',
+      'hvac':          'HVAC Brands',
+      'electronics':   'Electronics Brands',
+      'water-heaters': 'Water Heater Brands'
     };
     var expandedCategories = getSidebarExpandedCategories();
 
