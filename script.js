@@ -658,8 +658,7 @@ function renderStaticSidebar() {
       { key: 'appliances', label: 'Appliances', href: '/appliances' },
       { key: 'hvac', label: 'HVAC', href: '/hvac' },
       { key: 'electronics', label: 'Electronics', href: '/electronics' },
-      { key: 'water-heaters', label: 'Water Heaters', href: '/water-heaters' },
-      { key: 'smart-lookup', label: 'Smart Lookup ✨', href: '/smart-lookup' }
+      { key: 'water-heaters', label: 'Water Heaters', href: '/water-heaters' }
     ];
     catLinks.forEach(function(item) {
       var a = document.createElement('a');
@@ -1056,6 +1055,7 @@ function enhanceSmartLookupSidebarTop() {
   var section = document.createElement('div');
   section.className = 'sidebar-section sidebar-smart-top';
   section.innerHTML =
+    '<div class="sidebar-title">Tools</div>' +
     '<a class="sidebar-link sidebar-smart-top-link" href="/smart-lookup">' +
     'Smart Lookup <span class="new-badge">NEW</span>' +
     '</a>' +
