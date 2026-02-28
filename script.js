@@ -1411,14 +1411,8 @@ function mountSharedSmartLookupAboutSection() {
     if (existing) existing.innerHTML = smartLookupAboutInnerHtml();
     return;
   }
-  if (slug !== '' && slug !== 'index') return;
-  if (existing) return;
-  var mainCard = document.querySelector('.main-card');
-  if (!mainCard || !mainCard.parentNode) return;
-  var card = document.createElement('section');
-  card.className = 'technical-methodology-card';
-  card.innerHTML = smartLookupAboutInnerHtml();
-  mainCard.insertAdjacentElement('afterend', card);
+  // "About Smart Lookup" section only belongs on the smart-lookup page
+  return;
 }
 
 // ===== FOOTER BRANDING UPDATE (Task 7) =====
@@ -1640,6 +1634,30 @@ function extractMainContentFromDoc(doc) {
   return temp.innerHTML;
 }
 
+function replaceSmartLookupWithButton() {
+  var slug = getBrandPageSlug();
+  if (slug === 'smart-lookup') return;
+
+  // Remove Smart Lookup form containers and related elements
+  ['.smart-lookup-container', '.smart-lookup-standalone', '.technical-methodology-card',
+   '.guided-search-btn', '.guided-search-note'].forEach(function(sel) {
+    document.querySelectorAll(sel).forEach(function(el) {
+      el.parentNode && el.parentNode.removeChild(el);
+    });
+  });
+
+  // Inject "No Serial Number? Use Smart Lookup" redirect prompt
+  var formArea = document.querySelector('.decoder-card .form-area') ||
+                 document.querySelector('.main-card .form-area');
+  if (!formArea) return;
+  if (formArea.querySelector('.sl-redirect-prompt')) return;
+
+  var prompt = document.createElement('p');
+  prompt.className = 'sl-redirect-prompt';
+  prompt.innerHTML = 'No Serial Number? Use <a href="/smart-lookup">Smart Lookup</a>';
+  formArea.appendChild(prompt);
+}
+
 function initPage() {
   ensureSmartLookupDom();
   enhanceHeaderBranding();
@@ -1771,6 +1789,8 @@ function initPage() {
       updateDecodeBtn();
     }
   } catch (_) {}
+
+  replaceSmartLookupWithButton();
 }
 
 function initSpaNavigation() {

@@ -1240,6 +1240,21 @@ body {
 
 }
 
+/* ── Smart Lookup redirect prompt (decoder pages) ── */
+.sl-redirect-prompt {
+    margin-top: 1.1rem;
+    font-size: 0.82rem;
+    color: var(--text-mid);
+}
+.sl-redirect-prompt a {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+}
+.sl-redirect-prompt a:hover {
+    text-decoration: underline;
+}
+
 /* ── Alt Lookup Toggle ── */
 .smart-lookup-container {
 
