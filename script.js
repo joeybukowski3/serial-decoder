@@ -311,10 +311,10 @@ var BRAND_CATEGORY_BY_ID = null;
 var CATEGORY_TO_BRANDS = null;
 var STATIC_SIDEBAR_RENDERED = false;
 var TOP_BRANDS_BY_CATEGORY = {
-  'appliances': ['whirlpool', 'ge', 'frigidaire', 'lg', 'samsung'],
-  'hvac': ['goodman', 'carrier', 'trane', 'rheem', 'lennox'],
-  'electronics': ['samsung', 'sony', 'lg', 'vizio', 'panasonic'],
-  'water-heaters': ['rheem', 'a_o_smith', 'bradford_white', 'state_industries', 'whirlpool_water_heaters']
+  'appliances': ['whirlpool', 'ge', 'frigidaire', 'lg', 'samsung', 'maytag', 'kenmore'],
+  'hvac': ['goodman', 'carrier', 'trane', 'rheem', 'lennox', 'york', 'ruud'],
+  'electronics': ['samsung', 'sony', 'lg', 'apple', 'hp', 'vizio', 'panasonic'],
+  'water-heaters': ['rheem', 'a_o_smith', 'bradford_white', 'state_industries', 'whirlpool_water_heaters', 'ruud', 'richmond']
 };
 var SIDEBAR_CATEGORY_LABELS = {
   'appliances': 'Appliances ️',
@@ -677,6 +677,13 @@ function renderStaticSidebar() {
     var container = document.createElement('div');
     container.className = 'sidebar-brand-groups';
     var categoryOrder = ['appliances', 'hvac', 'electronics', 'water-heaters'];
+    var CAT_BUTTON_LABELS = {
+      'appliances':    'Appliance Brands',
+      'hvac':          'HVAC Brands',
+      'electronics':   'Electronics Brands',
+      'water-heaters': 'Water Heater Brands'
+    };
+    var expandedCategories = getSidebarExpandedCategories();
 
     categoryOrder.forEach(function(catKey) {
       var brandData = getCategoryGroupData(catKey);
@@ -693,20 +700,36 @@ function renderStaticSidebar() {
         return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
       });
 
+      var catLabel = CAT_BUTTON_LABELS[catKey] || (CATEGORY_KEY_TO_NAME[catKey] || catKey) + ' Brands';
+      var isExpanded = expandedCategories.indexOf(catKey) !== -1;
+
       var group = document.createElement('div');
-      group.className = 'sidebar-brand-group';
+      group.className = 'sidebar-brand-group' + (isExpanded ? ' open' : '');
       group.setAttribute('data-category', CATEGORY_KEY_TO_NAME[catKey] || catKey);
 
+      // Clickable header — entire row toggles the group
       var header = document.createElement('div');
       header.className = 'sidebar-group-header';
-      var label = document.createElement('div');
-      label.className = 'sidebar-group-link';
-      label.textContent = CATEGORY_KEY_TO_NAME[catKey] || catKey;
-      header.appendChild(label);
+
+      var toggleBtn = document.createElement('button');
+      toggleBtn.type = 'button';
+      toggleBtn.className = 'sidebar-group-link';
+      toggleBtn.setAttribute('aria-expanded', String(isExpanded));
+      toggleBtn.textContent = (isExpanded ? '\u2013 ' : '+ ') + catLabel;
+
+      var arrow = document.createElement('span');
+      arrow.className = 'sidebar-group-arrow';
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.textContent = '\u25b8';
+
+      header.appendChild(toggleBtn);
+      header.appendChild(arrow);
       group.appendChild(header);
 
+      // Top-7 brand links — hidden until category is expanded
       var list = document.createElement('div');
       list.className = 'sidebar-group-links';
+      if (!isExpanded) list.hidden = true;
       topIds.forEach(function(id) {
         var brand = brandData.find(function(b) { return b.id === id; });
         if (!brand) return;
@@ -720,14 +743,20 @@ function renderStaticSidebar() {
       });
       group.appendChild(list);
 
+      // "+ All Brands" section for remaining brands
+      var moreWrap = null;
+      var moreList = null;
       if (remaining.length) {
-        var moreWrap = document.createElement('div');
+        moreWrap = document.createElement('div');
         moreWrap.className = 'sidebar-more-brands';
+        if (!isExpanded) moreWrap.hidden = true;
+
         var moreBtn = document.createElement('button');
         moreBtn.type = 'button';
         moreBtn.className = 'sidebar-more-toggle';
-        moreBtn.textContent = '+ More Brands';
-        var moreList = document.createElement('div');
+        moreBtn.innerHTML = '<span class="more-brands-icon" aria-hidden="true"></span><span class="more-brands-text">+ All Brands</span>';
+
+        moreList = document.createElement('div');
         moreList.className = 'sidebar-more-list';
         moreList.hidden = true;
         remaining.forEach(function(brand) {
@@ -739,18 +768,46 @@ function renderStaticSidebar() {
           a.setAttribute('data-category', catKey);
           moreList.appendChild(a);
         });
-        var key = 'sidebar_morebrands_' + catKey;
-        moreBtn.addEventListener('click', function() {
-          var isOpen = !moreList.hidden;
-          moreList.hidden = isOpen;
-          moreWrap.classList.toggle('open', !isOpen);
-          moreBtn.textContent = isOpen ? '+ More Brands' : '– Less Brands';
-          try { localStorage.setItem(key, String(!isOpen)); } catch (_) {}
+
+        moreBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var open = !moreList.hidden;
+          moreList.hidden = open;
+          moreWrap.classList.toggle('open', !open);
+          moreBtn.querySelector('.more-brands-text').textContent = open ? '+ All Brands' : '\u2013 All Brands';
         });
+
         moreWrap.appendChild(moreBtn);
         moreWrap.appendChild(moreList);
         group.appendChild(moreWrap);
       }
+
+      // Header click: toggle category open/closed
+      header.addEventListener('click', function() {
+        var nowOpen = list.hidden; // if currently hidden, we're opening
+        list.hidden = !nowOpen;
+        group.classList.toggle('open', nowOpen);
+        toggleBtn.setAttribute('aria-expanded', String(nowOpen));
+        toggleBtn.textContent = (nowOpen ? '\u2013 ' : '+ ') + catLabel;
+        if (moreWrap) moreWrap.hidden = !nowOpen;
+
+        // Collapse "All Brands" when category collapses
+        if (!nowOpen && moreWrap && moreList) {
+          moreList.hidden = true;
+          moreWrap.classList.remove('open');
+          var moreText = moreWrap.querySelector('.more-brands-text');
+          if (moreText) moreText.textContent = '+ All Brands';
+        }
+
+        // Persist expanded state
+        var expanded = getSidebarExpandedCategories();
+        if (nowOpen) {
+          if (expanded.indexOf(catKey) === -1) expanded.push(catKey);
+        } else {
+          expanded = expanded.filter(function(k) { return k !== catKey; });
+        }
+        setSidebarExpandedCategories(expanded);
+      });
 
       container.appendChild(group);
     });

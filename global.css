@@ -202,6 +202,8 @@ body {
     align-items: center;
     justify-content: space-between;
     background: rgba(148, 163, 184, 0.14);
+    cursor: pointer;
+    user-select: none;
 
 }
 
