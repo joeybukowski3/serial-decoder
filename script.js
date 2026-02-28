@@ -1060,7 +1060,7 @@ function enhanceSmartLookupSidebarTop() {
     '\u2b50 Smart Lookup' +
     '</a>' +
     '<a class="sidebar-link sidebar-smart-sub-link" href="/">' +
-    'Serial Number Decoder' +
+    '\ud83d\udcdf Serial Number Decoder' +
     '</a>';
 
   var firstSection = sidebar.querySelector('.sidebar-section');
