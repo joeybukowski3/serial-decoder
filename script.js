@@ -1807,6 +1807,7 @@ function initSpaNavigation() {
     if (!href || href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
     if (href.indexOf('javascript:') === 0) return;
     if (link.hasAttribute('download')) return;
+    if (link.hasAttribute('data-no-spa')) return;
     if (href.indexOf('#') === 0) return;
     var url = new URL(href, window.location.origin);
     if (url.origin !== window.location.origin) return;
