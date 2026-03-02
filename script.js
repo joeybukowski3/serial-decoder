@@ -317,10 +317,10 @@ var TOP_BRANDS_BY_CATEGORY = {
   'water-heaters': ['rheem', 'a_o_smith', 'bradford_white', 'state_industries', 'whirlpool_water_heaters', 'ruud', 'richmond']
 };
 var SIDEBAR_CATEGORY_LABELS = {
-  'appliances': 'ðŸŽ›ï¸ Appliances',
-  'hvac': 'ðŸŒ¡ï¸ HVAC',
-  'electronics': 'ðŸ“º Electronics',
-  'water-heaters': 'ðŸš¿ Water Heaters'
+  'appliances': '\uD83D\uDEE0\uFE0F Appliances',
+  'hvac': '\uD83C\uDF21\uFE0F HVAC',
+  'electronics': '\uD83D\uDCFA Electronics',
+  'water-heaters': '\uD83D\uDEBF Water Heaters'
 };
 var BRAND_SLUG_OVERRIDES = {
   'whirlpool_water_heaters': 'whirlpool',
@@ -1149,15 +1149,16 @@ function injectHeroBanner() {
 }
 
 function enhanceSidebarCategoryLinks() {
+  var slug = getBrandPageSlug();
+  if (slug === '' || slug === 'index') return;
   var section = null;
   document.querySelectorAll('.sidebar .sidebar-section').forEach(function(node) {
     var title = node.querySelector('.sidebar-title');
     if (title && title.textContent.trim().toLowerCase() === 'categories') section = node;
   });
   if (!section) return;
+  if (section.querySelector('.cat-tab[onclick]')) return;
   if (section.querySelector('.cat-tab-link')) return;
-
-  var slug = getBrandPageSlug();
   var activeKey = null;
   try {
     var urlCatRaw = new URLSearchParams(window.location.search).get('cat') || '';
@@ -1188,6 +1189,24 @@ function enhanceSidebarCategoryLinks() {
     a.href = categoryPageHrefByKey(cat.key);
     a.textContent = cat.label;
     section.appendChild(a);
+  });
+}
+
+function bindHomepageCategoryTabs() {
+  var slug = getBrandPageSlug();
+  if (!(slug === '' || slug === 'index')) return;
+  document.querySelectorAll('.category-tab-link').forEach(function(link) {
+    if (link.getAttribute('data-home-tab-bound') === '1') return;
+    link.setAttribute('data-home-tab-bound', '1');
+    link.addEventListener('click', function(event) {
+      var href = link.getAttribute('href') || '';
+      var key = categoryNameToKey(href.replace(/^\/+/, '').replace(/\.html$/i, '').replace(/\/+$/, ''));
+      if (!key || !decoderData[normalizeDecoderCategory(key)]) return;
+      event.preventDefault();
+      var btn = document.querySelector('.cat-tab[data-cat="' + key + '"]');
+      if (!btn && key === 'water-heaters') btn = document.querySelector('.cat-tab[data-cat="waterHeaters"]');
+      selectCategory(key, btn || null);
+    });
   });
 }
 
@@ -1324,7 +1343,7 @@ function buildCategoryTabBarHtml(activeKey) {
     { key: 'hvac', label: 'HVAC', href: '/hvac' },
     { key: 'electronics', label: 'Electronics', href: '/electronics' },
     { key: 'water-heaters', label: 'Water Heaters', href: '/water-heaters' },
-    { key: 'smart-lookup', label: 'â­ Smart Lookup', href: '/smart-lookup' }
+    { key: 'smart-lookup', label: '\u2B50 Smart Lookup', href: '/smart-lookup' }
   ];
   return tabs.map(function(t) {
     return '<a href="' + t.href + '" class="category-tab-link' + (t.key === activeKey ? ' active' : '') + '">' + t.label + '</a>';
@@ -1664,6 +1683,7 @@ function initPage() {
   enhanceSidebarLogo();
   injectHeroBanner();
   ensurePageTitleAndCategoryTabs();
+  bindHomepageCategoryTabs();
   enhanceSmartLookupSidebarTop();
   renderStaticSidebar();
   document.body.classList.toggle('brand-page', isBrandPage());
@@ -3381,7 +3401,7 @@ function clearEmojiCursor() {
   return;
 }
 
-// ===== LOADING STATE (ðŸŒ©ï¸ â†’ â˜€ï¸) =====
+// ===== LOADING STATE (cloud -> sun) =====
 function setLoadingActive() {
   var emoji   = document.getElementById('loadingEmoji');
   var loading = document.getElementById('ageLoading');
@@ -3390,23 +3410,23 @@ function setLoadingActive() {
   if (placeholder) placeholder.classList.add('hidden');
   document.body.style.cursor = 'url("data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\'><text y=\'28\' font-size=\'28\'>\uD83D\uDD75\uFE0F</text></svg>") 16 16, auto';
   if (emoji) {
-    emoji.textContent = 'ðŸŒ©ï¸';
+    emoji.textContent = '\uD83C\uDF29\uFE0F';
     emoji.className   = 'loading-emoji lightning';
   }
   // Reset loading text to default (estimateAge() overrides this for AI searches)
   var lt = document.getElementById('loadingText');
   if (lt) lt.textContent = 'Researching product information...';
   loading.classList.remove('hidden');
-  setEmojiCursor('ðŸŒ©ï¸');
+  setEmojiCursor('\uD83C\uDF29\uFE0F');
 }
 
 function setLoadingSuccess(callback) {
   var emoji = document.getElementById('loadingEmoji');
   if (emoji) {
-    emoji.textContent = 'â˜€ï¸';
+    emoji.textContent = '\u2600\uFE0F';
     emoji.className   = 'loading-emoji sun';
   }
-  setEmojiCursor('â˜€ï¸');
+  setEmojiCursor('\u2600\uFE0F');
   setTimeout(function() {
     document.getElementById('ageLoading').classList.add('hidden');
     clearEmojiCursor();
@@ -3863,9 +3883,9 @@ async function estimateAge() {
   var sr = document.getElementById('serialResults');
   if (sr) sr.classList.add('hidden');
   setLoadingActive();
-  setEmojiCursor('ðŸ•µï¸');  // detective cursor for AI lookup
+  setEmojiCursor('\uD83D\uDD75\uFE0F');  // detective cursor for AI lookup
   var lt = document.getElementById('loadingText');
-  if (lt) lt.textContent = 'ðŸ•µï¸ Investigating...';
+  if (lt) lt.textContent = '\uD83D\uDD75\uFE0F Investigating...';
   document.getElementById('ageLoading').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   var loadStart = Date.now();
 
@@ -4032,7 +4052,7 @@ async function generateAISection(type, btn) {
   var query = queries[type] || (brand + ' appliance ' + year);
 
   var resultEl = document.getElementById('ai-result-' + type);
-  if (btn) { btn.disabled = true; btn.textContent = 'Loadingâ€¦'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
   if (resultEl) resultEl.classList.add('hidden');
 
   try {
