@@ -54,6 +54,8 @@
     { "source": "/appliances", "destination": "/appliances.html" },
     { "source": "/electronics", "destination": "/electronics.html" },
     { "source": "/water-heaters", "destination": "/water-heaters.html" },
+    { "source": "/serial-number-decoding", "destination": "/index.html" },
+    { "source": "/serial-number-decoding.html", "destination": "/index.html" },
     { "source": "/universal-decoder", "destination": "/universal-decoder.html" },
     { "source": "/methodology", "destination": "/methodology.html" },
     { "source": "/disclaimer", "destination": "/disclaimer.html" },
