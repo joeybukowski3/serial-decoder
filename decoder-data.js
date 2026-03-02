@@ -99,6 +99,10 @@ var decoderData = {
       method: 'Count only letters and numbers in the serial number. If the serial number has nine alphanumeric characters, the second character is the year and the third and fourth characters are the week. If the serial number has ten alphanumeric characters, the third character is the year and the fourth and fifth characters are the week.',
       notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
+      patterns: [
+        { name: '9-char alphanumeric', length: 9, mask: '**##*****', notes: 'Week digits are characters 3-4.' },
+        { name: '10-char alphanumeric', length: 10, mask: '***##*****', notes: 'Week digits are characters 4-5.' }
+      ],
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
             decode: function(serial) {
@@ -1122,6 +1126,11 @@ var decoderData = {
       method: 'Characters 1-2 (Character 1 = month, Character 2 = year)',
       notes: '12-year repeating cycle. GE water heaters manufactured by Rheem — use Group 7A. Haier-era units (post-2016) continue using same format.',
       source: 'products.geappliances.com; cannonsappliance.com; lumayeconsulting.com; en.tab-tv.com',
+      patterns: [
+        { name: '8-char standard', length: 8, mask: 'AA######', notes: 'Starts with two letters, followed by six digits.' },
+        { name: '9-char with suffix', length: 9, mask: 'AA######*', notes: 'Starts with two letters, followed by six digits and optional suffix.' },
+        { name: '10-char with suffix', length: 10, mask: 'AA######**', notes: 'Starts with two letters, followed by six digits and optional suffix.' }
+      ],
       yearMap: { 'A': '1977/1989/2001/2013/2025', 'D': '1978/1990/2002/2014/2026', 'F': '1979/1991/2003/2015', 'G': '1980/1992/2004/2016', 'H': '1981/1993/2005/2017', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'R': '1984/1996/2008/2020', 'S': '1985/1997/2009/2021', 'T': '1986/1998/2010/2022', 'V': '1987/1999/2011/2023', 'Z': '1988/2000/2012/2024' },
       monthMap: { 'A': 'January', 'D': 'February', 'F': 'March', 'G': 'April', 'H': 'May', 'L': 'June', 'M': 'July', 'R': 'August', 'S': 'September', 'T': 'October', 'V': 'November', 'Z': 'December' },
       decode: function(serial) {
@@ -1404,6 +1413,10 @@ var decoderData = {
       method: '15-digit: Characters 8-9 (year + month). 11-digit: Characters 4-5 (year + month).',
       notes: 'Identify serial length before decoding. 20-year repeating cycle for some codes (R T W X Y A).',
       source: 'homespy.io; electrical-forensics.com; lumayeconsulting.com',
+      patterns: [
+        { name: '11-char serial', length: 11, mask: '***A*******', notes: 'Year code is at position 4.' },
+        { name: '15-char serial', length: 15, mask: '*******A*******', notes: 'Year code is at position 8.' }
+      ],
       yearMap: { 'R': '2001/2021', 'T': '2002/2022', 'W': '2003/2023', 'X': '2004/2024', 'Y': '2005/2025', 'A': '2006/2026', 'P': '2007', 'Q': '2008', 'S': '2009', 'Z': '2010', 'B': '2011', 'C': '2012', 'D': '2013', 'F': '2014', 'G': '2015', 'H': '2016', 'J': '2017', 'K': '2018', 'M': '2019', 'N': '2020' },
       monthMap: { '1': 'January', '2': 'February', '3': 'March', '4': 'April', '5': 'May', '6': 'June', '7': 'July', '8': 'August', '9': 'September', 'A': 'October', 'B': 'November', 'C': 'December' },
             decode: function(serial) {
@@ -1445,6 +1458,13 @@ var decoderData = {
       method: 'Character 1 (year last digit) + Characters 2-3 (month, two-digit number format)',
       notes: 'Decade must be inferred. 10-year repeating cycle. Example: 810XXXX = October 2008 or 2018. Model number is needed to narrow decade/exact year.',
       source: 'homespy.io; lumayeconsulting.com; cannonsappliance.com',
+      patterns: [
+        { name: '8-char serial', length: 8, mask: '###*****', notes: 'Character 1 is year digit, characters 2-3 are month digits.' },
+        { name: '9-char serial', length: 9, mask: '###******', notes: 'Character 1 is year digit, characters 2-3 are month digits.' },
+        { name: '10-char serial', length: 10, mask: '###*******', notes: 'Character 1 is year digit, characters 2-3 are month digits.' },
+        { name: '11-char serial', length: 11, mask: '###********', notes: 'Character 1 is year digit, characters 2-3 are month digits.' },
+        { name: '12-char serial', length: 12, mask: '###*********', notes: 'Character 1 is year digit, characters 2-3 are month digits.' }
+      ],
       yearMap: { '0': '2000/2010/2020', '1': '2001/2011/2021', '2': '2002/2012/2022', '3': '2003/2013/2023', '4': '2004/2014/2024', '5': '2005/2015/2025', '6': '2006/2016', '7': '2007/2017', '8': '2008/2018', '9': '2009/2019' },
       monthMap: { '10': 'October', '11': 'November', '12': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
       decode: function(serial) {
@@ -1474,6 +1494,12 @@ var decoderData = {
       method: 'Serial always begins with \'FD\' followed by numeric production code.',
       notes: 'Formula: FD digits 1-2 + 20 = year. If sum >= 100 drop the first digit. FD = Fertigungsdatum (German: production date). All three brands use identical logic.',
       source: 'electrical-forensics.com; homespy.io; lumayeconsulting.com; building-center.org',
+      patterns: [
+        { name: '9-char FD serial', length: 9, mask: 'AA####***', prefix: 'FD', notes: 'Must start with FD, followed by 4 numeric date digits.' },
+        { name: '10-char FD serial', length: 10, mask: 'AA####****', prefix: 'FD', notes: 'Must start with FD, followed by 4 numeric date digits.' },
+        { name: '11-char FD serial', length: 11, mask: 'AA####*****', prefix: 'FD', notes: 'Must start with FD, followed by 4 numeric date digits.' },
+        { name: '12-char FD serial', length: 12, mask: 'AA####******', prefix: 'FD', notes: 'Must start with FD, followed by 4 numeric date digits.' }
+      ],
       yearMap: { 'FD79': '1999', 'FD80': '2000', 'FD81': '2001', 'FD82': '2002', 'FD83': '2003', 'FD84': '2004', 'FD85': '2005', 'FD86': '2006', 'FD87': '2007', 'FD88': '2008', 'FD89': '2009', 'FD90': '2010', 'FD91': '2011', 'FD92': '2012', 'FD93': '2013', 'FD94': '2014', 'FD95': '2015', 'FD96': '2016', 'FD97': '2017', 'FD98': '2018', 'FD99': '2019', 'FD00': '2020', 'FD01': '2021', 'FD02': '2022', 'FD03': '2023', 'FD04': '2024', 'FD05': '2025' },
       monthMap: { '10': 'October', '11': 'November', '12': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
       decode: function(serial) {
