@@ -3606,3 +3606,168 @@ img.ia-sidebar-logo {
     height: 150px;
 
 }
+
+/* ---- Homepage Explanation Strip ---- */
+.explain-strip {
+
+    margin: 0.5rem 0 0.75rem;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    background: #f1f5f9;
+    padding: 0.65rem 0.75rem 0.7rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+
+}
+
+.explain-tool-cards {
+
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin-bottom: 0.5rem;
+
+}
+
+.explain-tool-card {
+
+    background: #ffffff;
+    border: 1px solid #dbe4ee;
+    border-radius: 10px;
+    padding: 0.55rem 0.6rem;
+
+}
+
+.explain-tool-head {
+
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.2rem;
+
+}
+
+.explain-tool-icon {
+
+    font-size: 0.95rem;
+    line-height: 1;
+
+}
+
+.explain-tool-head h2 {
+
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.25;
+
+}
+
+.explain-tool-card p {
+
+    font-size: 0.76rem;
+    color: var(--text-mid);
+    line-height: 1.4;
+    margin: 0 0 0.35rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+
+}
+
+.explain-tool-tag {
+
+    display: inline-flex;
+    align-items: center;
+    background: #e2e8f0;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    padding: 0.12rem 0.48rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    white-space: nowrap;
+
+}
+
+.explain-use-cases {
+
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border: 1px solid #dbe4ee;
+    border-radius: 8px;
+    background: #ffffff;
+    overflow: hidden;
+    margin-bottom: 0.45rem;
+
+}
+
+.explain-use-case {
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: 32px;
+    padding: 0.32rem 0.45rem;
+    font-size: 0.72rem;
+    color: #64748b;
+    text-align: center;
+    line-height: 1.3;
+    border-right: 1px solid #e2e8f0;
+
+}
+
+.explain-use-case:last-child {
+
+    border-right: none;
+
+}
+
+.explain-handoff {
+
+    border-top: 1px solid #dbe4ee;
+    padding-top: 0.35rem;
+
+}
+
+.explain-handoff p {
+
+    font-size: 0.75rem;
+    color: #64748b;
+    text-align: center;
+    line-height: 1.35;
+
+}
+
+@media (max-width: 700px) {
+
+    .explain-tool-cards {
+
+        grid-template-columns: 1fr;
+
+    }
+
+    .explain-use-cases {
+
+        grid-template-columns: 1fr;
+
+    }
+
+    .explain-use-case {
+
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+        justify-content: flex-start;
+        text-align: left;
+        padding: 0.4rem 0.55rem;
+
+    }
+
+    .explain-use-case:last-child {
+
+        border-bottom: none;
+
+    }
+
+}
