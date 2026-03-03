@@ -1678,6 +1678,43 @@ function replaceSmartLookupWithButton() {
   formArea.appendChild(prompt);
 }
 
+function bindSmartLookupActions() {
+  var input = getSmartLookupInputEl();
+  if (!input) return;
+
+  var buttons = document.querySelectorAll(
+    '.smart-lookup-container button[onclick*="estimateAge"], ' +
+    '.smart-lookup-standalone button[onclick*="estimateAge"], ' +
+    '#smartLookupBtn, .smart-lookup-btn, .alt-btn'
+  );
+
+  buttons.forEach(function(btn) {
+    if (!btn) return;
+    if (btn.tagName === 'BUTTON' && (!btn.type || btn.type.toLowerCase() !== 'button')) {
+      btn.type = 'button';
+    }
+    if (btn.getAttribute('data-smart-action-bound') === '1') return;
+    btn.setAttribute('data-smart-action-bound', '1');
+
+    // Prefer explicit event binding over inline attributes for reliability.
+    if ((btn.getAttribute('onclick') || '').indexOf('estimateAge') !== -1) {
+      btn.removeAttribute('onclick');
+    }
+
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var q = String((input && input.value) || '').trim();
+      if (!q) {
+        if (input && input.focus) input.focus();
+        showCustomAlert('Enter a model number, brand, or description to use Smart Lookup.');
+        return;
+      }
+      estimateAge();
+    });
+  });
+}
+
 function initPage() {
   ensureSmartLookupDom();
   enhanceHeaderBranding();
@@ -1797,6 +1834,7 @@ function initPage() {
       altQuery.addEventListener('input', showAltDisclaimer);
     }
   }
+  bindSmartLookupActions();
 
   loadBrandContext();
   ensureDidYouKnowBlock();
