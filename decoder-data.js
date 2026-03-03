@@ -2935,9 +2935,11 @@ var decoderData = {
         var yearDigit = s[3];
         var weekChars = s.substring(4, 6);
         var weekNum = parseInt(weekChars, 10);
-        if (isNaN(weekNum) || weekNum < 1 || weekNum > 53) return null;
         var y = this.yearMap[yearDigit];
-        return { year: y || 'Year digit: ' + yearDigit + ' (decade unknown)', month: 'Week ' + weekChars, yearCode: yearDigit, weekDigits: weekChars };
+        var weekText = (!isNaN(weekNum) && weekNum >= 1 && weekNum <= 53)
+          ? ('Week ' + weekChars)
+          : ('Week code: ' + weekChars + ' (outside 01-53; year decoded only)');
+        return { year: y || 'Year digit: ' + yearDigit + ' (decade unknown)', month: weekText, yearCode: yearDigit, weekDigits: weekChars };
       }
     },
     'asus': {
