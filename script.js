@@ -2077,7 +2077,8 @@ function collectBrandMethodEntries(brandIdOrName, brandName, preferredCategory) 
         categoryKey: catKey,
         categoryLabel: categoryDisplayLabel(catKey),
         name: decoderVariantLabel(decoderId, decoder.name || ''),
-        method: methodText
+        method: methodText,
+        decoder: decoder
       });
     });
   });
@@ -2092,7 +2093,50 @@ function collectBrandMethodEntries(brandIdOrName, brandName, preferredCategory) 
   return entries;
 }
 
-function buildDecodingMethodsDropdownHtml(entries, summaryText) {
+function normalizeSerialForMethodPreview(serialInput) {
+  var s = String(serialInput || '').toUpperCase().replace(/\s+/g, '');
+  if (!s) return '';
+  if (/[^A-Z0-9]/.test(s)) return '';
+  return s;
+}
+
+function isSerialLikeInput(input) {
+  var s = normalizeSerialForMethodPreview(input);
+  return !!s && s.length >= 6;
+}
+
+function summarizeMethodResultForSerial(decoder, serialInput) {
+  var serial = normalizeSerialForMethodPreview(serialInput);
+  if (!serial) {
+    return 'Result preview unavailable - enter a serial number to run this method.';
+  }
+  if (!decoder || typeof decoder.decode !== 'function') {
+    return 'Result preview unavailable for this method.';
+  }
+  try {
+    var raw = decoder.decode(serial);
+    var sanity = sanitizeDecodeResult(raw);
+    if (!raw || !sanity.valid) {
+      return 'No valid result for this serial using this method.';
+    }
+    var result = sanity.result || raw;
+    var yearDisplay = capYear(result.year) || String(result.year || 'N/A');
+    var monthDisplay = String(result.month || '').trim();
+    var summary = 'Year: ' + yearDisplay;
+    if (monthDisplay && monthDisplay !== 'N/A') {
+      summary += ' | Month/Period: ' + monthDisplay;
+    }
+    var age = computeEstimatedAge(result._ageYear || yearDisplay);
+    if (age && age !== '\u2014') {
+      summary += ' | Estimated age: ' + age;
+    }
+    return summary;
+  } catch (_) {
+    return 'Method could not decode this serial input.';
+  }
+}
+
+function buildDecodingMethodsDropdownHtml(entries, summaryText, serialInput) {
   var list = Array.isArray(entries) ? entries : [];
   if (!list.length) return '';
   var summary = summaryText || ('Decoding Methods for this Brand (' + list.length + ')');
@@ -2100,16 +2144,18 @@ function buildDecodingMethodsDropdownHtml(entries, summaryText) {
     '<summary>' + esc(summary) + '</summary>' +
     '<div class="sources-checked-body"><div class="evidence-list">';
   list.forEach(function(item) {
+    var resultSummary = summarizeMethodResultForSerial(item.decoder, serialInput);
     html += '<div class="evidence-item">' +
       '<span class="ev-source">' + esc(item.name + ' - ' + item.categoryLabel) + '</span>' +
-      '<span>' + esc(item.method) + '</span>' +
+      '<span><strong>Method:</strong> ' + esc(item.method) + '</span>' +
+      '<span><strong>Result:</strong> ' + esc(resultSummary) + '</span>' +
       '</div>';
   });
   html += '</div></div></details>';
   return html;
 }
 
-function renderSerialMethodsDropdown(brandIdOrName, brandName, preferredCategory) {
+function renderSerialMethodsDropdown(brandIdOrName, brandName, preferredCategory, serialInput) {
   var body = document.querySelector('#serialResults .results-body');
   if (!body) return;
   var existing = body.querySelector('.decoding-methods-dropdown');
@@ -2128,7 +2174,7 @@ function renderSerialMethodsDropdown(brandIdOrName, brandName, preferredCategory
       }];
     }
   }
-  var html = buildDecodingMethodsDropdownHtml(entries, 'All Decoding Methods for this Brand');
+  var html = buildDecodingMethodsDropdownHtml(entries, 'All Decoding Methods for this Brand', serialInput);
   if (!html) return;
 
   var wrap = document.createElement('div');
@@ -2301,7 +2347,7 @@ function showDecodeFallback(decoder, serial, brandId, reason, overrideNotes) {
     'We\u2019re sorry, our system is having trouble decoding that number. Please refer to the decoding method above.\n\nSerial entered: ' + serial;
   updateSearchQueryLine();
   updateResultWarning({ year: 'Unknown', month: '' }, brandId);
-  renderSerialMethodsDropdown(brandId, decoder.name, currentCategory);
+  renderSerialMethodsDropdown(brandId, decoder.name, currentCategory, serial);
   showBrandLogo('serialBrandLogo', brandId, decoder.name);
   currentFeedbackContext = { brand: decoder.name, serial: serial };
   fireFallbackAlert(decoder.name, serial, currentCategory, reason);
@@ -3102,7 +3148,7 @@ function showPatternValidationError(decoder, serial, brandId, validation, patter
   document.getElementById('resultMethod').textContent = (decoder && (decoder.method || decoder.serialLengthNote)) || 'Check the product label and ensure the full serial number is entered.';
   document.getElementById('resultNotes').textContent  = lines.join('\n');
   updateResultWarning({ year: 'Unknown', month: '' }, brandId);
-  renderSerialMethodsDropdown(brandId, brandName, currentCategory);
+  renderSerialMethodsDropdown(brandId, brandName, currentCategory, serial);
   showBrandLogo('serialBrandLogo', brandId, brandName);
   updateSearchQueryLine();
   currentFeedbackContext = { brand: brandName, serial: serial };
@@ -3136,7 +3182,7 @@ function showSerialLengthError(decoder, serial, brandId, req) {
     ' Search again or use Smart Lookup.';
 
   updateResultWarning({ year: 'Unknown', month: '' }, brandId);
-  renderSerialMethodsDropdown(brandId, decoder.name, currentCategory);
+  renderSerialMethodsDropdown(brandId, decoder.name, currentCategory, serial);
   showBrandLogo('serialBrandLogo', brandId, decoder.name);
   updateSearchQueryLine();
   currentFeedbackContext = { brand: decoder.name, serial: serial };
@@ -3206,7 +3252,8 @@ function showDualEraResult(metaBrandId, cfg, serial) {
   html += '</details>';
   html += buildDecodingMethodsDropdownHtml(
     collectBrandMethodEntries(metaBrandId, brandName, currentCategory),
-    'All Decoding Methods for this Brand'
+    'All Decoding Methods for this Brand',
+    serial
   );
 
   // Inject into results-body, hiding all standard rows
@@ -3289,7 +3336,7 @@ function decodeSerial() {
       document.getElementById('resultNotes').textContent  = kenmoreResolution.note;
       updateSearchQueryLine();
       updateResultWarning({ year: 'Unknown', month: '' }, 'kenmore');
-      renderSerialMethodsDropdown('kenmore', 'Kenmore', currentCategory);
+      renderSerialMethodsDropdown('kenmore', 'Kenmore', currentCategory, serial);
       showBrandLogo('serialBrandLogo', 'kenmore', 'Kenmore');
       currentFeedbackContext = { brand: 'Kenmore', serial: serial };
       document.getElementById('ageResults').classList.add('hidden');
@@ -3526,7 +3573,7 @@ function decodeSerial() {
     }
     document.getElementById('resultNotes').textContent = notesText;
     updateResultWarning(result, brandId, serial);
-    renderSerialMethodsDropdown(brandId, decoder.name, currentCategory);
+    renderSerialMethodsDropdown(brandId, decoder.name, currentCategory, serial);
 
     // Compute derived display fields from output shape (no decode rules exposed)
     var _displayedYear = document.getElementById('resultYear').textContent;
@@ -4066,6 +4113,7 @@ function buildSmartLookupResultHtml(query, data, specificity) {
   }
   if (lookupBrand) {
     var preferredCategory = smartLookupCategoryToDecoderCategory(category);
+    var previewSerial = isSerialLikeInput(query) ? query : '';
     var brandMethodEntries = collectBrandMethodEntries(lookupBrand, lookupBrand, preferredCategory);
     if (!brandMethodEntries.length) {
       brandMethodEntries = [{
@@ -4075,7 +4123,7 @@ function buildSmartLookupResultHtml(query, data, specificity) {
         method: 'No direct serial method is currently mapped for this brand. Use the serial number decoder with the exact model/serial label details.'
       }];
     }
-    html += buildDecodingMethodsDropdownHtml(brandMethodEntries, 'All Decoding Methods for ' + lookupBrand);
+    html += buildDecodingMethodsDropdownHtml(brandMethodEntries, 'All Decoding Methods for ' + lookupBrand, previewSerial);
   }
 
   // GUARANTEED MINIMUM BLOCKS: Description, Origin, Production Status
