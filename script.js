@@ -1655,7 +1655,8 @@ function extractMainContentFromDoc(doc) {
 
 function replaceSmartLookupWithButton() {
   var slug = getBrandPageSlug();
-  if (slug === 'smart-lookup') return;
+  // Keep full Smart Lookup UI on the main page and smart-lookup page.
+  if (!slug || slug === 'index' || slug === 'smart-lookup') return;
 
   // Remove Smart Lookup form containers and related elements
   ['.smart-lookup-container', '.smart-lookup-standalone', '.technical-methodology-card',
