@@ -1,220 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5946778263750869" crossorigin="anonymous"></script>
-<meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Lookup | Decode by Model or Description</title>
-    <meta name="description" content="Use Smart Lookup to estimate product age when you don't have a serial number. Enter a model number or description and get an instant estimate.">
-    <link rel="canonical" href="https://www.decodemyitem.com/smart-lookup.html">
-    <link rel="stylesheet" href="global.css">
-    
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Lookup – Item Assist</title>
+  <meta name="description" content="Use Smart Lookup to estimate product age when you don't have a serial number. Enter a model number or description and get an AI-powered estimate.">
+  <link rel="canonical" href="https://www.decodemyitem.com/smart-lookup.html">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .hidden { display: none !important; }
+
+    /* ─── LOOKUP BOX ─── */
+    .lookup-box {
+      max-width: 600px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 28px 24px;
+    }
+    .lookup-box .section-label { margin-bottom: 16px; display: block; }
+
+    /* ─── TIPS ─── */
+    .tips { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 16px; max-width: 600px; margin: 32px auto 0; }
+    .tip-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+    .tip-icon { font-size: 22px; margin-bottom: 8px; }
+    .tip-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+    .tip-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+    /* ─── RESULTS CARD ─── */
+    .results-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; max-width: 600px; margin: 24px auto; }
+    .results-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); }
+    .results-header h3 { font-size: 14px; font-weight: 700; color: var(--white); margin: 0; }
+    .results-body { padding: 16px 20px; }
+    .results-footer { display: flex; gap: 10px; flex-wrap: wrap; padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.08); }
+
+    /* ─── LOADING ─── */
+    .loading-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px; }
+    .loading-emoji { font-size: 36px; }
+    @keyframes lightning-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.1)} }
+    .loading-emoji.lightning { animation: lightning-pulse 1s ease-in-out infinite; }
+    .loading-text { font-size: 13px; color: var(--muted); }
+
+    /* ─── RESULT ACTION BUTTONS ─── */
+    .decode-again-btn, .error-btn {
+      font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600;
+      padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .decode-again-btn { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
+    .decode-again-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .error-btn { background: transparent; border: 1px solid rgba(245,166,35,0.2); color: var(--amber); }
+    .error-btn:hover { border-color: rgba(245,166,35,0.4); }
+
+    /* ─── MODAL ─── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 20px; max-width: 480px; width: 100%; overflow: hidden; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .modal-header h3 { font-size: 14px; font-weight: 700; color: var(--white); margin: 0; }
+    .modal-close { background: transparent; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
+    .modal-close:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+    .modal-body { padding: 20px 22px; }
+    .modal-field { margin-bottom: 14px; }
+    .modal-field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .decode-btn { background: linear-gradient(135deg, var(--teal), #0099ff); color: var(--navy); font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; }
+    .cancel-btn { background: transparent; color: var(--muted); font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); cursor: pointer; }
+    .cancel-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.25); }
+    .fb-thanks { background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--teal); margin-top: 12px; }
+    .form-input { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
+    .form-input:focus { border-color: var(--teal); }
+    .form-select { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; appearance: none; cursor: pointer; }
+    textarea.form-input { resize: vertical; min-height: 80px; }
+    .brand-logo-wrap { width: 32px; height: 32px; }
+    .brand-logo-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  </style>
 </head>
 <body>
-    <div class="circuit-bg"></div>
-    <div class="circuit-nodes">
-        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
-        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
+
+<!-- ─── NAV ─── -->
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-icon">🔍</div>
+    <div>
+      <div class="logo-text">Item <span>Assist</span></div>
+      <div class="logo-sub">Intuitive Data Aggregation</div>
     </div>
+  </a>
+  <ul>
+    <li><a href="index.html" data-page="index">Serial Number Decoder</a></li>
+    <li><a href="smart-lookup.html" data-page="smart">Smart Lookup</a></li>
+    <li><a href="methodology.html" data-page="methodology">Methodology</a></li>
+    <li><a href="contact.html" data-page="contact">Contact</a></li>
+    <li><a href="security.html" data-page="security" class="nav-cta">Security &amp; Data</a></li>
+  </ul>
+</nav>
 
-        <aside class="sidebar">
-        <div class="sidebar-header">
-            <a class="sidebar-logo" href="/"><img class="ia-sidebar-logo" src="/assets/item-assist-logo.png" width="150" height="150" alt="Item Assist logo"></a>
-        </div>
-        <div class="sidebar-section">
-            <div class="sidebar-title">Categories</div>
-            <button class="cat-tab active" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
-            <button class="cat-tab" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
-            <button class="cat-tab" data-cat="hvac" onclick="selectCategory('hvac', this)">HVAC</button>
-            <button class="cat-tab" data-cat="electronics" onclick="selectCategory('electronics', this)">Electronics</button>
-        </div>
-        <div class="sidebar-section">
-            <div class="sidebar-title">Brands</div>
-            <a class="sidebar-link" href="/goodman">Goodman</a>
-            <a class="sidebar-link" href="/carrier">Carrier</a>
-            <a class="sidebar-link" href="/rheem">Rheem</a>
-            <a class="sidebar-link" href="/trane">Trane</a>
-            <a class="sidebar-link" href="/whirlpool">Whirlpool</a>
-            <a class="sidebar-link" href="/ge">GE</a>
-            <a class="sidebar-link" href="/samsung">Samsung</a>
-            <a class="sidebar-link" href="/lg">LG</a>
-            <a class="sidebar-link" href="/sony">Sony</a>
-            <a class="sidebar-link" href="/bosch">Bosch</a>
-            <a class="sidebar-link" href="/maytag">Maytag</a>
-            <a class="sidebar-link" href="/frigidaire">Frigidaire</a>
-            <a class="sidebar-link" href="/kenmore">Kenmore</a>
-            <a class="sidebar-link" href="/apple">Apple</a>
-            <a class="sidebar-link" href="/hp">HP</a>
-            <a class="sidebar-link" href="/asus">ASUS</a>
-            <a class="sidebar-link" href="/google-pixel">Google Pixel</a>
-            <a class="sidebar-link" href="/vizio">Vizio</a>
-            <a class="sidebar-link" href="/panasonic">Panasonic</a>
-        </div>
-        <div class="sidebar-section">
-            <div class="sidebar-title">Resources</div>
-            <a class="sidebar-link" href="/smart-lookup">Smart Lookup</a>
-            <a class="sidebar-link" href="/methodology">Methodology</a>
-            <a class="sidebar-link" href="/disclaimer">Disclaimer</a>
-            <a class="sidebar-link" href="/contact">Contact</a>
-        </div>
-    </aside>
-    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-    <div class="ad-zone"><div class="ad-label">Data Partner</div></div>
-    <div class="page-shell">
-    <div class="app-container content-wrapper container">
-        <div class="header">
-            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle navigation">&#9776;</button>
-            <div class="header-brand">
-                <h1><span class="accent">&#9889;</span> Smart Lookup <span class="accent">(Powered by AI)</span></h1>
-                <p class="subtitle">Estimate manufacture dates by model number or description</p>
-                <p class="header-tagline">No serial number needed — get an instant estimate for appliances, water heaters, electronics, and HVAC.</p>
-            </div>
-            
-        </div>
+<!-- ─── PAGE HERO ─── -->
+<section class="page-hero">
+  <div class="hero-badge">
+    <span class="badge-dot" style="background:var(--amber);"></span>
+    <span style="color:var(--amber);">AI-Powered</span>
+  </div>
+  <h1>Smart <em>Lookup</em></h1>
+  <p class="hero-sub">No serial number? No problem. Enter a model number, brand name, or product description and our AI will research and estimate the manufacture date range.</p>
+</section>
 
-        <div class="main-card">
-            <div class="form-area">
-                <div class="smart-lookup-container">
-                    <div class="smart-lookup-header"><span class="ai-icon">&#10024;</span> No Serial Number? Use Smart Lookup (Powered by AI)</div>
-                    <div id="altSection" class="alt-section open">
-                        <div class="alt-inner">
-                            <div class="alt-divider"><span>Smart Lookup (Powered by AI)</span></div>
-                            <div class="form-group">
-                                <div class="step-label">Model Number or Description</div>
-                                <input type="text" id="smart-lookup-input" class="form-input" placeholder="e.g., GE Profile PFE28KSKSS or LG 55&quot; C3 series TV">
-                                <div class="helper-text">Enter a model number, brand + model, or description to estimate the age</div>
-                            </div>
-                            <p class="alt-scope-note">&#128268; Works for appliances, water heaters, <strong>electronics</strong>, and HVAC — even if the brand is not listed.</p>
-                            <p class="alt-disclaimer hidden">Note: Serial numbers are the most reliable way to date an item. This tool estimates age ranges using online research data—the more specific your info, the better the results. Keep in mind that general search terms may yield broader date ranges for long-running models.</p>
-                            <button class="decode-btn" onclick="estimateAge()">Estimate Age</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- ─── LOOKUP TOOL ─── -->
+<section class="section" style="padding-top:32px;">
+  <div class="lookup-box">
+    <span class="section-label">✨ Smart Lookup</span>
 
-        <div id="ageLoading" class="results-card hidden">
-            <div class="loading-inner">
-                <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
-                <div class="loading-text" id="loadingText">Researching product information...</div>
-            </div>
-        </div>
+    <label for="smart-lookup-input">Model Number or Description</label>
+    <input type="text" id="smart-lookup-input" class="search-input"
+           placeholder="e.g., GE Profile PFE28KSKSS or LG 55&quot; C3 series TV"
+           style="margin-bottom:6px;">
+    <p class="search-hint">Enter a model number, brand + model, brand + series, or description to estimate age. The more specific, the better.</p>
 
-        <div id="ageResults" class="results-card hidden">
-            <div class="results-header">
-                <h3>&#128337; Smart Lookup (Powered by AI) Results</h3>
-                <div class="brand-logo-wrap" id="ageBrandLogo"></div>
-            </div>
-            <div class="results-body" id="smart-lookup-results"></div>
-            <div class="results-footer">
-                <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
-                <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
-            </div>
-        </div>
+    <button class="btn-amber" style="width:100%;margin-top:14px;" onclick="estimateAge()">✨ Run Smart Lookup</button>
+    <p class="search-link" style="margin-top:12px;">Have a serial number? <a href="index.html">Use the Serial Decoder →</a></p>
+  </div>
 
-        <section class="technical-methodology-card">
-            <h2>About Smart Lookup (Powered by AI)</h2>
-            <p class="technical-methodology-subhead">Proprietary Intelligence for Missing Data</p>
-            <p class="technical-methodology-copy">When serial numbers are missing, incomplete, or unreadable, Smart Lookup applies proprietary intelligence across model patterns, manufacturer timelines, and known product release cycles to estimate manufacture windows with practical confidence.</p>
-            <ul class="technical-methodology-list">
-                <li><strong>Broad Search Tier:</strong> Interprets general product descriptions to identify likely era ranges and historical launch periods.</li>
-                <li><strong>Professional Search Tier:</strong> Uses brand, model family, series, and variant-level clues to refine results for claim-ready age estimates.</li>
-            </ul>
-            <p class="technical-methodology-copy">For best results, include the brand, full model number, and any visible version or series details from the data plate.</p>
-            <p class="technical-methodology-note">Designed for insurance claim accuracy and equipment lifecycle audits.</p>
-        </section>
-
-        <div class="footer">
-            <p class="footer-tagline">Built for fast, reliable equipment age lookups.</p>
-            <div class="footer-links">
-                <a href="/methodology">Methodology</a>
-                <span class="footer-sep">|</span>
-                <a href="/disclaimer">Disclaimer</a>
-                <span class="footer-sep">|</span>
-                <a href="/contact">Contact</a>
-                            <span class="footer-sep">|</span>
-                <a href="/privacy-policy">Privacy Policy</a>
-            </div>
-            <p class="footer-verify">Database Last Verified: February 2026. All decoding logic is cross-referenced with manufacturer technical bulletins.</p>
-            <p>&copy; 2026 Item Assist. Always verify results for accuracy.</p>
-            <p class="footer-db">Database updated February 2026 â€” 30,000+ serial formats &amp; model references.</p>
-        </div>
-    </div><!-- /app-container -->
-    </div><!-- /page-shell -->
-
-    <!-- Feedback Modal -->
-    <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3>&#9888; Report an Issue</h3>
-                <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
-            </div>
-            <div class="modal-body">
-                <div class="modal-field">
-                    <label>Brand</label>
-                    <input type="text" id="fbBrand" class="form-input" readonly>
-                </div>
-                <div class="modal-field">
-                    <label>Serial Number / Search Query</label>
-                    <input type="text" id="fbSerial" class="form-input" readonly>
-                </div>
-                <div class="modal-field">
-                    <label>Issue Type</label>
-                    <select id="fbType" class="form-select">
-                        <option value="">-- Select issue type --</option>
-                        <option value="wrong_year">Wrong year / date</option>
-                        <option value="wrong_month">Wrong month</option>
-                        <option value="wrong_brand">Wrong brand identified</option>
-                        <option value="format_error">Format / decode error</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                <div class="modal-field">
-                    <label>Details (optional)</label>
-                    <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong? What is the correct date if known?"></textarea>
-                </div>
-                <div id="fbThanks" class="fb-thanks hidden">&#10003; Thank you! Your feedback helps improve this tool.</div>
-                <div id="fbActions" class="modal-actions">
-                    <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
-                    <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
-                </div>
-            </div>
-        </div>
+  <!-- TIPS -->
+  <div class="tips">
+    <div class="tip-card">
+      <div class="tip-icon">🎯</div>
+      <div class="tip-title">Be Specific</div>
+      <p class="tip-desc">Include the full model number when possible — this gives the AI the best chance of a precise date range.</p>
     </div>
+    <div class="tip-card">
+      <div class="tip-icon">🏷️</div>
+      <div class="tip-title">Include Brand</div>
+      <p class="tip-desc">Even a partial brand name helps narrow down the results significantly.</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">⏱️</div>
+      <div class="tip-title">Expect a Range</div>
+      <p class="tip-desc">Smart Lookup returns an estimated year range, not an exact date. Use the Serial Decoder for precision.</p>
+    </div>
+  </div>
+</section>
 
-    <script src="decoder-data.js"></script>
-    <script src="script.js"></script>
-    <script src="smart-lookup.js"></script>
+<!-- ─── LOADING ─── -->
+<div id="ageLoading" class="results-card hidden">
+  <div class="loading-inner">
+    <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
+    <div class="loading-text" id="loadingText">Researching product information...</div>
+  </div>
+</div>
+
+<!-- ─── AGE ESTIMATE RESULTS ─── -->
+<div id="ageResults" class="results-card hidden">
+  <div class="results-header">
+    <h3>🕑 Smart Lookup Results</h3>
+    <div class="brand-logo-wrap" id="ageBrandLogo"></div>
+  </div>
+  <div class="results-body" id="smart-lookup-results"></div>
+  <div class="results-footer">
+    <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
+    <button class="error-btn" onclick="openFeedbackModal()">⚠️ Possible Error? Let Us Know</button>
+  </div>
+</div>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div>© 2026 Item Assist · Database verified February 2026</div>
+  <div class="footer-links">
+    <a href="methodology.html">Methodology</a>
+    <a href="contact.html">Contact</a>
+    <a href="security.html">Security &amp; Data Notice</a>
+  </div>
+</footer>
+
+<!-- ─── FEEDBACK MODAL ─── -->
+<div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>⚠️ Report an Issue</h3>
+      <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label>Brand</label>
+        <input type="text" id="fbBrand" class="form-input" readonly>
+      </div>
+      <div class="modal-field">
+        <label>Serial Number / Search Query</label>
+        <input type="text" id="fbSerial" class="form-input" readonly>
+      </div>
+      <div class="modal-field">
+        <label>Issue Type</label>
+        <select id="fbType" class="form-select">
+          <option value="">-- Select issue type --</option>
+          <option value="wrong_year">Wrong year / date</option>
+          <option value="wrong_month">Wrong month</option>
+          <option value="wrong_brand">Wrong brand identified</option>
+          <option value="format_error">Format / decode error</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>Details (optional)</label>
+        <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong? What is the correct date if known?"></textarea>
+      </div>
+      <div id="fbThanks" class="fb-thanks hidden">&#10003; Thank you! Your feedback helps improve this tool.</div>
+      <div id="fbActions" class="modal-actions">
+        <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
+        <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="decoder-data.js"></script>
+<script src="script.js"></script>
+<script src="smart-lookup.js"></script>
+<script src="shared.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,483 +1,556 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5946778263750869" crossorigin="anonymous"></script>
-<meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serial Number Age Decoder | Item Assist</title>
-    <meta name="description" content="Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.">
-    <link rel="canonical" href="https://www.decodemyitem.com/">
-    <link rel="stylesheet" href="global.css">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5946778263750869" crossorigin="anonymous"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serial Number Decoder | Item Assist</title>
+  <meta name="description" content="Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.">
+  <link rel="canonical" href="https://www.decodemyitem.com/">
+  <link rel="stylesheet" href="shared.css">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <style>
+    /* ─── UTILITIES ─── */
+    .hidden { display: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+    /* ─── DECODER FORM ─── */
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+    .era-group { margin-top: 8px; }
+    .era-note { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+
+    /* ─── RESULTS CARD ─── */
+    .results-card {
+      background: var(--navy-mid);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      max-width: 620px;
+      margin: 0 auto 24px;
+    }
+    .results-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+    }
+    .results-header h3 { font-size: 14px; font-weight: 700; color: var(--white); margin: 0; }
+    .results-body { padding: 16px 20px; }
+    .results-footer {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      padding: 12px 20px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      background: rgba(0,0,0,0.08);
+    }
+
+    /* ─── RESULT ROWS ─── */
+    .result-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 13px;
+    }
+    .result-row:last-of-type { border-bottom: none; }
+    .result-label { color: var(--muted); }
+    .result-value { color: var(--white); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .result-row--primary .result-label { font-weight: 700; color: var(--white); }
+    .result-row--primary .result-value { font-size: 15px; color: var(--teal); }
+
+    /* ─── INFO BLOCKS ─── */
+    .info-block { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 16px; margin-top: 12px; }
+    .info-block h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 6px; }
+    .info-block p { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+    /* ─── DETERMINATION DETAILS ─── */
+    .determination-details { margin-top: 12px; }
+    .determination-details summary { font-size: 12px; color: var(--muted); cursor: pointer; padding: 6px 0; list-style: none; display: flex; align-items: center; gap: 6px; }
+    .determination-details summary::before { content: '▶'; font-size: 9px; transition: transform 0.2s; }
+    .determination-details[open] summary::before { transform: rotate(90deg); }
+    .determination-details summary:hover { color: var(--teal); }
+    .determination-body { font-size: 12px; color: var(--muted); line-height: 1.6; padding: 8px 0; }
+
+    /* ─── MORE OPTIONS ─── */
+    .more-options-section { border-top: 1px solid rgba(255,255,255,0.06); }
+    .more-options-toggle { width: 100%; padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; transition: color 0.2s; }
+    .more-options-toggle:hover { color: var(--teal); }
+    .more-options-arrow { margin-right: 6px; font-size: 10px; display: inline-block; transition: transform 0.2s; }
+    .more-options-body { padding: 0 20px 16px; }
+    .options-drawer { margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden; }
+    .options-drawer summary { font-size: 13px; font-weight: 600; color: var(--white); cursor: pointer; padding: 10px 14px; background: rgba(255,255,255,0.02); }
+    .options-drawer summary:hover { color: var(--teal); }
+    .options-drawer-body { padding: 12px 14px; }
+    .placeholder-note { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+    .placeholder-hint { font-size: 12px; color: var(--muted); opacity: 0.7; margin-bottom: 12px; }
+    .ai-generate-btn { background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25); border-radius: 8px; padding: 8px 16px; font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; color: var(--teal); cursor: pointer; transition: all 0.2s; }
+    .ai-generate-btn:hover { background: rgba(0,201,167,0.18); }
+    .ai-generate-result { margin-top: 12px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ─── RESULT ACTION BUTTONS ─── */
+    .copy-btn, .decode-again-btn, .error-btn, .cancel-btn {
+      font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600;
+      padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .copy-btn { background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25); color: var(--teal); }
+    .copy-btn:hover { background: rgba(0,201,167,0.18); }
+    .decode-again-btn { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
+    .decode-again-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .error-btn { background: transparent; border: 1px solid rgba(245,166,35,0.2); color: var(--amber); }
+    .error-btn:hover { border-color: rgba(245,166,35,0.4); }
+    .cancel-btn { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
+    .cancel-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.25); }
+    .decode-btn { background: linear-gradient(135deg, var(--teal), #0099ff); color: var(--navy); font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; }
+
+    /* ─── LOADING ─── */
+    .loading-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px; }
+    .loading-emoji { font-size: 36px; }
+    @keyframes lightning-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.1)} }
+    .loading-emoji.lightning { animation: lightning-pulse 1s ease-in-out infinite; }
+    .loading-text { font-size: 13px; color: var(--muted); }
+
+    /* ─── BRAND LOGO ─── */
+    .brand-logo-wrap { width: 32px; height: 32px; }
+    .brand-logo-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+    /* ─── POPULAR BRANDS ─── */
+    .brands-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .brand-tile {
+      display: flex; flex-direction: column; gap: 4px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .brand-tile:hover { border-color: rgba(0,201,167,0.4); background: rgba(255,255,255,0.07); transform: translateY(-2px); }
+    .brand-tile-name { font-size: 14px; font-weight: 700; color: var(--white); }
+    .brand-tile-desc { font-size: 11px; color: var(--muted); }
+
+    /* ─── FEEDBACK MODAL ─── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 20px; max-width: 480px; width: 100%; overflow: hidden; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .modal-header h3 { font-size: 14px; font-weight: 700; color: var(--white); margin: 0; }
+    .modal-close { background: transparent; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
+    .modal-close:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+    .modal-body { padding: 20px 22px; }
+    .modal-field { margin-bottom: 14px; }
+    .modal-field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .fb-thanks { background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--teal); margin-top: 12px; }
+    .form-input { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
+    .form-input:focus { border-color: var(--teal); }
+    .form-select { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; appearance: none; cursor: pointer; }
+    textarea.form-input { resize: vertical; min-height: 80px; }
+
+    /* ─── GUIDE DRAWER ─── */
+    .guide-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 150; display: none; }
+    .guide-drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 340px; max-width: 90vw; background: var(--navy-mid); border-left: 1px solid var(--border); z-index: 160; overflow-y: auto; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; }
+    .guide-drawer.open { transform: translateX(0); }
+    .guide-drawer-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); position: sticky; top: 0; background: var(--navy-mid); }
+    .guide-drawer-header h3 { font-size: 14px; font-weight: 700; color: var(--white); margin: 0; }
+    .guide-drawer-close { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; }
+    .guide-drawer-close:hover { color: var(--white); }
+    .guide-drawer-body { padding: 20px; flex: 1; }
+    .guide-drawer-body h4 { font-size: 13px; font-weight: 700; color: var(--white); margin: 16px 0 8px; }
+    .guide-drawer-body h4:first-child { margin-top: 0; }
+    .guide-drawer-body ol, .guide-drawer-body ul { padding-left: 18px; }
+    .guide-drawer-body li { font-size: 13px; color: var(--muted); margin-bottom: 6px; line-height: 1.5; }
+    .guide-drawer-body p { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+    .warning-note { background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.2); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 16px; }
+    .warning-note strong { color: var(--amber); }
+
+    /* ─── RESULTS WRAPPER ─── */
+    .results-wrapper { max-width: 620px; margin: 0 auto; padding: 0 0 32px; }
+  </style>
 </head>
 <body>
-    <div class="circuit-bg"></div>
-    <div class="circuit-nodes">
-        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
-        <div class="node"></div><div class="node"></div><div class="node"></div><div class="node"></div>
+
+<!-- ─── NAV ─── -->
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-icon">🔍</div>
+    <div>
+      <div class="logo-text">Item <span>Assist</span></div>
+      <div class="logo-sub">Intuitive Data Aggregation</div>
     </div>
+  </a>
+  <ul>
+    <li><a href="index.html" data-page="index">Serial Number Decoder</a></li>
+    <li><a href="smart-lookup.html" data-page="smart">Smart Lookup</a></li>
+    <li><a href="methodology.html" data-page="methodology">Methodology</a></li>
+    <li><a href="contact.html" data-page="contact">Contact</a></li>
+    <li><a href="security.html" data-page="security" class="nav-cta">Security &amp; Data</a></li>
+  </ul>
+</nav>
 
-        <aside class="sidebar">
-        <div class="sidebar-header">
-            <a class="sidebar-logo" href="/"><img class="ia-sidebar-logo" src="/assets/item-assist-logo.png" width="150" height="150" alt="Item Assist logo"></a>
-        </div>
-        <div class="sidebar-section">
-            <div class="sidebar-title">Categories</div>
-            <button class="cat-tab active" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
-            <button class="cat-tab" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
-            <button class="cat-tab" data-cat="hvac" onclick="selectCategory('hvac', this)">HVAC</button>
-            <button class="cat-tab" data-cat="electronics" onclick="selectCategory('electronics', this)">Electronics</button>
-        </div>
-        <div class="sidebar-section">
-            <div class="sidebar-title">Brands</div>
-            <a class="sidebar-link" href="/goodman">Goodman</a>
-            <a class="sidebar-link" href="/carrier">Carrier</a>
-            <a class="sidebar-link" href="/rheem">Rheem</a>
-            <a class="sidebar-link" href="/trane">Trane</a>
-            <a class="sidebar-link" href="/whirlpool">Whirlpool</a>
-            <a class="sidebar-link" href="/ge">GE</a>
-            <a class="sidebar-link" href="/samsung">Samsung</a>
-            <a class="sidebar-link" href="/lg">LG</a>
-            <a class="sidebar-link" href="/sony">Sony</a>
-            <a class="sidebar-link" href="/bosch">Bosch</a>
-            <a class="sidebar-link" href="/maytag">Maytag</a>
-            <a class="sidebar-link" href="/frigidaire">Frigidaire</a>
-            <a class="sidebar-link" href="/kenmore">Kenmore</a>
-            <a class="sidebar-link" href="/apple">Apple</a>
-            <a class="sidebar-link" href="/hp">HP</a>
-            <a class="sidebar-link" href="/asus">ASUS</a>
-            <a class="sidebar-link" href="/google-pixel">Google Pixel</a>
-            <a class="sidebar-link" href="/vizio">Vizio</a>
-            <a class="sidebar-link" href="/panasonic">Panasonic</a>
-        </div>
-        <div class="sidebar-section">
-            <div class="sidebar-title">Resources</div>
-            <a class="sidebar-link" href="/smart-lookup">Smart Lookup</a>
-            <a class="sidebar-link" href="/methodology">Methodology</a>
-            <a class="sidebar-link" href="/disclaimer">Disclaimer</a>
-            <a class="sidebar-link" href="/contact">Contact</a>
-        </div>
-    </aside>
-    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-    <div class="ad-zone"><div class="ad-label">Data Partner</div></div>
-    <div class="page-shell">
-    <div class="app-container content-wrapper container">
+<!-- ─── PAGE HERO ─── -->
+<section class="page-hero">
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    No AI Required
+  </div>
+  <h1>Serial Number <em>Decoder</em></h1>
+  <p class="hero-sub">Instantly decode manufacture dates from serial numbers across 100+ appliance, HVAC, electronics, and water heater brands.</p>
+</section>
 
-        <!-- Header -->
-        <div class="header">
-            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle navigation">&#9776;</button>
-            <div class="header-brand">
-                <h1><span class="accent">&#9889;</span> Serial Number Age <span class="accent">Decoder</span></h1>
-                <p class="subtitle">Find manufacture dates for appliances, water heaters &amp; electronics</p>
-                <p class="header-tagline">Trusted by <strong>homeowners</strong> and <strong>insurance professionals</strong> to determine equipment age from serial numbers — no account required.</p>
-            </div>
-            
+<!-- ─── DECODER TOOL ─── -->
+<section class="section" style="padding-top:32px;padding-bottom:16px;">
+  <div style="max-width:620px;margin:0 auto;">
+    <div class="search-box">
+      <!-- Category + Smart Lookup Tabs -->
+      <div class="search-tabs">
+        <button class="search-tab cat-tab active" data-cat="appliances"   onclick="selectCatAndShowDecoder('appliances', this)">🏠 Appliances</button>
+        <button class="search-tab cat-tab"         data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">💧 Water Heaters</button>
+        <button class="search-tab cat-tab"         data-cat="hvac"        onclick="selectCatAndShowDecoder('hvac', this)">❄️ HVAC</button>
+        <button class="search-tab cat-tab"         data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">📺 Electronics</button>
+        <button class="search-tab smart-tab"       onclick="showSmartPanel(this)">✨ Smart Lookup</button>
+      </div>
+
+      <!-- DECODER PANEL -->
+      <div class="search-panel" id="panel-decoder">
+        <label class="sr-only" for="brand">Select Brand</label>
+        <select id="brand" class="search-select">
+          <option value="">-- Select Brand --</option>
+        </select>
+
+        <!-- Era Selector (shown by script.js when needed) -->
+        <div class="era-group hidden" id="eraGroup">
+          <label class="sr-only" for="eraSelect">
+            Manufacture Era
+            <span title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">ⓘ</span>
+          </label>
+          <select id="eraSelect" class="search-select" style="margin-top:8px;">
+            <option value="">-- Select Era --</option>
+            <option value="post">Post-2006 (manufactured after 2006)</option>
+            <option value="pre">Pre-2006 (manufactured before 2006)</option>
+          </select>
+          <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
         </div>
 
-        <!-- Search Form -->
-<div class="main-card">
-            <!-- Category Tabs -->
-            
+        <label class="sr-only" for="serial">Enter Serial Number</label>
+        <input type="text" id="serial" class="search-input" placeholder="Enter serial number (e.g., CB2501800)" style="margin-top:8px;">
+        <p class="search-hint">Enter the serial number exactly as shown on the product label</p>
 
-            <!-- Form -->
-            <div class="form-area">
-                <div class="form-group">
-                    <label class="step-label sr-only" for="brand">Select Brand</label>
-                    <select id="brand" class="form-select">
-                        <option value="">-- Select Brand --</option>
-                    </select>
-                </div>
+        <button id="decodeBtn" class="btn-primary" style="width:100%;margin-top:14px;" disabled onclick="decodeSerial()">🔍 Decode Serial Number</button>
+        <p class="search-link" style="margin-top:10px;">No serial number? <a href="smart-lookup.html">Use Smart Lookup →</a></p>
+      </div>
 
-                <!-- Era Dropdown -->
-                <div class="form-group era-group hidden" id="eraGroup">
-                    <label class="step-label sr-only" for="eraSelect">
-                        Manufacture Era
-                        <span class="info-icon" title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">ⓘ</span>
-                    </label>
-                    <select id="eraSelect" class="form-select">
-                        <option value="">-- Select Era --</option>
-                        <option value="post">Post-2006 (manufactured after 2006)</option>
-                        <option value="pre">Pre-2006 (manufactured before 2006)</option>
-                    </select>
-                    <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
-                </div>
-
-                <div class="form-group">
-                    <label class="step-label sr-only" for="serial">Enter Serial Number</label>
-                    <input type="text" id="serial" class="form-input" placeholder="Enter serial number (e.g., CB2501800)">
-                    <div class="helper-text">Enter the serial number exactly as shown on the product label</div>
-                </div>
-
-                <button id="decodeBtn" class="decode-btn" disabled onclick="decodeSerial()">Decode Serial Number</button>
-                <div class="smart-lookup-container">
-                    <div class="smart-lookup-header"><span class="ai-icon">&#10024;</span> No Serial Number? Use Smart Lookup (Powered by AI)</div>
-                    <!-- Alt Lookup Toggle -->
-                    <span class="alt-toggle open" onclick="toggleAlt()">
-                        <span class="arrow">&#9654;</span> No serial number? Search by model or description
-                    </span>
-
-                    <div id="altSection" class="alt-section open">
-                        <div class="alt-inner">
-                            <div class="alt-divider"><span>Smart Lookup (Powered by AI)</span></div>
-                            <div class="form-group">
-                                <label class="step-label sr-only" for="smart-lookup-input">Model Number or Description</label>
-                                <input type="text" id="smart-lookup-input" class="form-input" placeholder="e.g., GE Profile PFE28KSKSS or LG 55&quot; C3 series TV">
-                                <div class="helper-text">Enter a model number, brand + model, brand + series, or general description to estimate the age. The more information you provide, the better the result.</div>
-                            </div>
-                            <p class="alt-scope-note">&#128268; Works for appliances, water heaters, <strong>and electronics</strong> — TVs, computers, phones, and any brand not listed in the tabs above.</p>
-                            <p class="alt-disclaimer hidden">Note: Serial numbers are the most reliable way to date an item. This tool estimates age ranges using online research data—the more specific your info, the better the results. Keep in mind that general search terms may yield broader date ranges for long-running models.</p>
-                            <button class="decode-btn" onclick="estimateAge()">Estimate Age</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-<!-- Loading -->
-        <div id="ageLoading" class="results-card hidden">
-            <div class="loading-inner">
-                <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
-                <div class="loading-text" id="loadingText">Researching product information...</div>
-            </div>
-        </div>
-
-        <!-- Serial Decode Results -->
-        <div id="serialResults" class="results-card hidden">
-            <div class="results-header">
-                <h3>&#128202; Decoded Results</h3>
-                <div class="brand-logo-wrap" id="serialBrandLogo"></div>
-            </div>
-            <div class="results-body">
-                <div class="result-row result-row--primary">
-                    <span class="result-label">Manufacture Date</span>
-                    <span class="result-value" id="resultYear"></span>
-                </div>
-                <div class="result-row" id="resultMonthRow">
-                    <span class="result-label">Month / Period</span>
-                    <span class="result-value" id="resultMonth"></span>
-                </div>
-                <div class="result-row">
-                    <span class="result-label">Brand</span>
-                    <span class="result-value" id="resultBrand"></span>
-                </div>
-                <div class="result-row">
-                    <span class="result-label">Estimated Age</span>
-                    <span class="result-value" id="resultEstimatedAge">—</span>
-                </div>
-                <div class="info-block method">
-                    <h4>Decoding Method</h4>
-                    <p id="resultMethod"></p>
-                </div>
-                <div class="info-block notes">
-                    <h4>Important Notes</h4>
-                    <p id="resultNotes"></p>
-                </div>
-                <details class="determination-details">
-                    <summary>How this was determined</summary>
-                    <div class="determination-body">
-                        We use manufacturer serial format rules and published industry references to extract manufacture date information from serial numbers. Some brands reuse year codes across decades, which is why multiple valid years may appear. When two years are shown, the correct decade can typically be confirmed using physical condition, purchase records, or known installation dates.
-                    </div>
-                </details>
-            </div>
-            <div class="results-footer">
-                <button class="copy-btn" onclick="copyClaimFile()">Copy Information</button>
-                <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
-                <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
-            </div>
-            <div class="more-options-section">
-                <button class="more-options-toggle" onclick="toggleMoreOptions()">
-                    <span class="more-options-arrow" id="moreOptionsArrow">&#9654;</span> More options
-                </button>
-                <div class="more-options-body hidden" id="moreOptionsBody">
-                    <details class="options-drawer">
-                        <summary>Replacement Options</summary>
-                        <div class="options-drawer-body">
-                            <p class="placeholder-note">This section loads on demand.</p>
-                            <p class="placeholder-hint">Find current-market replacement units for this brand and product type.</p>
-                            <button class="ai-generate-btn" onclick="generateAISection('replacements', this)">&#128161; Generate (uses AI)</button>
-                            <div class="ai-generate-result hidden" id="ai-result-replacements"></div>
-                        </div>
-                    </details>
-                    <details class="options-drawer">
-                        <summary>Detailed Specifications</summary>
-                        <div class="options-drawer-body">
-                            <p class="placeholder-note">This section loads on demand.</p>
-                            <p class="placeholder-hint">Technical specifications and features for this product class.</p>
-                            <button class="ai-generate-btn" onclick="generateAISection('specs', this)">&#128161; Generate (uses AI)</button>
-                            <div class="ai-generate-result hidden" id="ai-result-specs"></div>
-                        </div>
-                    </details>
-                    <details class="options-drawer">
-                        <summary>Market Data</summary>
-                        <div class="options-drawer-body">
-                            <p class="placeholder-note">This section loads on demand.</p>
-                            <p class="placeholder-hint">Current pricing and market availability for this product category.</p>
-                            <button class="ai-generate-btn" onclick="generateAISection('market', this)">&#128161; Generate (uses AI)</button>
-                            <div class="ai-generate-result hidden" id="ai-result-market"></div>
-                        </div>
-                    </details>
-                </div>
-            </div>
-        </div>
-
-        <!-- Age Estimate Results -->
-        <div id="ageResults" class="results-card hidden">
-            <div class="results-header">
-                <h3>&#128337; Estimated Age</h3>
-                <div class="brand-logo-wrap" id="ageBrandLogo"></div>
-            </div>
-            <div class="results-body" id="smart-lookup-results"></div>
-            <div class="results-footer">
-                <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
-                <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
-            </div>
-        </div>
-
-        <!-- Popular Brands SEO Section -->
-        <section class="popular-brands-section" aria-label="Decode by brand">
-            <h2 class="brands-section-title">Decode by Brand</h2>
-            <p class="brands-section-desc">Dedicated serial number decode guides for major appliance and electronics brands.</p>
-            <div class="brands-grid">
-                <a href="/ge" class="brand-tile">
-                    <span class="brand-tile-name">GE</span>
-                    <span class="brand-tile-desc">Refrigerators, ranges, washers</span>
-                </a>
-                <a href="/whirlpool" class="brand-tile">
-                    <span class="brand-tile-name">Whirlpool</span>
-                    <span class="brand-tile-desc">All Whirlpool family brands</span>
-                </a>
-                <a href="/samsung" class="brand-tile">
-                    <span class="brand-tile-name">Samsung</span>
-                    <span class="brand-tile-desc">Appliances &amp; TVs</span>
-                </a>
-                <a href="/lg" class="brand-tile">
-                    <span class="brand-tile-name">LG</span>
-                    <span class="brand-tile-desc">Appliances &amp; TVs</span>
-                </a>
-                <a href="/bosch" class="brand-tile">
-                    <span class="brand-tile-name">Bosch</span>
-                    <span class="brand-tile-desc">Dishwashers, washers, ranges</span>
-                </a>
-                <a href="/maytag" class="brand-tile">
-                    <span class="brand-tile-name">Maytag</span>
-                    <span class="brand-tile-desc">Pre &amp; post-2006 formats</span>
-                </a>
-                <a href="/frigidaire" class="brand-tile">
-                    <span class="brand-tile-name">Frigidaire</span>
-                    <span class="brand-tile-desc">Refrigerators, ranges, washers</span>
-                </a>
-                <a href="/kenmore" class="brand-tile">
-                    <span class="brand-tile-name">Kenmore</span>
-                    <span class="brand-tile-desc">OEM identification guide</span>
-                </a>
-                <a href="/apple" class="brand-tile">
-                    <span class="brand-tile-name">Apple</span>
-                    <span class="brand-tile-desc">iPhones, iPads, Macs</span>
-                </a>
-                <a href="/hp" class="brand-tile">
-                    <span class="brand-tile-name">HP</span>
-                    <span class="brand-tile-desc">Laptops, desktops, printers</span>
-                </a>
-                <a href="/asus" class="brand-tile">
-                    <span class="brand-tile-name">ASUS</span>
-                    <span class="brand-tile-desc">Laptops, motherboards, desktops</span>
-                </a>
-                <a href="/google-pixel" class="brand-tile">
-                    <span class="brand-tile-name">Google Pixel</span>
-                    <span class="brand-tile-desc">Pixel phones &amp; tablets</span>
-                </a>
-                <a href="/sony" class="brand-tile">
-                    <span class="brand-tile-name">Sony</span>
-                    <span class="brand-tile-desc">Bravia TVs &amp; home theater</span>
-                </a>
-                <a href="/vizio" class="brand-tile">
-                    <span class="brand-tile-name">Vizio</span>
-                    <span class="brand-tile-desc">Vizio TVs all series</span>
-                </a>
-                <a href="/panasonic" class="brand-tile">
-                    <span class="brand-tile-name">Panasonic</span>
-                    <span class="brand-tile-desc">TVs &amp; home theater</span>
-                </a>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p class="footer-tagline">Built for fast, reliable equipment age lookups.</p>
-            <div class="footer-links">
-                <a href="/methodology">Methodology</a>
-                <span class="footer-sep">|</span>
-                <a href="/disclaimer">Disclaimer</a>
-                <span class="footer-sep">|</span>
-                <a href="/contact">Contact</a>
-                            <span class="footer-sep">|</span>
-                <a href="/privacy-policy">Privacy Policy</a>
-            </div>
-            <p class="footer-verify">Database Last Verified: February 2026. All decoding logic is cross-referenced with manufacturer technical bulletins.</p>
-            <p>&copy; 2026 Item Assist. Always verify results for accuracy.</p>
-            <p class="footer-db">Database updated February 2026 &nbsp;&middot;&nbsp; Sources: Manufacturer documentation and authorized publications</p>
-        </div>
-
-    </div><!-- /app-container -->
-    </div><!-- /page-shell -->
-
-    <!-- Guide Drawer -->
-    <div id="guideOverlay" class="guide-overlay" onclick="closeGuide()"></div>
-    <div id="guideDrawer" class="guide-drawer">
-        <div class="guide-drawer-header">
-            <h3>&#9432; How to Use This Tool</h3>
-            <button class="guide-drawer-close" onclick="closeGuide()">&#x2715;</button>
-        </div>
-        <div class="guide-drawer-body">
-            <h4>Quick Decoding</h4>
-            <ol>
-                <li>Click <strong>Appliances</strong> or <strong>Water Heaters</strong></li>
-                <li>Choose the <strong>brand</strong> from the dropdown</li>
-                <li>If an <strong>Era selector</strong> appears, choose Pre-2006 or Post-2006</li>
-                <li>Enter the <strong>serial number</strong> exactly as shown on the label</li>
-                <li>Click <strong>Decode Serial Number</strong></li>
-            </ol>
-            <h4>No Serial Number?</h4>
-            <p>Use the <strong>Smart Lookup</strong> section. Enter a model number, brand name, or description (e.g., "GE Profile PFE28KSKSS") to get an AI-powered age estimate.</p>
-            <h4>Finding Serial Numbers</h4>
-            <ul>
-                <li><strong>Refrigerators:</strong> Inside on the left or right wall</li>
-                <li><strong>Ovens/Ranges:</strong> Inside the door or on the back panel</li>
-                <li><strong>Dishwashers:</strong> Top edge of the door or side panel</li>
-                <li><strong>Washers/Dryers:</strong> Inside the door or on the back</li>
-                <li><strong>Water Heaters:</strong> On a sticker/plate on the side of the tank</li>
-            </ul>
-            <div class="warning-note">
-                <strong>For Insurance Claims:</strong> Many serial number codes repeat every 10–20 years. Always verify the decade using physical condition, model features, purchase receipts, or installation records. Document which method you used to determine the final manufacture date.
-            </div>
-        </div>
+      <!-- SMART LOOKUP PANEL -->
+      <div class="search-panel" id="panel-smart" style="display:none;">
+        <label class="sr-only" for="smart-lookup-input">Model Number or Description</label>
+        <input type="text" id="smart-lookup-input" class="search-input"
+               placeholder="e.g., GE Profile PFE28KSKSS or LG 55&quot; C3 series TV">
+        <p class="search-hint">Enter a model number, brand + model, brand + series, or description to estimate the age. The more information you provide, the better the result.</p>
+        <button class="btn-amber" style="width:100%;margin-top:14px;" onclick="estimateAge()">✨ Run Smart Lookup</button>
+        <p class="search-link" style="margin-top:10px;">Have a serial number? Use the tabs above to select your brand.</p>
+      </div>
     </div>
+  </div>
+</section>
 
-    <!-- Feedback Modal -->
-    <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3>&#9888; Report an Issue</h3>
-                <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
-            </div>
-            <div class="modal-body">
-                <div class="modal-field">
-                    <label class="sr-only" for="fbBrand">Brand</label>
-                    <input type="text" id="fbBrand" class="form-input" readonly>
-                </div>
-                <div class="modal-field">
-                    <label class="sr-only" for="fbSerial">Serial Number / Search Query</label>
-                    <input type="text" id="fbSerial" class="form-input" readonly>
-                </div>
-                <div class="modal-field">
-                    <label class="sr-only" for="fbType">Issue Type</label>
-                    <select id="fbType" class="form-select">
-                        <option value="">-- Select issue type --</option>
-                        <option value="wrong_year">Wrong year / date</option>
-                        <option value="wrong_month">Wrong month</option>
-                        <option value="wrong_brand">Wrong brand identified</option>
-                        <option value="format_error">Format / decode error</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                <div class="modal-field">
-                    <label class="sr-only" for="fbDetails">Details (optional)</label>
-                    <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong? What is the correct date if known?"></textarea>
-                </div>
-                <div id="fbThanks" class="fb-thanks hidden">&#10003; Thank you! Your feedback helps improve this tool.</div>
-                <div id="fbActions" class="modal-actions">
-                    <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
-                    <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
-                </div>
-            </div>
-        </div>
+<!-- ─── RESULTS WRAPPER ─── -->
+<div class="results-wrapper" style="padding:0 48px 32px;">
+
+  <!-- Loading -->
+  <div id="ageLoading" class="results-card hidden">
+    <div class="loading-inner">
+      <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
+      <div class="loading-text" id="loadingText">Researching product information...</div>
     </div>
+  </div>
 
-    <script src="decoder-data.js"></script>
-    <script src="script.js"></script>
-    <script src="smart-lookup.js"></script>
-    <script type="application/ld+json">
+  <!-- Serial Decode Results -->
+  <div id="serialResults" class="results-card hidden">
+    <div class="results-header">
+      <h3>📊 Decoded Results</h3>
+      <div class="brand-logo-wrap" id="serialBrandLogo"></div>
+    </div>
+    <div class="results-body">
+      <div class="result-row result-row--primary">
+        <span class="result-label">Manufacture Date</span>
+        <span class="result-value" id="resultYear"></span>
+      </div>
+      <div class="result-row" id="resultMonthRow">
+        <span class="result-label">Month / Period</span>
+        <span class="result-value" id="resultMonth"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Brand</span>
+        <span class="result-value" id="resultBrand"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Estimated Age</span>
+        <span class="result-value" id="resultEstimatedAge">—</span>
+      </div>
+      <div class="info-block method">
+        <h4>Decoding Method</h4>
+        <p id="resultMethod"></p>
+      </div>
+      <div class="info-block notes">
+        <h4>Important Notes</h4>
+        <p id="resultNotes"></p>
+      </div>
+      <details class="determination-details">
+        <summary>How this was determined</summary>
+        <div class="determination-body">
+          We use manufacturer serial format rules and published industry references to extract manufacture date information from serial numbers. Some brands reuse year codes across decades, which is why multiple valid years may appear. When two years are shown, the correct decade can typically be confirmed using physical condition, purchase records, or known installation dates.
+        </div>
+      </details>
+    </div>
+    <div class="results-footer">
+      <button class="copy-btn" onclick="copyClaimFile()">Copy Information</button>
+      <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
+      <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
+    </div>
+    <div class="more-options-section">
+      <button class="more-options-toggle" onclick="toggleMoreOptions()">
+        <span class="more-options-arrow" id="moreOptionsArrow">&#9654;</span> More options
+      </button>
+      <div class="more-options-body hidden" id="moreOptionsBody">
+        <details class="options-drawer">
+          <summary>Replacement Options</summary>
+          <div class="options-drawer-body">
+            <p class="placeholder-note">This section loads on demand.</p>
+            <p class="placeholder-hint">Find current-market replacement units for this brand and product type.</p>
+            <button class="ai-generate-btn" onclick="generateAISection('replacements', this)">&#128161; Generate (uses AI)</button>
+            <div class="ai-generate-result hidden" id="ai-result-replacements"></div>
+          </div>
+        </details>
+        <details class="options-drawer">
+          <summary>Detailed Specifications</summary>
+          <div class="options-drawer-body">
+            <p class="placeholder-note">This section loads on demand.</p>
+            <p class="placeholder-hint">Technical specifications and features for this product class.</p>
+            <button class="ai-generate-btn" onclick="generateAISection('specs', this)">&#128161; Generate (uses AI)</button>
+            <div class="ai-generate-result hidden" id="ai-result-specs"></div>
+          </div>
+        </details>
+        <details class="options-drawer">
+          <summary>Market Data</summary>
+          <div class="options-drawer-body">
+            <p class="placeholder-note">This section loads on demand.</p>
+            <p class="placeholder-hint">Current pricing and market availability for this product category.</p>
+            <button class="ai-generate-btn" onclick="generateAISection('market', this)">&#128161; Generate (uses AI)</button>
+            <div class="ai-generate-result hidden" id="ai-result-market"></div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Age Estimate Results -->
+  <div id="ageResults" class="results-card hidden">
+    <div class="results-header">
+      <h3>&#128337; Estimated Age</h3>
+      <div class="brand-logo-wrap" id="ageBrandLogo"></div>
+    </div>
+    <div class="results-body" id="smart-lookup-results"></div>
+    <div class="results-footer">
+      <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
+      <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
+    </div>
+  </div>
+
+</div><!-- /results-wrapper -->
+
+<!-- ─── TRUST BAR ─── -->
+<div class="trust-bar">
+  <div class="trust-item"><span>🏢</span><span><strong>100+</strong> Brands covered</span></div>
+  <div class="trust-item"><span>⚡</span><span><strong>Instant</strong> results</span></div>
+  <div class="trust-item"><span>🤖</span><span><strong>AI Fallback</strong> via Smart Lookup</span></div>
+  <div class="trust-item"><span>🏠</span><span>Appliances, HVAC, Electronics &amp; Water Heaters</span></div>
+</div>
+
+<!-- ─── POPULAR BRANDS ─── -->
+<section class="section alt">
+  <div style="max-width:1100px;margin:0 auto;">
+    <span class="section-label">Browse by Brand</span>
+    <h2 class="section-title">Decode by Brand</h2>
+    <p class="section-sub">Dedicated serial number decode guides for major appliance and electronics brands.</p>
+    <div class="brands-grid">
+      <a href="/ge" class="brand-tile"><span class="brand-tile-name">GE</span><span class="brand-tile-desc">Refrigerators, ranges, washers</span></a>
+      <a href="/whirlpool" class="brand-tile"><span class="brand-tile-name">Whirlpool</span><span class="brand-tile-desc">All Whirlpool family brands</span></a>
+      <a href="/samsung" class="brand-tile"><span class="brand-tile-name">Samsung</span><span class="brand-tile-desc">Appliances &amp; TVs</span></a>
+      <a href="/lg" class="brand-tile"><span class="brand-tile-name">LG</span><span class="brand-tile-desc">Appliances &amp; TVs</span></a>
+      <a href="/bosch" class="brand-tile"><span class="brand-tile-name">Bosch</span><span class="brand-tile-desc">Dishwashers, washers, ranges</span></a>
+      <a href="/maytag" class="brand-tile"><span class="brand-tile-name">Maytag</span><span class="brand-tile-desc">Pre &amp; post-2006 formats</span></a>
+      <a href="/frigidaire" class="brand-tile"><span class="brand-tile-name">Frigidaire</span><span class="brand-tile-desc">Refrigerators, ranges, washers</span></a>
+      <a href="/kenmore" class="brand-tile"><span class="brand-tile-name">Kenmore</span><span class="brand-tile-desc">OEM identification guide</span></a>
+      <a href="/apple" class="brand-tile"><span class="brand-tile-name">Apple</span><span class="brand-tile-desc">iPhones, iPads, Macs</span></a>
+      <a href="/hp" class="brand-tile"><span class="brand-tile-name">HP</span><span class="brand-tile-desc">Laptops, desktops, printers</span></a>
+      <a href="/asus" class="brand-tile"><span class="brand-tile-name">ASUS</span><span class="brand-tile-desc">Laptops, motherboards, desktops</span></a>
+      <a href="/google-pixel" class="brand-tile"><span class="brand-tile-name">Google Pixel</span><span class="brand-tile-desc">Pixel phones &amp; tablets</span></a>
+      <a href="/sony" class="brand-tile"><span class="brand-tile-name">Sony</span><span class="brand-tile-desc">Bravia TVs &amp; home theater</span></a>
+      <a href="/vizio" class="brand-tile"><span class="brand-tile-name">Vizio</span><span class="brand-tile-desc">Vizio TVs all series</span></a>
+      <a href="/panasonic" class="brand-tile"><span class="brand-tile-name">Panasonic</span><span class="brand-tile-desc">TVs &amp; home theater</span></a>
+      <a href="/carrier" class="brand-tile"><span class="brand-tile-name">Carrier</span><span class="brand-tile-desc">HVAC systems &amp; heat pumps</span></a>
+      <a href="/rheem" class="brand-tile"><span class="brand-tile-name">Rheem</span><span class="brand-tile-desc">Water heaters &amp; HVAC</span></a>
+      <a href="/goodman" class="brand-tile"><span class="brand-tile-name">Goodman</span><span class="brand-tile-desc">HVAC systems</span></a>
+      <a href="/trane" class="brand-tile"><span class="brand-tile-name">Trane</span><span class="brand-tile-desc">HVAC systems</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div>© 2026 Item Assist · Database verified February 2026</div>
+  <div class="footer-links">
+    <a href="methodology.html">Methodology</a>
+    <a href="contact.html">Contact</a>
+    <a href="security.html">Security &amp; Data Notice</a>
+    <a href="/privacy-policy">Privacy Policy</a>
+  </div>
+</footer>
+
+<!-- ─── GUIDE DRAWER ─── -->
+<div id="guideOverlay" class="guide-overlay" onclick="closeGuide()"></div>
+<div id="guideDrawer" class="guide-drawer">
+  <div class="guide-drawer-header">
+    <h3>&#9432; How to Use This Tool</h3>
+    <button class="guide-drawer-close" onclick="closeGuide()">&#x2715;</button>
+  </div>
+  <div class="guide-drawer-body">
+    <h4>Quick Decoding</h4>
+    <ol>
+      <li>Click <strong>Appliances</strong>, <strong>Water Heaters</strong>, <strong>HVAC</strong>, or <strong>Electronics</strong></li>
+      <li>Choose the <strong>brand</strong> from the dropdown</li>
+      <li>If an <strong>Era selector</strong> appears, choose Pre-2006 or Post-2006</li>
+      <li>Enter the <strong>serial number</strong> exactly as shown on the label</li>
+      <li>Click <strong>Decode Serial Number</strong></li>
+    </ol>
+    <h4>No Serial Number?</h4>
+    <p>Click the <strong>✨ Smart Lookup</strong> tab. Enter a model number, brand name, or description (e.g., "GE Profile PFE28KSKSS") to get an AI-powered age estimate.</p>
+    <h4>Finding Serial Numbers</h4>
+    <ul>
+      <li><strong>Refrigerators:</strong> Inside on the left or right wall</li>
+      <li><strong>Ovens/Ranges:</strong> Inside the door or on the back panel</li>
+      <li><strong>Dishwashers:</strong> Top edge of the door or side panel</li>
+      <li><strong>Washers/Dryers:</strong> Inside the door or on the back</li>
+      <li><strong>Water Heaters:</strong> On a sticker/plate on the side of the tank</li>
+    </ul>
+    <div class="warning-note">
+      <strong>Note:</strong> Many serial number codes repeat every 10–20 years. Always verify the decade using physical condition, model features, purchase receipts, or installation records.
+    </div>
+  </div>
+</div>
+
+<!-- ─── FEEDBACK MODAL ─── -->
+<div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>&#9888; Report an Issue</h3>
+      <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label class="sr-only" for="fbBrand">Brand</label>
+        <input type="text" id="fbBrand" class="form-input" readonly>
+      </div>
+      <div class="modal-field">
+        <label class="sr-only" for="fbSerial">Serial Number / Search Query</label>
+        <input type="text" id="fbSerial" class="form-input" readonly>
+      </div>
+      <div class="modal-field">
+        <label class="sr-only" for="fbType">Issue Type</label>
+        <select id="fbType" class="form-select">
+          <option value="">-- Select issue type --</option>
+          <option value="wrong_year">Wrong year / date</option>
+          <option value="wrong_month">Wrong month</option>
+          <option value="wrong_brand">Wrong brand identified</option>
+          <option value="format_error">Format / decode error</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="sr-only" for="fbDetails">Details (optional)</label>
+        <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong? What is the correct date if known?"></textarea>
+      </div>
+      <div id="fbThanks" class="fb-thanks hidden">&#10003; Thank you! Your feedback helps improve this tool.</div>
+      <div id="fbActions" class="modal-actions">
+        <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
+        <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel switching helpers (must be before decoder-data.js / script.js) -->
+<script>
+function selectCatAndShowDecoder(cat, btn) {
+  if (typeof selectCategory === 'function') selectCategory(cat, btn);
+  document.getElementById('panel-decoder').style.display = 'block';
+  document.getElementById('panel-smart').style.display = 'none';
+}
+function showSmartPanel(btn) {
+  document.querySelectorAll('.cat-tab').forEach(function(t){ t.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('panel-decoder').style.display = 'none';
+  document.getElementById('panel-smart').style.display = 'block';
+}
+</script>
+
+<script src="decoder-data.js"></script>
+<script src="script.js"></script>
+<script src="smart-lookup.js"></script>
+<script src="shared.js"></script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Serial Number Decoder",
+  "url": "https://www.decodemyitem.com",
+  "description": "Decode appliance and electronics serial numbers to find manufacture date and age. Free, instant results for GE, Whirlpool, Samsung, LG, Bosch and more.",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
     {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Serial Number Age Decoder",
-      "url": "https://www.decodemyitem.com",
-      "description": "Decode appliance and electronics serial numbers to find manufacture date and age. Free, instant results for GE, Whirlpool, Samsung, LG, Bosch and more.",
-      "applicationCategory": "UtilityApplication",
-      "operatingSystem": "Any",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
-    }
-    </script>
-    <script type="application/ld+json">
+      "@type": "Question",
+      "name": "How do I decode a serial number?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Select your appliance brand from the dropdown, enter the full serial number exactly as shown on the product label, and click Decode. The tool applies the manufacturer's encoding rules to extract the manufacture date instantly."
+      }
+    },
     {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "How do I decode a serial number?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Select your appliance brand from the dropdown, enter the full serial number exactly as shown on the product label, and click Decode. The tool applies the manufacturer's encoding rules to extract the manufacture date instantly."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Where is the serial number located on my appliance?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Serial number location varies by appliance. On refrigerators, check inside the fresh food compartment wall. On dishwashers, look on the inner edge of the door. Washers and dryers typically have it on the door frame. Ranges show it on the oven door frame. Water heaters display it on a label on the side of the tank."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How accurate is this serial number decoder?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "For supported brands, accuracy is high when the full serial number is entered correctly. Some manufacturers reuse year codes on repeating cycles, which may result in two possible manufacture years being shown. In those cases, physical condition and model features can help confirm the correct decade."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Does this tool work for both appliances and electronics?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. The decoder supports major home appliances including refrigerators, washers, dryers, dishwashers, and ranges, plus water heaters and electronics including Samsung and LG TVs. Use the Smart Lookup feature for brands or models not listed in the main tabs."
-          }
-        }
-      ]
+      "@type": "Question",
+      "name": "Where is the serial number located on my appliance?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Serial number location varies by appliance. On refrigerators, check inside the fresh food compartment wall. On dishwashers, look on the inner edge of the door. Washers and dryers typically have it on the door frame. Ranges show it on the oven door frame. Water heaters display it on a label on the side of the tank."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How accurate is this serial number decoder?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "For supported brands, accuracy is high when the full serial number is entered correctly. Some manufacturers reuse year codes on repeating cycles, which may result in two possible manufacture years being shown. In those cases, physical condition and model features can help confirm the correct decade."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does this tool work for both appliances and electronics?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The decoder supports major home appliances including refrigerators, washers, dryers, dishwashers, and ranges, plus water heaters and electronics including Samsung and LG TVs. Use the Smart Lookup feature for brands or models not listed in the main tabs."
+      }
     }
-    </script>
+  ]
+}
+</script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
