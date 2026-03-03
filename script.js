@@ -151,7 +151,7 @@ var KENMORE_DEFAULT_NOTE = 'Prefix not recognized \u2014 defaulting to Whirlpool
 // who actually made the unit, identified by the first 3 digits of the MODEL number.
 // cycle = years in the manufacturer's repeating serial date cycle.
 var KENMORE_PREFIX_TO_DECODER = {
-  // Whirlpool method (char 2 = year letter, chars 3-4 = week) â€” 30-year cycle
+  // Whirlpool method (char 2 = year letter, chars 3-4 = week) - 30-year cycle
   '106': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
   '110': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
   '198': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
@@ -162,7 +162,7 @@ var KENMORE_PREFIX_TO_DECODER = {
   '568': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
   '664': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
   '665': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
-  // Roper method (same as Whirlpool) â€” 30-year cycle
+  // Roper method (same as Whirlpool) - 30-year cycle
   '103': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
   '155': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
   '278': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
@@ -170,11 +170,11 @@ var KENMORE_PREFIX_TO_DECODER = {
   '835': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
   '911': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
   '917': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
-  // GE method (char 1 = month letter, char 2 = year letter using GE codes) â€” 12-year cycle
+  // GE method (char 1 = month letter, char 2 = year letter using GE codes) - 12-year cycle
   '362': { manufacturer: 'General Electric', decoderId: 'ge', cycle: 12 },
   '363': { manufacturer: 'General Electric', decoderId: 'ge', cycle: 12 },
   '464': { manufacturer: 'General Electric', decoderId: 'ge', cycle: 12 },
-  // Frigidaire/Electrolux method (2 letters, then digit 1 = year last digit, digits 2-3 = week) â€” 10-year cycle
+  // Frigidaire/Electrolux method (2 letters, then digit 1 = year last digit, digits 2-3 = week) - 10-year cycle
   '119': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
   '253': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
   '417': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
@@ -185,23 +185,23 @@ var KENMORE_PREFIX_TO_DECODER = {
   '790': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
   '791': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
   '970': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
-  // Kelvinator (uses Frigidaire decode method) â€” 10-year cycle
+  // Kelvinator (uses Frigidaire decode method) - 10-year cycle
   '416': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
   '473': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
   '622': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
   '630': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
   '683': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
-  // Amana (Whirlpool post-2006 for modern units) â€” 30-year cycle
+  // Amana (Whirlpool post-2006 for modern units) - 30-year cycle
   '335': { manufacturer: 'Amana', decoderId: 'amana_post_2006', cycle: 30 },
   '596': { manufacturer: 'Amana', decoderId: 'amana_post_2006', cycle: 30 },
-  // LG method (char 1 = year last digit, chars 2-3 = month as two digits) â€” 10-year cycle
+  // LG method (char 1 = year last digit, chars 2-3 = month as two digits) - 10-year cycle
   '795': { manufacturer: 'LG', decoderId: 'lg', cycle: 10 },
   '796': { manufacturer: 'LG', decoderId: 'lg', cycle: 10 },
-  // Samsung method â€” 10-year cycle
+  // Samsung method - 10-year cycle
   '401': { manufacturer: 'Samsung', decoderId: 'samsung', cycle: 10 },
-  // Jenn-Air (post-2006 Whirlpool era) â€” 30-year cycle
+  // Jenn-Air (post-2006 Whirlpool era) - 30-year cycle
   '629': { manufacturer: 'Jenn-Air', decoderId: 'jenn_air_post_2006', cycle: 30 },
-  // Maytag-family: Maycor / Speed Queen / Litton / Caloric / Hardwick â€” 30-year cycle
+  // Maytag-family: Maycor / Speed Queen / Litton / Caloric / Hardwick - 30-year cycle
   '174': { manufacturer: 'Caloric',     decoderId: 'maytag_pre_2006', cycle: 30 },
   '587': { manufacturer: 'Speed Queen', decoderId: 'maytag_pre_2006', cycle: 30 },
   '651': { manufacturer: 'Speed Queen', decoderId: 'maytag_pre_2006', cycle: 30 },
@@ -706,7 +706,7 @@ function renderStaticSidebar() {
       group.className = 'sidebar-brand-group' + (isExpanded ? ' open' : '');
       group.setAttribute('data-category', CATEGORY_KEY_TO_NAME[catKey] || catKey);
 
-      // Clickable header â€” entire row toggles the group
+      // Clickable header - entire row toggles the group
       var header = document.createElement('div');
       header.className = 'sidebar-group-header';
 
@@ -725,7 +725,7 @@ function renderStaticSidebar() {
       header.appendChild(arrow);
       group.appendChild(header);
 
-      // Top-7 brand links â€” hidden until category is expanded
+      // Top-7 brand links - hidden until category is expanded
       var list = document.createElement('div');
       list.className = 'sidebar-group-links';
       if (!isExpanded) list.hidden = true;
@@ -1949,7 +1949,7 @@ function onBrandChange() {
   var brandId = opt ? opt.value : '';
   var cyclingCat = CYCLING_BRANDS[currentCategory] || {};
   var cfg = cyclingCat[brandId];
-  // Era dropdown no longer required â€” split brands now auto-decode both eras simultaneously
+  // Era dropdown no longer required - split brands now auto-decode both eras simultaneously
   hideEraGroup();
   document.getElementById('eraSelect').value = '';
   updateModelFieldVisibility(brandId);
@@ -2001,6 +2001,145 @@ function resolveDecoderId(metaBrandId) {
   return cfg.single;
 }
 
+function smartLookupCategoryToDecoderCategory(cat) {
+  var key = String(cat || '').toLowerCase();
+  if (key === 'appliance') return 'appliances';
+  if (key === 'waterheater') return 'waterHeaters';
+  if (key === 'hvac') return 'hvac';
+  if (key === 'electronics') return 'electronics';
+  return '';
+}
+
+function normalizeBrandToken(value) {
+  var raw = String(value || '').trim().toLowerCase();
+  if (!raw) return '';
+  var token = raw.replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  if (!token) return '';
+  if (token === 'google') return 'google_pixel';
+  if (token === 'googlepixel') return 'google_pixel';
+  if (token === 'aosmith' || token === 'ao_smith') return 'a_o_smith';
+  if (token === 'ge_cafe') return 'ge_caf';
+  return token;
+}
+
+function categoryDisplayLabel(decoderCategory) {
+  if (!decoderCategory) return 'Unknown';
+  if (decoderCategory === 'waterHeaters') return 'Water Heaters';
+  return CATEGORY_KEY_TO_NAME[decoderCategory] || decoderCategory;
+}
+
+function decoderVariantLabel(decoderId, decoderName) {
+  var label = decoderName || decoderId;
+  if (/_post_?\d{4}/i.test(decoderId) && label.toLowerCase().indexOf('post-') === -1) {
+    label += ' (Post-2006)';
+  } else if (/_pre_?\d{4}/i.test(decoderId) && label.toLowerCase().indexOf('pre-') === -1) {
+    label += ' (Pre-2006)';
+  } else if (/_tv$/i.test(decoderId) && label.toLowerCase().indexOf('tv') === -1) {
+    label += ' (TV)';
+  } else if (/_phone$/i.test(decoderId) && label.toLowerCase().indexOf('phone') === -1) {
+    label += ' (Phone)';
+  }
+  return label;
+}
+
+function collectBrandMethodEntries(brandIdOrName, brandName, preferredCategory) {
+  var entries = [];
+  var seen = {};
+  var brandToken = normalizeBrandToken(brandIdOrName || brandName);
+  var canonicalToken = canonicalizeBrandId(brandToken);
+  var canonicalName = canonicalizeBrandName(brandName || brandIdOrName || '');
+  var preferred = normalizeDecoderCategory(preferredCategory || '');
+  var categoryKeys = ['appliances', 'waterHeaters', 'hvac', 'electronics'];
+
+  categoryKeys.forEach(function(catKey) {
+    var group = decoderData && decoderData[catKey];
+    var decoders = group && group.decoders ? group.decoders : null;
+    if (!decoders) return;
+    Object.keys(decoders).forEach(function(decoderId) {
+      var decoder = decoders[decoderId];
+      if (!decoder) return;
+      var methodText = decoder.method || decoder.decodeMethod || decoder.serialLengthNote || '';
+      if (!methodText) return;
+      var decCanonicalId = canonicalizeBrandId(decoderId);
+      var decNameCanonical = canonicalizeBrandName(decoder.name || '');
+      var matched = false;
+
+      if (canonicalToken && decCanonicalId === canonicalToken) matched = true;
+      if (!matched && canonicalName && decNameCanonical === canonicalName) matched = true;
+      if (!matched && brandToken && decoderId === brandToken) matched = true;
+      if (!matched && canonicalToken && decoderId.indexOf(canonicalToken + '_') === 0) matched = true;
+
+      if (!matched) return;
+      var key = catKey + '|' + decoderId;
+      if (seen[key]) return;
+      seen[key] = true;
+      entries.push({
+        categoryKey: catKey,
+        categoryLabel: categoryDisplayLabel(catKey),
+        name: decoderVariantLabel(decoderId, decoder.name || ''),
+        method: methodText
+      });
+    });
+  });
+
+  entries.sort(function(a, b) {
+    var ap = (a.categoryKey === preferred) ? 0 : 1;
+    var bp = (b.categoryKey === preferred) ? 0 : 1;
+    if (ap !== bp) return ap - bp;
+    if (a.categoryLabel !== b.categoryLabel) return a.categoryLabel.localeCompare(b.categoryLabel);
+    return a.name.localeCompare(b.name);
+  });
+  return entries;
+}
+
+function buildDecodingMethodsDropdownHtml(entries, summaryText) {
+  var list = Array.isArray(entries) ? entries : [];
+  if (!list.length) return '';
+  var summary = summaryText || ('Decoding Methods for this Brand (' + list.length + ')');
+  var html = '<details class="sources-checked decoding-methods-dropdown">' +
+    '<summary>' + esc(summary) + '</summary>' +
+    '<div class="sources-checked-body"><div class="evidence-list">';
+  list.forEach(function(item) {
+    html += '<div class="evidence-item">' +
+      '<span class="ev-source">' + esc(item.name + ' - ' + item.categoryLabel) + '</span>' +
+      '<span>' + esc(item.method) + '</span>' +
+      '</div>';
+  });
+  html += '</div></div></details>';
+  return html;
+}
+
+function renderSerialMethodsDropdown(brandIdOrName, brandName, preferredCategory) {
+  var body = document.querySelector('#serialResults .results-body');
+  if (!body) return;
+  var existing = body.querySelector('.decoding-methods-dropdown');
+  if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+  var entries = collectBrandMethodEntries(brandIdOrName, brandName, preferredCategory || currentCategory);
+  if (!entries.length) {
+    var methodEl = document.getElementById('resultMethod');
+    var fallbackMethod = methodEl ? String(methodEl.textContent || '').trim() : '';
+    if (fallbackMethod) {
+      entries = [{
+        categoryKey: preferredCategory || currentCategory || 'appliances',
+        categoryLabel: categoryDisplayLabel(preferredCategory || currentCategory || 'appliances'),
+        name: brandName || String(brandIdOrName || 'Selected brand'),
+        method: fallbackMethod
+      }];
+    }
+  }
+  var html = buildDecodingMethodsDropdownHtml(entries, 'All Decoding Methods for this Brand');
+  if (!html) return;
+
+  var wrap = document.createElement('div');
+  wrap.innerHTML = html;
+  var dropdown = wrap.firstElementChild;
+  if (!dropdown) return;
+  var notesBlock = body.querySelector('.info-block.notes');
+  if (notesBlock && notesBlock.parentNode) notesBlock.parentNode.insertBefore(dropdown, notesBlock);
+  else body.appendChild(dropdown);
+}
+
 function updateDecodeBtn() {
   var dom = getDecodeDom();
   var brandEl  = dom.brandEl;
@@ -2010,7 +2149,7 @@ function updateDecodeBtn() {
   var brand  = brandEl.value;
   var serial = serialEl.value.trim();
   var decoderId = brand ? resolveDecoderId(brand) : null;
-  // Split brands (Amana/Maytag/Admiral/Jenn-Air) decode both eras at once â€” no era selection needed
+  // Split brands (Amana/Maytag/Admiral/Jenn-Air) decode both eras at once - no era selection needed
   var isSplitBrand = false;
   if (brand && !decoderId) {
     var _scc = CYCLING_BRANDS[currentCategory] || {};
@@ -2162,6 +2301,7 @@ function showDecodeFallback(decoder, serial, brandId, reason, overrideNotes) {
     'We\u2019re sorry, our system is having trouble decoding that number. Please refer to the decoding method above.\n\nSerial entered: ' + serial;
   updateSearchQueryLine();
   updateResultWarning({ year: 'Unknown', month: '' }, brandId);
+  renderSerialMethodsDropdown(brandId, decoder.name, currentCategory);
   showBrandLogo('serialBrandLogo', brandId, decoder.name);
   currentFeedbackContext = { brand: decoder.name, serial: serial };
   fireFallbackAlert(decoder.name, serial, currentCategory, reason);
@@ -2175,7 +2315,7 @@ function showDecodeFallback(decoder, serial, brandId, reason, overrideNotes) {
 // ===== ERA YEAR FILTERING (Task 1) =====
 function filterYearsByEra(yearStr, era) {
   var candidates = parseCandidateYears(yearStr);
-  if (!candidates.length) return yearStr; // non-numeric or unparseable â€” pass through
+  if (!candidates.length) return yearStr; // non-numeric or unparseable - pass through
   var filtered;
   if (era === 'post') {
     filtered = candidates.filter(function(y) { return y >= 2006; });
@@ -2310,7 +2450,7 @@ function isIncompleteResult(result) {
   var yearStr = String(result.year || '').trim();
   var monthStr = String(result.month || '').trim();
   var text = (yearStr + ' ' + monthStr).toLowerCase();
-  // Dual-year format like "1992/2022" is a valid result â€” do NOT flag as incomplete
+  // Dual-year format like "1992/2022" is a valid result - do NOT flag as incomplete
   if (/^\d{4}\/\d{4}$/.test(yearStr)) return false;
   if (text.indexOf('unknown') !== -1) return true;
   if (text.indexOf('ambiguous') !== -1) return true;
@@ -2319,17 +2459,31 @@ function isIncompleteResult(result) {
   return false;
 }
 
-function updateResultWarning(result, brandId) {
+function buildPanasonicNonNumericHint(brandId, serialValue) {
+  if (String(brandId || '').toLowerCase() !== 'panasonic') return '';
+  var s = String(serialValue || '').trim().toUpperCase();
+  if (!s) return '';
+  if (/^\d/.test(s)) return '';
+  return 'Panasonic tip: The first serial character is usually a numeric year code (0-9). Your entry begins with "' + s.charAt(0) + '". Verify the serial from the rating label or try Smart Lookup with the full model number.';
+}
+
+function updateResultWarning(result, brandId, serialValue) {
   var block = ensureResultWarningBlock();
   if (!block) return;
   var modelEl = document.getElementById('modelNumber');
+  var serialEl = document.getElementById('serial');
+  var serialText = (serialValue !== undefined && serialValue !== null)
+    ? String(serialValue)
+    : (serialEl ? String(serialEl.value || '') : '');
+  var panasonicHint = buildPanasonicNonNumericHint(brandId, serialText);
   var modelMissing = requiresModelForBrand(brandId)
     && (!modelEl || !modelEl.value.trim());
-  if (isIncompleteResult(result) || modelMissing) {
+  if (isIncompleteResult(result) || modelMissing || panasonicHint) {
     block.classList.remove('hidden');
     var p = block.querySelector('p');
     if (p) {
-      p.textContent = 'Incomplete result ï¿½ please verify your inputs (brand/serial/model). If the result is still incorrect after verifying inputs, report an issue.';
+      p.textContent = 'Incomplete result - please verify your inputs (brand/serial/model). If the result is still incorrect after verifying inputs, report an issue.'
+        + (panasonicHint ? ' ' + panasonicHint : '');
     }
   } else {
     block.classList.add('hidden');
@@ -2391,9 +2545,8 @@ function updateKenmorePrefixVisibility(brandId) {
   else group.classList.add('hidden');
 }
 
-function resolveKenmoreDecoderFromPrefix() {
-  var prefixEl = document.getElementById('kenmoreModelPrefix');
-  var prefix = prefixEl ? String(prefixEl.value || '').replace(/\D/g, '').substring(0, 3) : '';
+function resolveKenmoreDecoderFromPrefixValue(prefix) {
+  prefix = String(prefix || '').replace(/\D/g, '').substring(0, 3);
   if (!prefix) {
     return {
       noPrefix: true,
@@ -2422,6 +2575,50 @@ function resolveKenmoreDecoderFromPrefix() {
     usedDefault: false,
     cycle: match.cycle,
     note: ''
+  };
+}
+
+function resolveKenmoreDecoderFromPrefix() {
+  var prefixEl = document.getElementById('kenmoreModelPrefix');
+  var rawPrefix = prefixEl ? String(prefixEl.value || '') : '';
+  return resolveKenmoreDecoderFromPrefixValue(rawPrefix);
+}
+
+function isRheemFamilyWaterHeaterBrand(brandId) {
+  var key = String(brandId || '').toLowerCase();
+  return key === 'rheem' || key === 'ruud' || key === 'richmond' || key === 'vanguard';
+}
+
+function buildRheemPrefixGuidance(brandId, serial, categoryOverride) {
+  var activeCategory = categoryOverride || currentCategory;
+  if (activeCategory !== 'waterHeaters') return '';
+  if (!isRheemFamilyWaterHeaterBrand(brandId)) return '';
+  var s = String(serial || '').toUpperCase().replace(/\s+/g, '');
+  if (!/^[A-Z]/.test(s)) return '';
+  return 'If your serial includes a prefix, try searching again without the prefix letters.\n' +
+    'Or decode manually using the method shown.';
+}
+
+function decodeKenmoreSamsungRarePattern(serial, kenmoreResolution, samsungDecoder) {
+  if (!kenmoreResolution || kenmoreResolution.prefix !== '401') return null;
+  var clean = String(serial || '').toUpperCase().replace(/\s+/g, '');
+  // Rare Samsung-built Kenmore structure: 14-char alphanumeric with Samsung year/month markers at chars 8-9.
+  if (!/^[A-Z0-9]{14}$/.test(clean)) return null;
+  if (!samsungDecoder || !samsungDecoder.yearMap || !samsungDecoder.monthMap) return null;
+
+  var yearChar = clean[7];
+  var monthChar = clean[8];
+  var year = samsungDecoder.yearMap[yearChar];
+  var month = samsungDecoder.monthMap[monthChar];
+  if (!year || !month) return null;
+
+  return {
+    year: year,
+    month: month,
+    yearCode: yearChar,
+    monthCode: monthChar,
+    confidence: 'High',
+    rarePattern: 'Kenmore prefix 401 Samsung-built 14-char serial'
   };
 }
 
@@ -2497,8 +2694,64 @@ function deterministicRefinement(candidates, model, context) {
   };
 }
 
-function chooseCandidateFromLookup(candidates, lookupData) {
-  if (!lookupData) return null;
+function chooseSerialBaselineYear(candidates) {
+  if (!Array.isArray(candidates) || !candidates.length) return null;
+  var valid = candidates.filter(function(y) { return Number.isInteger(y) && y >= 1900 && y <= CURRENT_YEAR; });
+  if (!valid.length) return null;
+  return Math.max.apply(null, valid);
+}
+
+function parseRangeFloorYear(yearRangeText) {
+  var text = String(yearRangeText || '');
+  if (!text) return null;
+  var direct = text.match(/\b(19|20)\d{2}\b/);
+  return direct ? parseInt(direct[0], 10) : null;
+}
+
+function parseStrongReleaseYear(lookupData) {
+  var candidates = [];
+  var notes = String((lookupData && lookupData.notes) || '');
+  var releaseRe = /\b(introduced|released|launched)\b[^0-9]{0,30}\b((?:19|20)\d{2})\b/ig;
+  var m;
+  while ((m = releaseRe.exec(notes)) !== null) {
+    candidates.push(parseInt(m[2], 10));
+  }
+  var evidence = Array.isArray(lookupData && lookupData.evidence) ? lookupData.evidence : [];
+  evidence.forEach(function(item) {
+    var d = String((item && item.detail) || '');
+    var em;
+    while ((em = releaseRe.exec(d)) !== null) {
+      candidates.push(parseInt(em[2], 10));
+    }
+  });
+  var valid = candidates.filter(function(y) { return Number.isInteger(y) && y >= 1900 && y <= CURRENT_YEAR; });
+  if (!valid.length) return null;
+  return Math.min.apply(null, valid);
+}
+
+function scoreNarrowDateEvidence(lookupData) {
+  if (!lookupData) return 'weak';
+  var notes = String(lookupData.notes || '').toLowerCase();
+  var hasStrongVerb = /\b(introduced|released|launched)\b/.test(notes);
+  if (!hasStrongVerb && Array.isArray(lookupData.evidence)) {
+    hasStrongVerb = lookupData.evidence.some(function(e) {
+      return /\b(introduced|released|launched)\b/i.test(String((e && e.detail) || ''));
+    });
+  }
+  if (hasStrongVerb) return 'strong';
+  if (lookupData.yearRange || lookupData.estimatedYear) return 'medium';
+  return 'weak';
+}
+
+function pickClosestCandidate(candidates, target) {
+  if (!Array.isArray(candidates) || !candidates.length || !Number.isInteger(target)) return null;
+  return candidates.reduce(function(prev, cur) {
+    return Math.abs(cur - target) < Math.abs(prev - target) ? cur : prev;
+  }, candidates[0]);
+}
+
+function chooseCandidateFromLookup(candidates, lookupData, modelInput, contextInput) {
+  if (!lookupData || !candidates || !candidates.length) return null;
   var targetYears = [];
   if (lookupData.estimatedYear) {
     targetYears = targetYears.concat(parseCandidateYears(String(lookupData.estimatedYear)));
@@ -2506,15 +2759,44 @@ function chooseCandidateFromLookup(candidates, lookupData) {
   if (lookupData.yearRange) {
     targetYears = targetYears.concat(parseCandidateYears(String(lookupData.yearRange)));
   }
-  if (!targetYears.length || !candidates.length) return null;
+  if (!targetYears.length) return null;
+
+  var serialBaseline = chooseSerialBaselineYear(candidates);
+  var confidence = scoreNarrowDateEvidence(lookupData);
+  var rangeFloor = parseRangeFloorYear(lookupData.yearRange);
+  var releaseFloor = parseStrongReleaseYear(lookupData);
+  var floorYear = Math.max(rangeFloor || 0, releaseFloor || 0) || null;
   var target = targetYears[0];
-  var best = candidates.reduce(function(prev, cur) {
-    return Math.abs(cur - target) < Math.abs(prev - target) ? cur : prev;
-  }, candidates[0]);
+
+  var filteredByFloor = candidates.slice();
+  if (floorYear) {
+    filteredByFloor = filteredByFloor.filter(function(y) { return y >= floorYear; });
+  }
+  var pool = filteredByFloor.length ? filteredByFloor : candidates.slice();
+  var best = pickClosestCandidate(pool, target);
+  if (!Number.isInteger(best)) return null;
+
+  var shift = serialBaseline !== null ? Math.abs(best - serialBaseline) : 0;
+  var maxShift = confidence === 'strong' ? 999 : (confidence === 'medium' ? 3 : 2);
+  var conflict = serialBaseline !== null && shift > maxShift;
+  if (conflict) {
+    best = serialBaseline;
+  }
+  if (floorYear && best < floorYear) {
+    var clampedPool = candidates.filter(function(y) { return y >= floorYear; });
+    if (clampedPool.length) {
+      best = clampedPool[0];
+    }
+  }
+
+  var why = [];
+  if (floorYear) why.push('model availability floor ' + floorYear);
+  why.push('confidence ' + confidence);
+  if (conflict) why.push('kept near serial baseline ' + serialBaseline);
   return {
     chosenYear: best,
-    summary: 'Smart Lookup suggests around ' + target + '; closest serial-valid candidate is ' + best + '.',
-    confidence: 'Medium'
+    summary: 'Smart Lookup target was around ' + target + '; selected serial-valid year ' + best + ' (' + why.join(', ') + ').',
+    confidence: confidence.charAt(0).toUpperCase() + confidence.slice(1)
   };
 }
 
@@ -2542,7 +2824,7 @@ async function refineAmbiguousResult() {
       body: JSON.stringify({ query: query.trim() })
     });
     var data = await parseJsonResponseSafe(res, 'refine-ambiguous');
-    selected = chooseCandidateFromLookup(candidates, data);
+    selected = chooseCandidateFromLookup(candidates, data, model, context);
     if (!selected) selected = deterministicRefinement(candidates, model, context);
     output.innerHTML =
       '<div class="info-block refinement">' +
@@ -2575,17 +2857,17 @@ async function refineAmbiguousResult() {
 // ===== SERIAL LENGTH REQUIREMENTS =====
 var SERIAL_LENGTH_REQUIREMENTS = {
   appliances: {
-    // Whirlpool family â€” strict 9 or 10 characters
+    // Whirlpool family - strict 9 or 10 characters
     'whirlpool':  { typical: [9, 10], minDecode: 9 },
     'kitchenaid': { typical: [9, 10], minDecode: 9 },
     'roper':      { typical: [9, 10], minDecode: 9 },
     'estate':     { typical: [9, 10], minDecode: 9 },
     'inglis':     { typical: [9, 10], minDecode: 9 },
     'crosley':    { typical: [9, 10], minDecode: 9 },
-    // GE family â€” 2 chars to decode, typically 8â€“10
+    // GE family - 2 chars to decode, typically 8-10
     'ge':   { typical: [8, 9, 10], minDecode: 2 },
     'cafe': { typical: [8, 9, 10], minDecode: 2 },
-    // Frigidaire/Electrolux family â€” 5 chars to decode, typically 8â€“10
+    // Frigidaire/Electrolux family - 5 chars to decode, typically 8-10
     'frigidaire':                        { typical: [8, 9, 10], minDecode: 5 },
     'electrolux':                        { typical: [8, 9, 10], minDecode: 5 },
     'philco':                            { typical: [8, 9, 10], minDecode: 5 },
@@ -2594,25 +2876,25 @@ var SERIAL_LENGTH_REQUIREMENTS = {
     'gibson':                            { typical: [8, 9, 10], minDecode: 5 },
     'white_westinghouse':                { typical: [8, 9, 10], minDecode: 5 },
     'white_consolidated_industries_wci': { typical: [8, 9, 10], minDecode: 5 },
-    // Samsung â€” strict 11 or 15 characters
+    // Samsung - strict 11 or 15 characters
     'samsung': { typical: [11, 15], minDecode: 11 },
-    // LG â€” 3 chars to decode, typically 8â€“12
+    // LG - 3 chars to decode, typically 8-12
     'lg': { typical: [8, 9, 10, 11, 12], minDecode: 3 },
-    // Bosch family â€” must start with 'FD', typically 9â€“12
+    // Bosch family - must start with 'FD', typically 9-12
     'bosch':     { typical: [9, 10, 11, 12], minDecode: 4, prefix: 'FD' },
     'thermador': { typical: [9, 10, 11, 12], minDecode: 4, prefix: 'FD' },
     'gaggenau':  { typical: [9, 10, 11, 12], minDecode: 4, prefix: 'FD' },
-    // Maytag/Jenn-Air/Amana/Admiral post-2006 â€” 2nd alpha char, typically 8â€“10
+    // Maytag/Jenn-Air/Amana/Admiral post-2006 - 2nd alpha char, typically 8-10
     'maytag_post_2006':   { typical: [8, 9, 10], minDecode: 2 },
     'jenn_air_post_2006': { typical: [8, 9, 10], minDecode: 2 },
     'amana_post_2006':    { typical: [8, 9, 10], minDecode: 2 },
     'admiral_post_2006':  { typical: [8, 9, 10], minDecode: 2 },
-    // Maytag/Jenn-Air/Amana/Admiral pre-2006 â€” 2nd alpha char, typically 8â€“10
+    // Maytag/Jenn-Air/Amana/Admiral pre-2006 - 2nd alpha char, typically 8-10
     'maytag_pre_2006':   { typical: [8, 9, 10], minDecode: 2 },
     'jenn_air_pre_2006': { typical: [8, 9, 10], minDecode: 2 },
     'amana_pre_2006':    { typical: [8, 9, 10], minDecode: 2 },
     'admiral_pre_2006':  { typical: [8, 9, 10], minDecode: 2 },
-    // Last-2-char family (year+month at end) â€” typically 7â€“10
+    // Last-2-char family (year+month at end) - typically 7-10
     'caloric':     { typical: [7, 8, 9, 10], minDecode: 2 },
     'hardwick':    { typical: [7, 8, 9, 10], minDecode: 2 },
     'norge':       { typical: [7, 8, 9, 10], minDecode: 2 },
@@ -2627,7 +2909,7 @@ var SERIAL_LENGTH_REQUIREMENTS = {
     'maycor':      { typical: [7, 8, 9, 10], minDecode: 2 },
     'neptune':     { typical: [7, 8, 9, 10], minDecode: 2 },
     'imperial':    { typical: [7, 8, 9, 10], minDecode: 2 },
-    // Other 2-letter decode brands â€” typically 8â€“10
+    // Other 2-letter decode brands - typically 8-10
     'norcold':       { typical: [8, 9, 10], minDecode: 2 },
     'sub_zero':      { typical: [8, 9, 10], minDecode: 2 },
     'hampton_bay':   { typical: [8, 9, 10], minDecode: 2 },
@@ -2640,7 +2922,7 @@ var SERIAL_LENGTH_REQUIREMENTS = {
     'kenmore':       { typical: [8, 9, 10], minDecode: 2 }
   },
   waterHeater: {
-    // Rheem family â€” MMYYXXXXXX = 10 digits
+    // Rheem family - MMYYXXXXXX = 10 digits
     'rheem':                         { typical: [10], minDecode: 4 },
     'ruud':                          { typical: [10], minDecode: 4 },
     'richmond':                      { typical: [10], minDecode: 4 },
@@ -2650,7 +2932,7 @@ var SERIAL_LENGTH_REQUIREMENTS = {
     'aqua_therm':                    { typical: [10], minDecode: 4 },
     'energy_master':                 { typical: [10], minDecode: 4 },
     'cimarron':                      { typical: [10], minDecode: 4 },
-    // AO Smith family â€” variable pre/post 2008, typically 9â€“10
+    // AO Smith family - variable pre/post 2008, typically 9-10
     'a_o_smith':                     { typical: [9, 10], minDecode: 3 },
     'state_industries':              { typical: [9, 10], minDecode: 3 },
     'reliance_water_heaters':        { typical: [9, 10], minDecode: 3 },
@@ -2658,50 +2940,50 @@ var SERIAL_LENGTH_REQUIREMENTS = {
     'u_s_craftmaster':               { typical: [9, 10], minDecode: 3 },
     'gsw':                           { typical: [9, 10], minDecode: 3 },
     'intertherm_miller':             { typical: [9, 10], minDecode: 3 },
-    // Whirlpool water heaters â€” strict 9 or 10
+    // Whirlpool water heaters - strict 9 or 10
     'whirlpool_water_heaters': { typical: [9, 10], minDecode: 9 },
-    // Bradford White â€” 6 or 15 characters
+    // Bradford White - 6 or 15 characters
     'bradford_white': { typical: [6, 15], minDecode: 6 }
   },
   hvac: {
-    // Goodman/Amana HVAC â€” YYMM format, typically 9â€“11
+    // Goodman/Amana HVAC - YYMM format, typically 9-11
     'goodman': { typical: [9, 10, 11], minDecode: 4 },
     'amana':   { typical: [9, 10, 11], minDecode: 4 },
-    // Carrier/Bryant/Payne â€” WWYY format, typically 9â€“11
+    // Carrier/Bryant/Payne - WWYY format, typically 9-11
     'carrier': { typical: [9, 10, 11], minDecode: 4 },
     'bryant':  { typical: [9, 10, 11], minDecode: 4 },
     'payne':   { typical: [9, 10, 11], minDecode: 4 },
-    // Rheem/Ruud HVAC â€” XWWYY format, typically 9â€“11
+    // Rheem/Ruud HVAC - XWWYY format, typically 9-11
     'rheem': { typical: [9, 10, 11], minDecode: 5 },
     'ruud':  { typical: [9, 10, 11], minDecode: 5 },
-    // Trane/American Standard â€” positions 3â€“4, typically 9â€“11
+    // Trane/American Standard - positions 3-4, typically 9-11
     'trane':             { typical: [9, 10, 11], minDecode: 4 },
     'american_standard': { typical: [9, 10, 11], minDecode: 4 },
-    // Lennox â€” 6 chars to decode, typically 8â€“11
+    // Lennox - 6 chars to decode, typically 8-11
     'lennox': { typical: [8, 9, 10, 11], minDecode: 6 },
-    // York â€” 3 chars to decode, typically 8â€“11
+    // York - 3 chars to decode, typically 8-11
     'york': { typical: [8, 9, 10, 11], minDecode: 3 }
   },
   electronics: {
-    // Samsung TV â€” strict 11 or 15 characters
+    // Samsung TV - strict 11 or 15 characters
     'samsung_tv': { typical: [11, 15], minDecode: 11 },
-    // LG TV â€” 3 chars to decode, typically 8â€“12
+    // LG TV - 3 chars to decode, typically 8-12
     'lg_tv': { typical: [8, 9, 10, 11, 12], minDecode: 3 },
-    // Apple â€” strict 10 (post-2021) or 12 (pre-2021)
+    // Apple - strict 10 (post-2021) or 12 (pre-2021)
     'apple': { typical: [10, 12], minDecode: 10 },
-    // Samsung phone â€” 6 chars to decode, typically 9â€“11
+    // Samsung phone - 6 chars to decode, typically 9-11
     'samsung_phone': { typical: [9, 10, 11], minDecode: 6 },
-    // HP â€” 6 or 15 characters
+    // HP - 6 or 15 characters
     'hp': { typical: [6, 15], minDecode: 6 },
-    // Asus â€” 2 chars to decode, typically 9â€“12
+    // Asus - 2 chars to decode, typically 9-12
     'asus': { typical: [9, 10, 11, 12], minDecode: 2 },
-    // Google Pixel â€” 3 chars to decode, typically 9â€“11
+    // Google Pixel - 3 chars to decode, typically 9-11
     'google_pixel': { typical: [9, 10, 11], minDecode: 3 },
-    // Vizio â€” 5 chars to decode, typically 9â€“11
+    // Vizio - 5 chars to decode, typically 9-11
     'vizio': { typical: [9, 10, 11], minDecode: 5 },
-    // Panasonic â€” 2 chars to decode, typically 9â€“11
+    // Panasonic - 2 chars to decode, typically 9-11
     'panasonic': { typical: [9, 10, 11], minDecode: 2 }
-    // Sony is model-based â€” no serial length check needed
+    // Sony is model-based - no serial length check needed
   }
 };
 
@@ -2820,6 +3102,7 @@ function showPatternValidationError(decoder, serial, brandId, validation, patter
   document.getElementById('resultMethod').textContent = (decoder && (decoder.method || decoder.serialLengthNote)) || 'Check the product label and ensure the full serial number is entered.';
   document.getElementById('resultNotes').textContent  = lines.join('\n');
   updateResultWarning({ year: 'Unknown', month: '' }, brandId);
+  renderSerialMethodsDropdown(brandId, brandName, currentCategory);
   showBrandLogo('serialBrandLogo', brandId, brandName);
   updateSearchQueryLine();
   currentFeedbackContext = { brand: brandName, serial: serial };
@@ -2853,6 +3136,7 @@ function showSerialLengthError(decoder, serial, brandId, req) {
     ' Search again or use Smart Lookup.';
 
   updateResultWarning({ year: 'Unknown', month: '' }, brandId);
+  renderSerialMethodsDropdown(brandId, decoder.name, currentCategory);
   showBrandLogo('serialBrandLogo', brandId, decoder.name);
   updateSearchQueryLine();
   currentFeedbackContext = { brand: decoder.name, serial: serial };
@@ -2920,6 +3204,10 @@ function showDualEraResult(metaBrandId, cfg, serial) {
   html += '<p><strong>Quick guide:</strong> If one result shows an unrecognized code and the other shows a valid year, the valid one is almost certainly correct. If you know when the appliance was purchased \u2014 before or after 2006 \u2014 use the matching result.</p>';
   html += '</div>';
   html += '</details>';
+  html += buildDecodingMethodsDropdownHtml(
+    collectBrandMethodEntries(metaBrandId, brandName, currentCategory),
+    'All Decoding Methods for this Brand'
+  );
 
   // Inject into results-body, hiding all standard rows
   var resultsBody = document.querySelector('#serialResults .results-body');
@@ -2991,7 +3279,7 @@ function decodeSerial() {
   if (isKenmore) {
     kenmoreResolution = resolveKenmoreDecoderFromPrefix();
     if (kenmoreResolution.noPrefix) {
-      // Pre-validation: no loading animation â€” show prompt directly
+      // Pre-validation: no loading animation - show prompt directly
       var _km = document.getElementById('resultMonthRow'); if (_km) _km.style.display = 'none';
       var _ky = document.getElementById('resultYear'); if (_ky) { _ky.textContent = ''; var _kyr = _ky.closest ? _ky.closest('.result-row') : null; if (_kyr) _kyr.style.display = 'none'; }
       var _ka = document.getElementById('resultEstimatedAge'); if (_ka) { _ka.textContent = '\u2014'; var _kar = _ka.closest ? _ka.closest('.result-row') : null; if (_kar) _kar.style.display = 'none'; }
@@ -3001,6 +3289,7 @@ function decodeSerial() {
       document.getElementById('resultNotes').textContent  = kenmoreResolution.note;
       updateSearchQueryLine();
       updateResultWarning({ year: 'Unknown', month: '' }, 'kenmore');
+      renderSerialMethodsDropdown('kenmore', 'Kenmore', currentCategory);
       showBrandLogo('serialBrandLogo', 'kenmore', 'Kenmore');
       currentFeedbackContext = { brand: 'Kenmore', serial: serial };
       document.getElementById('ageResults').classList.add('hidden');
@@ -3044,6 +3333,11 @@ function decodeSerial() {
     return;
   }
 
+  var kenmoreRareResult = null;
+  if (isKenmore && kenmoreResolution && kenmoreResolution.prefix === '401') {
+    kenmoreRareResult = decodeKenmoreSamsungRarePattern(serial, kenmoreResolution, decoder);
+  }
+
   if (/[^A-Z0-9]/.test(serial)) {
     showPatternValidationError(
       decoder,
@@ -3067,10 +3361,12 @@ function decodeSerial() {
   }
 
   // === MASK PATTERN PRE-VALIDATION ===
-  var patternValidation = validateSerialAgainstPatterns(serial, decoder.patterns || []);
-  if (!patternValidation.valid) {
-    showPatternValidationError(decoder, serial, brandId, patternValidation, decoder.patterns || []);
-    return;
+  if (!kenmoreRareResult) {
+    var patternValidation = validateSerialAgainstPatterns(serial, decoder.patterns || []);
+    if (!patternValidation.valid) {
+      showPatternValidationError(decoder, serial, brandId, patternValidation, decoder.patterns || []);
+      return;
+    }
   }
 
   updateSearchQueryLine();
@@ -3106,7 +3402,7 @@ function decodeSerial() {
       if (_ae && _ae.closest) { var r2 = _ae.closest('.result-row'); if (r2) r2.style.display = ''; }
     })();
 
-    var result = decoder.decode(serial);
+    var result = kenmoreRareResult || decoder.decode(serial);
     var sanity  = sanitizeDecodeResult(result);
     var monthRow  = document.getElementById('resultMonthRow');
 
@@ -3124,6 +3420,14 @@ function decodeSerial() {
         _failNotes = 'Serial format not recognized for ' + decoder.name + '. Please check the serial and try again.\n\n' +
           'We\'re sorry, our system is having trouble decoding that number. Please refer to the decoding method above.';
       }
+      var _prefixGuidance = buildRheemPrefixGuidance(brandId, serial);
+      if (_prefixGuidance) {
+        _failNotes = (_failNotes ? (_failNotes + '\n\n') : '') + _prefixGuidance;
+      }
+      var _panasonicHint = buildPanasonicNonNumericHint(brandId, serial);
+      if (_panasonicHint) {
+        _failNotes = (_failNotes ? (_failNotes + '\n\n') : '') + _panasonicHint;
+      }
       showDecodeFallback(decoder, serial, brandId, _reason, _failNotes);
       return;
     }
@@ -3136,7 +3440,7 @@ function decodeSerial() {
     if (_eraVal && result && result.year) {
       var _filteredYear = filterYearsByEra(String(result.year), _eraVal);
       if (_filteredYear === null) {
-        // No candidate years match the selected era ï¿½ show clear message, no age
+        // No candidate years match the selected era - show clear message, no age
         document.getElementById('resultBrand').textContent  = decoder.name;
         document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'N/A';
         document.getElementById('resultNotes').textContent  = 'No matching dates found for the selected era. Try switching to Pre-2006 or Post-2006.';
@@ -3195,6 +3499,9 @@ function decodeSerial() {
     })();
 
     var notesText = decoder.notes || decoder.decodeNotes || 'N/A';
+    if (kenmoreRareResult && kenmoreRareResult.rarePattern) {
+      notesText = kenmoreRareResult.rarePattern + '. ' + notesText;
+    }
     if (isKenmore && kenmoreResolution) {
       var _kenmoreBaseNote = 'Kenmore appliances are manufactured by third-party companies under contract with Sears. ' +
         'The decode method and result above are based on the OEM manufacturer (' + kenmoreResolution.manufacturer + ') identified by your model prefix. ' +
@@ -3213,8 +3520,13 @@ function decodeSerial() {
         notesText = _shortNote + (notesText && notesText !== 'N/A' ? '\n\n' + notesText : '');
       }
     }
+    var _panasonicNoteHint = buildPanasonicNonNumericHint(brandId, serial);
+    if (_panasonicNoteHint) {
+      notesText = _panasonicNoteHint + (notesText && notesText !== 'N/A' ? '\n\n' + notesText : '');
+    }
     document.getElementById('resultNotes').textContent = notesText;
-    updateResultWarning(result, brandId);
+    updateResultWarning(result, brandId, serial);
+    renderSerialMethodsDropdown(brandId, decoder.name, currentCategory);
 
     // Compute derived display fields from output shape (no decode rules exposed)
     var _displayedYear = document.getElementById('resultYear').textContent;
@@ -3259,7 +3571,7 @@ function copyClaimFile() {
   var brand = brandEl  ? brandEl.textContent.trim()  : '';
   var age   = ageEl    ? ageEl.textContent.trim()    : '';
 
-  // Get only the one-line method string â€” strip the decode-detail span if present
+  // Get only the one-line method string - strip the decode-detail span if present
   var method = '';
   if (methodEl) {
     var methodClone = methodEl.cloneNode(true);
@@ -3708,6 +4020,21 @@ function getQuerySpecificity(query) {
   return 'specific';
 }
 
+function inferBrandFromQuery(query) {
+  var q = String(query || '').toLowerCase();
+  if (!q) return '';
+  var best = '';
+  (SUPPORTED_TERMS.brands || []).forEach(function(brand) {
+    var b = String(brand || '').toLowerCase();
+    if (!b) return;
+    var matched = b.length <= 2
+      ? (new RegExp('\\b' + b + '\\b', 'i')).test(q)
+      : (q.indexOf(b) !== -1);
+    if (matched && b.length > best.length) best = brand;
+  });
+  return best;
+}
+
 function buildRefineTipBox(tipText) {
   return '<div class="tip-block">' +
     '<div class="tip-row"><span class="tip-label">&#128161; Refine Your Result</span>' +
@@ -3726,15 +4053,29 @@ function buildSmartLookupFallbackHtml(query) {
 function buildSmartLookupResultHtml(query, data, specificity) {
   var category = detectQueryItemType(query);
   var html = '';
+  var lookupBrand = data.brand || inferBrandFromQuery(query);
 
   html += '<div class="result-query smart-search-query">Search: ' + esc(query) + '</div>';
 
   // Identification rows
-  if (data.brand) {
-    html += '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + esc(data.brand) + '</span></div>';
+  if (lookupBrand) {
+    html += '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + esc(lookupBrand) + '</span></div>';
   }
   if (data.model && specificity === 'specific') {
     html += '<div class="result-row"><span class="result-label">Model</span><span class="result-value">' + esc(data.model) + '</span></div>';
+  }
+  if (lookupBrand) {
+    var preferredCategory = smartLookupCategoryToDecoderCategory(category);
+    var brandMethodEntries = collectBrandMethodEntries(lookupBrand, lookupBrand, preferredCategory);
+    if (!brandMethodEntries.length) {
+      brandMethodEntries = [{
+        categoryKey: preferredCategory || 'appliances',
+        categoryLabel: categoryDisplayLabel(preferredCategory || 'appliances'),
+        name: lookupBrand,
+        method: 'No direct serial method is currently mapped for this brand. Use the serial number decoder with the exact model/serial label details.'
+      }];
+    }
+    html += buildDecodingMethodsDropdownHtml(brandMethodEntries, 'All Decoding Methods for ' + lookupBrand);
   }
 
   // GUARANTEED MINIMUM BLOCKS: Description, Origin, Production Status
@@ -3791,7 +4132,7 @@ function buildSmartLookupResultHtml(query, data, specificity) {
     html += '<div class="info-block tip"><h4>&#128161; Limited Information Available</h4><p>We were unable to find complete information for this search. For more specific results, try including the model number, series name, or product type. You can also try the serial number decoder if you have the appliance in front of you.</p></div>';
   }
 
-  // Sources Checked â€” collapsible (Change 5)
+  // Sources Checked - collapsible (Change 5)
   var hasEvidence = data.evidence && data.evidence.length > 0;
   var hasSources = !!(data.sources && (Array.isArray(data.sources) ? data.sources.length > 0 : true));
   if (hasEvidence || hasSources) {
@@ -3943,16 +4284,17 @@ async function estimateAge() {
     // === ITEM TYPE MISMATCH CHECK ===
     var resultType = detectResultItemType(data);
     if (queryType && resultType && queryType !== resultType) {
-      // Notes from a different category â€” suppress them to avoid cross-category bleed
+      // Notes from a different category - suppress them to avoid cross-category bleed
       data = Object.assign({}, data, { notes: null, serialRule: null });
     }
 
     var body = getSmartLookupResultsEl();
     var specificity = getQuerySpecificity(query);
     body.innerHTML = buildSmartLookupResultHtml(query, data, specificity);
-    var brandId = (data.brand || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-    showBrandLogo('ageBrandLogo', brandId, data.brand || '');
-    currentFeedbackContext = { brand: data.brand || '', serial: query };
+    var resolvedBrand = data.brand || inferBrandFromQuery(query);
+    var brandId = normalizeBrandToken(resolvedBrand);
+    showBrandLogo('ageBrandLogo', brandId, resolvedBrand || '');
+    currentFeedbackContext = { brand: resolvedBrand || '', serial: query };
 
     // Ensure the cloud shows for at least 1400ms so the full 2 s sequence completes
     var elapsed   = Date.now() - loadStart;
@@ -4015,7 +4357,7 @@ async function submitFeedback() {
       body: JSON.stringify({ brand: brand, serial: serial, issueType: issueType, details: details }),
     });
   } catch (e) {
-    // fail silently â€” still show thank-you
+    // fail silently - still show thank-you
   }
 
   document.getElementById('fbThanks').classList.remove('hidden');
@@ -4038,16 +4380,16 @@ function toggleMoreOptions() {
   if (arrow) arrow.classList.toggle('open', !isOpen);
 }
 
-// ===== PROGRESSIVE DISCLOSURE â€” AI SECTION GENERATOR =====
+// ===== PROGRESSIVE DISCLOSURE - AI SECTION GENERATOR =====
 async function generateAISection(type, btn) {
   var brand  = currentFeedbackContext.brand  || '';
   var serial = currentFeedbackContext.serial || '';
   var year   = document.getElementById('resultYear').textContent || '';
 
   var queries = {
-    replacements: brand + ' appliance manufactured around ' + year + ' â€” current replacement models and comparable units',
-    specs:        brand + ' appliance serial ' + serial + ' manufactured around ' + year + ' â€” technical specifications and product features',
-    market:       brand + ' appliance manufactured around ' + year + ' â€” current market pricing and availability'
+    replacements: brand + ' appliance manufactured around ' + year + ' - current replacement models and comparable units',
+    specs:        brand + ' appliance serial ' + serial + ' manufactured around ' + year + ' - technical specifications and product features',
+    market:       brand + ' appliance manufactured around ' + year + ' - current market pricing and availability'
   };
   var query = queries[type] || (brand + ' appliance ' + year);
 
@@ -4181,6 +4523,7 @@ function showCustomAlert(message) {
   modal.appendChild(box);
   document.body.appendChild(modal);
 }
+
 
 
 
