@@ -1567,7 +1567,8 @@ button.decode-button {
 /* ── Results Cards ── */
 .results-card {
 
-    margin-top: 1.5rem; background: var(--card-bg);
+    margin-top: 1.5rem; background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: var(--radius);
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     overflow: hidden;
@@ -1576,14 +1577,15 @@ button.decode-button {
 
 .results-header {
 
-    background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%);
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
     padding: 1rem 1.5rem;
     display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
 
 }
 
 .results-header h3 {
- font-size: 1rem; font-weight: 700; color: var(--text-white);
+ font-size: 1rem; font-weight: 700; color: #1a202c;
 }
 
 .results-body {
@@ -1614,11 +1616,11 @@ button.decode-button {
 }
 
 .result-label {
- font-size: 0.85rem; font-weight: 600; color: var(--text-mid);
+ font-size: 0.85rem; font-weight: 600; color: #4a5568;
 }
 
 .result-value {
- font-size: 1.05rem; font-weight: 700; color: var(--accent2);
+ font-size: 1.05rem; font-weight: 700; color: #3182ce;
 }
 
 .info-block {
@@ -1626,6 +1628,16 @@ button.decode-button {
     margin-top: 1rem; padding: 1rem; background: #f8fafc;
     border-radius: 10px; border-left: 4px solid var(--card-border);
 
+}
+
+.info-block p,
+.info-block li,
+.result-query {
+    color: #4a5568;
+}
+
+.info-block h4 {
+    color: #1a202c;
 }
 
 .info-block.method {

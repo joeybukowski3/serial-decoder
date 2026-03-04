@@ -2884,7 +2884,8 @@ async function parseJsonResponseSafe(res, contextLabel) {
 async function estimateAge() {
   var inputEl = getSmartLookupInputEl();
   if (!inputEl || !document.getElementById('smart-lookup-input')) return;
-  var query = inputEl.value.trim();
+  var query = String(inputEl.value || '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+  inputEl.value = query;
   if (!query) return;
 
   document.getElementById('ageResults').classList.add('hidden');
