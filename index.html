@@ -167,6 +167,28 @@
 
     /* ─── RESULTS WRAPPER ─── */
     .results-wrapper { max-width: 620px; margin: 0 auto; padding: 0 0 32px; }
+
+    /* Home-only dual tool layout */
+    .home-tools-wrap { max-width: 1240px; margin: 0 auto; }
+    .home-tools-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    .home-tools-grid .search-box {
+      max-width: none;
+      height: 100%;
+    }
+    .home-tools-grid .search-tab[disabled] {
+      cursor: default;
+      opacity: 1;
+    }
+    @media (max-width: 980px) {
+      .home-tools-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -191,64 +213,66 @@
 
 <!-- ─── PAGE HERO ─── -->
 <section class="page-hero">
-  <div class="hero-badge">
-    <span class="badge-dot"></span>
-    No AI Required
-  </div>
   <h1>Serial Number <em>Decoder</em></h1>
   <p class="hero-sub">Instantly decode manufacture dates from serial numbers across 100+ appliance, HVAC, electronics, and water heater brands.</p>
 </section>
 
 <!-- ─── DECODER TOOL ─── -->
 <section class="section" style="padding-top:32px;padding-bottom:16px;">
-  <div style="max-width:620px;margin:0 auto;">
-    <div class="search-box">
-      <!-- Category + Smart Lookup Tabs -->
-      <div class="search-tabs">
-        <button class="search-tab cat-tab active" data-cat="appliances"   onclick="selectCatAndShowDecoder('appliances', this)">🏠 Appliances</button>
-        <button class="search-tab cat-tab"         data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">💧 Water Heaters</button>
-        <button class="search-tab cat-tab"         data-cat="hvac"        onclick="selectCatAndShowDecoder('hvac', this)">❄️ HVAC</button>
-        <button class="search-tab cat-tab"         data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">📺 Electronics</button>
-        <button class="search-tab smart-tab"       onclick="showSmartPanel(this)">✨ Smart Lookup</button>
-      </div>
-
-      <!-- DECODER PANEL -->
-      <div class="search-panel" id="panel-decoder">
-        <label class="sr-only" for="brand">Select Brand</label>
-        <select id="brand" class="search-select">
-          <option value="">-- Select Brand --</option>
-        </select>
-
-        <!-- Era Selector (shown by script.js when needed) -->
-        <div class="era-group hidden" id="eraGroup">
-          <label class="sr-only" for="eraSelect">
-            Manufacture Era
-            <span title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">ⓘ</span>
-          </label>
-          <select id="eraSelect" class="search-select" style="margin-top:8px;">
-            <option value="">-- Select Era --</option>
-            <option value="post">Post-2006 (manufactured after 2006)</option>
-            <option value="pre">Pre-2006 (manufactured before 2006)</option>
-          </select>
-          <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
+  <div class="home-tools-wrap">
+    <div class="home-tools-grid">
+      <div class="search-box">
+        <!-- Decoder Category Tabs -->
+        <div class="search-tabs">
+          <button class="search-tab cat-tab active" data-cat="appliances"   onclick="selectCatAndShowDecoder('appliances', this)">🏠 Appliances</button>
+          <button class="search-tab cat-tab"         data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">💧 Water Heaters</button>
+          <button class="search-tab cat-tab"         data-cat="hvac"        onclick="selectCatAndShowDecoder('hvac', this)">❄️ HVAC</button>
+          <button class="search-tab cat-tab"         data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">📺 Electronics</button>
         </div>
 
-        <label class="sr-only" for="serial">Enter Serial Number</label>
-        <input type="text" id="serial" class="search-input" placeholder="Enter serial number (e.g., CB2501800)" style="margin-top:8px;">
-        <p class="search-hint">Enter the serial number exactly as shown on the product label</p>
+        <!-- DECODER PANEL -->
+        <div class="search-panel" id="panel-decoder">
+          <label class="sr-only" for="brand">Select Brand</label>
+          <select id="brand" class="search-select">
+            <option value="">-- Select Brand --</option>
+          </select>
 
-        <button id="decodeBtn" class="btn-primary" style="width:100%;margin-top:14px;" disabled onclick="decodeSerial()">🔍 Decode Serial Number</button>
-        <p class="search-link" style="margin-top:10px;">No serial number? <a href="smart-lookup.html">Use Smart Lookup →</a></p>
+          <!-- Era Selector (shown by script.js when needed) -->
+          <div class="era-group hidden" id="eraGroup">
+            <label class="sr-only" for="eraSelect">
+              Manufacture Era
+              <span title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">ⓘ</span>
+            </label>
+            <select id="eraSelect" class="search-select" style="margin-top:8px;">
+              <option value="">-- Select Era --</option>
+              <option value="post">Post-2006 (manufactured after 2006)</option>
+              <option value="pre">Pre-2006 (manufactured before 2006)</option>
+            </select>
+            <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
+          </div>
+
+          <label class="sr-only" for="serial">Enter Serial Number</label>
+          <input type="text" id="serial" class="search-input" placeholder="Enter serial number (e.g., CB2501800)" style="margin-top:8px;">
+          <p class="search-hint">Enter the serial number exactly as shown on the product label</p>
+
+          <button id="decodeBtn" class="btn-primary" style="width:100%;margin-top:14px;" disabled onclick="decodeSerial()">🔍 Decode Serial Number</button>
+          <p class="search-link" style="margin-top:10px;">No serial number? <a href="smart-lookup.html">Use Smart Lookup →</a></p>
+        </div>
       </div>
 
-      <!-- SMART LOOKUP PANEL -->
-      <div class="search-panel" id="panel-smart" style="display:none;">
-        <label class="sr-only" for="smart-lookup-input">Model Number or Description</label>
-        <input type="text" id="smart-lookup-input" class="search-input"
-               placeholder="e.g., GE Profile PFE28KSKSS or LG 55&quot; C3 series TV">
-        <p class="search-hint">Enter a model number, brand + model, brand + series, or description to estimate the age. The more information you provide, the better the result.</p>
-        <button class="btn-amber" style="width:100%;margin-top:14px;" onclick="estimateAge()">✨ Run Smart Lookup</button>
-        <p class="search-link" style="margin-top:10px;">Have a serial number? Use the tabs above to select your brand.</p>
+      <div class="search-box">
+        <div class="search-tabs">
+          <button class="search-tab smart-tab active" type="button" disabled>✨ Smart Lookup</button>
+        </div>
+
+        <div class="search-panel" id="panel-smart">
+          <label class="sr-only" for="smart-lookup-input">Model Number or Description</label>
+          <input type="text" id="smart-lookup-input" class="search-input"
+                 placeholder="e.g., GE Profile PFE28KSKSS or LG 55&quot; C3 series TV">
+          <p class="search-hint">Enter a model number, brand + model, brand + series, or description to estimate the age. The more information you provide, the better the result.</p>
+          <button class="btn-amber" style="width:100%;margin-top:14px;" onclick="estimateAge()">✨ Run Smart Lookup</button>
+          <p class="search-link" style="margin-top:10px;">Have a serial number? Use the decoder panel to the left.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -484,14 +508,6 @@
 <script>
 function selectCatAndShowDecoder(cat, btn) {
   if (typeof selectCategory === 'function') selectCategory(cat, btn);
-  document.getElementById('panel-decoder').style.display = 'block';
-  document.getElementById('panel-smart').style.display = 'none';
-}
-function showSmartPanel(btn) {
-  document.querySelectorAll('.cat-tab').forEach(function(t){ t.classList.remove('active'); });
-  btn.classList.add('active');
-  document.getElementById('panel-decoder').style.display = 'none';
-  document.getElementById('panel-smart').style.display = 'block';
 }
 </script>
 
