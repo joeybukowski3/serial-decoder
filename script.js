@@ -398,6 +398,7 @@ function sidebarCategoryForSlug(slug) {
 function categoryNameToKey(name) {
   if (!name) return 'appliances';
   var s = String(name).toLowerCase();
+  if (s === 'smart-lookup' || s === 'smart lookup' || s === 'smartlookup') return 'smart-lookup';
   if (s === 'hvac') return 'hvac';
   if (s === 'waterheaters' || s === 'water-heaters' || s === 'water heaters') return 'water-heaters';
   if (s === 'electronics') return 'electronics';
