@@ -121,34 +121,37 @@
 
             <!-- Form -->
             <div class="form-area">
-                <div class="form-group">
-                    <label class="step-label sr-only" for="brand">Select Brand</label>
-                    <select id="brand" class="form-select">
-                        <option value="">-- Select Brand --</option>
-                    </select>
-                </div>
+                <div class="decode-panel">
+                    <label class="panel-label">Decode Tool</label>
+                    <div class="form-group">
+                        <label class="step-label sr-only" for="brand">Select Brand</label>
+                        <select id="brand" class="form-select">
+                            <option value="">-- Select Brand --</option>
+                        </select>
+                    </div>
 
-                <!-- Era Dropdown -->
-                <div class="form-group era-group hidden" id="eraGroup">
-                    <label class="step-label sr-only" for="eraSelect">
-                        Manufacture Era
-                        <span class="info-icon" title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">&#9432;</span>
-                    </label>
-                    <select id="eraSelect" class="form-select">
-                        <option value="">-- Select Era --</option>
-                        <option value="post">Post-2006 (manufactured after 2006)</option>
-                        <option value="pre">Pre-2006 (manufactured before 2006)</option>
-                    </select>
-                    <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
-                </div>
+                    <!-- Era Dropdown -->
+                    <div class="form-group era-group hidden" id="eraGroup">
+                        <label class="step-label sr-only" for="eraSelect">
+                            Manufacture Era
+                            <span class="info-icon" title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">&#9432;</span>
+                        </label>
+                        <select id="eraSelect" class="form-select">
+                            <option value="">-- Select Era --</option>
+                            <option value="post">Post-2006 (manufactured after 2006)</option>
+                            <option value="pre">Pre-2006 (manufactured before 2006)</option>
+                        </select>
+                        <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
+                    </div>
 
-                <div class="form-group">
-                    <label class="step-label sr-only" for="serial">Enter Serial Number</label>
-                    <input type="text" id="serial" class="form-input" placeholder="Enter serial number (e.g., CB2501800)">
-                    <div class="helper-text">Enter the serial number exactly as shown on the product label</div>
-                </div>
+                    <div class="form-group">
+                        <label class="step-label sr-only" for="serial">Enter Serial Number</label>
+                        <input type="text" id="serial" class="form-input" placeholder="Enter serial number (e.g., CB2501800)">
+                        <div class="helper-text">Enter the serial number exactly as shown on the product label</div>
+                    </div>
 
-                <button id="decodeBtn" class="decode-btn" disabled onclick="decodeSerial()">Decode Serial Number</button>
+                    <button id="decodeBtn" class="decode-btn decode-button" disabled onclick="decodeSerial()">Decode Serial Number</button>
+                </div>
                 <div class="smart-lookup-container">
                     <div class="smart-lookup-header"><span class="ai-icon">&#10024;</span> No Serial Number? Use Smart Lookup</div>
                     <!-- Alt Lookup Toggle -->

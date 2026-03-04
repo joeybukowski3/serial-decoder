@@ -1115,6 +1115,41 @@ body {
  padding: 1rem 1.25rem 1.1rem;
 }
 
+.decode-panel {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 24px;
+    margin-top: 16px;
+    margin-bottom: 24px;
+}
+
+.panel-label {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.decode-panel > .form-group,
+.decode-panel > button {
+    margin-bottom: 16px;
+}
+
+.decode-panel > :last-child {
+    margin-bottom: 0;
+}
+
+.decode-panel .decode-button {
+    min-height: 48px;
+    font-weight: 600;
+    font-size: 16px;
+    margin-top: 0;
+}
+
 .step-label {
 
     font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
@@ -2211,6 +2246,19 @@ details.sources-checked[open] summary::before {
         overflow: hidden;
     }
     .form-area { padding: 0.875rem; }
+    .decode-panel {
+        padding: 16px;
+        margin-top: 12px;
+        margin-bottom: 16px;
+    }
+    .panel-label {
+        font-size: 11px;
+        margin-bottom: 10px;
+    }
+    .decode-panel .decode-button {
+        min-height: 52px;
+        font-size: 1rem;
+    }
     .results-body { padding: 0.875rem; }
     .static-card-body { padding: 1rem 0.875rem; }
     .static-card-header { padding: 0.875rem 1rem; }
