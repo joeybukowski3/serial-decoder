@@ -436,14 +436,37 @@ body {
 
 }
 
-.sidebar .cat-tab.active {
 
-    background: #3182ce;
-    color: #ffffff;
-    border-color: #3182ce;
-
+.sidebar-section-title {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    font-weight: 600;
+    margin: 18px 0 8px;
 }
 
+.sidebar-item,
+.sidebar-link,
+.sidebar-group-link,
+.sidebar .cat-tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    margin-bottom: 4px;
+}
+
+.sidebar-link.active,
+.sidebar-group-link.active,
+.sidebar-brand-link.active,
+.sidebar-category-link.active,
+.sidebar .cat-tab.active,
+.sidebar-item.active {
+    background: #1e3a5f;
+    border-left: 3px solid #4da3ff;
+    font-weight: 600;
+}
 .sidebar-overlay {
 
     display: none;
@@ -1143,10 +1166,51 @@ body {
 }
 
 /* ── Form Area ── */
+
+
 .form-area {
  padding: 1rem 1.25rem 1.1rem;
 }
 
+.decode-panel {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 24px;
+    margin-top: 16px;
+    margin-bottom: 24px;
+}
+
+.panel-label {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.decode-panel select,
+.decode-panel input,
+.decode-panel button {
+    margin-bottom: 16px;
+}
+
+.decode-panel .form-group {
+    margin-bottom: 0;
+}
+
+.decode-panel button:last-child,
+.decode-panel #decodeBtn {
+    margin-bottom: 0;
+}
+
+button.decode-button {
+    height: 48px;
+    font-weight: 600;
+    font-size: 16px;
+}
 .step-label {
 
     font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
