@@ -653,7 +653,7 @@ function renderStaticSidebar() {
   });
 
   if (categoriesSection) {
-    categoriesSection.innerHTML = '<div class="sidebar-title">Categories</div>';
+    categoriesSection.innerHTML = '<div class="sidebar-title sidebar-section-title">Categories</div>';
     var catLinks = [
       { key: 'appliances', label: 'Appliances', href: '/appliances' },
       { key: 'hvac', label: 'HVAC', href: '/hvac' },
@@ -662,7 +662,7 @@ function renderStaticSidebar() {
     ];
     catLinks.forEach(function(item) {
       var a = document.createElement('a');
-      a.className = 'sidebar-link sidebar-category-link';
+      a.className = 'sidebar-link sidebar-category-link sidebar-item';
       a.href = item.href;
       a.setAttribute('data-category', item.key);
       var label = SIDEBAR_CATEGORY_LABELS[item.key] || item.label;
@@ -672,7 +672,7 @@ function renderStaticSidebar() {
   }
 
   if (brandsSection) {
-    brandsSection.innerHTML = '<div class="sidebar-title">Brands</div>';
+    brandsSection.innerHTML = '<div class="sidebar-title sidebar-section-title">Brands</div>';
     var container = document.createElement('div');
     container.className = 'sidebar-brand-groups';
     var categoryOrder = ['appliances', 'hvac', 'electronics', 'water-heaters'];
@@ -733,7 +733,7 @@ function renderStaticSidebar() {
         var brand = brandData.find(function(b) { return b.id === id; });
         if (!brand) return;
         var a = document.createElement('a');
-        a.className = 'sidebar-link sidebar-brand-link';
+        a.className = 'sidebar-link sidebar-brand-link sidebar-item';
         a.href = categoryBrandHref(catKey, brand.id);
         a.textContent = getBrandDisplayName(brand);
         a.setAttribute('data-brand', brand.id);
@@ -760,7 +760,7 @@ function renderStaticSidebar() {
         moreList.hidden = true;
         remaining.forEach(function(brand) {
           var a = document.createElement('a');
-          a.className = 'sidebar-link sidebar-link-secondary sidebar-brand-link';
+          a.className = 'sidebar-link sidebar-link-secondary sidebar-brand-link sidebar-item';
           a.href = categoryBrandHref(catKey, brand.id);
           a.textContent = getBrandDisplayName(brand);
           a.setAttribute('data-brand', brand.id);
@@ -872,7 +872,7 @@ function enhanceSidebarNavigation() {
     if (catName === 'Water Heaters') {
       WATER_HEATER_BRANDS.forEach(function(wb) {
         var wa = document.createElement('a');
-        wa.className = 'sidebar-link';
+        wa.className = 'sidebar-link sidebar-item';
         wa.href = brandTargetHref(wb.id);
         wa.textContent = wb.label;
         wa.setAttribute('data-brand', wb.id);
@@ -963,7 +963,7 @@ function enhanceSidebarNavigation() {
 
       remaining.forEach(function(item) {
         var a = document.createElement('a');
-        a.className = 'sidebar-link sidebar-link-secondary';
+        a.className = 'sidebar-link sidebar-link-secondary sidebar-item';
         a.href = item.href;
         a.textContent = item.label;
         a.setAttribute('data-category', categoryNameToKey(catName));
@@ -1055,11 +1055,11 @@ function enhanceSmartLookupSidebarTop() {
   var section = document.createElement('div');
   section.className = 'sidebar-section sidebar-smart-top';
   section.innerHTML =
-    '<div class="sidebar-title">Tools</div>' +
-    '<a class="sidebar-link sidebar-smart-top-link" href="/smart-lookup">' +
+    '<div class="sidebar-title sidebar-section-title">Tools</div>' +
+    '<a class="sidebar-link sidebar-smart-top-link sidebar-item" href="/smart-lookup">' +
     '\u2b50 Smart Lookup' +
     '</a>' +
-    '<a class="sidebar-link sidebar-smart-sub-link" href="/">' +
+    '<a class="sidebar-link sidebar-smart-sub-link sidebar-item" href="/">' +
     '\ud83d\udcdf Serial Number Decoder' +
     '</a>';
 
@@ -1184,7 +1184,7 @@ function enhanceSidebarCategoryLinks() {
   section.querySelectorAll('.cat-tab, .cat-tab-link').forEach(function(el) { el.remove(); });
   cats.forEach(function(cat) {
     var a = document.createElement('a');
-    a.className = 'cat-tab cat-tab-link';
+    a.className = 'cat-tab cat-tab-link sidebar-item';
     if (activeKey === cat.key) a.classList.add('active');
     a.href = categoryPageHrefByKey(cat.key);
     a.textContent = cat.label;
@@ -1715,6 +1715,19 @@ function bindSmartLookupActions() {
   });
 }
 
+function applySidebarVisualHierarchy() {
+  var sidebar = document.querySelector('.sidebar');
+  if (!sidebar) return;
+
+  sidebar.querySelectorAll('.sidebar-title').forEach(function(title) {
+    title.classList.add('sidebar-section-title');
+  });
+
+  sidebar.querySelectorAll('.sidebar-link, .sidebar-group-link, .cat-tab, .cat-tab-link').forEach(function(item) {
+    item.classList.add('sidebar-item');
+  });
+}
+
 function initPage() {
   ensureSmartLookupDom();
   enhanceHeaderBranding();
@@ -1724,6 +1737,7 @@ function initPage() {
   bindHomepageCategoryTabs();
   enhanceSmartLookupSidebarTop();
   renderStaticSidebar();
+  applySidebarVisualHierarchy();
   document.body.classList.toggle('brand-page', isBrandPage());
   document.body.classList.toggle('methodology-page', getBrandPageSlug() === 'methodology');
   syncSidebarActiveState();

@@ -441,6 +441,35 @@ body {
 
 }
 
+.sidebar-section-title {
+
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    font-weight: 600;
+    margin: 18px 0 8px;
+
+}
+
+.sidebar-item {
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    margin-bottom: 4px;
+
+}
+
+.sidebar-item.active {
+
+    background: #1e3a5f;
+    border-left: 3px solid #4da3ff;
+    font-weight: 600;
+
+}
+
 .sidebar-overlay {
 
     display: none;
@@ -1139,12 +1168,18 @@ body {
     margin-bottom: 16px;
 }
 
+.decode-panel select,
+.decode-panel input,
+.decode-panel button {
+    margin-bottom: 16px;
+}
+
 .decode-panel > :last-child {
     margin-bottom: 0;
 }
 
-.decode-panel .decode-button {
-    min-height: 48px;
+button.decode-button {
+    height: 48px;
     font-weight: 600;
     font-size: 16px;
     margin-top: 0;
