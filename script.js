@@ -967,9 +967,6 @@ function enhanceSmartLookupSidebarTop() {
     '<div class="sidebar-section-title">Tools</div>' +
     '<a class="sidebar-link sidebar-smart-top-link sidebar-item" href="/smart-lookup">' +
     'Smart Lookup <span class="new-badge">NEW</span>' +
-    '</a>' +
-    '<a class="sidebar-link sidebar-smart-sub-link sidebar-item" href="/">' +
-    'Serial Number Decoder' +
     '</a>';
 
   var firstSection = sidebar.querySelector('.sidebar-section');
