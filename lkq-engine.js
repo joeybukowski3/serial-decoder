@@ -166,7 +166,7 @@
         rows += '<td class="' + cls + ' lkq-no-val">—</td>';
       } else {
         var rc = _ratingClass(opt.lkqRating);
-        rows += '<td class="' + cls + '"><span class="lkq-badge ' + rc + '">' +
+        rows += '<td class="' + cls + '"><span class="lkq-rating-badge ' + rc + '">' +
           _esc((opt.lkqRating || 'NOT LKQ').toUpperCase().trim()) + '</span></td>';
       }
     });
@@ -412,7 +412,7 @@
       '</div>'
     );
 
-    _setYourPickCell(table, 'rating', '<span class="lkq-badge ' + rc + '">' + _esc(ratingLabel) + '</span>');
+    _setYourPickCell(table, 'rating', '<span class="lkq-rating-badge ' + rc + '">' + _esc(ratingLabel) + '</span>');
     _setYourPickCell(table, 'brand', _esc(data.brand || '—'));
     _setYourPickCell(table, 'price', _esc(data.priceRange || '—'));
 
