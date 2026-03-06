@@ -609,3 +609,22 @@ footer {
   .comparison-header, .comp-row { grid-template-columns: 1fr; }
   .comp-col:first-child, .comp-cell:first-child { border-right: none; border-bottom: 1px solid var(--border); }
 }
+
+/* --- Internal version timestamp badge --- */
+.internal-version-badge {
+  position: fixed;
+  right: 10px;
+  bottom: 8px;
+  z-index: 9999;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.2px;
+  color: rgba(122, 147, 172, 0.55);
+  background: rgba(13, 27, 42, 0.25);
+  border: 1px solid rgba(122, 147, 172, 0.2);
+  border-radius: 999px;
+  padding: 4px 7px;
+  user-select: none;
+  pointer-events: none;
+}

@@ -46,3 +46,18 @@ function setTab(el, tab) {
     }
   }
 }
+
+/* --- Internal version timestamp badge (obfuscated) --- */
+(function () {
+  function pad2(n) { return String(n).padStart(2, '0'); }
+
+  var now = new Date();
+  // Format example: 6/1204 => day-of-month / HHMM
+  var code = now.getDate() + '/' + pad2(now.getHours()) + pad2(now.getMinutes());
+
+  var badge = document.createElement('div');
+  badge.className = 'internal-version-badge';
+  badge.setAttribute('aria-hidden', 'true');
+  badge.textContent = code;
+  document.body.appendChild(badge);
+})();
