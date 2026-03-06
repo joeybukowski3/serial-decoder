@@ -4573,3 +4573,51 @@ img.ia-sidebar-logo {
   min-height: 0;
 }
 
+/* LKQ text visibility fixes */
+.lkq-output,
+.lkq-id-card,
+.lkq-successor-card,
+.lkq-id-name,
+.lkq-id-model,
+.lkq-id-specs,
+.lkq-id-desc,
+.lkq-section-title,
+.lkq-section-num {
+  color: #1a1a2e !important;
+}
+
+.lkq-comparison-table th,
+.lkq-comparison-table td {
+  color: #1a1a2e !important;
+}
+
+.lkq-pill {
+  color: #1a1a2e !important;
+  background: #e8ecf4 !important;
+}
+
+/* Smart Lookup structured age breakdown rows */
+.sl-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid #e8ecf0;
+  background: #ffffff;
+  border-left: 3px solid #2563eb;
+  margin-bottom: 2px;
+}
+.sl-result-label {
+  color: #5a6a7a;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.sl-result-value {
+  font-weight: 700;
+  color: #1a1a2e;
+  font-size: 1rem;
+}
+.sl-result-highlight {
+  color: #2563eb;
+}
+

@@ -48,27 +48,32 @@
   function _buildIdCard(summary) {
     var pills = '';
     if (summary.category) {
-      pills += '<span class="lkq-id-pill">' + _esc(summary.category) + '</span>';
+      pills += '<span class="lkq-pill">' + _esc(summary.category) + '</span>';
+    }
+
+    var ageRows = '';
+    if (summary.manufactureYear) {
+      ageRows += '<div class="sl-result-row"><span class="sl-result-label">Confirmed Manufacture Year</span><span class="sl-result-value sl-result-highlight">' + _esc(summary.manufactureYear) + '</span></div>';
+    }
+    if (summary.retailAvailability) {
+      ageRows += '<div class="sl-result-row"><span class="sl-result-label">Confirmed Retail Availability</span><span class="sl-result-value sl-result-highlight">' + _esc(summary.retailAvailability) + '</span></div>';
     }
     if (summary.estimatedAgeRange) {
-      pills += '<span class="lkq-id-pill lkq-id-pill-age">Age: ' + _esc(summary.estimatedAgeRange) + '</span>';
+      ageRows += '<div class="sl-result-row"><span class="sl-result-label">Estimated Age</span><span class="sl-result-value sl-result-highlight">' + _esc(summary.estimatedAgeRange) + '</span></div>';
     }
 
     return (
-      '<div class="lkq-section-pad">' +
-        '<div class="lkq-section-hd">' +
-          '<span class="lkq-step-num">1</span>' +
-          '<span class="lkq-step-title">Item Identification</span>' +
-        '</div>' +
-        '<div class="lkq-id-body">' +
-          (summary.name ? '<div class="lkq-id-name">' + _esc(summary.name) + '</div>' : '') +
-          '<div class="lkq-id-meta">' +
-            (summary.brand ? '<span class="lkq-id-brand">' + _esc(summary.brand) + '</span>' : '') +
-            (summary.model ? '<span class="lkq-id-model">Model: ' + _esc(summary.model) + '</span>' : '') +
-          '</div>' +
-          (pills ? '<div class="lkq-id-pills">' + pills + '</div>' : '') +
-          (summary.description ? '<p class="lkq-id-desc">' + _esc(summary.description) + '</p>' : '') +
-        '</div>' +
+      '<div class="lkq-id-card">' +
+      '<div class="lkq-id-header">' +
+      '<span class="lkq-section-num">1</span>' +
+      '<span class="lkq-section-title">Item Identification</span>' +
+      '</div>' +
+      '<div class="lkq-id-name">' + _esc(summary.name || '') + '</div>' +
+      (summary.modelNumber ? '<div class="lkq-id-model">Model: ' + _esc(summary.modelNumber) + '</div>' : '') +
+      (summary.specs ? '<div class="lkq-id-specs">' + _esc(summary.specs) + '</div>' : '') +
+      '<div class="lkq-pills">' + pills + '</div>' +
+      ageRows +
+      (summary.description ? '<div class="lkq-id-desc">' + _esc(summary.description) + '</div>' : '') +
       '</div>'
     );
   }
