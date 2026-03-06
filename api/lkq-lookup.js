@@ -89,6 +89,14 @@ Retailer guidance:
 - Commercial/industrial: "Grainger" or "Amazon Business"
 - General household: "Amazon" or "Home Depot"
 
+New-condition requirement (strict):
+- Every replacement option must be purchasable as brand NEW from an authorized retailer
+- Never include refurbished, renewed, open-box, pre-owned, used, or certified pre-owned listings
+- retailerSearchQuery must target a new-condition listing specifically
+- If a candidate model is only available refurbished/used, exclude it and find the next qualifying NEW option
+- If no qualifying NEW option can be confirmed for a slot, leave the slot empty (do not force-fill with used/refurbished)
+- This rule applies to all replacement slots including Best Match
+
 Successor status rules:
 - "direct_successor": the manufacturer released a named model to replace this exact model (use when you know this with confidence)
 - "same_brand_equivalent": the same brand has a current equivalent product (same tier/line, different model number) but not a formally named successor
@@ -102,8 +110,10 @@ Respond with ONLY valid JSON in this exact format:
     "model": "Model number only (e.g. WM4000HWA), or null if unknown",
     "category": "Short category label (e.g. Front-Load Washer, 65-inch 4K TV, Gas Furnace)",
     "description": "1-2 sentence description of this item and its primary function",
-    "estimatedAgeRange": "Year range string (e.g. 2018–2022) or null if unknown"
-  },
+    "estimatedAgeRange": "Year range string (e.g. 2018-2022) or null if unknown",
+    "availability": "Currently Available | Discontinued | Availability Unconfirmed",
+    "originalPriceDisplay": "Current retail range if sold new; otherwise ~$X,XXX (MSRP) or ~$X,XXX (Avg. Market Value)"
+},
   "specLabels": ["Label1", "Label2", "Label3", "Label4", "Label5"],
   "originalSpecs": {
     "Label1": "value",
@@ -148,7 +158,10 @@ Rules:
 - If successorStatus.type is "direct_successor" or "same_brand_equivalent", the first replacement option should be that successor/equivalent and must use the same name/model as successorStatus
 - Include options from multiple manufacturers when possible
 - priceRange reflects current retail pricing; use "N/A" if unknown
-- retailerSearchQuery is a clean search string, not a URL`;
+- retailerSearchQuery is a clean search string, not a URL
+- replacementOptions must be NEW-condition purchase candidates only (no refurbished/used/open-box)
+- If original item is still sold new, itemSummary.originalPriceDisplay should be current retail range
+- If original item is discontinued, itemSummary.originalPriceDisplay should be "~$X,XXX (MSRP)" or "~$X,XXX (Avg. Market Value)"`;
 
   try {
     const response = await fetch(
@@ -189,3 +202,5 @@ Rules:
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+

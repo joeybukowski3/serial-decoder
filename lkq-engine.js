@@ -26,6 +26,212 @@
     return 'not-lkq';
   }
 
+  function _norm(v) {
+    return String(v || '').toLowerCase().trim();
+  }
+
+  function _extractNumbers(v) {
+    var text = String(v || '').replace(/,/g, '').toLowerCase();
+    var nums = [];
+    var re = /(\d+(?:\.\d+)?)(\s*k)?/g;
+    var m;
+    while ((m = re.exec(text)) !== null) {
+      var n = parseFloat(m[1]);
+      if (!isFinite(n)) continue;
+      if (m[2]) n *= 1000;
+      nums.push(n);
+    }
+    return nums;
+  }
+
+  function _midpointFromValue(v) {
+    var nums = _extractNumbers(v);
+    if (!nums.length) return null;
+    if (nums.length === 1) return nums[0];
+    return (nums[0] + nums[1]) / 2;
+  }
+
+  function _pctDelta(original, candidate) {
+    if (!isFinite(original) || !isFinite(candidate) || original === 0) return null;
+    return ((candidate - original) / original) * 100;
+  }
+
+  function _panelTier(v) {
+    var s = _norm(v);
+    if (!s) return null;
+    if (s.indexOf('oled') !== -1) return 5;
+    if (s.indexOf('mini-led') !== -1 || s.indexOf('mini led') !== -1) return 4;
+    if (s.indexOf('qled') !== -1 || s.indexOf('qned') !== -1) return 3;
+    if (s.indexOf('led') !== -1) return 2;
+    if (s.indexOf('lcd') !== -1) return 1;
+    return null;
+  }
+
+  function _resolutionTier(v) {
+    var s = _norm(v);
+    if (!s) return null;
+    if (s.indexOf('8k') !== -1) return 4;
+    if (s.indexOf('4k') !== -1 || s.indexOf('uhd') !== -1 || s.indexOf('2160') !== -1) return 3;
+    if (s.indexOf('1440') !== -1 || s.indexOf('2k') !== -1) return 2;
+    if (s.indexOf('1080') !== -1 || s.indexOf('full hd') !== -1) return 1;
+    if (s.indexOf('720') !== -1 || s.indexOf('hd') !== -1) return 0;
+    return null;
+  }
+
+  function _refreshHz(v) {
+    var s = _norm(v);
+    var m = s.match(/(\d+(?:\.\d+)?)\s*hz/);
+    if (m) return parseFloat(m[1]);
+    var nums = _extractNumbers(s);
+    if (nums.length) return nums[0];
+    return null;
+  }
+
+  function _outcomeToClass(outcome) {
+    if (outcome === 'gold') return 'lkq-spec-dot-gold';
+    if (outcome === 'orange') return 'lkq-spec-dot-orange';
+    if (outcome === 'red') return 'lkq-spec-dot-red';
+    return 'lkq-spec-dot-green';
+  }
+
+  function _dotValueHtml(value, outcome) {
+    return (
+      '<span class="lkq-spec-indicator">' +
+        '<span class="lkq-spec-dot ' + _outcomeToClass(outcome) + '"></span>' +
+        '<span class="lkq-spec-value">' + _esc(value || '—') + '</span>' +
+      '</span>'
+    );
+  }
+
+  function _evaluatePriceOutcome(originalValue, candidateValue) {
+    var o = _midpointFromValue(originalValue);
+    var c = _midpointFromValue(candidateValue);
+    if (!isFinite(o) || !isFinite(c)) return 'green';
+    var d = _pctDelta(o, c);
+    if (d === null) return 'green';
+    if (Math.abs(d) <= 10) return 'green';
+    if (Math.abs(d) <= 20) return 'orange';
+    if (d < -20) return 'red';
+    return 'gold';
+  }
+
+  function _evaluateSpecOutcome(label, originalValue, candidateValue) {
+    var l = _norm(label);
+    var o = _norm(originalValue);
+    var c = _norm(candidateValue);
+    if (!c || c === '—' || c === '-') return 'green';
+    if (!o || o === '—' || o === '-') return 'green';
+    if (o === c) return 'green';
+
+    if (l.indexOf('panel') !== -1 || l.indexOf('display technology') !== -1 || l.indexOf('technology') !== -1) {
+      var opt = _panelTier(o);
+      var cpt = _panelTier(c);
+      if (opt !== null && cpt !== null) {
+        if (cpt > opt) return 'gold';
+        if (cpt < opt) return 'red';
+        return 'orange';
+      }
+      return 'orange';
+    }
+
+    if (l.indexOf('resolution') !== -1) {
+      var ort = _resolutionTier(o);
+      var crt = _resolutionTier(c);
+      if (ort !== null && crt !== null) {
+        if (crt > ort) return 'gold';
+        if (crt < ort) return 'red';
+        return 'green';
+      }
+      return 'orange';
+    }
+
+    if (l.indexOf('refresh') !== -1) {
+      var orh = _refreshHz(o);
+      var crh = _refreshHz(c);
+      if (isFinite(orh) && isFinite(crh)) {
+        if (crh > orh) return 'gold';
+        if (crh < orh) return 'red';
+        return 'green';
+      }
+      return 'orange';
+    }
+
+    if (l.indexOf('smart') !== -1 || l.indexOf('connectivity') !== -1 || l.indexOf('platform') !== -1) {
+      var cNoSmart = c.indexOf('none') !== -1 || c.indexOf('no smart') !== -1 || c.indexOf('n/a') !== -1;
+      var oHasSmart = o.indexOf('none') === -1 && o.indexOf('no smart') === -1 && o.indexOf('n/a') === -1;
+      if (cNoSmart && oHasSmart) return 'red';
+      if (o === c) return 'green';
+      return 'orange';
+    }
+
+    if (
+      l.indexOf('fuel') !== -1 ||
+      l.indexOf('installation') !== -1 ||
+      l.indexOf('mount') !== -1 ||
+      l.indexOf('phase') !== -1
+    ) {
+      if (o === c) return 'green';
+      var incompatible = (
+        (o.indexOf('gas') !== -1 && c.indexOf('electric') !== -1) ||
+        (o.indexOf('electric') !== -1 && c.indexOf('gas') !== -1) ||
+        (o.indexOf('single') !== -1 && c.indexOf('three') !== -1) ||
+        (o.indexOf('three') !== -1 && c.indexOf('single') !== -1) ||
+        (o.indexOf('countertop') !== -1 && c.indexOf('over-the-range') !== -1) ||
+        (o.indexOf('over-the-range') !== -1 && c.indexOf('countertop') !== -1) ||
+        (o.indexOf('built-in') !== -1 && c.indexOf('countertop') !== -1) ||
+        (o.indexOf('ventless') !== -1 && c.indexOf('vented') !== -1) ||
+        (o.indexOf('vented') !== -1 && c.indexOf('ventless') !== -1)
+      );
+      if (incompatible) return 'red';
+      return 'orange';
+    }
+
+    if (l.indexOf('efficiency') !== -1 || l.indexOf('seer') !== -1 || l.indexOf('energy') !== -1) {
+      var oe = _midpointFromValue(o);
+      var ce = _midpointFromValue(c);
+      if (isFinite(oe) && isFinite(ce)) {
+        var de = _pctDelta(oe, ce);
+        if (de === null) return 'green';
+        if (de > 10) return 'gold';
+        if (de >= 0) return 'green';
+        if (de >= -10) return 'orange';
+        return 'red';
+      }
+      return 'orange';
+    }
+
+    if (
+      l.indexOf('size') !== -1 ||
+      l.indexOf('capacity') !== -1 ||
+      l.indexOf('dimension') !== -1 ||
+      l.indexOf('screen') !== -1
+    ) {
+      var os = _midpointFromValue(o);
+      var cs = _midpointFromValue(c);
+      if (isFinite(os) && isFinite(cs)) {
+        var ds = _pctDelta(os, cs);
+        if (ds === null) return 'green';
+        if (Math.abs(ds) <= 10) return 'green';
+        if (Math.abs(ds) <= 20) return 'orange';
+        if (ds < -20) return 'red';
+        return 'gold';
+      }
+    }
+
+    var og = _midpointFromValue(o);
+    var cg = _midpointFromValue(c);
+    if (isFinite(og) && isFinite(cg)) {
+      var dg = _pctDelta(og, cg);
+      if (dg === null) return 'green';
+      if (Math.abs(dg) <= 5) return 'green';
+      if (dg > 5) return 'gold';
+      if (dg < -15) return 'red';
+      return 'orange';
+    }
+
+    return 'orange';
+  }
+
   function _retailerUrl(name, query) {
     var q = encodeURIComponent(query || '');
     var n = (name || '').toLowerCase();
@@ -53,7 +259,16 @@
     var modelNumber = summary.modelNumber || summary.model || '';
     var category = summary.category || '';
     var estimatedAge = summary.estimatedAgeRange || '';
+    var availability = summary.availability || 'Availability Unconfirmed';
     var description = summary.description || '';
+
+    function _availabilityHtml(v) {
+      var norm = String(v || '').toLowerCase();
+      var cls = 'lkq-availability-unknown';
+      if (norm.indexOf('currently available') !== -1) cls = 'lkq-availability-available';
+      else if (norm.indexOf('discontinued') !== -1) cls = 'lkq-availability-discontinued';
+      return '<span class="' + cls + '">' + _esc(v || 'Availability Unconfirmed') + '</span>';
+    }
 
     return (
       '<div class="lkq-section-pad lkq-id-card">' +
@@ -67,6 +282,10 @@
           _buildIdRow('Model Number', modelNumber) +
           _buildIdRow('Category', category) +
           _buildIdRow('Estimated Age', estimatedAge) +
+          '<div class="lkq-id-row">' +
+            '<span class="lkq-id-label">Availability</span>' +
+            '<span class="lkq-id-value">' + _availabilityHtml(availability) + '</span>' +
+          '</div>' +
         '</div>' +
         '<div class="lkq-id-desc-block">' +
           '<div class="lkq-id-desc-label">Description</div>' +
@@ -188,10 +407,12 @@
 
     // Price Range
     rows += '<tr data-row="price"><td class="lkq-td-label">Price Range</td>';
-    rows += '<td class="lkq-td lkq-td-original lkq-no-val">—</td>';
+    rows += '<td class="lkq-td lkq-td-original">' + _esc(summary.originalPriceDisplay || summary.priceRange || '—') + '</td>';
     tableOptions.forEach(function (opt, i) {
       var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
-      rows += '<td class="' + cls + '">' + _esc((opt && opt.priceRange) || '—') + '</td>';
+      var priceVal = (opt && opt.priceRange) || '—';
+      var priceOutcome = _evaluatePriceOutcome(summary.originalPriceDisplay || summary.priceRange || '', priceVal);
+      rows += '<td class="' + cls + '">' + _dotValueHtml(priceVal, priceOutcome) + '</td>';
     });
     rows += _yourPickEmptyCell('price');
     rows += '</tr>';
@@ -204,7 +425,8 @@
       tableOptions.forEach(function (opt, i) {
         var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
         var val = (opt && opt.specs && opt.specs[label]) || '—';
-        rows += '<td class="' + cls + '">' + _esc(val) + '</td>';
+        var outcome = _evaluateSpecOutcome(label, (originalSpecs && originalSpecs[label]) || '—', val);
+        rows += '<td class="' + cls + '">' + _dotValueHtml(val, outcome) + '</td>';
       });
       rows += _yourPickEmptyCell(rowKey);
       rows += '</tr>';
@@ -295,6 +517,7 @@
 
     _instances[instanceId] = {
       originalItem: summary.name || '',
+      originalPrice: summary.originalPriceDisplay || summary.priceRange || '',
       originalSpecs: originalSpecs,
       specLabels: specLabels,
       resultsEl: resultsEl,
@@ -417,7 +640,14 @@
 
     _setYourPickCell(table, 'rating', '<span class="lkq-rating-badge ' + rc + '">' + _esc(ratingLabel) + '</span>');
     _setYourPickCell(table, 'brand', _esc(data.brand || '—'));
-    _setYourPickCell(table, 'price', _esc(data.priceRange || '—'));
+    _setYourPickCell(
+      table,
+      'price',
+      _dotValueHtml(
+        data.priceRange || '—',
+        _evaluatePriceOutcome(inst.originalPrice || '', data.priceRange || '—')
+      )
+    );
 
     _setYourPickCell(
       table,
@@ -434,7 +664,11 @@
       var idx = parseInt(rowKey.replace('spec-', ''), 10);
       var label = inst.specLabels[idx] || '';
       var val = (data.specs && label && data.specs[label]) || '—';
-      _setYourPickCell(table, rowKey, _esc(val));
+      _setYourPickCell(
+        table,
+        rowKey,
+        _dotValueHtml(val, _evaluateSpecOutcome(label, (inst.originalSpecs && inst.originalSpecs[label]) || '—', val))
+      );
     });
 
     _bindYourPickInput(inst.resultsEl, instanceId);

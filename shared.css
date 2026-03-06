@@ -702,6 +702,21 @@ footer {
   overflow-wrap: anywhere;
 }
 
+.lkq-availability-available {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.lkq-availability-discontinued {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.lkq-availability-unknown {
+  color: #64748b;
+  font-weight: 700;
+}
+
 .lkq-id-desc-block {
   border-top: 1px solid #f1f5f9;
   padding: 0.75rem 1rem 1rem;
@@ -886,4 +901,27 @@ footer {
   font-size: 0.78rem;
   color: #64748b;
   font-style: italic;
+}
+
+.lkq-spec-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.lkq-spec-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  flex: 0 0 9px;
+}
+
+.lkq-spec-dot-green { background: #16a34a; }
+.lkq-spec-dot-orange { background: #f97316; }
+.lkq-spec-dot-red { background: #dc2626; }
+.lkq-spec-dot-gold { background: #eab308; }
+
+.lkq-spec-value {
+  overflow-wrap: anywhere;
 }
