@@ -67,7 +67,10 @@
           _buildIdRow('Model Number', modelNumber) +
           _buildIdRow('Category', category) +
           _buildIdRow('Estimated Age', estimatedAge) +
-          _buildIdRow('Description', description, 'lkq-id-row-desc') +
+        '</div>' +
+        '<div class="lkq-id-desc-block">' +
+          '<div class="lkq-id-desc-label">Description</div>' +
+          '<div class="lkq-id-desc-value">' + _esc(description || '—') + '</div>' +
         '</div>' +
       '</div>'
     );
@@ -76,7 +79,7 @@
   function _buildSuccessorRow(ss) {
     var type = (ss && ss.type) || 'none';
 
-    var badgeLabel = 'No In-Brand Match';
+    var badgeLabel = 'None Available';
     var badgeClass = 'lkq-successor-tag--none';
     if (type === 'direct_successor') {
       badgeLabel = 'Direct Successor';
@@ -134,7 +137,7 @@
     var headerCells =
       '<th class="lkq-th-label"></th>' +
       '<th class="lkq-th-original">Original Item</th>' +
-      '<th class="lkq-th-best">' + _esc(bestMatchLabel || 'Brand Match') + '</th>' +
+      '<th class="lkq-th-best">' + _esc(bestMatchLabel || 'Best Match') + '</th>' +
       '<th class="lkq-th">Alternative Replacement 1</th>' +
       '<th class="lkq-th">Alternative Replacement 2</th>';
     headerCells += '<th class="lkq-th-yourpick">Your Pick</th>';
@@ -159,7 +162,7 @@
 
     // LKQ Rating
     rows += '<tr data-row="rating"><td class="lkq-td-label">LKQ Rating</td>';
-    rows += '<td class="lkq-td lkq-td-original"><span class="lkq-badge lkq-badge-original">Original</span></td>';
+    rows += '<td class="lkq-td lkq-td-original"><span class="lkq-rating-badge lkq-rating-original">Original</span></td>';
     tableOptions.forEach(function (opt, i) {
       var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
       if (!opt) {
@@ -269,7 +272,7 @@
 
     return (
       '<div class="lkq-table-footnotes">' +
-        notes.map(function (n) { return '<p><em>' + _esc(n) + '</em></p>'; }).join('') +
+        notes.map(function (n) { return '<p><em>- ' + _esc(n) + '</em></p>'; }).join('') +
       '</div>'
     );
   }
