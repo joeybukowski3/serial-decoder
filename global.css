@@ -4669,3 +4669,215 @@ img.ia-sidebar-logo {
   color: #1a1a2e !important;
 }
 
+/* =================================================================
+   LKQ RESULTS LAYOUT REBUILD (display-only)
+   ================================================================= */
+.lkq-id-card {
+  background: #ffffff !important;
+  border: 1px solid #dbe5ef !important;
+  border-radius: 12px !important;
+}
+
+.lkq-id-header {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.75rem;
+}
+
+.lkq-section-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #0ea5e9;
+  color: #ffffff !important;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.lkq-id-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.lkq-id-row {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.52rem 0.65rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.lkq-id-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.lkq-id-value {
+  font-size: 0.86rem;
+  color: #1e293b;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.lkq-id-row-desc .lkq-id-value {
+  font-style: normal;
+}
+
+.lkq-successor-card {
+  background: #f8fafc;
+  border: 1px solid #d9e4ef;
+  border-radius: 12px;
+}
+
+.lkq-successor-rowline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.7rem;
+  background: #ffffff;
+  border: 1px solid #d9e4ef;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.lkq-successor-tag--none {
+  background: #e2e8f0;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.lkq-successor-name {
+  margin-top: 0.55rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.lkq-successor-model,
+.lkq-successor-desc {
+  margin-top: 0.2rem;
+  font-size: 0.82rem;
+  color: #334155;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.lkq-table-wrap {
+  margin-top: 0.7rem;
+  overflow: visible;
+}
+
+.lkq-comparison-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.lkq-comparison-table th,
+.lkq-comparison-table td {
+  white-space: normal !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.lkq-th-label {
+  width: 170px;
+  min-width: 170px;
+}
+
+.lkq-th-best {
+  border-top: 3px solid #f59e0b !important;
+}
+
+.lkq-th-yourpick {
+  border-top: 3px solid #14b8a6 !important;
+}
+
+.lkq-td-label {
+  font-weight: 800 !important;
+  color: #334155 !important;
+}
+
+.lkq-comparison-table tbody tr:nth-child(odd) .lkq-td {
+  background: #fbfdff;
+}
+
+.lkq-comparison-table tbody tr:nth-child(even) .lkq-td {
+  background: #f4f8fc;
+}
+
+.lkq-comparison-table tbody tr:nth-child(odd) .lkq-td-best {
+  background: #fff8eb;
+}
+
+.lkq-comparison-table tbody tr:nth-child(even) .lkq-td-best {
+  background: #fef1d6;
+}
+
+.lkq-yourpick-empty {
+  color: #94a3b8 !important;
+  background: #edf2f7 !important;
+}
+
+.lkq-yourpick-editor {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem;
+  align-items: start;
+}
+
+.lkq-yourpick-editor .lkq-compare-input {
+  margin: 0;
+  min-width: 0;
+}
+
+.lkq-yourpick-editor .lkq-compare-btn {
+  margin: 0;
+  white-space: nowrap;
+  padding: 0.52rem 0.72rem;
+}
+
+.lkq-yourpick-loaded {
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.lkq-compare-status {
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
+.lkq-buy-link {
+  text-decoration: underline;
+}
+
+.lkq-table-footnotes {
+  margin-top: 0.45rem;
+  padding: 0.7rem 0.15rem 0.2rem;
+  border-top: 1px dashed #d1dbe6;
+}
+
+.lkq-table-footnotes p {
+  font-size: 0.77rem;
+  color: #64748b;
+  margin: 0.25rem 0 0;
+}
+
+@media (max-width: 1100px) {
+  .lkq-table-wrap {
+    overflow-x: auto;
+  }
+}
+
