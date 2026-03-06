@@ -4257,3 +4257,319 @@ img.ia-sidebar-logo {
 .lkq-dot:nth-child(2) { animation-delay: 0.2s; }
 .lkq-dot:nth-child(3) { animation-delay: 0.4s; }
 
+/* ── Phase 4: Full-width results card ─────────────────────────── */
+.results-card.lkq-results-full {
+  max-width: none !important;
+  margin: 24px 0 !important;
+  border-radius: 12px;
+}
+
+.results-card.lkq-results-full .results-body {
+  padding: 0;
+}
+
+/* ── Phase 4: Section padding wrapper ─────────────────────────── */
+.lkq-section-pad {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.lkq-section-pad:last-child {
+  border-bottom: none;
+}
+
+/* ── Phase 4: Item ID Card (Section 1) ────────────────────────── */
+.lkq-id-body {
+  margin-top: 10px;
+}
+
+.lkq-id-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a202c;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.lkq-id-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.lkq-id-brand {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: #334155;
+  border-radius: 5px;
+  padding: 2px 9px;
+  letter-spacing: 0.2px;
+}
+
+.lkq-id-model {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.lkq-id-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.lkq-id-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
+.lkq-id-pill-age {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+.lkq-id-desc {
+  font-size: 0.83rem;
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* "Original" badge in rating row */
+.lkq-badge.lkq-badge-original {
+  background: #e8f4fd;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+/* ── Phase 4: Successor Row (Section 2) ───────────────────────── */
+.lkq-successor-section {
+  background: #f8fafc;
+}
+
+.lkq-successor-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.lkq-successor-tag {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  flex-shrink: 0;
+}
+
+.lkq-successor-tag--direct {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.lkq-successor-tag--equiv {
+  background: #fef3c7;
+  color: #78350f;
+  border: 1px solid #fcd34d;
+}
+
+.lkq-successor-item {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.lkq-successor-expl {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.5;
+  flex-basis: 100%;
+  margin-top: 2px;
+}
+
+.lkq-successor-none-text {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* ── Phase 4: Comparison Table (Section 3) ────────────────────── */
+.lkq-table-section {
+  padding-bottom: 0;
+}
+
+.lkq-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 12px;
+}
+
+.lkq-comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  color: #1a202c;
+}
+
+/* Column header cells */
+.lkq-comparison-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.lkq-th-label {
+  width: 120px;
+  min-width: 100px;
+  color: #94a3b8;
+  background: #fff;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.lkq-th-original {
+  background: #f8fafc;
+  color: #475569;
+  min-width: 160px;
+}
+
+.lkq-th-best {
+  background: #fffbeb;
+  color: #92400e;
+  border-left: 2px solid #fcd34d;
+  min-width: 160px;
+}
+
+.lkq-th {
+  background: #f8fafc;
+  color: #475569;
+  min-width: 150px;
+}
+
+.lkq-th-yourpick {
+  background: #f0fdf4;
+  color: #065f46;
+  border-left: 2px solid #6ee7b7;
+  min-width: 150px;
+}
+
+/* Row label cells */
+.lkq-td-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #64748b;
+  background: #fff;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+/* Data cells */
+.lkq-td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.lkq-td-original {
+  background: #f8fafc;
+  color: #475569;
+}
+
+.lkq-td-best {
+  background: #fffdf0;
+  border-left: 2px solid #fcd34d;
+}
+
+.lkq-td-yourpick {
+  background: #f0fdf4;
+  border-left: 2px solid #6ee7b7;
+}
+
+/* Striped rows */
+.lkq-comparison-table tbody tr:nth-child(even) .lkq-td-original { background: #f0f4f8; }
+.lkq-comparison-table tbody tr:nth-child(even) .lkq-td-best      { background: #fef9e0; }
+.lkq-comparison-table tbody tr:nth-child(even) .lkq-td           { background: #fafafa; }
+
+.lkq-td-name {
+  font-weight: 700;
+  color: #1a202c;
+  line-height: 1.35;
+}
+
+.lkq-td-model {
+  font-size: 0.73rem;
+  color: #64748b;
+  font-family: 'Courier New', Courier, monospace;
+  margin-top: 2px;
+}
+
+.lkq-notes-text {
+  font-size: 0.78rem;
+  color: #4a5568;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.lkq-no-val {
+  color: #94a3b8;
+}
+
+.lkq-no-options {
+  font-size: 0.83rem;
+  color: #64748b;
+  padding: 0.5rem 0;
+  margin: 0;
+}
+
+/* Table footnotes */
+.lkq-table-footnotes {
+  padding: 8px 14px 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.lkq-table-footnotes p {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
+
+/* ── Phase 4: Compare Section (Section 4) ─────────────────────── */
+.lkq-compare-err {
+  font-size: 0.83rem;
+  color: #991b1b;
+  margin: 8px 0 0;
+}
+
+.lkq-compare-status {
+  min-height: 0;
+}
+

@@ -1,9 +1,8 @@
 /**
  * lkq-engine.js — Centralized LKQ Replacement Evaluation Engine
  *
- * Single module that handles the AI prompt, output formatting, replacement
- * table, and Compare Your Own feature. Both the Serial Number Decoder results
- * and the Smart Lookup page feed data into this engine as separate instances.
+ * Renders a 4-section column-based comparison table. Both the Serial Number
+ * Decoder results and the Smart Lookup page feed data into this engine.
  *
  * Public API:
  *   LKQEngine.evaluate(instanceId, query, resultsEl, callbacks)
@@ -13,10 +12,10 @@
 (function () {
   'use strict';
 
-  // Per-instance state: { originalItem, originalSpecs, resultsEl }
+  // Per-instance state: { originalItem, originalSpecs, specLabels, resultsEl }
   var _instances = {};
 
-  // ── Private utilities ─────────────────────────────────────────────────────
+  // ── Utilities ─────────────────────────────────────────────────────────────
 
   function _esc(s) {
     if (s === null || s === undefined) return '';
@@ -44,145 +43,417 @@
     return '';
   }
 
-  // ── Option card ───────────────────────────────────────────────────────────
+  // ── Section builders ──────────────────────────────────────────────────────
 
-  function _addOptionCard(container, option, index) {
-    var rc = _ratingClass(option.lkqRating);
-    var ratingLabel = (option.lkqRating || 'NOT LKQ').toUpperCase().trim();
-
-    var specsHtml = '';
-    if (option.keySpecs && typeof option.keySpecs === 'object') {
-      Object.keys(option.keySpecs).forEach(function (k) {
-        specsHtml += '<span class="lkq-mini-spec"><b>' + _esc(k) + ':</b> ' + _esc(option.keySpecs[k]) + '</span>';
-      });
+  function _buildIdCard(summary) {
+    var pills = '';
+    if (summary.category) {
+      pills += '<span class="lkq-id-pill">' + _esc(summary.category) + '</span>';
+    }
+    if (summary.estimatedAgeRange) {
+      pills += '<span class="lkq-id-pill lkq-id-pill-age">Age: ' + _esc(summary.estimatedAgeRange) + '</span>';
     }
 
-    var url = _retailerUrl(option.retailerName || '', option.retailerSearchQuery || option.model || '');
-    var buyHtml = url
-      ? '<a class="lkq-buy-link" href="' + _esc(url) + '" target="_blank" rel="noopener noreferrer">' + _esc(option.retailerName || 'Buy') + ' &#8594;</a>'
-      : (option.retailerName ? '<span style="font-size:0.78rem;color:#64748b;">' + _esc(option.retailerName) + '</span>' : '');
-
-    var card = document.createElement('div');
-    card.className = 'lkq-option-card lkq-row-hidden';
-    card.innerHTML =
-      '<div class="lkq-option-top">' +
-        '<div class="lkq-option-nameblock">' +
-          '<div class="lkq-option-name">' + _esc(option.name || '') + '</div>' +
-          (option.model ? '<div class="lkq-option-model">' + _esc(option.model) + '</div>' : '') +
-        '</div>' +
-        '<span class="lkq-badge ' + rc + '">' + _esc(ratingLabel) + '</span>' +
-      '</div>' +
-      (specsHtml ? '<div class="lkq-option-specs">' + specsHtml + '</div>' : '') +
-      (option.lkqRationale ? '<p class="lkq-option-rationale">' + _esc(option.lkqRationale) + '</p>' : '') +
-      '<div class="lkq-option-bottom">' +
-        '<span class="lkq-option-price">' + _esc(option.priceRange || 'N/A') + '</span>' +
-        buyHtml +
-      '</div>';
-
-    container.appendChild(card);
-
-    // Staggered reveal
-    setTimeout(function () {
-      card.classList.remove('lkq-row-hidden');
-      card.classList.add('lkq-row-enter');
-    }, index * 180);
-  }
-
-  // ── Render the three-section output ──────────────────────────────────────
-
-  function _renderOutput(instanceId, data, resultsEl) {
-    var summary = data.itemSummary || {};
-    var options = Array.isArray(data.replacementOptions) ? data.replacementOptions : [];
-
-    // Persist context for compare feature
-    _instances[instanceId] = {
-      originalItem:  summary.name || '',
-      originalSpecs: summary.keySpecs || {},
-      resultsEl:     resultsEl,
-    };
-
-    // ── Section 1: Item Summary ──────────────────────────────────────────
-    var chips = '';
-    if (summary.keySpecs && typeof summary.keySpecs === 'object') {
-      Object.keys(summary.keySpecs).forEach(function (k) {
-        chips +=
-          '<span class="lkq-spec-chip">' +
-            '<span class="lkq-chip-label">' + _esc(k) + '</span>' +
-            '<span class="lkq-chip-val">' + _esc(summary.keySpecs[k]) + '</span>' +
-          '</span>';
-      });
-    }
-
-    var s1 =
-      '<div class="lkq-section">' +
+    return (
+      '<div class="lkq-section-pad">' +
         '<div class="lkq-section-hd">' +
           '<span class="lkq-step-num">1</span>' +
-          '<span class="lkq-step-title">Item Summary</span>' +
+          '<span class="lkq-step-title">Item Identification</span>' +
         '</div>' +
-        '<div class="lkq-summary-body">' +
-          (summary.name        ? '<div class="lkq-item-name">' + _esc(summary.name) + '</div>' : '') +
-          (summary.description ? '<p class="lkq-item-desc">'   + _esc(summary.description) + '</p>' : '') +
-          (chips               ? '<div class="lkq-spec-chips">' + chips + '</div>' : '') +
-          (summary.estimatedAgeRange
-            ? '<div class="lkq-age-line">Estimated Age Range: ' + _esc(summary.estimatedAgeRange) + '</div>'
-            : '') +
+        '<div class="lkq-id-body">' +
+          (summary.name ? '<div class="lkq-id-name">' + _esc(summary.name) + '</div>' : '') +
+          '<div class="lkq-id-meta">' +
+            (summary.brand ? '<span class="lkq-id-brand">' + _esc(summary.brand) + '</span>' : '') +
+            (summary.model ? '<span class="lkq-id-model">Model: ' + _esc(summary.model) + '</span>' : '') +
+          '</div>' +
+          (pills ? '<div class="lkq-id-pills">' + pills + '</div>' : '') +
+          (summary.description ? '<p class="lkq-id-desc">' + _esc(summary.description) + '</p>' : '') +
         '</div>' +
-      '</div>';
+      '</div>'
+    );
+  }
 
-    // ── Section 2: Replacement Options ───────────────────────────────────
-    // Options list container receives a scoped ID for post-render card injection
-    var listId = 'lkq-options-' + instanceId;
-    var s2 =
-      '<div class="lkq-section">' +
+  function _buildSuccessorRow(ss) {
+    var type = (ss && ss.type) || 'none';
+    var inner = '';
+
+    if (type === 'direct_successor') {
+      inner =
+        '<span class="lkq-successor-tag lkq-successor-tag--direct">Direct Successor</span>' +
+        '<span class="lkq-successor-item">' +
+          _esc(ss.name || '') + (ss.model ? ' &middot; ' + _esc(ss.model) : '') +
+        '</span>' +
+        (ss.explanation ? '<span class="lkq-successor-expl">' + _esc(ss.explanation) + '</span>' : '');
+    } else if (type === 'same_brand_equivalent') {
+      inner =
+        '<span class="lkq-successor-tag lkq-successor-tag--equiv">Same-Brand Equivalent</span>' +
+        '<span class="lkq-successor-item">' +
+          _esc(ss.name || '') + (ss.model ? ' &middot; ' + _esc(ss.model) : '') +
+        '</span>' +
+        (ss.explanation ? '<span class="lkq-successor-expl">' + _esc(ss.explanation) + '</span>' : '');
+    } else {
+      inner =
+        '<span class="lkq-successor-none-text">No in-brand replacement currently available</span>' +
+        (ss && ss.explanation ? '<span class="lkq-successor-expl">' + _esc(ss.explanation) + '</span>' : '');
+    }
+
+    return (
+      '<div class="lkq-section-pad lkq-successor-section">' +
         '<div class="lkq-section-hd">' +
           '<span class="lkq-step-num">2</span>' +
-          '<span class="lkq-step-title">Replacement Options</span>' +
+          '<span class="lkq-step-title">Successor / In-Brand Status</span>' +
         '</div>' +
-        '<div class="lkq-options-list" id="' + _esc(listId) + '"></div>' +
-      '</div>';
+        '<div class="lkq-successor-row">' + inner + '</div>' +
+      '</div>'
+    );
+  }
 
-    // ── Section 3: Compare Your Own Recommendation ────────────────────────
-    // Inline onclick passes instanceId so the engine knows which instance to use
+  function _buildTable(summary, originalSpecs, specLabels, options, bestMatchLabel) {
+    if (!options.length) {
+      return '<p class="lkq-no-options">No replacement options found. Try a more specific query.</p>';
+    }
+
+    // Header row
+    var headerCells =
+      '<th class="lkq-th-label"></th>' +
+      '<th class="lkq-th-original">Original Item</th>';
+
+    options.forEach(function (opt, i) {
+      if (i === 0) {
+        headerCells += '<th class="lkq-th-best">' + _esc(bestMatchLabel || 'Best Match') + '</th>';
+      } else {
+        headerCells += '<th class="lkq-th">Option ' + (i + 1) + '</th>';
+      }
+    });
+
+    var rows = '';
+
+    // Item Name row
+    rows += '<tr data-row="name"><td class="lkq-td-label">Item</td>';
+    rows += '<td class="lkq-td lkq-td-original"><div class="lkq-td-name">' + _esc(summary.name || '') + '</div>' +
+      (summary.model ? '<div class="lkq-td-model">' + _esc(summary.model) + '</div>' : '') + '</td>';
+    options.forEach(function (opt, i) {
+      var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
+      rows += '<td class="' + cls + '"><div class="lkq-td-name">' + _esc(opt.name || '') + '</div>' +
+        (opt.model ? '<div class="lkq-td-model">' + _esc(opt.model) + '</div>' : '') + '</td>';
+    });
+    rows += '</tr>';
+
+    // LKQ Rating row
+    rows += '<tr data-row="rating"><td class="lkq-td-label">LKQ Rating</td>';
+    rows += '<td class="lkq-td lkq-td-original"><span class="lkq-badge lkq-badge-original">Original</span></td>';
+    options.forEach(function (opt, i) {
+      var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
+      var rc = _ratingClass(opt.lkqRating);
+      rows += '<td class="' + cls + '"><span class="lkq-badge ' + rc + '">' +
+        _esc((opt.lkqRating || 'NOT LKQ').toUpperCase().trim()) + '</span></td>';
+    });
+    rows += '</tr>';
+
+    // Brand row
+    rows += '<tr data-row="brand"><td class="lkq-td-label">Brand</td>';
+    rows += '<td class="lkq-td lkq-td-original">' + _esc(summary.brand || '—') + '</td>';
+    options.forEach(function (opt, i) {
+      var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
+      rows += '<td class="' + cls + '">' + _esc(opt.brand || '—') + '</td>';
+    });
+    rows += '</tr>';
+
+    // Price Range row
+    rows += '<tr data-row="price"><td class="lkq-td-label">Price Range</td>';
+    rows += '<td class="lkq-td lkq-td-original lkq-no-val">—</td>';
+    options.forEach(function (opt, i) {
+      var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
+      rows += '<td class="' + cls + '">' + _esc(opt.priceRange || '—') + '</td>';
+    });
+    rows += '</tr>';
+
+    // Spec rows
+    specLabels.forEach(function (label, si) {
+      rows += '<tr data-row="spec-' + si + '"><td class="lkq-td-label">' + _esc(label) + '</td>';
+      rows += '<td class="lkq-td lkq-td-original">' + _esc((originalSpecs && originalSpecs[label]) || '—') + '</td>';
+      options.forEach(function (opt, i) {
+        var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
+        var val = (opt.specs && opt.specs[label]) || '—';
+        rows += '<td class="' + cls + '">' + _esc(val) + '</td>';
+      });
+      rows += '</tr>';
+    });
+
+    // Where to Buy row
+    rows += '<tr data-row="buy"><td class="lkq-td-label">Where to Buy</td>';
+    rows += '<td class="lkq-td lkq-td-original lkq-no-val">—</td>';
+    options.forEach(function (opt, i) {
+      var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
+      var url = _retailerUrl(opt.retailerName || '', opt.retailerSearchQuery || opt.model || '');
+      var buyCell = url
+        ? '<a class="lkq-buy-link" href="' + _esc(url) + '" target="_blank" rel="noopener noreferrer">' + _esc(opt.retailerName || 'Buy') + ' &#8594;</a>'
+        : (opt.retailerName ? '<span class="lkq-no-val">' + _esc(opt.retailerName) + '</span>' : '<span class="lkq-no-val">—</span>');
+      rows += '<td class="' + cls + '">' + buyCell + '</td>';
+    });
+    rows += '</tr>';
+
+    // Notes row
+    rows += '<tr data-row="notes"><td class="lkq-td-label">Notes</td>';
+    rows += '<td class="lkq-td lkq-td-original lkq-no-val">—</td>';
+    options.forEach(function (opt, i) {
+      var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
+      rows += '<td class="' + cls + '"><span class="lkq-notes-text">' + _esc(opt.notes || '—') + '</span></td>';
+    });
+    rows += '</tr>';
+
+    return (
+      '<div class="lkq-table-scroll">' +
+        '<table class="lkq-comparison-table">' +
+          '<thead><tr>' + headerCells + '</tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table>' +
+      '</div>'
+    );
+  }
+
+  function _buildTableFootnotes(ss) {
+    var type = (ss && ss.type) || 'none';
+    var notes = [];
+
+    if (type === 'direct_successor') {
+      notes.push('&#9733; Best Match is the direct successor model from the original manufacturer.');
+    } else if (type === 'same_brand_equivalent') {
+      notes.push('&#9733; Best Match is the same-brand equivalent from the original manufacturer.');
+    } else {
+      notes.push('&#9432; No in-brand replacement is currently available from the original manufacturer.');
+    }
+
+    return (
+      '<div class="lkq-table-footnotes">' +
+        notes.map(function (n) { return '<p>' + n + '</p>'; }).join('') +
+      '</div>'
+    );
+  }
+
+  function _buildCompareSection(instanceId) {
     var safeId = _esc(instanceId);
-    var s3 =
-      '<div class="lkq-section lkq-compare-section">' +
+    return (
+      '<div class="lkq-section-pad lkq-compare-section">' +
         '<div class="lkq-section-hd">' +
-          '<span class="lkq-step-num">3</span>' +
+          '<span class="lkq-step-num">4</span>' +
           '<span class="lkq-step-title">Compare Your Own Recommendation</span>' +
         '</div>' +
-        '<p class="lkq-compare-desc">Have a specific replacement in mind? Enter it below to get an LKQ assessment.</p>' +
+        '<p class="lkq-compare-desc">Have a specific replacement in mind? Enter it below to add it as a column in the table above.</p>' +
         '<div class="lkq-compare-row">' +
           '<input type="text" class="search-input lkq-compare-input" placeholder="Enter brand and model (e.g. Samsung WF45R6100AW)">' +
           '<button class="btn-amber lkq-compare-btn" onclick="LKQEngine._runCompare(\'' + safeId + '\')">Compare</button>' +
         '</div>' +
-        '<div class="lkq-compare-result"></div>' +
-      '</div>';
+        '<div class="lkq-compare-status"></div>' +
+      '</div>'
+    );
+  }
 
-    resultsEl.innerHTML = s1 + s2 + s3;
+  // ── Render output ─────────────────────────────────────────────────────────
 
-    // Bind Enter key on the compare input
+  function _renderOutput(instanceId, data, resultsEl) {
+    var summary        = data.itemSummary || {};
+    var options        = Array.isArray(data.replacementOptions) ? data.replacementOptions : [];
+    var specLabels     = Array.isArray(data.specLabels) ? data.specLabels : [];
+    var originalSpecs  = data.originalSpecs || {};
+    var successorStatus = data.successorStatus || { type: 'none', explanation: '' };
+    var bestMatchLabel = data.bestMatchLabel || 'Best Match';
+
+    // Persist context for compare
+    _instances[instanceId] = {
+      originalItem:  summary.name || '',
+      originalSpecs: originalSpecs,
+      specLabels:    specLabels,
+      resultsEl:     resultsEl,
+    };
+
+    // Expand results card to full width
+    var card = resultsEl.closest('.results-card');
+    if (card) card.classList.add('lkq-results-full');
+
+    resultsEl.innerHTML =
+      _buildIdCard(summary) +
+      _buildSuccessorRow(successorStatus) +
+      '<div class="lkq-section-pad lkq-table-section">' +
+        '<div class="lkq-section-hd">' +
+          '<span class="lkq-step-num">3</span>' +
+          '<span class="lkq-step-title">Replacement Options</span>' +
+        '</div>' +
+        _buildTable(summary, originalSpecs, specLabels, options, bestMatchLabel) +
+        _buildTableFootnotes(successorStatus) +
+      '</div>' +
+      _buildCompareSection(instanceId);
+
+    // Bind Enter key on compare input
     var compareInput = resultsEl.querySelector('.lkq-compare-input');
     if (compareInput) {
       compareInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') LKQEngine._runCompare(instanceId);
       });
     }
+  }
 
-    // Populate option cards with staggered animation
-    var optList = document.getElementById(listId);
-    if (optList && options.length > 0) {
-      options.forEach(function (opt, i) { _addOptionCard(optList, opt, i); });
-    } else if (optList) {
-      optList.innerHTML = '<p style="font-size:0.83rem;color:#64748b;padding:0.5rem 0;">No replacement options found. Try a more specific query.</p>';
+  // ── _runCompare: append "Your Pick" column ────────────────────────────────
+
+  async function _runCompare(instanceId) {
+    var inst = _instances[instanceId];
+    if (!inst || !inst.resultsEl) return;
+
+    var inputEl  = inst.resultsEl.querySelector('.lkq-compare-input');
+    var statusEl = inst.resultsEl.querySelector('.lkq-compare-status');
+    if (!inputEl || !statusEl) return;
+
+    var recommendation = String(inputEl.value || '').trim();
+    if (!recommendation) { inputEl.focus(); return; }
+
+    statusEl.innerHTML =
+      '<div class="lkq-compare-loading">' +
+        '<span class="lkq-dot"></span>' +
+        '<span class="lkq-dot"></span>' +
+        '<span class="lkq-dot"></span>' +
+        '<span style="margin-left:0.35rem;">Evaluating...</span>' +
+      '</div>';
+
+    try {
+      var res = await fetch('/api/lkq-compare', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalItem:   inst.originalItem  || '',
+          originalSpecs:  inst.originalSpecs || {},
+          specLabels:     inst.specLabels    || [],
+          recommendation: recommendation,
+        }),
+      });
+
+      if (res.status === 429) {
+        statusEl.innerHTML = '<p class="lkq-compare-err">Usage limit reached. Please wait a moment and try again.</p>';
+        return;
+      }
+
+      var data;
+      try {
+        var ct = (res.headers && res.headers.get('content-type')) || '';
+        data = ct.toLowerCase().indexOf('application/json') !== -1
+          ? await res.json()
+          : { error: 'Unexpected server response.' };
+      } catch (_) {
+        data = { error: 'Could not parse server response.' };
+      }
+
+      if (data.error) {
+        statusEl.innerHTML = '<p class="lkq-compare-err">' + _esc(data.error) + '</p>';
+        return;
+      }
+
+      _appendYourPickColumn(inst.resultsEl, inst.specLabels, data, recommendation);
+      statusEl.innerHTML = '';
+
+    } catch (e) {
+      console.error('[LKQEngine] _runCompare failed:', e);
+      statusEl.innerHTML = '<p class="lkq-compare-err">Compare is temporarily unavailable. Please try again.</p>';
     }
   }
 
-  // ── Public: evaluate ──────────────────────────────────────────────────────
-  //
-  // instanceId  — unique string per entry point ('smart-lookup', 'serial-decoder')
-  // query       — search string to send to the API
-  // resultsEl   — DOM element to render the 3-section output into
-  // callbacks   — { onSuccess(), onError(type, message) }
+  function _appendYourPickColumn(resultsEl, specLabels, data, recommendation) {
+    var table = resultsEl.querySelector('.lkq-comparison-table');
+    if (!table) return;
+
+    // Remove any existing "Your Pick" column
+    table.querySelectorAll('.lkq-yourpick-cell').forEach(function (el) { el.remove(); });
+
+    // Add header cell
+    var thead = table.querySelector('thead tr');
+    if (thead) {
+      var th = document.createElement('th');
+      th.className = 'lkq-th-yourpick lkq-yourpick-cell';
+      th.textContent = 'Your Pick';
+      thead.appendChild(th);
+    }
+
+    var rc         = _ratingClass(data.rating);
+    var ratingLabel = (data.rating || 'NOT LKQ').toUpperCase().trim();
+    var url        = _retailerUrl(data.retailerName || '', data.retailerSearchQuery || recommendation || '');
+
+    // Handlers for each data-row type
+    var rowHandlers = {
+      'name': function () {
+        var td = _td('lkq-td lkq-td-yourpick lkq-yourpick-cell');
+        td.innerHTML =
+          '<div class="lkq-td-name">' + _esc(data.name || recommendation) + '</div>' +
+          (data.model ? '<div class="lkq-td-model">' + _esc(data.model) + '</div>' : '');
+        return td;
+      },
+      'rating': function () {
+        var td = _td('lkq-td lkq-td-yourpick lkq-yourpick-cell');
+        td.innerHTML = '<span class="lkq-badge ' + rc + '">' + _esc(ratingLabel) + '</span>';
+        return td;
+      },
+      'brand': function () {
+        var td = _td('lkq-td lkq-td-yourpick lkq-yourpick-cell');
+        td.textContent = data.brand || '—';
+        return td;
+      },
+      'price': function () {
+        var td = _td('lkq-td lkq-td-yourpick lkq-yourpick-cell');
+        td.textContent = data.priceRange || '—';
+        return td;
+      },
+      'buy': function () {
+        var td = _td('lkq-td lkq-td-yourpick lkq-yourpick-cell');
+        td.innerHTML = url
+          ? '<a class="lkq-buy-link" href="' + _esc(url) + '" target="_blank" rel="noopener noreferrer">' + _esc(data.retailerName || 'Buy') + ' &#8594;</a>'
+          : (data.retailerName ? '<span class="lkq-no-val">' + _esc(data.retailerName) + '</span>' : '<span class="lkq-no-val">—</span>');
+        return td;
+      },
+      'notes': function () {
+        var td = _td('lkq-td lkq-td-yourpick lkq-yourpick-cell');
+        td.innerHTML = '<span class="lkq-notes-text">' + _esc(data.notes || data.explanation || '—') + '</span>';
+        return td;
+      },
+    };
+
+    table.querySelectorAll('tbody tr[data-row]').forEach(function (tr) {
+      var rowKey = tr.getAttribute('data-row');
+      var td;
+
+      if (rowHandlers[rowKey]) {
+        td = rowHandlers[rowKey]();
+      } else if (rowKey && rowKey.indexOf('spec-') === 0) {
+        var si    = parseInt(rowKey.replace('spec-', ''), 10);
+        var label = specLabels[si] || '';
+        td = _td('lkq-td lkq-td-yourpick lkq-yourpick-cell');
+        td.textContent = (data.specs && label && data.specs[label]) || '—';
+      }
+
+      if (td) tr.appendChild(td);
+    });
+
+    // Scroll table into view so the new column is visible
+    var scroll = resultsEl.querySelector('.lkq-table-scroll');
+    if (scroll) {
+      scroll.scrollLeft = scroll.scrollWidth;
+    }
+  }
+
+  function _td(className) {
+    var el = document.createElement('td');
+    el.className = className;
+    return el;
+  }
+
+  // ── clearInstance ─────────────────────────────────────────────────────────
+
+  function clearInstance(instanceId) {
+    var inst = _instances[instanceId];
+    if (inst && inst.resultsEl) {
+      var card = inst.resultsEl.closest('.results-card');
+      if (card) card.classList.remove('lkq-results-full');
+    }
+    delete _instances[instanceId];
+  }
+
+  // ── evaluate ──────────────────────────────────────────────────────────────
 
   async function evaluate(instanceId, query, resultsEl, callbacks) {
     callbacks = callbacks || {};
@@ -242,85 +513,6 @@
         callbacks.onError('network', 'Smart Lookup is temporarily unavailable. Please try again.');
       }
     }
-  }
-
-  // ── Public: _runCompare ───────────────────────────────────────────────────
-  //
-  // Called from inline onclick inside the rendered Section 3 output.
-
-  async function _runCompare(instanceId) {
-    var inst = _instances[instanceId];
-    if (!inst || !inst.resultsEl) return;
-
-    var inputEl  = inst.resultsEl.querySelector('.lkq-compare-input');
-    var resultEl = inst.resultsEl.querySelector('.lkq-compare-result');
-    if (!inputEl || !resultEl) return;
-
-    var recommendation = String(inputEl.value || '').trim();
-    if (!recommendation) { inputEl.focus(); return; }
-
-    resultEl.innerHTML =
-      '<div class="lkq-compare-loading">' +
-        '<span class="lkq-dot"></span>' +
-        '<span class="lkq-dot"></span>' +
-        '<span class="lkq-dot"></span>' +
-        '<span style="margin-left:0.35rem;">Evaluating...</span>' +
-      '</div>';
-
-    try {
-      var res = await fetch('/api/lkq-compare', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          originalItem:  inst.originalItem  || '',
-          originalSpecs: inst.originalSpecs || {},
-          recommendation: recommendation,
-        }),
-      });
-
-      if (res.status === 429) {
-        resultEl.innerHTML = '<p style="font-size:0.83rem;color:#b45309;padding:0.5rem 0;">Usage limit reached. Please wait a moment and try again.</p>';
-        return;
-      }
-
-      var data;
-      try {
-        var ct = (res.headers && res.headers.get('content-type')) || '';
-        data = ct.toLowerCase().indexOf('application/json') !== -1
-          ? await res.json()
-          : { error: 'Unexpected server response.' };
-      } catch (_) {
-        data = { error: 'Could not parse server response.' };
-      }
-
-      if (data.error) {
-        resultEl.innerHTML = '<p style="font-size:0.83rem;color:#991b1b;padding:0.5rem 0;">' + _esc(data.error) + '</p>';
-        return;
-      }
-
-      var rc          = _ratingClass(data.rating);
-      var ratingLabel = (data.rating || 'NOT LKQ').toUpperCase().trim();
-
-      resultEl.innerHTML =
-        '<div class="lkq-compare-verdict">' +
-          '<div class="lkq-compare-verdict-top">' +
-            '<span class="lkq-verdict-label">Verdict:</span>' +
-            '<span class="lkq-verdict-query">' + _esc(recommendation) + '</span>' +
-            '<span class="lkq-badge ' + rc + '">' + _esc(ratingLabel) + '</span>' +
-          '</div>' +
-          (data.explanation ? '<p class="lkq-verdict-explanation">' + _esc(data.explanation) + '</p>' : '') +
-        '</div>';
-
-    } catch (e) {
-      console.error('[LKQEngine] _runCompare failed:', e);
-      resultEl.innerHTML = '<p style="font-size:0.83rem;color:#991b1b;padding:0.5rem 0;">Compare is temporarily unavailable. Please try again.</p>';
-    }
-  }
-
-  // ── Public: clearInstance ─────────────────────────────────────────────────
-
-  function clearInstance(instanceId) {
-    delete _instances[instanceId];
   }
 
   // ── Expose ────────────────────────────────────────────────────────────────

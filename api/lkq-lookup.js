@@ -45,7 +45,7 @@ export default async function handler(req, res) {
 
   const sanitizedQuery = query.trim();
   const normalizedQuery = sanitizedQuery.toLowerCase().replace(/\s+/g, ' ');
-  const cacheKey = `lkq-lookup:${normalizedQuery}`;
+  const cacheKey = `lkq-lookup-v2:${normalizedQuery}`;
 
   // Cache check (7-day TTL)
   try {
@@ -64,50 +64,75 @@ export default async function handler(req, res) {
 
 Query: "${sanitizedQuery}"
 
-LKQ Evaluation Standards — weight these specs for like kind and quality determination:
-- Appliances (washers, dryers, refrigerators, ranges, dishwashers): capacity (cu ft/cu in), fuel type (gas/electric/dual), installation type (built-in/freestanding/slide-in), finish, efficiency rating (Energy Star), dimensions
-- HVAC (furnaces, AC, heat pumps, boilers): BTU or tonnage, SEER/AFUE/HSPF rating, fuel type (gas/electric/heat pump/oil), configuration (central/mini-split/window/packaged), installation type (air handler/split system)
-- Water heaters: tank vs tankless, capacity (gallons), fuel type, first-hour delivery, energy factor/UEF
-- Electronics/TVs: screen size, panel technology (OLED/QLED/Neo QLED/LED), resolution (4K/8K), smart platform, HDR support, refresh rate
-- Generators: rated wattage, fuel type (gas/propane/diesel/natural gas), standby vs portable, phase (single/three), transfer switch type
-- Commercial equipment: capacity/throughput, power requirements (voltage/phase/amperage), industry certifications (NSF/UL/CE), construction material
-- Electrical components: voltage rating, amperage, phase, certifications, form factor
-- Lighting: lumen output, color temperature (CCT), CRI, fixture type, dimming capability
-
-Works for both residential AND commercial items. For uncommon or commercial brands, identify the product category and provide equivalent replacements.
-If the item is not widely recognized, use description context to determine category and still provide relevant options.
-
-Retailer selection guidance:
-- Major home appliances: "AJ Madison" or "Home Depot"
-- HVAC and mechanical systems: "Grainger" or "Ferguson"
-- Consumer electronics and TVs: "Best Buy" or "Amazon"
-- Commercial or industrial equipment: "Grainger" or "Amazon Business"
-- Small appliances and general household: "Amazon" or "Home Depot"
+LKQ Evaluation Standards — use these category-specific specs for the specLabels array:
+- Appliances (washers, dryers): ["Capacity", "Fuel Type", "Installation Type", "Efficiency Rating", "Dimensions"]
+- Refrigerators: ["Capacity", "Configuration", "Ice Maker", "Efficiency Rating", "Dimensions"]
+- Ranges/Ovens: ["Fuel Type", "Configuration", "Oven Capacity", "Burner Count", "Dimensions"]
+- Dishwashers: ["Place Settings", "Wash Cycles", "Noise Level", "Efficiency Rating", "Installation Type"]
+- HVAC (furnaces, AC, heat pumps): ["BTU / Tonnage", "SEER / AFUE / HSPF", "Fuel Type", "Configuration", "Phase"]
+- Water heaters: ["Tank vs Tankless", "Capacity (gal)", "Fuel Type", "First-Hour Delivery", "UEF Rating"]
+- Electronics/TVs: ["Screen Size", "Panel Type", "Resolution", "Refresh Rate", "Smart Platform"]
+- Generators: ["Rated Wattage", "Fuel Type", "Standby vs Portable", "Phase", "Transfer Switch"]
+- Commercial equipment: ["Capacity / Output", "Power Requirements", "Certifications", "Construction", "Phase"]
+- Lighting: ["Lumen Output", "Color Temp (CCT)", "CRI", "Fixture Type", "Dimming"]
+- Other: choose 5 specs most relevant to LKQ determination for the category
 
 LKQ Rating Criteria:
-- MATCH: Same category, same fuel type/power source, same installation type, capacity within 10%, equivalent or better efficiency rating, same or newer generation
-- CLOSE MATCH: Same category, same fuel type, capacity within 20%, minor spec differences that do not significantly affect functionality
-- NOT LKQ: Different fuel type, capacity difference greater than 20%, wrong installation type, or fundamentally different product class
+- MATCH: Same category, same fuel type/power source, same installation type, capacity within 10%, equivalent or better efficiency, same or newer generation
+- CLOSE MATCH: Same category, same fuel type, capacity within 20%, minor spec differences not affecting core functionality
+- NOT LKQ: Different fuel type, capacity >20% difference, wrong installation type, or fundamentally different product class
+
+Retailer guidance:
+- Major home appliances: "AJ Madison" or "Home Depot"
+- HVAC and mechanical: "Grainger" or "Ferguson"
+- Consumer electronics: "Best Buy" or "Amazon"
+- Commercial/industrial: "Grainger" or "Amazon Business"
+- General household: "Amazon" or "Home Depot"
+
+Successor status rules:
+- "direct_successor": the manufacturer released a named model to replace this exact model (use when you know this with confidence)
+- "same_brand_equivalent": the same brand has a current equivalent product (same tier/line, different model number) but not a formally named successor
+- "none": the manufacturer no longer makes this category or has no clear equivalent; explain briefly
 
 Respond with ONLY valid JSON in this exact format:
 {
   "itemSummary": {
-    "name": "Full identified item name (e.g. LG WM4000HWA Front-Load Washer)",
+    "name": "Full identified item name (Brand + descriptive model name, e.g. LG WM4000HWA Front-Load Washer)",
+    "brand": "Brand name only (e.g. LG)",
+    "model": "Model number only (e.g. WM4000HWA), or null if unknown",
+    "category": "Short category label (e.g. Front-Load Washer, 65-inch 4K TV, Gas Furnace)",
     "description": "1-2 sentence description of this item and its primary function",
-    "keySpecs": {
-      "Spec Name": "Value"
-    },
-    "estimatedAgeRange": "Year range string or null if unknown"
+    "estimatedAgeRange": "Year range string (e.g. 2018–2022) or null if unknown"
   },
+  "specLabels": ["Label1", "Label2", "Label3", "Label4", "Label5"],
+  "originalSpecs": {
+    "Label1": "value",
+    "Label2": "value",
+    "Label3": "value",
+    "Label4": "value",
+    "Label5": "value"
+  },
+  "successorStatus": {
+    "type": "direct_successor",
+    "name": "Brand + product name of successor/equivalent (null if type is none)",
+    "model": "Model number of successor/equivalent (null if type is none)",
+    "explanation": "One sentence explaining the successor/equivalent relationship, or why none exists"
+  },
+  "bestMatchLabel": "Best Match",
   "replacementOptions": [
     {
       "name": "Full product name (Brand + descriptive model name)",
       "model": "Model number",
-      "keySpecs": {
-        "Spec Name": "Value"
+      "brand": "Brand name only",
+      "specs": {
+        "Label1": "value",
+        "Label2": "value",
+        "Label3": "value",
+        "Label4": "value",
+        "Label5": "value"
       },
       "lkqRating": "MATCH",
-      "lkqRationale": "One concise sentence explaining why this rating was assigned",
+      "notes": "One concise sentence explaining the key spec comparison vs original",
       "priceRange": "$XXX–$XXX",
       "retailerName": "Retailer name",
       "retailerSearchQuery": "Optimized search string (brand + model number)"
@@ -116,11 +141,14 @@ Respond with ONLY valid JSON in this exact format:
 }
 
 Rules:
-- keySpecs in replacementOptions must use the same spec category names as itemSummary.keySpecs for direct comparison
-- Include 3 to 5 replacement options, sorted: MATCH first, then CLOSE MATCH, then NOT LKQ if needed
+- specLabels must be exactly 5 strings appropriate for this item category
+- originalSpecs keys must exactly match specLabels values
+- Each replacementOption.specs keys must exactly match specLabels values
+- Include 3 to 5 replacement options, sorted: MATCH first, then CLOSE MATCH, then NOT LKQ
+- If successorStatus.type is "direct_successor" or "same_brand_equivalent", the first replacement option should be that successor/equivalent and must use the same name/model as successorStatus
 - Include options from multiple manufacturers when possible
-- priceRange should reflect current retail pricing; use "N/A" if unknown
-- retailerSearchQuery should be a clean search string, not a URL`;
+- priceRange reflects current retail pricing; use "N/A" if unknown
+- retailerSearchQuery is a clean search string, not a URL`;
 
   try {
     const response = await fetch(

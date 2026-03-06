@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { originalItem, originalSpecs, recommendation } = req.body || {};
+  const { originalItem, originalSpecs, specLabels, recommendation } = req.body || {};
 
   if (!recommendation || typeof recommendation !== 'string' || recommendation.trim().length === 0) {
     return res.status(400).json({ error: 'Missing recommendation' });
@@ -55,26 +55,48 @@ export default async function handler(req, res) {
   const specsText =
     originalSpecs && typeof originalSpecs === 'object' && Object.keys(originalSpecs).length > 0
       ? Object.entries(originalSpecs)
-          .map(([k, v]) => `${k}: ${v}`)
-          .join(', ')
+          .map(([k, v]) => `  ${k}: ${v}`)
+          .join('\n')
       : '';
 
-  const prompt = `You are an insurance claims specialist evaluating a specific Like Kind and Quality (LKQ) replacement recommendation under insurance standards.
+  const labelsArr = Array.isArray(specLabels) && specLabels.length > 0
+    ? specLabels
+    : (originalSpecs ? Object.keys(originalSpecs) : []);
 
-Original Item: ${originalItem.trim()}${specsText ? `\nOriginal Item Key Specs: ${specsText}` : ''}
+  const labelsText = labelsArr.length > 0 ? labelsArr.join(', ') : '';
 
+  const prompt = `You are an insurance claims specialist evaluating a specific Like Kind and Quality (LKQ) replacement recommendation.
+
+Original Item: ${originalItem.trim()}
+${specsText ? `Original Item Specs:\n${specsText}\n` : ''}
 Proposed Replacement: "${recommendation.trim()}"
 
-Evaluate whether this proposed replacement qualifies as a valid LKQ replacement. Consider all available spec information and your knowledge of this product.
-
+${labelsText ? `Spec categories to evaluate (use exactly these as keys in "specs"): ${labelsText}\n` : ''}
 LKQ Rating Criteria:
-- MATCH: Same category, same fuel type/power source, same installation type, capacity within 10%, equivalent or better efficiency rating, same or newer generation
-- CLOSE MATCH: Same category, same fuel type, capacity within 20%, minor spec differences that do not significantly affect core functionality
-- NOT LKQ: Different fuel type, capacity difference greater than 20%, wrong installation type, or fundamentally different product class
+- MATCH: Same category, same fuel type/power source, same installation type, capacity within 10%, equivalent or better efficiency, same or newer generation
+- CLOSE MATCH: Same category, same fuel type, capacity within 20%, minor spec differences not affecting core functionality
+- NOT LKQ: Different fuel type, capacity >20% difference, wrong installation type, or fundamentally different product class
+
+Retailer guidance:
+- Major home appliances: "AJ Madison" or "Home Depot"
+- HVAC and mechanical: "Grainger" or "Ferguson"
+- Consumer electronics: "Best Buy" or "Amazon"
+- Commercial/industrial: "Grainger" or "Amazon Business"
+- General household: "Amazon" or "Home Depot"
 
 Respond with ONLY valid JSON:
 {
   "rating": "MATCH",
+  "name": "Full product name (Brand + descriptive model name)",
+  "model": "Model number, or null if not identifiable",
+  "brand": "Brand name only",
+  "priceRange": "$XXX–$XXX or N/A",
+  "specs": {
+    ${labelsArr.map(l => `"${l}": "value"`).join(',\n    ')}
+  },
+  "retailerName": "Retailer name",
+  "retailerSearchQuery": "brand model number",
+  "notes": "One sentence noting the most important spec difference vs the original",
   "explanation": "2-3 sentences explaining this rating. Cover the most important spec comparisons — what aligns with the original and what differs. Be specific."
 }`;
 
