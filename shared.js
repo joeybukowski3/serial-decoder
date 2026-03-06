@@ -39,7 +39,7 @@ function setTab(el, tab) {
     decoderPanel.style.display = 'block';
     smartPanel.style.display   = 'none';
     const sel    = document.getElementById('brand-select');
-    const brands = BRANDS[tab] || [];
+    const brands = (BRANDS[tab] || []).slice().sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
     if (sel) {
       sel.innerHTML = '<option value="">-- Select Brand --</option>' +
         brands.map(b => `<option>${b}</option>`).join('');

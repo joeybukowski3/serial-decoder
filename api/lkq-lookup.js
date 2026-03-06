@@ -77,10 +77,11 @@ LKQ Evaluation Standards — use these category-specific specs for the specLabel
 - Lighting: ["Lumen Output", "Color Temp (CCT)", "CRI", "Fixture Type", "Dimming"]
 - Other: choose 5 specs most relevant to LKQ determination for the category
 
-LKQ Rating Criteria:
-- MATCH: Same category, same fuel type/power source, same installation type, capacity within 10%, equivalent or better efficiency, same or newer generation
-- CLOSE MATCH: Same category, same fuel type, capacity within 20%, minor spec differences not affecting core functionality
-- NOT LKQ: Different fuel type, capacity >20% difference, wrong installation type, or fundamentally different product class
+LKQ Rating Criteria (4-tier):
+- NOT LKQ (RED): Different category/type, incompatible replacement, significantly inferior key specs, wrong fuel/power/installation class
+- CLOSE MATCH (ORANGE): Close in specs but minor downgrade, older/lower series, or slight inferiority
+- LKQ (GREEN): Equal or fair-variance equivalent on key specs; true like kind and quality
+- ABOVE LKQ (GOLD): Exceeds original on one or more key specs without changing core category/use case
 
 Retailer guidance:
 - Major home appliances: "AJ Madison" or "Home Depot"
@@ -96,6 +97,24 @@ New-condition requirement (strict):
 - If a candidate model is only available refurbished/used, exclude it and find the next qualifying NEW option
 - If no qualifying NEW option can be confirmed for a slot, leave the slot empty (do not force-fill with used/refurbished)
 - This rule applies to all replacement slots including Best Match
+
+Replacement table selection rules (strict):
+- Target order is: Original Item, Best Match, Alternative Replacement 1, Alternative Replacement 2, Your Pick
+- Best Match must be same-brand successor or same-brand current equivalent when available and must not be a downgrade
+- Alternative Replacement 1 and 2 must be different models from comparable quality brands and must not be duplicates
+- Exclude any option that is CLOSE MATCH or NOT LKQ; do not show or mention excluded options
+- Never include lower series, older generation, lower tier, or spec-downgrade models
+- Only include options that qualify as LKQ or ABOVE LKQ
+- If no same-brand LKQ/ABOVE LKQ option exists, do not force one; prioritize qualifying alternatives instead
+- If fewer qualifying options exist, return fewer options (do not pad with weak options)
+- If no qualifying options exist, return an empty replacementOptions array and explain in successorStatus.explanation
+
+Overall LKQ rating determination:
+- If majority of key specs are GREEN and none are RED, rate as LKQ
+- If one or more key specs are GOLD and none are RED, rate as ABOVE LKQ
+- If any key spec is RED, rate as NOT LKQ (exclude from replacementOptions)
+- If majority of key specs are ORANGE, rate as CLOSE MATCH (exclude from replacementOptions)
+- Mixed GREEN/ORANGE with no RED may still be LKQ when orange differences are minor and non-core
 
 Successor status rules:
 - "direct_successor": the manufacturer released a named model to replace this exact model (use when you know this with confidence)
@@ -154,8 +173,12 @@ Rules:
 - specLabels must be exactly 5 strings appropriate for this item category
 - originalSpecs keys must exactly match specLabels values
 - Each replacementOption.specs keys must exactly match specLabels values
-- Include 3 to 5 replacement options, sorted: MATCH first, then CLOSE MATCH, then NOT LKQ
-- If successorStatus.type is "direct_successor" or "same_brand_equivalent", the first replacement option should be that successor/equivalent and must use the same name/model as successorStatus
+- Include up to 3 replacement options total (Best Match + up to 2 alternatives), only if they qualify
+- replacementOptions must contain ONLY LKQ-qualified options:
+  - Use "MATCH" when the option is LKQ (green)
+  - Use "ABOVE LKQ" when the option is above LKQ (gold)
+  - Never return CLOSE MATCH or NOT LKQ options in replacementOptions
+- If successorStatus.type is "direct_successor" or "same_brand_equivalent", the first replacement option should be that successor/equivalent when it qualifies and must use the same name/model as successorStatus
 - Include options from multiple manufacturers when possible
 - priceRange reflects current retail pricing; use "N/A" if unknown
 - retailerSearchQuery is a clean search string, not a URL

@@ -1841,6 +1841,10 @@ function populateBrands(category) {
     }
   });
 
+  consolidated.sort(function(a, b) {
+    return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' });
+  });
+
   sel.innerHTML = '<option value="">-- Select Brand --</option>';
   consolidated.forEach(function(b) {
     var opt = document.createElement('option');
