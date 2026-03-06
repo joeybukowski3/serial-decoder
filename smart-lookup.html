@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Lookup – Item Assist</title>
-  <meta name="description" content="Use Smart Lookup to estimate product age when you don't have a serial number. Enter a model number or description and get an AI-powered estimate.">
+  <meta name="description" content="Enter a model number or item description and get an AI-powered LKQ replacement evaluation with comparable options and pricing.">
   <link rel="canonical" href="https://www.decodemyitem.com/smart-lookup.html">
   <link rel="stylesheet" href="shared.css">
   <style>
@@ -102,7 +102,7 @@
     <span style="color:var(--amber);">AI-Powered</span>
   </div>
   <h1>Smart <em>Lookup</em></h1>
-  <p class="hero-sub">No serial number? No problem. Enter a model number, brand name, or product description and our AI will research and estimate the manufacture date range.</p>
+  <p class="hero-sub">Enter a model number or item description and get an AI-powered LKQ replacement evaluation — comparable options, pricing, and a MATCH / CLOSE MATCH / NOT LKQ verdict for each.</p>
 </section>
 
 <!-- ─── LOOKUP TOOL ─── -->
@@ -112,11 +112,11 @@
 
     <label for="smart-lookup-input">Model Number or Description</label>
     <input type="text" id="smart-lookup-input" class="search-input"
-           placeholder="e.g., GE Profile PFE28KSKSS or LG 55&quot; C3 series TV"
+           placeholder="e.g., LG WM4000HWA or LG front load washing machine"
            style="margin-bottom:6px;">
-    <p class="search-hint">Enter a model number, brand + model, brand + series, or description to estimate age. The more specific, the better.</p>
+    <p class="search-hint">Enter a model number or item description. Works for appliances, HVAC, electronics, generators, commercial equipment, and more.</p>
 
-    <button class="btn-amber" style="width:100%;margin-top:14px;" onclick="estimateAge()">✨ Run Smart Lookup</button>
+    <button class="btn-amber" style="width:100%;margin-top:14px;" onclick="runLKQLookup()">Search</button>
     <p class="search-link" style="margin-top:12px;">Have a serial number? <a href="index.html">Use the Serial Decoder →</a></p>
   </div>
 
@@ -125,17 +125,17 @@
     <div class="tip-card">
       <div class="tip-icon">🎯</div>
       <div class="tip-title">Be Specific</div>
-      <p class="tip-desc">Include the full model number when possible — this gives the AI the best chance of a precise date range.</p>
+      <p class="tip-desc">Include the full model number when possible — this produces the most accurate LKQ matching and spec comparison.</p>
     </div>
     <div class="tip-card">
       <div class="tip-icon">🏷️</div>
       <div class="tip-title">Include Brand</div>
-      <p class="tip-desc">Even a partial brand name helps narrow down the results significantly.</p>
+      <p class="tip-desc">Even a brand name plus a description helps identify category-equivalent replacements when no model is available.</p>
     </div>
     <div class="tip-card">
-      <div class="tip-icon">⏱️</div>
-      <div class="tip-title">Expect a Range</div>
-      <p class="tip-desc">Smart Lookup returns an estimated year range, not an exact date. Use the Serial Decoder for precision.</p>
+      <div class="tip-icon">🏭</div>
+      <div class="tip-title">Commercial Items</div>
+      <p class="tip-desc">Works for commercial and industrial equipment, not just residential. Try generators, HVAC systems, or commercial appliances.</p>
     </div>
   </div>
 </section>
@@ -148,16 +148,16 @@
   </div>
 </div>
 
-<!-- ─── AGE ESTIMATE RESULTS ─── -->
+<!-- ─── LKQ RESULTS ─── -->
 <div id="ageResults" class="results-card hidden">
   <div class="results-header">
-    <h3>🕑 Smart Lookup Results</h3>
+    <h3>&#9878; LKQ Replacement Evaluation</h3>
     <div class="brand-logo-wrap" id="ageBrandLogo"></div>
   </div>
   <div class="results-body" id="smart-lookup-results"></div>
   <div class="results-footer">
     <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
-    <button class="error-btn" onclick="openFeedbackModal()">⚠️ Possible Error? Let Us Know</button>
+    <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
   </div>
 </div>
 
@@ -175,7 +175,7 @@
 <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
   <div class="modal-card">
     <div class="modal-header">
-      <h3>⚠️ Report an Issue</h3>
+      <h3>&#9888; Report an Issue</h3>
       <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
     </div>
     <div class="modal-body">
@@ -212,6 +212,7 @@
 </div>
 
 <script src="decoder-data.js"></script>
+<script src="lkq-engine.js"></script>
 <script src="script.js"></script>
 <script src="smart-lookup.js"></script>
 <script src="shared.js"></script>

@@ -3866,3 +3866,394 @@ img.ia-sidebar-logo {
 
 }
 
+/* ================================================================
+   LKQ SERIAL ENTRY SECTION
+   (inside the serial results card, at the bottom)
+   ================================================================ */
+
+.lkq-entry-section {
+  border-top: 1px solid #e2e8f0;
+  padding: 1rem 1.25rem 1.1rem;
+  background: #f8fafc;
+  border-radius: 0 0 16px 16px; /* match results-card radius */
+}
+
+.lkq-entry-hd {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.lkq-entry-icon {
+  font-size: 14px;
+  color: var(--accent, #00b4d8);
+}
+
+.lkq-entry-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.lkq-entry-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.lkq-entry-input-row .search-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.lkq-entry-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   LKQ SMART LOOKUP — RESULTS OUTPUT
+   ================================================================ */
+
+/* Section wrapper */
+.lkq-section {
+  margin-bottom: 1.25rem;
+}
+
+/* Section header (numbered) */
+.lkq-section-hd {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.lkq-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent, #00b4d8);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.lkq-step-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #64748b;
+}
+
+/* ── Section 1: Item Summary ───────────────────────────────────── */
+.lkq-summary-body {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+}
+
+.lkq-item-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 0.3rem;
+}
+
+.lkq-item-desc {
+  font-size: 0.855rem;
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0 0 0.75rem;
+}
+
+.lkq-spec-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.lkq-spec-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.lkq-chip-label {
+  font-weight: 600;
+  color: #475569;
+}
+
+.lkq-chip-val {
+  color: #1e293b;
+}
+
+.lkq-age-line {
+  font-size: 0.8rem;
+  color: #64748b;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+/* ── LKQ Rating Badges ─────────────────────────────────────────── */
+.lkq-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.lkq-badge.match {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.lkq-badge.close-match {
+  background: #fef3c7;
+  color: #78350f;
+  border: 1px solid #fcd34d;
+}
+
+.lkq-badge.not-lkq {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+/* ── Section 2: Replacement Option Cards ──────────────────────── */
+.lkq-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.lkq-option-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  transition: box-shadow 0.2s;
+}
+
+.lkq-option-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+/* Staggered entry animation */
+@keyframes lkq-row-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lkq-row-hidden {
+  opacity: 0;
+}
+
+.lkq-row-enter {
+  animation: lkq-row-in 0.28s ease-out forwards;
+}
+
+.lkq-option-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.lkq-option-nameblock {
+  min-width: 0;
+}
+
+.lkq-option-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1a202c;
+  line-height: 1.3;
+}
+
+.lkq-option-model {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-family: 'Courier New', Courier, monospace;
+  margin-top: 0.1rem;
+}
+
+.lkq-option-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.45rem;
+  margin-bottom: 0.5rem;
+}
+
+.lkq-mini-spec {
+  font-size: 0.75rem;
+  color: #475569;
+  background: #f1f5f9;
+  border-radius: 4px;
+  padding: 0.15rem 0.45rem;
+  white-space: nowrap;
+}
+
+.lkq-mini-spec b {
+  color: #334155;
+  font-weight: 600;
+}
+
+.lkq-option-rationale {
+  font-size: 0.8rem;
+  color: #4a5568;
+  line-height: 1.55;
+  margin: 0 0 0.55rem;
+  font-style: italic;
+}
+
+.lkq-option-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.lkq-option-price {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.lkq-buy-link {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent, #00b4d8);
+  text-decoration: none;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--accent, #00b4d8);
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.lkq-buy-link:hover {
+  background: var(--accent, #00b4d8);
+  color: #fff;
+}
+
+/* ── Section 3: Compare Your Recommendation ───────────────────── */
+.lkq-compare-section {
+  margin-bottom: 0;
+}
+
+.lkq-compare-desc {
+  font-size: 0.83rem;
+  color: #4a5568;
+  margin: 0 0 0.65rem;
+  line-height: 1.55;
+}
+
+.lkq-compare-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.lkq-compare-row .search-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.lkq-compare-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Compare verdict */
+.lkq-compare-verdict {
+  margin-top: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+
+.lkq-compare-loading {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.83rem;
+  color: #64748b;
+  padding: 0.5rem 0;
+}
+
+.lkq-compare-verdict-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.lkq-verdict-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.lkq-verdict-query {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.lkq-verdict-explanation {
+  font-size: 0.84rem;
+  color: #374151;
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* Compare loading dots */
+@keyframes lkq-dot-pulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+.lkq-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent, #00b4d8);
+  animation: lkq-dot-pulse 1.2s ease-in-out infinite;
+}
+.lkq-dot:nth-child(2) { animation-delay: 0.2s; }
+.lkq-dot:nth-child(3) { animation-delay: 0.4s; }
+

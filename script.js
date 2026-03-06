@@ -1887,8 +1887,8 @@ function normalizeBrandId(brandId) {
   var s = raw.toLowerCase();
   var cleaned = s.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
 
-  if (cleaned === 'cafe' || cleaned === 'caf�') return 'cafe';
-  if (cleaned === 'ge cafe' || cleaned === 'ge caf�' || cleaned === 'ge caf') return 'cafe';
+  if (cleaned === 'cafe' || cleaned === 'caf�') return 'cafe';
+  if (cleaned === 'ge cafe' || cleaned === 'ge caf�' || cleaned === 'ge caf') return 'cafe';
   if (cleaned === 'ge monogram' || cleaned === 'monogram') return 'ge';
   if (cleaned === 'ge profile' || cleaned === 'profile') return 'ge';
   if (cleaned === 'hotpoint' || cleaned === 'rca') return 'ge';
@@ -2021,7 +2021,7 @@ function showDecodeFallback(decoder, serial, brandId, reason) {
   document.getElementById('resultBrand').textContent  = decoder.name;
   document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'Check the product label and ensure the full serial number is entered.';
   document.getElementById('resultNotes').textContent  =
-    'We\u2019re sorry, our system is having trouble decoding that number. Please refer to the decoding method above.\n\nSerial entered: ' + serial;
+    sanitizeAlertText('We\u2019re sorry, our system is having trouble decoding that number. Please refer to the decoding method above.\n\nSerial entered: ' + serial);
   updateSearchQueryLine();
   updateResultWarning({ year: 'Unknown', month: '' }, brandId);
   showBrandLogo('serialBrandLogo', brandId, decoder.name);
@@ -2188,7 +2188,7 @@ function updateResultWarning(result, brandId) {
     block.classList.remove('hidden');
     var p = block.querySelector('p');
     if (p) {
-      p.textContent = 'Incomplete result � please verify your inputs (brand/serial/model). If the result is still incorrect after verifying inputs, report an issue.';
+      p.textContent = sanitizeAlertText('Incomplete result \u2014 please verify your inputs (brand/serial/model). If the result is still incorrect after verifying inputs, report an issue.');
     }
   } else {
     block.classList.add('hidden');
@@ -2205,12 +2205,12 @@ function ensureBrandAliasSearch() {
   group.className = 'form-group brand-alias-group';
   group.innerHTML = '' +
     '<label class="step-label sr-only" for="brandAliasInput">Search Brand</label>' +
-    '<input type="text" id="brandAliasInput" class="form-input" list="brandAliasList" placeholder="Search brand (e.g., GE Profile, Monogram, Caf�)">' +
+    '<input type="text" id="brandAliasInput" class="form-input" list="brandAliasList" placeholder="Search brand (e.g., GE Profile, Monogram, Caf�)">' +
     '<datalist id="brandAliasList">' +
       '<option value="GE"></option>' +
-      '<option value="Caf�"></option>' +
+      '<option value="Caf�"></option>' +
       '<option value="Cafe"></option>' +
-      '<option value="GE Caf�"></option>' +
+      '<option value="GE Caf�"></option>' +
       '<option value="GE Cafe"></option>' +
       '<option value="Monogram"></option>' +
       '<option value="Profile"></option>' +
@@ -2533,10 +2533,10 @@ function decodeSerial() {
     if (_eraVal && result && result.year) {
       var _filteredYear = filterYearsByEra(String(result.year), _eraVal);
       if (_filteredYear === null) {
-        // No candidate years match the selected era � show clear message, no age
+        // No candidate years match the selected era � show clear message, no age
         document.getElementById('resultBrand').textContent  = decoder.name;
         document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'N/A';
-        document.getElementById('resultNotes').textContent  = 'No matching dates found for the selected era. Try switching to Pre-2006 or Post-2006.';
+        document.getElementById('resultNotes').textContent  = sanitizeAlertText('No matching dates found for the selected era. Try switching to Pre-2006 or Post-2006.');
         updateResultWarning({ year: 'Unknown', month: '' }, brandId);
         var _yearEl = document.getElementById('resultYear');
         if (_yearEl) {
@@ -2592,7 +2592,7 @@ function decodeSerial() {
     if (isKenmore && kenmoreResolution && kenmoreResolution.note) {
       notesText = kenmoreResolution.note + (notesText ? ' ' + notesText : '');
     }
-    document.getElementById('resultNotes').textContent = notesText;
+    document.getElementById('resultNotes').textContent = sanitizeAlertText(notesText);
     updateResultWarning(result, brandId);
 
     // Compute derived display fields from output shape (no decode rules exposed)
@@ -2708,6 +2708,12 @@ function decodeAnotherItem() {
   if (refinePanel) refinePanel.classList.add('hidden');
   var refineOut = document.getElementById('narrowDateOutput');
   if (refineOut) refineOut.innerHTML = '';
+  var serialLkqResults = document.getElementById('serialLkqResults');
+  if (serialLkqResults) serialLkqResults.classList.add('hidden');
+  var serialModelInput = document.getElementById('serial-lkq-model-input');
+  if (serialModelInput) serialModelInput.value = '';
+  LKQEngine.clearInstance('serial-decoder');
+  LKQEngine.clearInstance('smart-lookup');
   updateDecodeBtn();
   window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   setTimeout(function() {
@@ -2849,10 +2855,18 @@ function showSmartLookupNotice(type, message) {
   var bg    = isCapacity ? '#fffbeb' : '#f0f9ff';
   var border = isCapacity ? '#f59e0b' : '#00b4d8';
   var color  = isCapacity ? '#92400e' : '#0c4a6e';
+  var iconColor = isCapacity ? '#b45309' : '#0369a1';
+  var safeMessage = sanitizeAlertText(message);
+  var alertIcon = '' +
+    '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="flex:0 0 auto;fill:' + iconColor + ';">' +
+      '<path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"></path>' +
+    '</svg>';
   if (body) {
     body.innerHTML =
-      '<div style="background:' + bg + ';border-left:3px solid ' + border + ';border-radius:8px;padding:1rem 1.125rem;font-size:0.875rem;color:' + color + ';line-height:1.65;">' +
-      message + '</div>';
+      '<div style="background:' + bg + ';border-left:3px solid ' + border + ';border-radius:8px;padding:1rem 1.125rem;font-size:0.875rem;color:' + color + ';line-height:1.65;display:flex;gap:0.625rem;align-items:flex-start;">' +
+      alertIcon +
+      '<div style="min-width:0;">' + safeMessage + '</div>' +
+      '</div>';
   }
   var ageResults = document.getElementById('ageResults');
   if (ageResults) {
@@ -2880,140 +2894,100 @@ async function parseJsonResponseSafe(res, contextLabel) {
   };
 }
 
-// ===== ESTIMATE AGE =====
-async function estimateAge() {
+// ===== ESTIMATE AGE — delegates to LKQ engine (Smart Lookup entry point) =====
+function estimateAge() {
+  runLKQLookup();
+}
+
+// ===== SMART LOOKUP — thin entry point wrapper around LKQEngine =====
+async function runLKQLookup() {
   var inputEl = getSmartLookupInputEl();
   if (!inputEl || !document.getElementById('smart-lookup-input')) return;
   var query = String(inputEl.value || '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
   inputEl.value = query;
   if (!query) return;
 
-  document.getElementById('ageResults').classList.add('hidden');
-  document.getElementById('serialResults').classList.add('hidden');
+  var ageResultsEl    = document.getElementById('ageResults');
+  var serialResultsEl = document.getElementById('serialResults');
+  if (ageResultsEl)    ageResultsEl.classList.add('hidden');
+  if (serialResultsEl) serialResultsEl.classList.add('hidden');
+
   setLoadingActive();
-  setEmojiCursor('🕵️');  // detective cursor for AI lookup
+  setEmojiCursor('🕵️');
   var lt = document.getElementById('loadingText');
-  if (lt) lt.textContent = '🕵️ Investigating...';
-  document.getElementById('ageLoading').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (lt) lt.textContent = '🕵️ Evaluating LKQ options...';
+  var ageLoadingEl = document.getElementById('ageLoading');
+  if (ageLoadingEl) ageLoadingEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   var loadStart = Date.now();
 
-  try {
-    var res  = await fetch('/api/age-lookup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: query }),
-    });
+  var resultsEl = getSmartLookupResultsEl();
+  if (!resultsEl) { setLoadingHidden(); return; }
 
-    // Handle structured limit responses before parsing JSON
-    if (res.status === 429) {
-      var limitData = {};
-      try { limitData = await parseJsonResponseSafe(res, 'rate-limit'); } catch(_) {}
-      if (limitData.errorCode === 'RATE_LIMIT' || res.status === 429) {
-        setLoadingHidden();
-        showSmartLookupNotice('limit', 'You\'ve reached the Smart Lookup usage limit. Please wait a few minutes and try again.');
-        return;
+  LKQEngine.evaluate('smart-lookup', query, resultsEl, {
+    onSuccess: function () {
+      currentFeedbackContext = { brand: '', serial: query };
+      var elapsed   = Date.now() - loadStart;
+      var remaining = Math.max(0, 1400 - elapsed);
+      setTimeout(function () {
+        setLoadingSuccess(function () {
+          if (ageResultsEl) {
+            ageResultsEl.classList.remove('hidden');
+            ageResultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        });
+      }, remaining);
+    },
+    onError: function (type, message) {
+      setLoadingHidden();
+      if (type === 'capacity') {
+        showSmartLookupNotice('capacity', 'Wow! Due to the popular demand of this tool, the capacity of the free version has been reached. Please utilize the serial number decoder. The smart lookup function will be available again soon. Interested in utilizing smart lookup within personalized data limits? <a href="contact.html" style="color:inherit;font-weight:700;">Contact us today</a> to become a pro member.');
+      } else {
+        showSmartLookupNotice('limit', message || 'Smart Lookup is temporarily unavailable. Please try again.');
       }
-    }
-    if (res.status === 503) {
-      setLoadingHidden();
-      showSmartLookupNotice('capacity', 'Wow! Due to the popular demand of this tool, the capacity of the free version has been reached. Please utilize the serial number decoder. The smart lookup function will be available again soon. Interested in utilizing smart lookup within personalized data limits? <a href="contact.html" style="color:inherit;font-weight:700;">Contact us today</a> to become a pro member.');
-      return;
-    }
+    },
+  });
+}
 
-    var data = await parseJsonResponseSafe(res, 'age-lookup');
+// ===== SERIAL DECODER — LKQ entry point =====
+function loadSerialLKQ() {
+  var brand = (currentFeedbackContext && currentFeedbackContext.brand)
+    ? currentFeedbackContext.brand.trim() : '';
+  var modelInputEl = document.getElementById('serial-lkq-model-input');
+  var model = modelInputEl ? modelInputEl.value.trim() : '';
 
-    if (data.errorCode === 'RATE_LIMIT') {
-      setLoadingHidden();
-      showSmartLookupNotice('limit', 'You\'ve reached the Smart Lookup usage limit. Please wait a few minutes and try again.');
-      return;
-    }
-    if (data.errorCode === 'SITE_LIMIT') {
-      setLoadingHidden();
-      showSmartLookupNotice('capacity', 'Wow! Due to the popular demand of this tool, the capacity of the free version has been reached. Please utilize the serial number decoder. The smart lookup function will be available again soon. Interested in utilizing smart lookup within personalized data limits? <a href="contact.html" style="color:inherit;font-weight:700;">Contact us today</a> to become a pro member.');
-      return;
-    }
+  // Build query: brand + model if provided, or brand alone
+  var query = model ? ((brand ? brand + ' ' : '') + model) : brand;
+  if (!query) return;
 
-    if (data.error) {
-      setLoadingHidden();
-      showSmartLookupNotice('limit', esc(data.error));
-      return;
-    }
+  var resultsCard = document.getElementById('serialLkqResults');
+  var resultsEl   = document.getElementById('serial-lkq-output');
+  if (!resultsCard || !resultsEl) return;
 
-    var body = getSmartLookupResultsEl();
-    var html = '';
-    html += '<div class="result-query smart-search-query">Search Query: ' + esc(query) + '</div>';
+  // Show inline loading state
+  resultsEl.innerHTML =
+    '<div style="display:flex;align-items:center;gap:0.5rem;padding:1rem 0;font-size:0.83rem;color:#64748b;">' +
+      '<span>🕵️</span> Evaluating LKQ options\u2026' +
+    '</div>';
+  resultsCard.classList.remove('hidden');
+  resultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-    // Invention summary for generic/category-only queries
-    if (data.inventionSummary) {
-      html += '<div class="info-block invention-summary"><h4>About This Product Category</h4><p>' + esc(data.inventionSummary) + '</p></div>';
-    }
+  LKQEngine.evaluate('serial-decoder', query, resultsEl, {
+    onSuccess: function () {
+      resultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    },
+    onError: function (type, message) {
+      resultsEl.innerHTML =
+        '<div style="background:#fef2f2;border-left:3px solid #ef4444;border-radius:8px;padding:1rem;font-size:0.875rem;color:#991b1b;">' +
+          (message || 'LKQ lookup failed. Please try again.') +
+        '</div>';
+    },
+  });
+}
 
-    if (data.brand) {
-      html += '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + esc(data.brand) + '</span></div>';
-    }
-    if (data.model) {
-      html += '<div class="result-row"><span class="result-label">Model</span><span class="result-value">' + esc(data.model) + '</span></div>';
-    }
-    if (data.estimatedYear) {
-      html += '<div class="result-row"><span class="result-label">Estimated Year</span><span class="result-value">' + esc(capYear(data.estimatedYear)) + '</span></div>';
-    }
-    if (data.yearRange) {
-      html += '<div class="result-row"><span class="result-label">Production Range</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
-    }
-    if (data.notes) {
-      html += '<div class="info-block notes"><h4>Notes</h4><p>' + esc(data.notes) + '</p></div>';
-    }
-    if (data.serialLocation) {
-      html += '<div class="info-block serial-loc"><h4>Where to Find the Serial Number</h4><p>' + esc(data.serialLocation) + '</p></div>';
-    }
-    if (data.serialRule) {
-      html += '<div class="info-block serial-rule"><h4>Serial Number Decoding Hint</h4><p>' + esc(data.serialRule) + '</p></div>';
-    }
-    if (data.refinementSuggestion) {
-      html += '<div class="info-block refinement"><h4>Get More Accurate Results</h4><p>' + esc(data.refinementSuggestion) + '</p></div>';
-    }
-    // Suppress model tips if query looks like a serial number (9+ compact alphanumeric, no spaces)
-    var queryIsSerialLike = /^[a-zA-Z0-9]{9,}$/.test(query);
-
-    // Tip: generic description → show one example model number as a clickable chip
-    if (!queryIsSerialLike && data.exampleModelNumber) {
-      html += '<div class="tip-block">';
-      html += '<div class="tip-row"><span class="tip-label">&#128161; Tip</span><span class="tip-text">You\'ll get more accurate results if you enter the model number.</span></div>';
-      html += '<div class="tip-chips"><button class="suggestion-chip" data-model="' + esc(data.exampleModelNumber) + '" onclick="clickSuggestion(this.dataset.model)">' + esc(data.exampleModelNumber) + '</button></div>';
-      html += '</div>';
-    }
-
-    // Tip: partial model prefix → show 2–3 completions as clickable chips
-    if (!queryIsSerialLike && data.suggestedModelNumbers && data.suggestedModelNumbers.length > 0) {
-      html += '<div class="tip-block">';
-      html += '<div class="tip-row"><span class="tip-label">&#128161;</span><span class="tip-text">Try one of these similar model numbers:</span></div>';
-      html += '<div class="tip-chips">';
-      data.suggestedModelNumbers.forEach(function(m) {
-        html += '<button class="suggestion-chip" data-model="' + esc(m) + '" onclick="clickSuggestion(this.dataset.model)">' + esc(m) + '</button>';
-      });
-      html += '</div></div>';
-    }
-
-    body.innerHTML = html;
-    var brandId = (data.brand || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-    showBrandLogo('ageBrandLogo', brandId, data.brand || '');
-    currentFeedbackContext = { brand: data.brand || '', serial: query };
-
-    // Ensure the cloud shows for at least 1400ms so the full 2 s sequence completes
-    var elapsed   = Date.now() - loadStart;
-    var remaining = Math.max(0, 1400 - elapsed);
-    setTimeout(function() {
-      setLoadingSuccess(function() {
-        document.getElementById('ageResults').classList.remove('hidden');
-        document.getElementById('ageResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      });
-    }, remaining);
-
-  } catch (e) {
-    setLoadingHidden();
-    console.error('[Smart Lookup] estimateAge failed:', e);
-    showSmartLookupNotice('limit', 'Smart Lookup is temporarily unavailable. Please try again.');
-  }
+function closeSerialLkq() {
+  var el = document.getElementById('serialLkqResults');
+  if (el) el.classList.add('hidden');
+  LKQEngine.clearInstance('serial-decoder');
 }
 
 // ===== GUIDE DRAWER =====
@@ -3139,7 +3113,7 @@ function clickSuggestion(modelNum) {
   }
   var input = getSmartLookupInputEl();
   if (input) input.value = modelNum;
-  estimateAge();
+  runLKQLookup();
 }
 
 // ===== UTILITY =====
@@ -3149,6 +3123,14 @@ function esc(s) {
   div.textContent = s;
   return div.innerHTML;
 }
+
+function sanitizeAlertText(text) {
+  if (text === null || text === undefined) return '';
+  return String(text)
+    .replace(/\\ufe0e|\\ufe0f|ufe0e|ufe0f/gi, '')
+    .replace(/[\uFE0E\uFE0F\u200B-\u200D\u2060\u00AD]/g, '');
+}
+
 
 // ===== CUSTOM ALERT MODAL =====
 function showCustomAlert(message) {
@@ -3174,8 +3156,20 @@ function showCustomAlert(message) {
   box.style.boxShadow = '0 16px 40px rgba(0,0,0,0.28)';
   box.style.textAlign = 'center';
 
+  var heading = document.createElement('div');
+  heading.style.display = 'flex';
+  heading.style.alignItems = 'center';
+  heading.style.justifyContent = 'center';
+  heading.style.gap = '8px';
+  heading.style.marginBottom = '10px';
+  heading.innerHTML =
+    '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="fill:#0369a1;">' +
+      '<path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"></path>' +
+    '</svg>' +
+    '<span style="font-weight:700;color:#0f172a;">Notice</span>';
+
   var msg = document.createElement('div');
-  msg.textContent = message;
+  msg.textContent = sanitizeAlertText(message);
   msg.style.color = '#1f2937';
   msg.style.fontSize = '1rem';
   msg.style.lineHeight = '1.45';
@@ -3207,6 +3201,7 @@ function showCustomAlert(message) {
   });
   document.addEventListener('keydown', onEsc);
 
+  box.appendChild(heading);
   box.appendChild(msg);
   box.appendChild(okBtn);
   modal.appendChild(box);

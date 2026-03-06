@@ -351,15 +351,15 @@
         <div class="search-panel" id="panel-smart">
           <label class="sr-only" for="smart-lookup-input">Model Number or Description</label>
           <input type="text" id="smart-lookup-input" class="search-input"
-                 placeholder="e.g., GE Profile PFE28KSKSS or LG 55&quot; C3 series TV">
-          <p class="search-hint">Enter a model number, brand + model, brand + series, or description to estimate the age. The more information you provide, the better the result.</p>
+                 placeholder="e.g., LG WM4000HWA or LG front load washing machine">
+          <p class="search-hint">Enter a model number or item description. Works for appliances, HVAC, electronics, generators, commercial equipment, and more.</p>
           <p class="search-link" style="margin-top:10px;">Have a serial number? Use the Decode action in the Power Bar below.</p>
         </div>
       </div>
     </div>
     <div class="power-bar" role="group" aria-label="Power Bar actions">
       <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">🔍 Decode Serial Number</button>
-      <button class="btn-amber power-btn" type="button" onclick="estimateAge()">✨ Run Smart Lookup</button>
+      <button class="btn-amber power-btn" type="button" onclick="runLKQLookup()">Search</button>
     </div>
   </div>
 </section>
@@ -452,12 +452,37 @@
         </details>
       </div>
     </div>
+
+    <!-- LKQ Entry Point -->
+    <div class="lkq-entry-section">
+      <div class="lkq-entry-hd">
+        <span class="lkq-entry-icon">&#9878;</span>
+        <strong class="lkq-entry-title">Get LKQ Replacement Options</strong>
+      </div>
+      <div class="lkq-entry-input-row">
+        <input type="text" id="serial-lkq-model-input" class="search-input" placeholder="Enter model number for accurate results (optional)">
+        <button class="btn-amber lkq-entry-btn" onclick="loadSerialLKQ()">Load LKQ Options</button>
+      </div>
+      <p class="search-hint" style="margin-top:0.5rem;">Leave blank to search by brand and item type from decoded results</p>
+    </div>
   </div>
 
-  <!-- Age Estimate Results -->
+  <!-- Serial Decoder LKQ Results -->
+  <div id="serialLkqResults" class="results-card hidden">
+    <div class="results-header">
+      <h3>&#9878; LKQ Replacement Evaluation</h3>
+    </div>
+    <div class="results-body" id="serial-lkq-output"></div>
+    <div class="results-footer">
+      <button class="decode-again-btn" onclick="closeSerialLkq()">Close</button>
+      <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
+    </div>
+  </div>
+
+  <!-- LKQ Results (Smart Lookup) -->
   <div id="ageResults" class="results-card hidden">
     <div class="results-header">
-      <h3>&#128337; Estimated Age</h3>
+      <h3>&#9878; LKQ Replacement Evaluation</h3>
       <div class="brand-logo-wrap" id="ageBrandLogo"></div>
     </div>
     <div class="results-body" id="smart-lookup-results"></div>
@@ -598,6 +623,7 @@ function selectCatAndShowDecoder(cat, btn) {
 </script>
 
 <script src="decoder-data.js"></script>
+<script src="lkq-engine.js"></script>
 <script src="script.js"></script>
 <script src="smart-lookup.js"></script>
 <script src="shared.js"></script>
