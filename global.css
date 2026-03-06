@@ -4782,6 +4782,9 @@ img.ia-sidebar-logo {
 .lkq-comparison-table {
   table-layout: fixed;
   width: 100%;
+  border: 1px solid #dbe5ef;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 .lkq-comparison-table th,
@@ -4796,6 +4799,13 @@ img.ia-sidebar-logo {
   min-width: 170px;
 }
 
+.lkq-col-label { width: 16%; }
+.lkq-col-original,
+.lkq-col-best,
+.lkq-col-alt1,
+.lkq-col-alt2,
+.lkq-col-yourpick { width: 16.8%; }
+
 .lkq-th-best {
   border-top: 3px solid #f59e0b !important;
 }
@@ -4807,6 +4817,10 @@ img.ia-sidebar-logo {
 .lkq-td-label {
   font-weight: 800 !important;
   color: #334155 !important;
+  position: static !important;
+  left: auto !important;
+  z-index: auto !important;
+  border-right: 1px solid #e2e8f0;
 }
 
 .lkq-comparison-table tbody tr:nth-child(odd) .lkq-td {
@@ -4823,6 +4837,17 @@ img.ia-sidebar-logo {
 
 .lkq-comparison-table tbody tr:nth-child(even) .lkq-td-best {
   background: #fef1d6;
+}
+
+.lkq-comparison-table th,
+.lkq-comparison-table td {
+  vertical-align: top;
+  border-right: 1px solid #e2e8f0;
+}
+
+.lkq-comparison-table th:last-child,
+.lkq-comparison-table td:last-child {
+  border-right: none;
 }
 
 .lkq-yourpick-empty {

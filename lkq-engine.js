@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * lkq-engine.js - Centralized LKQ Replacement Evaluation Engine
  *
  * Public API:
@@ -42,7 +42,7 @@
     return (
       '<div class="lkq-id-row' + (extraClass ? (' ' + extraClass) : '') + '">' +
         '<span class="lkq-id-label">' + _esc(label) + '</span>' +
-        '<span class="lkq-id-value">' + _esc(value || '—') + '</span>' +
+        '<span class="lkq-id-value">' + _esc(value || 'â€”') + '</span>' +
       '</div>'
     );
   }
@@ -87,7 +87,7 @@
     }
 
     var name = (ss && ss.name) ? ss.name : 'No in-brand replacement found';
-    var model = (ss && ss.model) ? ss.model : '—';
+    var model = (ss && ss.model) ? ss.model : 'â€”';
     var explanation = (ss && ss.explanation) ? ss.explanation : 'No in-brand replacement is currently available.';
 
     return (
@@ -120,26 +120,23 @@
   }
 
   function _yourPickEmptyCell(rowKey) {
-    return '<td class="lkq-td lkq-td-yourpick lkq-yourpick-cell lkq-yourpick-empty" data-yourpick-row="' + _esc(rowKey) + '">—</td>';
+    return '<td class="lkq-td lkq-td-yourpick lkq-yourpick-cell lkq-yourpick-empty" data-yourpick-row="' + _esc(rowKey) + '">â€”</td>';
   }
 
   function _buildTable(summary, originalSpecs, specLabels, options, bestMatchLabel, instanceId) {
-    var tableOptions = Array.isArray(options) ? options.slice(0, 3) : [];
-    if (!tableOptions.length) {
+    var sourceOptions = Array.isArray(options) ? options : [];
+    var tableOptions = [sourceOptions[0] || null, sourceOptions[1] || null, sourceOptions[2] || null];
+    var hasAnyOption = tableOptions.some(function (o) { return !!o; });
+    if (!hasAnyOption) {
       return '<p class="lkq-no-options">No replacement options found. Try a more specific query.</p>';
     }
 
     var headerCells =
       '<th class="lkq-th-label"></th>' +
-      '<th class="lkq-th-original">Original Item</th>';
-
-    tableOptions.forEach(function (opt, i) {
-      if (i === 0) {
-        headerCells += '<th class="lkq-th-best">' + _esc(bestMatchLabel || 'Best Match') + '</th>';
-      } else {
-        headerCells += '<th class="lkq-th">Option ' + (i + 1) + '</th>';
-      }
-    });
+      '<th class="lkq-th-original">Original Item</th>' +
+      '<th class="lkq-th-best">' + _esc(bestMatchLabel || 'Brand Match') + '</th>' +
+      '<th class="lkq-th">Alternative Replacement 1</th>' +
+      '<th class="lkq-th">Alternative Replacement 2</th>';
     headerCells += '<th class="lkq-th-yourpick">Your Pick</th>';
 
     var rows = '';
@@ -150,8 +147,12 @@
       ((summary.modelNumber || summary.model) ? '<div class="lkq-td-model">' + _esc(summary.modelNumber || summary.model) + '</div>' : '') + '</td>';
     tableOptions.forEach(function (opt, i) {
       var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
-      rows += '<td class="' + cls + '"><div class="lkq-td-name">' + _esc(opt.name || '') + '</div>' +
-        (opt.model ? '<div class="lkq-td-model">' + _esc(opt.model) + '</div>' : '') + '</td>';
+      if (!opt) {
+        rows += '<td class="' + cls + ' lkq-no-val">â€”</td>';
+      } else {
+        rows += '<td class="' + cls + '"><div class="lkq-td-name">' + _esc(opt.name || '') + '</div>' +
+          (opt.model ? '<div class="lkq-td-model">' + _esc(opt.model) + '</div>' : '') + '</td>';
+      }
     });
     rows += _yourPickEditorCell(instanceId);
     rows += '</tr>';
@@ -161,29 +162,33 @@
     rows += '<td class="lkq-td lkq-td-original"><span class="lkq-badge lkq-badge-original">Original</span></td>';
     tableOptions.forEach(function (opt, i) {
       var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
-      var rc = _ratingClass(opt.lkqRating);
-      rows += '<td class="' + cls + '"><span class="lkq-badge ' + rc + '">' +
-        _esc((opt.lkqRating || 'NOT LKQ').toUpperCase().trim()) + '</span></td>';
+      if (!opt) {
+        rows += '<td class="' + cls + ' lkq-no-val">â€”</td>';
+      } else {
+        var rc = _ratingClass(opt.lkqRating);
+        rows += '<td class="' + cls + '"><span class="lkq-badge ' + rc + '">' +
+          _esc((opt.lkqRating || 'NOT LKQ').toUpperCase().trim()) + '</span></td>';
+      }
     });
     rows += _yourPickEmptyCell('rating');
     rows += '</tr>';
 
     // Brand
     rows += '<tr data-row="brand"><td class="lkq-td-label">Brand</td>';
-    rows += '<td class="lkq-td lkq-td-original">' + _esc(summary.brand || '—') + '</td>';
+    rows += '<td class="lkq-td lkq-td-original">' + _esc(summary.brand || 'â€”') + '</td>';
     tableOptions.forEach(function (opt, i) {
       var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
-      rows += '<td class="' + cls + '">' + _esc(opt.brand || '—') + '</td>';
+      rows += '<td class="' + cls + '">' + _esc((opt && opt.brand) || 'â€”') + '</td>';
     });
     rows += _yourPickEmptyCell('brand');
     rows += '</tr>';
 
     // Price Range
     rows += '<tr data-row="price"><td class="lkq-td-label">Price Range</td>';
-    rows += '<td class="lkq-td lkq-td-original lkq-no-val">—</td>';
+    rows += '<td class="lkq-td lkq-td-original lkq-no-val">â€”</td>';
     tableOptions.forEach(function (opt, i) {
       var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
-      rows += '<td class="' + cls + '">' + _esc(opt.priceRange || '—') + '</td>';
+      rows += '<td class="' + cls + '">' + _esc((opt && opt.priceRange) || 'â€”') + '</td>';
     });
     rows += _yourPickEmptyCell('price');
     rows += '</tr>';
@@ -192,10 +197,10 @@
     specLabels.forEach(function (label, si) {
       var rowKey = 'spec-' + si;
       rows += '<tr data-row="' + rowKey + '"><td class="lkq-td-label">' + _esc(label) + '</td>';
-      rows += '<td class="lkq-td lkq-td-original">' + _esc((originalSpecs && originalSpecs[label]) || '—') + '</td>';
+      rows += '<td class="lkq-td lkq-td-original">' + _esc((originalSpecs && originalSpecs[label]) || 'â€”') + '</td>';
       tableOptions.forEach(function (opt, i) {
         var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
-        var val = (opt.specs && opt.specs[label]) || '—';
+        var val = (opt && opt.specs && opt.specs[label]) || 'â€”';
         rows += '<td class="' + cls + '">' + _esc(val) + '</td>';
       });
       rows += _yourPickEmptyCell(rowKey);
@@ -204,13 +209,17 @@
 
     // Retailer Link
     rows += '<tr data-row="buy"><td class="lkq-td-label">Retailer Link</td>';
-    rows += '<td class="lkq-td lkq-td-original lkq-no-val">—</td>';
+    rows += '<td class="lkq-td lkq-td-original lkq-no-val">â€”</td>';
     tableOptions.forEach(function (opt, i) {
       var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
+      if (!opt) {
+        rows += '<td class="' + cls + ' lkq-no-val">â€”</td>';
+        return;
+      }
       var url = _retailerUrl(opt.retailerName || '', opt.retailerSearchQuery || opt.model || '');
       var buyCell = url
         ? '<a class="lkq-buy-link" href="' + _esc(url) + '" target="_blank" rel="noopener noreferrer">' + _esc(opt.retailerName || 'Buy') + ' &#8594;</a>'
-        : (opt.retailerName ? '<span class="lkq-no-val">' + _esc(opt.retailerName) + '</span>' : '<span class="lkq-no-val">—</span>');
+        : (opt.retailerName ? '<span class="lkq-no-val">' + _esc(opt.retailerName) + '</span>' : '<span class="lkq-no-val">â€”</span>');
       rows += '<td class="' + cls + '">' + buyCell + '</td>';
     });
     rows += _yourPickEmptyCell('buy');
@@ -218,10 +227,10 @@
 
     // Notes
     rows += '<tr data-row="notes"><td class="lkq-td-label">Notes</td>';
-    rows += '<td class="lkq-td lkq-td-original lkq-no-val">—</td>';
+    rows += '<td class="lkq-td lkq-td-original lkq-no-val">â€”</td>';
     tableOptions.forEach(function (opt, i) {
       var cls = i === 0 ? 'lkq-td lkq-td-best' : 'lkq-td';
-      rows += '<td class="' + cls + '"><span class="lkq-notes-text">' + _esc(opt.notes || '—') + '</span></td>';
+      rows += '<td class="' + cls + '"><span class="lkq-notes-text">' + _esc((opt && opt.notes) || 'â€”') + '</span></td>';
     });
     rows += _yourPickEmptyCell('notes');
     rows += '</tr>';
@@ -229,6 +238,14 @@
     return (
       '<div class="lkq-table-wrap">' +
         '<table class="lkq-comparison-table">' +
+          '<colgroup>' +
+            '<col class="lkq-col-label">' +
+            '<col class="lkq-col-original">' +
+            '<col class="lkq-col-best">' +
+            '<col class="lkq-col-alt1">' +
+            '<col class="lkq-col-alt2">' +
+            '<col class="lkq-col-yourpick">' +
+          '</colgroup>' +
           '<thead><tr>' + headerCells + '</tr></thead>' +
           '<tbody>' + rows + '</tbody>' +
         '</table>' +
@@ -396,24 +413,24 @@
     );
 
     _setYourPickCell(table, 'rating', '<span class="lkq-badge ' + rc + '">' + _esc(ratingLabel) + '</span>');
-    _setYourPickCell(table, 'brand', _esc(data.brand || '—'));
-    _setYourPickCell(table, 'price', _esc(data.priceRange || '—'));
+    _setYourPickCell(table, 'brand', _esc(data.brand || 'â€”'));
+    _setYourPickCell(table, 'price', _esc(data.priceRange || 'â€”'));
 
     _setYourPickCell(
       table,
       'buy',
       url
         ? '<a class="lkq-buy-link" href="' + _esc(url) + '" target="_blank" rel="noopener noreferrer">' + _esc(data.retailerName || 'Buy') + ' &#8594;</a>'
-        : (data.retailerName ? '<span class="lkq-no-val">' + _esc(data.retailerName) + '</span>' : '<span class="lkq-no-val">—</span>')
+        : (data.retailerName ? '<span class="lkq-no-val">' + _esc(data.retailerName) + '</span>' : '<span class="lkq-no-val">â€”</span>')
     );
 
-    _setYourPickCell(table, 'notes', '<span class="lkq-notes-text">' + _esc(data.notes || data.explanation || '—') + '</span>');
+    _setYourPickCell(table, 'notes', '<span class="lkq-notes-text">' + _esc(data.notes || data.explanation || 'â€”') + '</span>');
 
     table.querySelectorAll('tbody tr[data-row^="spec-"]').forEach(function (tr) {
       var rowKey = tr.getAttribute('data-row');
       var idx = parseInt(rowKey.replace('spec-', ''), 10);
       var label = inst.specLabels[idx] || '';
-      var val = (data.specs && label && data.specs[label]) || '—';
+      var val = (data.specs && label && data.specs[label]) || 'â€”';
       _setYourPickCell(table, rowKey, _esc(val));
     });
 
@@ -495,3 +512,5 @@
     clearInstance: clearInstance,
   };
 }());
+
+
