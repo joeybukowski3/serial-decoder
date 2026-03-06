@@ -25,7 +25,8 @@
       border: 1px solid #e2e8f0;
       border-radius: 16px;
       overflow: hidden;
-      max-width: 620px;
+      width: 100%;
+      max-width: 1240px;
       margin: 0 auto 24px;
     }
     .results-header {
@@ -166,7 +167,13 @@
     .warning-note strong { color: var(--amber); }
 
     /* ─── RESULTS WRAPPER ─── */
-    .results-wrapper { max-width: 620px; margin: 0 auto; padding: 0 0 32px; }
+    .results-wrapper { max-width: 1240px; margin: 0 auto; padding: 0 0 32px; }
+
+    /* Ensure Smart Lookup panel text remains readable on white result cards */
+    #smart-lookup-results,
+    #smart-lookup-results * {
+      color: #1a1a2e !important;
+    }
 
     /* Home-only dual tool layout */
     .home-tools-wrap { max-width: 1240px; margin: 0 auto; }
