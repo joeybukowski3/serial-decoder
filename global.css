@@ -1572,6 +1572,9 @@ button.decode-button {
     border-radius: var(--radius);
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     overflow: hidden;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
 
 }
 
@@ -4619,5 +4622,50 @@ img.ia-sidebar-logo {
 }
 .sl-result-highlight {
   color: #2563eb;
+}
+
+#smart-lookup-results,
+#ageResults {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+}
+
+.lkq-output {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* ── LKQ text visibility fixes ── */
+.lkq-output,
+.lkq-id-card,
+.lkq-successor-card,
+.lkq-id-name,
+.lkq-id-model,
+.lkq-id-specs,
+.lkq-id-desc,
+.lkq-section-title,
+.lkq-section-num,
+.lkq-id-header {
+  color: #1a1a2e !important;
+}
+
+.lkq-comparison-table th,
+.lkq-comparison-table td {
+  color: #1a1a2e !important;
+}
+
+.lkq-pill {
+  color: #1a1a2e !important;
+  background: #e8ecf4 !important;
+}
+
+.lkq-successor-label,
+.lkq-successor-name,
+.lkq-successor-model,
+.lkq-successor-desc {
+  color: #1a1a2e !important;
 }
 
