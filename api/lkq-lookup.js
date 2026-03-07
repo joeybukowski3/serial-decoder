@@ -87,6 +87,7 @@ ABOVE LKQ threshold (strict):
 - Do NOT use ABOVE LKQ for routine generational improvements, normal year-over-year electronics gains, or small spec bumps that naturally happen with newer replacements
 - Most newer electronics, appliances, and TVs that are simply current equivalents should still be rated LKQ, not ABOVE LKQ
 - Use ABOVE LKQ only when the replacement is materially higher tier, premium class, or substantially better in market value and feature set
+- Prefer ABOVE LKQ only when there is a clearly meaningful jump such as roughly 2x market value, a major capacity/output increase, or an obvious class/tier upgrade
 - Good ABOVE LKQ examples: replacing a Honda with a BMW; replacing a Hotpoint dishwasher with a KitchenAid
 - If the replacement is same class/use case and just modestly better because it is newer, rate it LKQ
 
@@ -119,6 +120,7 @@ Replacement table selection rules (strict):
 Overall LKQ rating determination:
 - If majority of key specs are GREEN and none are RED, rate as LKQ
 - Rate as ABOVE LKQ only when the item is a substantial step-up in tier, class, value, or feature/performance package; a single mild improvement is not enough
+- A candidate should usually remain LKQ unless the upgrade is clearly significant, such as about 2x price/value, clearly premium-brand substitution, or major capacity/performance gain
 - If any key spec is RED, rate as NOT LKQ (exclude from replacementOptions)
 - If majority of key specs are ORANGE, rate as CLOSE MATCH (exclude from replacementOptions)
 - Mixed GREEN/ORANGE with no RED may still be LKQ when orange differences are minor and non-core

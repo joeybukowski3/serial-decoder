@@ -72,10 +72,18 @@ ${specsText ? `Original Item Specs:\n${specsText}\n` : ''}
 Proposed Replacement: "${recommendation.trim()}"
 
 ${labelsText ? `Spec categories to evaluate (use exactly these as keys in "specs"): ${labelsText}\n` : ''}
-LKQ Rating Criteria:
-- MATCH: Same category, same fuel type/power source, same installation type, capacity within 10%, equivalent or better efficiency, same or newer generation
-- CLOSE MATCH: Same category, same fuel type, capacity within 20%, minor spec differences not affecting core functionality
-- NOT LKQ: Different fuel type, capacity >20% difference, wrong installation type, or fundamentally different product class
+LKQ Rating Criteria (4-tier):
+- NOT LKQ: Different category/type, incompatible replacement, significantly inferior key specs, wrong fuel/power/installation class
+- CLOSE MATCH: Close in specs but minor downgrade, older/lower series, or slight inferiority
+- MATCH: Equal or fair-variance equivalent on key specs; true like kind and quality
+- ABOVE LKQ: Reserved only for a clear and significant upgrade, not a slight improvement
+
+ABOVE LKQ threshold (strict):
+- Do NOT use ABOVE LKQ for routine generational improvements, normal year-over-year electronics gains, or small spec bumps
+- Most newer electronics, appliances, and TVs that are simply current equivalents should still be MATCH, not ABOVE LKQ
+- Use ABOVE LKQ only when there is a meaningful jump such as roughly 2x market value, a major capacity/output increase, or an obvious premium tier/class upgrade
+- Good ABOVE LKQ examples: replacing a Honda with a BMW; replacing a Hotpoint dishwasher with a KitchenAid
+- If the replacement is only modestly better because it is newer, rate it MATCH
 
 Retailer guidance:
 - Major home appliances: "AJ Madison" or "Home Depot"
