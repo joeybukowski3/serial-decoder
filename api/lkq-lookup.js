@@ -81,7 +81,14 @@ LKQ Rating Criteria (4-tier):
 - NOT LKQ (RED): Different category/type, incompatible replacement, significantly inferior key specs, wrong fuel/power/installation class
 - CLOSE MATCH (ORANGE): Close in specs but minor downgrade, older/lower series, or slight inferiority
 - LKQ (GREEN): Equal or fair-variance equivalent on key specs; true like kind and quality
-- ABOVE LKQ (GOLD): Exceeds original on one or more key specs without changing core category/use case
+- ABOVE LKQ (GOLD): A clear premium-tier or major value/performance/class upgrade, not just a normal newer model
+
+ABOVE LKQ threshold (strict):
+- Do NOT use ABOVE LKQ for routine generational improvements, normal year-over-year electronics gains, or small spec bumps that naturally happen with newer replacements
+- Most newer electronics, appliances, and TVs that are simply current equivalents should still be rated LKQ, not ABOVE LKQ
+- Use ABOVE LKQ only when the replacement is materially higher tier, premium class, or substantially better in market value and feature set
+- Good ABOVE LKQ examples: replacing a Honda with a BMW; replacing a Hotpoint dishwasher with a KitchenAid
+- If the replacement is same class/use case and just modestly better because it is newer, rate it LKQ
 
 Retailer guidance:
 - Major home appliances: "AJ Madison" or "Home Depot"
@@ -111,7 +118,7 @@ Replacement table selection rules (strict):
 
 Overall LKQ rating determination:
 - If majority of key specs are GREEN and none are RED, rate as LKQ
-- If one or more key specs are GOLD and none are RED, rate as ABOVE LKQ
+- Rate as ABOVE LKQ only when the item is a substantial step-up in tier, class, value, or feature/performance package; a single mild improvement is not enough
 - If any key spec is RED, rate as NOT LKQ (exclude from replacementOptions)
 - If majority of key specs are ORANGE, rate as CLOSE MATCH (exclude from replacementOptions)
 - Mixed GREEN/ORANGE with no RED may still be LKQ when orange differences are minor and non-core

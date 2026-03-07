@@ -21,6 +21,7 @@
 
   function _ratingClass(rating) {
     var r = (rating || '').toUpperCase().trim();
+    if (r === 'ABOVE LKQ') return 'above-lkq';
     if (r === 'MATCH') return 'match';
     if (r === 'CLOSE MATCH') return 'close-match';
     return 'not-lkq';
@@ -499,6 +500,18 @@
     );
   }
 
+  function _buildTableLegend() {
+    return (
+      '<div class="lkq-table-legend" aria-label="LKQ dot color legend">' +
+        '<span class="lkq-table-legend-title">Dot Legend</span>' +
+        '<span class="lkq-table-legend-item"><span class="lkq-spec-dot lkq-spec-dot-green"></span><span>LKQ / equivalent</span></span>' +
+        '<span class="lkq-table-legend-item"><span class="lkq-spec-dot lkq-spec-dot-gold"></span><span>Above LKQ / major upgrade</span></span>' +
+        '<span class="lkq-table-legend-item"><span class="lkq-spec-dot lkq-spec-dot-orange"></span><span>Slight downgrade / close match</span></span>' +
+        '<span class="lkq-table-legend-item"><span class="lkq-spec-dot lkq-spec-dot-red"></span><span>Below LKQ / not comparable</span></span>' +
+      '</div>'
+    );
+  }
+
   function _bindYourPickInput(resultsEl, instanceId) {
     var input = resultsEl.querySelector('.lkq-compare-input');
     if (!input) return;
@@ -536,6 +549,7 @@
           '<span class="lkq-step-title">Replacement Options</span>' +
         '</div>' +
         _buildTable(summary, originalSpecs, specLabels, options, bestMatchLabel, instanceId) +
+        _buildTableLegend() +
         _buildTableFootnotes(successorStatus) +
       '</div>';
 
