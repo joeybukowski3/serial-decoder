@@ -89,6 +89,8 @@ Hard interpretation rules:
 - Always think like an expert insurance inspector focused only on damaged property and equipment
 
 Output behavior:
+- Set queryKind to "general" for brand-only, category-only, broad brand + category queries, or any search that does not identify a single product
+- Set queryKind to "specific" when the query includes a model number, clear distinguishing specs, or enough detail to identify a narrow product target
 - If the query is already a clear model number or complete, unambiguous item description, use action "bypass"
 - Otherwise use action "suggest" and produce between 1 and 5 ranked suggested interpretations
 - Suggestions do NOT need to be related to each other; they are independent best guesses
@@ -108,6 +110,7 @@ Examples:
 Return ONLY valid JSON in this format:
 {
   "action": "bypass",
+  "queryKind": "specific",
   "confidence": "high",
   "scopeValid": true,
   "message": null,
@@ -145,6 +148,7 @@ Return ONLY valid JSON in this format:
     const parsed = JSON.parse(text);
     const payload = {
       action: ['bypass', 'suggest', 'no_results', 'out_of_scope'].includes(parsed?.action) ? parsed.action : 'suggest',
+      queryKind: ['general', 'specific'].includes(parsed?.queryKind) ? parsed.queryKind : 'specific',
       confidence: ['high', 'medium', 'low'].includes(parsed?.confidence) ? parsed.confidence : 'medium',
       scopeValid: parsed?.scopeValid !== false,
       message: typeof parsed?.message === 'string' && parsed.message.trim() ? parsed.message.trim() : null,

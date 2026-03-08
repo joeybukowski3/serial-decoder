@@ -3079,48 +3079,203 @@ async function fetchSmartLookupInterpretation(query) {
   return data || {};
 }
 
-async function executeSmartLookup(query) {
+async function fetchSmartLookupGeneral(query) {
+  var res = await fetch('/api/smart-query-general', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: query }),
+  });
+  var data = await parseJsonResponseSafe(res, 'smart-query-general');
+  if (!res.ok) {
+    var err = new Error((data && data.error) || 'General lookup unavailable');
+    err.code = data && data.errorCode ? data.errorCode : '';
+    throw err;
+  }
+  return data || {};
+}
+
+function showGeneralSmartLookupResults(query, data) {
+  var ageResultsEl = document.getElementById('ageResults');
+  var resultsEl = getSmartLookupResultsEl();
+  var refineOptions = Array.isArray(data && data.refineOptions) ? data.refineOptions.slice(0, 5) : [];
+  var averageLabel = (data && data.averageModelLabel) || (data && data.averageModelQuery) || '';
+  var averageQuery = (data && data.averageModelQuery) || '';
+  var category = (data && data.itemCategory) || 'General Property Item';
+  var brand = (data && data.brand) || '';
+  var headingMeta = [];
+  if (!resultsEl) return;
+  if (brand) headingMeta.push('<span><strong>Brand:</strong> ' + escapeSmartLookupHtml(brand) + '</span>');
+  headingMeta.push('<span><strong>Category:</strong> ' + escapeSmartLookupHtml(category) + '</span>');
+
+  resultsEl.innerHTML =
+    '<div class="smart-general-card">' +
+      '<div class="smart-general-section smart-general-overview">' +
+        '<div class="smart-general-section-title">General Item Overview</div>' +
+        '<div class="smart-general-meta">' + headingMeta.join('') + '</div>' +
+        '<p class="smart-general-overview-text">' + escapeSmartLookupHtml((data && data.overview) || '') + '</p>' +
+      '</div>' +
+      '<div class="smart-general-section smart-general-refine">' +
+        '<div class="smart-general-section-title">Refine Your Result</div>' +
+        '<p class="smart-general-subtitle">Your search returned a general result. Select a specific model below or enter a model number to get full LKQ options.</p>' +
+        '<div class="smart-general-refine-list">' +
+          refineOptions.map(function (item, index) {
+            return '<button type="button" class="smart-general-refine-pill" data-refine-query="' + escapeSmartLookupHtml(item.query) + '" data-refine-index="' + index + '">' + escapeSmartLookupHtml(item.label) + '</button>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+      '<div class="smart-general-section smart-general-lkq">' +
+        '<div class="smart-general-section-title">LKQ Options</div>' +
+        '<div class="smart-general-lkq-placeholder" id="smart-general-lkq-placeholder">' +
+          '<div class="smart-general-lkq-actions">' +
+            '<button type="button" class="smart-general-primary" id="smart-general-average-btn">Calculate LKQ Options Based on Average Model</button>' +
+            '<button type="button" class="smart-general-secondary" id="smart-general-research-btn">Research Possible Models</button>' +
+          '</div>' +
+          '<p class="smart-general-subtitle">Choose an average representative model or research model numbers to refine this search.</p>' +
+        '</div>' +
+        '<div class="smart-general-lkq-note" id="smart-general-lkq-note"></div>' +
+        '<div class="smart-general-lkq-target" id="smart-general-lkq-target"></div>' +
+      '</div>' +
+    '</div>';
+
+  Array.prototype.forEach.call(resultsEl.querySelectorAll('[data-refine-query]'), function (btn) {
+    btn.addEventListener('click', function () {
+      var target = document.getElementById('smart-general-lkq-target');
+      var note = document.getElementById('smart-general-lkq-note');
+      var nextQuery = normalizeSmartLookupQuery(btn.getAttribute('data-refine-query'));
+      var inputEl = getSmartLookupInputEl();
+      if (!nextQuery || !target) return;
+      if (inputEl) inputEl.value = nextQuery;
+      if (note) note.textContent = '';
+      executeSmartLookup(nextQuery, {
+        targetEl: target,
+        preserveGeneral: true,
+        instanceId: 'smart-lookup-general'
+      });
+    });
+  });
+
+  (function bindAverageAndResearch() {
+    var avgBtn = document.getElementById('smart-general-average-btn');
+    var researchBtn = document.getElementById('smart-general-research-btn');
+    var target = document.getElementById('smart-general-lkq-target');
+    var note = document.getElementById('smart-general-lkq-note');
+    if (avgBtn) {
+      avgBtn.disabled = !averageQuery;
+      avgBtn.addEventListener('click', function () {
+        var inputEl = getSmartLookupInputEl();
+        if (!averageQuery || !target) return;
+        if (inputEl) inputEl.value = averageQuery;
+        if (note) {
+          note.textContent = 'LKQ options calculated based on an average ' +
+            (((brand ? brand + ' ' : '') + ((data && data.averageModelCategory) || category)).trim()) +
+            ' model. For more accurate results, select a specific model above.';
+        }
+        executeSmartLookup(averageQuery, {
+          targetEl: target,
+          preserveGeneral: true,
+          instanceId: 'smart-lookup-general'
+        });
+      });
+    }
+    if (researchBtn) {
+      researchBtn.addEventListener('click', function () {
+        window.open('https://www.google.com/search?q=' + encodeURIComponent(query + ' model numbers'), '_blank', 'noopener,noreferrer');
+      });
+    }
+  })();
+
+  if (ageResultsEl) {
+    ageResultsEl.classList.remove('hidden');
+    ageResultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+async function runGeneralSmartLookup(query) {
+  var ageResultsEl = document.getElementById('ageResults');
+  var serialResultsEl = document.getElementById('serialResults');
+  var ageLoadingEl = document.getElementById('ageLoading');
+  var loadStart;
+  clearSmartLookupAssist();
+  if (ageResultsEl) ageResultsEl.classList.add('hidden');
+  if (serialResultsEl) serialResultsEl.classList.add('hidden');
+  setLoadingActive();
+  if (ageLoadingEl) ageLoadingEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  loadStart = Date.now();
+
+  try {
+    var generalData = await fetchSmartLookupGeneral(query);
+    var elapsed = Date.now() - loadStart;
+    var remaining = Math.max(0, 1000 - elapsed);
+    setTimeout(function () {
+      setLoadingSuccess(function () {
+        showGeneralSmartLookupResults(query, generalData);
+      });
+    }, remaining);
+  } catch (_) {
+    setLoadingHidden();
+    executeSmartLookup(query);
+  }
+}
+
+async function executeSmartLookup(query, opts) {
   var ageResultsEl;
   var serialResultsEl;
   var ageLoadingEl;
   var loadStart;
-  var resultsEl = getSmartLookupResultsEl();
+  var resultsEl = (opts && opts.targetEl) ? opts.targetEl : getSmartLookupResultsEl();
+  var preserveGeneral = !!(opts && opts.preserveGeneral);
+  var instanceId = (opts && opts.instanceId) || 'smart-lookup';
 
-  clearSmartLookupAssist();
+  if (!preserveGeneral) clearSmartLookupAssist();
   query = normalizeSmartLookupQuery(query);
   if (!query) return;
   if (!resultsEl) { setLoadingHidden(); return; }
 
-  ageResultsEl = document.getElementById('ageResults');
-  serialResultsEl = document.getElementById('serialResults');
-  if (ageResultsEl) ageResultsEl.classList.add('hidden');
-  if (serialResultsEl) serialResultsEl.classList.add('hidden');
+  if (!preserveGeneral) {
+    ageResultsEl = document.getElementById('ageResults');
+    serialResultsEl = document.getElementById('serialResults');
+    if (ageResultsEl) ageResultsEl.classList.add('hidden');
+    if (serialResultsEl) serialResultsEl.classList.add('hidden');
+    setLoadingActive();
+    ageLoadingEl = document.getElementById('ageLoading');
+    if (ageLoadingEl) ageLoadingEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    loadStart = Date.now();
+  } else {
+    resultsEl.innerHTML =
+      '<div class="smart-general-inline-loading">Evaluating LKQ options...</div>';
+    resultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    loadStart = Date.now();
+  }
 
-  setLoadingActive();
-  ageLoadingEl = document.getElementById('ageLoading');
-  if (ageLoadingEl) ageLoadingEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  loadStart = Date.now();
-
-  LKQEngine.evaluate('smart-lookup', query, resultsEl, {
+  LKQEngine.evaluate(instanceId, query, resultsEl, {
     onSuccess: function () {
       currentFeedbackContext = { brand: '', serial: query };
       var elapsed = Date.now() - loadStart;
       var remaining = Math.max(0, 1400 - elapsed);
       setTimeout(function () {
-        setLoadingSuccess(function () {
-          if (ageResultsEl) {
-            ageResultsEl.classList.remove('hidden');
-            ageResultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }
-        });
+        if (preserveGeneral) {
+          resultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+          setLoadingSuccess(function () {
+            if (ageResultsEl) {
+              ageResultsEl.classList.remove('hidden');
+              ageResultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          });
+        }
       }, remaining);
     },
     onError: function (type, message) {
-      setLoadingHidden();
-      if (type === 'capacity') {
-        showSmartLookupNotice('capacity', 'Wow! Due to the popular demand of this tool, the capacity of the free version has been reached. Please utilize the serial number decoder. The smart lookup function will be available again soon. Interested in utilizing smart lookup within personalized data limits? <a href="contact.html" style="color:inherit;font-weight:700;">Contact us today</a> to become a pro member.');
+      if (preserveGeneral) {
+        resultsEl.innerHTML =
+          '<div class="smart-general-inline-error">' + escapeSmartLookupHtml(message || 'Smart Lookup is temporarily unavailable. Please try again.') + '</div>';
       } else {
-        showSmartLookupNotice('limit', message || 'Smart Lookup is temporarily unavailable. Please try again.');
+        setLoadingHidden();
+        if (type === 'capacity') {
+          showSmartLookupNotice('capacity', 'Wow! Due to the popular demand of this tool, the capacity of the free version has been reached. Please utilize the serial number decoder. The smart lookup function will be available again soon. Interested in utilizing smart lookup within personalized data limits? <a href="contact.html" style="color:inherit;font-weight:700;">Contact us today</a> to become a pro member.');
+        } else {
+          showSmartLookupNotice('limit', message || 'Smart Lookup is temporarily unavailable. Please try again.');
+        }
       }
     },
   });
@@ -3165,6 +3320,10 @@ async function runLKQLookup() {
         interpreted.message || 'Item Assist is designed for property and equipment research. Please enter an appliance, electronic, HVAC, electrical, or household item.',
         'info'
       );
+      return;
+    }
+    if (interpreted && interpreted.queryKind === 'general') {
+      runGeneralSmartLookup(query);
       return;
     }
     if (suggestions.length) {
