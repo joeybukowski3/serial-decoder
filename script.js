@@ -1,4 +1,4 @@
-﻿// ===== ROUTE NORMALIZATION =====
+// ===== ROUTE NORMALIZATION =====
 (function normalizeHtmlRoutes() {
   var path = window.location.pathname;
   if (path === '/' || path.endsWith('.html') || path.indexOf('.') !== -1) return;
@@ -19,7 +19,7 @@ var CYCLING_BRANDS = {
     'estate':      { label: 'Estate',       single: 'estate',       type: 'advisory' },
     'inglis':      { label: 'Inglis',       single: 'inglis',       type: 'advisory' },
     'ge':          { label: 'GE',           single: 'ge',           type: 'advisory' },
-    'ge_caf':      { label: 'GE Cafe',      single: 'ge_caf',       type: 'advisory' },
+    'ge_caf':      { label: 'GE Café',      single: 'ge_caf',       type: 'advisory' },
     'ge_profile':  { label: 'GE Profile',   single: 'ge_profile',   type: 'advisory' },
     'ge_monogram': { label: 'GE Monogram',  single: 'ge_monogram',  type: 'advisory' },
     'hotpoint':    { label: 'Hotpoint',     single: 'hotpoint',     type: 'advisory' },
@@ -146,69 +146,34 @@ function toggleSidebar() {
 }
 var currentFeedbackContext = {};
 var CURRENT_YEAR = new Date().getFullYear();
-var KENMORE_DEFAULT_NOTE = 'Prefix not recognized \u2014 defaulting to Whirlpool method. Results may vary.';
-// Kenmore does not manufacture its own appliances. The serial decode method depends entirely on
-// who actually made the unit, identified by the first 3 digits of the MODEL number.
-// cycle = years in the manufacturer's repeating serial date cycle.
+var KENMORE_DEFAULT_NOTE = 'For more accurate results, please enter the first 3 digits of your Kenmore model number.';
 var KENMORE_PREFIX_TO_DECODER = {
-  // Whirlpool method (char 2 = year letter, chars 3-4 = week) - 30-year cycle
-  '106': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
-  '110': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
-  '198': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
-  '562': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
-  '564': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
-  '565': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
-  '566': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
-  '568': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
-  '664': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
-  '665': { manufacturer: 'Whirlpool', decoderId: 'whirlpool', cycle: 30 },
-  // Roper method (same as Whirlpool) - 30-year cycle
-  '103': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
-  '155': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
-  '278': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
-  '647': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
-  '835': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
-  '911': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
-  '917': { manufacturer: 'Roper', decoderId: 'roper', cycle: 30 },
-  // GE method (char 1 = month letter, char 2 = year letter using GE codes) - 12-year cycle
-  '362': { manufacturer: 'General Electric', decoderId: 'ge', cycle: 12 },
-  '363': { manufacturer: 'General Electric', decoderId: 'ge', cycle: 12 },
-  '464': { manufacturer: 'General Electric', decoderId: 'ge', cycle: 12 },
-  // Frigidaire/Electrolux method (2 letters, then digit 1 = year last digit, digits 2-3 = week) - 10-year cycle
-  '119': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
-  '253': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
-  '417': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
-  '580': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
-  '592': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
-  '628': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
-  '662': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
-  '790': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
-  '791': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
-  '970': { manufacturer: 'Frigidaire', decoderId: 'frigidaire', cycle: 10 },
-  // Kelvinator (uses Frigidaire decode method) - 10-year cycle
-  '416': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
-  '473': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
-  '622': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
-  '630': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
-  '683': { manufacturer: 'Kelvinator', decoderId: 'frigidaire', cycle: 10 },
-  // Amana (Whirlpool post-2006 for modern units) - 30-year cycle
-  '335': { manufacturer: 'Amana', decoderId: 'amana_post_2006', cycle: 30 },
-  '596': { manufacturer: 'Amana', decoderId: 'amana_post_2006', cycle: 30 },
-  // LG method (char 1 = year last digit, chars 2-3 = month as two digits) - 10-year cycle
-  '795': { manufacturer: 'LG', decoderId: 'lg', cycle: 10 },
-  '796': { manufacturer: 'LG', decoderId: 'lg', cycle: 10 },
-  // Samsung method - 10-year cycle
-  '401': { manufacturer: 'Samsung', decoderId: 'samsung', cycle: 10 },
-  // Jenn-Air (post-2006 Whirlpool era) - 30-year cycle
-  '629': { manufacturer: 'Jenn-Air', decoderId: 'jenn_air_post_2006', cycle: 30 },
-  // Maytag-family: Maycor / Speed Queen / Litton / Caloric / Hardwick - 30-year cycle
-  '174': { manufacturer: 'Caloric',     decoderId: 'maytag_pre_2006', cycle: 30 },
-  '587': { manufacturer: 'Speed Queen', decoderId: 'maytag_pre_2006', cycle: 30 },
-  '651': { manufacturer: 'Speed Queen', decoderId: 'maytag_pre_2006', cycle: 30 },
-  '747': { manufacturer: 'Litton',      decoderId: 'maytag_pre_2006', cycle: 30 },
-  '789': { manufacturer: 'Hardwick',    decoderId: 'maytag_pre_2006', cycle: 30 },
-  '925': { manufacturer: 'Maycor',      decoderId: 'maytag_pre_2006', cycle: 30 },
-  '960': { manufacturer: 'Caloric',     decoderId: 'maytag_pre_2006', cycle: 30 },
+  '106': { manufacturer: 'Whirlpool', decoderId: 'whirlpool' },
+  '110': { manufacturer: 'Whirlpool', decoderId: 'whirlpool' },
+  '198': { manufacturer: 'Whirlpool', decoderId: 'whirlpool' },
+  '562': { manufacturer: 'Whirlpool', decoderId: 'whirlpool' },
+  '665': { manufacturer: 'Whirlpool', decoderId: 'whirlpool' },
+  '103': { manufacturer: 'Roper', decoderId: 'roper' },
+  '155': { manufacturer: 'Roper', decoderId: 'roper' },
+  '278': { manufacturer: 'Roper', decoderId: 'roper' },
+  '647': { manufacturer: 'Roper', decoderId: 'roper' },
+  '835': { manufacturer: 'Roper', decoderId: 'roper' },
+  '911': { manufacturer: 'Roper', decoderId: 'roper' },
+  '596': { manufacturer: 'Amana', decoderId: 'amana_post_2006' },
+  '174': { manufacturer: 'Caloric', decoderId: 'maytag_pre_2006' },
+  '960': { manufacturer: 'Caloric', decoderId: 'maytag_pre_2006' },
+  '629': { manufacturer: 'Jenn-Air', decoderId: 'jenn_air_pre_2006' },
+  '747': { manufacturer: 'Litton', decoderId: 'maytag_pre_2006' },
+  '925': { manufacturer: 'Maycor', decoderId: 'maytag_pre_2006' },
+  '651': { manufacturer: 'Speed Queen', decoderId: 'maytag_pre_2006' },
+  '253': { manufacturer: 'Gibson', decoderId: 'gibson' },
+  '417': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
+  '662': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
+  '628': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
+  '791': { manufacturer: 'Tappan', decoderId: 'tappan' },
+  '790': { manufacturer: 'WCI', decoderId: 'white_consolidated_industries_wci' },
+  '362': { manufacturer: 'General Electric', decoderId: 'ge' },
+  '363': { manufacturer: 'General Electric', decoderId: 'ge' }
 };
 var SIDEBAR_EXPANDED_KEY = 'sidebarExpandedCategories';
 var LAST_CATEGORY_KEY = 'lastSelectedCategory';
@@ -311,16 +276,16 @@ var BRAND_CATEGORY_BY_ID = null;
 var CATEGORY_TO_BRANDS = null;
 var STATIC_SIDEBAR_RENDERED = false;
 var TOP_BRANDS_BY_CATEGORY = {
-  'appliances': ['whirlpool', 'ge', 'frigidaire', 'lg', 'samsung', 'maytag', 'kenmore'],
-  'hvac': ['goodman', 'carrier', 'trane', 'rheem', 'lennox', 'york', 'ruud'],
-  'electronics': ['samsung', 'sony', 'lg', 'apple', 'hp', 'vizio', 'panasonic'],
-  'water-heaters': ['rheem', 'a_o_smith', 'bradford_white', 'state_industries', 'whirlpool_water_heaters', 'ruud', 'richmond']
+  'appliances': ['whirlpool', 'ge', 'frigidaire', 'lg', 'samsung'],
+  'hvac': ['goodman', 'carrier', 'trane', 'rheem', 'lennox'],
+  'electronics': ['samsung', 'sony', 'lg', 'vizio', 'panasonic'],
+  'water-heaters': ['rheem', 'a_o_smith', 'bradford_white', 'state_industries', 'whirlpool_water_heaters']
 };
 var SIDEBAR_CATEGORY_LABELS = {
-  'appliances': '\uD83D\uDEE0\uFE0F Appliances',
-  'hvac': '\uD83C\uDF21\uFE0F HVAC',
-  'electronics': '\uD83D\uDCFA Electronics',
-  'water-heaters': '\uD83D\uDEBF Water Heaters'
+  'appliances': 'Appliances ️',
+  'hvac': 'HVAC ️',
+  'electronics': 'Electronics ',
+  'water-heaters': 'Water Heaters '
 };
 var BRAND_SLUG_OVERRIDES = {
   'whirlpool_water_heaters': 'whirlpool',
@@ -398,7 +363,6 @@ function sidebarCategoryForSlug(slug) {
 function categoryNameToKey(name) {
   if (!name) return 'appliances';
   var s = String(name).toLowerCase();
-  if (s === 'smart-lookup' || s === 'smart lookup' || s === 'smartlookup') return 'smart-lookup';
   if (s === 'hvac') return 'hvac';
   if (s === 'waterheaters' || s === 'water-heaters' || s === 'water heaters') return 'water-heaters';
   if (s === 'electronics') return 'electronics';
@@ -659,7 +623,8 @@ function renderStaticSidebar() {
       { key: 'appliances', label: 'Appliances', href: '/appliances' },
       { key: 'hvac', label: 'HVAC', href: '/hvac' },
       { key: 'electronics', label: 'Electronics', href: '/electronics' },
-      { key: 'water-heaters', label: 'Water Heaters', href: '/water-heaters' }
+      { key: 'water-heaters', label: 'Water Heaters', href: '/water-heaters' },
+      { key: 'smart-lookup', label: 'Smart Lookup ✨', href: '/smart-lookup' }
     ];
     catLinks.forEach(function(item) {
       var a = document.createElement('a');
@@ -677,13 +642,6 @@ function renderStaticSidebar() {
     var container = document.createElement('div');
     container.className = 'sidebar-brand-groups';
     var categoryOrder = ['appliances', 'hvac', 'electronics', 'water-heaters'];
-    var CAT_BUTTON_LABELS = {
-      'appliances':    'Appliance Brands',
-      'hvac':          'HVAC Brands',
-      'electronics':   'Electronics Brands',
-      'water-heaters': 'Water Heater Brands'
-    };
-    var expandedCategories = getSidebarExpandedCategories();
 
     categoryOrder.forEach(function(catKey) {
       var brandData = getCategoryGroupData(catKey);
@@ -700,36 +658,20 @@ function renderStaticSidebar() {
         return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
       });
 
-      var catLabel = CAT_BUTTON_LABELS[catKey] || (CATEGORY_KEY_TO_NAME[catKey] || catKey) + ' Brands';
-      var isExpanded = expandedCategories.indexOf(catKey) !== -1;
-
       var group = document.createElement('div');
-      group.className = 'sidebar-brand-group' + (isExpanded ? ' open' : '');
+      group.className = 'sidebar-brand-group';
       group.setAttribute('data-category', CATEGORY_KEY_TO_NAME[catKey] || catKey);
 
-      // Clickable header - entire row toggles the group
       var header = document.createElement('div');
       header.className = 'sidebar-group-header';
-
-      var toggleBtn = document.createElement('button');
-      toggleBtn.type = 'button';
-      toggleBtn.className = 'sidebar-group-link';
-      toggleBtn.setAttribute('aria-expanded', String(isExpanded));
-      toggleBtn.textContent = (isExpanded ? '\u2013 ' : '+ ') + catLabel;
-
-      var arrow = document.createElement('span');
-      arrow.className = 'sidebar-group-arrow';
-      arrow.setAttribute('aria-hidden', 'true');
-      arrow.textContent = '\u25b8';
-
-      header.appendChild(toggleBtn);
-      header.appendChild(arrow);
+      var label = document.createElement('div');
+      label.className = 'sidebar-group-link';
+      label.textContent = CATEGORY_KEY_TO_NAME[catKey] || catKey;
+      header.appendChild(label);
       group.appendChild(header);
 
-      // Top-7 brand links - hidden until category is expanded
       var list = document.createElement('div');
       list.className = 'sidebar-group-links';
-      if (!isExpanded) list.hidden = true;
       topIds.forEach(function(id) {
         var brand = brandData.find(function(b) { return b.id === id; });
         if (!brand) return;
@@ -743,20 +685,14 @@ function renderStaticSidebar() {
       });
       group.appendChild(list);
 
-      // "+ All Brands" section for remaining brands
-      var moreWrap = null;
-      var moreList = null;
       if (remaining.length) {
-        moreWrap = document.createElement('div');
+        var moreWrap = document.createElement('div');
         moreWrap.className = 'sidebar-more-brands';
-        if (!isExpanded) moreWrap.hidden = true;
-
         var moreBtn = document.createElement('button');
         moreBtn.type = 'button';
         moreBtn.className = 'sidebar-more-toggle';
-        moreBtn.innerHTML = '<span class="more-brands-icon" aria-hidden="true"></span><span class="more-brands-text">+ All Brands</span>';
-
-        moreList = document.createElement('div');
+        moreBtn.textContent = '+ More Brands';
+        var moreList = document.createElement('div');
         moreList.className = 'sidebar-more-list';
         moreList.hidden = true;
         remaining.forEach(function(brand) {
@@ -768,46 +704,18 @@ function renderStaticSidebar() {
           a.setAttribute('data-category', catKey);
           moreList.appendChild(a);
         });
-
-        moreBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          var open = !moreList.hidden;
-          moreList.hidden = open;
-          moreWrap.classList.toggle('open', !open);
-          moreBtn.querySelector('.more-brands-text').textContent = open ? '+ All Brands' : '\u2013 All Brands';
+        var key = 'sidebar_morebrands_' + catKey;
+        moreBtn.addEventListener('click', function() {
+          var isOpen = !moreList.hidden;
+          moreList.hidden = isOpen;
+          moreWrap.classList.toggle('open', !isOpen);
+          moreBtn.textContent = isOpen ? '+ More Brands' : '– Less Brands';
+          try { localStorage.setItem(key, String(!isOpen)); } catch (_) {}
         });
-
         moreWrap.appendChild(moreBtn);
         moreWrap.appendChild(moreList);
         group.appendChild(moreWrap);
       }
-
-      // Header click: toggle category open/closed
-      header.addEventListener('click', function() {
-        var nowOpen = list.hidden; // if currently hidden, we're opening
-        list.hidden = !nowOpen;
-        group.classList.toggle('open', nowOpen);
-        toggleBtn.setAttribute('aria-expanded', String(nowOpen));
-        toggleBtn.textContent = (nowOpen ? '\u2013 ' : '+ ') + catLabel;
-        if (moreWrap) moreWrap.hidden = !nowOpen;
-
-        // Collapse "All Brands" when category collapses
-        if (!nowOpen && moreWrap && moreList) {
-          moreList.hidden = true;
-          moreWrap.classList.remove('open');
-          var moreText = moreWrap.querySelector('.more-brands-text');
-          if (moreText) moreText.textContent = '+ All Brands';
-        }
-
-        // Persist expanded state
-        var expanded = getSidebarExpandedCategories();
-        if (nowOpen) {
-          if (expanded.indexOf(catKey) === -1) expanded.push(catKey);
-        } else {
-          expanded = expanded.filter(function(k) { return k !== catKey; });
-        }
-        setSidebarExpandedCategories(expanded);
-      });
 
       container.appendChild(group);
     });
@@ -1056,12 +964,9 @@ function enhanceSmartLookupSidebarTop() {
   var section = document.createElement('div');
   section.className = 'sidebar-section sidebar-smart-top';
   section.innerHTML =
-    '<div class="sidebar-title sidebar-section-title">Tools</div>' +
+    '<div class="sidebar-section-title">Tools</div>' +
     '<a class="sidebar-link sidebar-smart-top-link sidebar-item" href="/smart-lookup">' +
-    '\u2b50 Smart Lookup' +
-    '</a>' +
-    '<a class="sidebar-link sidebar-smart-sub-link sidebar-item" href="/">' +
-    '\ud83d\udcdf Serial Number Decoder' +
+    'Smart Lookup <span class="new-badge">NEW</span>' +
     '</a>';
 
   var firstSection = sidebar.querySelector('.sidebar-section');
@@ -1081,7 +986,7 @@ function addGuidedSearchButtonToBrandDecoderCard() {
   var btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'guided-search-btn';
-  btn.textContent = 'Smart Lookup';
+  btn.textContent = 'Smart Lookup (Powered by AI)';
   btn.addEventListener('click', function() {
     var altSection = document.getElementById('altSection');
     var altQuery = getSmartLookupInputEl();
@@ -1101,7 +1006,7 @@ function addGuidedSearchButtonToBrandDecoderCard() {
 
   var note = document.createElement('p');
   note.className = 'guided-search-note';
-  note.textContent = 'Serial not recognized yet? Use Smart Lookup for model-based help.';
+  note.textContent = 'Serial not recognized yet? Use Smart Lookup (Powered by AI) for model-based help.';
 
   formArea.appendChild(btn);
   formArea.appendChild(note);
@@ -1126,7 +1031,6 @@ function enhanceHeaderBranding() {
       '<a class="ia-header-nav-link" href="/smart-lookup">Smart Lookup</a>' +
       '<a class="ia-header-nav-link" href="/methodology">Methodology</a>' +
       '<a class="ia-header-nav-link" href="/contact">Contact</a>' +
-      '<a class="ia-header-nav-link ia-header-nav-security" href="/privacy-policy#security">Security &amp; Data Notice</a>' +
     '</nav>';
   header.appendChild(wrap);
   header.setAttribute('data-ia-header-ready', '1');
@@ -1150,16 +1054,15 @@ function injectHeroBanner() {
 }
 
 function enhanceSidebarCategoryLinks() {
-  var slug = getBrandPageSlug();
-  if (slug === '' || slug === 'index') return;
   var section = null;
   document.querySelectorAll('.sidebar .sidebar-section').forEach(function(node) {
     var title = node.querySelector('.sidebar-title');
     if (title && title.textContent.trim().toLowerCase() === 'categories') section = node;
   });
   if (!section) return;
-  if (section.querySelector('.cat-tab[onclick]')) return;
   if (section.querySelector('.cat-tab-link')) return;
+
+  var slug = getBrandPageSlug();
   var activeKey = null;
   try {
     var urlCatRaw = new URLSearchParams(window.location.search).get('cat') || '';
@@ -1190,24 +1093,6 @@ function enhanceSidebarCategoryLinks() {
     a.href = categoryPageHrefByKey(cat.key);
     a.textContent = cat.label;
     section.appendChild(a);
-  });
-}
-
-function bindHomepageCategoryTabs() {
-  var slug = getBrandPageSlug();
-  if (!(slug === '' || slug === 'index')) return;
-  document.querySelectorAll('.category-tab-link').forEach(function(link) {
-    if (link.getAttribute('data-home-tab-bound') === '1') return;
-    link.setAttribute('data-home-tab-bound', '1');
-    link.addEventListener('click', function(event) {
-      var href = link.getAttribute('href') || '';
-      var key = categoryNameToKey(href.replace(/^\/+/, '').replace(/\.html$/i, '').replace(/\/+$/, ''));
-      if (!key || !decoderData[normalizeDecoderCategory(key)]) return;
-      event.preventDefault();
-      var btn = document.querySelector('.cat-tab[data-cat="' + key + '"]');
-      if (!btn && key === 'water-heaters') btn = document.querySelector('.cat-tab[data-cat="waterHeaters"]');
-      selectCategory(key, btn || null);
-    });
   });
 }
 
@@ -1334,17 +1219,17 @@ function titleForCategoryKey(key, slug) {
   if (key === 'hvac') return 'HVAC Serial Number Decoder';
   if (key === 'electronics') return 'Electronics Serial Number Decoder';
   if (key === 'water-heaters') return 'Water Heater Serial Number Decoder';
-  if (key === 'smart-lookup') return 'Smart Lookup';
+  if (key === 'smart-lookup') return 'Smart Lookup (Powered by AI)';
   return 'Appliances Serial Number Decoder';
 }
 
 function buildCategoryTabBarHtml(activeKey) {
   var tabs = [
-    { key: 'appliances', label: 'Appliances', href: '/appliances' },
     { key: 'hvac', label: 'HVAC', href: '/hvac' },
+    { key: 'appliances', label: 'Appliances', href: '/appliances' },
     { key: 'electronics', label: 'Electronics', href: '/electronics' },
     { key: 'water-heaters', label: 'Water Heaters', href: '/water-heaters' },
-    { key: 'smart-lookup', label: '\u2B50 Smart Lookup', href: '/smart-lookup' }
+    { key: 'smart-lookup', label: 'Smart Lookup', href: '/smart-lookup' }
   ];
   return tabs.map(function(t) {
     return '<a href="' + t.href + '" class="category-tab-link' + (t.key === activeKey ? ' active' : '') + '">' + t.label + '</a>';
@@ -1413,15 +1298,15 @@ function applyBrandDefaultFromSlug() {
 
 function smartLookupAboutInnerHtml() {
   return '' +
-    '<h2>About Smart Lookup</h2>' +
-    '<p class="technical-methodology-subhead">Intelligent Data Aggregation</p>' +
-    '<p class="technical-methodology-copy">When serial numbers are missing, incomplete, or unreadable, Smart Lookup applies research intelligence across model patterns, manufacturer timelines, and known product release cycles to estimate manufacture windows with practical confidence.</p>' +
+    '<h2>About Smart Lookup (Powered by AI)</h2>' +
+    '<p class="technical-methodology-subhead">Proprietary Intelligence for Missing Data</p>' +
+    '<p class="technical-methodology-copy">When serial numbers are missing, incomplete, or unreadable, Smart Lookup applies proprietary intelligence across model patterns, manufacturer timelines, and known product release cycles to estimate manufacture windows with practical confidence.</p>' +
     '<ul class="technical-methodology-list">' +
       '<li><strong>Broad Search Tier:</strong> Interprets general product descriptions to identify likely era ranges and historical launch periods.</li>' +
-      '<li><strong>Professional Search Tier:</strong> Uses brand, model family, series, and variant-level clues to refine results for precise age estimates.</li>' +
+      '<li><strong>Professional Search Tier:</strong> Uses brand, model family, series, and variant-level clues to refine results for claim-ready age estimates.</li>' +
     '</ul>' +
     '<p class="technical-methodology-copy">For best results, include the brand, full model number, and any visible version or series details from the data plate.</p>' +
-    '<p class="technical-methodology-note">Designed for equipment age research and lifecycle documentation.</p>';
+    '<p class="technical-methodology-note">Designed for insurance claim accuracy and equipment lifecycle audits.</p>';
 }
 
 function mountSharedSmartLookupAboutSection() {
@@ -1431,14 +1316,20 @@ function mountSharedSmartLookupAboutSection() {
     if (existing) existing.innerHTML = smartLookupAboutInnerHtml();
     return;
   }
-  // "About Smart Lookup" section only belongs on the smart-lookup page
-  return;
+  if (slug !== '' && slug !== 'index') return;
+  if (existing) return;
+  var mainCard = document.querySelector('.main-card');
+  if (!mainCard || !mainCard.parentNode) return;
+  var card = document.createElement('section');
+  card.className = 'technical-methodology-card';
+  card.innerHTML = smartLookupAboutInnerHtml();
+  mainCard.insertAdjacentElement('afterend', card);
 }
 
 // ===== FOOTER BRANDING UPDATE (Task 7) =====
 function updateFooterBranding() {
   document.querySelectorAll('.footer p').forEach(function(p) {
-    if (p.innerHTML.indexOf('\u00a9') !== -1 || p.innerHTML.indexOf('&copy;') !== -1 || p.innerHTML.indexOf('Â©') !== -1) {
+    if (p.innerHTML.indexOf('\u00a9') !== -1 || p.innerHTML.indexOf('&copy;') !== -1 || p.innerHTML.indexOf('©') !== -1) {
       p.innerHTML = p.innerHTML.replace(/Serial Number Decoder/g, 'Item Assist');
     }
   });
@@ -1654,90 +1545,59 @@ function extractMainContentFromDoc(doc) {
   return temp.innerHTML;
 }
 
-function replaceSmartLookupWithButton() {
-  var slug = getBrandPageSlug();
-  // Keep full Smart Lookup UI on the main page and smart-lookup page.
-  if (!slug || slug === 'index' || slug === 'smart-lookup') return;
 
-  // Remove Smart Lookup form containers and related elements
-  ['.smart-lookup-container', '.smart-lookup-standalone', '.technical-methodology-card',
-   '.guided-search-btn', '.guided-search-note'].forEach(function(sel) {
-    document.querySelectorAll(sel).forEach(function(el) {
-      el.parentNode && el.parentNode.removeChild(el);
-    });
-  });
-
-  // Inject "No Serial Number? Use Smart Lookup" redirect prompt
-  var formArea = document.querySelector('.decoder-card .form-area') ||
-                 document.querySelector('.main-card .form-area');
+function enhanceDecodePanel() {
+  var formArea = document.querySelector('.main-card .form-area') || document.querySelector('.decoder-card .form-area');
   if (!formArea) return;
-  if (formArea.querySelector('.sl-redirect-prompt')) return;
+  if (formArea.querySelector('.decode-panel')) return;
 
-  var prompt = document.createElement('p');
-  prompt.className = 'sl-redirect-prompt';
-  prompt.innerHTML = 'No Serial Number? Use <a href="/smart-lookup">Smart Lookup</a>';
-  formArea.appendChild(prompt);
-}
+  var brandEl = document.getElementById('brand');
+  var serialEl = document.getElementById('serial');
+  var decodeBtn = document.getElementById('decodeBtn');
+  if (!brandEl || !serialEl || !decodeBtn) return;
 
-function bindSmartLookupActions() {
-  var input = getSmartLookupInputEl();
-  if (!input) return;
+  var brandGroup = brandEl.closest('.form-group');
+  var eraGroup = document.getElementById('eraGroup');
+  var serialGroup = serialEl.closest('.form-group');
+  if (!brandGroup || !serialGroup) return;
 
-  var buttons = document.querySelectorAll(
-    '.smart-lookup-container button[onclick*="estimateAge"], ' +
-    '.smart-lookup-standalone button[onclick*="estimateAge"], ' +
-    '#smartLookupBtn, .smart-lookup-btn, .alt-btn'
-  );
+  var panel = document.createElement('div');
+  panel.className = 'decode-panel';
 
-  buttons.forEach(function(btn) {
-    if (!btn) return;
-    if (btn.tagName === 'BUTTON' && (!btn.type || btn.type.toLowerCase() !== 'button')) {
-      btn.type = 'button';
-    }
-    if (btn.getAttribute('data-smart-action-bound') === '1') return;
-    btn.setAttribute('data-smart-action-bound', '1');
+  var panelLabel = document.createElement('label');
+  panelLabel.className = 'panel-label';
+  panelLabel.textContent = 'Decode Tool';
+  panel.appendChild(panelLabel);
 
-    // Prefer explicit event binding over inline attributes for reliability.
-    if ((btn.getAttribute('onclick') || '').indexOf('estimateAge') !== -1) {
-      btn.removeAttribute('onclick');
-    }
+  panel.appendChild(brandGroup);
+  if (eraGroup && eraGroup.parentNode === formArea) panel.appendChild(eraGroup);
+  panel.appendChild(serialGroup);
+  panel.appendChild(decodeBtn);
 
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var q = String((input && input.value) || '').trim();
-      if (!q) {
-        if (input && input.focus) input.focus();
-        showCustomAlert('Enter a model number, brand, or description to use Smart Lookup.');
-        return;
-      }
-      estimateAge();
-    });
-  });
+  decodeBtn.classList.add('decode-button');
+
+  formArea.insertBefore(panel, formArea.firstChild);
 }
 
 function applySidebarVisualHierarchy() {
-  var sidebar = document.querySelector('.sidebar');
-  if (!sidebar) return;
-
-  sidebar.querySelectorAll('.sidebar-title').forEach(function(title) {
+  document.querySelectorAll('.sidebar .sidebar-title').forEach(function(title) {
     title.classList.add('sidebar-section-title');
   });
 
-  sidebar.querySelectorAll('.sidebar-link, .sidebar-group-link, .cat-tab, .cat-tab-link').forEach(function(item) {
+  document.querySelectorAll('.sidebar .sidebar-link, .sidebar .sidebar-group-link, .sidebar .cat-tab, .sidebar .cat-tab-link').forEach(function(item) {
     item.classList.add('sidebar-item');
   });
 }
-
 function initPage() {
+
   ensureSmartLookupDom();
   enhanceHeaderBranding();
   enhanceSidebarLogo();
   injectHeroBanner();
   ensurePageTitleAndCategoryTabs();
-  bindHomepageCategoryTabs();
   enhanceSmartLookupSidebarTop();
   renderStaticSidebar();
+  enhanceDecodePanel();
   applySidebarVisualHierarchy();
   document.body.classList.toggle('brand-page', isBrandPage());
   document.body.classList.toggle('methodology-page', getBrandPageSlug() === 'methodology');
@@ -1772,6 +1632,8 @@ function initPage() {
     syncGlobalCategoryTabs(initialCategory);
     saveCategoryKey(initialCategory);
     applyBrandDefaultFromSlug();
+    ensureBrandAliasSearch();
+
     if (brandSelect.getAttribute('data-brand-bound') !== '1') {
       brandSelect.setAttribute('data-brand-bound', '1');
       brandSelect.addEventListener('change', function() {
@@ -1849,7 +1711,6 @@ function initPage() {
       altQuery.addEventListener('input', showAltDisclaimer);
     }
   }
-  bindSmartLookupActions();
 
   loadBrandContext();
   ensureDidYouKnowBlock();
@@ -1863,8 +1724,6 @@ function initPage() {
       updateDecodeBtn();
     }
   } catch (_) {}
-
-  replaceSmartLookupWithButton();
 }
 
 function initSpaNavigation() {
@@ -1983,7 +1842,7 @@ function populateBrands(category) {
   });
 
   consolidated.sort(function(a, b) {
-    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+    return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' });
   });
 
   sel.innerHTML = '<option value="">-- Select Brand --</option>';
@@ -2003,8 +1862,13 @@ function onBrandChange() {
   var brandId = opt ? opt.value : '';
   var cyclingCat = CYCLING_BRANDS[currentCategory] || {};
   var cfg = cyclingCat[brandId];
-  // Era dropdown no longer required - split brands now auto-decode both eras simultaneously
-  hideEraGroup();
+  // Only show era dropdown for brands with SEPARATE pre/post-2006 decoders (type:'split')
+  // Advisory brands (Whirlpool, GE, etc.) already return both possible years in their output
+  if (cfg && cfg.type === 'split' && brandId) {
+    showEraGroup();
+  } else {
+    hideEraGroup();
+  }
   document.getElementById('eraSelect').value = '';
   updateModelFieldVisibility(brandId);
   updateKenmorePrefixVisibility(brandId);
@@ -2017,6 +1881,8 @@ function showEraGroup() {
 function hideEraGroup() {
   document.getElementById('eraGroup').classList.add('hidden');
   document.getElementById('eraSelect').value = '';
+  updateModelFieldVisibility(brandId);
+  updateKenmorePrefixVisibility(brandId);
 }
 
 function normalizeBrandId(brandId) {
@@ -2024,13 +1890,9 @@ function normalizeBrandId(brandId) {
   var raw = String(brandId).trim();
   var s = raw.toLowerCase();
   var cleaned = s.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
-  var normalized = cleaned;
-  if (normalized.normalize) {
-    normalized = normalized.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  }
 
-  if (normalized === 'cafe') return 'cafe';
-  if (normalized === 'ge cafe' || normalized === 'ge caf') return 'cafe';
+  if (cleaned === 'cafe' || cleaned === 'caf�') return 'cafe';
+  if (cleaned === 'ge cafe' || cleaned === 'ge caf�' || cleaned === 'ge caf') return 'cafe';
   if (cleaned === 'ge monogram' || cleaned === 'monogram') return 'ge';
   if (cleaned === 'ge profile' || cleaned === 'profile') return 'ge';
   if (cleaned === 'hotpoint' || cleaned === 'rca') return 'ge';
@@ -2055,191 +1917,6 @@ function resolveDecoderId(metaBrandId) {
   return cfg.single;
 }
 
-function smartLookupCategoryToDecoderCategory(cat) {
-  var key = String(cat || '').toLowerCase();
-  if (key === 'appliance') return 'appliances';
-  if (key === 'waterheater') return 'waterHeaters';
-  if (key === 'hvac') return 'hvac';
-  if (key === 'electronics') return 'electronics';
-  return '';
-}
-
-function normalizeBrandToken(value) {
-  var raw = String(value || '').trim().toLowerCase();
-  if (!raw) return '';
-  var token = raw.replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-  if (!token) return '';
-  if (token === 'google') return 'google_pixel';
-  if (token === 'googlepixel') return 'google_pixel';
-  if (token === 'aosmith' || token === 'ao_smith') return 'a_o_smith';
-  if (token === 'ge_cafe') return 'ge_caf';
-  return token;
-}
-
-function categoryDisplayLabel(decoderCategory) {
-  if (!decoderCategory) return 'Unknown';
-  if (decoderCategory === 'waterHeaters') return 'Water Heaters';
-  return CATEGORY_KEY_TO_NAME[decoderCategory] || decoderCategory;
-}
-
-function decoderVariantLabel(decoderId, decoderName) {
-  var label = decoderName || decoderId;
-  if (/_post_?\d{4}/i.test(decoderId) && label.toLowerCase().indexOf('post-') === -1) {
-    label += ' (Post-2006)';
-  } else if (/_pre_?\d{4}/i.test(decoderId) && label.toLowerCase().indexOf('pre-') === -1) {
-    label += ' (Pre-2006)';
-  } else if (/_tv$/i.test(decoderId) && label.toLowerCase().indexOf('tv') === -1) {
-    label += ' (TV)';
-  } else if (/_phone$/i.test(decoderId) && label.toLowerCase().indexOf('phone') === -1) {
-    label += ' (Phone)';
-  }
-  return label;
-}
-
-function collectBrandMethodEntries(brandIdOrName, brandName, preferredCategory) {
-  var entries = [];
-  var seen = {};
-  var brandToken = normalizeBrandToken(brandIdOrName || brandName);
-  var canonicalToken = canonicalizeBrandId(brandToken);
-  var canonicalName = canonicalizeBrandName(brandName || brandIdOrName || '');
-  var preferred = normalizeDecoderCategory(preferredCategory || '');
-  var categoryKeys = ['appliances', 'waterHeaters', 'hvac', 'electronics'];
-
-  categoryKeys.forEach(function(catKey) {
-    var group = decoderData && decoderData[catKey];
-    var decoders = group && group.decoders ? group.decoders : null;
-    if (!decoders) return;
-    Object.keys(decoders).forEach(function(decoderId) {
-      var decoder = decoders[decoderId];
-      if (!decoder) return;
-      var methodText = decoder.method || decoder.decodeMethod || decoder.serialLengthNote || '';
-      if (!methodText) return;
-      var decCanonicalId = canonicalizeBrandId(decoderId);
-      var decNameCanonical = canonicalizeBrandName(decoder.name || '');
-      var matched = false;
-
-      if (canonicalToken && decCanonicalId === canonicalToken) matched = true;
-      if (!matched && canonicalName && decNameCanonical === canonicalName) matched = true;
-      if (!matched && brandToken && decoderId === brandToken) matched = true;
-      if (!matched && canonicalToken && decoderId.indexOf(canonicalToken + '_') === 0) matched = true;
-
-      if (!matched) return;
-      var key = catKey + '|' + decoderId;
-      if (seen[key]) return;
-      seen[key] = true;
-      entries.push({
-        categoryKey: catKey,
-        categoryLabel: categoryDisplayLabel(catKey),
-        name: decoderVariantLabel(decoderId, decoder.name || ''),
-        method: methodText,
-        decoder: decoder
-      });
-    });
-  });
-
-  entries.sort(function(a, b) {
-    var ap = (a.categoryKey === preferred) ? 0 : 1;
-    var bp = (b.categoryKey === preferred) ? 0 : 1;
-    if (ap !== bp) return ap - bp;
-    if (a.categoryLabel !== b.categoryLabel) return a.categoryLabel.localeCompare(b.categoryLabel);
-    return a.name.localeCompare(b.name);
-  });
-  return entries;
-}
-
-function normalizeSerialForMethodPreview(serialInput) {
-  var s = String(serialInput || '').toUpperCase().replace(/\s+/g, '');
-  if (!s) return '';
-  if (/[^A-Z0-9]/.test(s)) return '';
-  return s;
-}
-
-function isSerialLikeInput(input) {
-  var s = normalizeSerialForMethodPreview(input);
-  return !!s && s.length >= 6;
-}
-
-function summarizeMethodResultForSerial(decoder, serialInput) {
-  var serial = normalizeSerialForMethodPreview(serialInput);
-  if (!serial) {
-    return 'Result preview unavailable - enter a serial number to run this method.';
-  }
-  if (!decoder || typeof decoder.decode !== 'function') {
-    return 'Result preview unavailable for this method.';
-  }
-  try {
-    var raw = decoder.decode(serial);
-    var sanity = sanitizeDecodeResult(raw);
-    if (!raw || !sanity.valid) {
-      return 'No valid result for this serial using this method.';
-    }
-    var result = sanity.result || raw;
-    var yearDisplay = capYear(result.year) || String(result.year || 'N/A');
-    var monthDisplay = String(result.month || '').trim();
-    var summary = 'Year: ' + yearDisplay;
-    if (monthDisplay && monthDisplay !== 'N/A') {
-      summary += ' | Month/Period: ' + monthDisplay;
-    }
-    var age = computeEstimatedAge(result._ageYear || yearDisplay);
-    if (age && age !== '\u2014') {
-      summary += ' | Estimated age: ' + age;
-    }
-    return summary;
-  } catch (_) {
-    return 'Method could not decode this serial input.';
-  }
-}
-
-function buildDecodingMethodsDropdownHtml(entries, summaryText, serialInput) {
-  var list = Array.isArray(entries) ? entries : [];
-  if (!list.length) return '';
-  var summary = summaryText || ('Decoding Methods for this Brand (' + list.length + ')');
-  var html = '<details class="sources-checked decoding-methods-dropdown">' +
-    '<summary>' + esc(summary) + '</summary>' +
-    '<div class="sources-checked-body"><div class="evidence-list">';
-  list.forEach(function(item) {
-    var resultSummary = summarizeMethodResultForSerial(item.decoder, serialInput);
-    html += '<div class="evidence-item">' +
-      '<span class="ev-source">' + esc(item.name + ' - ' + item.categoryLabel) + '</span>' +
-      '<span><strong>Method:</strong> ' + esc(item.method) + '</span>' +
-      '<span><strong>Result:</strong> ' + esc(resultSummary) + '</span>' +
-      '</div>';
-  });
-  html += '</div></div></details>';
-  return html;
-}
-
-function renderSerialMethodsDropdown(brandIdOrName, brandName, preferredCategory, serialInput) {
-  var body = document.querySelector('#serialResults .results-body');
-  if (!body) return;
-  var existing = body.querySelector('.decoding-methods-dropdown');
-  if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
-
-  var entries = collectBrandMethodEntries(brandIdOrName, brandName, preferredCategory || currentCategory);
-  if (!entries.length) {
-    var methodEl = document.getElementById('resultMethod');
-    var fallbackMethod = methodEl ? String(methodEl.textContent || '').trim() : '';
-    if (fallbackMethod) {
-      entries = [{
-        categoryKey: preferredCategory || currentCategory || 'appliances',
-        categoryLabel: categoryDisplayLabel(preferredCategory || currentCategory || 'appliances'),
-        name: brandName || String(brandIdOrName || 'Selected brand'),
-        method: fallbackMethod
-      }];
-    }
-  }
-  var html = buildDecodingMethodsDropdownHtml(entries, 'All Decoding Methods for this Brand', serialInput);
-  if (!html) return;
-
-  var wrap = document.createElement('div');
-  wrap.innerHTML = html;
-  var dropdown = wrap.firstElementChild;
-  if (!dropdown) return;
-  var notesBlock = body.querySelector('.info-block.notes');
-  if (notesBlock && notesBlock.parentNode) notesBlock.parentNode.insertBefore(dropdown, notesBlock);
-  else body.appendChild(dropdown);
-}
-
 function updateDecodeBtn() {
   var dom = getDecodeDom();
   var brandEl  = dom.brandEl;
@@ -2249,123 +1926,73 @@ function updateDecodeBtn() {
   var brand  = brandEl.value;
   var serial = serialEl.value.trim();
   var decoderId = brand ? resolveDecoderId(brand) : null;
-  // Split brands (Amana/Maytag/Admiral/Jenn-Air) decode both eras at once - no era selection needed
-  var isSplitBrand = false;
-  if (brand && !decoderId) {
-    var _scc = CYCLING_BRANDS[currentCategory] || {};
-    var _sCfg = _scc[brand] || _scc[normalizeBrandId(brand)];
-    isSplitBrand = !!(_sCfg && _sCfg.type === 'split');
-  }
-  // Kenmore also requires a model prefix to be selected before decoding
-  var kenmorePrefixOk = true;
-  if (brand && normalizeBrandId(brand) === 'kenmore') {
-    var _prefixEl = document.getElementById('kenmoreModelPrefix');
-    kenmorePrefixOk = !!(_prefixEl && _prefixEl.value);
-  }
-  btnEl.disabled = !(brand && serial && (decoderId || isSplitBrand) && kenmorePrefixOk);
+  btnEl.disabled = !(brand && serial && decoderId);
 }
 
 // ===== YEAR CAP (never return future dates) =====
 function capYear(yearStr) {
   if (!yearStr) return yearStr;
   var str = String(yearStr).trim();
-  if (/^\d{4}$/.test(str)) {
-    var y = parseInt(str, 10);
-    if (y >= 1900 && y <= CURRENT_YEAR) return str;
-    return '';
+
+  // Dual-year format: "1992/2022" or "2010/2040"
+  if (/^\d{4}\/\d{4}$/.test(str)) {
+    var parts = str.split('/');
+    var valid = parts.filter(function(p) { return parseInt(p) <= CURRENT_YEAR; });
+    if (valid.length === 2) return str;          // Both valid, return both
+    if (valid.length === 1) return valid[0];     // Only one valid year
+    return str;                                  // Both future — return original (edge case)
   }
+
+  // Single 4-digit year
+  if (/^\d{4}$/.test(str)) {
+    var y = parseInt(str);
+    if (y > CURRENT_YEAR) return CURRENT_YEAR.toString();
+  }
+
   return str;
 }
 
 // ===== AGE HELPER =====
 function computeEstimatedAge(displayedYear) {
-  if (!displayedYear) return '\u2014';
+  if (!displayedYear) return '—';
   var s = String(displayedYear).trim();
-  if (/^\d{4}$/.test(s)) {
-    var y = parseInt(s, 10);
-    if (y < 1900 || y > CURRENT_YEAR) return '\u2014';
-    var age = CURRENT_YEAR - y;
-    if (age < 0 || age > 200) return '\u2014';
-    return age + " year" + (age !== 1 ? "s" : "");
+  // Dual year "1992/2022"
+  if (/^\d{4}\/\d{4}$/.test(s)) {
+    var parts = s.split('/');
+    var a1 = CURRENT_YEAR - parseInt(parts[0]);
+    var a2 = CURRENT_YEAR - parseInt(parts[1]);
+    if (a2 < 0) return a1 + ' years';
+    return a2 + ' or ' + a1 + ' years';
   }
-  return '\u2014';
+  // Single year
+  if (/^\d{4}$/.test(s)) {
+    var age = CURRENT_YEAR - parseInt(s);
+    return age >= 0 ? age + ' year' + (age !== 1 ? 's' : '') : '—';
+  }
+  return '—';
 }
 
 // ===== SANITY CHECK =====
 function sanitizeDecodeResult(result) {
-  if (!result) return { valid: false, reason: "No result from decoder" };
-  var sanitized = Object.assign({}, result);
-  var yearRaw = result.year;
-
-  function isValidYearInt(yearInt) {
-    return Number.isInteger(yearInt) && yearInt >= 1900 && yearInt <= CURRENT_YEAR;
+  if (!result) return { valid: false, reason: 'No result from decoder' };
+  var yearStr = String(result.year || '').trim();
+  // Non-numeric or empty year strings (e.g. "Post-2021 (Randomized)") — pass through
+  if (!yearStr || !/^\d/.test(yearStr)) return { valid: true };
+  // Dual-year "YYYY/YYYY"
+  if (/^\d{4}\/\d{4}$/.test(yearStr)) {
+    var parts = yearStr.split('/').map(Number);
+    var anyValid = parts.some(function(y) { return y >= 1980 && y <= CURRENT_YEAR; });
+    if (!anyValid) return { valid: false, reason: 'Decoded years ' + yearStr + ' both outside plausible range (1980\u2013' + CURRENT_YEAR + ')' };
+    return { valid: true };
   }
-
-  function parseValidYears(inputValues) {
-    var seen = {};
-    var out = [];
-    inputValues.forEach(function(v) {
-      var s = String(v == null ? "" : v).trim();
-      if (!/^\d{4}$/.test(s)) return;
-      var n = parseInt(s, 10);
-      if (!isValidYearInt(n) || seen[n]) return;
-      seen[n] = true;
-      out.push(n);
-    });
-    return out;
-  }
-
-  if (Array.isArray(yearRaw)) {
-    var arrYears = parseValidYears(yearRaw);
-    if (!arrYears.length) return { valid: false, reason: "Decoded year array contains no valid years in 1900-" + CURRENT_YEAR };
-    if (arrYears.length === 1) {
-      sanitized.year = String(arrYears[0]);
-      sanitized._ageYear = String(arrYears[0]);
-    } else {
-      sanitized.year = "Ambiguous years: " + arrYears.join(" or ");
-      sanitized._ageYear = "";
-      sanitized._ambiguousYears = arrYears;
-    }
-    return { valid: true, result: sanitized };
-  }
-
-  var yearStr = String(yearRaw || "").trim();
-  if (!yearStr) return { valid: true, result: sanitized };
-
+  // Single 4-digit year
   if (/^\d{4}$/.test(yearStr)) {
-    var parsedYear = parseInt(yearStr, 10);
-    if (!isValidYearInt(parsedYear)) {
-      return { valid: false, reason: "Decoded year " + yearStr + " is outside valid range (1900-" + CURRENT_YEAR + ")" };
+    var y = parseInt(yearStr);
+    if (y < 1980 || y > CURRENT_YEAR) {
+      return { valid: false, reason: 'Decoded year ' + yearStr + ' is outside plausible range (1980\u2013' + CURRENT_YEAR + ')' };
     }
-    sanitized.year = String(parsedYear);
-    sanitized._ageYear = String(parsedYear);
-    return { valid: true, result: sanitized };
   }
-
-  var hasDigit = /\d/.test(yearStr);
-  var listFormat = /^\s*\d{4}(\s*\/\s*\d{4})+\s*$/.test(yearStr) || /^\s*\d{4}(\s+or\s+\d{4})+\s*$/i.test(yearStr);
-  if (listFormat) {
-    var candidates = parseValidYears(yearStr.split(/\/|\s+or\s+/i));
-    if (!candidates.length) {
-      return { valid: false, reason: "Decoded years are outside valid range (1900-" + CURRENT_YEAR + ")" };
-    }
-    if (candidates.length === 1) {
-      sanitized.year = String(candidates[0]);
-      sanitized._ageYear = String(candidates[0]);
-    } else {
-      sanitized.year = "Ambiguous years: " + candidates.join(" or ");
-      sanitized._ageYear = "";
-      sanitized._ambiguousYears = candidates;
-    }
-    return { valid: true, result: sanitized };
-  }
-
-  if (hasDigit) {
-    return { valid: false, reason: "Decoded year contains invalid characters: " + yearStr };
-  }
-
-  sanitized._ageYear = "";
-  return { valid: true, result: sanitized };
+  return { valid: true };
 }
 
 // ===== DECODE FALLBACK ALERT (fire-and-forget) =====
@@ -2380,7 +2007,7 @@ function fireFallbackAlert(brand, serial, category, reason) {
 }
 
 // ===== DECODE FALLBACK DISPLAY =====
-function showDecodeFallback(decoder, serial, brandId, reason, overrideNotes) {
+function showDecodeFallback(decoder, serial, brandId, reason) {
   var refinePanel = document.querySelector('.narrow-date-panel');
   if (refinePanel) refinePanel.classList.add('hidden');
   var monthRow = document.getElementById('resultMonthRow');
@@ -2397,11 +2024,10 @@ function showDecodeFallback(decoder, serial, brandId, reason, overrideNotes) {
   }
   document.getElementById('resultBrand').textContent  = decoder.name;
   document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'Check the product label and ensure the full serial number is entered.';
-  document.getElementById('resultNotes').textContent  = overrideNotes ||
-    'We\u2019re sorry, our system is having trouble decoding that number. Please refer to the decoding method above.\n\nSerial entered: ' + serial;
+  document.getElementById('resultNotes').textContent  =
+    sanitizeAlertText('We\u2019re sorry, our system is having trouble decoding that number. Please refer to the decoding method above.\n\nSerial entered: ' + serial);
   updateSearchQueryLine();
   updateResultWarning({ year: 'Unknown', month: '' }, brandId);
-  renderSerialMethodsDropdown(brandId, decoder.name, currentCategory, serial);
   showBrandLogo('serialBrandLogo', brandId, decoder.name);
   currentFeedbackContext = { brand: decoder.name, serial: serial };
   fireFallbackAlert(decoder.name, serial, currentCategory, reason);
@@ -2415,7 +2041,7 @@ function showDecodeFallback(decoder, serial, brandId, reason, overrideNotes) {
 // ===== ERA YEAR FILTERING (Task 1) =====
 function filterYearsByEra(yearStr, era) {
   var candidates = parseCandidateYears(yearStr);
-  if (!candidates.length) return yearStr; // non-numeric or unparseable - pass through
+  if (!candidates.length) return yearStr; // non-numeric or unparseable — pass through
   var filtered;
   if (era === 'post') {
     filtered = candidates.filter(function(y) { return y >= 2006; });
@@ -2426,7 +2052,7 @@ function filterYearsByEra(yearStr, era) {
   }
   if (!filtered.length) return null; // no valid candidates for this era
   if (filtered.length === 1) return String(filtered[0]);
-  return 'Ambiguous years: ' + filtered.join(' or ');
+  return filtered.join('/');
 }
 
 function parseCandidateYears(yearText) {
@@ -2547,81 +2173,98 @@ function ensureResultWarningBlock() {
 
 function isIncompleteResult(result) {
   if (!result) return true;
-  var yearStr = String(result.year || '').trim();
-  var monthStr = String(result.month || '').trim();
-  var text = (yearStr + ' ' + monthStr).toLowerCase();
-  // Dual-year format like "1992/2022" is a valid result - do NOT flag as incomplete
-  if (/^\d{4}\/\d{4}$/.test(yearStr)) return false;
+  var text = (String(result.year || '') + ' ' + String(result.month || '')).toLowerCase();
   if (text.indexOf('unknown') !== -1) return true;
   if (text.indexOf('ambiguous') !== -1) return true;
   if (text.indexOf('unable') !== -1) return true;
   if (text.indexOf('non-numeric') !== -1) return true;
+  if (text.indexOf('/') !== -1) return true;
   return false;
 }
 
-function buildPanasonicNonNumericHint(brandId, serialValue) {
-  if (String(brandId || '').toLowerCase() !== 'panasonic') return '';
-  var s = String(serialValue || '').trim().toUpperCase();
-  if (!s) return '';
-  if (/^\d/.test(s)) return '';
-  return 'Panasonic tip: The first serial character is usually a numeric year code (0-9). Your entry begins with "' + s.charAt(0) + '". Verify the serial from the rating label or try Smart Lookup with the full model number.';
-}
-
-function updateResultWarning(result, brandId, serialValue) {
+function updateResultWarning(result, brandId) {
   var block = ensureResultWarningBlock();
   if (!block) return;
   var modelEl = document.getElementById('modelNumber');
-  var serialEl = document.getElementById('serial');
-  var serialText = (serialValue !== undefined && serialValue !== null)
-    ? String(serialValue)
-    : (serialEl ? String(serialEl.value || '') : '');
-  var panasonicHint = buildPanasonicNonNumericHint(brandId, serialText);
   var modelMissing = requiresModelForBrand(brandId)
     && (!modelEl || !modelEl.value.trim());
-  if (isIncompleteResult(result) || modelMissing || panasonicHint) {
+  if (isIncompleteResult(result) || modelMissing) {
     block.classList.remove('hidden');
     var p = block.querySelector('p');
     if (p) {
-      p.textContent = 'Incomplete result - please verify your inputs (brand/serial/model). If the result is still incorrect after verifying inputs, report an issue.'
-        + (panasonicHint ? ' ' + panasonicHint : '');
+      p.textContent = sanitizeAlertText('Incomplete result \u2014 please verify your inputs (brand/serial/model). If the result is still incorrect after verifying inputs, report an issue.');
     }
   } else {
     block.classList.add('hidden');
   }
 }
 
+function ensureBrandAliasSearch() {
+  var brandSelect = document.getElementById('brand');
+  if (!brandSelect) return null;
+  if (document.getElementById('brandAliasInput')) return document.getElementById('brandAliasInput');
+  var brandGroup = brandSelect.closest('.form-group');
+  if (!brandGroup) return null;
+  var group = document.createElement('div');
+  group.className = 'form-group brand-alias-group';
+  group.innerHTML = '' +
+    '<label class="step-label sr-only" for="brandAliasInput">Search Brand</label>' +
+    '<input type="text" id="brandAliasInput" class="form-input" list="brandAliasList" placeholder="Search brand (e.g., GE Profile, Monogram, Caf�)">' +
+    '<datalist id="brandAliasList">' +
+      '<option value="GE"></option>' +
+      '<option value="Caf�"></option>' +
+      '<option value="Cafe"></option>' +
+      '<option value="GE Caf�"></option>' +
+      '<option value="GE Cafe"></option>' +
+      '<option value="Monogram"></option>' +
+      '<option value="Profile"></option>' +
+      '<option value="Hotpoint"></option>' +
+      '<option value="RCA"></option>' +
+    '</datalist>' +
+    '<div class="helper-text">Type a brand or alias to quickly select it in the dropdown.</div>';
+  brandGroup.insertAdjacentElement('beforebegin', group);
+
+  var input = group.querySelector('#brandAliasInput');
+  var applySelection = function() {
+    var query = input.value.trim();
+    if (!query) return;
+    var normalized = normalizeBrandId(query);
+    var targetId = '';
+    if (normalized === 'ge' || normalized === 'cafe') {
+      targetId = normalized;
+    } else {
+      var qLower = query.toLowerCase();
+      for (var i = 0; i < brandSelect.options.length; i++) {
+        var opt = brandSelect.options[i];
+        var text = (opt.textContent || opt.value || '').toLowerCase();
+        if (text === qLower || opt.value.toLowerCase() === qLower) {
+          targetId = opt.value;
+          break;
+        }
+      }
+    }
+    if (targetId) {
+      brandSelect.value = targetId;
+      onBrandChange();
+      updateDecodeBtn();
+    }
+  };
+  input.addEventListener('change', applySelection);
+  input.addEventListener('input', applySelection);
+  return input;
+}
 function ensureKenmorePrefixField() {
   var formArea = document.querySelector('.form-area');
   if (!formArea) return null;
   if (document.getElementById('kenmoreModelPrefix')) return document.getElementById('kenmoreModelPrefix');
   var serialInput = document.getElementById('serial');
   var serialGroup = serialInput ? serialInput.closest('.form-group') : null;
-  // Build <optgroup> sections from KENMORE_PREFIX_TO_DECODER, grouped by manufacturer
-  var byMfr = {};
-  Object.keys(KENMORE_PREFIX_TO_DECODER).forEach(function(prefix) {
-    var mfr = KENMORE_PREFIX_TO_DECODER[prefix].manufacturer;
-    if (!byMfr[mfr]) byMfr[mfr] = [];
-    byMfr[mfr].push(prefix);
-  });
-  Object.keys(byMfr).forEach(function(mfr) {
-    byMfr[mfr].sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
-  });
-  var optgroupsHtml = Object.keys(byMfr).sort().map(function(mfr) {
-    var opts = byMfr[mfr].map(function(p) {
-      return '<option value="' + p + '">' + p + ' \u2014 ' + mfr + '</option>';
-    }).join('');
-    return '<optgroup label="' + mfr + '">' + opts + '</optgroup>';
-  }).join('');
-
   var group = document.createElement('div');
   group.className = 'form-group kenmore-prefix-group hidden';
   group.innerHTML = '' +
-    '<label class="step-label" for="kenmoreModelPrefix">Kenmore Model Prefix (first 3 digits of model number)</label>' +
-    '<select id="kenmoreModelPrefix" class="form-select">' +
-      '<option value="">-- Select model prefix --</option>' +
-      optgroupsHtml +
-    '</select>' +
-    '<div class="helper-text kenmore-prefix-note">Select the first 3 digits of your Kenmore model number to identify who manufactured it.</div>';
+    '<label class="step-label" for="kenmoreModelPrefix">Kenmore Model Prefix (first 3 digits)</label>' +
+    '<input type="text" id="kenmoreModelPrefix" class="form-input" placeholder="e.g., 106" maxlength="3" inputmode="numeric" pattern="[0-9]*">' +
+    '<div class="helper-text kenmore-prefix-note">Optional but recommended for Kenmore: enter the first 3 digits of the model number.</div>';
   if (serialGroup && serialGroup.parentNode) {
     serialGroup.insertAdjacentElement('afterend', group);
   } else {
@@ -2630,7 +2273,9 @@ function ensureKenmorePrefixField() {
   var input = document.getElementById('kenmoreModelPrefix');
   if (input && input.getAttribute('data-prefix-bound') !== '1') {
     input.setAttribute('data-prefix-bound', '1');
-    input.addEventListener('change', updateDecodeBtn);
+    input.addEventListener('input', function() {
+      input.value = (input.value || '').replace(/\D/g, '').substring(0, 3);
+    });
   }
   return input;
 }
@@ -2645,81 +2290,23 @@ function updateKenmorePrefixVisibility(brandId) {
   else group.classList.add('hidden');
 }
 
-function resolveKenmoreDecoderFromPrefixValue(prefix) {
-  prefix = String(prefix || '').replace(/\D/g, '').substring(0, 3);
+function resolveKenmoreDecoderFromPrefix() {
+  var prefixEl = document.getElementById('kenmoreModelPrefix');
+  var prefix = prefixEl ? String(prefixEl.value || '').replace(/\D/g, '').substring(0, 3) : '';
   if (!prefix) {
-    return {
-      noPrefix: true,
-      decoderId: 'whirlpool',
-      manufacturer: 'Whirlpool',
-      usedDefault: true,
-      cycle: 30,
-      note: 'For Kenmore appliances, the model number prefix (first 3 digits) is required to decode accurately. Please enter the first 3 digits of your model number.'
-    };
+    return { prefix: '', manufacturer: 'Whirlpool', decoderId: 'whirlpool', usedDefault: true, note: KENMORE_DEFAULT_NOTE };
   }
   var match = KENMORE_PREFIX_TO_DECODER[prefix];
   if (!match) {
     return {
       prefix: prefix,
-      decoderId: 'whirlpool',
       manufacturer: 'Whirlpool',
+      decoderId: 'whirlpool',
       usedDefault: true,
-      cycle: 30,
-      note: 'Prefix ' + prefix + ' not recognized \u2014 defaulting to Whirlpool method. Results may vary.'
+      note: 'Prefix ' + prefix + ' is not in our Kenmore prefix table. ' + KENMORE_DEFAULT_NOTE
     };
   }
-  return {
-    prefix: prefix,
-    decoderId: match.decoderId,
-    manufacturer: match.manufacturer,
-    usedDefault: false,
-    cycle: match.cycle,
-    note: ''
-  };
-}
-
-function resolveKenmoreDecoderFromPrefix() {
-  var prefixEl = document.getElementById('kenmoreModelPrefix');
-  var rawPrefix = prefixEl ? String(prefixEl.value || '') : '';
-  return resolveKenmoreDecoderFromPrefixValue(rawPrefix);
-}
-
-function isRheemFamilyWaterHeaterBrand(brandId) {
-  var key = String(brandId || '').toLowerCase();
-  return key === 'rheem' || key === 'ruud' || key === 'richmond' || key === 'vanguard';
-}
-
-function buildRheemPrefixGuidance(brandId, serial, categoryOverride) {
-  var activeCategory = categoryOverride || currentCategory;
-  if (activeCategory !== 'waterHeaters') return '';
-  if (!isRheemFamilyWaterHeaterBrand(brandId)) return '';
-  var s = String(serial || '').toUpperCase().replace(/\s+/g, '');
-  if (!/^[A-Z]/.test(s)) return '';
-  return 'If your serial includes a prefix, try searching again without the prefix letters.\n' +
-    'Or decode manually using the method shown.';
-}
-
-function decodeKenmoreSamsungRarePattern(serial, kenmoreResolution, samsungDecoder) {
-  if (!kenmoreResolution || kenmoreResolution.prefix !== '401') return null;
-  var clean = String(serial || '').toUpperCase().replace(/\s+/g, '');
-  // Rare Samsung-built Kenmore structure: 14-char alphanumeric with Samsung year/month markers at chars 8-9.
-  if (!/^[A-Z0-9]{14}$/.test(clean)) return null;
-  if (!samsungDecoder || !samsungDecoder.yearMap || !samsungDecoder.monthMap) return null;
-
-  var yearChar = clean[7];
-  var monthChar = clean[8];
-  var year = samsungDecoder.yearMap[yearChar];
-  var month = samsungDecoder.monthMap[monthChar];
-  if (!year || !month) return null;
-
-  return {
-    year: year,
-    month: month,
-    yearCode: yearChar,
-    monthCode: monthChar,
-    confidence: 'High',
-    rarePattern: 'Kenmore prefix 401 Samsung-built 14-char serial'
-  };
+  return { prefix: prefix, manufacturer: match.manufacturer, decoderId: match.decoderId, usedDefault: false, note: '' };
 }
 
 function ensureModelField() {
@@ -2794,64 +2381,8 @@ function deterministicRefinement(candidates, model, context) {
   };
 }
 
-function chooseSerialBaselineYear(candidates) {
-  if (!Array.isArray(candidates) || !candidates.length) return null;
-  var valid = candidates.filter(function(y) { return Number.isInteger(y) && y >= 1900 && y <= CURRENT_YEAR; });
-  if (!valid.length) return null;
-  return Math.max.apply(null, valid);
-}
-
-function parseRangeFloorYear(yearRangeText) {
-  var text = String(yearRangeText || '');
-  if (!text) return null;
-  var direct = text.match(/\b(19|20)\d{2}\b/);
-  return direct ? parseInt(direct[0], 10) : null;
-}
-
-function parseStrongReleaseYear(lookupData) {
-  var candidates = [];
-  var notes = String((lookupData && lookupData.notes) || '');
-  var releaseRe = /\b(introduced|released|launched)\b[^0-9]{0,30}\b((?:19|20)\d{2})\b/ig;
-  var m;
-  while ((m = releaseRe.exec(notes)) !== null) {
-    candidates.push(parseInt(m[2], 10));
-  }
-  var evidence = Array.isArray(lookupData && lookupData.evidence) ? lookupData.evidence : [];
-  evidence.forEach(function(item) {
-    var d = String((item && item.detail) || '');
-    var em;
-    while ((em = releaseRe.exec(d)) !== null) {
-      candidates.push(parseInt(em[2], 10));
-    }
-  });
-  var valid = candidates.filter(function(y) { return Number.isInteger(y) && y >= 1900 && y <= CURRENT_YEAR; });
-  if (!valid.length) return null;
-  return Math.min.apply(null, valid);
-}
-
-function scoreNarrowDateEvidence(lookupData) {
-  if (!lookupData) return 'weak';
-  var notes = String(lookupData.notes || '').toLowerCase();
-  var hasStrongVerb = /\b(introduced|released|launched)\b/.test(notes);
-  if (!hasStrongVerb && Array.isArray(lookupData.evidence)) {
-    hasStrongVerb = lookupData.evidence.some(function(e) {
-      return /\b(introduced|released|launched)\b/i.test(String((e && e.detail) || ''));
-    });
-  }
-  if (hasStrongVerb) return 'strong';
-  if (lookupData.yearRange || lookupData.estimatedYear) return 'medium';
-  return 'weak';
-}
-
-function pickClosestCandidate(candidates, target) {
-  if (!Array.isArray(candidates) || !candidates.length || !Number.isInteger(target)) return null;
-  return candidates.reduce(function(prev, cur) {
-    return Math.abs(cur - target) < Math.abs(prev - target) ? cur : prev;
-  }, candidates[0]);
-}
-
-function chooseCandidateFromLookup(candidates, lookupData, modelInput, contextInput) {
-  if (!lookupData || !candidates || !candidates.length) return null;
+function chooseCandidateFromLookup(candidates, lookupData) {
+  if (!lookupData) return null;
   var targetYears = [];
   if (lookupData.estimatedYear) {
     targetYears = targetYears.concat(parseCandidateYears(String(lookupData.estimatedYear)));
@@ -2859,44 +2390,15 @@ function chooseCandidateFromLookup(candidates, lookupData, modelInput, contextIn
   if (lookupData.yearRange) {
     targetYears = targetYears.concat(parseCandidateYears(String(lookupData.yearRange)));
   }
-  if (!targetYears.length) return null;
-
-  var serialBaseline = chooseSerialBaselineYear(candidates);
-  var confidence = scoreNarrowDateEvidence(lookupData);
-  var rangeFloor = parseRangeFloorYear(lookupData.yearRange);
-  var releaseFloor = parseStrongReleaseYear(lookupData);
-  var floorYear = Math.max(rangeFloor || 0, releaseFloor || 0) || null;
+  if (!targetYears.length || !candidates.length) return null;
   var target = targetYears[0];
-
-  var filteredByFloor = candidates.slice();
-  if (floorYear) {
-    filteredByFloor = filteredByFloor.filter(function(y) { return y >= floorYear; });
-  }
-  var pool = filteredByFloor.length ? filteredByFloor : candidates.slice();
-  var best = pickClosestCandidate(pool, target);
-  if (!Number.isInteger(best)) return null;
-
-  var shift = serialBaseline !== null ? Math.abs(best - serialBaseline) : 0;
-  var maxShift = confidence === 'strong' ? 999 : (confidence === 'medium' ? 3 : 2);
-  var conflict = serialBaseline !== null && shift > maxShift;
-  if (conflict) {
-    best = serialBaseline;
-  }
-  if (floorYear && best < floorYear) {
-    var clampedPool = candidates.filter(function(y) { return y >= floorYear; });
-    if (clampedPool.length) {
-      best = clampedPool[0];
-    }
-  }
-
-  var why = [];
-  if (floorYear) why.push('model availability floor ' + floorYear);
-  why.push('confidence ' + confidence);
-  if (conflict) why.push('kept near serial baseline ' + serialBaseline);
+  var best = candidates.reduce(function(prev, cur) {
+    return Math.abs(cur - target) < Math.abs(prev - target) ? cur : prev;
+  }, candidates[0]);
   return {
     chosenYear: best,
-    summary: 'Smart Lookup target was around ' + target + '; selected serial-valid year ' + best + ' (' + why.join(', ') + ').',
-    confidence: confidence.charAt(0).toUpperCase() + confidence.slice(1)
+    summary: 'Smart Lookup suggests around ' + target + '; closest serial-valid candidate is ' + best + '.',
+    confidence: 'Medium'
   };
 }
 
@@ -2924,7 +2426,7 @@ async function refineAmbiguousResult() {
       body: JSON.stringify({ query: query.trim() })
     });
     var data = await parseJsonResponseSafe(res, 'refine-ambiguous');
-    selected = chooseCandidateFromLookup(candidates, data, model, context);
+    selected = chooseCandidateFromLookup(candidates, data);
     if (!selected) selected = deterministicRefinement(candidates, model, context);
     output.innerHTML =
       '<div class="info-block refinement">' +
@@ -2954,385 +2456,6 @@ async function refineAmbiguousResult() {
   updateResultWarning({ year: yearEl.textContent, month: monthEl ? monthEl.textContent : '' }, (getDecodeDom().brandEl ? getDecodeDom().brandEl.value : ''));
 }
 
-// ===== SERIAL LENGTH REQUIREMENTS =====
-var SERIAL_LENGTH_REQUIREMENTS = {
-  appliances: {
-    // Whirlpool family - strict 9 or 10 characters
-    'whirlpool':  { typical: [9, 10], minDecode: 9 },
-    'kitchenaid': { typical: [9, 10], minDecode: 9 },
-    'roper':      { typical: [9, 10], minDecode: 9 },
-    'estate':     { typical: [9, 10], minDecode: 9 },
-    'inglis':     { typical: [9, 10], minDecode: 9 },
-    'crosley':    { typical: [9, 10], minDecode: 9 },
-    // GE family - 2 chars to decode, typically 8-10
-    'ge':   { typical: [8, 9, 10], minDecode: 2 },
-    'cafe': { typical: [8, 9, 10], minDecode: 2 },
-    // Frigidaire/Electrolux family - 5 chars to decode, typically 8-10
-    'frigidaire':                        { typical: [8, 9, 10], minDecode: 5 },
-    'electrolux':                        { typical: [8, 9, 10], minDecode: 5 },
-    'philco':                            { typical: [8, 9, 10], minDecode: 5 },
-    'tappan':                            { typical: [8, 9, 10], minDecode: 5 },
-    'kelvinator':                        { typical: [8, 9, 10], minDecode: 5 },
-    'gibson':                            { typical: [8, 9, 10], minDecode: 5 },
-    'white_westinghouse':                { typical: [8, 9, 10], minDecode: 5 },
-    'white_consolidated_industries_wci': { typical: [8, 9, 10], minDecode: 5 },
-    // Samsung - strict 11 or 15 characters
-    'samsung': { typical: [11, 15], minDecode: 11 },
-    // LG - 3 chars to decode, typically 8-12
-    'lg': { typical: [8, 9, 10, 11, 12], minDecode: 3 },
-    // Bosch family - must start with 'FD', typically 9-12
-    'bosch':     { typical: [9, 10, 11, 12], minDecode: 4, prefix: 'FD' },
-    'thermador': { typical: [9, 10, 11, 12], minDecode: 4, prefix: 'FD' },
-    'gaggenau':  { typical: [9, 10, 11, 12], minDecode: 4, prefix: 'FD' },
-    // Maytag/Jenn-Air/Amana/Admiral post-2006 - 2nd alpha char, typically 8-10
-    'maytag_post_2006':   { typical: [8, 9, 10], minDecode: 2 },
-    'jenn_air_post_2006': { typical: [8, 9, 10], minDecode: 2 },
-    'amana_post_2006':    { typical: [8, 9, 10], minDecode: 2 },
-    'admiral_post_2006':  { typical: [8, 9, 10], minDecode: 2 },
-    // Maytag/Jenn-Air/Amana/Admiral pre-2006 - 2nd alpha char, typically 8-10
-    'maytag_pre_2006':   { typical: [8, 9, 10], minDecode: 2 },
-    'jenn_air_pre_2006': { typical: [8, 9, 10], minDecode: 2 },
-    'amana_pre_2006':    { typical: [8, 9, 10], minDecode: 2 },
-    'admiral_pre_2006':  { typical: [8, 9, 10], minDecode: 2 },
-    // Last-2-char family (year+month at end) - typically 7-10
-    'caloric':     { typical: [7, 8, 9, 10], minDecode: 2 },
-    'hardwick':    { typical: [7, 8, 9, 10], minDecode: 2 },
-    'norge':       { typical: [7, 8, 9, 10], minDecode: 2 },
-    'speed_queen': { typical: [7, 8, 9, 10], minDecode: 2 },
-    'magic_chef':  { typical: [7, 8, 9, 10], minDecode: 2 },
-    'modern_maid': { typical: [7, 8, 9, 10], minDecode: 2 },
-    'glenwood':    { typical: [7, 8, 9, 10], minDecode: 2 },
-    'sunray':      { typical: [7, 8, 9, 10], minDecode: 2 },
-    'litton':      { typical: [7, 8, 9, 10], minDecode: 2 },
-    'menumaster':  { typical: [7, 8, 9, 10], minDecode: 2 },
-    'bravos':      { typical: [7, 8, 9, 10], minDecode: 2 },
-    'maycor':      { typical: [7, 8, 9, 10], minDecode: 2 },
-    'neptune':     { typical: [7, 8, 9, 10], minDecode: 2 },
-    'imperial':    { typical: [7, 8, 9, 10], minDecode: 2 },
-    // Other 2-letter decode brands - typically 8-10
-    'norcold':       { typical: [8, 9, 10], minDecode: 2 },
-    'sub_zero':      { typical: [8, 9, 10], minDecode: 2 },
-    'hampton_bay':   { typical: [8, 9, 10], minDecode: 2 },
-    'conquest':      { typical: [8, 9, 10], minDecode: 2 },
-    'coolerator':    { typical: [8, 9, 10], minDecode: 2 },
-    'crystal_tips':  { typical: [8, 9, 10], minDecode: 2 },
-    'partners_plus': { typical: [8, 9, 10], minDecode: 2 },
-    'jordan':        { typical: [8, 9, 10], minDecode: 2 },
-    'sinkguard':     { typical: [8, 9, 10], minDecode: 2 },
-    'kenmore':       { typical: [8, 9, 10], minDecode: 2 }
-  },
-  waterHeater: {
-    // Rheem family - MMYYXXXXXX = 10 digits
-    'rheem':                         { typical: [10], minDecode: 4 },
-    'ruud':                          { typical: [10], minDecode: 4 },
-    'richmond':                      { typical: [10], minDecode: 4 },
-    'vanguard':                      { typical: [10], minDecode: 4 },
-    'ge_water_heaters':              { typical: [10], minDecode: 4 },
-    'montgomery_ward':               { typical: [10], minDecode: 4 },
-    'aqua_therm':                    { typical: [10], minDecode: 4 },
-    'energy_master':                 { typical: [10], minDecode: 4 },
-    'cimarron':                      { typical: [10], minDecode: 4 },
-    // AO Smith family - variable pre/post 2008, typically 9-10
-    'a_o_smith':                     { typical: [9, 10], minDecode: 3 },
-    'state_industries':              { typical: [9, 10], minDecode: 3 },
-    'reliance_water_heaters':        { typical: [9, 10], minDecode: 3 },
-    'american_water_heater_company': { typical: [9, 10], minDecode: 3 },
-    'u_s_craftmaster':               { typical: [9, 10], minDecode: 3 },
-    'gsw':                           { typical: [9, 10], minDecode: 3 },
-    'intertherm_miller':             { typical: [9, 10], minDecode: 3 },
-    // Whirlpool water heaters - strict 9 or 10
-    'whirlpool_water_heaters': { typical: [9, 10], minDecode: 9 },
-    // Bradford White - 6 or 15 characters
-    'bradford_white': { typical: [6, 15], minDecode: 6 }
-  },
-  hvac: {
-    // Goodman/Amana HVAC - YYMM format, typically 9-11
-    'goodman': { typical: [9, 10, 11], minDecode: 4 },
-    'amana':   { typical: [9, 10, 11], minDecode: 4 },
-    // Carrier/Bryant/Payne - WWYY format, typically 9-11
-    'carrier': { typical: [9, 10, 11], minDecode: 4 },
-    'bryant':  { typical: [9, 10, 11], minDecode: 4 },
-    'payne':   { typical: [9, 10, 11], minDecode: 4 },
-    // Rheem/Ruud HVAC - XWWYY format, typically 9-11
-    'rheem': { typical: [9, 10, 11], minDecode: 5 },
-    'ruud':  { typical: [9, 10, 11], minDecode: 5 },
-    // Trane/American Standard - positions 3-4, typically 9-11
-    'trane':             { typical: [9, 10, 11], minDecode: 4 },
-    'american_standard': { typical: [9, 10, 11], minDecode: 4 },
-    // Lennox - 6 chars to decode, typically 8-11
-    'lennox': { typical: [8, 9, 10, 11], minDecode: 6 },
-    // York - 3 chars to decode, typically 8-11
-    'york': { typical: [8, 9, 10, 11], minDecode: 3 }
-  },
-  electronics: {
-    // Samsung TV - strict 11 or 15 characters
-    'samsung_tv': { typical: [11, 15], minDecode: 11 },
-    // LG TV - 3 chars to decode, typically 8-12
-    'lg_tv': { typical: [8, 9, 10, 11, 12], minDecode: 3 },
-    // Apple - strict 10 (post-2021) or 12 (pre-2021)
-    'apple': { typical: [10, 12], minDecode: 10 },
-    // Samsung phone - 6 chars to decode, typically 9-11
-    'samsung_phone': { typical: [9, 10, 11], minDecode: 6 },
-    // HP - 6 or 15 characters
-    'hp': { typical: [6, 15], minDecode: 6 },
-    // Asus - 2 chars to decode, typically 9-12
-    'asus': { typical: [9, 10, 11, 12], minDecode: 2 },
-    // Google Pixel - 3 chars to decode, typically 9-11
-    'google_pixel': { typical: [9, 10, 11], minDecode: 3 },
-    // Vizio - 5 chars to decode, typically 9-11
-    'vizio': { typical: [9, 10, 11], minDecode: 5 },
-    // Panasonic - 2 chars to decode, typically 9-11
-    'panasonic': { typical: [9, 10, 11], minDecode: 2 }
-    // Sony is model-based - no serial length check needed
-  }
-};
-
-function getSerialLengthReq(category, brandId) {
-  var catMap = SERIAL_LENGTH_REQUIREMENTS[category];
-  return catMap ? (catMap[brandId] || null) : null;
-}
-
-function formatTypicalLengths(typical) {
-  if (!typical || typical.length === 0) return 'standard length';
-  var sorted = typical.slice().sort(function(a, b) { return a - b; });
-  if (sorted.length === 1) return sorted[0] + ' characters';
-  var isConsecutive = sorted.every(function(v, i) { return i === 0 || v === sorted[i - 1] + 1; });
-  if (isConsecutive && sorted.length > 2) return sorted[0] + ' to ' + sorted[sorted.length - 1] + ' characters';
-  if (sorted.length === 2) return sorted[0] + ' and ' + sorted[1] + ' characters';
-  return sorted.slice(0, -1).join(', ') + ', and ' + sorted[sorted.length - 1] + ' characters';
-}
-
-function firstPatternMismatch(pattern, serial) {
-  if (!pattern || !pattern.mask) return null;
-  var mask = String(pattern.mask);
-  var max = Math.min(mask.length, serial.length);
-  for (var i = 0; i < max; i++) {
-    var expected = mask[i];
-    var actual = serial[i] || '';
-    if (expected === '*') continue;
-    if (expected === '#' && !/^\d$/.test(actual)) {
-      var kind = /^[A-Z]$/.test(actual) ? 'letter' : 'symbol';
-      return {
-        index: i + 1,
-        message: 'There is a ' + kind + ' at position ' + (i + 1) + ' where a numeral is expected. Please check the serial and try again to complete the result.'
-      };
-    }
-    if (expected === 'A' && !/^[A-Z]$/.test(actual)) {
-      var kind2 = /^\d$/.test(actual) ? 'numeral' : 'symbol';
-      return {
-        index: i + 1,
-        message: 'There is a ' + kind2 + ' at position ' + (i + 1) + ' where a letter is expected. Please check the serial and try again to complete the result.'
-      };
-    }
-  }
-  return null;
-}
-
-function doesPatternMatch(pattern, serial) {
-  if (!pattern || !pattern.length || serial.length !== pattern.length) return false;
-  if (pattern.prefix && serial.indexOf(String(pattern.prefix).toUpperCase()) !== 0) return false;
-  return !firstPatternMismatch(pattern, serial);
-}
-
-function validateSerialAgainstPatterns(serial, patterns) {
-  if (!patterns || !patterns.length) return { valid: true, hasPatterns: false };
-  var byLength = patterns.filter(function(p) { return p && p.length === serial.length; });
-
-  for (var i = 0; i < patterns.length; i++) {
-    if (doesPatternMatch(patterns[i], serial)) return { valid: true, hasPatterns: true, matchedPattern: patterns[i] };
-  }
-
-  if (byLength.length) {
-    var best = null;
-    for (var j = 0; j < byLength.length; j++) {
-      var mm = firstPatternMismatch(byLength[j], serial);
-      if (mm && (!best || mm.index < best.index)) best = mm;
-    }
-    return {
-      valid: false,
-      hasPatterns: true,
-      type: 'mask',
-      message: best ? best.message : 'This serial number does not match the known formats for this brand. Please check the serial and try again.'
-    };
-  }
-
-  return {
-    valid: false,
-    hasPatterns: true,
-    type: 'length',
-    message: 'This serial number does not match the known formats for this brand. Please check the serial and try again.'
-  };
-}
-
-function buildPatternLines(patterns) {
-  return (patterns || []).map(function(p) {
-    var name = p.name || (p.length + '-char pattern');
-    var notes = p.notes || ('Expected ' + p.length + ' characters.');
-    var mask = p.mask || '';
-    return '- ' + name + ' - ' + notes + (mask ? ' (Example format: ' + mask + ')' : '');
-  });
-}
-
-function showPatternValidationError(decoder, serial, brandId, validation, patterns) {
-  var monthRow = document.getElementById('resultMonthRow');
-  if (monthRow) monthRow.style.display = 'none';
-  var yearEl = document.getElementById('resultYear');
-  if (yearEl) {
-    yearEl.textContent = '';
-    if (yearEl.closest) { var yr = yearEl.closest('.result-row'); if (yr) yr.style.display = 'none'; }
-  }
-  var ageEl = document.getElementById('resultEstimatedAge');
-  if (ageEl) {
-    ageEl.textContent = '\u2014';
-    if (ageEl.closest) { var ar = ageEl.closest('.result-row'); if (ar) ar.style.display = 'none'; }
-  }
-  var refinePanel = document.querySelector('.narrow-date-panel');
-  if (refinePanel) refinePanel.classList.add('hidden');
-
-  var brandName = decoder && decoder.name ? decoder.name : 'Selected brand';
-  var lines = [
-    'Serial format not recognized for ' + brandName + '.',
-    'This serial number does not match the known formats for ' + brandName + '. Please check the serial and try again.'
-  ];
-  if (validation && validation.message) lines.push('', validation.message);
-  var known = buildPatternLines(patterns);
-  if (known.length) lines.push('', 'Known formats:', known.join('\n'));
-
-  document.getElementById('resultBrand').textContent  = brandName;
-  document.getElementById('resultMethod').textContent = (decoder && (decoder.method || decoder.serialLengthNote)) || 'Check the product label and ensure the full serial number is entered.';
-  document.getElementById('resultNotes').textContent  = lines.join('\n');
-  updateResultWarning({ year: 'Unknown', month: '' }, brandId);
-  renderSerialMethodsDropdown(brandId, brandName, currentCategory, serial);
-  showBrandLogo('serialBrandLogo', brandId, brandName);
-  updateSearchQueryLine();
-  currentFeedbackContext = { brand: brandName, serial: serial };
-  document.getElementById('ageResults').classList.add('hidden');
-  document.getElementById('serialResults').classList.remove('hidden');
-  document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function showSerialLengthError(decoder, serial, brandId, req) {
-  var monthRow = document.getElementById('resultMonthRow');
-  if (monthRow) monthRow.style.display = 'none';
-  var yearEl = document.getElementById('resultYear');
-  if (yearEl) {
-    yearEl.textContent = '';
-    if (yearEl.closest) { var yr = yearEl.closest('.result-row'); if (yr) yr.style.display = 'none'; }
-  }
-  var ageEl = document.getElementById('resultEstimatedAge');
-  if (ageEl) {
-    ageEl.textContent = '\u2014';
-    if (ageEl.closest) { var ar = ageEl.closest('.result-row'); if (ar) ar.style.display = 'none'; }
-  }
-  var refinePanel = document.querySelector('.narrow-date-panel');
-  if (refinePanel) refinePanel.classList.add('hidden');
-
-  var lenStr = formatTypicalLengths(req.typical);
-  var prefixNote = req.prefix ? ' Serial numbers for this brand must begin with \u2018' + req.prefix + '\u2019.' : '';
-  document.getElementById('resultBrand').textContent  = decoder.name;
-  document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || '';
-  document.getElementById('resultNotes').textContent  =
-    'This brand uses serial numbers that are ' + lenStr + ' in length.' + prefixNote +
-    ' Search again or use Smart Lookup.';
-
-  updateResultWarning({ year: 'Unknown', month: '' }, brandId);
-  renderSerialMethodsDropdown(brandId, decoder.name, currentCategory, serial);
-  showBrandLogo('serialBrandLogo', brandId, decoder.name);
-  updateSearchQueryLine();
-  currentFeedbackContext = { brand: decoder.name, serial: serial };
-
-  document.getElementById('ageResults').classList.add('hidden');
-  document.getElementById('serialResults').classList.remove('hidden');
-  document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// ===== DUAL-ERA RESULT (split brands: Amana, Maytag, Admiral, Jenn-Air) =====
-function buildEraBlock(era, label, tag, result, decoder) {
-  var yearStr = result ? String(result.year || '') : '';
-  var hasUnknown = yearStr.indexOf('Unknown') !== -1;
-  var html = '<div class="era-result-block era-result-' + era + (hasUnknown || !result ? ' era-result-uncertain' : '') + '">';
-  html += '<div class="era-result-heading">' + esc(label) + '<span class="era-method-tag">' + esc(tag) + '</span></div>';
-  if (!result) {
-    html += '<div class="era-unknown-note">This serial does not match the ' + esc(label) + ' format.</div>';
-  } else {
-    var displayYear = capYear(yearStr);
-    html += '<div class="result-row"><span class="result-label">Manufacturer Date</span><span class="result-value">' + esc(displayYear) + '</span></div>';
-    if (result.month && result.month !== 'N/A') {
-      html += '<div class="result-row"><span class="result-label">Month / Period</span><span class="result-value">' + esc(result.month) + '</span></div>';
-    }
-    if (!hasUnknown) {
-      var age = computeEstimatedAge(displayYear);
-      if (age && age !== '\u2014') {
-        html += '<div class="result-row"><span class="result-label">Estimated Age</span><span class="result-value">' + esc(age) + '</span></div>';
-      }
-    } else {
-      html += '<div class="era-unknown-note">Year code not recognized \u2014 this method likely does not apply to your serial.</div>';
-    }
-  }
-  if (decoder) {
-    html += '<div class="era-method-note">' + esc(decoder.decodeMethod || decoder.serialLengthNote || '') + '</div>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function showDualEraResult(metaBrandId, cfg, serial) {
-  var decoders = decoderData[currentCategory].decoders;
-  var postDecoder = decoders[cfg.post];
-  var preDecoder  = decoders[cfg.pre];
-  var postResult  = postDecoder ? postDecoder.decode(serial) : null;
-  var preResult   = preDecoder  ? preDecoder.decode(serial)  : null;
-  var brandName   = cfg.label;
-
-  var html = '';
-  html += '<div class="info-block era-split-notice">';
-  html += '<h4>Two Decoding Methods</h4>';
-  html += '<p><strong>' + esc(brandName) + '</strong> changed its serial number format when Whirlpool acquired the brand in 2006. ';
-  html += 'Both methods have been applied to your serial below.</p>';
-  html += '</div>';
-
-  html += '<div class="era-dual-results">';
-  html += buildEraBlock('post', 'Post-2006', 'Whirlpool era', postResult, postDecoder);
-  html += buildEraBlock('pre',  'Pre-2006',  'Legacy era',    preResult,  preDecoder);
-  html += '</div>';
-
-  html += '<details class="determination-details era-determine-guide">';
-  html += '<summary>How to tell which result is correct</summary>';
-  html += '<div class="determination-body">';
-  html += '<p><strong>Post-2006 (Whirlpool era):</strong> Year is encoded at a fixed character position \u2014 position 2 in a 9-character serial, or position 3 in a 10-character serial. The result shows a dual year like \u201c2012/2042\u201d reflecting the 30-year repeating cycle. Units purchased in 2006 or later use this method.</p>';
-  html += '<p><strong>Pre-2006 (Legacy era):</strong> Year and month are encoded as letter codes in the last two characters of the serial. If the Pre-2006 result shows \u201cYear code not recognized,\u201d that method does not apply to your serial.</p>';
-  html += '<p><strong>Quick guide:</strong> If one result shows an unrecognized code and the other shows a valid year, the valid one is almost certainly correct. If you know when the appliance was purchased \u2014 before or after 2006 \u2014 use the matching result.</p>';
-  html += '</div>';
-  html += '</details>';
-  html += buildDecodingMethodsDropdownHtml(
-    collectBrandMethodEntries(metaBrandId, brandName, currentCategory),
-    'All Decoding Methods for this Brand',
-    serial
-  );
-
-  // Inject into results-body, hiding all standard rows
-  var resultsBody = document.querySelector('#serialResults .results-body');
-  if (resultsBody) {
-    var dualDisplay = document.getElementById('dualEraDisplay');
-    if (!dualDisplay) {
-      dualDisplay = document.createElement('div');
-      dualDisplay.id = 'dualEraDisplay';
-      resultsBody.insertBefore(dualDisplay, resultsBody.firstChild);
-    }
-    dualDisplay.innerHTML = html;
-    dualDisplay.style.display = '';
-    resultsBody.classList.add('results-body--dual');
-  }
-
-  showBrandLogo('serialBrandLogo', metaBrandId, brandName);
-  currentFeedbackContext = { brand: brandName, serial: serial };
-
-  setLoadingSuccess(function() {
-    document.getElementById('serialResults').classList.remove('hidden');
-    document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  });
-}
-
 // ===== SERIAL DECODE =====
 function decodeSerial() {
   var dom = getDecodeDom();
@@ -3340,7 +2463,7 @@ function decodeSerial() {
   var metaBrandId = dom.brandEl.value;
   var serialInput = dom.serialEl.value.trim();
   if (!metaBrandId || !serialInput) return;
-  var serial = serialInput.toUpperCase().replace(/\s+/g, '');
+  var serial = serialInput.replace(/[^A-Za-z0-9]/g, '');
   if (!serial) return;
   if (serial !== serialInput) dom.serialEl.value = serial;
 
@@ -3354,121 +2477,20 @@ function decodeSerial() {
   }
 
   var brandId = resolveDecoderId(metaBrandId);
-  var _splitEraConfig = null;
   if (!brandId) {
-    var _ecc = CYCLING_BRANDS[currentCategory] || {};
-    var _eccCfg = _ecc[metaBrandId] || _ecc[normalizeBrandId(metaBrandId)];
-    if (_eccCfg && _eccCfg.type === 'split') {
-      _splitEraConfig = _eccCfg;
-    } else {
-      var selected = '';
-      if (dom.brandEl && dom.brandEl.selectedIndex >= 0) {
-        selected = dom.brandEl.options[dom.brandEl.selectedIndex].textContent || '';
-      }
-      showDecodeFallback(
-        { name: selected || 'Selected brand', method: 'Decoder configuration not found for this brand.' },
-        serial,
-        metaBrandId,
-        'Brand not supported or missing decoder mapping'
-      );
-      return;
-    }
+    showCustomAlert('Please select the manufacture era for this brand.');
+    return;
   }
 
   var isKenmore = (normalizeBrandId(metaBrandId) === 'kenmore');
   var kenmoreResolution = null;
   if (isKenmore) {
     kenmoreResolution = resolveKenmoreDecoderFromPrefix();
-    if (kenmoreResolution.noPrefix) {
-      // Pre-validation: no loading animation - show prompt directly
-      var _km = document.getElementById('resultMonthRow'); if (_km) _km.style.display = 'none';
-      var _ky = document.getElementById('resultYear'); if (_ky) { _ky.textContent = ''; var _kyr = _ky.closest ? _ky.closest('.result-row') : null; if (_kyr) _kyr.style.display = 'none'; }
-      var _ka = document.getElementById('resultEstimatedAge'); if (_ka) { _ka.textContent = '\u2014'; var _kar = _ka.closest ? _ka.closest('.result-row') : null; if (_kar) _kar.style.display = 'none'; }
-      var _kp = document.querySelector('.narrow-date-panel'); if (_kp) _kp.classList.add('hidden');
-      document.getElementById('resultBrand').textContent  = 'Kenmore';
-      document.getElementById('resultMethod').textContent = 'Model prefix required to identify OEM manufacturer';
-      document.getElementById('resultNotes').textContent  = kenmoreResolution.note;
-      updateSearchQueryLine();
-      updateResultWarning({ year: 'Unknown', month: '' }, 'kenmore');
-      renderSerialMethodsDropdown('kenmore', 'Kenmore', currentCategory, serial);
-      showBrandLogo('serialBrandLogo', 'kenmore', 'Kenmore');
-      currentFeedbackContext = { brand: 'Kenmore', serial: serial };
-      document.getElementById('ageResults').classList.add('hidden');
-      document.getElementById('serialResults').classList.remove('hidden');
-      document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      return;
-    }
     brandId = kenmoreResolution.decoderId;
   }
 
-  // Era-split brands: decode both pre and post methods simultaneously
-  if (_splitEraConfig) {
-    updateSearchQueryLine();
-    document.getElementById('serialResults').classList.add('hidden');
-    document.getElementById('ageResults').classList.add('hidden');
-    var _sb = document.getElementById('moreOptionsBody'); if (_sb) _sb.classList.add('hidden');
-    var _sa = document.getElementById('moreOptionsArrow'); if (_sa) _sa.classList.remove('open');
-    ['replacements', 'specs', 'market'].forEach(function(t) {
-      var _sel = document.getElementById('ai-result-' + t);
-      if (_sel) { _sel.classList.add('hidden'); _sel.textContent = ''; }
-    });
-    setLoadingActive();
-    setTimeout(function() {
-      showDualEraResult(metaBrandId, _splitEraConfig, serial);
-    }, 1400);
-    return;
-  }
-
   var decoder = decoderData[currentCategory].decoders[brandId];
-  if (!decoder) {
-    var selectedName = '';
-    if (dom.brandEl && dom.brandEl.selectedIndex >= 0) {
-      selectedName = dom.brandEl.options[dom.brandEl.selectedIndex].textContent || '';
-    }
-    showDecodeFallback(
-      { name: selectedName || 'Selected brand', method: 'Brand decoder is not available for this selection.' },
-      serial,
-      brandId || metaBrandId,
-      'Decoder not found for this brand'
-    );
-    return;
-  }
-
-  var kenmoreRareResult = null;
-  if (isKenmore && kenmoreResolution && kenmoreResolution.prefix === '401') {
-    kenmoreRareResult = decodeKenmoreSamsungRarePattern(serial, kenmoreResolution, decoder);
-  }
-
-  if (/[^A-Z0-9]/.test(serial)) {
-    showPatternValidationError(
-      decoder,
-      serial,
-      brandId,
-      { message: 'The serial contains unsupported symbols. Use letters and numerals only.' },
-      decoder.patterns || []
-    );
-    return;
-  }
-
-  // === SERIAL LENGTH PRE-VALIDATION ===
-  var _serialReq = getSerialLengthReq(currentCategory, brandId);
-  if (_serialReq && (!decoder.patterns || !decoder.patterns.length)) {
-    var _prefixFail = _serialReq.prefix &&
-      serial.toUpperCase().indexOf(_serialReq.prefix.toUpperCase()) !== 0;
-    if (serial.length < _serialReq.minDecode || _prefixFail) {
-      showSerialLengthError(decoder, serial, brandId, _serialReq);
-      return;
-    }
-  }
-
-  // === MASK PATTERN PRE-VALIDATION ===
-  if (!kenmoreRareResult) {
-    var patternValidation = validateSerialAgainstPatterns(serial, decoder.patterns || []);
-    if (!patternValidation.valid) {
-      showPatternValidationError(decoder, serial, brandId, patternValidation, decoder.patterns || []);
-      return;
-    }
-  }
+  if (!decoder) { showCustomAlert('Decoder not found for this brand'); return; }
 
   updateSearchQueryLine();
 
@@ -3488,13 +2510,6 @@ function decodeSerial() {
 
   // Hold the cloud for at least 1400ms so the sun transition reaches ~2 s total
   setTimeout(function() {
-    // Clear dual-era mode if previous decode was a split brand
-    (function() {
-      var _drb = document.querySelector('#serialResults .results-body');
-      if (_drb) _drb.classList.remove('results-body--dual');
-      var _ded = document.getElementById('dualEraDisplay');
-      if (_ded) { _ded.innerHTML = ''; _ded.style.display = 'none'; }
-    })();
     // Reset row/block visibility from any previous fallback state
     (function() {
       var _yr = document.getElementById('resultYear');
@@ -3503,7 +2518,7 @@ function decodeSerial() {
       if (_ae && _ae.closest) { var r2 = _ae.closest('.result-row'); if (r2) r2.style.display = ''; }
     })();
 
-    var result = kenmoreRareResult || decoder.decode(serial);
+    var result = decoder.decode(serial);
     var sanity  = sanitizeDecodeResult(result);
     var monthRow  = document.getElementById('resultMonthRow');
 
@@ -3511,28 +2526,9 @@ function decodeSerial() {
       var _reason = !result
         ? 'Decoder returned null for serial: ' + serial
         : (sanity.reason || 'Sanity check failed');
-      var _failNotes = null;
-      if (_serialReq && _serialReq.typical.length > 0) {
-        var _lenStr = formatTypicalLengths(_serialReq.typical);
-        var _pfx = _serialReq.prefix ? ' Serial numbers for this brand must begin with \u2018' + _serialReq.prefix + '\u2019.' : '';
-        _failNotes = 'This brand uses serial numbers that are ' + _lenStr + ' in length.' + _pfx + ' Search again or use Smart Lookup.';
-      }
-      if (!_failNotes && (!decoder.patterns || !decoder.patterns.length)) {
-        _failNotes = 'Serial format not recognized for ' + decoder.name + '. Please check the serial and try again.\n\n' +
-          'We\'re sorry, our system is having trouble decoding that number. Please refer to the decoding method above.';
-      }
-      var _prefixGuidance = buildRheemPrefixGuidance(brandId, serial);
-      if (_prefixGuidance) {
-        _failNotes = (_failNotes ? (_failNotes + '\n\n') : '') + _prefixGuidance;
-      }
-      var _panasonicHint = buildPanasonicNonNumericHint(brandId, serial);
-      if (_panasonicHint) {
-        _failNotes = (_failNotes ? (_failNotes + '\n\n') : '') + _panasonicHint;
-      }
-      showDecodeFallback(decoder, serial, brandId, _reason, _failNotes);
+      showDecodeFallback(decoder, serial, brandId, _reason);
       return;
     }
-    result = sanity.result || result;
     if (monthRow) monthRow.style.display = '';
 
     // === ERA FILTERING: filter candidate years to the selected era BEFORE display ===
@@ -3541,10 +2537,10 @@ function decodeSerial() {
     if (_eraVal && result && result.year) {
       var _filteredYear = filterYearsByEra(String(result.year), _eraVal);
       if (_filteredYear === null) {
-        // No candidate years match the selected era - show clear message, no age
+        // No candidate years match the selected era � show clear message, no age
         document.getElementById('resultBrand').textContent  = decoder.name;
         document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'N/A';
-        document.getElementById('resultNotes').textContent  = 'No matching dates found for the selected era. Try switching to Pre-2006 or Post-2006.';
+        document.getElementById('resultNotes').textContent  = sanitizeAlertText('No matching dates found for the selected era. Try switching to Pre-2006 or Post-2006.');
         updateResultWarning({ year: 'Unknown', month: '' }, brandId);
         var _yearEl = document.getElementById('resultYear');
         if (_yearEl) {
@@ -3570,10 +2566,7 @@ function decodeSerial() {
         return;
       }
       // Assign the era-filtered year back so all downstream display uses it
-      result = Object.assign({}, result, {
-        year: _filteredYear,
-        _ageYear: /^\d{4}$/.test(String(_filteredYear || '')) ? String(_filteredYear) : ''
-      });
+      result = Object.assign({}, result, { year: _filteredYear });
     }
 
     document.getElementById('resultYear').textContent    = capYear(result.year);
@@ -3600,39 +2593,15 @@ function decodeSerial() {
     })();
 
     var notesText = decoder.notes || decoder.decodeNotes || 'N/A';
-    if (kenmoreRareResult && kenmoreRareResult.rarePattern) {
-      notesText = kenmoreRareResult.rarePattern + '. ' + notesText;
+    if (isKenmore && kenmoreResolution && kenmoreResolution.note) {
+      notesText = kenmoreResolution.note + (notesText ? ' ' + notesText : '');
     }
-    if (isKenmore && kenmoreResolution) {
-      var _kenmoreBaseNote = 'Kenmore appliances are manufactured by third-party companies under contract with Sears. ' +
-        'The decode method and result above are based on the OEM manufacturer (' + kenmoreResolution.manufacturer + ') identified by your model prefix. ' +
-        'Results follow a ' + (kenmoreResolution.cycle || 30) + '-year repeating cycle \u2014 use appliance condition and features to confirm the decade.';
-      var _kenmoreFullNote = kenmoreResolution.note
-        ? kenmoreResolution.note + ' ' + _kenmoreBaseNote
-        : _kenmoreBaseNote;
-      notesText = _kenmoreFullNote + (notesText && notesText !== 'N/A' ? '\n\n' + notesText : '');
-    }
-    // Prepend a short-serial warning when the input was shorter than the brand's typical length
-    if (_serialReq && _serialReq.typical.length > 0) {
-      var _typicalMin = Math.min.apply(null, _serialReq.typical);
-      if (serial.length < _typicalMin) {
-        var _shortNote = 'Note: Serial numbers from this brand are typically ' +
-          formatTypicalLengths(_serialReq.typical) + '. Please verify the information above before proceeding with this estimated age.';
-        notesText = _shortNote + (notesText && notesText !== 'N/A' ? '\n\n' + notesText : '');
-      }
-    }
-    var _panasonicNoteHint = buildPanasonicNonNumericHint(brandId, serial);
-    if (_panasonicNoteHint) {
-      notesText = _panasonicNoteHint + (notesText && notesText !== 'N/A' ? '\n\n' + notesText : '');
-    }
-    document.getElementById('resultNotes').textContent = notesText;
-    updateResultWarning(result, brandId, serial);
-    renderSerialMethodsDropdown(brandId, decoder.name, currentCategory, serial);
+    document.getElementById('resultNotes').textContent = sanitizeAlertText(notesText);
+    updateResultWarning(result, brandId);
 
     // Compute derived display fields from output shape (no decode rules exposed)
     var _displayedYear = document.getElementById('resultYear').textContent;
-    var _ageSourceYear = result._ageYear || _displayedYear;
-    document.getElementById('resultEstimatedAge').textContent = computeEstimatedAge(_ageSourceYear);
+    document.getElementById('resultEstimatedAge').textContent = computeEstimatedAge(_displayedYear);
 
     showBrandLogo('serialBrandLogo', brandId, decoder.name);
     currentFeedbackContext = {
@@ -3672,7 +2641,7 @@ function copyClaimFile() {
   var brand = brandEl  ? brandEl.textContent.trim()  : '';
   var age   = ageEl    ? ageEl.textContent.trim()    : '';
 
-  // Get only the one-line method string - strip the decode-detail span if present
+  // Get only the one-line method string — strip the decode-detail span if present
   var method = '';
   if (methodEl) {
     var methodClone = methodEl.cloneNode(true);
@@ -3743,6 +2712,13 @@ function decodeAnotherItem() {
   if (refinePanel) refinePanel.classList.add('hidden');
   var refineOut = document.getElementById('narrowDateOutput');
   if (refineOut) refineOut.innerHTML = '';
+  var serialLkqResults = document.getElementById('serialLkqResults');
+  if (serialLkqResults) serialLkqResults.classList.add('hidden');
+  var serialModelInput = document.getElementById('serial-lkq-model-input');
+  if (serialModelInput) serialModelInput.value = '';
+  LKQEngine.clearInstance('serial-decoder');
+  LKQEngine.clearInstance('smart-lookup');
+  clearSmartLookupAssist();
   updateDecodeBtn();
   window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   setTimeout(function() {
@@ -3814,36 +2790,34 @@ function clearEmojiCursor() {
   return;
 }
 
-// ===== LOADING STATE (cloud -> sun) =====
+// ===== LOADING STATE (🌩️ → ☀️) =====
 function setLoadingActive() {
   var emoji   = document.getElementById('loadingEmoji');
   var loading = document.getElementById('ageLoading');
   // Hide placeholder once a search has started
   var placeholder = document.getElementById('resultsPlaceholder');
   if (placeholder) placeholder.classList.add('hidden');
-  document.body.style.cursor = 'url("data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\'><text y=\'28\' font-size=\'28\'>\uD83D\uDD75\uFE0F</text></svg>") 16 16, auto';
   if (emoji) {
-    emoji.textContent = '\uD83C\uDF29\uFE0F';
+    emoji.textContent = '🌩️';
     emoji.className   = 'loading-emoji lightning';
   }
   // Reset loading text to default (estimateAge() overrides this for AI searches)
   var lt = document.getElementById('loadingText');
   if (lt) lt.textContent = 'Researching product information...';
   loading.classList.remove('hidden');
-  setEmojiCursor('\uD83C\uDF29\uFE0F');
+  setEmojiCursor('🌩️');
 }
 
 function setLoadingSuccess(callback) {
   var emoji = document.getElementById('loadingEmoji');
   if (emoji) {
-    emoji.textContent = '\u2600\uFE0F';
+    emoji.textContent = '☀️';
     emoji.className   = 'loading-emoji sun';
   }
-  setEmojiCursor('\u2600\uFE0F');
+  setEmojiCursor('☀️');
   setTimeout(function() {
     document.getElementById('ageLoading').classList.add('hidden');
     clearEmojiCursor();
-    document.body.style.cursor = '';
     if (callback) callback();
   }, 600);
 }
@@ -3851,7 +2825,6 @@ function setLoadingSuccess(callback) {
 function setLoadingHidden() {
   document.getElementById('ageLoading').classList.add('hidden');
   clearEmojiCursor();
-  document.body.style.cursor = '';
 }
 
 // ===== BRAND LOGO =====
@@ -3887,10 +2860,18 @@ function showSmartLookupNotice(type, message) {
   var bg    = isCapacity ? '#fffbeb' : '#f0f9ff';
   var border = isCapacity ? '#f59e0b' : '#00b4d8';
   var color  = isCapacity ? '#92400e' : '#0c4a6e';
+  var iconColor = isCapacity ? '#b45309' : '#0369a1';
+  var safeMessage = sanitizeAlertText(message);
+  var alertIcon = '' +
+    '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="flex:0 0 auto;fill:' + iconColor + ';">' +
+      '<path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"></path>' +
+    '</svg>';
   if (body) {
     body.innerHTML =
-      '<div style="background:' + bg + ';border-left:3px solid ' + border + ';border-radius:8px;padding:1rem 1.125rem;font-size:0.875rem;color:' + color + ';line-height:1.65;">' +
-      message + '</div>';
+      '<div style="background:' + bg + ';border-left:3px solid ' + border + ';border-radius:8px;padding:1rem 1.125rem;font-size:0.875rem;color:' + color + ';line-height:1.65;display:flex;gap:0.625rem;align-items:flex-start;">' +
+      alertIcon +
+      '<div style="min-width:0;">' + safeMessage + '</div>' +
+      '</div>';
   }
   var ageResults = document.getElementById('ageResults');
   if (ageResults) {
@@ -3918,501 +2899,334 @@ async function parseJsonResponseSafe(res, contextLabel) {
   };
 }
 
-// ===== SMART LOOKUP ITEM TYPE DETECTION =====
-var SMART_LOOKUP_CATEGORIES = {
-  appliance: ['washer', 'dryer', 'refrigerator', 'fridge', 'dishwasher', 'oven', 'range', 'microwave', 'freezer', 'ice maker', 'cooktop', 'stovetop', 'stove', 'washing machine', 'clothes washer', 'front load', 'top load', 'garbage disposal', 'trash compactor'],
-  waterHeater: ['water heater', 'hot water heater', 'water tank', 'tankless', 'water boiler', 'on-demand water heater'],
-  hvac: ['furnace', 'air conditioner', 'ac', 'heat pump', 'hvac', 'air handler', 'condenser', 'boiler', 'mini split', 'air purifier', 'dehumidifier', 'humidifier', 'thermostat', 'ductless'],
-  electronics: ['tv', 'television', 'monitor', 'phone', 'smartphone', 'tablet', 'laptop', 'computer', 'desktop', 'printer', 'camera', 'speaker', 'soundbar', 'projector', 'headphones', 'earbuds', 'smartwatch', 'watch', 'router', 'modem', 'streaming device', 'game console', 'gaming console']
-};
+// ===== ESTIMATE AGE — delegates to LKQ engine (Smart Lookup entry point) =====
+function estimateAge() {
+  runLKQLookup();
+}
 
-// ===== SUPPORTED TERMS REFERENCE =====
-var SUPPORTED_TERMS = {
-  appliances: ['washer', 'dryer', 'refrigerator', 'fridge', 'dishwasher', 'oven', 'range', 'microwave', 'freezer', 'ice maker', 'cooktop', 'stove', 'garbage disposal', 'trash compactor', 'washing machine', 'front load', 'top load'],
-  hvac: ['furnace', 'air conditioner', 'ac', 'heat pump', 'hvac', 'air handler', 'condenser', 'boiler', 'mini split', 'air purifier', 'dehumidifier', 'humidifier', 'thermostat', 'ductless'],
-  waterHeater: ['water heater', 'hot water heater', 'water tank', 'tankless', 'water boiler', 'on-demand water heater'],
-  electronics: ['tv', 'television', 'monitor', 'phone', 'smartphone', 'tablet', 'laptop', 'computer', 'desktop', 'printer', 'camera', 'speaker', 'soundbar', 'projector', 'headphones', 'earbuds', 'smartwatch', 'watch', 'router', 'modem', 'streaming device', 'game console', 'gaming console'],
-  brands: ['LG', 'Samsung', 'Whirlpool', 'GE', 'Frigidaire', 'Maytag', 'KitchenAid', 'Bosch', 'Electrolux', 'Sony', 'Vizio', 'Panasonic', 'Apple', 'HP', 'Asus', 'Google', 'Nintendo', 'Microsoft', 'Trane', 'Carrier', 'Goodman', 'Lennox', 'Rheem', 'Ruud', 'Bradford White', 'AO Smith', 'State', 'American Standard', 'Bryant', 'York', 'Payne', 'Amana', 'Admiral', 'Kenmore', 'Roper', 'Estate', 'Inglis', 'Thermador', 'Sub-Zero', 'Viking', 'Miele']
-};
-
-var SMART_LOOKUP_BLOCKLIST = [
-  'wedding', 'birthday', 'recipe', 'baby', 'school', 'weather', 'sports', 'movie',
-  'song', 'stock', 'crypto', 'horoscope', 'politics', 'election', 'concert',
-  'restaurant', 'hotel', 'flight', 'dating', 'diet', 'yoga', 'meditation', 'lottery',
-  'casino', 'gambling', 'tattoo', 'haircut', 'makeup', 'nail', 'perfume', 'cologne'
+var SMART_LOOKUP_BRANDS = [
+  'apple', 'carrier', 'nest', 'google', 'samsung', 'lg', 'ge', 'whirlpool', 'hotpoint', 'kitchenaid',
+  'frigidaire', 'bosch', 'maytag', 'amana', 'kenmore', 'electrolux', 'rheem', 'ruud', 'trane', 'goodman',
+  'lennox', 'york', 'tempstar', 'heil', 'bryant', 'shark', 'dyson', 'sony', 'vizio', 'panasonic', 'hp',
+  'dell', 'lenovo', 'asus', 'acer', 'msi', 'bose', 'jbl', 'ring', 'generac', 'kohler', 'tesla', 'enphase'
 ];
 
-function isSupportedQuery(query) {
-  var q = query.toLowerCase().trim();
-
-  // Always pass: probable model number (6+ consecutive alphanumeric chars)
-  if (/[a-zA-Z0-9]{6,}/.test(query)) return true;
-
-  // Block clearly off-topic queries
-  for (var b = 0; b < SMART_LOOKUP_BLOCKLIST.length; b++) {
-    if (q.indexOf(SMART_LOOKUP_BLOCKLIST[b]) !== -1) return false;
-  }
-
-  // Pass known brands
-  for (var i = 0; i < SUPPORTED_TERMS.brands.length; i++) {
-    if (q.indexOf(SUPPORTED_TERMS.brands[i].toLowerCase()) !== -1) return true;
-  }
-
-  // Pass known product category keywords
-  var cats = ['appliances', 'hvac', 'waterHeater', 'electronics'];
-  for (var c = 0; c < cats.length; c++) {
-    var keywords = SUPPORTED_TERMS[cats[c]];
-    for (var k = 0; k < keywords.length; k++) {
-      var kw = keywords[k];
-      if (kw.length <= 2) {
-        if (new RegExp('\\b' + kw + '\\b', 'i').test(q)) return true;
-      } else {
-        if (q.indexOf(kw) !== -1) return true;
-      }
-    }
-  }
-  return false;
-}
-
-function detectQueryItemType(query) {
-  var q = query.toLowerCase();
-  for (var cat in SMART_LOOKUP_CATEGORIES) {
-    var keywords = SMART_LOOKUP_CATEGORIES[cat];
-    for (var i = 0; i < keywords.length; i++) {
-      var kw = keywords[i];
-      // For very short keywords like 'ac', use boundary check to avoid false matches in 'back', 'track', etc.
-      if (kw.length <= 2) {
-        var re = new RegExp('\\b' + kw + '\\b', 'i');
-        if (re.test(q)) return cat;
-      } else {
-        if (q.indexOf(kw) !== -1) return cat;
-      }
-    }
-  }
-  return null;
-}
-
-// Keywords too generic/common to reliably identify category from free-form API text
-var RESULT_DETECT_EXCLUSIONS = {
-  'range': true, 'oven': true, 'stove': true, 'boiler': true,
-  'condenser': true, 'monitor': true, 'watch': true
-};
-
-function detectResultItemType(data) {
-  var combined = ((data.notes || '') + ' ' + (data.serialRule || '') + ' ' + (data.model || '') + ' ' + (data.brand || '')).toLowerCase();
-  for (var cat in SMART_LOOKUP_CATEGORIES) {
-    var keywords = SMART_LOOKUP_CATEGORIES[cat];
-    for (var i = 0; i < keywords.length; i++) {
-      var kw = keywords[i];
-      if (RESULT_DETECT_EXCLUSIONS[kw]) continue;
-      if (combined.indexOf(kw) !== -1) return cat;
-    }
-  }
-  return null;
-}
-
-// ===== QUERY SPECIFICITY & RESULT BUILDER =====
-
-var KNOWN_BRANDS = [
-  'lg', 'samsung', 'whirlpool', 'ge', 'maytag', 'bosch', 'kitchenaid', 'frigidaire', 'electrolux',
-  'sony', 'vizio', 'panasonic', 'apple', 'hp', 'asus', 'google', 'nintendo', 'microsoft',
-  'trane', 'carrier', 'goodman', 'lennox', 'rheem', 'ruud', 'bradford white', 'ao smith', 'state',
-  'american standard', 'bryant', 'york', 'payne', 'amana', 'admiral', 'kenmore', 'roper', 'estate',
-  'inglis', 'thermador', 'sub-zero', 'viking', 'miele', 'jenn-air', 'jennair', 'speed queen', 'tcl',
-  'hisense', 'sharp', 'toshiba', 'haier', 'wolf', 'microsoft', 'dell', 'hp', 'lenovo', 'logitech',
-  'bose', 'fisher', 'paykel'
+var SMART_LOOKUP_CATEGORY_PATTERNS = [
+  /\b(tv|television|oled|qled|display|monitor|soundbar|speaker|receiver|camera|camcorder|projector|phone|iphone|android|tablet|ipad|laptop|notebook|desktop|computer|console|playstation|xbox|switch|headphones|earbuds|router|modem)\b/i,
+  /\b(refrigerator|fridge|freezer|washer|washing machine|dryer|dishwasher|range|oven|cooktop|microwave|hood|vent hood|ice maker)\b/i,
+  /\b(ac|air conditioner|air conditioning|mini split|heat pump|furnace|air handler|coil|condenser|thermostat|duct|ductwork)\b/i,
+  /\b(water heater|tankless|boiler|sump pump|well pump|plumbing fixture|faucet|toilet|shower valve|garbage disposal)\b/i,
+  /\b(panel|breaker|breaker box|electrical panel|meter|switchgear|subpanel|wiring|wire|outlet|receptacle)\b/i,
+  /\b(generator|inverter|transfer switch|power station)\b/i,
+  /\b(solar|pv|microinverter|battery backup|battery storage)\b/i,
+  /\b(vacuum|robot vacuum|steam mop|ceiling fan|garage door opener|fixture|built-in|appliance)\b/i
 ];
 
-// ===== CATEGORY GENERIC CONTENT BLOCKS =====
-var CATEGORY_GENERIC_BLOCKS = {
-  appliance: {
-    description: 'Home appliances are household devices designed to assist in domestic functions such as cleaning, cooking, and food preservation. They are manufactured by many major brands and are a staple of modern residential and commercial settings.',
-    origin: 'Mass-produced home appliances became widely available starting in the early 20th century, with electric models entering mainstream use through the 1940s and 1950s.',
-    productionStatus: 'Still widely produced as of 2026.'
-  },
-  waterHeater: {
-    description: 'Water heaters are appliances used to heat water for residential and commercial use, including bathing, cooking, and space conditioning. They are available in tank-based and tankless configurations.',
-    origin: 'The first commercially practical water heater was patented in the 1880s. Gas and electric models became standard in American homes through the mid-20th century.',
-    productionStatus: 'Still widely produced as of 2026.'
-  },
-  hvac: {
-    description: 'HVAC equipment includes heating, ventilation, and air conditioning systems designed to regulate indoor temperature, humidity, and air quality in residential and commercial buildings.',
-    origin: 'Modern forced-air heating systems emerged in the late 19th century, while central air conditioning systems became widely available for residential use in the 1950s and 1960s.',
-    productionStatus: 'Still widely produced as of 2026.'
-  },
-  electronics: {
-    description: 'Consumer electronics are electronic devices intended for personal and household use, including televisions, audio equipment, computers, and mobile devices. They are among the most rapidly evolving product categories on the market.',
-    origin: 'Consumer electronics as a category began with radio receivers in the early 20th century, expanding to include televisions in the 1940s, personal computers in the 1970s, and smartphones in the 2000s.',
-    productionStatus: 'Still widely produced as of 2026.'
-  }
-};
-
-function deriveProductionStatus(query, data) {
-  var yearRange = (data.yearRange || '').trim();
-  var label = data.model || query;
-  if (!yearRange) return 'Still widely produced as of 2026.';
-  if (/present/i.test(yearRange)) return 'Still widely produced as of 2026.';
-  var match = yearRange.match(/(\d{4})\s*[\u2013\u2014\-]+\s*(\d{4})/);
-  if (match) {
-    var startY = parseInt(match[1]);
-    var endY   = parseInt(match[2]);
-    if (endY >= 2022) return 'Still widely produced as of 2026.';
-    return 'The ' + label + ' was manufactured from ' + startY + ' to ' + endY + ' and is no longer in production.';
-  }
-  return 'Still widely produced as of 2026.';
+function escapeSmartLookupHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
-function buildGuaranteedBlocks(query, data, category) {
-  var html = '';
-
-  // Description block
-  var description = (data.notes && data.notes.trim().length >= 20)
-    ? data.notes.trim()
-    : (category && CATEGORY_GENERIC_BLOCKS[category]
-        ? CATEGORY_GENERIC_BLOCKS[category].description
-        : 'This is a consumer product from a recognized brand or product category.');
-  html += '<div class="info-block result-description"><h4>Description</h4><p>' + esc(description) + '</p></div>';
-
-  // Origin block
-  var origin;
-  if (data.inventionSummary && data.inventionSummary.trim().length >= 20) {
-    origin = data.inventionSummary.trim();
-  } else if (data.estimatedYear) {
-    var originLabel = (data.brand && data.model)
-      ? data.brand + ' ' + data.model
-      : (data.brand || data.model || query);
-    origin = originLabel + ' was introduced in ' + data.estimatedYear + '.';
-  } else if (category && CATEGORY_GENERIC_BLOCKS[category]) {
-    origin = CATEGORY_GENERIC_BLOCKS[category].origin;
-  } else {
-    origin = 'The origin and introduction date of this product varies by brand and region.';
-  }
-  html += '<div class="info-block result-origin"><h4>Origin</h4><p>' + esc(origin) + '</p></div>';
-
-  // Production Status block
-  var productionStatus;
-  if (data.yearRange) {
-    productionStatus = deriveProductionStatus(query, data);
-  } else if (data.estimatedYear) {
-    var psLabel = data.model || query;
-    var yr = parseInt(data.estimatedYear, 10);
-    productionStatus = yr >= 2020
-      ? 'The ' + psLabel + ' was released in ' + data.estimatedYear + ' and remains in active production as of 2026.'
-      : 'The ' + psLabel + ' was introduced in ' + data.estimatedYear + '. Current production status varies by model and region.';
-  } else if (category && CATEGORY_GENERIC_BLOCKS[category]) {
-    productionStatus = CATEGORY_GENERIC_BLOCKS[category].productionStatus;
-  } else {
-    productionStatus = 'Still widely produced as of 2026.';
-  }
-  html += '<div class="info-block result-production-status"><h4>Production Status</h4><p>' + esc(productionStatus) + '</p></div>';
-
-  return html;
+function normalizeSmartLookupQuery(query) {
+  return String(query || '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-function getQuerySpecificity(query) {
-  var q = query.trim().toLowerCase();
-  var hasBrand = KNOWN_BRANDS.some(function(b) { return q.indexOf(b) !== -1; });
-  // Model pattern: adjacent letter+digit (C3, WF45R), 4+ digit number, or query ends with version number
-  var hasModel = /[a-zA-Z]\d|\d[a-zA-Z]/.test(query) ||
-                 /\b\d{4,}\b/.test(query) ||
-                 /\s\d+$/.test(query.trim());
-  if (!hasBrand) return 'general';
-  if (hasBrand && !hasModel) return 'brand';
-  return 'specific';
+function getSmartLookupAssistHost() {
+  var input = getSmartLookupInputEl();
+  if (!input) return null;
+  return input.closest('.form-group') || input.closest('.search-panel') || input.closest('.lookup-box') || input.closest('.alt-inner') || input.parentNode;
 }
 
-function inferBrandFromQuery(query) {
-  var q = String(query || '').toLowerCase();
-  if (!q) return '';
-  var best = '';
-  (SUPPORTED_TERMS.brands || []).forEach(function(brand) {
-    var b = String(brand || '').toLowerCase();
-    if (!b) return;
-    var matched = b.length <= 2
-      ? (new RegExp('\\b' + b + '\\b', 'i')).test(q)
-      : (q.indexOf(b) !== -1);
-    if (matched && b.length > best.length) best = brand;
-  });
-  return best;
+function ensureSmartLookupAssistEl() {
+  var existing = document.getElementById('smart-lookup-assist');
+  var anchor;
+  var host;
+  var el;
+  if (existing) return existing;
+  anchor = getSmartLookupAssistHost();
+  host = anchor && anchor.parentNode ? anchor.parentNode : null;
+  if (!host) return null;
+  el = document.createElement('div');
+  el.id = 'smart-lookup-assist';
+  el.className = 'smart-lookup-assist hidden';
+  if (anchor.nextSibling) host.insertBefore(el, anchor.nextSibling);
+  else host.appendChild(el);
+  return el;
 }
 
-function buildRefineTipBox(tipText) {
-  return '<div class="tip-block">' +
-    '<div class="tip-row"><span class="tip-label">&#128161; Refine Your Result</span>' +
-    '<span class="tip-text">' + esc(tipText) + '</span></div>' +
+function clearSmartLookupAssist() {
+  var el = document.getElementById('smart-lookup-assist');
+  if (!el) return;
+  el.innerHTML = '';
+  el.classList.add('hidden');
+}
+
+function showSmartLookupAssistLoading() {
+  var el = ensureSmartLookupAssistEl();
+  if (!el) return;
+  el.classList.remove('hidden');
+  el.innerHTML =
+    '<div class="smart-lookup-assist-card">' +
+      '<div class="smart-lookup-assist-title">Did you mean?</div>' +
+      '<p class="smart-lookup-assist-note">Reviewing your query through a property claims lens...</p>' +
     '</div>';
 }
 
-function buildSmartLookupFallbackHtml(query) {
-  var category = detectQueryItemType(query);
-  var html = '<div class="result-query smart-search-query">Search: ' + esc(query) + '</div>';
-  html += buildGuaranteedBlocks(query, {}, category);
-  html += buildRefineTipBox('To get a more specific manufacture year, try adding a model number, series name, or product type to your search. Examples: \u2018LG C3 55 inch TV\u2019, \u2018Samsung QLED QN85B\u2019, \u2018Whirlpool front load washer WFW5000DW\u2019.');
-  return html;
+function showSmartLookupAssistMessage(message, tone) {
+  var el = ensureSmartLookupAssistEl();
+  if (!el) return;
+  el.classList.remove('hidden');
+  el.innerHTML =
+    '<div class="smart-lookup-assist-card smart-lookup-assist-card-' + (tone || 'info') + '">' +
+      '<p class="smart-lookup-assist-note">' + sanitizeAlertText(message || '') + '</p>' +
+    '</div>';
 }
 
-function buildSmartLookupResultHtml(query, data, specificity) {
-  var category = detectQueryItemType(query);
-  var html = '';
-  var lookupBrand = data.brand || inferBrandFromQuery(query);
+function renderSmartLookupSuggestions(originalQuery, suggestions, confidence) {
+  var el = ensureSmartLookupAssistEl();
+  var list = Array.isArray(suggestions) ? suggestions.filter(Boolean).slice(0, 5) : [];
+  if (!el || !list.length) return;
 
-  html += '<div class="result-query smart-search-query">Search: ' + esc(query) + '</div>';
-
-  // Identification rows
-  if (lookupBrand) {
-    html += '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + esc(lookupBrand) + '</span></div>';
-  }
-  if (data.model && specificity === 'specific') {
-    html += '<div class="result-row"><span class="result-label">Model</span><span class="result-value">' + esc(data.model) + '</span></div>';
-  }
-  if (lookupBrand) {
-    var preferredCategory = smartLookupCategoryToDecoderCategory(category);
-    var previewSerial = isSerialLikeInput(query) ? query : '';
-    var brandMethodEntries = collectBrandMethodEntries(lookupBrand, lookupBrand, preferredCategory);
-    if (!brandMethodEntries.length) {
-      brandMethodEntries = [{
-        categoryKey: preferredCategory || 'appliances',
-        categoryLabel: categoryDisplayLabel(preferredCategory || 'appliances'),
-        name: lookupBrand,
-        method: 'No direct serial method is currently mapped for this brand. Use the serial number decoder with the exact model/serial label details.'
-      }];
-    }
-    html += buildDecodingMethodsDropdownHtml(brandMethodEntries, 'All Decoding Methods for ' + lookupBrand, previewSerial);
-  }
-
-  // GUARANTEED MINIMUM BLOCKS: Description, Origin, Production Status
-  html += buildGuaranteedBlocks(query, data, category);
-
-  // Parse yearRange for conflict detection and span calculation
-  var yearRangeStart = null, yearRangeEnd = null, yearRangeSpan = 0;
-  if (data.yearRange) {
-    var yrMatch = data.yearRange.match(/(\d{4})\s*[\u2013\u2014\-]+\s*(present|\d{4})/i);
-    if (yrMatch) {
-      yearRangeStart = parseInt(yrMatch[1], 10);
-      yearRangeEnd = /present/i.test(yrMatch[2]) ? 2026 : parseInt(yrMatch[2], 10);
-      yearRangeSpan = yearRangeEnd - yearRangeStart;
-    }
+  el.classList.remove('hidden');
+  if (list.length === 1 && confidence === 'high') {
+    el.innerHTML =
+      '<div class="smart-lookup-assist-card">' +
+        '<div class="smart-lookup-assist-title">Did you mean?</div>' +
+        '<div class="smart-lookup-assist-single">Did you mean: <strong>' + escapeSmartLookupHtml(list[0]) + '</strong>?</div>' +
+        '<div class="smart-lookup-assist-actions">' +
+          '<button type="button" class="smart-lookup-suggestion-pill" data-smart-lookup-suggestion="' + escapeSmartLookupHtml(list[0]) + '">Yes</button>' +
+          '<button type="button" class="smart-lookup-suggestion-pill smart-lookup-suggestion-pill-secondary" data-smart-lookup-as-entered="' + escapeSmartLookupHtml(originalQuery) + '">No</button>' +
+        '</div>' +
+      '</div>';
+  } else {
+    el.innerHTML =
+      '<div class="smart-lookup-assist-card">' +
+        '<div class="smart-lookup-assist-title">Did you mean?</div>' +
+        '<div class="smart-lookup-assist-list">' +
+          list.map(function (item) {
+            return '<button type="button" class="smart-lookup-suggestion-pill" data-smart-lookup-suggestion="' + escapeSmartLookupHtml(item) + '">' + escapeSmartLookupHtml(item) + '</button>';
+          }).join('') +
+        '</div>' +
+        '<button type="button" class="smart-lookup-search-as-entered" data-smart-lookup-as-entered="' + escapeSmartLookupHtml(originalQuery) + '">Search for \'' + escapeSmartLookupHtml(originalQuery) + '\' as entered</button>' +
+      '</div>';
   }
 
-  var hasConflict = false;
-  if (data.estimatedYear && yearRangeStart !== null) {
-    var eYear = parseInt(data.estimatedYear, 10);
-    if (!isNaN(eYear) && (eYear < yearRangeStart || eYear > yearRangeEnd)) {
-      hasConflict = true;
-    }
-  }
-
-  // Professional labels based on confidence
-  var yearLabel = (specificity === 'specific' && !hasConflict) ? 'Confirmed Manufacture Year' : 'Estimated Manufacture Year';
-  var rangeLabel = hasConflict
-    ? 'Conflicting Date Information'
-    : (yearRangeSpan > 4 ? 'Estimated Date Range (verify recommended)' : 'Confirmed Retail Availability');
-
-  // Estimated year row
-  if (data.estimatedYear) {
-    var isPrimary = specificity === 'specific';
-    html += '<div class="result-row' + (isPrimary ? ' result-row--primary' : '') + '">' +
-      '<span class="result-label">' + yearLabel + '</span>' +
-      '<span class="result-value">' + esc(capYear(data.estimatedYear)) + '</span></div>';
-  }
-
-  // Year range row
-  if (data.yearRange) {
-    html += '<div class="result-row"><span class="result-label">' + rangeLabel + '</span><span class="result-value">' + esc(data.yearRange) + '</span></div>';
-  }
-
-  // Conflict or wide-window notice
-  if (hasConflict) {
-    html += '<div class="info-block warning"><p><strong>Note:</strong> The estimated manufacture year (' + esc(String(data.estimatedYear)) + ') falls outside the confirmed retail availability range (' + esc(data.yearRange) + '). This may indicate limited data or a discrepancy between manufacture date and retail listing date. We recommend using the retail availability range as the primary reference.</p></div>';
-  } else if (yearRangeSpan > 4) {
-    html += '<div class="info-block"><p><strong>Wide Date Window:</strong> This product has a confirmed retail availability spanning ' + yearRangeSpan + ' years. The manufacture date of a specific unit may fall anywhere within this range.</p></div>';
-  }
-
-  // Thin result fallback
-  var isThinResult = !data.estimatedYear && !data.yearRange && (!data.notes || data.notes.trim().length < 40);
-  if (isThinResult) {
-    html += '<div class="info-block tip"><h4>&#128161; Limited Information Available</h4><p>We were unable to find complete information for this search. For more specific results, try including the model number, series name, or product type. You can also try the serial number decoder if you have the appliance in front of you.</p></div>';
-  }
-
-  // Sources Checked - collapsible (Change 5)
-  var hasEvidence = data.evidence && data.evidence.length > 0;
-  var hasSources = !!(data.sources && (Array.isArray(data.sources) ? data.sources.length > 0 : true));
-  if (hasEvidence || hasSources) {
-    html += '<details class="sources-checked"><summary>Sources Checked</summary><div class="sources-checked-body">';
-    if (hasEvidence) {
-      html += '<div class="evidence-list">';
-      data.evidence.forEach(function(item) {
-        var detail = item.detail || '';
-        var source = item.source || '';
-        if (detail || source) {
-          html += '<div class="evidence-item">';
-          if (source) html += '<span class="ev-source">' + esc(source) + '</span>';
-          if (detail) html += '<span>' + esc(detail) + '</span>';
-          html += '</div>';
-        }
-      });
-      html += '</div>';
-    }
-    if (hasSources) {
-      var srcList = Array.isArray(data.sources) ? data.sources : [data.sources];
-      html += '<div class="evidence-list">';
-      srcList.forEach(function(src) {
-        var label = typeof src === 'string' ? src : (src.name || src.url || JSON.stringify(src));
-        html += '<div class="evidence-item"><span>' + esc(label) + '</span></div>';
-      });
-      html += '</div>';
-    }
-    html += '</div></details>';
-  }
-
-  // Serial hints
-  if (data.serialRule) {
-    html += '<div class="info-block serial-rule"><h4>Serial Number Hint</h4><p>' + esc(data.serialRule) + '</p></div>';
-  }
-  if (data.serialLocation) {
-    html += '<div class="info-block serial-loc"><h4>Where to Find the Serial Number</h4><p>' + esc(data.serialLocation) + '</p></div>';
-  }
-
-  // Refine Your Result tip
-  var isHighConfidenceSingle = (specificity === 'specific') && !!data.estimatedYear && !hasConflict;
-  if (!isHighConfidenceSingle) {
-    html += buildRefineTipBox('To get a more specific manufacture year, try adding a model number, series name, or product type to your search. Examples: \u2018LG C3 55 inch TV\u2019, \u2018Samsung QLED QN85B\u2019, \u2018Whirlpool front load washer WFW5000DW\u2019.');
-  } else if (data.refinementSuggestion) {
-    html += buildRefineTipBox(data.refinementSuggestion);
-  }
-
-  // Suggestion chips
-  var queryIsSerialLike = /^[a-zA-Z0-9]{9,}$/.test(query);
-  if (!queryIsSerialLike && data.exampleModelNumber) {
-    html += '<div class="tip-block">';
-    html += '<div class="tip-row"><span class="tip-label">&#128161; Tip</span><span class="tip-text">You\'ll get more accurate results if you enter the model number.</span></div>';
-    html += '<div class="tip-chips"><button class="suggestion-chip" data-model="' + esc(data.exampleModelNumber) + '" onclick="clickSuggestion(this.dataset.model)">' + esc(data.exampleModelNumber) + '</button></div>';
-    html += '</div>';
-  }
-  if (!queryIsSerialLike && data.suggestedModelNumbers && data.suggestedModelNumbers.length > 0) {
-    html += '<div class="tip-block">';
-    html += '<div class="tip-row"><span class="tip-label">&#128161;</span><span class="tip-text">Try one of these similar model numbers:</span></div>';
-    html += '<div class="tip-chips">';
-    data.suggestedModelNumbers.forEach(function(m) {
-      html += '<button class="suggestion-chip" data-model="' + esc(m) + '" onclick="clickSuggestion(this.dataset.model)">' + esc(m) + '</button>';
+  Array.prototype.forEach.call(el.querySelectorAll('[data-smart-lookup-suggestion]'), function (btn) {
+    btn.addEventListener('click', function () {
+      var suggestion = normalizeSmartLookupQuery(btn.getAttribute('data-smart-lookup-suggestion'));
+      var inputEl = getSmartLookupInputEl();
+      if (!suggestion) return;
+      if (inputEl) inputEl.value = suggestion;
+      executeSmartLookup(suggestion);
     });
-    html += '</div></div>';
-  }
+  });
 
-  return html;
+  Array.prototype.forEach.call(el.querySelectorAll('[data-smart-lookup-as-entered]'), function (btn) {
+    btn.addEventListener('click', function () {
+      var rawQuery = normalizeSmartLookupQuery(btn.getAttribute('data-smart-lookup-as-entered'));
+      var inputEl = getSmartLookupInputEl();
+      if (!rawQuery) return;
+      if (inputEl) inputEl.value = rawQuery;
+      executeSmartLookup(rawQuery);
+    });
+  });
 }
 
-// ===== ESTIMATE AGE =====
-async function estimateAge() {
+function isLikelyModelNumberQuery(query) {
+  var q = normalizeSmartLookupQuery(query);
+  var compact;
+  if (!q || q.length < 6) return false;
+  if (q.split(/\s+/).length > 3) return false;
+  compact = q.replace(/\s+/g, '');
+  if (!/[a-z]/i.test(compact) || !/\d/.test(compact)) return false;
+  return /^[a-z0-9\-_/]+$/i.test(compact);
+}
+
+function hasSmartLookupBrandHint(query) {
+  var q = String(query || '').toLowerCase();
+  return SMART_LOOKUP_BRANDS.some(function (brand) { return q.indexOf(brand) !== -1; });
+}
+
+function hasSmartLookupCategoryHint(query) {
+  return SMART_LOOKUP_CATEGORY_PATTERNS.some(function (pattern) { return pattern.test(query || ''); });
+}
+
+function shouldBypassSmartLookupInterpretation(query) {
+  var q = normalizeSmartLookupQuery(query);
+  var wordCount;
+  if (!q) return false;
+  if (isLikelyModelNumberQuery(q)) return true;
+  wordCount = q.split(/\s+/).filter(Boolean).length;
+  return wordCount >= 3 && hasSmartLookupCategoryHint(q) && (hasSmartLookupBrandHint(q) || /\d/.test(q));
+}
+
+async function fetchSmartLookupInterpretation(query) {
+  var res = await fetch('/api/smart-query-interpret', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: query }),
+  });
+  var data = await parseJsonResponseSafe(res, 'smart-query-interpret');
+  if (!res.ok) {
+    var err = new Error((data && data.error) || 'Interpretation unavailable');
+    err.code = data && data.errorCode ? data.errorCode : '';
+    throw err;
+  }
+  return data || {};
+}
+
+async function executeSmartLookup(query) {
+  var ageResultsEl;
+  var serialResultsEl;
+  var ageLoadingEl;
+  var loadStart;
+  var resultsEl = getSmartLookupResultsEl();
+
+  clearSmartLookupAssist();
+  query = normalizeSmartLookupQuery(query);
+  if (!query) return;
+  if (!resultsEl) { setLoadingHidden(); return; }
+
+  ageResultsEl = document.getElementById('ageResults');
+  serialResultsEl = document.getElementById('serialResults');
+  if (ageResultsEl) ageResultsEl.classList.add('hidden');
+  if (serialResultsEl) serialResultsEl.classList.add('hidden');
+
+  setLoadingActive();
+  ageLoadingEl = document.getElementById('ageLoading');
+  if (ageLoadingEl) ageLoadingEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  loadStart = Date.now();
+
+  LKQEngine.evaluate('smart-lookup', query, resultsEl, {
+    onSuccess: function () {
+      currentFeedbackContext = { brand: '', serial: query };
+      var elapsed = Date.now() - loadStart;
+      var remaining = Math.max(0, 1400 - elapsed);
+      setTimeout(function () {
+        setLoadingSuccess(function () {
+          if (ageResultsEl) {
+            ageResultsEl.classList.remove('hidden');
+            ageResultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        });
+      }, remaining);
+    },
+    onError: function (type, message) {
+      setLoadingHidden();
+      if (type === 'capacity') {
+        showSmartLookupNotice('capacity', 'Wow! Due to the popular demand of this tool, the capacity of the free version has been reached. Please utilize the serial number decoder. The smart lookup function will be available again soon. Interested in utilizing smart lookup within personalized data limits? <a href="contact.html" style="color:inherit;font-weight:700;">Contact us today</a> to become a pro member.');
+      } else {
+        showSmartLookupNotice('limit', message || 'Smart Lookup is temporarily unavailable. Please try again.');
+      }
+    },
+  });
+}
+
+// ===== SMART LOOKUP — thin entry point wrapper around LKQEngine =====
+async function runLKQLookup() {
   var inputEl = getSmartLookupInputEl();
-  if (!inputEl) return;
-  var query = inputEl.value.trim();
+  var query;
+  var interpreted;
+  var suggestions;
+  if (!inputEl || !document.getElementById('smart-lookup-input')) return;
+  query = normalizeSmartLookupQuery(inputEl.value || '');
+  inputEl.value = query;
   if (!query) return;
 
-  var isSupported = isSupportedQuery(query);
-  var queryType = detectQueryItemType(query);
-
-  if (!isSupported) {
-    var body = getSmartLookupResultsEl();
-    if (body) {
-      body.innerHTML = '<div class="info-block warning">That search does not match terminology within the scope of our support. Try searching another term or using the serial number decoder. If you feel you reached this message in error, please contact our team with details.</div>';
-    }
-    document.getElementById('ageResults').classList.remove('hidden');
-    document.getElementById('ageResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (shouldBypassSmartLookupInterpretation(query)) {
+    executeSmartLookup(query);
     return;
   }
 
-  document.getElementById('ageResults').classList.add('hidden');
-  var sr = document.getElementById('serialResults');
-  if (sr) sr.classList.add('hidden');
-  setLoadingActive();
-  setEmojiCursor('\uD83D\uDD75\uFE0F');  // detective cursor for AI lookup
-  var lt = document.getElementById('loadingText');
-  if (lt) lt.textContent = '\uD83D\uDD75\uFE0F Investigating...';
-  document.getElementById('ageLoading').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  var loadStart = Date.now();
-
   try {
-    var res  = await fetch('/api/age-lookup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: query,
-        researchInstructions: 'Search for this product across major retail websites including bestbuy.com, walmart.com, amazon.com, homedepot.com, lowes.com, ajmadison.com, target.com, and costco.com. Note the earliest and most recent listing dates found. Also search for the earliest online publications, blog posts, product reviews, owner manuals, and press releases for this product. Use these sources to determine the earliest confirmed availability date and the most recent confirmed listing date. These retailer listing dates are reliable indicators of production range. Do not assume a product is discontinued unless it is confirmed absent from all major retailers and all recent sources.',
-      }),
-    });
+    showSmartLookupAssistLoading();
+    interpreted = await fetchSmartLookupInterpretation(query);
+    suggestions = Array.isArray(interpreted && interpreted.suggestions)
+      ? interpreted.suggestions.filter(Boolean).slice(0, 5)
+      : [];
 
-    // Handle structured limit responses before parsing JSON
-    if (res.status === 429) {
-      var limitData = {};
-      try { limitData = await parseJsonResponseSafe(res, 'rate-limit'); } catch(_) {}
-      if (limitData.errorCode === 'RATE_LIMIT' || res.status === 429) {
-        setLoadingHidden();
-        showSmartLookupNotice('limit', 'You\'ve reached the Smart Lookup usage limit. Please wait a few minutes and try again.');
-        return;
-      }
-    }
-    if (res.status === 503) {
-      setLoadingHidden();
-      showSmartLookupNotice('capacity', 'Wow! Due to the popular demand of this tool, the capacity of the free version has been reached. Please utilize the serial number decoder. The smart lookup function will be available again soon. Interested in utilizing smart lookup within personalized data limits? <a href="contact.html" style="color:inherit;font-weight:700;">Contact us today</a> to become a pro member.');
+    if (interpreted && interpreted.action === 'bypass') {
+      executeSmartLookup(suggestions[0] || query);
       return;
     }
-
-    var data = await parseJsonResponseSafe(res, 'age-lookup');
-    console.log('[Smart Lookup API Response]', JSON.stringify(data, null, 2));
-
-    // Internal fields starting with "_" (like _source) are for tracking and MUST be hidden from UI
-    for (var key in data) {
-      if (key.indexOf('_') === 0) delete data[key];
-    }
-
-    if (data.errorCode === 'RATE_LIMIT') {
-      setLoadingHidden();
-      showSmartLookupNotice('limit', 'You\'ve reached the Smart Lookup usage limit. Please wait a few minutes and try again.');
+    if (interpreted && interpreted.action === 'no_results') {
+      showSmartLookupAssistMessage(
+        interpreted.message || "We couldn't identify an item from your search. Try entering a brand name, model number, or item description such as 'LG refrigerator' or 'Carrier AC unit'.",
+        'info'
+      );
       return;
     }
-    if (data.errorCode === 'SITE_LIMIT') {
-      setLoadingHidden();
-      showSmartLookupNotice('capacity', 'Wow! Due to the popular demand of this tool, the capacity of the free version has been reached. Please utilize the serial number decoder. The smart lookup function will be available again soon. Interested in utilizing smart lookup within personalized data limits? <a href="contact.html" style="color:inherit;font-weight:700;">Contact us today</a> to become a pro member.');
+    if (interpreted && interpreted.action === 'out_of_scope') {
+      showSmartLookupAssistMessage(
+        interpreted.message || 'Item Assist is designed for property and equipment research. Please enter an appliance, electronic, HVAC, electrical, or household item.',
+        'info'
+      );
       return;
     }
-
-    if (data.errorCode === 'AI_UNAVAILABLE' || data.error) {
-      setLoadingHidden();
-      showSmartLookupNotice('limit', esc(data.message || data.error || 'Smart Lookup is temporarily unavailable.'));
+    if (suggestions.length) {
+      renderSmartLookupSuggestions(query, suggestions, interpreted && interpreted.confidence);
       return;
     }
+  } catch (_) {}
 
-    // === ITEM TYPE MISMATCH CHECK ===
-    var resultType = detectResultItemType(data);
-    if (queryType && resultType && queryType !== resultType) {
-      // Notes from a different category - suppress them to avoid cross-category bleed
-      data = Object.assign({}, data, { notes: null, serialRule: null });
-    }
+  clearSmartLookupAssist();
+  executeSmartLookup(query);
+}
 
-    var body = getSmartLookupResultsEl();
-    var specificity = getQuerySpecificity(query);
-    body.innerHTML = buildSmartLookupResultHtml(query, data, specificity);
-    var resolvedBrand = data.brand || inferBrandFromQuery(query);
-    var brandId = normalizeBrandToken(resolvedBrand);
-    showBrandLogo('ageBrandLogo', brandId, resolvedBrand || '');
-    currentFeedbackContext = { brand: resolvedBrand || '', serial: query };
+// ===== SERIAL DECODER — LKQ entry point =====
+(function bindSmartLookupAssistReset() {
+  var input = getSmartLookupInputEl();
+  if (!input) return;
+  if (input.getAttribute('data-smart-lookup-assist-bound') === '1') return;
+  input.setAttribute('data-smart-lookup-assist-bound', '1');
+  input.addEventListener('input', function () {
+    clearSmartLookupAssist();
+  });
+})();
 
-    // Ensure the cloud shows for at least 1400ms so the full 2 s sequence completes
-    var elapsed   = Date.now() - loadStart;
-    var remaining = Math.max(0, 1400 - elapsed);
-    setTimeout(function() {
-      setLoadingSuccess(function() {
-        document.getElementById('ageResults').classList.remove('hidden');
-        document.getElementById('ageResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      });
-    }, remaining);
+function loadSerialLKQ() {
+  var brand = (currentFeedbackContext && currentFeedbackContext.brand)
+    ? currentFeedbackContext.brand.trim() : '';
+  var modelInputEl = document.getElementById('serial-lkq-model-input');
+  var model = modelInputEl ? modelInputEl.value.trim() : '';
 
-  } catch (e) {
-    setLoadingHidden();
-    console.error('[Smart Lookup] estimateAge failed:', e);
-    showSmartLookupNotice('limit', 'Smart Lookup is temporarily unavailable. Please try again.');
-  }
+  // Build query: brand + model if provided, or brand alone
+  var query = model ? ((brand ? brand + ' ' : '') + model) : brand;
+  if (!query) return;
+
+  var resultsCard = document.getElementById('serialLkqResults');
+  var resultsEl   = document.getElementById('serial-lkq-output');
+  if (!resultsCard || !resultsEl) return;
+
+  // Show inline loading state
+  resultsEl.innerHTML =
+    '<div style="display:flex;align-items:center;gap:0.5rem;padding:1rem 0;font-size:0.83rem;color:#64748b;">' +
+      '<span>🕵️</span> Evaluating LKQ options\u2026' +
+    '</div>';
+  resultsCard.classList.remove('hidden');
+  resultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  LKQEngine.evaluate('serial-decoder', query, resultsEl, {
+    onSuccess: function () {
+      resultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    },
+    onError: function (type, message) {
+      resultsEl.innerHTML =
+        '<div style="background:#fef2f2;border-left:3px solid #ef4444;border-radius:8px;padding:1rem;font-size:0.875rem;color:#991b1b;">' +
+          (message || 'LKQ lookup failed. Please try again.') +
+        '</div>';
+    },
+  });
+}
+
+function closeSerialLkq() {
+  var el = document.getElementById('serialLkqResults');
+  if (el) el.classList.add('hidden');
+  LKQEngine.clearInstance('serial-decoder');
 }
 
 // ===== GUIDE DRAWER =====
@@ -4459,7 +3273,7 @@ async function submitFeedback() {
       body: JSON.stringify({ brand: brand, serial: serial, issueType: issueType, details: details }),
     });
   } catch (e) {
-    // fail silently - still show thank-you
+    // fail silently — still show thank-you
   }
 
   document.getElementById('fbThanks').classList.remove('hidden');
@@ -4482,21 +3296,21 @@ function toggleMoreOptions() {
   if (arrow) arrow.classList.toggle('open', !isOpen);
 }
 
-// ===== PROGRESSIVE DISCLOSURE - AI SECTION GENERATOR =====
+// ===== PROGRESSIVE DISCLOSURE — AI SECTION GENERATOR =====
 async function generateAISection(type, btn) {
   var brand  = currentFeedbackContext.brand  || '';
   var serial = currentFeedbackContext.serial || '';
   var year   = document.getElementById('resultYear').textContent || '';
 
   var queries = {
-    replacements: brand + ' appliance manufactured around ' + year + ' - current replacement models and comparable units',
-    specs:        brand + ' appliance serial ' + serial + ' manufactured around ' + year + ' - technical specifications and product features',
-    market:       brand + ' appliance manufactured around ' + year + ' - current market pricing and availability'
+    replacements: brand + ' appliance manufactured around ' + year + ' — current replacement models and comparable units',
+    specs:        brand + ' appliance serial ' + serial + ' manufactured around ' + year + ' — technical specifications and product features',
+    market:       brand + ' appliance manufactured around ' + year + ' — current market pricing and availability'
   };
   var query = queries[type] || (brand + ' appliance ' + year);
 
   var resultEl = document.getElementById('ai-result-' + type);
-  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
   if (resultEl) resultEl.classList.add('hidden');
 
   try {
@@ -4506,12 +3320,6 @@ async function generateAISection(type, btn) {
       body: JSON.stringify({ query: query }),
     });
     var data = await parseJsonResponseSafe(res, 'ai-section-' + type);
-
-    // Filter internal tracking fields (e.g. _source, _fallbackUsed)
-    for (var key in data) {
-      if (key.indexOf('_') === 0) delete data[key];
-    }
-
     if (resultEl) {
       var lines = [];
       if (data.notes) lines.push(data.notes);
@@ -4543,16 +3351,8 @@ function clickSuggestion(modelNum) {
     if (toggle) toggle.classList.add('open');
   }
   var input = getSmartLookupInputEl();
-  if (input) {
-    // Preserve brand context so bare model numbers pass the supported-query check
-    var searchTerm = modelNum;
-    var brand = currentFeedbackContext && currentFeedbackContext.brand;
-    if (brand && !isSupportedQuery(modelNum)) {
-      searchTerm = brand + ' ' + modelNum;
-    }
-    input.value = searchTerm;
-  }
-  estimateAge();
+  if (input) input.value = modelNum;
+  runLKQLookup();
 }
 
 // ===== UTILITY =====
@@ -4562,6 +3362,14 @@ function esc(s) {
   div.textContent = s;
   return div.innerHTML;
 }
+
+function sanitizeAlertText(text) {
+  if (text === null || text === undefined) return '';
+  return String(text)
+    .replace(/\\ufe0e|\\ufe0f|ufe0e|ufe0f/gi, '')
+    .replace(/[\uFE0E\uFE0F\u200B-\u200D\u2060\u00AD]/g, '');
+}
+
 
 // ===== CUSTOM ALERT MODAL =====
 function showCustomAlert(message) {
@@ -4587,8 +3395,20 @@ function showCustomAlert(message) {
   box.style.boxShadow = '0 16px 40px rgba(0,0,0,0.28)';
   box.style.textAlign = 'center';
 
+  var heading = document.createElement('div');
+  heading.style.display = 'flex';
+  heading.style.alignItems = 'center';
+  heading.style.justifyContent = 'center';
+  heading.style.gap = '8px';
+  heading.style.marginBottom = '10px';
+  heading.innerHTML =
+    '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="fill:#0369a1;">' +
+      '<path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"></path>' +
+    '</svg>' +
+    '<span style="font-weight:700;color:#0f172a;">Notice</span>';
+
   var msg = document.createElement('div');
-  msg.textContent = message;
+  msg.textContent = sanitizeAlertText(message);
   msg.style.color = '#1f2937';
   msg.style.fontSize = '1rem';
   msg.style.lineHeight = '1.45';
@@ -4620,13 +3440,12 @@ function showCustomAlert(message) {
   });
   document.addEventListener('keydown', onEsc);
 
+  box.appendChild(heading);
   box.appendChild(msg);
   box.appendChild(okBtn);
   modal.appendChild(box);
   document.body.appendChild(modal);
 }
-
-
 
 
 
