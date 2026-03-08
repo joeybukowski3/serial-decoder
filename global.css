@@ -5727,7 +5727,8 @@ img.ia-sidebar-logo {
 
 .smart-general-subtitle,
 .smart-general-overview-text,
-.smart-general-meta {
+.smart-general-meta,
+.smart-general-overview-note {
 
     color: var(--text-muted);
     font-size: 0.9rem;
@@ -5828,6 +5829,101 @@ img.ia-sidebar-logo {
     background: #fff5f5;
     border: 1px solid rgba(239, 68, 68, 0.2);
     color: #991b1b;
+
+}
+
+.smart-unrecognized-card {
+
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1rem 1.05rem;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+
+}
+
+.smart-unrecognized-title,
+.smart-unrecognized-subtitle,
+.smart-unrecognized-tips-title {
+
+    color: var(--text-main);
+    font-weight: 800;
+
+}
+
+.smart-unrecognized-subtitle,
+.smart-unrecognized-tips-title {
+
+    margin-top: 0.85rem;
+    margin-bottom: 0.45rem;
+    font-size: 0.92rem;
+
+}
+
+.smart-unrecognized-suggestions {
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+
+}
+
+.smart-unrecognized-empty {
+
+    margin-top: 0.65rem;
+    color: var(--text-muted);
+
+}
+
+.smart-unrecognized-pill,
+.smart-unrecognized-submit {
+
+    appearance: none;
+    border-radius: 999px;
+    padding: 0.55rem 0.85rem;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+
+}
+
+.smart-unrecognized-pill {
+
+    border: 1px solid rgba(49, 130, 206, 0.28);
+    background: rgba(49, 130, 206, 0.1);
+    color: var(--text-main);
+
+}
+
+.smart-unrecognized-tips {
+
+    margin: 0;
+    padding-left: 1.1rem;
+    color: var(--text-muted);
+
+}
+
+.smart-unrecognized-form {
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 0.9rem;
+
+}
+
+.smart-unrecognized-input {
+
+    flex: 1 1 280px;
+
+}
+
+.smart-unrecognized-submit {
+
+    border: 1px solid rgba(49, 130, 206, 0.28);
+    background: rgba(49, 130, 206, 0.1);
+    color: var(--text-main);
 
 }
 

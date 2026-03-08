@@ -2904,24 +2904,6 @@ function estimateAge() {
   runLKQLookup();
 }
 
-var SMART_LOOKUP_BRANDS = [
-  'apple', 'carrier', 'nest', 'google', 'samsung', 'lg', 'ge', 'whirlpool', 'hotpoint', 'kitchenaid',
-  'frigidaire', 'bosch', 'maytag', 'amana', 'kenmore', 'electrolux', 'rheem', 'ruud', 'trane', 'goodman',
-  'lennox', 'york', 'tempstar', 'heil', 'bryant', 'shark', 'dyson', 'sony', 'vizio', 'panasonic', 'hp',
-  'dell', 'lenovo', 'asus', 'acer', 'msi', 'bose', 'jbl', 'ring', 'generac', 'kohler', 'tesla', 'enphase'
-];
-
-var SMART_LOOKUP_CATEGORY_PATTERNS = [
-  /\b(tv|television|oled|qled|display|monitor|soundbar|speaker|receiver|camera|camcorder|projector|phone|iphone|android|tablet|ipad|laptop|notebook|desktop|computer|console|playstation|xbox|switch|headphones|earbuds|router|modem)\b/i,
-  /\b(refrigerator|fridge|freezer|washer|washing machine|dryer|dishwasher|range|oven|cooktop|microwave|hood|vent hood|ice maker)\b/i,
-  /\b(ac|air conditioner|air conditioning|mini split|heat pump|furnace|air handler|coil|condenser|thermostat|duct|ductwork)\b/i,
-  /\b(water heater|tankless|boiler|sump pump|well pump|plumbing fixture|faucet|toilet|shower valve|garbage disposal)\b/i,
-  /\b(panel|breaker|breaker box|electrical panel|meter|switchgear|subpanel|wiring|wire|outlet|receptacle)\b/i,
-  /\b(generator|inverter|transfer switch|power station)\b/i,
-  /\b(solar|pv|microinverter|battery backup|battery storage)\b/i,
-  /\b(vacuum|robot vacuum|steam mop|ceiling fan|garage door opener|fixture|built-in|appliance)\b/i
-];
-
 function escapeSmartLookupHtml(value) {
   return String(value || '')
     .replace(/&/g, '&amp;')
@@ -2971,97 +2953,9 @@ function showSmartLookupAssistLoading() {
   el.classList.remove('hidden');
   el.innerHTML =
     '<div class="smart-lookup-assist-card">' +
-      '<div class="smart-lookup-assist-title">Did you mean?</div>' +
-      '<p class="smart-lookup-assist-note">Reviewing your query through a property claims lens...</p>' +
+      '<div class="smart-lookup-assist-title">Checking Your Search</div>' +
+      '<p class="smart-lookup-assist-note">Classifying your search before any LKQ results are generated.</p>' +
     '</div>';
-}
-
-function showSmartLookupAssistMessage(message, tone) {
-  var el = ensureSmartLookupAssistEl();
-  if (!el) return;
-  el.classList.remove('hidden');
-  el.innerHTML =
-    '<div class="smart-lookup-assist-card smart-lookup-assist-card-' + (tone || 'info') + '">' +
-      '<p class="smart-lookup-assist-note">' + sanitizeAlertText(message || '') + '</p>' +
-    '</div>';
-}
-
-function renderSmartLookupSuggestions(originalQuery, suggestions, confidence) {
-  var el = ensureSmartLookupAssistEl();
-  var list = Array.isArray(suggestions) ? suggestions.filter(Boolean).slice(0, 5) : [];
-  if (!el || !list.length) return;
-
-  el.classList.remove('hidden');
-  if (list.length === 1 && confidence === 'high') {
-    el.innerHTML =
-      '<div class="smart-lookup-assist-card">' +
-        '<div class="smart-lookup-assist-title">Did you mean?</div>' +
-        '<div class="smart-lookup-assist-single">Did you mean: <strong>' + escapeSmartLookupHtml(list[0]) + '</strong>?</div>' +
-        '<div class="smart-lookup-assist-actions">' +
-          '<button type="button" class="smart-lookup-suggestion-pill" data-smart-lookup-suggestion="' + escapeSmartLookupHtml(list[0]) + '">Yes</button>' +
-          '<button type="button" class="smart-lookup-suggestion-pill smart-lookup-suggestion-pill-secondary" data-smart-lookup-as-entered="' + escapeSmartLookupHtml(originalQuery) + '">No</button>' +
-        '</div>' +
-      '</div>';
-  } else {
-    el.innerHTML =
-      '<div class="smart-lookup-assist-card">' +
-        '<div class="smart-lookup-assist-title">Did you mean?</div>' +
-        '<div class="smart-lookup-assist-list">' +
-          list.map(function (item) {
-            return '<button type="button" class="smart-lookup-suggestion-pill" data-smart-lookup-suggestion="' + escapeSmartLookupHtml(item) + '">' + escapeSmartLookupHtml(item) + '</button>';
-          }).join('') +
-        '</div>' +
-        '<button type="button" class="smart-lookup-search-as-entered" data-smart-lookup-as-entered="' + escapeSmartLookupHtml(originalQuery) + '">Search for \'' + escapeSmartLookupHtml(originalQuery) + '\' as entered</button>' +
-      '</div>';
-  }
-
-  Array.prototype.forEach.call(el.querySelectorAll('[data-smart-lookup-suggestion]'), function (btn) {
-    btn.addEventListener('click', function () {
-      var suggestion = normalizeSmartLookupQuery(btn.getAttribute('data-smart-lookup-suggestion'));
-      var inputEl = getSmartLookupInputEl();
-      if (!suggestion) return;
-      if (inputEl) inputEl.value = suggestion;
-      executeSmartLookup(suggestion);
-    });
-  });
-
-  Array.prototype.forEach.call(el.querySelectorAll('[data-smart-lookup-as-entered]'), function (btn) {
-    btn.addEventListener('click', function () {
-      var rawQuery = normalizeSmartLookupQuery(btn.getAttribute('data-smart-lookup-as-entered'));
-      var inputEl = getSmartLookupInputEl();
-      if (!rawQuery) return;
-      if (inputEl) inputEl.value = rawQuery;
-      executeSmartLookup(rawQuery);
-    });
-  });
-}
-
-function isLikelyModelNumberQuery(query) {
-  var q = normalizeSmartLookupQuery(query);
-  var compact;
-  if (!q || q.length < 6) return false;
-  if (q.split(/\s+/).length > 3) return false;
-  compact = q.replace(/\s+/g, '');
-  if (!/[a-z]/i.test(compact) || !/\d/.test(compact)) return false;
-  return /^[a-z0-9\-_/]+$/i.test(compact);
-}
-
-function hasSmartLookupBrandHint(query) {
-  var q = String(query || '').toLowerCase();
-  return SMART_LOOKUP_BRANDS.some(function (brand) { return q.indexOf(brand) !== -1; });
-}
-
-function hasSmartLookupCategoryHint(query) {
-  return SMART_LOOKUP_CATEGORY_PATTERNS.some(function (pattern) { return pattern.test(query || ''); });
-}
-
-function shouldBypassSmartLookupInterpretation(query) {
-  var q = normalizeSmartLookupQuery(query);
-  var wordCount;
-  if (!q) return false;
-  if (isLikelyModelNumberQuery(q)) return true;
-  wordCount = q.split(/\s+/).filter(Boolean).length;
-  return wordCount >= 3 && hasSmartLookupCategoryHint(q) && (hasSmartLookupBrandHint(q) || /\d/.test(q));
 }
 
 async function fetchSmartLookupInterpretation(query) {
@@ -3113,6 +3007,7 @@ function showGeneralSmartLookupResults(query, data) {
         '<div class="smart-general-section-title">General Item Overview</div>' +
         '<div class="smart-general-meta">' + headingMeta.join('') + '</div>' +
         '<p class="smart-general-overview-text">' + escapeSmartLookupHtml((data && data.overview) || '') + '</p>' +
+        '<p class="smart-general-overview-note">Showing general results. Select a model below for specific LKQ options.</p>' +
       '</div>' +
       '<div class="smart-general-section smart-general-refine">' +
         '<div class="smart-general-section-title">Refine Your Result</div>' +
@@ -3139,12 +3034,14 @@ function showGeneralSmartLookupResults(query, data) {
 
   Array.prototype.forEach.call(resultsEl.querySelectorAll('[data-refine-query]'), function (btn) {
     btn.addEventListener('click', function () {
+      var placeholder = document.getElementById('smart-general-lkq-placeholder');
       var target = document.getElementById('smart-general-lkq-target');
       var note = document.getElementById('smart-general-lkq-note');
       var nextQuery = normalizeSmartLookupQuery(btn.getAttribute('data-refine-query'));
       var inputEl = getSmartLookupInputEl();
       if (!nextQuery || !target) return;
       if (inputEl) inputEl.value = nextQuery;
+      if (placeholder) placeholder.classList.add('hidden');
       if (note) note.textContent = '';
       executeSmartLookup(nextQuery, {
         targetEl: target,
@@ -3162,9 +3059,11 @@ function showGeneralSmartLookupResults(query, data) {
     if (avgBtn) {
       avgBtn.disabled = !averageQuery;
       avgBtn.addEventListener('click', function () {
+        var placeholder = document.getElementById('smart-general-lkq-placeholder');
         var inputEl = getSmartLookupInputEl();
         if (!averageQuery || !target) return;
         if (inputEl) inputEl.value = averageQuery;
+        if (placeholder) placeholder.classList.add('hidden');
         if (note) {
           note.textContent = 'LKQ options calculated based on an average ' +
             (((brand ? brand + ' ' : '') + ((data && data.averageModelCategory) || category)).trim()) +
@@ -3182,6 +3081,73 @@ function showGeneralSmartLookupResults(query, data) {
         window.open('https://www.google.com/search?q=' + encodeURIComponent(query + ' model numbers'), '_blank', 'noopener,noreferrer');
       });
     }
+  })();
+
+  if (ageResultsEl) {
+    ageResultsEl.classList.remove('hidden');
+    ageResultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function showUnrecognizedSmartLookupResults(query, interpreted) {
+  var ageResultsEl = document.getElementById('ageResults');
+  var serialResultsEl = document.getElementById('serialResults');
+  var resultsEl = getSmartLookupResultsEl();
+  var suggestions = Array.isArray(interpreted && interpreted.suggestions) ? interpreted.suggestions.filter(Boolean).slice(0, 5) : [];
+  if (!resultsEl) return;
+  if (serialResultsEl) serialResultsEl.classList.add('hidden');
+
+  resultsEl.innerHTML =
+    '<div class="smart-unrecognized-card">' +
+      '<div class="smart-unrecognized-title">We weren&apos;t sure what you meant by \'' + escapeSmartLookupHtml(query) + '\'</div>' +
+      '<div class="smart-unrecognized-subtitle">Did you mean?</div>' +
+      '<div class="smart-unrecognized-suggestions">' +
+        suggestions.map(function (item) {
+          return '<button type="button" class="smart-unrecognized-pill" data-unrecognized-query="' + escapeSmartLookupHtml(item) + '">' + escapeSmartLookupHtml(item) + '</button>';
+        }).join('') +
+      '</div>' +
+      (!suggestions.length ? '<p class="smart-unrecognized-empty">No results found.</p>' : '') +
+      '<div class="smart-unrecognized-tips-title">Not what you were looking for? Try these tips:</div>' +
+      '<ul class="smart-unrecognized-tips">' +
+        '<li>Include the brand name (e.g. Samsung, LG, Carrier)</li>' +
+        '<li>Include the item type (e.g. refrigerator, AC unit, breaker panel)</li>' +
+        '<li>Include the model number if available for the most accurate results</li>' +
+      '</ul>' +
+      '<div class="smart-unrecognized-form">' +
+        '<input type="text" class="search-input smart-unrecognized-input" id="smart-unrecognized-input" value="' + escapeSmartLookupHtml(query) + '">' +
+        '<button type="button" class="smart-unrecognized-submit" id="smart-unrecognized-submit">Search Again</button>' +
+      '</div>' +
+    '</div>';
+
+  Array.prototype.forEach.call(resultsEl.querySelectorAll('[data-unrecognized-query]'), function (btn) {
+    btn.addEventListener('click', function () {
+      var nextQuery = normalizeSmartLookupQuery(btn.getAttribute('data-unrecognized-query'));
+      var inputEl = getSmartLookupInputEl();
+      if (!nextQuery) return;
+      clearSmartLookupAssist();
+      if (inputEl) inputEl.value = nextQuery;
+      executeSmartLookup(nextQuery);
+    });
+  });
+
+  (function bindRetry() {
+    var retryInput = document.getElementById('smart-unrecognized-input');
+    var retryBtn = document.getElementById('smart-unrecognized-submit');
+    if (!retryInput || !retryBtn) return;
+    retryBtn.addEventListener('click', function () {
+      var nextQuery = normalizeSmartLookupQuery(retryInput.value || '');
+      var inputEl = getSmartLookupInputEl();
+      if (!nextQuery) return;
+      clearSmartLookupAssist();
+      if (inputEl) inputEl.value = nextQuery;
+      runLKQLookup();
+    });
+    retryInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        retryBtn.click();
+      }
+    });
   })();
 
   if (ageResultsEl) {
@@ -3213,7 +3179,7 @@ async function runGeneralSmartLookup(query) {
     }, remaining);
   } catch (_) {
     setLoadingHidden();
-    executeSmartLookup(query);
+    showSmartLookupNotice('limit', 'Smart Lookup is temporarily unavailable. Please try again.');
   }
 }
 
@@ -3286,54 +3252,37 @@ async function runLKQLookup() {
   var inputEl = getSmartLookupInputEl();
   var query;
   var interpreted;
-  var suggestions;
   if (!inputEl || !document.getElementById('smart-lookup-input')) return;
   query = normalizeSmartLookupQuery(inputEl.value || '');
   inputEl.value = query;
   if (!query) return;
-
-  if (shouldBypassSmartLookupInterpretation(query)) {
-    executeSmartLookup(query);
-    return;
-  }
+  clearSmartLookupAssist();
 
   try {
     showSmartLookupAssistLoading();
     interpreted = await fetchSmartLookupInterpretation(query);
-    suggestions = Array.isArray(interpreted && interpreted.suggestions)
-      ? interpreted.suggestions.filter(Boolean).slice(0, 5)
-      : [];
+    clearSmartLookupAssist();
 
-    if (interpreted && interpreted.action === 'bypass') {
-      executeSmartLookup(suggestions[0] || query);
-      return;
-    }
-    if (interpreted && interpreted.action === 'no_results') {
-      showSmartLookupAssistMessage(
-        interpreted.message || "We couldn't identify an item from your search. Try entering a brand name, model number, or item description such as 'LG refrigerator' or 'Carrier AC unit'.",
-        'info'
-      );
-      return;
-    }
-    if (interpreted && interpreted.action === 'out_of_scope') {
-      showSmartLookupAssistMessage(
-        interpreted.message || 'Item Assist is designed for property and equipment research. Please enter an appliance, electronic, HVAC, electrical, or household item.',
-        'info'
-      );
+    if (interpreted && interpreted.action === 'bypass' && interpreted.queryKind === 'specific') {
+      executeSmartLookup((interpreted.suggestions && interpreted.suggestions[0]) || query);
       return;
     }
     if (interpreted && interpreted.queryKind === 'general') {
       runGeneralSmartLookup(query);
       return;
     }
-    if (suggestions.length) {
-      renderSmartLookupSuggestions(query, suggestions, interpreted && interpreted.confidence);
+    if (interpreted && (interpreted.action === 'suggest' || interpreted.action === 'no_results' || interpreted.action === 'out_of_scope')) {
+      showUnrecognizedSmartLookupResults(query, interpreted);
       return;
     }
-  } catch (_) {}
-
-  clearSmartLookupAssist();
-  executeSmartLookup(query);
+    if (interpreted && interpreted.queryKind === 'specific') {
+      executeSmartLookup(query);
+      return;
+    }
+  } catch (_) {
+    clearSmartLookupAssist();
+    showSmartLookupNotice('limit', 'Smart Lookup is temporarily unavailable. Please try again.');
+  }
 }
 
 // ===== SERIAL DECODER — LKQ entry point =====

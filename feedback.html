@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback &amp; Bugs - Item Assist</title>
+  <meta name="description" content="Send Item Assist feedback, bug reports, search issues, and feature requests.">
+  <link rel="canonical" href="https://www.decodemyitem.com/feedback.html">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .feedback-shell {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .feedback-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 28px;
+    }
+    .feedback-intro {
+      margin-bottom: 22px;
+    }
+    .feedback-intro p {
+      margin-top: 10px;
+    }
+    .feedback-label-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .feedback-label-row label {
+      margin-bottom: 0;
+      color: var(--white);
+      font-weight: 700;
+      text-transform: none;
+      font-size: 0.95rem;
+      letter-spacing: 0;
+    }
+    .feedback-optional {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .feedback-status {
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      margin-bottom: 16px;
+    }
+    .feedback-status.success {
+      background: rgba(0,201,167,0.08);
+      border: 1px solid rgba(0,201,167,0.2);
+      color: var(--teal);
+    }
+    .feedback-status.error {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      color: #fca5a5;
+    }
+    .feedback-field-error {
+      margin: -10px 0 16px;
+      font-size: 0.82rem;
+      color: #fca5a5;
+    }
+    .feedback-confirmation {
+      background: rgba(0,201,167,0.08);
+      border: 1px solid rgba(0,201,167,0.2);
+      border-radius: 14px;
+      padding: 18px 20px;
+      color: var(--teal);
+      font-size: 0.96rem;
+    }
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-icon">🔍</div>
+    <div>
+      <div class="logo-text">Item <span>Assist</span></div>
+      <div class="logo-sub">Intuitive Data Aggregation</div>
+    </div>
+  </a>
+  <ul>
+    <li><a href="index.html" data-page="index">Serial Number Decoder</a></li>
+    <li><a href="smart-lookup.html" data-page="smart">Smart Lookup</a></li>
+    <li><a href="methodology.html" data-page="methodology">Methodology</a></li>
+    <li><a href="contact.html" data-page="contact">Contact</a></li>
+    <li><a href="feedback.html" data-page="feedback">Feedback &amp; Bugs</a></li>
+    <li><a href="security.html" data-page="security" class="nav-cta">Security &amp; Data</a></li>
+  </ul>
+</nav>
+
+<section class="page-hero">
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    Feedback
+  </div>
+  <h1>Feedback &amp; <em>Bugs</em></h1>
+  <p class="hero-sub">Share product feedback, report issues, or flag incorrect results. We review every submission and use them to improve Item Assist.</p>
+</section>
+
+<section class="section" style="padding-top:32px;">
+  <div class="feedback-shell">
+    <div class="feedback-card">
+      <div class="feedback-intro">
+        <span class="section-label" style="display:block;margin-bottom:14px;">Send Feedback</span>
+        <p>Use this form for bug reports, Smart Lookup issues, incorrect results, and feature requests.</p>
+      </div>
+
+      <div id="feedbackConfirmation" class="feedback-confirmation hidden">
+        Thank you for your feedback! We review all submissions and use them to improve the site.
+      </div>
+
+      <form id="feedbackForm" onsubmit="submitSiteFeedback(event)">
+        <div id="feedbackStatus" class="feedback-status hidden"></div>
+
+        <div class="feedback-label-row">
+          <label for="feedbackName">Name</label>
+          <span class="feedback-optional">(optional)</span>
+        </div>
+        <input type="text" id="feedbackName" placeholder="Your name (optional)" autocomplete="name">
+
+        <div class="feedback-label-row">
+          <label for="feedbackType">Feedback Type</label>
+          <span class="feedback-optional">(optional)</span>
+        </div>
+        <select id="feedbackType">
+          <option value="">-- Select feedback type --</option>
+          <option>General Feedback</option>
+          <option>Bug Report</option>
+          <option>Search / Smart Lookup Issue</option>
+          <option>Serial Number Decoder Issue</option>
+          <option>LKQ Replacement Table Issue</option>
+          <option>Feature Request</option>
+          <option>Incorrect Result</option>
+          <option>Other</option>
+        </select>
+
+        <div class="feedback-label-row">
+          <label for="feedbackPage">Page or Feature</label>
+          <span class="feedback-optional">(optional)</span>
+        </div>
+        <select id="feedbackPage">
+          <option value="">-- Select page or feature --</option>
+          <option>Home Page</option>
+          <option>Serial Number Decoder</option>
+          <option>Smart Lookup</option>
+          <option>LKQ Replacement Evaluation</option>
+          <option>Methodology Page</option>
+          <option>Security &amp; Data Page</option>
+          <option>General / Not Sure</option>
+        </select>
+
+        <div class="feedback-label-row">
+          <label for="feedbackItem">Item Searched</label>
+          <span class="feedback-optional">(optional)</span>
+        </div>
+        <input type="text" id="feedbackItem" placeholder="What item or model were you searching? (optional)">
+
+        <div class="feedback-label-row">
+          <label for="feedbackMessage">Message</label>
+        </div>
+        <textarea id="feedbackMessage" rows="4" placeholder="Describe your feedback, suggestion, or issue..."></textarea>
+        <div id="feedbackMessageError" class="feedback-field-error hidden">Please enter a message before submitting.</div>
+
+        <button type="submit" id="feedbackSubmitBtn" class="btn-primary" style="width:100%;">Send Feedback</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>© 2026 Item Assist · Database verified February 2026</div>
+  <div class="footer-links">
+    <a href="methodology.html">Methodology</a>
+    <a href="contact.html">Contact</a>
+    <a href="security.html">Security &amp; Data Notice</a>
+    <a href="/privacy-policy">Privacy Policy</a>
+  </div>
+</footer>
+
+<script>
+async function submitSiteFeedback(event) {
+  event.preventDefault();
+
+  var form = document.getElementById('feedbackForm');
+  var confirmation = document.getElementById('feedbackConfirmation');
+  var status = document.getElementById('feedbackStatus');
+  var messageError = document.getElementById('feedbackMessageError');
+  var submitBtn = document.getElementById('feedbackSubmitBtn');
+  var payload = {
+    name: document.getElementById('feedbackName').value.trim(),
+    feedbackType: document.getElementById('feedbackType').value.trim(),
+    pageFeature: document.getElementById('feedbackPage').value.trim(),
+    itemSearched: document.getElementById('feedbackItem').value.trim(),
+    message: document.getElementById('feedbackMessage').value.trim()
+  };
+
+  status.className = 'feedback-status hidden';
+  status.textContent = '';
+  messageError.classList.add('hidden');
+
+  if (!payload.message) {
+    messageError.classList.remove('hidden');
+    document.getElementById('feedbackMessage').focus();
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Sending...';
+
+  try {
+    var response = await fetch('/api/site-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    var data = await response.json();
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || 'Unable to send feedback');
+    }
+
+    form.reset();
+    form.classList.add('hidden');
+    confirmation.classList.remove('hidden');
+  } catch (error) {
+    status.className = 'feedback-status error';
+    status.textContent = 'Something went wrong while sending your feedback. Please try again.';
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send Feedback';
+  }
+}
+</script>
+<script src="shared.js"></script>
+</body>
+</html>

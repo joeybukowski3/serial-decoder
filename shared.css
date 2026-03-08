@@ -1068,7 +1068,8 @@ footer {
 
 .smart-general-subtitle,
 .smart-general-overview-text,
-.smart-general-meta {
+.smart-general-meta,
+.smart-general-overview-note {
   color: var(--muted);
   font-size: 0.9rem;
 }
@@ -1146,4 +1147,76 @@ footer {
   background: rgba(239,68,68,0.12);
   border: 1px solid rgba(239,68,68,0.25);
   color: #fecaca;
+}
+
+.smart-unrecognized-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(0,201,167,0.16);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.smart-unrecognized-title,
+.smart-unrecognized-subtitle,
+.smart-unrecognized-tips-title {
+  color: var(--white);
+  font-weight: 800;
+}
+
+.smart-unrecognized-subtitle,
+.smart-unrecognized-tips-title {
+  margin-top: 14px;
+  margin-bottom: 8px;
+  font-size: 0.92rem;
+}
+
+.smart-unrecognized-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.smart-unrecognized-empty {
+  margin-top: 10px;
+  color: var(--muted);
+}
+
+.smart-unrecognized-pill,
+.smart-unrecognized-submit {
+  appearance: none;
+  border-radius: 999px;
+  padding: 10px 15px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.smart-unrecognized-pill {
+  border: 1px solid rgba(0,201,167,0.3);
+  background: rgba(0,201,167,0.12);
+  color: var(--white);
+}
+
+.smart-unrecognized-tips {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+.smart-unrecognized-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.smart-unrecognized-input {
+  flex: 1 1 280px;
+}
+
+.smart-unrecognized-submit {
+  border: 1px solid rgba(0,201,167,0.3);
+  background: rgba(0,201,167,0.12);
+  color: var(--white);
 }
