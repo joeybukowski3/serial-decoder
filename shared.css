@@ -814,12 +814,12 @@ footer {
   table-layout: fixed;
 }
 
-.lkq-comparison-table thead tr { background: #1e3a5f; }
+.lkq-comparison-table thead tr { background: #ebf8ff; }
 
 .lkq-comparison-table thead th {
-  color: #ffffff !important;
+  color: #1a202c !important;
   font-weight: 800;
-  border: 1px solid rgba(255,255,255,0.14);
+  border: 1px solid #bfdbfe;
   padding: 10px;
 }
 
