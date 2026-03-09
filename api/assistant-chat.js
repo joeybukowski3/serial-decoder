@@ -1,11 +1,3 @@
-const SYSTEM_PROMPT = [
-  'You are Bolt AI Assist, a professional research assistant for property claims, insurance inspections, equipment age verification, and technical item research.',
-  'Stay aligned with the tone and focus of Item Assist, DecodeMyItem, and Bolt Research Team: precise, practical, and professional.',
-  'Prioritize appliances, HVAC, water heaters, electrical equipment, electronics, fixtures, generators, solar equipment, and comparable property-related items.',
-  'When an answer is uncertain, say so clearly and recommend manufacturer verification for final claims decisions.',
-  'Keep responses concise but useful, with direct next steps when possible.'
-].join(' ');
-
 function normalizeMessages(messages) {
   return Array.isArray(messages) ? messages
     .filter(function (message) {
@@ -30,6 +22,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Gemini API key is not configured' });
   }
 
+  const systemPrompt = process.env.CHAT_SYSTEM_PROMPT;
+  if (!systemPrompt) {
+    return res.status(500).json({ error: 'Chat system prompt is not configured' });
+  }
+
   const contents = normalizeMessages((req.body || {}).messages);
   if (!contents.length) {
     return res.status(400).json({ error: 'Messages are required' });
@@ -43,7 +40,7 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           systemInstruction: {
-            parts: [{ text: SYSTEM_PROMPT }],
+            parts: [{ text: systemPrompt }],
           },
           contents: contents,
           generationConfig: {

@@ -58,30 +58,45 @@
       var state = core.getState();
       var messages = state.messages.slice(-10);
       var quickActions = core.getQuickActions().slice(0, 2);
+      var actionContext = state.actionContext;
+      var lastMessage = messages.length ? messages[messages.length - 1] : null;
 
       root.innerHTML =
         (open ? (
           '<div class="bolt-chat-panel">' +
             '<div class="bolt-chat-header">' +
-              '<div>' +
-                '<h2>Bolt AI Assist</h2>' +
-                '<p>Property and equipment research assistant</p>' +
+              '<div class="bolt-chat-header-brand">' +
+                '<div class="bolt-chat-logo-mark"><span>🔍</span></div>' +
+                '<div>' +
+                  '<h2>Item Assist AI</h2>' +
+                  '<p>Age Verification &amp; Replacement Research</p>' +
+                '</div>' +
               '</div>' +
               '<div class="bolt-chat-header-actions">' +
-                '<button type="button" class="bolt-chat-header-btn" data-bolt-expand>Expand to Full View</button>' +
-                '<button type="button" class="bolt-chat-header-btn" data-bolt-close>Close</button>' +
+                '<button type="button" class="bolt-chat-header-btn bolt-chat-header-btn-ghost" data-bolt-new>New Chat</button>' +
+                '<button type="button" class="bolt-chat-header-btn" aria-label="Close Item Assist AI" data-bolt-close>&times;</button>' +
               '</div>' +
             '</div>' +
             '<div class="bolt-chat-body"><div class="bolt-chat-message-list">' +
               messages.map(function (message) {
+                var showActions = actionContext && lastMessage && message.role === 'model' && message.timestamp === lastMessage.timestamp;
                 return (
-                  '<div class="bolt-chat-message ' + message.role + '">' +
-                    '<div class="bolt-chat-avatar">' + (message.role === 'user' ? 'You' : 'AI') + '</div>' +
-                    '<div class="bolt-chat-bubble">' + core.formatMessageHtml(message.text) + '</div>' +
+                  '<div class="bolt-chat-message-block">' +
+                    '<div class="bolt-chat-message ' + message.role + '">' +
+                      '<div class="bolt-chat-avatar">' + (message.role === 'user' ? 'You' : 'AI') + '</div>' +
+                      '<div class="bolt-chat-bubble">' + core.formatMessageHtml(message.text) + '</div>' +
+                    '</div>' +
+                    (showActions ? (
+                      '<div class="bolt-chat-preset-row">' +
+                        actionContext.actions.map(function (action) {
+                          return '<button type="button" class="bolt-chat-preset-btn ' + (action.style === 'ghost' ? 'is-ghost' : 'is-primary') + '" data-bolt-preset="' + action.kind + '">' + action.label + '</button>';
+                        }).join('') +
+                      '</div>'
+                    ) : '') +
                   '</div>'
                 );
               }).join('') +
-              (state.loading ? '<div class="bolt-chat-loading">Bolt AI Assist is responding...</div>' : '') +
+              (state.loading ? '<div class="bolt-chat-loading">Item Assist AI is responding...</div>' : '') +
             '</div></div>' +
             '<div class="bolt-chat-footer">' +
               '<div class="bolt-chat-actions">' +
@@ -93,11 +108,15 @@
                 '<input class="bolt-chat-input" type="text" name="message" placeholder="Ask about age, specs, or serial guidance..." value="' + draft.replace(/"/g, '&quot;') + '">' +
                 '<button type="submit" class="bolt-chat-primary-btn">Send</button>' +
               '</form>' +
+              '<div class="bolt-chat-footer-links"><button type="button" class="bolt-chat-expand-link" data-bolt-expand>Expand to Full View</button></div>' +
               '<div class="bolt-chat-note">Chat history is saved locally and continues in full view.</div>' +
             '</div>' +
           '</div>'
         ) : '') +
-        '<button type="button" class="bolt-chat-launcher" aria-label="Open Bolt AI Assist" data-bolt-launcher>AI</button>';
+        '<button type="button" class="bolt-chat-launcher" aria-label="Open Item Assist AI" data-bolt-launcher>' +
+          '<span class="bolt-chat-launcher-icon">⌕</span>' +
+          '<span class="bolt-chat-launcher-tooltip">Item Assist AI</span>' +
+        '</button>';
 
       var launcher = root.querySelector('[data-bolt-launcher]');
       if (launcher) {
@@ -115,13 +134,6 @@
         });
       }
 
-      var expandBtn = root.querySelector('[data-bolt-expand]');
-      if (expandBtn) {
-        expandBtn.addEventListener('click', function () {
-          window.location.href = '/assistant';
-        });
-      }
-
       Array.prototype.forEach.call(root.querySelectorAll('[data-bolt-quick]'), function (button) {
         button.addEventListener('click', function () {
           draft = button.getAttribute('data-bolt-quick') || '';
@@ -129,6 +141,32 @@
           draft = '';
         });
       });
+
+      Array.prototype.forEach.call(root.querySelectorAll('[data-bolt-preset]'), function (button) {
+        button.addEventListener('click', function () {
+          var kind = button.getAttribute('data-bolt-preset');
+          var action = actionContext && actionContext.actions
+            ? actionContext.actions.find(function (item) { return item.kind === kind; })
+            : null;
+          draft = '';
+          core.runPresetAction(action);
+        });
+      });
+
+      var expandBtn = root.querySelector('[data-bolt-expand]');
+      if (expandBtn) {
+        expandBtn.addEventListener('click', function () {
+          window.location.href = '/assistant';
+        });
+      }
+
+      var newBtn = root.querySelector('[data-bolt-new]');
+      if (newBtn) {
+        newBtn.addEventListener('click', function () {
+          draft = '';
+          core.clearConversation();
+        });
+      }
 
       var form = root.querySelector('[data-bolt-form]');
       if (form) {

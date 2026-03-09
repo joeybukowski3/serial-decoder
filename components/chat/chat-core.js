@@ -5,7 +5,7 @@
   var listeners = [];
   var initialMessage = {
     role: 'model',
-    text: 'Hello. I am Bolt AI Assist. I can help with item age research, serial number guidance, technical specs, life expectancy, and property-related equipment questions.',
+    text: "Hi — I'm Item Assist AI. I can decode serial numbers, estimate item ages, and identify LKQ replacement options. What are you working on?",
     timestamp: Date.now(),
   };
 
@@ -20,6 +20,7 @@
     messages: loadMessages(),
     loading: false,
     error: '',
+    actionContext: null,
   };
 
   function safeLocalStorageGet(key) {
@@ -67,6 +68,7 @@
       messages: next.messages || state.messages,
       loading: typeof next.loading === 'boolean' ? next.loading : state.loading,
       error: typeof next.error === 'string' ? next.error : state.error,
+      actionContext: Object.prototype.hasOwnProperty.call(next, 'actionContext') ? next.actionContext : state.actionContext,
     };
     persistMessages();
     notify();
@@ -86,6 +88,7 @@
       messages: state.messages.slice(),
       loading: state.loading,
       error: state.error,
+      actionContext: state.actionContext,
     };
   }
 
@@ -98,7 +101,54 @@
       }],
       loading: false,
       error: '',
+      actionContext: null,
     });
+  }
+
+  function detectActionContext(text) {
+    var value = String(text || '').toLowerCase();
+    if (!value) return null;
+
+    if (/(best match|alternative 1|alternative 2|lkq|close match|not lkq|above lkq)/i.test(value)) {
+      return {
+        type: 'replacement',
+        actions: [{
+          kind: 'replacement',
+          label: 'Decode a Different Item',
+          prompt: 'I have a new item to identify.',
+          style: 'ghost',
+          clearFirst: true,
+        }],
+      };
+    }
+
+    if (/(cause of loss|likely cause|damage pattern|fire damage|smoke damage|water damage|surge damage|mechanical failure|theft|physical damage)/i.test(value)) {
+      return {
+        type: 'cause',
+        actions: [{
+          kind: 'cause',
+          label: 'Find Replacement Options for Damaged Item',
+          prompt: 'Please provide LKQ replacement options for the item we just discussed.',
+          style: 'primary',
+          clearFirst: false,
+        }],
+      };
+    }
+
+    if (/(manufacture date|estimated age|age estimate|confidence level|identified item|serial number|generation|manufactured)/i.test(value)) {
+      return {
+        type: 'age',
+        actions: [{
+          kind: 'age',
+          label: 'Compare Replacement Options',
+          prompt: 'Based on the item you just identified, please provide LKQ replacement options.',
+          style: 'primary',
+          clearFirst: false,
+        }],
+      };
+    }
+
+    return null;
   }
 
   function escapeHtml(value) {
@@ -134,6 +184,7 @@
       messages: nextMessages,
       loading: true,
       error: '',
+      actionContext: null,
     });
 
     try {
@@ -160,6 +211,7 @@
         }),
         loading: false,
         error: '',
+        actionContext: detectActionContext(String(data.reply || '').trim()),
       });
     } catch (error) {
       setState({
@@ -170,8 +222,24 @@
         }),
         loading: false,
         error: error && error.message ? error.message : 'Unable to get a response right now',
+        actionContext: null,
       });
     }
+  }
+
+  async function runPresetAction(action) {
+    if (!action || !action.prompt) return;
+    if (action.clearFirst) {
+      clearConversation();
+    } else {
+      setState({
+        messages: state.messages,
+        loading: state.loading,
+        error: state.error,
+        actionContext: null,
+      });
+    }
+    await sendMessage(action.prompt);
   }
 
   window.BoltAIAssistCore = {
@@ -179,6 +247,7 @@
     formatMessageHtml: formatMessageHtml,
     getQuickActions: function () { return quickActions.slice(); },
     getState: getState,
+    runPresetAction: runPresetAction,
     sendMessage: sendMessage,
     subscribe: subscribe,
   };
