@@ -55,6 +55,7 @@
     { "source": "/electronics", "destination": "/electronics.html" },
     { "source": "/water-heaters", "destination": "/water-heaters.html" },
     { "source": "/universal-decoder", "destination": "/universal-decoder.html" },
+    { "source": "/assistant", "destination": "/assistant.html" },
     { "source": "/methodology", "destination": "/methodology.html" },
     { "source": "/disclaimer", "destination": "/disclaimer.html" },
     { "source": "/contact", "destination": "/contact.html" },
