@@ -20,6 +20,36 @@
       padding: 28px 28px 24px;
     }
     .lookup-box .section-label { margin-bottom: 16px; display: block; }
+    .lookup-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .lookup-actions .btn-amber {
+      flex: 0 0 auto;
+      min-width: 170px;
+      margin-top: 0 !important;
+    }
+    .lookup-checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 50px;
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--white);
+      line-height: 1.2;
+    }
+    .lookup-checkbox input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--teal);
+      flex: 0 0 16px;
+    }
 
     /* ─── TIPS ─── */
     .tips { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 16px; max-width: 600px; margin: 32px auto 0; }
@@ -122,7 +152,13 @@
            style="margin-bottom:6px;">
     <p class="search-hint">Enter a model number or item description. Works for appliances, HVAC, electronics, generators, commercial equipment, and more.</p>
 
-    <button class="btn-amber" style="width:100%;margin-top:14px;" onclick="runLKQLookup()">Search</button>
+    <div class="lookup-actions">
+      <button class="btn-amber" type="button" onclick="runLKQLookup()">Search</button>
+      <label class="lookup-checkbox" for="include-replacement-comparisons">
+        <input type="checkbox" id="include-replacement-comparisons" checked>
+        <span>Include Replacement Comparisons</span>
+      </label>
+    </div>
     <p class="search-link" style="margin-top:12px;">Have a serial number? <a href="index.html">Use the Serial Decoder →</a></p>
   </div>
 

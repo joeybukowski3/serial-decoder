@@ -3191,6 +3191,9 @@ async function executeSmartLookup(query, opts) {
   var resultsEl = (opts && opts.targetEl) ? opts.targetEl : getSmartLookupResultsEl();
   var preserveGeneral = !!(opts && opts.preserveGeneral);
   var instanceId = (opts && opts.instanceId) || 'smart-lookup';
+  var includeComparisons = (opts && typeof opts.includeComparisons === 'boolean')
+    ? opts.includeComparisons
+    : shouldIncludeSmartLookupComparisons();
 
   if (!preserveGeneral) clearSmartLookupAssist();
   query = normalizeSmartLookupQuery(query);
@@ -3216,6 +3219,7 @@ async function executeSmartLookup(query, opts) {
   LKQEngine.evaluate(instanceId, query, resultsEl, {
     onSuccess: function () {
       currentFeedbackContext = { brand: '', serial: query };
+      applySmartLookupComparisonPreference(resultsEl, includeComparisons);
       var elapsed = Date.now() - loadStart;
       var remaining = Math.max(0, 1400 - elapsed);
       setTimeout(function () {
@@ -3244,6 +3248,48 @@ async function executeSmartLookup(query, opts) {
         }
       }
     },
+  });
+}
+
+function shouldIncludeSmartLookupComparisons() {
+  var checkbox = document.getElementById('include-replacement-comparisons');
+  return checkbox ? !!checkbox.checked : true;
+}
+
+function applySmartLookupComparisonPreference(resultsEl, includeComparisons) {
+  var table;
+  var rows;
+  var headerRow;
+  var colgroup;
+  if (!resultsEl || includeComparisons) return;
+
+  table = resultsEl.querySelector('.lkq-comparison-table');
+  if (!table) return;
+
+  colgroup = table.querySelector('colgroup');
+  if (colgroup) {
+    while (colgroup.children.length > 2) {
+      colgroup.removeChild(colgroup.lastElementChild);
+    }
+  }
+
+  headerRow = table.querySelector('thead tr');
+  if (headerRow) {
+    while (headerRow.children.length > 2) {
+      headerRow.removeChild(headerRow.lastElementChild);
+    }
+  }
+
+  rows = table.querySelectorAll('tbody tr');
+  Array.prototype.forEach.call(rows, function (row) {
+    var rowKey = row.getAttribute('data-row');
+    if (rowKey === 'rating' || rowKey === 'buy' || rowKey === 'notes') {
+      row.remove();
+      return;
+    }
+    while (row.children.length > 2) {
+      row.removeChild(row.lastElementChild);
+    }
   });
 }
 

@@ -5082,7 +5082,7 @@ img.ia-sidebar-logo {
 }
 
 .lkq-comparison-table thead tr {
-  background: #1e3a5f;
+  background: #ebf8ff;
 }
 
 .lkq-comparison-table thead th {
@@ -5090,10 +5090,10 @@ img.ia-sidebar-logo {
   text-align: left;
   font-size: 0.75rem;
   font-weight: 800;
-  color: #ffffff !important;
+  color: #1a202c !important;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-right: 1px solid rgba(255,255,255,0.1);
+  border-right: 1px solid #bfdbfe;
   white-space: nowrap;
 }
 
@@ -5406,13 +5406,13 @@ img.ia-sidebar-logo {
 }
 
 .lkq-comparison-table thead tr {
-  background: #1e3a5f;
+  background: #ebf8ff;
 }
 
 .lkq-comparison-table thead th {
-  color: #ffffff !important;
+  color: #1a202c !important;
   font-weight: 800;
-  border: 1px solid rgba(255,255,255,0.14);
+  border: 1px solid #bfdbfe;
   padding: 10px;
 }
 
