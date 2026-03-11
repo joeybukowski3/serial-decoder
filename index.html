@@ -17,7 +17,7 @@
     /* ─── DECODER FORM ─── */
     .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
     .era-group { margin-top: 8px; }
-    .era-note { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+    .era-note { font-size: 11px; color: #d8e3ee; margin-top: 6px; line-height: 1.5; }
 
     /* ─── RESULTS CARD ─── */
     .results-card {
@@ -80,11 +80,11 @@
     .options-drawer summary { font-size: 13px; font-weight: 600; color: var(--white); cursor: pointer; padding: 10px 14px; background: rgba(255,255,255,0.02); }
     .options-drawer summary:hover { color: var(--teal); }
     .options-drawer-body { padding: 12px 14px; }
-    .placeholder-note { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
-    .placeholder-hint { font-size: 12px; color: var(--muted); opacity: 0.7; margin-bottom: 12px; }
+    .placeholder-note { font-size: 13px; color: #334155; margin-bottom: 4px; }
+    .placeholder-hint { font-size: 12px; color: #475569; opacity: 1; margin-bottom: 12px; }
     .ai-generate-btn { background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25); border-radius: 8px; padding: 8px 16px; font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; color: var(--teal); cursor: pointer; transition: all 0.2s; }
     .ai-generate-btn:hover { background: rgba(0,201,167,0.18); }
-    .ai-generate-result { margin-top: 12px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .ai-generate-result { margin-top: 12px; font-size: 13px; color: #334155; line-height: 1.6; }
 
     /* ─── RESULT ACTION BUTTONS ─── */
     .copy-btn, .decode-again-btn, .error-btn, .cancel-btn {
@@ -106,7 +106,7 @@
     .loading-emoji { font-size: 36px; }
     @keyframes lightning-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.1)} }
     .loading-emoji.lightning { animation: lightning-pulse 1s ease-in-out infinite; }
-    .loading-text { font-size: 13px; color: #4a5568; }
+    .loading-text { font-size: 13px; color: #334155; }
 
     /* ─── BRAND LOGO ─── */
     .brand-logo-wrap { width: 32px; height: 32px; }
@@ -130,7 +130,7 @@
     }
     .brand-tile:hover { border-color: rgba(0,201,167,0.4); background: rgba(255,255,255,0.07); transform: translateY(-2px); }
     .brand-tile-name { font-size: 14px; font-weight: 700; color: var(--white); }
-    .brand-tile-desc { font-size: 11px; color: var(--muted); }
+    .brand-tile-desc { font-size: 11px; color: #d8e3ee; }
 
     /* ─── FEEDBACK MODAL ─── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -424,7 +424,8 @@
     </div>
     <div class="results-footer">
       <button class="copy-btn" onclick="copyClaimFile()">Copy Information</button>
-      <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
+      <button class="decode-again-btn btn-amber" onclick="decodeAnotherItem()">Decode Another Item</button>
+      <button class="decode-again-btn btn-teal" onclick="useSmartLookup()">Use Smart Lookup</button>
       <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
     </div>
     <div class="more-options-section">
