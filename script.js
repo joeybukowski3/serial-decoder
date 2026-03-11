@@ -6,6 +6,16 @@
   window.location.replace(normalized + window.location.search);
 })();
 
+(function loadBoltAiAssistBubble() {
+  var path = window.location.pathname || '';
+  if (path === '/assistant' || path.endsWith('/assistant.html') || path.endsWith('assistant.html')) return;
+  if (document.getElementById('bolt-ai-bubble-script')) return;
+  var script = document.createElement('script');
+  script.id = 'bolt-ai-bubble-script';
+  script.src = '/components/chat/chat-bubble.js';
+  document.head.appendChild(script);
+})();
+
 // ===== ERA & CYCLING BRAND CONFIG =====
 var CYCLING_BRANDS = {
   appliances: {

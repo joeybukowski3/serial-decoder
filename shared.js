@@ -61,3 +61,13 @@ function setTab(el, tab) {
   badge.textContent = code;
   document.body.appendChild(badge);
 })();
+
+(function loadBoltAiAssistBubble() {
+  var path = window.location.pathname || '';
+  if (path === '/assistant' || path.endsWith('/assistant.html') || path.endsWith('assistant.html')) return;
+  if (document.getElementById('bolt-ai-bubble-script')) return;
+  var script = document.createElement('script');
+  script.id = 'bolt-ai-bubble-script';
+  script.src = '/components/chat/chat-bubble.js';
+  document.body.appendChild(script);
+})();

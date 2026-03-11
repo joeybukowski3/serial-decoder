@@ -1,0 +1,64 @@
+{
+  "sites": {
+    "itemassist": {
+      "description": "Age-lookup AI fallback endpoint at decodemyitem.com",
+      "endpoint": "https://www.decodemyitem.com/api/age-lookup",
+      "method": "POST",
+      "notes": "Serial decoder is client-side only. This endpoint is the AI fallback — test with brand+model queries, not raw serials.",
+      "cases": [
+        {
+          "label": "Whirlpool top-load washer — mid-2000s",
+          "input": {
+            "query": "Whirlpool top-load washing machine WTW5000DW"
+          },
+          "expected": {
+            "brand": "Whirlpool",
+            "estimatedYear": null,
+            "yearRange": "2015-2019"
+          }
+        },
+        {
+          "label": "Samsung French door refrigerator — recent",
+          "input": {
+            "query": "Samsung French door refrigerator RF23M8070SR"
+          },
+          "expected": {
+            "brand": "Samsung",
+            "estimatedYear": null,
+            "yearRange": "2017-2020"
+          }
+        }
+      ]
+    },
+    "boltresearchteam": {
+      "description": "LKQ item lookup endpoint at boltresearchteam.com",
+      "endpoint": "https://www.boltresearchteam.com/api/lkq-lookup",
+      "method": "GET",
+      "notes": "Query sent as ?query= param. Check itemSummary fields in response.",
+      "cases": [
+        {
+          "label": "Bosch dishwasher lookup",
+          "input": {
+            "query": "Bosch dishwasher SHX878WD5N"
+          },
+          "expected": {
+            "brand": "Bosch",
+            "category": "Dishwasher",
+            "estimatedAgeRange": "FILL_IN"
+          }
+        },
+        {
+          "label": "LG dryer lookup",
+          "input": {
+            "query": "LG dryer DLEX3900W"
+          },
+          "expected": {
+            "brand": "LG",
+            "category": "Dryer",
+            "estimatedAgeRange": "FILL_IN"
+          }
+        }
+      ]
+    }
+  }
+}

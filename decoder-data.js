@@ -20,7 +20,7 @@
 }
 
 // Serial Number Decoder Database â€” Auto-generated from CSV
-// Generated: 2026-02-17
+// Generated: 2026-02-17
 // Source of truth for runtime decoding; CSV files are not loaded by the app.
 
 var decoderData = {
@@ -1170,7 +1170,7 @@ var decoderData = {
       var m = this.monthMap[monthChar];
       return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
     }
-    },
+    },
     'frigidaire': {
       name: 'Frigidaire',
       parentManufacturer: 'Electrolux AB (Sweden)',
@@ -1424,7 +1424,7 @@ var decoderData = {
       var len = serial.length;
       var yearChar = '';
       var monthChar = '';
-      if (len >= 15) {
+      if (len >= 14) {
         yearChar = serial[7];
         monthChar = serial[8];
       } else if (len >= 11) {
