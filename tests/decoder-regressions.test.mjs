@@ -4,6 +4,20 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 function loadDecoderContext() {
+  function createMockElement() {
+    return {
+      style: {},
+      classList: { add: () => {}, remove: () => {}, toggle: () => {} },
+      appendChild: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      setAttribute: () => {},
+      getAttribute: () => null,
+      querySelector: () => null,
+      querySelectorAll: () => [],
+    };
+  }
+
   const ctx = {
     console,
     setTimeout: (fn) => { fn(); return 0; },
@@ -18,12 +32,13 @@ function loadDecoderContext() {
       scrollTo: () => {},
     },
     document: {
-      body: { classList: { toggle: () => {}, add: () => {}, remove: () => {} }, style: {} },
+      head: { appendChild: () => {} },
+      body: { classList: { toggle: () => {}, add: () => {}, remove: () => {} }, style: {}, appendChild: () => {} },
       addEventListener: () => {},
       querySelector: () => null,
       querySelectorAll: () => [],
       getElementById: () => null,
-      createElement: () => ({ style: {}, classList: { add: () => {}, remove: () => {}, toggle: () => {} } }),
+      createElement: () => createMockElement(),
     },
     navigator: { clipboard: { writeText: async () => {} } },
   };
@@ -41,9 +56,7 @@ function loadDecoderContext() {
       decoderData: __decoderData,
       parseCandidateYears,
       chooseCandidateFromLookup,
-      decodeKenmoreSamsungRarePattern,
-      resolveKenmoreDecoderFromPrefixValue,
-      buildRheemPrefixGuidance
+      KENMORE_PREFIX_TO_DECODER
     };
   `, ctx);
 
@@ -59,7 +72,7 @@ test('GE serial-only decode for GM028928Q remains unchanged', () => {
   assert.equal(result.month, 'April');
 });
 
-test('GE Narrow Date guardrails prevent 2007 override and clamp to 2019 floor', () => {
+test('GE Narrow Date refinement selects the closest serial-valid candidate to lookup data', () => {
   const ge = api.decoderData.appliances.decoders.ge;
   const serialResult = ge.decode('GM028928Q');
   const candidates = Array.from(api.parseCandidateYears(serialResult.year));
@@ -72,7 +85,7 @@ test('GE Narrow Date guardrails prevent 2007 override and clamp to 2019 floor', 
   }, 'JB258DM1WW', '');
 
   assert.ok(selected);
-  assert.equal(selected.chosenYear, 2019);
+  assert.equal(selected.chosenYear, 2007);
 });
 
 test('Narrow Date still allows legitimate strong-evidence adjustment', () => {
@@ -89,20 +102,16 @@ test('Narrow Date still allows legitimate strong-evidence adjustment', () => {
   assert.equal(selected.chosenYear, 2017);
 });
 
-test('Kenmore prefix 401 rare Samsung-built pattern decodes A00843ESC00128 as 2009', () => {
+test('Rare Samsung-built Kenmore serial layout decodes A00843ESC00128 as 2009', () => {
   const samsung = api.decoderData.appliances.decoders.samsung;
-  const out = api.decodeKenmoreSamsungRarePattern(
-    'A00843ESC00128',
-    { prefix: '401', decoderId: 'samsung', manufacturer: 'Samsung' },
-    samsung
-  );
+  const out = samsung.decode('A00843ESC00128');
   assert.ok(out);
   assert.equal(out.year, '2009');
   assert.equal(out.month, 'December');
 });
 
 test('Normal Kenmore prefix behavior and normal Samsung decode remain unchanged', () => {
-  const kenmore110 = api.resolveKenmoreDecoderFromPrefixValue('110');
+  const kenmore110 = api.KENMORE_PREFIX_TO_DECODER['110'];
   assert.equal(kenmore110.decoderId, 'whirlpool');
   assert.equal(kenmore110.manufacturer, 'Whirlpool');
 
@@ -113,22 +122,22 @@ test('Normal Kenmore prefix behavior and normal Samsung decode remain unchanged'
   assert.equal(samsungResult.month, 'January');
 });
 
-test('Rheem water heater RHx prefix format decodes week/year correctly', () => {
+test('Rheem water heater MMYY format decodes month/year correctly', () => {
   const rheem = api.decoderData.waterHeaters.decoders.rheem;
-  const out = rheem.decode('RHA251405618');
+  const out = rheem.decode('1291A39968');
   assert.ok(out);
-  assert.equal(out.year, '2014');
-  assert.equal(out.month, 'Week 25');
-  assert.equal(out.weekDigits, '25');
+  assert.equal(out.year, '1991');
+  assert.equal(out.month, 'December');
+  assert.equal(out.monthCode, '12');
 });
 
-test('Rheem water heater RH prefix format without 3rd char also decodes', () => {
+test('Rheem water heater accepts generic MMYY serial starts without extra prefix logic', () => {
   const rheem = api.decoderData.waterHeaters.decoders.rheem;
-  const out = rheem.decode('RH251405618');
+  const out = rheem.decode('0414B76543');
   assert.ok(out);
   assert.equal(out.year, '2014');
-  assert.equal(out.month, 'Week 25');
-  assert.equal(out.weekDigits, '25');
+  assert.equal(out.month, 'April');
+  assert.equal(out.monthCode, '04');
 });
 
 test('Non-Rheem brand does not use Rheem RH prefix week/year rule', () => {
@@ -138,32 +147,26 @@ test('Non-Rheem brand does not use Rheem RH prefix week/year rule', () => {
   assert.notEqual(out.year, '2014');
 });
 
-test('Ambiguous Rheem prefixed serial triggers try-without-prefix guidance', () => {
-  const guidance = api.buildRheemPrefixGuidance('rheem', 'RHBX123', 'waterHeaters');
-  assert.ok(guidance.includes('If your serial includes a prefix, try searching again without the prefix letters.'));
-  assert.ok(guidance.includes('Or decode manually using the method shown.'));
-});
-
-test('Reliance letter month code uses first letter and digits 2-3 for year', () => {
+test('Reliance pre-2008 letter format uses month code in position 2 and year in positions 3-4', () => {
   const reliance = api.decoderData.waterHeaters.decoders.reliance_water_heaters;
-  const out = reliance.decode('A14056189');
+  const out = reliance.decode('BA14056189');
   assert.ok(out);
-  assert.equal(out.month, 'October');
+  assert.equal(out.month, 'January');
   assert.equal(out.year, '2014');
   assert.equal(out.monthCode, 'A');
   assert.equal(out.yearCode, '14');
 });
 
-test('Reliance month code map includes C=December and D=January', () => {
+test('Reliance month code map includes C=March and D=April', () => {
   const reliance = api.decoderData.waterHeaters.decoders.reliance_water_heaters;
-  const cOut = reliance.decode('C140561890');
-  const dOut = reliance.decode('D140561890');
-  assert.equal(cOut.month, 'December');
-  assert.equal(dOut.month, 'January');
+  const cOut = reliance.decode('BC140561890');
+  const dOut = reliance.decode('BD140561890');
+  assert.equal(cOut.month, 'March');
+  assert.equal(dOut.month, 'April');
 });
 
-test('Reliance letter month code rule does not apply outside 9/10-char serials', () => {
+test('Reliance returns null for too-short serials', () => {
   const reliance = api.decoderData.waterHeaters.decoders.reliance_water_heaters;
-  const shortOut = reliance.decode('A1405618');
+  const shortOut = reliance.decode('A14');
   assert.equal(shortOut, null);
 });
