@@ -1559,7 +1559,7 @@ button.decode-button {
 
 .loading-text {
 
-    text-align: center; color: var(--text-light);
+    text-align: center; color: var(--text-mid);
     font-style: italic; font-size: 0.9rem;
 
 }
@@ -1595,6 +1595,17 @@ button.decode-button {
  padding: 1.5rem;
 }
 
+.results-card,
+.results-body,
+.results-body p,
+.results-body li,
+.results-body dd,
+.results-body dt,
+.results-body span,
+.results-body strong {
+ color: #1a202c;
+}
+
 .header .sidebar-toggle {
     position: absolute;
     left: 1rem;
@@ -1619,11 +1630,11 @@ button.decode-button {
 }
 
 .result-label {
- font-size: 0.85rem; font-weight: 600; color: #4a5568;
+ font-size: 0.85rem; font-weight: 600; color: #334155;
 }
 
 .result-value {
- font-size: 1.05rem; font-weight: 700; color: #3182ce;
+ font-size: 1.05rem; font-weight: 700; color: #1d4ed8;
 }
 
 .info-block {
@@ -2405,7 +2416,7 @@ button.decode-button {
 
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--text-light);
+    color: var(--text-mid);
     font-style: italic;
     margin-bottom: 0.25rem;
 
@@ -2774,7 +2785,7 @@ button.decode-button {
 /* ── Header tagline (who it's for) ── */
 .header-tagline {
 
-    font-size: 0.78rem; color: rgba(232,237,245,0.65);
+    font-size: 0.78rem; color: rgba(232,237,245,0.88);
     margin-top: 0.3rem; line-height: 1.5;
 
 }
@@ -2801,7 +2812,7 @@ button.decode-button {
 
 .brands-section-desc {
     font-size: 0.78rem;
-    color: var(--text-muted);
+    color: #334155;
     margin-bottom: 1rem;
 }
 
@@ -5723,6 +5734,16 @@ img.ia-sidebar-logo {
     color: var(--text-main);
     margin-bottom: 0.45rem;
 
+}
+
+.category-page-head p,
+.popular-brands-section p,
+.static-card-header p,
+.static-section p,
+.static-section li,
+.search-hint,
+.search-link {
+    color: #334155;
 }
 
 .smart-general-subtitle,
