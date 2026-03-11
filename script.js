@@ -2820,6 +2820,18 @@ function decodeAnotherItem() {
   }, 300);
 }
 
+function useSmartLookup() {
+  decodeAnotherItem();
+  var altQuery = getSmartLookupInputEl();
+  if (altQuery) {
+    altQuery.focus();
+    var altSection = document.getElementById('altSection');
+    if (altSection && !altSection.classList.contains('open')) {
+      altSection.classList.add('open');
+    }
+  }
+}
+
 function getBrandFactsKey(slug) {
   if (!slug) return '';
   if (slug === 'google-pixel') return 'google_pixel';
