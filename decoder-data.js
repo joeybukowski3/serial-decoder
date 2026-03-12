@@ -2019,17 +2019,17 @@ var decoderData = {
       groupId: '7B',
       products: 'Water Heater (tank)',
       serialEra: 'Pre-2008',
-      serialLengthNote: 'Letter-coded format: [Month letter][2-digit year][...]. Numeric format: [YY][WW][...] where YY = 2-digit year and WW = production week (01\u201353).',
-      decodeMethod: 'Character 1 (month letter), characters 2-3 (year) for letter-coded serials',
-      yearCodePosition: 'Characters 2-3 (letter-coded serials)',
-      monthCodePosition: 'Character 1 (letter-coded serials)',
+      serialLengthNote: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...]. Some legacy examples may omit the factory letter and begin with the month code directly. Numeric format: [YY][WW][...] where YY = 2-digit year and WW = production week (01\u201353).',
+      decodeMethod: 'Character 2 (month code), characters 3-4 (year) for standard pre-2008 letter-coded serials',
+      yearCodePosition: 'Characters 3-4 (standard pre-2008 letter-coded serials)',
+      monthCodePosition: 'Character 2 (standard pre-2008 letter-coded serials)',
       outputType: 'Month + Year',
-      decodeNotes: 'Reliance letter-coded month map: A=October, B=November, C=December, D=January, E=February, F=March, G=April, H=May, I=June, K=July, L=August, M=September. In this format, the first letter is month and the 2nd-3rd digits are year. Numeric serials can still use YYWW.',
-      exampleSerial: 'A1405618 (letter-coded) or 1504A023527 (numeric YYWW)',
-      exampleResult: 'A=October, 14=2014 \u2192 October 2014 | 15=2015, 04=week 4 \u2192 2015 week 4',
+      decodeNotes: 'Pre-2008 Reliance serials generally follow the A.O. Smith family pattern: [Factory letter][Month code][2-digit year][...], with I skipped in the month codes. Numeric serials can still use YYWW.',
+      exampleSerial: 'BA14056189 (pre-2008 letter-coded) or 1504A023527 (numeric YYWW)',
+      exampleResult: 'B=factory, A=January, 14=2014 \u2192 January 2014 | 15=2015, 04=week 4 \u2192 2015 week 4',
       sources: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
-      method: 'Letter-coded format: first letter is month code (A=Oct ... M=Sep), digits 2-3 are year. Numeric format can use YYWW.',
-      notes: 'Reliance letter-coded month map: A=October, B=November, C=December, D=January, E=February, F=March, G=April, H=May, I=June, K=July, L=August, M=September. For this format, the first letter is month and the 2nd-3rd digits are year.',
+      method: 'Pre-2008 format: [Factory letter][Month code][2-digit year][...], with a fallback for legacy examples that begin directly with the month code. Numeric format can use YYWW.',
+      notes: 'Pre-2008 Reliance serials generally use the A.O. Smith family month code map with the month in character 2 and the year in characters 3-4. I is skipped.',
       source: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
       yearMap: { 'YY (e.g. 06 = 2006)': 'Prefix with 19XX or 20XX based on context', 'YYYY (e.g. 2018)': 'Read directly (e.g. 2018)' },
       monthMap: { 'A': 'October', 'B': 'November', 'C': 'December', 'D': 'January', 'E': 'February', 'F': 'March', 'G': 'April', 'H': 'May', 'I': 'June', 'K': 'July', 'L': 'August', 'M': 'September', '10': 'October', '11': 'November', '12': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
@@ -2091,21 +2091,27 @@ var decoderData = {
       notes: 'Reliance letter-coded month map: A=October, B=November, C=December, D=January, E=February, F=March, G=April, H=May, I=June, K=July, L=August, M=September. For this format, the first letter is month and the 2nd-3rd digits are year.',
       source: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
       yearMap: { 'YY (e.g. 06 = 2006)': 'Prefix with 19XX or 20XX based on context', 'YYYY (e.g. 2018)': 'Read directly (e.g. 2018)' },
-      monthMap: { 'A': 'October', 'B': 'November', 'C': 'December', 'D': 'January', 'E': 'February', 'F': 'March', 'G': 'April', 'H': 'May', 'I': 'June', 'K': 'July', 'L': 'August', 'M': 'September', '10': 'October', '11': 'November', '12': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
+      monthMap: { '10': 'October', '11': 'November', '12': 'December', 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'J': 'September', 'K': 'October', 'L': 'November', 'M': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
       var YEAR_NOW = new Date().getFullYear();
-      // Reliance letter-coded format applies to 9- and 10-character serials:
-      // [Month letter][2-digit year][...]
-      if (/^[A-Za-z]/.test(serial) && (serial.length === 9 || serial.length === 10)) {
-        if (serial.length < 4) return null;
-        var monthChar = serial[0].toUpperCase();
-        var yearDigits = serial.substring(1, 3);
-        if (!/^\d{2}$/.test(yearDigits)) return null;
+      // Standard pre-2008 format: [Factory][Month][YY][...]
+      if (/^[A-Za-z]{2}\d{2}/.test(serial)) {
+        var monthChar = serial[1].toUpperCase();
+        var yearDigits = serial.substring(2, 4);
         var yr = parseInt(yearDigits);
         var fullYear = yr >= 84 ? '19' + yearDigits : '20' + yearDigits;
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
+      }
+      // Legacy fallback: [Month][YY][...]
+      if (/^[A-Za-z]\d{2}/.test(serial)) {
+        var legacyMonthChar = serial[0].toUpperCase();
+        var legacyYearDigits = serial.substring(1, 3);
+        var legacyYr = parseInt(legacyYearDigits);
+        var legacyFullYear = legacyYr >= 84 ? '19' + legacyYearDigits : '20' + legacyYearDigits;
+        var legacyMonth = this.monthMap[legacyMonthChar];
+        return { year: legacyFullYear, month: legacyMonth || 'Unknown code: ' + legacyMonthChar, yearCode: legacyYearDigits, monthCode: legacyMonthChar };
       }
       // Post-2008 numeric Format A: YYYYMM... â€” full 4-digit year (2000â€“present), then 2-digit month.
       if (/^\d{4}/.test(serial) && serial.length >= 6) {

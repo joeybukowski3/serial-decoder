@@ -528,6 +528,10 @@ function brandTargetHref(brandId) {
   return '/' + slug;
 }
 
+function homeResetHref() {
+  return '/?reset=1';
+}
+
 function categoryBrandHref(catKey, brandId) {
   if (!brandId) return categoryPageHrefByKey(catKey);
   var base = categoryPageHrefByKey(catKey);
@@ -555,11 +559,84 @@ function rewriteBrandLinks(root) {
       if (url.origin !== window.location.origin) return;
       var slug = url.pathname.replace(/\/+$/, '').split('/').pop().replace(/\.html$/i, '');
       if (!brandSlugs[slug]) return;
+      if (link.classList && link.classList.contains('brand-tile')) {
+        link.setAttribute('href', homeResetHref());
+        link.setAttribute('data-brand-reset-link', '1');
+        return;
+      }
       var target = brandLinkHrefFromSlug(slug);
       if (target) link.setAttribute('href', target);
       link.setAttribute('data-brand', slugToBrandId(slug));
     } catch (_) {}
   });
+}
+
+function shouldResetHomePageSearch() {
+  try {
+    var slug = getBrandPageSlug();
+    if (slug !== '' && slug !== 'index') return false;
+    var params = new URLSearchParams(window.location.search || '');
+    return params.get('reset') === '1';
+  } catch (_) {
+    return false;
+  }
+}
+
+function resetHomePageSearch() {
+  var slug = getBrandPageSlug();
+  if (slug !== '' && slug !== 'index') return;
+
+  var tabBtn = document.querySelector('.cat-tab[data-cat="appliances"]');
+  if (typeof selectCategory === 'function') {
+    selectCategory('appliances', tabBtn);
+  }
+
+  var dom = getDecodeDom();
+  var brandSelect = dom.brandEl;
+  var serialInput = dom.serialEl;
+  var altQuery = getSmartLookupInputEl();
+  var eraSelect = document.getElementById('eraSelect');
+  var kenmorePrefix = document.getElementById('kenmoreModelPrefix');
+  var ageLoading = document.getElementById('ageLoading');
+  var serialResults = document.getElementById('serialResults');
+  var ageResults = document.getElementById('ageResults');
+  var serialLkqResults = document.getElementById('serialLkqResults');
+  var serialModelInput = document.getElementById('serial-lkq-model-input');
+  var refinePanel = document.querySelector('.narrow-date-panel');
+  var refineOut = document.getElementById('narrowDateOutput');
+
+  if (brandSelect) {
+    brandSelect.value = '';
+    if (typeof onBrandChange === 'function') onBrandChange();
+  }
+  if (serialInput) serialInput.value = '';
+  if (altQuery) altQuery.value = '';
+  if (eraSelect) eraSelect.value = '';
+  if (kenmorePrefix) kenmorePrefix.value = '';
+  if (serialModelInput) serialModelInput.value = '';
+  if (serialResults) serialResults.classList.add('hidden');
+  if (ageResults) ageResults.classList.add('hidden');
+  if (ageLoading) ageLoading.classList.add('hidden');
+  if (serialLkqResults) serialLkqResults.classList.add('hidden');
+  if (refinePanel) refinePanel.classList.add('hidden');
+  if (refineOut) refineOut.innerHTML = '';
+  if (document.getElementById('eraGroup')) hideEraGroup();
+
+  LKQEngine.clearInstance('serial-decoder');
+  LKQEngine.clearInstance('smart-lookup');
+  clearSmartLookupAssist();
+  updateDecodeBtn();
+  syncSidebarActiveState();
+
+  try {
+    history.replaceState({}, '', '/');
+  } catch (_) {}
+
+  window.scrollTo(0, 0);
+  setTimeout(function() {
+    if (brandSelect && brandSelect.focus) brandSelect.focus();
+    else if (serialInput && serialInput.focus) serialInput.focus();
+  }, 0);
 }
 
 function getCategoryGroupData(catKey) {
@@ -1628,10 +1705,12 @@ function initPage() {
 
   if (brandSelect && serialInput) {
     var initialCategory = 'appliances';
+    var resetHomeSearch = shouldResetHomePageSearch();
     try {
       var initParams = new URLSearchParams(window.location.search || '');
       var initCat = initParams.get('cat');
-      if (initCat) initialCategory = categoryNameToKey(initCat);
+      if (resetHomeSearch) initialCategory = 'appliances';
+      else if (initCat) initialCategory = categoryNameToKey(initCat);
       else if (window.DEFAULT_CATEGORY) initialCategory = categoryNameToKey(window.DEFAULT_CATEGORY);
       else initialCategory = getSavedCategoryKey() || 'appliances';
     } catch (_) {
@@ -1677,8 +1756,8 @@ function initPage() {
       var catParam   = params.get('cat');
       var brandParam = params.get('brand');
       brandParam = normalizeBrandId(brandParam);
-      if (!catParam && window.DEFAULT_CATEGORY) catParam = window.DEFAULT_CATEGORY;
-      if (catParam) {
+      if (!resetHomeSearch && !catParam && window.DEFAULT_CATEGORY) catParam = window.DEFAULT_CATEGORY;
+      if (!resetHomeSearch && catParam) {
         var tabBtn = document.querySelector('.cat-tab[data-cat="' + catParam + '"]');
         if (tabBtn) selectCategory(catParam, tabBtn);
         else if (decoderData[normalizeDecoderCategory(catParam)]) {
@@ -1691,7 +1770,7 @@ function initPage() {
           updateDecodeBtn();
         }
       }
-      if (brandParam) {
+      if (!resetHomeSearch && brandParam) {
         var sel = getDecodeDom().brandEl;
         if (sel) {
           for (var i = 0; i < sel.options.length; i++) {
@@ -1709,6 +1788,10 @@ function initPage() {
         }
       }
     } catch (e) {}
+
+    if (resetHomeSearch) {
+      resetHomePageSearch();
+    }
   }
 
   if (altQuery) {
@@ -1729,7 +1812,7 @@ function initPage() {
   try {
     var q = new URLSearchParams(window.location.search || '');
     var serialParam = q.get('serial');
-    if (serialParam && dom.serialEl) {
+    if (!shouldResetHomePageSearch() && serialParam && dom.serialEl) {
       dom.serialEl.value = serialParam;
       updateDecodeBtn();
     }
