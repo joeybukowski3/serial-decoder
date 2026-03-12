@@ -4,7 +4,7 @@
    <link rel="stylesheet" href="shared.css">
    ═══════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* ─── TOKENS ─── */
 :root {
@@ -2095,4 +2095,388 @@ footer {
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* =================================================================
+   Item Assist dark navy + teal refresh
+   ================================================================= */
+:root {
+  --bg-primary: #0d1b2a;
+  --bg-card: #1b2a3b;
+  --bg-input: #243447;
+  --accent: #00c9a7;
+  --accent-hover: #33d9be;
+  --text-primary: #f0f4f8;
+  --text-muted: #a8b8c8;
+  --border-subtle: #1e3248;
+  --border-accent: #2e8b7a;
+
+  --navy: var(--bg-primary);
+  --navy-mid: #132232;
+  --navy-light: #16283a;
+  --teal: var(--accent);
+  --teal-dim: var(--accent-hover);
+  --white: var(--text-primary);
+  --muted: var(--text-muted);
+  --card-bg: var(--bg-card);
+  --border: var(--border-subtle);
+  --surface: var(--bg-card);
+  --surface-alt: #0a1520;
+  --accent-soft: var(--accent);
+  --shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 18px 42px rgba(0, 0, 0, 0.4);
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(0, 201, 167, 0.08), transparent 28%),
+    linear-gradient(180deg, #0d1b2a 0%, #102132 100%);
+  color: var(--text-primary);
+}
+
+a { color: var(--accent); }
+
+nav {
+  background: rgba(10, 21, 32, 0.92);
+  border: 1px solid var(--border-subtle);
+}
+
+.logo-icon { background: linear-gradient(135deg, #0d1b2a, #00c9a7); }
+.logo-text,
+.logo-sub,
+nav ul li a { color: var(--text-primary); }
+nav ul li a { opacity: 0.82; }
+nav ul li a:hover {
+  color: var(--text-primary);
+  background: rgba(0, 201, 167, 0.1);
+  border-color: rgba(0, 201, 167, 0.22);
+  opacity: 1;
+}
+nav ul li a.active {
+  background: rgba(0, 201, 167, 0.14);
+  color: var(--accent);
+  border-color: rgba(0, 201, 167, 0.24);
+}
+.nav-cta {
+  background: rgba(0, 201, 167, 0.12) !important;
+  border-color: var(--border-accent) !important;
+  color: var(--accent) !important;
+}
+
+.page-hero,
+.hero {
+  background: linear-gradient(135deg, #0d1b2a, #1b2a3b);
+  border: 1px solid var(--border-subtle);
+}
+
+.hero h1,
+.page-hero h1 {
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.hero-badge,
+.pill.teal,
+.pill.amber,
+.pill.muted {
+  background: transparent;
+  border: 1px solid var(--border-accent);
+  color: var(--accent);
+}
+
+h1,
+h2,
+h3,
+h4,
+.card-title,
+.aud-title,
+.brand-tile-name,
+.tip-title,
+.info-title,
+.smart-general-section-title,
+.smart-lookup-assist-title,
+.smart-unrecognized-title,
+.smart-unrecognized-subtitle,
+.smart-unrecognized-tips-title,
+.prose h2,
+.prose h3,
+.result-value,
+.smart-age-value,
+.lkq-id-value,
+.lkq-successor-name,
+.lkq-successor-model,
+.lkq-id-desc-value {
+  color: var(--text-primary);
+}
+
+.section-label,
+.section-title {
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+p,
+.hero-sub,
+.section-sub,
+.card-desc,
+.tip-desc,
+.info-desc,
+.search-hint,
+.search-link,
+.search-link a,
+.aud-desc,
+.placeholder-note,
+.placeholder-hint,
+.ai-generate-result,
+.determination-body,
+.guide-drawer-body li,
+.guide-drawer-body p,
+.warning-note,
+.conf-desc,
+.source-chip,
+.caveat-block,
+.feedback-optional,
+.step-list li,
+.result-label,
+.smart-age-label,
+label,
+.lookup-checkbox,
+.search-tab {
+  color: var(--text-muted);
+}
+
+.card,
+.aud-card,
+.brand-tile,
+.tip-card,
+.lookup-box,
+.search-box,
+.comparison,
+.result-box,
+.contact-form-box,
+.feedback-card,
+.confidence-table,
+.smart-general-section,
+.smart-lookup-assist-card,
+.smart-unrecognized-card,
+.modal-card,
+.guide-drawer,
+.lkq-id-card,
+.lkq-successor-card,
+.lkq-table-section,
+.results-card,
+.prose,
+.info-block,
+.determination-details,
+.options-drawer,
+.lkq-entry-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+.search-tabs,
+.more-options-section,
+.results-footer,
+.lkq-id-desc-block,
+.lkq-successor-rowline,
+.lkq-table-legend,
+.options-drawer summary,
+.power-bar,
+.results-header,
+.lkq-id-header,
+.lkq-successor-header,
+.lkq-replace-header,
+.lkq-section-hd,
+.modal-header,
+.guide-drawer-header {
+  background: #0a1520;
+  border-color: var(--border-subtle);
+}
+
+.search-tab.active,
+.search-tab.smart-tab.active {
+  color: var(--accent);
+  background: rgba(0, 201, 167, 0.12);
+  border-bottom-color: var(--accent);
+}
+
+.power-bar {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.search-select,
+.search-input,
+input[type="text"],
+select,
+textarea,
+.form-input,
+.form-select,
+.lkq-yourpick-editor .lkq-compare-input,
+.smart-unrecognized-input {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-accent);
+}
+
+.search-input:focus,
+.search-select:focus,
+input[type="text"]:focus,
+select:focus,
+textarea:focus,
+.form-input:focus,
+.form-select:focus,
+.lkq-yourpick-editor .lkq-compare-input:focus,
+.smart-unrecognized-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
+.search-input::placeholder,
+input::placeholder,
+textarea::placeholder { color: #89a1b8; }
+
+.btn-primary,
+.btn-amber,
+.decode-btn,
+.smart-general-primary,
+.smart-unrecognized-submit,
+.lkq-yourpick-editor .lkq-compare-btn,
+.power-btn.btn-primary {
+  background: var(--accent);
+  color: #0d1b2a;
+  border: 1px solid var(--accent);
+}
+
+.btn-primary:hover,
+.btn-amber:hover,
+.decode-btn:hover,
+.smart-general-primary:hover,
+.smart-unrecognized-submit:hover,
+.lkq-yourpick-editor .lkq-compare-btn:hover,
+.power-btn.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  transform: scale(1.02);
+}
+
+.btn-secondary,
+.copy-btn,
+.decode-again-btn,
+.smart-general-secondary,
+.smart-general-refine-pill,
+.smart-unrecognized-pill,
+.power-btn.btn-amber,
+.cancel-btn,
+.ai-generate-btn {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--border-accent);
+}
+
+.btn-secondary:hover,
+.copy-btn:hover,
+.decode-again-btn:hover,
+.smart-general-secondary:hover,
+.smart-general-refine-pill:hover,
+.smart-unrecognized-pill:hover,
+.power-btn.btn-amber:hover,
+.cancel-btn:hover,
+.ai-generate-btn:hover {
+  background: rgba(0, 201, 167, 0.1);
+  color: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.results-header h3,
+.lkq-section-title,
+.lkq-step-title,
+.modal-header h3,
+.guide-drawer-header h3 { color: #ffffff !important; }
+
+#serialResults .results-body > .result-row,
+.smart-general-inline-loading,
+.lkq-successor-card,
+.lkq-comparison-table td:first-child,
+.lkq-th-label,
+.lkq-table-footnotes,
+.conf-badge.low,
+.source-chip {
+  background: var(--bg-input);
+}
+
+.trust-item {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 4px 12px;
+  box-shadow: none;
+}
+
+.trust-item strong { color: var(--accent); }
+
+.brand-tile:hover,
+.card:hover,
+.aud-card:hover,
+.tip-card:hover,
+.search-box:hover,
+.lookup-box:hover {
+  box-shadow: 0 0 12px rgba(0, 201, 167, 0.25);
+  border-color: var(--border-accent);
+}
+
+.lkq-comparison-table thead tr { background: #102132; }
+.lkq-comparison-table thead th,
+.lkq-comparison-table td,
+.lkq-table-footnotes,
+.lkq-table-legend { border-color: var(--border-subtle) !important; }
+.lkq-comparison-table tbody tr:nth-child(even) td,
+.lkq-comparison-table tbody tr:nth-child(odd) td { background: var(--bg-card); }
+
+footer {
+  background: #0a1520;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+.footer-links a { color: var(--accent); }
+.modal-close:hover,
+.guide-drawer-close:hover {
+  background: rgba(0, 201, 167, 0.1);
+  color: var(--accent);
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-amber,
+.search-tab,
+.search-select,
+.search-input,
+.lookup-checkbox,
+.copy-btn,
+.decode-again-btn,
+.error-btn,
+.cancel-btn,
+.decode-btn,
+.more-options-toggle,
+.ai-generate-btn {
+  font-family: 'Inter', sans-serif;
 }
