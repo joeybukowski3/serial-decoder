@@ -11,17 +11,17 @@
     .contact-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 40px;
+      gap: 24px;
       max-width: 900px;
       margin: 0 auto;
     }
     @media (max-width: 700px) { .contact-grid { grid-template-columns: 1fr; } }
     .contact-form-box {
-      background: #eef4f8;
+      background: #ffffff;
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 32px 28px;
-      box-shadow: 0 12px 30px rgba(15, 55, 86, 0.06);
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
     .contact-info { display: flex; flex-direction: column; gap: 20px; justify-content: center; }
     .info-item { display: flex; gap: 14px; align-items: flex-start; }
@@ -29,8 +29,8 @@
     .info-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
     .info-desc  { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
     .cf-status { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
-    .cf-status.success { background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2); color: var(--teal); }
-    .cf-status.error   { background: rgba(245,100,100,0.08); border: 1px solid rgba(245,100,100,0.2); color: #f87171; }
+    .cf-status.success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: var(--success); }
+    .cf-status.error   { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.18); color: #dc2626; }
     .hidden { display: none !important; }
     .feedback-link { display: inline-block; margin-top: 10px; font-size: 13px; color: var(--teal); text-decoration: none; }
     .feedback-link:hover { opacity: 0.8; }
@@ -69,7 +69,7 @@
 </section>
 
 <!-- ─── CONTACT ─── -->
-<section class="section" style="padding-top:32px;">
+<section class="section" style="padding-top:0;">
   <div class="contact-grid">
 
     <!-- FORM -->

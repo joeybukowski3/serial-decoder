@@ -22,25 +22,25 @@
     /* ─── RESULTS CARD ─── */
     .results-card {
       background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
       overflow: hidden;
       width: 100%;
-      max-width: 1240px;
+      max-width: 1100px;
       margin: 0 auto 24px;
     }
     .results-header {
       display: flex; justify-content: space-between; align-items: center;
       padding: 14px 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      background: #0f172a;
+      border-bottom: 0;
+      background: var(--navy);
     }
     .results-header h3 { font-size: 14px; font-weight: 700; color: #ffffff; margin: 0; }
-    .results-body { padding: 16px 20px; }
+    .results-body { padding: 24px; }
     .results-footer {
       display: flex; gap: 10px; flex-wrap: wrap;
-      padding: 12px 20px;
-      border-top: 1px solid #e2e8f0;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
       background: #ffffff;
     }
 
@@ -58,7 +58,7 @@
     .result-row--primary .result-value { font-size: 15px; color: #3182ce; }
 
     /* ─── INFO BLOCKS ─── */
-    .info-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-top: 12px; }
+    .info-block { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-top: 12px; }
     .info-block h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #1a202c; margin-bottom: 6px; }
     .info-block p { font-size: 13px; color: #4a5568; line-height: 1.5; margin: 0; }
 
@@ -71,19 +71,19 @@
     .determination-body { font-size: 12px; color: #4a5568; line-height: 1.6; padding: 8px 0; }
 
     /* ─── MORE OPTIONS ─── */
-    .more-options-section { border-top: 1px solid rgba(255,255,255,0.06); }
+    .more-options-section { border-top: 1px solid var(--border); }
     .more-options-toggle { width: 100%; padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; transition: color 0.2s; }
     .more-options-toggle:hover { color: var(--teal); }
     .more-options-arrow { margin-right: 6px; font-size: 10px; display: inline-block; transition: transform 0.2s; }
     .more-options-body { padding: 0 20px 16px; }
-    .options-drawer { margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden; }
-    .options-drawer summary { font-size: 13px; font-weight: 600; color: var(--white); cursor: pointer; padding: 10px 14px; background: rgba(255,255,255,0.02); }
+    .options-drawer { margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .options-drawer summary { font-size: 13px; font-weight: 600; color: var(--white); cursor: pointer; padding: 16px 18px; background: #f8fafc; }
     .options-drawer summary:hover { color: var(--teal); }
     .options-drawer-body { padding: 12px 14px; }
     .placeholder-note { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
     .placeholder-hint { font-size: 12px; color: var(--muted); opacity: 0.7; margin-bottom: 12px; }
-    .ai-generate-btn { background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25); border-radius: 8px; padding: 8px 16px; font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; color: var(--teal); cursor: pointer; transition: all 0.2s; }
-    .ai-generate-btn:hover { background: rgba(0,201,167,0.18); }
+    .ai-generate-btn { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 16px; font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; color: var(--teal); cursor: pointer; transition: all 0.15s ease; }
+    .ai-generate-btn:hover { background: #dbeafe; }
     .ai-generate-result { margin-top: 12px; font-size: 13px; color: var(--muted); line-height: 1.6; }
 
     /* ─── RESULT ACTION BUTTONS ─── */
@@ -91,15 +91,15 @@
       font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600;
       padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
     }
-    .copy-btn { background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25); color: var(--teal); }
-    .copy-btn:hover { background: rgba(0,201,167,0.18); }
-    .decode-again-btn { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
-    .decode-again-btn:hover { border-color: var(--teal); color: var(--teal); }
-    .error-btn { background: transparent; border: 1px solid rgba(245,166,35,0.2); color: var(--amber); }
-    .error-btn:hover { border-color: rgba(245,166,35,0.4); }
-    .cancel-btn { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
-    .cancel-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.25); }
-    .decode-btn { background: linear-gradient(135deg, var(--teal), #0099ff); color: var(--navy); font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; }
+    .copy-btn { background: #ffffff; border: 1px solid var(--teal); color: var(--teal); }
+    .copy-btn:hover { background: #eff6ff; }
+    .decode-again-btn { background: #ffffff; border: 1px solid var(--teal); color: var(--teal); }
+    .decode-again-btn:hover { border-color: var(--teal-dim); color: var(--teal-dim); }
+    .error-btn { background: #fef3c7; border: 1px solid #fcd34d; color: #b45309; }
+    .error-btn:hover { border-color: var(--amber); }
+    .cancel-btn { background: #f1f5f9; border: 1px solid var(--border); color: var(--white); }
+    .cancel-btn:hover { color: var(--white); border-color: #cbd5e1; }
+    .decode-btn { background: var(--teal); color: #ffffff; font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; }
 
     /* ─── LOADING ─── */
     .loading-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px; }
@@ -167,7 +167,7 @@
     .warning-note strong { color: var(--amber); }
 
     /* ─── RESULTS WRAPPER ─── */
-    .results-wrapper { max-width: 1240px; margin: 0 auto; padding: 0 0 32px; }
+    .results-wrapper { max-width: 1100px; margin: 0 auto; padding: 0 0 32px; }
 
     /* Ensure Smart Lookup panel text remains readable on white result cards */
     #smart-lookup-results,
@@ -176,7 +176,7 @@
     }
 
     /* Home-only dual tool layout */
-    .home-tools-wrap { max-width: 1240px; margin: 0 auto; }
+    .home-tools-wrap { max-width: 1100px; margin: 0 auto; }
     .home-tools-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -254,8 +254,8 @@
     .power-bar {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 12px;
+      gap: 16px;
+      margin-top: 16px;
     }
     .smart-lookup-actions {
       display: flex;
@@ -293,12 +293,13 @@
       cursor: pointer;
     }
     .power-btn.btn-primary {
-      background: #3182ce;
+      background: var(--teal);
       color: #ffffff;
     }
     .power-btn.btn-amber {
-      background: #f6ad55;
-      color: #1a202c;
+      background: #f1f5f9;
+      color: var(--white);
+      border: 1px solid var(--border);
     }
     .power-btn.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
     @media (max-width: 980px) { .power-bar { grid-template-columns: 1fr; } }
@@ -333,7 +334,7 @@
 </section>
 
 <!-- ─── DECODER TOOL ─── -->
-<section class="section" style="padding-top:0;padding-bottom:16px;">
+<section class="section" style="padding-top:0;padding-bottom:0;">
   <div class="home-tools-wrap">
     <div class="home-tools-grid">
       <div class="search-box">
@@ -405,7 +406,7 @@
 </section>
 
 <!-- ─── RESULTS WRAPPER ─── -->
-<div class="results-wrapper" style="padding:0 48px 32px;">
+<div class="results-wrapper" style="padding:0 0 32px;">
 
   <!-- Loading -->
   <div id="ageLoading" class="results-card hidden">
