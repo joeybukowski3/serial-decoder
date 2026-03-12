@@ -109,6 +109,13 @@ const APPLIANCE_ERA_DATA = {
   }
 };
 
+const TODAY_ISO = new Date().toISOString().slice(0, 10);
+const TODAY_READABLE = new Date().toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+
 function findHvacBrand(normalizedQuery) {
   for (const cfg of HVAC_SERIAL_CONFIG) {
     for (const alias of cfg.aliases) {
@@ -201,22 +208,27 @@ function applyNintendoSwitch2Hints(base, normalizedQuery) {
 
   if (!isSwitch2) return out;
 
-  const currentGenLabel = 'Current Generation (Released late 2025)';
+  const currentGenLabel = 'Current Generation (Released June 5, 2025)';
   const serialRuleText = 'Nintendo Switch 2 serial numbers typically follow the new 14-digit alphanumeric standard used for modern Nintendo hardware.';
 
   if (!out.brand || String(out.brand).toLowerCase() === 'unknown') out.brand = 'Nintendo';
   if (!out.model) out.model = 'Switch 2';
 
   out.yearRange = currentGenLabel;
-  if (!out.estimatedYear || /not yet released/i.test(String(out.estimatedYear))) {
+  if (!out.estimatedYear || /not yet released|unreleased|coming soon|upcoming/i.test(String(out.estimatedYear))) {
     out.estimatedYear = '2025';
   }
 
-  out.notes = String(out.notes || '').replace(/not yet released/ig, 'released late 2025').trim();
+  out.notes = String(out.notes || '')
+    .replace(/not yet released/ig, 'released June 5, 2025')
+    .replace(/\bunreleased\b/ig, 'released June 5, 2025')
+    .replace(/\bcoming soon\b/ig, 'released June 5, 2025')
+    .replace(/\bupcoming\b/ig, 'released June 5, 2025')
+    .trim();
   if (!out.notes) {
-    out.notes = 'Nintendo Switch 2 is the current generation, released in late 2025.';
-  } else if (!/released late 2025/i.test(out.notes)) {
-    out.notes += ' Nintendo Switch 2 is the current generation, released in late 2025.';
+    out.notes = 'Nintendo Switch 2 is the current generation, released on June 5, 2025.';
+  } else if (!/june 5,\s*2025/i.test(out.notes)) {
+    out.notes += ' Nintendo Switch 2 is the current generation, released on June 5, 2025.';
   }
 
   if (!out.serialRule) {
@@ -410,7 +422,7 @@ export default async function handler(req, res) {
 
   const sanitizedQuery = query.trim();
   const normalizedQuery = sanitizedQuery.toLowerCase().replace(/\s+/g, ' ');
-  const queryCacheKey = `age-lookup:${normalizedQuery}`;
+  const queryCacheKey = `age-lookup:v2:${normalizedQuery}`;
 
   // ── Query-level cache (14-day TTL) ────────────────────────────────────────
   try {
@@ -451,6 +463,8 @@ export default async function handler(req, res) {
 
   const prompt = `You are a product research specialist. Given the following appliance, electronics, or equipment model number, brand, or description, determine the most likely manufacture date or production era.
 
+Today is ${TODAY_READABLE} (${TODAY_ISO}). Every answer must be accurate as of today's date. Do not describe any product as unreleased, upcoming, or not yet released if it was already released on or before today's date.
+
 Research approach:
 - Identify the brand and model from the query
 - Determine when this model was first manufactured or sold
@@ -469,7 +483,7 @@ Research approach:
   - Samsung washers: VRT indicates post-2006 era; AddWash indicates post-2016 era.
   - LG washers: Inverter DirectDrive branding aligns with cycles starting in 2009.
 - Apply this Nintendo-console mapping when relevant:
-  - Nintendo Switch 2 is current generation and released in late 2025 (do not classify it as unreleased).
+  - Nintendo Switch 2 is current generation and released on June 5, 2025 (do not classify it as unreleased).
   - Mention that Switch 2 serial numbers typically follow a modern 14-digit alphanumeric standard.
 - Apply this mobile-device mapping when relevant:
   - Apple iPhone 17 released in September 2025; classify it as current generation rather than unreleased.
