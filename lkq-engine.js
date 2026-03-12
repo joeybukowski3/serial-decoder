@@ -541,8 +541,10 @@
     if (card) card.classList.add('lkq-results-full');
 
     resultsEl.innerHTML =
-      _buildIdCard(summary) +
-      _buildSuccessorRow(successorStatus) +
+      '<div class="lkq-top-grid">' +
+        _buildIdCard(summary) +
+        _buildSuccessorRow(successorStatus) +
+      '</div>' +
       '<div class="lkq-section-pad lkq-table-section">' +
         '<div class="lkq-section-hd">' +
           '<span class="lkq-step-num">3</span>' +
