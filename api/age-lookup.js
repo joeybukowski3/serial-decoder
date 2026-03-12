@@ -136,6 +136,22 @@ function normalizeBrandKey(name) {
   return String(name || '').toLowerCase().replace(/[^a-z]/g, '');
 }
 
+function normalizeKnownItemQuery(query) {
+  const text = String(query || '').trim();
+  const normalized = text.toLowerCase();
+  if (!text) return '';
+
+  if (/\blr3re(?:-\d+)?\b/.test(normalized) && !/\blitter[\s-]*robot\b/.test(normalized)) {
+    return `${text} Whisker Litter-Robot 3 Open Air self-cleaning litter box`;
+  }
+
+  if (/\blitter[\s-]*robot\b/.test(normalized) && !/\bwhisker\b/.test(normalized)) {
+    return `${text} by Whisker`;
+  }
+
+  return text;
+}
+
 function applyHvacEraHints(base, normalizedQuery) {
   const out = { ...base };
   const brandKey = normalizeBrandKey(out.brand);
@@ -420,9 +436,9 @@ export default async function handler(req, res) {
     // Redis unavailable — allow request rather than blocking legitimate users
   }
 
-  const sanitizedQuery = query.trim();
+  const sanitizedQuery = normalizeKnownItemQuery(query.trim());
   const normalizedQuery = sanitizedQuery.toLowerCase().replace(/\s+/g, ' ');
-  const queryCacheKey = `age-lookup:v2:${normalizedQuery}`;
+  const queryCacheKey = `age-lookup:v3:${normalizedQuery}`;
 
   // ── Query-level cache (14-day TTL) ────────────────────────────────────────
   try {
@@ -485,6 +501,9 @@ Research approach:
 - Apply this Nintendo-console mapping when relevant:
   - Nintendo Switch 2 is current generation and released on June 5, 2025 (do not classify it as unreleased).
   - Mention that Switch 2 serial numbers typically follow a modern 14-digit alphanumeric standard.
+- Apply this pet-tech mapping when relevant:
+  - LR3RE-1000 is a Whisker Litter-Robot 3 Open Air self-cleaning litter box, not a generator or power product.
+  - Litter-Robot queries should be identified as automatic litter boxes / pet-tech appliances.
 - Apply this mobile-device mapping when relevant:
   - Apple iPhone 17 released in September 2025; classify it as current generation rather than unreleased.
 

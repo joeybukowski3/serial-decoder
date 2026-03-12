@@ -3010,6 +3010,25 @@ function normalizeSmartLookupQuery(query) {
   return String(query || '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+function expandKnownSmartLookupQuery(query) {
+  var text = normalizeSmartLookupQuery(query);
+  var normalized = text.toLowerCase();
+  if (!text) return '';
+
+  if (/\blr3re(?:-\d+)?\b/.test(normalized)) {
+    if (!/\blitter[\s-]*robot\b/.test(normalized)) {
+      return text + ' Whisker Litter-Robot 3 Open Air self-cleaning litter box';
+    }
+    return text;
+  }
+
+  if (/\blitter[\s-]*robot\b/.test(normalized) && !/\bself[\s-]*clean/i.test(text)) {
+    return text + ' self-cleaning litter box by Whisker';
+  }
+
+  return text;
+}
+
 function getSmartLookupAssistHost() {
   var input = getSmartLookupInputEl();
   if (!input) return null;
@@ -3079,6 +3098,104 @@ async function fetchSmartLookupGeneral(query) {
     throw err;
   }
   return data || {};
+}
+
+async function fetchAgeLookup(query) {
+  var res = await fetch('/api/age-lookup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: query }),
+  });
+  var data = await parseJsonResponseSafe(res, 'age-lookup');
+  if (!res.ok) {
+    var err = new Error((data && data.error) || 'Age lookup unavailable');
+    err.code = data && data.errorCode ? data.errorCode : '';
+    throw err;
+  }
+  return data || {};
+}
+
+function showAgeLookupResults(displayQuery, data) {
+  var ageResultsEl = document.getElementById('ageResults');
+  var resultsEl = getSmartLookupResultsEl();
+  var fields;
+  var details;
+  if (!resultsEl) return;
+
+  fields = [
+    { label: 'Search', value: displayQuery || '—' },
+    { label: 'Brand', value: data.brand || 'Unknown' },
+    { label: 'Model', value: data.model || 'Unknown' },
+    { label: 'Specificity', value: data.specificityLevel || 'Unknown' },
+    { label: 'Estimated Year', value: data.estimatedYear || 'Unknown' },
+    { label: 'Production Range', value: data.yearRange || 'Unknown' }
+  ];
+
+  details = [];
+  if (data.inventionSummary) details.push('<p>' + escapeSmartLookupHtml(data.inventionSummary) + '</p>');
+  if (data.notes) details.push('<p>' + escapeSmartLookupHtml(data.notes) + '</p>');
+  if (data.refinementSuggestion) details.push('<p><strong>Refine Search:</strong> ' + escapeSmartLookupHtml(data.refinementSuggestion) + '</p>');
+  if (data.serialRule) details.push('<p><strong>Serial Rule:</strong> ' + escapeSmartLookupHtml(data.serialRule) + '</p>');
+  if (data.serialLocation) details.push('<p><strong>Serial Location:</strong> ' + escapeSmartLookupHtml(data.serialLocation) + '</p>');
+  if (data.exampleModelNumber) details.push('<p><strong>Example Model:</strong> ' + escapeSmartLookupHtml(data.exampleModelNumber) + '</p>');
+  if (Array.isArray(data.suggestedModelNumbers) && data.suggestedModelNumbers.length) {
+    details.push('<p><strong>Suggested Models:</strong> ' + escapeSmartLookupHtml(data.suggestedModelNumbers.join(', ')) + '</p>');
+  }
+
+  resultsEl.innerHTML =
+    '<div class="smart-age-grid">' +
+      '<div class="smart-general-section smart-age-section">' +
+        '<div class="smart-general-section-title">Item Identification</div>' +
+        '<div class="smart-age-rows">' +
+          fields.map(function (field) {
+            return '' +
+              '<div class="smart-age-row">' +
+                '<span class="smart-age-label">' + escapeSmartLookupHtml(field.label) + '</span>' +
+                '<span class="smart-age-value">' + escapeSmartLookupHtml(field.value) + '</span>' +
+              '</div>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+      '<div class="smart-general-section smart-age-section">' +
+        '<div class="smart-general-section-title">Research Notes</div>' +
+        '<div class="smart-age-copy">' + (details.join('') || '<p>No additional details found.</p>') + '</div>' +
+      '</div>' +
+    '</div>';
+
+  if (ageResultsEl) {
+    ageResultsEl.classList.remove('hidden');
+    ageResultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+async function runAgeOnlyLookup(query, opts) {
+  var ageResultsEl = document.getElementById('ageResults');
+  var serialResultsEl = document.getElementById('serialResults');
+  var ageLoadingEl = document.getElementById('ageLoading');
+  var displayQuery = normalizeSmartLookupQuery((opts && opts.displayQuery) || query);
+  var loadStart;
+
+  clearSmartLookupAssist();
+  if (ageResultsEl) ageResultsEl.classList.add('hidden');
+  if (serialResultsEl) serialResultsEl.classList.add('hidden');
+  setLoadingActive();
+  if (ageLoadingEl) ageLoadingEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  loadStart = Date.now();
+
+  try {
+    var data = await fetchAgeLookup(query);
+    var elapsed = Date.now() - loadStart;
+    var remaining = Math.max(0, 1000 - elapsed);
+    currentFeedbackContext = { brand: data.brand || '', serial: displayQuery };
+    setTimeout(function () {
+      setLoadingSuccess(function () {
+        showAgeLookupResults(displayQuery, data);
+      });
+    }, remaining);
+  } catch (_) {
+    setLoadingHidden();
+    showSmartLookupNotice('limit', 'Smart Lookup is temporarily unavailable. Please try again.');
+  }
 }
 
 function showGeneralSmartLookupResults(query, data) {
@@ -3390,24 +3507,33 @@ function applySmartLookupComparisonPreference(resultsEl, includeComparisons) {
 async function runLKQLookup() {
   var inputEl = getSmartLookupInputEl();
   var query;
+  var resolvedQuery;
   var interpreted;
+  var includeComparisons;
   if (!inputEl || !document.getElementById('smart-lookup-input')) return;
   query = normalizeSmartLookupQuery(inputEl.value || '');
   inputEl.value = query;
   if (!query) return;
+  resolvedQuery = expandKnownSmartLookupQuery(query);
+  includeComparisons = shouldIncludeSmartLookupComparisons();
   clearSmartLookupAssist();
 
   try {
     showSmartLookupAssistLoading();
-    interpreted = await fetchSmartLookupInterpretation(query);
+    interpreted = await fetchSmartLookupInterpretation(resolvedQuery);
     clearSmartLookupAssist();
 
     if (interpreted && interpreted.action === 'bypass' && interpreted.queryKind === 'specific') {
-      executeSmartLookup((interpreted.suggestions && interpreted.suggestions[0]) || query);
+      if (includeComparisons) {
+        executeSmartLookup((interpreted.suggestions && interpreted.suggestions[0]) || resolvedQuery);
+      } else {
+        runAgeOnlyLookup((interpreted.suggestions && interpreted.suggestions[0]) || resolvedQuery, { displayQuery: query });
+      }
       return;
     }
     if (interpreted && interpreted.queryKind === 'general') {
-      runGeneralSmartLookup(query);
+      if (includeComparisons) runGeneralSmartLookup(resolvedQuery);
+      else runAgeOnlyLookup(resolvedQuery, { displayQuery: query });
       return;
     }
     if (interpreted && (interpreted.action === 'suggest' || interpreted.action === 'no_results' || interpreted.action === 'out_of_scope')) {
@@ -3415,7 +3541,8 @@ async function runLKQLookup() {
       return;
     }
     if (interpreted && interpreted.queryKind === 'specific') {
-      executeSmartLookup(query);
+      if (includeComparisons) executeSmartLookup(resolvedQuery);
+      else runAgeOnlyLookup(resolvedQuery, { displayQuery: query });
       return;
     }
   } catch (_) {

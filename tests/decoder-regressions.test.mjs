@@ -56,7 +56,8 @@ function loadDecoderContext() {
       decoderData: __decoderData,
       parseCandidateYears,
       chooseCandidateFromLookup,
-      KENMORE_PREFIX_TO_DECODER
+      KENMORE_PREFIX_TO_DECODER,
+      expandKnownSmartLookupQuery
     };
   `, ctx);
 
@@ -169,4 +170,11 @@ test('Reliance returns null for too-short serials', () => {
   const reliance = api.decoderData.waterHeaters.decoders.reliance_water_heaters;
   const shortOut = reliance.decode('A14');
   assert.equal(shortOut, null);
+});
+
+test('Smart Lookup expands LR3RE-1000 to the Litter-Robot product family', () => {
+  const expanded = api.expandKnownSmartLookupQuery('LR3RE-1000');
+  assert.match(expanded, /Litter-Robot 3 Open Air/i);
+  assert.match(expanded, /Whisker/i);
+  assert.doesNotMatch(expanded, /Generac/i);
 });

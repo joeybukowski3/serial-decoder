@@ -18,6 +18,22 @@ function getClientIp(req) {
   return req.socket?.remoteAddress || 'unknown';
 }
 
+function normalizeKnownItemQuery(query) {
+  const text = String(query || '').trim();
+  const normalized = text.toLowerCase();
+  if (!text) return '';
+
+  if (/\blr3re(?:-\d+)?\b/.test(normalized) && !/\blitter[\s-]*robot\b/.test(normalized)) {
+    return `${text} Whisker Litter-Robot 3 Open Air self-cleaning litter box`;
+  }
+
+  if (/\blitter[\s-]*robot\b/.test(normalized) && !/\bwhisker\b/.test(normalized)) {
+    return `${text} by Whisker`;
+  }
+
+  return text;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -43,9 +59,9 @@ export default async function handler(req, res) {
     }
   } catch (_) {}
 
-  const sanitizedQuery = query.trim();
+  const sanitizedQuery = normalizeKnownItemQuery(query.trim());
   const normalizedQuery = sanitizedQuery.toLowerCase().replace(/\s+/g, ' ');
-  const cacheKey = `lkq-lookup-v2:${normalizedQuery}`;
+  const cacheKey = `lkq-lookup-v3:${normalizedQuery}`;
 
   // Cache check (7-day TTL)
   try {
@@ -61,6 +77,8 @@ export default async function handler(req, res) {
   }
 
   const prompt = `You are an insurance claims specialist evaluating Like Kind and Quality (LKQ) replacements for damaged or lost items. Given the following item query, identify the original item and return a structured LKQ replacement evaluation.
+
+Today is ${new Date().toISOString().slice(0, 10)}. Identify the exact product that best matches the query. Preserve exact model tokens whenever possible and do not substitute a looser category match when a specific known product match exists.
 
 Query: "${sanitizedQuery}"
 
@@ -97,6 +115,10 @@ Retailer guidance:
 - Consumer electronics: "Best Buy" or "Amazon"
 - Commercial/industrial: "Grainger" or "Amazon Business"
 - General household: "Amazon" or "Home Depot"
+
+Specific identification rules:
+- LR3RE-1000 is a Whisker Litter-Robot 3 Open Air self-cleaning litter box.
+- Litter-Robot queries are pet-tech household appliances, not generators, power equipment, or Generac products.
 
 New-condition requirement (strict):
 - Every replacement option must be purchasable as brand NEW from an authorized retailer
