@@ -506,7 +506,7 @@
         '<span class="lkq-table-legend-title">Dot Legend</span>' +
         '<span class="lkq-table-legend-item"><span class="lkq-spec-dot lkq-spec-dot-green"></span><span>LKQ / equivalent</span></span>' +
         '<span class="lkq-table-legend-item"><span class="lkq-spec-dot lkq-spec-dot-gold"></span><span>Above LKQ / major upgrade</span></span>' +
-        '<span class="lkq-table-legend-item"><span class="lkq-spec-dot lkq-spec-dot-orange"></span><span>Slight downgrade / close match</span></span>' +
+        '<span class="lkq-table-legend-item"><span class="lkq-spec-dot lkq-spec-dot-orange"></span><span>Close Match</span></span>' +
         '<span class="lkq-table-legend-item"><span class="lkq-spec-dot lkq-spec-dot-red"></span><span>Below LKQ / not comparable</span></span>' +
       '</div>'
     );
