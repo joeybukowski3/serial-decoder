@@ -8,16 +8,25 @@
 
 /* ─── TOKENS ─── */
 :root {
-  --navy:      #0d1b2a;
-  --navy-mid:  #1a2d42;
-  --navy-light:#243954;
-  --teal:      #00c9a7;
-  --teal-dim:  #00a589;
-  --amber:     #f5a623;
-  --white:     #f0f4f8;
-  --muted:     #b7c7d9;
-  --card-bg:   rgba(255,255,255,0.04);
-  --border:    rgba(0,201,167,0.18);
+  --navy:         #0d1b2a;
+  --navy-mid:     #1a2d42;
+  --navy-light:   #243954;
+  --teal:         #00c9a7;
+  --teal-dim:     #00a589;
+  --amber:        #f5a623;
+  --white:        #f0f4f8;
+  --muted:        #b7c7d9;
+  --card-bg:      rgba(255,255,255,0.04);
+  --border:       rgba(0,201,167,0.18);
+
+  /* Extended aliases used across pages */
+  --accent:        #00c9a7;
+  --accent-hover:  #00a589;
+  --border-accent: rgba(0,201,167,0.3);
+  --border-subtle: rgba(255,255,255,0.08);
+  --bg-card:       #0a1520;
+  --bg-input:      rgba(255,255,255,0.05);
+  --text-primary:  #f0f4f8;
 }
 
 /* ─── RESET ─── */
