@@ -1,24 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --bolt-chat-navy: #0d1b2a;
-  --bolt-chat-navy-soft: #1b2a3b;
+  --bolt-chat-navy: #1a202c;
+  --bolt-chat-navy-soft: #243954;
   --bolt-chat-teal: #00c9a7;
-  --bolt-chat-amber: #f59e0b;
-  --bolt-chat-white: #f0f4f8;
-  --bolt-chat-muted: #a8b8c8;
-  --bolt-chat-border: #1e3248;
-  --bolt-chat-bg: #0d1b2a;
-  --bolt-chat-panel: #1b2a3b;
-  --bolt-chat-input: #243447;
-  --bolt-chat-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --bolt-chat-amber: #f5a623;
+  --bolt-chat-white: #f8fafc;
+  --bolt-chat-muted: #64748b;
+  --bolt-chat-border: #dbe6f0;
+  --bolt-chat-bg: #eef4fb;
+  --bolt-chat-panel: #ffffff;
+  --bolt-chat-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
 }
 
 .bolt-chat-font,
 .bolt-chat-font button,
 .bolt-chat-font input,
 .bolt-chat-font textarea {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Sora', sans-serif;
 }
 
 .bolt-chat-hidden {
@@ -30,7 +29,7 @@
   right: 20px;
   bottom: 20px;
   z-index: 3000;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Sora', sans-serif;
 }
 
 .bolt-chat-launcher {
@@ -38,8 +37,8 @@
   height: 62px;
   border: 0;
   border-radius: 999px;
-  background: var(--bolt-chat-teal);
-  color: #0d1b2a;
+  background: #00c9a7;
+  color: var(--bolt-chat-white);
   box-shadow: var(--bolt-chat-shadow);
   cursor: pointer;
   display: inline-flex;
@@ -59,7 +58,7 @@
   right: 72px;
   top: 50%;
   transform: translateY(-50%);
-  background: var(--bolt-chat-navy);
+  background: #0d1b2a;
   color: #ffffff;
   border-radius: 999px;
   padding: 9px 12px;
@@ -89,7 +88,7 @@
 }
 
 .bolt-chat-header {
-  background: var(--bolt-chat-navy);
+  background: #0d1b2a;
   color: var(--bolt-chat-white);
   padding: 16px 18px;
   display: flex;
@@ -108,7 +107,7 @@
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #0d1b2a, #00c9a7);
+  background: linear-gradient(135deg, #00c9a7, #0099ff);
   color: #0d1b2a;
   display: inline-flex;
   align-items: center;
@@ -123,7 +122,7 @@
   font-size: 16px;
   font-weight: 800;
   margin: 0;
-  color: var(--bolt-chat-teal);
+  color: #00c9a7;
 }
 
 .bolt-chat-header p {
@@ -168,11 +167,11 @@
 .bolt-chat-secondary-btn {
   background: transparent;
   border-color: var(--bolt-chat-border);
-  color: var(--bolt-chat-white);
+  color: var(--bolt-chat-navy);
 }
 
 .bolt-chat-body {
-  background: linear-gradient(180deg, #0d1b2a 0%, #132232 100%);
+  background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
   overflow-y: auto;
   padding: 16px;
 }
@@ -217,8 +216,8 @@
 }
 
 .bolt-chat-message.user .bolt-chat-avatar {
-  background: #243447;
-  color: var(--bolt-chat-white);
+  background: #d7e2ee;
+  color: var(--bolt-chat-navy);
 }
 
 .bolt-chat-bubble {
@@ -226,14 +225,14 @@
   border: 1px solid var(--bolt-chat-border);
   border-radius: 16px;
   padding: 12px 14px;
-  color: var(--bolt-chat-white);
+  color: var(--bolt-chat-navy);
   font-size: 13px;
   line-height: 1.65;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
 }
 
 .bolt-chat-bubble a {
-  color: var(--bolt-chat-teal);
+  color: #2563eb;
 }
 
 .bolt-chat-loading {
@@ -268,23 +267,23 @@
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  border: 1px solid var(--bolt-chat-teal);
+  border: 1px solid #00c9a7;
 }
 
 .bolt-chat-preset-btn.is-primary {
-  background: var(--bolt-chat-teal);
-  color: #0d1b2a;
+  background: #00c9a7;
+  color: #ffffff;
 }
 
 .bolt-chat-preset-btn.is-ghost {
   background: transparent;
-  color: var(--bolt-chat-teal);
+  color: #00a589;
 }
 
 .bolt-chat-pill {
   border: 1px solid var(--bolt-chat-border);
-  background: rgba(0, 201, 167, 0.08);
-  color: var(--bolt-chat-teal);
+  background: #f8fafc;
+  color: var(--bolt-chat-navy);
   border-radius: 999px;
   padding: 8px 12px;
   font-size: 11px;
@@ -302,8 +301,8 @@
   min-height: 48px;
   border: 1px solid var(--bolt-chat-border);
   border-radius: 14px;
-  background: var(--bolt-chat-input);
-  color: var(--bolt-chat-white);
+  background: #f8fafc;
+  color: var(--bolt-chat-navy);
   padding: 12px 14px;
   font-size: 13px;
   outline: none;

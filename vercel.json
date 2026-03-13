@@ -61,6 +61,7 @@
     { "source": "/methodology", "destination": "/methodology.html" },
     { "source": "/disclaimer", "destination": "/disclaimer.html" },
     { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/feedback", "destination": "/feedback.html" },
     { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
     { "source": "/security", "destination": "/security.html" }
   ],

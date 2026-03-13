@@ -6,7 +6,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Serial Number Decoder | Item Assist</title>
   <meta name="description" content="Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.">
-  <link rel="canonical" href="https://www.decodemyitem.com/">
+      <link rel="canonical" href="https://www.decodemyitem.com/">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Item Assist">
+  <meta property="og:title" content="Serial Number Decoder | Item Assist">
+  <meta property="og:description" content="Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.">
+  <meta property="og:url" content="https://www.decodemyitem.com/">
+  <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
+  <meta property="og:image:alt" content="Item Assist preview image">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Serial Number Decoder | Item Assist">
+  <meta name="twitter:description" content="Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.">
+  <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Serial Number Decoder | Item Assist",
+    "description": "Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.",
+    "url": "https://www.decodemyitem.com/",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Item Assist",
+      "url": "https://www.decodemyitem.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.decodemyitem.com/assets/item-assist-logo.png"
+      }
+    }
+  }
+  </script>
   <link rel="stylesheet" href="shared.css">
   <link rel='icon' type='image/png' href='/favicon.png'>
   <style>
@@ -17,31 +48,31 @@
     /* ─── DECODER FORM ─── */
     .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
     .era-group { margin-top: 8px; }
-    .era-note { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+    .era-note { font-size: 11px; color: #d8e3ee; margin-top: 6px; line-height: 1.5; }
 
     /* ─── RESULTS CARD ─── */
     .results-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
       overflow: hidden;
       width: 100%;
-      max-width: 1100px;
+      max-width: 1240px;
       margin: 0 auto 24px;
     }
     .results-header {
       display: flex; justify-content: space-between; align-items: center;
       padding: 14px 20px;
-      border-bottom: 0;
-      background: var(--navy);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: #0f172a;
     }
     .results-header h3 { font-size: 14px; font-weight: 700; color: #ffffff; margin: 0; }
-    .results-body { padding: 24px; }
+    .results-body { padding: 16px 20px; }
     .results-footer {
       display: flex; gap: 10px; flex-wrap: wrap;
-      padding: 16px 24px;
-      border-top: 1px solid var(--border);
-      background: var(--bg-card);
+      padding: 12px 20px;
+      border-top: 1px solid #e2e8f0;
+      background: #ffffff;
     }
 
     /* ─── RESULT ROWS ─── */
@@ -58,7 +89,7 @@
     .result-row--primary .result-value { font-size: 15px; color: #3182ce; }
 
     /* ─── INFO BLOCKS ─── */
-    .info-block { background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 18px; margin-top: 12px; }
+    .info-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-top: 12px; }
     .info-block h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #1a202c; margin-bottom: 6px; }
     .info-block p { font-size: 13px; color: #4a5568; line-height: 1.5; margin: 0; }
 
@@ -71,42 +102,42 @@
     .determination-body { font-size: 12px; color: #4a5568; line-height: 1.6; padding: 8px 0; }
 
     /* ─── MORE OPTIONS ─── */
-    .more-options-section { border-top: 1px solid var(--border); }
-    .more-options-toggle { width: 100%; padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; transition: color 0.2s; }
+    .more-options-section { border-top: 1px solid rgba(255,255,255,0.06); }
+    .more-options-toggle { width: 100%; padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; transition: color 0.2s; }
     .more-options-toggle:hover { color: var(--teal); }
     .more-options-arrow { margin-right: 6px; font-size: 10px; display: inline-block; transition: transform 0.2s; }
     .more-options-body { padding: 0 20px 16px; }
-    .options-drawer { margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-    .options-drawer summary { font-size: 13px; font-weight: 600; color: var(--white); cursor: pointer; padding: 16px 18px; background: #0a1520; }
+    .options-drawer { margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden; }
+    .options-drawer summary { font-size: 13px; font-weight: 600; color: var(--white); cursor: pointer; padding: 10px 14px; background: rgba(255,255,255,0.02); }
     .options-drawer summary:hover { color: var(--teal); }
     .options-drawer-body { padding: 12px 14px; }
-    .placeholder-note { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
-    .placeholder-hint { font-size: 12px; color: var(--muted); opacity: 0.7; margin-bottom: 12px; }
-    .ai-generate-btn { background: transparent; border: 1px solid var(--border-accent); border-radius: 8px; padding: 10px 16px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; color: var(--accent); cursor: pointer; transition: all 0.15s ease; }
-    .ai-generate-btn:hover { background: rgba(0, 201, 167, 0.1); }
-    .ai-generate-result { margin-top: 12px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .placeholder-note { font-size: 13px; color: #334155; margin-bottom: 4px; }
+    .placeholder-hint { font-size: 12px; color: #475569; opacity: 1; margin-bottom: 12px; }
+    .ai-generate-btn { background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25); border-radius: 8px; padding: 8px 16px; font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; color: var(--teal); cursor: pointer; transition: all 0.2s; }
+    .ai-generate-btn:hover { background: rgba(0,201,167,0.18); }
+    .ai-generate-result { margin-top: 12px; font-size: 13px; color: #334155; line-height: 1.6; }
 
     /* ─── RESULT ACTION BUTTONS ─── */
     .copy-btn, .decode-again-btn, .error-btn, .cancel-btn {
-      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+      font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600;
       padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
     }
-    .copy-btn { background: transparent; border: 1px solid var(--border-accent); color: var(--accent); }
-    .copy-btn:hover { background: rgba(0, 201, 167, 0.1); }
-    .decode-again-btn { background: transparent; border: 1px solid var(--border-accent); color: var(--accent); }
-    .decode-again-btn:hover { border-color: var(--accent-hover); color: var(--accent-hover); }
-    .error-btn { background: #fef3c7; border: 1px solid #fcd34d; color: #b45309; }
-    .error-btn:hover { border-color: var(--amber); }
-    .cancel-btn { background: transparent; border: 1px solid var(--border-accent); color: var(--accent); }
-    .cancel-btn:hover { color: var(--accent-hover); border-color: var(--accent-hover); }
-    .decode-btn { background: var(--accent); color: #0d1b2a; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; }
+    .copy-btn { background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25); color: var(--teal); }
+    .copy-btn:hover { background: rgba(0,201,167,0.18); }
+    .decode-again-btn { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
+    .decode-again-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .error-btn { background: transparent; border: 1px solid rgba(245,166,35,0.2); color: var(--amber); }
+    .error-btn:hover { border-color: rgba(245,166,35,0.4); }
+    .cancel-btn { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
+    .cancel-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.25); }
+    .decode-btn { background: linear-gradient(135deg, var(--teal), #0099ff); color: var(--navy); font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; }
 
     /* ─── LOADING ─── */
     .loading-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px; }
     .loading-emoji { font-size: 36px; }
     @keyframes lightning-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.1)} }
     .loading-emoji.lightning { animation: lightning-pulse 1s ease-in-out infinite; }
-    .loading-text { font-size: 13px; color: #4a5568; }
+    .loading-text { font-size: 13px; color: #334155; }
 
     /* ─── BRAND LOGO ─── */
     .brand-logo-wrap { width: 32px; height: 32px; }
@@ -130,11 +161,11 @@
     }
     .brand-tile:hover { border-color: rgba(0,201,167,0.4); background: rgba(255,255,255,0.07); transform: translateY(-2px); }
     .brand-tile-name { font-size: 14px; font-weight: 700; color: var(--white); }
-    .brand-tile-desc { font-size: 11px; color: var(--muted); }
+    .brand-tile-desc { font-size: 11px; color: #d8e3ee; }
 
     /* ─── FEEDBACK MODAL ─── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .modal-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 20px; max-width: 480px; width: 100%; overflow: hidden; }
+    .modal-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 20px; max-width: 480px; width: 100%; overflow: hidden; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid rgba(255,255,255,0.06); }
     .modal-header h3 { font-size: 14px; font-weight: 700; color: var(--white); margin: 0; }
     .modal-close { background: transparent; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
@@ -143,17 +174,17 @@
     .modal-field { margin-bottom: 14px; }
     .modal-field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
     .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
-    .fb-thanks { background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--accent); margin-top: 12px; }
-    .form-input { width: 100%; background: var(--bg-input); border: 1px solid var(--border-accent); border-radius: 10px; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
+    .fb-thanks { background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--teal); margin-top: 12px; }
+    .form-input { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
     .form-input:focus { border-color: var(--teal); }
-    .form-select { width: 100%; background: var(--bg-input); border: 1px solid var(--border-accent); border-radius: 10px; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; appearance: none; cursor: pointer; }
+    .form-select { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; appearance: none; cursor: pointer; }
     textarea.form-input { resize: vertical; min-height: 80px; }
 
     /* ─── GUIDE DRAWER ─── */
     .guide-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 150; display: none; }
-    .guide-drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 340px; max-width: 90vw; background: var(--bg-card); border-left: 1px solid var(--border-subtle); z-index: 160; overflow-y: auto; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; }
+    .guide-drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 340px; max-width: 90vw; background: var(--navy-mid); border-left: 1px solid var(--border); z-index: 160; overflow-y: auto; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; }
     .guide-drawer.open { transform: translateX(0); }
-    .guide-drawer-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-subtle); position: sticky; top: 0; background: #0a1520; }
+    .guide-drawer-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); position: sticky; top: 0; background: var(--navy-mid); }
     .guide-drawer-header h3 { font-size: 14px; font-weight: 700; color: var(--white); margin: 0; }
     .guide-drawer-close { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; }
     .guide-drawer-close:hover { color: var(--white); }
@@ -163,11 +194,11 @@
     .guide-drawer-body ol, .guide-drawer-body ul { padding-left: 18px; }
     .guide-drawer-body li { font-size: 13px; color: var(--muted); margin-bottom: 6px; line-height: 1.5; }
     .guide-drawer-body p { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
-    .warning-note { background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.24); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 16px; }
+    .warning-note { background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.2); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 16px; }
     .warning-note strong { color: var(--amber); }
 
     /* ─── RESULTS WRAPPER ─── */
-    .results-wrapper { max-width: 1100px; margin: 0 auto; padding: 0 0 32px; }
+    .results-wrapper { max-width: 1240px; margin: 0 auto; padding: 0 0 32px; }
 
     /* Ensure Smart Lookup panel text remains readable on white result cards */
     #smart-lookup-results,
@@ -176,7 +207,7 @@
     }
 
     /* Home-only dual tool layout */
-    .home-tools-wrap { max-width: 1100px; margin: 0 auto; }
+    .home-tools-wrap { max-width: 1240px; margin: 0 auto; }
     .home-tools-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -236,7 +267,7 @@
     .home-hero h1 {
       font-size: clamp(1.65rem, 2.8vw, 2rem);
       font-weight: 700;
-      color: #173756;
+      color: #ffffff;
       margin-bottom: 10px;
       letter-spacing: -0.6px;
       line-height: 1.15;
@@ -245,7 +276,7 @@
       font-size: 1rem;
       line-height: 1.5;
       max-width: 750px;
-      color: #5f7488;
+      color: #ffffff;
     }
     #smart-lookup-input {
       height: 50px;
@@ -254,8 +285,8 @@
     .power-bar {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-top: 16px;
+      gap: 10px;
+      margin-top: 12px;
     }
     .smart-lookup-actions {
       display: flex;
@@ -269,10 +300,10 @@
       align-items: center;
       gap: 8px;
       min-height: 24px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Sora', sans-serif;
       font-size: 12px;
       font-weight: 600;
-      color: #173756;
+      color: #ffffff;
       line-height: 1.2;
     }
     .lookup-checkbox input {
@@ -286,20 +317,19 @@
       width: 100%;
       height: 50px;
       border-radius: 12px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Sora', sans-serif;
       font-size: 14px;
       font-weight: 700;
       border: none;
       cursor: pointer;
     }
     .power-btn.btn-primary {
-      background: var(--accent);
-      color: #0d1b2a;
+      background: #3182ce;
+      color: #ffffff;
     }
     .power-btn.btn-amber {
-      background: transparent;
-      color: var(--accent);
-      border: 1px solid var(--border-accent);
+      background: #f6ad55;
+      color: #1a202c;
     }
     .power-btn.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
     @media (max-width: 980px) { .power-bar { grid-template-columns: 1fr; } }
@@ -334,7 +364,7 @@
 </section>
 
 <!-- ─── DECODER TOOL ─── -->
-<section class="section" style="padding-top:0;padding-bottom:0;">
+<section class="section" style="padding-top:0;padding-bottom:16px;">
   <div class="home-tools-wrap">
     <div class="home-tools-grid">
       <div class="search-box">
@@ -406,7 +436,7 @@
 </section>
 
 <!-- ─── RESULTS WRAPPER ─── -->
-<div class="results-wrapper" style="padding:0 0 32px;">
+<div class="results-wrapper" style="padding:0 48px 32px;">
 
   <!-- Loading -->
   <div id="ageLoading" class="results-card hidden">
@@ -456,7 +486,8 @@
     </div>
     <div class="results-footer">
       <button class="copy-btn" onclick="copyClaimFile()">Copy Information</button>
-      <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
+      <button class="decode-again-btn btn-amber" onclick="decodeAnotherItem()">Decode Another Item</button>
+      <button class="decode-again-btn btn-teal" onclick="useSmartLookup()">Use Smart Lookup</button>
       <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
     </div>
     <div class="more-options-section">

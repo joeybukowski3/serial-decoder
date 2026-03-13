@@ -5,23 +5,53 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact – Item Assist</title>
   <meta name="description" content="Contact Item Assist — report incorrect decode results, request a brand, or ask a question.">
-  <link rel="canonical" href="https://www.decodemyitem.com/contact">
+      <link rel="canonical" href="https://www.decodemyitem.com/contact">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Item Assist">
+  <meta property="og:title" content="Contact – Item Assist">
+  <meta property="og:description" content="Contact Item Assist — report incorrect decode results, request a brand, or ask a question.">
+  <meta property="og:url" content="https://www.decodemyitem.com/contact">
+  <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
+  <meta property="og:image:alt" content="Item Assist preview image">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Contact – Item Assist">
+  <meta name="twitter:description" content="Contact Item Assist — report incorrect decode results, request a brand, or ask a question.">
+  <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Contact – Item Assist",
+    "description": "Contact Item Assist — report incorrect decode results, request a brand, or ask a question.",
+    "url": "https://www.decodemyitem.com/contact",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Item Assist",
+      "url": "https://www.decodemyitem.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.decodemyitem.com/assets/item-assist-logo.png"
+      }
+    }
+  }
+  </script>
   <link rel="stylesheet" href="shared.css">
   <style>
     .contact-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 24px;
+      gap: 40px;
       max-width: 900px;
       margin: 0 auto;
     }
     @media (max-width: 700px) { .contact-grid { grid-template-columns: 1fr; } }
     .contact-form-box {
-      background: var(--bg-card);
+      background: rgba(255,255,255,0.04);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 24px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      border-radius: 20px;
+      padding: 32px 28px;
     }
     .contact-info { display: flex; flex-direction: column; gap: 20px; justify-content: center; }
     .info-item { display: flex; gap: 14px; align-items: flex-start; }
@@ -29,8 +59,8 @@
     .info-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
     .info-desc  { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
     .cf-status { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
-    .cf-status.success { background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2); color: var(--accent); }
-    .cf-status.error   { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.18); color: #dc2626; }
+    .cf-status.success { background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2); color: var(--teal); }
+    .cf-status.error   { background: rgba(245,100,100,0.08); border: 1px solid rgba(245,100,100,0.2); color: #f87171; }
     .hidden { display: none !important; }
     .feedback-link { display: inline-block; margin-top: 10px; font-size: 13px; color: var(--teal); text-decoration: none; }
     .feedback-link:hover { opacity: 0.8; }
@@ -69,7 +99,7 @@
 </section>
 
 <!-- ─── CONTACT ─── -->
-<section class="section" style="padding-top:0;">
+<section class="section" style="padding-top:32px;">
   <div class="contact-grid">
 
     <!-- FORM -->

@@ -5,20 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Lookup – Item Assist</title>
   <meta name="description" content="Enter a model number or item description and get an AI-powered LKQ replacement evaluation with comparable options and pricing.">
-  <link rel="canonical" href="https://www.decodemyitem.com/smart-lookup">
+      <link rel="canonical" href="https://www.decodemyitem.com/smart-lookup">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Item Assist">
+  <meta property="og:title" content="Smart Lookup – Item Assist">
+  <meta property="og:description" content="Enter a model number or item description and get an AI-powered LKQ replacement evaluation with comparable options and pricing.">
+  <meta property="og:url" content="https://www.decodemyitem.com/smart-lookup">
+  <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
+  <meta property="og:image:alt" content="Item Assist preview image">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Smart Lookup – Item Assist">
+  <meta name="twitter:description" content="Enter a model number or item description and get an AI-powered LKQ replacement evaluation with comparable options and pricing.">
+  <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Smart Lookup – Item Assist",
+    "description": "Enter a model number or item description and get an AI-powered LKQ replacement evaluation with comparable options and pricing.",
+    "url": "https://www.decodemyitem.com/smart-lookup",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Item Assist",
+      "url": "https://www.decodemyitem.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.decodemyitem.com/assets/item-assist-logo.png"
+      }
+    }
+  }
+  </script>
   <link rel="stylesheet" href="shared.css">
   <style>
     .hidden { display: none !important; }
 
     /* ─── LOOKUP BOX ─── */
     .lookup-box {
-      max-width: 720px;
+      max-width: 600px;
       margin: 0 auto;
-      background: var(--bg-card);
+      background: rgba(255,255,255,0.05);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 24px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      border-radius: 20px;
+      padding: 28px 28px 24px;
     }
     .lookup-box .section-label { margin-bottom: 16px; display: block; }
     .lookup-actions {
@@ -38,7 +68,7 @@
       align-items: center;
       gap: 8px;
       min-height: 50px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Sora', sans-serif;
       font-size: 12px;
       font-weight: 600;
       color: var(--white);
@@ -54,17 +84,17 @@
 
     /* ─── TIPS ─── */
     .tips { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 16px; max-width: 600px; margin: 32px auto 0; }
-    .tip-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .tip-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
     .tip-icon { font-size: 22px; margin-bottom: 8px; }
     .tip-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
     .tip-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 0; }
 
     /* ─── RESULTS CARD ─── */
-    .results-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 10px; overflow: hidden; width: 100%; max-width: 1100px; margin: 24px auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-    .results-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 0; background: var(--navy); }
+    .results-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; width: 100%; max-width: 1240px; margin: 24px auto; }
+    .results-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); background: #0f172a; }
     .results-header h3 { font-size: 14px; font-weight: 700; color: #ffffff; margin: 0; }
-    .results-body { padding: 24px; }
-    .results-footer { display: flex; gap: 12px; flex-wrap: wrap; padding: 16px 24px; border-top: 1px solid var(--border-subtle); background: #0a1520; }
+    .results-body { padding: 16px 20px; }
+    .results-footer { display: flex; gap: 10px; flex-wrap: wrap; padding: 12px 20px; border-top: 1px solid #e2e8f0; background: #ffffff; }
     .lkq-output * { color: #1a1a2e !important; }
     #smart-lookup-results,
     #smart-lookup-results * { color: #1a1a2e !important; }
@@ -78,18 +108,18 @@
 
     /* ─── RESULT ACTION BUTTONS ─── */
     .decode-again-btn, .error-btn {
-      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+      font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600;
       padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
     }
-    .decode-again-btn { background: transparent; border: 1px solid var(--border-accent); color: var(--accent); }
-    .decode-again-btn:hover { border-color: var(--accent-hover); color: var(--accent-hover); }
-    .error-btn { background: #fef3c7; border: 1px solid #fcd34d; color: #b45309; }
-    .error-btn:hover { border-color: var(--amber); }
+    .decode-again-btn { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
+    .decode-again-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .error-btn { background: transparent; border: 1px solid rgba(245,166,35,0.2); color: var(--amber); }
+    .error-btn:hover { border-color: rgba(245,166,35,0.4); }
 
     /* ─── MODAL ─── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .modal-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 20px; max-width: 480px; width: 100%; overflow: hidden; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid var(--border); }
+    .modal-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 20px; max-width: 480px; width: 100%; overflow: hidden; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid rgba(255,255,255,0.06); }
     .modal-header h3 { font-size: 14px; font-weight: 700; color: var(--white); margin: 0; }
     .modal-close { background: transparent; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
     .modal-close:hover { color: var(--white); background: rgba(255,255,255,0.05); }
@@ -97,13 +127,13 @@
     .modal-field { margin-bottom: 14px; }
     .modal-field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
     .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
-    .decode-btn { background: var(--accent); color: #0d1b2a; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; }
-    .cancel-btn { background: transparent; color: var(--accent); font-family: 'Inter', sans-serif; font-size: 13px; padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border-accent); cursor: pointer; }
-    .cancel-btn:hover { color: var(--accent-hover); border-color: var(--accent-hover); }
-    .fb-thanks { background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--accent); margin-top: 12px; }
-    .form-input { width: 100%; background: var(--bg-input); border: 1px solid var(--border-accent); border-radius: 10px; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
+    .decode-btn { background: linear-gradient(135deg, var(--teal), #0099ff); color: var(--navy); font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; }
+    .cancel-btn { background: transparent; color: var(--muted); font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); cursor: pointer; }
+    .cancel-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.25); }
+    .fb-thanks { background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--teal); margin-top: 12px; }
+    .form-input { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
     .form-input:focus { border-color: var(--teal); }
-    .form-select { width: 100%; background: var(--bg-input); border: 1px solid var(--border-accent); border-radius: 10px; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; appearance: none; cursor: pointer; }
+    .form-select { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; appearance: none; cursor: pointer; }
     textarea.form-input { resize: vertical; min-height: 80px; }
     .brand-logo-wrap { width: 32px; height: 32px; }
     .brand-logo-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
@@ -144,7 +174,7 @@
 </section>
 
 <!-- ─── LOOKUP TOOL ─── -->
-<section class="section" style="padding-top:0;">
+<section class="section" style="padding-top:32px;">
   <div class="lookup-box">
     <span class="section-label">✨ Smart Lookup</span>
 
