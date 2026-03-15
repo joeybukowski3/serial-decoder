@@ -136,6 +136,15 @@
       box-shadow: 0 16px 34px rgba(249,115,22,0.36);
       color: #081321;
     }
+    .decode-again-btn.btn-teal {
+      background: linear-gradient(135deg, #00c9ff, #2f7bff);
+      color: #f7fbff;
+      box-shadow: 0 12px 28px rgba(47,123,255,0.32);
+    }
+    .decode-again-btn.btn-teal:hover {
+      color: #f7fbff;
+      box-shadow: 0 16px 34px rgba(47,123,255,0.42);
+    }
     .decode-again-btn:focus-visible {
       outline: 3px solid rgba(255,255,255,0.4);
       outline-offset: 3px;
@@ -381,7 +390,7 @@
 </section>
 
 <!-- ─── DECODER TOOL ─── -->
-<section class="section" style="padding-top:0;padding-bottom:16px;">
+<section class="section" id="decoder-tool" style="padding-top:0;padding-bottom:16px;">
   <div class="home-tools-wrap">
     <div class="home-tools-grid">
       <div class="search-box">
@@ -507,65 +516,6 @@
       <button class="decode-again-btn btn-teal" onclick="useSmartLookup()">Use Smart Lookup</button>
       <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
     </div>
-    <div class="more-options-section">
-      <button class="more-options-toggle" onclick="toggleMoreOptions()">
-        <span class="more-options-arrow" id="moreOptionsArrow">&#9654;</span> More options
-      </button>
-      <div class="more-options-body hidden" id="moreOptionsBody">
-        <details class="options-drawer">
-          <summary>Replacement Options</summary>
-          <div class="options-drawer-body">
-            <p class="placeholder-note">This section loads on demand.</p>
-            <p class="placeholder-hint">Find current-market replacement units for this brand and product type.</p>
-            <button class="ai-generate-btn" onclick="generateAISection('replacements', this)">&#128161; Generate (uses AI)</button>
-            <div class="ai-generate-result hidden" id="ai-result-replacements"></div>
-          </div>
-        </details>
-        <details class="options-drawer">
-          <summary>Detailed Specifications</summary>
-          <div class="options-drawer-body">
-            <p class="placeholder-note">This section loads on demand.</p>
-            <p class="placeholder-hint">Technical specifications and features for this product class.</p>
-            <button class="ai-generate-btn" onclick="generateAISection('specs', this)">&#128161; Generate (uses AI)</button>
-            <div class="ai-generate-result hidden" id="ai-result-specs"></div>
-          </div>
-        </details>
-        <details class="options-drawer">
-          <summary>Market Data</summary>
-          <div class="options-drawer-body">
-            <p class="placeholder-note">This section loads on demand.</p>
-            <p class="placeholder-hint">Current pricing and market availability for this product category.</p>
-            <button class="ai-generate-btn" onclick="generateAISection('market', this)">&#128161; Generate (uses AI)</button>
-            <div class="ai-generate-result hidden" id="ai-result-market"></div>
-          </div>
-        </details>
-      </div>
-    </div>
-
-    <!-- LKQ Entry Point -->
-    <div class="lkq-entry-section">
-      <div class="lkq-entry-hd">
-        <span class="lkq-entry-icon">&#9878;</span>
-        <strong class="lkq-entry-title">Get LKQ Replacement Options</strong>
-      </div>
-      <div class="lkq-entry-input-row">
-        <input type="text" id="serial-lkq-model-input" class="search-input" placeholder="Enter model number for accurate results (optional)">
-        <button class="btn-amber lkq-entry-btn" onclick="loadSerialLKQ()">Load LKQ Options</button>
-      </div>
-      <p class="search-hint" style="margin-top:0.5rem;">Leave blank to search by brand and item type from decoded results</p>
-    </div>
-  </div>
-
-  <!-- Serial Decoder LKQ Results -->
-  <div id="serialLkqResults" class="results-card hidden">
-    <div class="results-header">
-      <h3>&#9878; LKQ Replacement Evaluation</h3>
-    </div>
-    <div class="results-body" id="serial-lkq-output"></div>
-    <div class="results-footer">
-      <button class="decode-again-btn" onclick="closeSerialLkq()">Close</button>
-      <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
-    </div>
   </div>
 
   <!-- LKQ Results (Smart Lookup) -->
@@ -598,25 +548,25 @@
     <h2 class="section-title">Decode by Brand</h2>
     <p class="section-sub">Dedicated serial number decode guides for major appliance and electronics brands.</p>
     <div class="brands-grid">
-      <a href="/ge" class="brand-tile"><span class="brand-tile-name">GE</span><span class="brand-tile-desc">Refrigerators, ranges, washers</span></a>
-      <a href="/whirlpool" class="brand-tile"><span class="brand-tile-name">Whirlpool</span><span class="brand-tile-desc">All Whirlpool family brands</span></a>
-      <a href="/samsung" class="brand-tile"><span class="brand-tile-name">Samsung</span><span class="brand-tile-desc">Appliances &amp; TVs</span></a>
-      <a href="/lg" class="brand-tile"><span class="brand-tile-name">LG</span><span class="brand-tile-desc">Appliances &amp; TVs</span></a>
-      <a href="/bosch" class="brand-tile"><span class="brand-tile-name">Bosch</span><span class="brand-tile-desc">Dishwashers, washers, ranges</span></a>
-      <a href="/maytag" class="brand-tile"><span class="brand-tile-name">Maytag</span><span class="brand-tile-desc">Pre &amp; post-2006 formats</span></a>
-      <a href="/frigidaire" class="brand-tile"><span class="brand-tile-name">Frigidaire</span><span class="brand-tile-desc">Refrigerators, ranges, washers</span></a>
-      <a href="/kenmore" class="brand-tile"><span class="brand-tile-name">Kenmore</span><span class="brand-tile-desc">OEM identification guide</span></a>
-      <a href="/apple" class="brand-tile"><span class="brand-tile-name">Apple</span><span class="brand-tile-desc">iPhones, iPads, Macs</span></a>
-      <a href="/hp" class="brand-tile"><span class="brand-tile-name">HP</span><span class="brand-tile-desc">Laptops, desktops, printers</span></a>
-      <a href="/asus" class="brand-tile"><span class="brand-tile-name">ASUS</span><span class="brand-tile-desc">Laptops, motherboards, desktops</span></a>
-      <a href="/google-pixel" class="brand-tile"><span class="brand-tile-name">Google Pixel</span><span class="brand-tile-desc">Pixel phones &amp; tablets</span></a>
-      <a href="/sony" class="brand-tile"><span class="brand-tile-name">Sony</span><span class="brand-tile-desc">Bravia TVs &amp; home theater</span></a>
-      <a href="/vizio" class="brand-tile"><span class="brand-tile-name">Vizio</span><span class="brand-tile-desc">Vizio TVs all series</span></a>
-      <a href="/panasonic" class="brand-tile"><span class="brand-tile-name">Panasonic</span><span class="brand-tile-desc">TVs &amp; home theater</span></a>
-      <a href="/carrier" class="brand-tile"><span class="brand-tile-name">Carrier</span><span class="brand-tile-desc">HVAC systems &amp; heat pumps</span></a>
-      <a href="/rheem" class="brand-tile"><span class="brand-tile-name">Rheem</span><span class="brand-tile-desc">Water heaters &amp; HVAC</span></a>
-      <a href="/goodman" class="brand-tile"><span class="brand-tile-name">Goodman</span><span class="brand-tile-desc">HVAC systems</span></a>
-      <a href="/trane" class="brand-tile"><span class="brand-tile-name">Trane</span><span class="brand-tile-desc">HVAC systems</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="ge"><span class="brand-tile-name">GE</span><span class="brand-tile-desc">Refrigerators, ranges, washers</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="whirlpool"><span class="brand-tile-name">Whirlpool</span><span class="brand-tile-desc">All Whirlpool family brands</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="samsung"><span class="brand-tile-name">Samsung</span><span class="brand-tile-desc">Appliances &amp; TVs</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="lg"><span class="brand-tile-name">LG</span><span class="brand-tile-desc">Appliances &amp; TVs</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="bosch"><span class="brand-tile-name">Bosch</span><span class="brand-tile-desc">Dishwashers, washers, ranges</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="maytag"><span class="brand-tile-name">Maytag</span><span class="brand-tile-desc">Pre &amp; post-2006 formats</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="frigidaire"><span class="brand-tile-name">Frigidaire</span><span class="brand-tile-desc">Refrigerators, ranges, washers</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="kenmore"><span class="brand-tile-name">Kenmore</span><span class="brand-tile-desc">OEM identification guide</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="apple"><span class="brand-tile-name">Apple</span><span class="brand-tile-desc">iPhones, iPads, Macs</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="hp"><span class="brand-tile-name">HP</span><span class="brand-tile-desc">Laptops, desktops, printers</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="asus"><span class="brand-tile-name">ASUS</span><span class="brand-tile-desc">Laptops, motherboards, desktops</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="google-pixel"><span class="brand-tile-name">Google Pixel</span><span class="brand-tile-desc">Pixel phones &amp; tablets</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="sony"><span class="brand-tile-name">Sony</span><span class="brand-tile-desc">Bravia TVs &amp; home theater</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="vizio"><span class="brand-tile-name">Vizio</span><span class="brand-tile-desc">Vizio TVs all series</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="panasonic"><span class="brand-tile-name">Panasonic</span><span class="brand-tile-desc">TVs &amp; home theater</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="hvac" data-prefill-brand="carrier"><span class="brand-tile-name">Carrier</span><span class="brand-tile-desc">HVAC systems &amp; heat pumps</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="waterHeaters" data-prefill-brand="rheem"><span class="brand-tile-name">Rheem</span><span class="brand-tile-desc">Water heaters &amp; HVAC</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="hvac" data-prefill-brand="goodman"><span class="brand-tile-name">Goodman</span><span class="brand-tile-desc">HVAC systems</span></a>
+      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="hvac" data-prefill-brand="trane"><span class="brand-tile-name">Trane</span><span class="brand-tile-desc">HVAC systems</span></a>
     </div>
   </div>
 </section>

@@ -2847,6 +2847,63 @@ function useSmartLookup() {
   }
 }
 
+function focusHomeDecoderWithBrand(category, brandId) {
+  var slug = getBrandPageSlug();
+  if (slug !== '' && slug !== 'index') return false;
+
+  var requestedCat = normalizeDecoderCategory(categoryNameToKey(category) || category);
+  var normalizedBrand = normalizeBrandId(brandId);
+  var tabBtn = document.querySelector('.cat-tab[data-cat="' + requestedCat + '"]');
+  var decoderSection = document.getElementById('decoder-tool');
+  var brandSelect = getDecodeDom().brandEl;
+  var serialInput = getDecodeDom().serialEl;
+
+  if (typeof selectCategory === 'function') selectCategory(requestedCat, tabBtn);
+
+  if (brandSelect && normalizedBrand) {
+    for (var i = 0; i < brandSelect.options.length; i++) {
+      if (brandSelect.options[i].value === normalizedBrand) {
+        brandSelect.value = normalizedBrand;
+        break;
+      }
+    }
+    onBrandChange();
+    updateDecodeBtn();
+  }
+
+  if (decoderSection && decoderSection.scrollIntoView) {
+    decoderSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }
+
+  setTimeout(function() {
+    if (!serialInput) return;
+    try {
+      serialInput.focus({ preventScroll: true });
+    } catch (_) {
+      serialInput.focus();
+    }
+  }, 250);
+
+  return true;
+}
+
+(function bindBrandTilePrefill() {
+  var tiles = document.querySelectorAll('.brand-tile[data-prefill-brand]');
+  if (!tiles.length) return;
+
+  tiles.forEach(function(tile) {
+    tile.addEventListener('click', function(event) {
+      event.preventDefault();
+      focusHomeDecoderWithBrand(
+        tile.getAttribute('data-prefill-cat'),
+        tile.getAttribute('data-prefill-brand')
+      );
+    });
+  });
+})();
+
 function getBrandFactsKey(slug) {
   if (!slug) return '';
   if (slug === 'google-pixel') return 'google_pixel';

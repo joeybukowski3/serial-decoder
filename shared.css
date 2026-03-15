@@ -153,6 +153,16 @@ nav ul li a.active {
 .hamburger.active span:nth-child(2) { opacity: 0; }
 .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
+.decode-again-btn.btn-teal {
+  background: linear-gradient(135deg, #00c9ff, #2f7bff);
+  color: #f7fbff;
+  box-shadow: 0 12px 28px rgba(47,123,255,0.32);
+}
+.decode-again-btn.btn-teal:hover {
+  color: #f7fbff;
+  box-shadow: 0 16px 34px rgba(47,123,255,0.42);
+}
+
 /* ─── HERO ─── */
 .hero {
   position: relative;
