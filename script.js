@@ -2789,6 +2789,12 @@ function copyClaimFile() {
 }
 
 // ===== DECODE ANOTHER ITEM =====
+function scrollHomeSearchToTop() {
+  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  if (document.documentElement) document.documentElement.scrollTop = 0;
+  if (document.body) document.body.scrollTop = 0;
+}
+
 function decodeAnotherItem() {
   var serialResults = document.getElementById('serialResults');
   var ageResults = document.getElementById('ageResults');
@@ -2815,9 +2821,7 @@ function decodeAnotherItem() {
   LKQEngine.clearInstance('smart-lookup');
   clearSmartLookupAssist();
   updateDecodeBtn();
-  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-  if (document.documentElement) document.documentElement.scrollTop = 0;
-  if (document.body) document.body.scrollTop = 0;
+  scrollHomeSearchToTop();
   setTimeout(function() {
     if (serialInput) {
       try {
@@ -2832,6 +2836,7 @@ function decodeAnotherItem() {
         altQuery.focus();
       }
     }
+    scrollHomeSearchToTop();
   }, 300);
 }
 
@@ -2839,12 +2844,17 @@ function useSmartLookup() {
   decodeAnotherItem();
   var altQuery = getSmartLookupInputEl();
   if (altQuery) {
-    altQuery.focus();
+    try {
+      altQuery.focus({ preventScroll: true });
+    } catch (_) {
+      altQuery.focus();
+    }
     var altSection = document.getElementById('altSection');
     if (altSection && !altSection.classList.contains('open')) {
       altSection.classList.add('open');
     }
   }
+  scrollHomeSearchToTop();
 }
 
 function focusHomeDecoderWithBrand(category, brandId) {
@@ -2854,7 +2864,6 @@ function focusHomeDecoderWithBrand(category, brandId) {
   var requestedCat = normalizeDecoderCategory(categoryNameToKey(category) || category);
   var normalizedBrand = normalizeBrandId(brandId);
   var tabBtn = document.querySelector('.cat-tab[data-cat="' + requestedCat + '"]');
-  var decoderSection = document.getElementById('decoder-tool');
   var brandSelect = getDecodeDom().brandEl;
   var serialInput = getDecodeDom().serialEl;
 
@@ -2871,11 +2880,7 @@ function focusHomeDecoderWithBrand(category, brandId) {
     updateDecodeBtn();
   }
 
-  if (decoderSection && decoderSection.scrollIntoView) {
-    decoderSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  } else {
-    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-  }
+  scrollHomeSearchToTop();
 
   setTimeout(function() {
     if (!serialInput) return;
@@ -2884,6 +2889,7 @@ function focusHomeDecoderWithBrand(category, brandId) {
     } catch (_) {
       serialInput.focus();
     }
+    scrollHomeSearchToTop();
   }, 250);
 
   return true;
