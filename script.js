@@ -2814,9 +2814,22 @@ function decodeAnotherItem() {
   clearSmartLookupAssist();
   updateDecodeBtn();
   window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  if (document.documentElement) document.documentElement.scrollTop = 0;
+  if (document.body) document.body.scrollTop = 0;
   setTimeout(function() {
-    if (serialInput) serialInput.focus();
-    else if (altQuery) altQuery.focus();
+    if (serialInput) {
+      try {
+        serialInput.focus({ preventScroll: true });
+      } catch (error) {
+        serialInput.focus();
+      }
+    } else if (altQuery) {
+      try {
+        altQuery.focus({ preventScroll: true });
+      } catch (error) {
+        altQuery.focus();
+      }
+    }
   }, 300);
 }
 
