@@ -47,6 +47,29 @@ function setTab(el, tab) {
   }
 }
 
+/* ─── MOBILE HAMBURGER ─── */
+(function() {
+  var btn = document.getElementById('hamburgerBtn');
+  var nav = document.querySelector('nav ul');
+  if (!btn || !nav) return;
+  btn.addEventListener('click', function() {
+    btn.classList.toggle('active');
+    nav.classList.toggle('open');
+  });
+  nav.querySelectorAll('a').forEach(function(link) {
+    link.addEventListener('click', function() {
+      btn.classList.remove('active');
+      nav.classList.remove('open');
+    });
+  });
+  document.addEventListener('click', function(e) {
+    if (!btn.contains(e.target) && !nav.contains(e.target)) {
+      btn.classList.remove('active');
+      nav.classList.remove('open');
+    }
+  });
+})();
+
 /* --- Internal version timestamp badge (obfuscated) --- */
 (function () {
   function pad2(n) { return String(n).padStart(2, '0'); }

@@ -2271,7 +2271,9 @@ function isIncompleteResult(result) {
   if (text.indexOf('ambiguous') !== -1) return true;
   if (text.indexOf('unable') !== -1) return true;
   if (text.indexOf('non-numeric') !== -1) return true;
-  if (text.indexOf('/') !== -1) return true;
+  // Don't flag "/" as incomplete — Whirlpool-family brands use "YYYY/YYYY" format
+  // for 30-year cycle ambiguity, which is a valid decoded result (not an error).
+  // The "Important Notes" section already explains the cycle to the user.
   return false;
 }
 
