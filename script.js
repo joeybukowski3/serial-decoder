@@ -2790,9 +2790,21 @@ function copyClaimFile() {
 
 // ===== DECODE ANOTHER ITEM =====
 function scrollHomeSearchToTop() {
-  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-  if (document.documentElement) document.documentElement.scrollTop = 0;
-  if (document.body) document.body.scrollTop = 0;
+  function forceTop() {
+    window.scrollTo(0, 0);
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+    if (document.body) document.body.scrollTop = 0;
+  }
+
+  forceTop();
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(forceTop);
+    requestAnimationFrame(function() {
+      requestAnimationFrame(forceTop);
+    });
+  }
+  setTimeout(forceTop, 60);
+  setTimeout(forceTop, 180);
 }
 
 function decodeAnotherItem() {
