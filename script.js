@@ -186,6 +186,12 @@ var KENMORE_PREFIX_TO_DECODER = {
   '417': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
   '662': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
   '628': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
+  '795': {
+    manufacturer: 'LG',
+    decoderId: 'lg',
+    productCategory: 'Refrigerator',
+    notes: 'LG-built Kenmore refrigerators use LG appliance serial rules. The year digit repeats every 10 years, so model era and features help resolve the decade.'
+  },
   '791': { manufacturer: 'Tappan', decoderId: 'tappan' },
   '790': { manufacturer: 'WCI', decoderId: 'white_consolidated_industries_wci' },
   '362': { manufacturer: 'General Electric', decoderId: 'ge' },
@@ -439,6 +445,10 @@ function setStoredSupplementalModel(catKey, value) {
   getDecoderCategoryState(catKey).model = value || '';
 }
 
+function extractKenmoreModelPrefix(modelValue) {
+  return String(modelValue || '').replace(/\D/g, '').substring(0, 3);
+}
+
 function clearSupplementalModelError() {
   var errorEl = document.getElementById('modelFieldError');
   var inputEl = document.getElementById('modelNumber');
@@ -505,7 +515,7 @@ function getSupplementalModelConfig(category, brandId) {
       maxLength: 3,
       pattern: '[0-9]*',
       sanitize: function(value) {
-        return String(value || '').replace(/\D/g, '').substring(0, 3);
+        return extractKenmoreModelPrefix(value);
       },
       missingMessage: 'Model Prefix is required for Kenmore.'
     };
@@ -2576,7 +2586,7 @@ function updateKenmorePrefixVisibility(brandId) {
 }
 
 function resolveKenmoreDecoderFromPrefix(prefixValue) {
-  var prefix = String(prefixValue || '').replace(/\D/g, '').substring(0, 3);
+  var prefix = extractKenmoreModelPrefix(prefixValue);
   if (!prefix) {
     return { prefix: '', manufacturer: 'Whirlpool', decoderId: 'whirlpool', usedDefault: true, note: KENMORE_DEFAULT_NOTE };
   }

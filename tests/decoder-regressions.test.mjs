@@ -59,7 +59,9 @@ function loadDecoderContext() {
       KENMORE_PREFIX_TO_DECODER,
       expandKnownSmartLookupQuery,
       getSupplementalModelConfig,
-      normalizeDecoderCategory
+      normalizeDecoderCategory,
+      extractKenmoreModelPrefix,
+      resolveKenmoreDecoderFromPrefix
     };
   `, ctx);
 
@@ -141,6 +143,28 @@ test('Kenmore requires a model prefix regardless of category key shape', () => {
   assert.equal(kenmoreAppliances.required, true);
   assert.equal(kenmoreAppliances.label, 'Model Prefix');
   assert.equal(normalized, 'waterHeaters');
+});
+
+test('Kenmore LG prefix 795 is recognized from a full dotted model number', () => {
+  const extracted = api.extractKenmoreModelPrefix('795.74053.410');
+  const resolved = api.resolveKenmoreDecoderFromPrefix('795.74053.410');
+
+  assert.equal(extracted, '795');
+  assert.equal(resolved.prefix, '795');
+  assert.equal(resolved.manufacturer, 'LG');
+  assert.equal(resolved.decoderId, 'lg');
+  assert.equal(resolved.usedDefault, false);
+});
+
+test('Kenmore 795 refrigerator serial routes to LG decoding without missing-prefix guidance', () => {
+  const resolved = api.resolveKenmoreDecoderFromPrefix('795.74053.410');
+  const lg = api.decoderData.appliances.decoders[resolved.decoderId];
+  const out = lg.decode('410KR00219');
+
+  assert.ok(out);
+  assert.equal(resolved.note, '');
+  assert.equal(out.year, '2004/2014/2024');
+  assert.equal(out.month, 'October');
 });
 
 test('Rheem water heater MMYY format decodes month/year correctly', () => {
