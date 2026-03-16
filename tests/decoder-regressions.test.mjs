@@ -57,7 +57,9 @@ function loadDecoderContext() {
       parseCandidateYears,
       chooseCandidateFromLookup,
       KENMORE_PREFIX_TO_DECODER,
-      expandKnownSmartLookupQuery
+      expandKnownSmartLookupQuery,
+      getSupplementalModelConfig,
+      normalizeDecoderCategory
     };
   `, ctx);
 
@@ -121,6 +123,24 @@ test('Normal Kenmore prefix behavior and normal Samsung decode remain unchanged'
   assert.ok(samsungResult);
   assert.equal(samsungResult.year, '2009');
   assert.equal(samsungResult.month, 'January');
+});
+
+test('Vizio model requirement is scoped to electronics only', () => {
+  const vizioElectronics = api.getSupplementalModelConfig('electronics', 'vizio');
+  const vizioAppliances = api.getSupplementalModelConfig('appliances', 'vizio');
+
+  assert.equal(vizioElectronics.required, true);
+  assert.equal(vizioElectronics.useModelAsPrimaryInput, true);
+  assert.equal(vizioAppliances.required, false);
+});
+
+test('Kenmore requires a model prefix regardless of category key shape', () => {
+  const kenmoreAppliances = api.getSupplementalModelConfig('appliances', 'kenmore');
+  const normalized = api.normalizeDecoderCategory('water-heaters');
+
+  assert.equal(kenmoreAppliances.required, true);
+  assert.equal(kenmoreAppliances.label, 'Model Prefix');
+  assert.equal(normalized, 'waterHeaters');
 });
 
 test('Rheem water heater MMYY format decodes month/year correctly', () => {
