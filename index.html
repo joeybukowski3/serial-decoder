@@ -219,6 +219,78 @@
     #smart-lookup-results * {
       color: #1a1a2e !important;
     }
+    .sl-top-summary-layer {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 18px;
+      padding: 16px;
+      border: 1px solid #dbe4ee;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
+    }
+    .sl-result-identity-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #dbe4ee;
+    }
+    .sl-summary-band {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+    .sl-summary-card {
+      padding: 14px;
+      border: 1px solid #dbe4ee;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+    }
+    .sl-summary-row {
+      margin-top: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #334155;
+    }
+    .sl-confidence-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .sl-confidence-card {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #cfe3dc;
+      background: #f7fffb;
+    }
+    .sl-recommendation-hero {
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #f7d9a6;
+      background: linear-gradient(135deg, #fff8ea 0%, #fff3d6 100%);
+    }
+    .sl-badge {
+      display: inline-flex;
+      align-items: center;
+      margin: 0 8px 8px 0;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #0f172a;
+    }
+    .sl-bullet-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: #334155;
+    }
 
     /* Home-only dual tool layout */
     .home-tools-wrap { max-width: 1240px; margin: 0 auto; }
@@ -713,6 +785,8 @@ function selectCatAndShowDecoder(cat, btn) {
 
 <script src="decoder-data.js"></script>
 <script src="lkq-engine.js"></script>
+<script src="smart-lookup-normalizer.js"></script>
+<script src="smart-lookup-summary-render.js"></script>
 <script src="script.js"></script>
 <script src="smart-lookup.js"></script>
 <script src="shared.js"></script>

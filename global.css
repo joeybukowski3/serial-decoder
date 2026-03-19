@@ -5968,3 +5968,244 @@ img.ia-sidebar-logo {
 
 }
 
+/* ================================================================
+   SMART LOOKUP COMPACT RESULTS OVERRIDES
+   ================================================================ */
+.sl-summary-band {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sl-summary-card {
+  padding: 12px 14px;
+}
+
+.sl-summary-card h4 {
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.sl-summary-row {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin-bottom: 6px;
+}
+
+.lkq-top-grid {
+  margin-bottom: 12px;
+}
+
+.lkq-table-section {
+  padding-top: 12px;
+}
+
+.lkq-options-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+  margin-top: 10px;
+}
+
+.lkq-option-card {
+  background: #ffffff;
+  border: 1px solid #cfd9e5;
+  border-radius: 12px;
+  min-width: 0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.lkq-option-card-best {
+  border-color: #f3c96a;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.12);
+}
+
+.lkq-option-card-yourpick {
+  border-color: #9fd7cc;
+}
+
+.lkq-option-card-head {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid #dbe5ef;
+  background: #f8fbff;
+}
+
+.lkq-option-card-best .lkq-option-card-head {
+  background: #fff9eb;
+}
+
+.lkq-option-card-yourpick .lkq-option-card-head {
+  background: #f2fbf8;
+}
+
+.lkq-option-card-kicker {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 5px;
+}
+
+.lkq-option-card-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.lkq-option-card-model {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 4px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.lkq-option-card-body {
+  padding: 0;
+  display: grid;
+}
+
+.lkq-option-row {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 8px 10px;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.lkq-option-row:nth-child(even) {
+  background: #f8fafc;
+}
+
+.lkq-option-row:first-child {
+  border-top: none;
+}
+
+.lkq-option-row-label {
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-bottom: 0;
+  padding-top: 2px;
+}
+
+.lkq-option-row-value,
+.lkq-card-value {
+  font-size: 0.77rem;
+  line-height: 1.4;
+  color: #1f2937;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.lkq-option-row-value .lkq-rating-badge {
+  font-size: 0.64rem;
+  padding: 0.18rem 0.5rem;
+}
+
+.lkq-option-row-value .lkq-buy-link {
+  font-size: 0.72rem;
+}
+
+.lkq-inline-details {
+  display: block;
+}
+
+.lkq-inline-details summary {
+  cursor: pointer;
+  color: #334155;
+  font-size: 0.77rem;
+  line-height: 1.4;
+  list-style: none;
+}
+
+.lkq-inline-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.lkq-inline-details summary::before {
+  content: '▶';
+  display: inline-block;
+  margin-right: 6px;
+  color: #64748b;
+  font-size: 0.62rem;
+}
+
+.lkq-inline-details[open] summary::before {
+  content: '▼';
+}
+
+.lkq-inline-details-body {
+  margin-top: 6px;
+  font-size: 0.77rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.lkq-yourpick-editor {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: start;
+  margin-bottom: 8px;
+}
+
+.lkq-yourpick-editor .lkq-compare-status {
+  grid-column: 1 / -1;
+}
+
+.lkq-yourpick-editor .lkq-compare-input {
+  font-size: 0.8rem;
+  min-width: 0;
+}
+
+.lkq-yourpick-editor .lkq-compare-btn {
+  align-self: stretch;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  padding: 0.5rem 0.8rem;
+}
+
+.lkq-yourpick-loaded {
+  border-top: 1px solid #eef2f7;
+  padding-top: 8px;
+}
+
+.lkq-table-legend,
+.lkq-table-footnotes {
+  margin-top: 10px;
+}
+
+@media (max-width: 1200px) {
+  .lkq-options-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .lkq-option-row {
+    grid-template-columns: 90px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .sl-summary-band,
+  .lkq-options-grid,
+  .lkq-top-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lkq-option-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+

@@ -3428,6 +3428,10 @@ async function executeSmartLookup(query, opts) {
   var resultsEl = (opts && opts.targetEl) ? opts.targetEl : getSmartLookupResultsEl();
   var preserveGeneral = !!(opts && opts.preserveGeneral);
   var instanceId = (opts && opts.instanceId) || 'smart-lookup';
+  var interpretData = (opts && opts.interpretData) || null;
+  var originalQuery = normalizeSmartLookupQuery((opts && opts.originalQuery) || query);
+  var normalizedOriginalQuery = String(originalQuery || '').toLowerCase().trim();
+  var ageLookupPromise;
   var includeComparisons = (opts && typeof opts.includeComparisons === 'boolean')
     ? opts.includeComparisons
     : shouldIncludeSmartLookupComparisons();
@@ -3436,6 +3440,9 @@ async function executeSmartLookup(query, opts) {
   query = normalizeSmartLookupQuery(query);
   if (!query) return;
   if (!resultsEl) { setLoadingHidden(); return; }
+  ageLookupPromise = preserveGeneral
+    ? Promise.resolve(null)
+    : fetchAgeLookup(query).catch(function () { return null; });
 
   if (!preserveGeneral) {
     ageResultsEl = document.getElementById('ageResults');
@@ -3454,9 +3461,23 @@ async function executeSmartLookup(query, opts) {
   }
 
   LKQEngine.evaluate(instanceId, query, resultsEl, {
-    onSuccess: function () {
+    onSuccess: async function (lkqData) {
+      var ageData;
+      var normalizedResult;
       currentFeedbackContext = { brand: '', serial: query };
       applySmartLookupComparisonPreference(resultsEl, includeComparisons);
+      ageData = await ageLookupPromise;
+      if (typeof normalizeSmartLookupResult === 'function') {
+        normalizedResult = normalizeSmartLookupResult({
+          interpret: interpretData,
+          age: ageData,
+          lkq: lkqData,
+          candidate: null,
+          originalQuery: originalQuery,
+          normalizedQuery: normalizedOriginalQuery
+        });
+      }
+      prependSmartLookupSummaryLayer(resultsEl, normalizedResult);
       var elapsed = Date.now() - loadStart;
       var remaining = Math.max(0, 1400 - elapsed);
       setTimeout(function () {
@@ -3530,6 +3551,22 @@ function applySmartLookupComparisonPreference(resultsEl, includeComparisons) {
   });
 }
 
+function prependSmartLookupSummaryLayer(resultsEl, normalizedResult) {
+  var existingLayer;
+  var summaryLayer;
+  if (!resultsEl || resultsEl.id !== 'smart-lookup-results') return;
+
+  existingLayer = resultsEl.querySelector('.sl-top-summary-layer');
+  if (existingLayer && existingLayer.parentNode) {
+    existingLayer.parentNode.removeChild(existingLayer);
+  }
+
+  if (!normalizedResult || typeof renderSmartLookupTopSummaryLayer !== 'function') return;
+  summaryLayer = renderSmartLookupTopSummaryLayer(normalizedResult);
+  if (!summaryLayer) return;
+  resultsEl.insertBefore(summaryLayer, resultsEl.firstChild || null);
+}
+
 // ===== SMART LOOKUP — thin entry point wrapper around LKQEngine =====
 async function runLKQLookup() {
   var inputEl = getSmartLookupInputEl();
@@ -3552,7 +3589,10 @@ async function runLKQLookup() {
 
     if (interpreted && interpreted.action === 'bypass' && interpreted.queryKind === 'specific') {
       if (includeComparisons) {
-        executeSmartLookup((interpreted.suggestions && interpreted.suggestions[0]) || resolvedQuery);
+        executeSmartLookup((interpreted.suggestions && interpreted.suggestions[0]) || resolvedQuery, {
+          interpretData: interpreted,
+          originalQuery: query
+        });
       } else {
         runAgeOnlyLookup((interpreted.suggestions && interpreted.suggestions[0]) || resolvedQuery, { displayQuery: query });
       }
@@ -3568,7 +3608,12 @@ async function runLKQLookup() {
       return;
     }
     if (interpreted && interpreted.queryKind === 'specific') {
-      if (includeComparisons) executeSmartLookup(resolvedQuery);
+      if (includeComparisons) {
+        executeSmartLookup(resolvedQuery, {
+          interpretData: interpreted,
+          originalQuery: query
+        });
+      }
       else runAgeOnlyLookup(resolvedQuery, { displayQuery: query });
       return;
     }

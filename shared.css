@@ -1009,6 +1009,223 @@ footer {
   min-width: 0;
 }
 
+/* ================================================================
+   SMART LOOKUP HORIZONTAL COMPARISON OVERRIDES
+   ================================================================ */
+.sl-summary-band {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sl-summary-card {
+  padding: 12px 14px;
+}
+
+.sl-summary-card h4 {
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.sl-summary-row {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin-bottom: 6px;
+}
+
+.lkq-top-grid {
+  margin-bottom: 12px;
+}
+
+.lkq-table-section {
+  padding-top: 12px;
+}
+
+.lkq-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 10px;
+}
+
+.lkq-comparison-table {
+  width: 100%;
+  min-width: 1120px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  border: 1px solid #d7e0ea;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.lkq-comparison-table thead tr {
+  background: #eef6ff;
+}
+
+.lkq-comparison-table thead th {
+  padding: 10px 12px;
+  border: 1px solid #d7e0ea;
+  color: #0f172a !important;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+}
+
+.lkq-th-label {
+  width: 150px;
+  background: #eaf0f6 !important;
+}
+
+.lkq-th-original {
+  background: #f8fafc !important;
+}
+
+.lkq-th-best {
+  background: #fff6df !important;
+  border-top: 3px solid #f59e0b !important;
+}
+
+.lkq-th-yourpick {
+  background: #edfdf7 !important;
+  border-top: 3px solid #14b8a6 !important;
+}
+
+.lkq-comparison-table td {
+  padding: 10px 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  vertical-align: top;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #1f2937 !important;
+  background: #ffffff;
+  overflow-wrap: anywhere;
+}
+
+.lkq-td-label {
+  width: 150px;
+  background: #f1f5f9 !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b !important;
+}
+
+.lkq-td-original {
+  background: #f9fbfd !important;
+}
+
+.lkq-td-best {
+  background: #fffaf0 !important;
+}
+
+.lkq-td-yourpick {
+  background: #f3fcf8 !important;
+}
+
+.lkq-comparison-table tbody tr:nth-child(even) .lkq-td,
+.lkq-comparison-table tbody tr:nth-child(even) .lkq-td-original,
+.lkq-comparison-table tbody tr:nth-child(even) .lkq-td-best,
+.lkq-comparison-table tbody tr:nth-child(even) .lkq-td-yourpick {
+  filter: brightness(0.995);
+}
+
+.lkq-td-name {
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.lkq-td-model {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.lkq-rating-badge.lkq-rating-original {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.lkq-inline-details {
+  display: block;
+}
+
+.lkq-inline-details summary {
+  cursor: pointer;
+  color: #334155;
+  font-size: 0.77rem;
+  line-height: 1.4;
+  list-style: none;
+}
+
+.lkq-inline-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.lkq-inline-details summary::before {
+  content: '▶';
+  display: inline-block;
+  margin-right: 6px;
+  color: #64748b;
+  font-size: 0.62rem;
+}
+
+.lkq-inline-details[open] summary::before {
+  content: '▼';
+}
+
+.lkq-inline-details-body {
+  margin-top: 6px;
+  font-size: 0.77rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.lkq-yourpick-editor {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.lkq-yourpick-editor .lkq-compare-status {
+  grid-column: 1 / -1;
+}
+
+.lkq-yourpick-editor .lkq-compare-input {
+  font-size: 0.8rem;
+  min-width: 0;
+}
+
+.lkq-yourpick-editor .lkq-compare-btn {
+  align-self: stretch;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  padding: 0.5rem 0.8rem;
+}
+
+.lkq-yourpick-loaded {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #dbe5ef;
+}
+
+.lkq-table-legend,
+.lkq-table-footnotes {
+  margin-top: 10px;
+}
+
+@media (max-width: 760px) {
+  .sl-summary-band,
+  .lkq-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .lkq-spec-dot {
   width: 9px;
   height: 9px;

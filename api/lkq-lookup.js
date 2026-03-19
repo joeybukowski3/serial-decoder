@@ -61,7 +61,7 @@ export default async function handler(req, res) {
 
   const sanitizedQuery = normalizeKnownItemQuery(query.trim());
   const normalizedQuery = sanitizedQuery.toLowerCase().replace(/\s+/g, ' ');
-  const cacheKey = `lkq-lookup-v3:${normalizedQuery}`;
+  const cacheKey = `lkq-lookup-v4:${normalizedQuery}`;
 
   // Cache check (7-day TTL)
   try {
@@ -129,8 +129,11 @@ New-condition requirement (strict):
 - This rule applies to all replacement slots including Best Match
 
 Replacement table selection rules (strict):
-- Target order is: Original Item, Best Match, Alternative Replacement 1, Alternative Replacement 2, Your Pick
-- Best Match must be same-brand successor or same-brand current equivalent when available and must not be a downgrade
+- Target order is: Original Item, Best Replacement Option, Alternative Replacement 1, Alternative Replacement 2, Your Pick
+- Best Replacement Option must be the most current same-brand successor or same-brand current equivalent when available and must not be a downgrade
+- Prefer the newest current-generation model that is still actively sold brand new by the manufacturer or a major authorized retailer; avoid older interim generations when a newer qualifying successor exists
+- The correct target is the current in-market successor, not merely the immediate next generation in the lineage
+- Do not choose a discontinued older successor if a newer current successor in the same line is available new
 - Alternative Replacement 1 and 2 must be different models from comparable quality brands and must not be duplicates
 - Exclude any option that is CLOSE MATCH or NOT LKQ; do not show or mention excluded options
 - Never include lower series, older generation, lower tier, or spec-downgrade models
@@ -148,8 +151,9 @@ Overall LKQ rating determination:
 - Mixed GREEN/ORANGE with no RED may still be LKQ when orange differences are minor and non-core
 
 Successor status rules:
-- "direct_successor": the manufacturer released a named model to replace this exact model (use when you know this with confidence)
+- "direct_successor": use this for the current same-line successor that is presently in market, even if there were one or more older intermediate successors before it
 - "same_brand_equivalent": the same brand has a current equivalent product (same tier/line, different model number) but not a formally named successor
+- When multiple successor generations exist, choose the newest current generation that is available brand new from a major retailer, not an older step in the chain
 - "none": the manufacturer no longer makes this category or has no clear equivalent; explain briefly
 
 Respond with ONLY valid JSON in this exact format:
@@ -178,7 +182,7 @@ Respond with ONLY valid JSON in this exact format:
     "model": "Model number of successor/equivalent (null if type is none)",
     "explanation": "One sentence explaining the successor/equivalent relationship, or why none exists"
   },
-  "bestMatchLabel": "Best Match",
+  "bestMatchLabel": "Best Replacement Option",
   "replacementOptions": [
     {
       "name": "Full product name (Brand + descriptive model name)",
@@ -209,7 +213,7 @@ Rules:
   - Use "MATCH" when the option is LKQ (green)
   - Use "ABOVE LKQ" when the option is above LKQ (gold)
   - Never return CLOSE MATCH or NOT LKQ options in replacementOptions
-- If successorStatus.type is "direct_successor" or "same_brand_equivalent", the first replacement option should be that successor/equivalent when it qualifies and must use the same name/model as successorStatus
+- If successorStatus.type is "direct_successor" or "same_brand_equivalent", the first replacement option should be that current successor/equivalent when it qualifies and must use the same name/model as successorStatus
 - Include options from multiple manufacturers when possible
 - priceRange reflects current retail pricing; use "N/A" if unknown
 - retailerSearchQuery is a clean search string, not a URL
