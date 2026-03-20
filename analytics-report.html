@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics Report | Item Assist</title>
+  <meta name="description" content="Local demo analytics dashboard for Item Assist search, Smart Lookup, refinements, feedback, and mobile usage.">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    body[data-page-kind="analytics"] .report-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+    .report-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
+    .report-card { background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:18px; padding:18px; }
+    .report-card h3 { color:var(--white); font-size:1rem; margin-bottom:8px; }
+    .metric { font-size:2rem; font-weight:800; color:var(--white); }
+    .metric-sub { color:var(--muted); font-size:.9rem; }
+    .mini-list { display:grid; gap:10px; margin-top:10px; }
+    .mini-row { display:flex; justify-content:space-between; gap:12px; color:var(--muted); font-size:.92rem; }
+    .mini-row strong { color:var(--white); }
+    .recent-list { display:grid; gap:10px; }
+    .recent-item { border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:12px 14px; background:rgba(255,255,255,0.03); }
+    .recent-item-title { font-weight:700; color:var(--white); }
+    .recent-item-meta { color:var(--muted); font-size:.84rem; margin-top:4px; }
+    .toolbar { display:flex; flex-wrap:wrap; gap:12px; margin:18px 0 26px; }
+  </style>
+</head>
+<body data-page-kind="analytics">
+<nav>
+  <a href="index.html" class="logo"><div class="logo-icon"></div><div><div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Local analytics viewer</div></div></a>
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="smart-lookup.html">Smart Lookup</a></li>
+    <li><a href="analytics-report.html" class="active">Analytics</a></li>
+  </ul>
+</nav>
+<section class="page-hero">
+  <span class="hero-badge"><span class="badge-dot"></span> In-browser reporting</span>
+  <h1>Local analytics <em>reporting dashboard</em></h1>
+  <p>For demo/testing: reads Item Assist events from localStorage and summarizes searches, results, refinements, feedback, examples, recent lookups, and mobile usage.</p>
+</section>
+<div class="report-wrap">
+  <div class="toolbar">
+    <button class="btn-primary" id="refreshReportBtn" type="button">Refresh report</button>
+    <button class="btn-secondary" id="resetReportBtn" type="button">Reset local analytics</button>
+  </div>
+  <div class="report-grid" id="reportMetrics"></div>
+  <section class="section" style="padding:32px 0 0;">
+    <div class="cards" style="max-width:none;">
+      <div class="card"><div class="card-title">Top brands</div><div id="topBrands" class="mini-list"></div></div>
+      <div class="card"><div class="card-title">Top categories</div><div id="topCategories" class="mini-list"></div></div>
+      <div class="card"><div class="card-title">Query paths</div><div id="queryKinds" class="mini-list"></div></div>
+    </div>
+  </section>
+  <section class="section" style="padding:32px 0 0;">
+    <div class="report-card">
+      <h3>Recent events</h3>
+      <div id="recentEvents" class="recent-list"></div>
+    </div>
+  </section>
+</div>
+<script src="analytics.js"></script>
+<script>
+(function () {
+  function row(item) {
+    if (!item) return '<div class="mini-row"><span>—</span><strong>0</strong></div>';
+    return '<div class="mini-row"><span>' + item.key + '</span><strong>' + item.count + '</strong></div>';
+  }
+  function render() {
+    var report = (window.ItemAssistAnalytics && window.ItemAssistAnalytics.buildReport()) || { totals:{}, sessions:{}, topBrands:[], topCategories:[], queryKinds:[], recentEvents:[] };
+    var totals = report.totals || {};
+    document.getElementById('reportMetrics').innerHTML = [
+      ['Searches', totals.search_started || 0, 'Smart Lookup starts'],
+      ['Successful results', totals.result_success || 0, 'Age/LKQ/general results shown'],
+      ['Failures', totals.result_failure || 0, 'Unavailable or no-result paths'],
+      ['Feedback actions', (totals.feedback_modal_opened || 0) + (totals.feedback_submitted || 0), 'Opened + submitted'],
+      ['Refinements', totals.refinement_click || 0, 'General result refinement taps'],
+      ['Mobile views', report.sessions.mobileViews || 0, 'Tracked on narrow screens']
+    ].map(function (metric) {
+      return '<div class="report-card"><div class="metric">' + metric[1] + '</div><h3>' + metric[0] + '</h3><div class="metric-sub">' + metric[2] + '</div></div>';
+    }).join('');
+    document.getElementById('topBrands').innerHTML = (report.topBrands.length ? report.topBrands : [null]).map(row).join('');
+    document.getElementById('topCategories').innerHTML = (report.topCategories.length ? report.topCategories : [null]).map(row).join('');
+    document.getElementById('queryKinds').innerHTML = (report.queryKinds.length ? report.queryKinds : [null]).map(row).join('');
+    document.getElementById('recentEvents').innerHTML = (report.recentEvents.length ? report.recentEvents : [{ name:'No events yet', at:'', payload:{} }]).map(function (event) {
+      var payload = event.payload || {};
+      var context = [payload.query, payload.queryKind, payload.brand, payload.category].filter(Boolean).join(' · ');
+      return '<div class="recent-item"><div class="recent-item-title">' + event.name + '</div><div class="recent-item-meta">' + (event.at || '') + (context ? ' — ' + context : '') + '</div></div>';
+    }).join('');
+  }
+  document.getElementById('refreshReportBtn').addEventListener('click', render);
+  document.getElementById('resetReportBtn').addEventListener('click', function () {
+    if (window.ItemAssistAnalytics) window.ItemAssistAnalytics.reset();
+    render();
+  });
+  if (window.ItemAssistAnalytics) window.ItemAssistAnalytics.subscribe(render);
+  render();
+}());
+</script>
+</body>
+</html>

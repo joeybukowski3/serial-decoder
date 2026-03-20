@@ -512,6 +512,9 @@
         _buildTable(summary, originalSpecs, specLabels, options, bestMatchLabel, instanceId) +
         _buildTableLegend() +
         _buildTableFootnotes(successorStatus) +
+        (instanceId === 'serial-decoder'
+          ? '<div class="lkq-bottom-actions"><button class="decode-again-btn btn-amber" type="button" onclick="decodeAnotherItem()">Decode Another Item</button></div>'
+          : '') +
       '</div>';
 
     _bindYourPickInput(resultsEl, instanceId);

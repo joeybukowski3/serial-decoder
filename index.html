@@ -39,6 +39,7 @@
   }
   </script>
   <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="mobile-smart-lookup.css">
   <link rel='icon' type='image/png' href='/favicon.png'>
   <style>
     /* ─── UTILITIES ─── */
@@ -300,6 +301,198 @@
       padding-left: 18px;
       color: #334155;
     }
+    .serial-summary-layer.hidden { display: none; }
+    .serial-query-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 100%;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #475569;
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: 1px solid #dbe4ee;
+      background: rgba(255,255,255,0.88);
+    }
+    .serial-result-hero {
+      padding: 20px;
+      border-radius: 16px;
+      border: 2px solid #f5c451;
+      background: linear-gradient(180deg, #fffdf7 0%, #f8fbff 100%);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    }
+    .serial-top-grid,
+    .serial-secondary-grid,
+    .serial-bottom-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+    .serial-top-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .serial-top-grid > *,
+    .serial-secondary-grid > * {
+      min-width: 0;
+      height: 100%;
+    }
+    .serial-summary-layer.serial-no-refine #serialRefinementMount {
+      display: none;
+    }
+    .serial-summary-layer.serial-no-refine .serial-secondary-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .serial-summary-layer.serial-no-refine #serialLkqMount {
+      grid-column: 1;
+    }
+    .serial-result-eyebrow {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+    .serial-result-main {
+      font-size: clamp(1rem, 2.5vw, 1.5rem);
+      line-height: 1.08;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+    .serial-result-subline {
+      margin-top: 12px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #1e293b;
+    }
+    .serial-hero-rows {
+      margin-top: 14px;
+      border-top: 1px solid #dbe4ee;
+    }
+    .serial-hero-row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 12px 0;
+      border-bottom: 1px solid #e7eef6;
+    }
+    .serial-hero-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+    .serial-hero-row-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+    }
+    .serial-hero-row-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.4;
+    }
+    .serial-summary-layer .narrow-date-panel,
+    .serial-summary-layer .lkq-entry-section {
+      margin-top: 0;
+      padding: 14px;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      height: 100%;
+      max-width: none;
+      border: 2px solid #cbdcf1;
+    }
+    .serial-summary-layer .narrow-date-fields {
+      grid-template-columns: 1fr;
+      align-items: stretch;
+      flex: 1 1 auto;
+    }
+    .serial-summary-layer .narrow-date-fields .decode-btn,
+    .serial-summary-layer .lkq-entry-btn {
+      width: 100%;
+      justify-self: stretch;
+      margin-top: auto;
+    }
+    .serial-summary-layer .lkq-entry-input-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      align-items: stretch;
+      margin-top: 8px;
+      flex: 1 1 auto;
+    }
+    .serial-summary-layer .lkq-entry-title,
+    .serial-summary-layer .narrow-date-panel h4 {
+      font-size: 1rem;
+    }
+    .serial-summary-layer .lkq-entry-hd {
+      margin-bottom: 4px;
+    }
+    .serial-method-card {
+      height: 100%;
+      border: 2px solid #cbdcf1;
+    }
+    .back-to-top-fab {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 1200;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 12px 8px;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.94);
+      color: #0f172a;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+      backdrop-filter: blur(8px);
+    }
+    .back-to-top-fab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+    }
+    .back-to-top-icon {
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 900;
+    }
+    .back-to-top-label {
+      font-size: 11px;
+      line-height: 1.1;
+      font-weight: 700;
+      color: #475569;
+      text-align: center;
+    }
+    .serial-summary-layer .lkq-entry-section .search-hint {
+      margin-top: 10px;
+    }
+    .serial-summary-layer .sl-panel-copy {
+      margin-top: 10px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #334155;
+    }
+    .serial-summary-layer .sl-panel-subhead {
+      margin-top: 12px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+    }
 
     /* Home-only dual tool layout */
     .home-tools-wrap { max-width: 1240px; margin: 0 auto; }
@@ -341,6 +534,15 @@
     .home-tools-grid .search-tab[disabled] {
       cursor: default;
       opacity: 1;
+    }
+    .kenmore-prefix-group {
+      margin-top: 10px;
+    }
+    #panel-decoder .kenmore-prefix-group .form-input,
+    #panel-decoder .kenmore-prefix-group .search-input {
+      width: 100%;
+      height: 50px;
+      margin: 0;
     }
     @media (max-width: 980px) {
       .home-tools-grid {
@@ -430,14 +632,13 @@
     @media (max-width: 980px) { .power-bar { grid-template-columns: 1fr; } }
   </style>
 </head>
-<body>
+<body data-page-kind="home">
 
 <!-- ─── NAV ─── -->
 <nav>
-  <a href="index.html" class="logo">
-    <div class="logo-icon"></div>
+  <a href="index.html" class="logo" aria-label="Decode My Item home">
     <div>
-      <div class="logo-text">Decode My <span>Item</span></div>
+      <div class="logo-text">Decodemyitem</div>
       <div class="logo-sub">Decode · Research · Automate</div>
     </div>
   </a>
@@ -457,8 +658,8 @@
 
 <!-- ─── PAGE HERO ─── -->
 <section class="page-hero home-hero">
-  <h1>Instant Equipment Age Verification</h1>
-  <p class="hero-sub">Two tools built for speed and efficiency. Utilize our Serial Number Decoder for quick, accurate results across a wide range of equipment, or leverage the Smart Lookup tool to generate advanced logic age estimations from model numbers or descriptions using authorized data sources.</p>
+  <h1>Item Assist for fast serial decoding and smarter replacement research</h1>
+  <p class="hero-sub">Two workflows, one faster decision path: decode serial numbers instantly when you have the plate, or use Smart Lookup to turn a model or description into a documented first-pass replacement recommendation with confidence cues and current-market context.</p>
 </section>
 
 <!-- ─── DECODER TOOL ─── -->
@@ -551,36 +752,39 @@
       <div class="brand-logo-wrap" id="serialBrandLogo"></div>
     </div>
     <div class="results-body">
-      <div class="result-row result-row--primary">
-        <span class="result-label">Manufacture Date</span>
-        <span class="result-value" id="resultYear"></span>
-      </div>
-      <div class="result-row" id="resultMonthRow">
-        <span class="result-label">Month / Period</span>
-        <span class="result-value" id="resultMonth"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">Brand</span>
-        <span class="result-value" id="resultBrand"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">Estimated Age</span>
-        <span class="result-value" id="resultEstimatedAge">—</span>
-      </div>
-      <div class="info-block method">
-        <h4>Decoding Method</h4>
-        <p id="resultMethod"></p>
-      </div>
-      <div class="info-block notes">
-        <h4>Important Notes</h4>
-        <p id="resultNotes"></p>
-      </div>
-      <details class="determination-details">
-        <summary>How this was determined</summary>
-        <div class="determination-body">
-          We use manufacturer serial format rules and published industry references to extract manufacture date information from serial numbers. Some brands reuse year codes across decades, which is why multiple valid years may appear. When two years are shown, the correct decade can typically be confirmed using physical condition, purchase records, or known installation dates.
+      <div id="serialSummaryLayer" class="sl-top-summary-layer serial-summary-layer hidden"></div>
+      <div class="serial-legacy-fields" hidden aria-hidden="true">
+        <div class="result-row result-row--primary">
+          <span class="result-label">Manufacture Date</span>
+          <span class="result-value" id="resultYear"></span>
         </div>
-      </details>
+        <div class="result-row" id="resultMonthRow">
+          <span class="result-label">Month / Period</span>
+          <span class="result-value" id="resultMonth"></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Brand</span>
+          <span class="result-value" id="resultBrand"></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Estimated Age</span>
+          <span class="result-value" id="resultEstimatedAge">—</span>
+        </div>
+        <div class="info-block method">
+          <h4>Decoding Method</h4>
+          <p id="resultMethod"></p>
+        </div>
+        <div class="info-block notes">
+          <h4>Important Notes</h4>
+          <p id="resultNotes"></p>
+        </div>
+        <details class="determination-details">
+          <summary>How this was determined</summary>
+          <div class="determination-body" id="serialDeterminationBody">
+            We use manufacturer serial format rules and published industry references to extract manufacture date information from serial numbers. Some brands reuse year codes across decades, which is why multiple valid years may appear. When two years are shown, the correct decade can typically be confirmed using physical condition, purchase records, or known installation dates.
+          </div>
+        </details>
+      </div>
     </div>
     <div class="results-footer">
       <button class="copy-btn" onclick="copyClaimFile()">Copy Information</button>
@@ -643,6 +847,20 @@
   </div>
 </section>
 
+<section class="section">
+  <div style="max-width:1100px;margin:0 auto;">
+    <span class="section-label">Guides &amp; Landing Pages</span>
+    <h2 class="section-title">Popular replacement and age-estimate workflows</h2>
+    <p class="section-sub">Practical intent pages for the most common reasons people land on Item Assist.</p>
+    <div class="cards">
+      <a class="card teal" href="replacement-lookup.html"><div class="card-badge teal">Replacement lookup</div><div class="card-title">Find a practical replacement path</div><p class="card-desc">Use Smart Lookup when you need a current-market replacement recommendation with rationale and confidence.</p></a>
+      <a class="card amber" href="appliance-age-estimator.html"><div class="card-badge amber">Appliance age</div><div class="card-title">Estimate appliance age without the guesswork</div><p class="card-desc">Use model and serial clues to narrow the likely production window and document your reasoning.</p></a>
+      <a class="card purple" href="tv-replacement-guide.html"><div class="card-badge purple">TV replacement</div><div class="card-title">Compare modern TV replacements</div><p class="card-desc">Turn an older TV model or description into a more current replacement shortlist and decision summary.</p></a>
+      <a class="card teal" href="hvac-replacement-guide.html"><div class="card-badge teal">HVAC replacement</div><div class="card-title">Research HVAC replacement candidates</div><p class="card-desc">Start with brand, tonnage context, and equipment type to get a clearer first-pass replacement direction.</p></a>
+    </div>
+  </div>
+</section>
+
 <!-- ─── FOOTER ─── -->
 <footer>
   <div>© 2026 Decode My Item · Database verified February 2026</div>
@@ -653,6 +871,11 @@
     <a href="/privacy-policy">Privacy Policy</a>
   </div>
 </footer>
+
+<button class="back-to-top-fab" type="button" onclick="scrollPageToTop()" aria-label="Back to top">
+  <span class="back-to-top-icon">↑</span>
+  <span class="back-to-top-label">Back to Top</span>
+</button>
 
 <!-- ─── GUIDE DRAWER ─── -->
 <div id="guideOverlay" class="guide-overlay" onclick="closeGuide()"></div>
@@ -735,10 +958,13 @@ function selectCatAndShowDecoder(cat, btn) {
 
 <script src="decoder-data.js"></script>
 <script src="lkq-engine.js"></script>
+<script src="analytics.js"></script>
+<script src="smart-lookup-extras.js"></script>
 <script src="smart-lookup-normalizer.js"></script>
 <script src="smart-lookup-summary-render.js"></script>
 <script src="script.js"></script>
 <script src="smart-lookup.js"></script>
+<script src="smart-lookup-upgrade-patch.js"></script>
 <script src="shared.js"></script>
 
 <script type="application/ld+json">

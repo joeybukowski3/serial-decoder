@@ -37,6 +37,7 @@
       brand: _firstNonEmpty(summary.brand, age && age.brand, interpret && interpret.brand),
       model: _firstNonEmpty(summary.modelNumber, summary.model, age && age.model, interpret && interpret.model),
       category: _firstNonEmpty(summary.category, age && age.itemCategory, interpret && interpret.category, interpret && interpret.itemCategory),
+      availability: _firstNonEmpty(summary.availability),
       searchType: _firstNonEmpty(interpret && interpret.queryKind, age && age.specificityLevel)
     };
   }
@@ -47,10 +48,10 @@
     var start;
     var end;
     if (!text) return '';
-    match = text.match(/(19|20)\d{2}\s*[-–]\s*((19|20)\d{2})/);
+    match = text.match(/((19|20)\d{2})\s*[-–]\s*((19|20)\d{2})/);
     if (!match) return '';
-    start = parseInt(match[0].match(/(19|20)\d{2}/)[0], 10);
-    end = parseInt(match[2], 10);
+    start = parseInt(match[1], 10);
+    end = parseInt(match[3], 10);
     if (!isFinite(start) || !isFinite(end) || end < start) return '';
     return String(Math.ceil((start + end) / 2));
   }
@@ -190,12 +191,82 @@
 
   function _buildBadges(identity, ageSummary, recommendation) {
     var primary = recommendation && recommendation.primary;
+    var successorStatus = recommendation && recommendation.successorStatus;
+    var badges = [identity.brand, identity.category, ageSummary.specificity, primary && primary.lkqRating];
+    if (successorStatus && successorStatus.type === 'direct_successor') badges.push('Current successor verified');
+    else if (successorStatus && successorStatus.type === 'same_brand_equivalent') badges.push('Same-brand verified');
+    return _toArray(badges);
+  }
+
+  function _buildVerification(recommendation) {
+    var primary = recommendation && recommendation.primary;
+    var successorStatus = recommendation && recommendation.successorStatus || {};
+    var verified = successorStatus.type === 'direct_successor' || successorStatus.type === 'same_brand_equivalent';
+    var badge = verified ? 'Verified' : (primary ? 'Reviewed' : 'Needs review');
+    var message = 'No current same-brand successor was verified.';
+
+    if (successorStatus.type === 'direct_successor') {
+      message = _firstNonEmpty(successorStatus.explanation, 'Current same-brand successor verified.');
+    } else if (successorStatus.type === 'same_brand_equivalent') {
+      message = _firstNonEmpty(successorStatus.explanation, 'Current same-brand equivalent verified.');
+    } else if (primary && primary.notes) {
+      message = primary.notes;
+    }
+
+    return {
+      badge: badge,
+      verified: verified,
+      message: message
+    };
+  }
+
+  function _buildWhyReplacement(identity, recommendation, ageSummary) {
+    var primary = recommendation && recommendation.primary;
+    var successorStatus = recommendation && recommendation.successorStatus || {};
+    var bullets = [];
+
+    if (successorStatus.explanation) bullets.push(successorStatus.explanation);
+    if (primary && primary.lkqRating) bullets.push('Lead option is rated ' + primary.lkqRating + ' against the original item profile.');
+    if (primary && primary.notes) bullets.push(primary.notes);
+    if (identity.category) bullets.push('Comparison is anchored to the same product class: ' + identity.category + '.');
+    if (ageSummary.productionRange) bullets.push('Original item timing was estimated using the ' + ageSummary.productionRange + ' production window.');
+
+    return {
+      title: 'Why this replacement?',
+      summary: _firstNonEmpty(bullets[0], 'This recommendation balances product identity, age estimate, and market availability.'),
+      bullets: bullets.slice(0, 4)
+    };
+  }
+
+  function _buildDifferences(identity, recommendation) {
+    var primary = recommendation && recommendation.primary;
+    if (!primary) return [];
     return _toArray([
-      identity.brand,
-      identity.category,
-      ageSummary.specificity,
-      primary && primary.lkqRating
+      identity.brand && primary.brand ? 'Brand: ' + identity.brand + ' → ' + primary.brand : '',
+      identity.model && primary.model ? 'Model: ' + identity.model + ' → ' + primary.model : '',
+      primary.priceRange ? 'Price range: ' + primary.priceRange : '',
+      primary.retailerName ? 'Available from ' + primary.retailerName : ''
+    ]).slice(0, 4);
+  }
+
+  function _buildMethodology(age, lkq, recommendation) {
+    var primary = recommendation && recommendation.primary;
+    var steps = _toArray([
+      'We interpret the search to identify brand, category, and likely model context.',
+      'We estimate age using model timelines, release windows, and product-family clues.',
+      'We compare current-market replacements against the original item profile and LKQ rating logic.',
+      primary && primary.retailerName ? 'Retail availability is surfaced from current-market retailer context such as ' + primary.retailerName + '.' : ''
     ]);
+    var sources = _toArray([
+      age && age.serialRule ? 'Serial/date rule: ' + age.serialRule : '',
+      age && age.serialLocation ? 'Label guidance: ' + age.serialLocation : '',
+      lkq && lkq.itemSummary && lkq.itemSummary.availability ? 'Availability note: ' + lkq.itemSummary.availability : ''
+    ]);
+    return {
+      title: 'Source transparency',
+      steps: steps,
+      sources: sources
+    };
   }
 
   function normalizeSmartLookupResult(input) {
@@ -219,7 +290,11 @@
       recommendation: recommendation,
       claimDecision: _buildClaimDecision(identity, ageSummary, recommendation),
       confidence: _buildConfidence(identity, ageSummary, recommendation, interpret),
-      badges: _buildBadges(identity, ageSummary, recommendation)
+      badges: _buildBadges(identity, ageSummary, recommendation),
+      verification: _buildVerification(recommendation),
+      whyReplacement: _buildWhyReplacement(identity, recommendation, ageSummary),
+      differences: _buildDifferences(identity, recommendation),
+      methodology: _buildMethodology(age, lkq, recommendation)
     };
   }
 
