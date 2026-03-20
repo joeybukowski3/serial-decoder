@@ -34,6 +34,74 @@ function normalizeKnownItemQuery(query) {
   return text;
 }
 
+function extractLgTvSeriesInfo(value) {
+  const text = String(value || '').toUpperCase();
+  const match = text.match(/OLED\d+[A-Z]{0,3}([BCGZM])(\d)[A-Z0-9]*/)
+    || text.match(/\b([BCGZM])(\d)\b/)
+    || text.match(/\b([BCGZM])(\d)[A-Z0-9]{2,}\b/);
+  if (!match) return null;
+  return {
+    family: match[1],
+    generationDigit: parseInt(match[2], 10),
+  };
+}
+
+function getCurrentLgTvGenerationDigit() {
+  const year = new Date().getFullYear();
+  return Math.max(1, year - 2021);
+}
+
+function rewriteLgTvModelToGeneration(value, targetDigit) {
+  const text = String(value || '');
+  if (!text || !Number.isFinite(targetDigit)) return text;
+
+  return text
+    .replace(/(OLED\d+[A-Z]{0,3})([BCGZM])(\d)([A-Z0-9]*)/i, (_, prefix, family, __, suffix) => `${prefix}${family}${targetDigit}${suffix || ''}`)
+    .replace(/\b([BCGZM])(\d)([A-Z0-9]{2,})\b/i, (_, family, __, suffix) => `${family}${targetDigit}${suffix}`)
+    .replace(/\b([BCGZM])(\d)\b/i, (_, family) => `${family}${targetDigit}`);
+}
+
+function maybePromoteCurrentSuccessor(result) {
+  if (!result || typeof result !== 'object') return result;
+
+  const summary = result.itemSummary || {};
+  const successor = result.successorStatus || {};
+  const options = Array.isArray(result.replacementOptions) ? result.replacementOptions : [];
+  const first = options[0];
+  const brand = String(summary.brand || first?.brand || successor.name || '').toLowerCase();
+  const category = String(summary.category || '').toLowerCase();
+  const originalInfo = extractLgTvSeriesInfo(summary.model || summary.modelNumber || summary.name || '');
+  const successorInfo = extractLgTvSeriesInfo(successor.model || first?.model || successor.name || first?.name || '');
+
+  if (brand !== 'lg') return result;
+  if (category.indexOf('tv') === -1 && category.indexOf('oled') === -1) return result;
+  if (!originalInfo || !successorInfo) return result;
+  if (originalInfo.family !== successorInfo.family) return result;
+
+  const currentDigit = getCurrentLgTvGenerationDigit();
+  if (!Number.isFinite(currentDigit) || currentDigit <= successorInfo.generationDigit) return result;
+  if (currentDigit <= originalInfo.generationDigit) return result;
+
+  const upgradeText = `Promoted to current in-market ${successorInfo.family}-series successor based on current model cycle.`;
+
+  if (successor.model) successor.model = rewriteLgTvModelToGeneration(successor.model, currentDigit);
+  if (successor.name) successor.name = rewriteLgTvModelToGeneration(successor.name, currentDigit);
+  successor.explanation = successor.explanation
+    ? `${successor.explanation} ${upgradeText}`
+    : upgradeText;
+
+  if (first) {
+    if (first.model) first.model = rewriteLgTvModelToGeneration(first.model, currentDigit);
+    if (first.name) first.name = rewriteLgTvModelToGeneration(first.name, currentDigit);
+    if (first.retailerSearchQuery) first.retailerSearchQuery = rewriteLgTvModelToGeneration(first.retailerSearchQuery, currentDigit);
+    first.notes = first.notes
+      ? `${first.notes} ${upgradeText}`
+      : upgradeText;
+  }
+
+  return result;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -67,7 +135,15 @@ export default async function handler(req, res) {
   try {
     const cached = await redis.get(cacheKey);
     if (cached) {
-      return res.status(200).json(cached);
+      const cachedPrimaryModelBefore = cached?.replacementOptions?.[0]?.model || cached?.successorStatus?.model || '';
+      const normalizedCached = maybePromoteCurrentSuccessor(cached);
+      const cachedPrimaryModelAfter = normalizedCached?.replacementOptions?.[0]?.model || normalizedCached?.successorStatus?.model || '';
+      if (cachedPrimaryModelAfter && cachedPrimaryModelAfter !== cachedPrimaryModelBefore) {
+        try {
+          await redis.set(cacheKey, normalizedCached, { ex: 7 * 24 * 60 * 60 });
+        } catch (_) {}
+      }
+      return res.status(200).json(normalizedCached);
     }
   } catch (_) {}
 
@@ -119,6 +195,8 @@ Retailer guidance:
 Specific identification rules:
 - LR3RE-1000 is a Whisker Litter-Robot 3 Open Air self-cleaning litter box.
 - Litter-Robot queries are pet-tech household appliances, not generators, power equipment, or Generac products.
+- Successor selection must always prefer the newest current-generation replacement that is actively sold brand new today, not merely the immediate next model in the lineage.
+- Example: if an LG C3 TV's immediate successor C4 is already discontinued or no longer broadly sold new, the correct successor is the current in-market C-series successor (for example C5 if that is the actively sold current model).
 
 New-condition requirement (strict):
 - Every replacement option must be purchasable as brand NEW from an authorized retailer
@@ -134,6 +212,9 @@ Replacement table selection rules (strict):
 - Prefer the newest current-generation model that is still actively sold brand new by the manufacturer or a major authorized retailer; avoid older interim generations when a newer qualifying successor exists
 - The correct target is the current in-market successor, not merely the immediate next generation in the lineage
 - Do not choose a discontinued older successor if a newer current successor in the same line is available new
+- If a lineage contains multiple newer generations, skip over discontinued or superseded intermediate generations and choose the newest currently sold qualifying model
+- Treat "current successor" as the newest model in the family that is still sold new today, even if one or more intermediate successors existed earlier
+- For TVs and fast-refresh consumer electronics, pay special attention to annual model cycles and select the current actively sold generation rather than the first newer generation after the original
 - Alternative Replacement 1 and 2 must be different models from comparable quality brands and must not be duplicates
 - Exclude any option that is CLOSE MATCH or NOT LKQ; do not show or mention excluded options
 - Never include lower series, older generation, lower tier, or spec-downgrade models
@@ -154,6 +235,8 @@ Successor status rules:
 - "direct_successor": use this for the current same-line successor that is presently in market, even if there were one or more older intermediate successors before it
 - "same_brand_equivalent": the same brand has a current equivalent product (same tier/line, different model number) but not a formally named successor
 - When multiple successor generations exist, choose the newest current generation that is available brand new from a major retailer, not an older step in the chain
+- Never label a discontinued or no-longer-current intermediate model as the successor when a newer actively sold model exists
+- The successorStatus name/model must reflect the current in-market replacement as of today, not the historically first follow-on model
 - "none": the manufacturer no longer makes this category or has no clear equivalent; explain briefly
 
 Respond with ONLY valid JSON in this exact format:
@@ -214,6 +297,7 @@ Rules:
   - Use "ABOVE LKQ" when the option is above LKQ (gold)
   - Never return CLOSE MATCH or NOT LKQ options in replacementOptions
 - If successorStatus.type is "direct_successor" or "same_brand_equivalent", the first replacement option should be that current successor/equivalent when it qualifies and must use the same name/model as successorStatus
+- The first replacement option must be the newest currently sold qualifying same-brand successor/equivalent, not an older intermediate successor
 - Include options from multiple manufacturers when possible
 - priceRange reflects current retail pricing; use "N/A" if unknown
 - retailerSearchQuery is a clean search string, not a URL
@@ -248,7 +332,7 @@ Rules:
       return res.status(502).json({ error: 'No response from AI service' });
     }
 
-    const result = JSON.parse(text);
+    const result = maybePromoteCurrentSuccessor(JSON.parse(text));
 
     // Cache result for 7 days
     try {

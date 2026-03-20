@@ -4,27 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Lookup – Item Assist</title>
-  <meta name="description" content="Enter a model number or item description and get an AI-powered LKQ replacement evaluation with comparable options and pricing.">
+  <meta name="description" content="Search by model or plain-language description to identify likely replacements, understand why they were chosen, and document confidence for claim-ready decisions.">
       <link rel="canonical" href="https://www.decodemyitem.com/smart-lookup">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Item Assist">
   <meta property="og:title" content="Smart Lookup – Item Assist">
-  <meta property="og:description" content="Enter a model number or item description and get an AI-powered LKQ replacement evaluation with comparable options and pricing.">
+  <meta property="og:description" content="Search by model or plain-language description to identify likely replacements, understand why they were chosen, and document confidence for claim-ready decisions.">
   <meta property="og:url" content="https://www.decodemyitem.com/smart-lookup">
   <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <meta property="og:image:alt" content="Item Assist preview image">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Smart Lookup – Item Assist">
-  <meta name="twitter:description" content="Enter a model number or item description and get an AI-powered LKQ replacement evaluation with comparable options and pricing.">
+  <meta name="twitter:description" content="Search by model or plain-language description to identify likely replacements, understand why they were chosen, and document confidence for claim-ready decisions.">
   <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": "Smart Lookup – Item Assist",
-    "description": "Enter a model number or item description and get an AI-powered LKQ replacement evaluation with comparable options and pricing.",
+    "description": "Search by model or plain-language description to identify likely replacements, understand why they were chosen, and document confidence for claim-ready decisions.",
     "url": "https://www.decodemyitem.com/smart-lookup",
     "publisher": {
       "@type": "Organization",
@@ -38,6 +38,7 @@
   }
   </script>
   <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="mobile-smart-lookup.css">
   <style>
     .hidden { display: none !important; }
 
@@ -170,6 +171,26 @@
       padding-left: 18px;
       color: #334155;
     }
+    .lookup-step-kicker { width: 100%; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--teal); }
+    .smart-examples { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; align-items:center; }
+    .smart-examples-label { width:100%; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
+    .smart-example-chip, .smart-recent-chip, .smart-recent-clear, .sl-inline-action { border:1px solid rgba(0,201,167,0.22); background:rgba(255,255,255,0.06); color:var(--white); border-radius:999px; padding:8px 12px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+    .smart-example-chip:hover, .smart-recent-chip:hover, .smart-recent-clear:hover, .sl-inline-action:hover { background:rgba(0,201,167,0.12); }
+    .smart-recent-panel { margin-top:16px; padding:14px; border:1px solid rgba(255,255,255,0.08); border-radius:14px; background:rgba(255,255,255,0.04); }
+    .smart-recent-header { display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:10px; color:var(--white); font-size:13px; }
+    .smart-recent-list { display:flex; flex-wrap:wrap; gap:10px; }
+    .smart-recent-empty { color:var(--muted); font-size:12px; }
+    .smart-loading-steps { width:min(100%, 520px); display:grid; gap:8px; margin-top:8px; }
+    .smart-loading-step { font-size:12px; color:#64748b; border:1px solid #dbe4ee; border-radius:999px; padding:8px 12px; background:#fff; text-align:left; }
+    .smart-loading-step.is-active { color:#0f172a; border-color:#93c5fd; background:#eff6ff; font-weight:700; }
+    .smart-loading-step.is-complete { color:#166534; border-color:#86efac; background:#f0fdf4; }
+    .sl-panel-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+    .sl-badge-row { display:flex; flex-wrap:wrap; gap:8px; }
+    .sl-badge-strong { background:#fff7ed; border-color:#fdba74; }
+    .sl-panel-copy { margin-top:10px; font-size:13px; line-height:1.55; color:#334155; }
+    .sl-panel-subhead { margin-top:10px; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#64748b; }
+    .sl-bullet-list-compact { margin-top:8px; }
+    .sl-action-row { display:flex; justify-content:flex-end; }
 
     /* ─── LOADING ─── */
     .loading-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px; }
@@ -234,12 +255,17 @@
       .results-footer { padding: 12px; gap: 8px; }
       .results-footer button { flex: 1 1 100%; }
       .lkq-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .lookup-box { padding:22px 18px 20px; }
+      .smart-examples, .smart-recent-list, .sl-action-row { flex-direction:column; align-items:stretch; }
+      .smart-example-chip, .smart-recent-chip, .sl-inline-action { width:100%; text-align:left; }
+      .smart-loading-steps { width:100%; }
+      .sl-summary-band, .sl-panel-grid { grid-template-columns:1fr; }
       .lkq-id-row { grid-template-columns: 1fr; gap: 2px; }
       .lkq-id-label { padding-bottom: 0; }
     }
   </style>
 </head>
-<body>
+<body data-page-kind="smart-lookup">
 
 <!-- ─── NAV ─── -->
 <nav>
@@ -271,26 +297,42 @@
     <span style="color:var(--amber);">AI-Powered</span>
   </div>
   <h1>Smart <em>Lookup</em></h1>
-  <p class="hero-sub">Enter a model number or item description and get an AI-powered LKQ replacement evaluation — comparable options, pricing, and a MATCH / CLOSE MATCH / NOT LKQ verdict for each.</p>
+  <p class="hero-sub">Turn rough product info into a faster replacement decision. Smart Lookup identifies the item, surfaces the most current likely replacement, explains why it was chosen, and shows confidence + source cues you can review quickly.</p>
 </section>
 
 <!-- ─── LOOKUP TOOL ─── -->
 <section class="section" style="padding-top:32px;">
   <div class="lookup-box">
     <span class="section-label">✨ Smart Lookup</span>
+    <p class="search-hint" style="margin:-4px 0 14px; font-size:13px; color:#d8e3ee;">Built for adjusters, contractors, property managers, and anyone who needs a defensible first-pass replacement fast.</p>
 
     <label for="smart-lookup-input">Model Number or Description</label>
     <input type="text" id="smart-lookup-input" class="search-input"
            placeholder="e.g., LG WM4000HWA or LG front load washing machine"
            style="margin-bottom:6px;">
-    <p class="search-hint">Enter a model number or item description. Works for appliances, HVAC, electronics, generators, commercial equipment, and more.</p>
+    <p class="search-hint">Enter a model number or item description. Works for appliances, HVAC, electronics, generators, commercial equipment, and more. Results include reasoning, verification cues, and lightweight source transparency.</p>
 
     <div class="lookup-actions">
+      <div class="lookup-step-kicker">Try a model, brand + model family, or a plain-language description.</div>
       <button class="btn-amber" type="button" onclick="runLKQLookup()">Search</button>
       <label class="lookup-checkbox" for="include-replacement-comparisons">
         <input type="checkbox" id="include-replacement-comparisons" checked>
         <span>Include Replacement Options</span>
       </label>
+    </div>
+    <div class="smart-examples">
+      <span class="smart-examples-label">Example searches</span>
+      <button type="button" class="smart-example-chip" onclick="applySmartLookupExample('LG WM4000HWA')">LG WM4000HWA</button>
+      <button type="button" class="smart-example-chip" onclick="applySmartLookupExample('Rinnai tankless water heater RU199')">Rinnai tankless water heater RU199</button>
+      <button type="button" class="smart-example-chip" onclick="applySmartLookupExample('Samsung 65 inch QLED TV QN65Q80')">Samsung 65 inch QLED TV QN65Q80</button>
+      <button type="button" class="smart-example-chip" onclick="applySmartLookupExample('Generac standby generator 22kW')">Generac standby generator 22kW</button>
+    </div>
+    <div class="smart-recent-panel" id="smartRecentPanel">
+      <div class="smart-recent-header">
+        <strong>Recent lookups</strong>
+        <button type="button" class="smart-recent-clear" onclick="clearRecentSmartLookups()">Clear</button>
+      </div>
+      <div class="smart-recent-list" id="smartRecentList"></div>
     </div>
     <p class="search-link" style="margin-top:12px;">Have a serial number? <a href="index.html">Use the Serial Decoder →</a></p>
   </div>
@@ -320,6 +362,12 @@
   <div class="loading-inner">
     <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
     <div class="loading-text" id="loadingText">Researching product information...</div>
+    <div class="smart-loading-steps" id="smartLoadingSteps">
+      <div class="smart-loading-step is-active" data-step="interpret">1. Interpreting search</div>
+      <div class="smart-loading-step" data-step="identify">2. Identifying item</div>
+      <div class="smart-loading-step" data-step="compare">3. Comparing replacements</div>
+      <div class="smart-loading-step" data-step="verify">4. Packaging results</div>
+    </div>
   </div>
 </div>
 
@@ -343,6 +391,7 @@
     <a href="methodology.html">Methodology</a>
     <a href="contact.html">Contact</a>
     <a href="security.html">Security &amp; Data Notice</a>
+    <a href="analytics-report.html">Analytics Report</a>
   </div>
 </footer>
 
@@ -370,6 +419,9 @@
           <option value="wrong_month">Wrong month</option>
           <option value="wrong_brand">Wrong brand identified</option>
           <option value="format_error">Format / decode error</option>
+          <option value="replacement_incorrect">Incorrect replacement recommendation</option>
+          <option value="replacement_outdated">Replacement is outdated / not current-market</option>
+          <option value="pricing_issue">Pricing / retailer issue</option>
           <option value="other">Other</option>
         </select>
       </div>
@@ -388,10 +440,17 @@
 
 <script src="decoder-data.js"></script>
 <script src="lkq-engine.js"></script>
+<script src="analytics.js"></script>
+<script src="smart-lookup-extras.js"></script>
 <script src="smart-lookup-normalizer.js"></script>
 <script src="smart-lookup-summary-render.js"></script>
 <script src="script.js"></script>
 <script src="smart-lookup.js"></script>
+<script src="smart-lookup-upgrade-patch.js"></script>
 <script src="shared.js"></script>
 </body>
 </html>
+/html>
+body>
+</html>
+/html>

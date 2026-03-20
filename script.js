@@ -156,6 +156,24 @@ function toggleSidebar() {
 }
 var currentFeedbackContext = {};
 var CURRENT_YEAR = new Date().getFullYear();
+
+function trackAnalyticsEvent(name, payload) {
+  try {
+    if (window.ItemAssistAnalytics && typeof window.ItemAssistAnalytics.track === 'function') {
+      window.ItemAssistAnalytics.track(name, payload || {});
+    }
+  } catch (_) {}
+}
+
+function trackSmartLookupEvent(name, payload) {
+  var inputEl = getSmartLookupInputEl ? getSmartLookupInputEl() : null;
+  var query = payload && payload.query ? payload.query : normalizeSmartLookupQuery((inputEl && inputEl.value) || '');
+  trackAnalyticsEvent(name, Object.assign({
+    context: 'smart-lookup',
+    query: query,
+    mobile: !!(window.matchMedia && window.matchMedia('(max-width: 760px)').matches)
+  }, payload || {}));
+}
 var KENMORE_DEFAULT_NOTE = 'For more accurate results, please enter the first 3 digits of your Kenmore model number.';
 var KENMORE_PREFIX_TO_DECODER = {
   '106': { manufacturer: 'Whirlpool', decoderId: 'whirlpool' },
@@ -180,6 +198,7 @@ var KENMORE_PREFIX_TO_DECODER = {
   '417': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
   '662': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
   '628': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
+  '795': { manufacturer: 'LG', decoderId: 'lg' },
   '791': { manufacturer: 'Tappan', decoderId: 'tappan' },
   '790': { manufacturer: 'WCI', decoderId: 'white_consolidated_industries_wci' },
   '362': { manufacturer: 'General Electric', decoderId: 'ge' },
@@ -632,7 +651,7 @@ function resetHomePageSearch() {
     history.replaceState({}, '', '/');
   } catch (_) {}
 
-  window.scrollTo(0, 0);
+  scrollPageToTop(true);
   setTimeout(function() {
     if (brandSelect && brandSelect.focus) brandSelect.focus();
     else if (serialInput && serialInput.focus) serialInput.focus();
@@ -1870,7 +1889,7 @@ function navigateSpa(url, options) {
       if (!options || !options.replace) {
         history.pushState({}, '', target.pathname + target.search);
       }
-      if (options && options.scroll) window.scrollTo(0, 0);
+      if (options && options.scroll) scrollPageToTop(true);
       initPage();
       if (typeof window.initSmartLookupPage === 'function') {
         window.initSmartLookupPage();
@@ -1885,13 +1904,25 @@ function navigateSpa(url, options) {
 }
 
 // ===== INIT =====
+try {
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+} catch (_) {}
+
 document.addEventListener('DOMContentLoaded', function() {
+  scrollPageToTop(true);
+  setTimeout(function() { scrollPageToTop(true); }, 0);
+  setTimeout(function() { scrollPageToTop(true); }, 120);
   ensureMainContentShell();
   initSpaNavigation();
   initPage();
   if (typeof window.initSmartLookupPage === 'function') {
     window.initSmartLookupPage();
   }
+});
+
+window.addEventListener('pageshow', function() {
+  scrollPageToTop(true);
+  setTimeout(function() { scrollPageToTop(true); }, 50);
 });
 
 // ===== CATEGORY SELECTION =====
@@ -1972,6 +2003,8 @@ function showEraGroup() {
 }
 
 function hideEraGroup() {
+  var brandEl = document.getElementById('brand');
+  var brandId = brandEl ? brandEl.value : '';
   document.getElementById('eraGroup').classList.add('hidden');
   document.getElementById('eraSelect').value = '';
   updateModelFieldVisibility(brandId);
@@ -2015,11 +2048,15 @@ function updateDecodeBtn() {
   var brandEl  = dom.brandEl;
   var serialEl = dom.serialEl;
   var btnEl    = dom.btnEl;
+  var kenmorePrefixEl = document.getElementById('kenmoreModelPrefix');
   if (!brandEl || !serialEl || !btnEl) return;
   var brand  = brandEl.value;
   var serial = serialEl.value.trim();
   var decoderId = brand ? resolveDecoderId(brand) : null;
-  btnEl.disabled = !(brand && serial && decoderId);
+  var isKenmore = String(normalizeBrandId(brand) || '').toLowerCase() === 'kenmore';
+  var kenmorePrefix = kenmorePrefixEl ? String(kenmorePrefixEl.value || '').replace(/\D/g, '').substring(0, 3) : '';
+  var kenmoreReady = !isKenmore || kenmorePrefix.length === 3;
+  btnEl.disabled = !(brand && serial && decoderId && kenmoreReady);
 }
 
 // ===== YEAR CAP (never return future dates) =====
@@ -2173,7 +2210,7 @@ function ensureRefinementPanel() {
   panel = document.createElement('div');
   panel.className = 'narrow-date-panel hidden';
   panel.innerHTML = '' +
-    '<h4>Narrow the Date (Recommended)</h4>' +
+    '<h4>Narrow the Date</h4>' +
     '<p class="narrow-date-note">Multiple possible dates were found. Add model/context to refine.</p>' +
     '<div class="narrow-date-fields">' +
       '<input type="text" id="narrowModelInput" class="form-input" placeholder="Model number">' +
@@ -2183,8 +2220,10 @@ function ensureRefinementPanel() {
     '<div id="narrowDateOutput" class="narrow-date-output"></div>';
   var resultsBody = serialResults.querySelector('.results-body');
   if (resultsBody) {
+    var summaryLayer = resultsBody.querySelector('#serialSummaryLayer');
     var queryLine = resultsBody.querySelector('.result-query');
-    if (queryLine) queryLine.insertAdjacentElement('afterend', panel);
+    if (summaryLayer) summaryLayer.insertAdjacentElement('afterend', panel);
+    else if (queryLine) queryLine.insertAdjacentElement('afterend', panel);
     else resultsBody.insertAdjacentElement('afterbegin', panel);
   } else {
     var moreOptions = serialResults.querySelector('.more-options-section');
@@ -2237,9 +2276,10 @@ function buildSearchQueryText() {
 }
 
 function updateSearchQueryLine() {
-  var line = ensureSearchQueryLine();
-  if (!line) return;
-  line.textContent = buildSearchQueryText();
+  var serialResults = document.getElementById('serialResults');
+  if (!serialResults) return;
+  var existing = serialResults.querySelector('.result-query');
+  if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
 }
 
 function ensureResultWarningBlock() {
@@ -2350,26 +2390,33 @@ function ensureBrandAliasSearch() {
 }
 function ensureKenmorePrefixField() {
   var formArea = document.querySelector('.form-area');
-  if (!formArea) return null;
+  var panelDecoder = document.getElementById('panel-decoder');
+  if (!formArea && !panelDecoder) return null;
   if (document.getElementById('kenmoreModelPrefix')) return document.getElementById('kenmoreModelPrefix');
   var serialInput = document.getElementById('serial');
   var serialGroup = serialInput ? serialInput.closest('.form-group') : null;
+  var homeToolRow = serialInput ? serialInput.closest('.home-tool-row') : null;
   var group = document.createElement('div');
   group.className = 'form-group kenmore-prefix-group hidden';
   group.innerHTML = '' +
     '<label class="step-label" for="kenmoreModelPrefix">Kenmore Model Prefix (first 3 digits)</label>' +
-    '<input type="text" id="kenmoreModelPrefix" class="form-input" placeholder="e.g., 106" maxlength="3" inputmode="numeric" pattern="[0-9]*">' +
-    '<div class="helper-text kenmore-prefix-note">Optional but recommended for Kenmore: enter the first 3 digits of the model number.</div>';
+    '<input type="text" id="kenmoreModelPrefix" class="form-input search-input" placeholder="e.g., 795" maxlength="3" inputmode="numeric" pattern="[0-9]*">' +
+    '<div class="helper-text kenmore-prefix-note">Required for Kenmore: enter the first 3 digits of the model number so the correct OEM decoding method is used.</div>';
   if (serialGroup && serialGroup.parentNode) {
     serialGroup.insertAdjacentElement('afterend', group);
-  } else {
+  } else if (homeToolRow && homeToolRow.parentNode) {
+    homeToolRow.insertAdjacentElement('afterend', group);
+  } else if (formArea) {
     formArea.appendChild(group);
+  } else if (panelDecoder) {
+    panelDecoder.appendChild(group);
   }
   var input = document.getElementById('kenmoreModelPrefix');
   if (input && input.getAttribute('data-prefix-bound') !== '1') {
     input.setAttribute('data-prefix-bound', '1');
     input.addEventListener('input', function() {
       input.value = (input.value || '').replace(/\D/g, '').substring(0, 3);
+      if (typeof updateDecodeBtn === 'function') updateDecodeBtn();
     });
   }
   return input;
@@ -2497,6 +2544,85 @@ function chooseCandidateFromLookup(candidates, lookupData) {
   };
 }
 
+function renderSerialSummaryLayer() {
+  var layer = document.getElementById('serialSummaryLayer');
+  var serialEl = document.getElementById('serial');
+  var yearEl = document.getElementById('resultYear');
+  var monthEl = document.getElementById('resultMonth');
+  var brandEl = document.getElementById('resultBrand');
+  var ageEl = document.getElementById('resultEstimatedAge');
+  var methodEl = document.getElementById('resultMethod');
+  var notesEl = document.getElementById('resultNotes');
+  var monthRow = document.getElementById('resultMonthRow');
+  var determinationEl = document.getElementById('serialDeterminationBody');
+  var serialValue = serialEl ? (serialEl.value || '').trim() : '';
+  var year = yearEl ? (yearEl.textContent || '').trim() : '';
+  var month = monthEl ? (monthEl.textContent || '').trim() : '';
+  var brand = brandEl ? (brandEl.textContent || '').trim() : '';
+  var age = ageEl ? (ageEl.textContent || '').trim() : '';
+  var method = methodEl ? (methodEl.textContent || '').trim() : '';
+  var notes = notesEl ? (notesEl.textContent || '').trim() : '';
+  var determination = determinationEl ? (determinationEl.textContent || '').trim() : '';
+  var monthVisible = !monthRow || !window.getComputedStyle || window.getComputedStyle(monthRow).display !== 'none';
+  var queryText = buildSearchQueryText();
+  var heroRows = [];
+  var refinementMount;
+  var refinePanel;
+  var lkqMount;
+  var lkqEntrySection;
+
+  if (!layer) return;
+
+  if (monthVisible && month) heroRows.push('<div class="serial-hero-row"><span class="serial-hero-row-label">Month / Period</span><span class="serial-hero-row-value">' + esc(month) + '</span></div>');
+  heroRows.push('<div class="serial-hero-row"><span class="serial-hero-row-label">Brand</span><span class="serial-hero-row-value">' + esc(brand || 'N/A') + '</span></div>');
+  heroRows.push('<div class="serial-hero-row"><span class="serial-hero-row-label">Estimated Age</span><span class="serial-hero-row-value">' + esc((age && age !== '—') ? age : 'N/A') + '</span></div>');
+
+  layer.innerHTML = '' +
+    '<div class="serial-query-chip">' + esc(queryText || 'Search Query: —') + '</div>' +
+    '<div class="serial-top-grid">' +
+      '<section class="serial-result-hero">' +
+        '<div class="serial-result-eyebrow">Decoded Result</div>' +
+        '<div class="serial-result-main">' + esc(year || 'N/A') + '</div>' +
+        '<div class="serial-result-subline"><strong>Serial Number:</strong> ' + esc(serialValue || '—') + '</div>' +
+        '<div class="serial-hero-rows">' + heroRows.join('') + '</div>' +
+      '</section>' +
+      '<div class="sl-summary-card serial-method-card">' +
+        '<h4>Decoding Method</h4>' +
+        '<p class="sl-panel-copy">' + esc(method || 'Method unavailable.') + '</p>' +
+      '</div>' +
+    '</div>' +
+    '<div class="serial-secondary-grid">' +
+      '<div id="serialRefinementMount"></div>' +
+      '<div id="serialLkqMount"></div>' +
+    '</div>' +
+    '<div class="serial-bottom-grid">' +
+      '<div class="sl-summary-card">' +
+        '<h4>Important Notes</h4>' +
+        '<p class="sl-panel-copy">' + esc(notes || 'No additional notes.') + '</p>' +
+      '</div>' +
+      '<div class="sl-summary-card">' +
+        '<h4>How this was determined</h4>' +
+        '<p class="sl-panel-copy">' + esc(determination || 'We used the brand\'s serial format rules to estimate the manufacture date.') + '</p>' +
+      '</div>' +
+    '</div>';
+
+  refinementMount = document.getElementById('serialRefinementMount');
+  refinePanel = ensureRefinementPanel();
+  if (refinePanel && refinementMount) refinementMount.appendChild(refinePanel);
+
+  lkqMount = document.getElementById('serialLkqMount');
+  lkqEntrySection = document.querySelector('.lkq-entry-section');
+  if (lkqEntrySection && lkqMount) lkqMount.appendChild(lkqEntrySection);
+
+  if (refinePanel && refinePanel.classList && refinePanel.classList.contains('hidden')) {
+    layer.classList.add('serial-no-refine');
+  } else {
+    layer.classList.remove('serial-no-refine');
+  }
+
+  layer.classList.remove('hidden');
+}
+
 async function refineAmbiguousResult() {
   var output = document.getElementById('narrowDateOutput');
   var modelEl = document.getElementById('narrowModelInput');
@@ -2580,6 +2706,13 @@ function decodeSerial() {
   var isKenmore = (normalizeBrandId(metaBrandId) === 'kenmore');
   var kenmoreResolution = null;
   if (isKenmore) {
+    var kenmorePrefixEl = document.getElementById('kenmoreModelPrefix');
+    var kenmorePrefix = kenmorePrefixEl ? String(kenmorePrefixEl.value || '').replace(/\D/g, '').substring(0, 3) : '';
+    if (kenmorePrefix.length !== 3) {
+      showCustomAlert('Kenmore requires the first 3 digits of the model number so the correct OEM decoding method can be used. Example: 795.');
+      if (kenmorePrefixEl && kenmorePrefixEl.focus) kenmorePrefixEl.focus();
+      return;
+    }
     kenmoreResolution = resolveKenmoreDecoderFromPrefix();
     brandId = kenmoreResolution.decoderId;
   }
@@ -2715,6 +2848,8 @@ function decodeSerial() {
       }
     }
 
+    renderSerialSummaryLayer();
+
     setLoadingSuccess(function() {
       document.getElementById('serialResults').classList.remove('hidden');
       document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -2789,6 +2924,17 @@ function copyClaimFile() {
 }
 
 // ===== DECODE ANOTHER ITEM =====
+function scrollPageToTop(forceInstant) {
+  var behavior = forceInstant ? 'auto' : 'smooth';
+  try {
+    window.scrollTo({ top: 0, left: 0, behavior: behavior });
+  } catch (_) {
+    window.scrollTo(0, 0);
+  }
+  if (document.documentElement) document.documentElement.scrollTop = 0;
+  if (document.body) document.body.scrollTop = 0;
+}
+
 function decodeAnotherItem() {
   var serialResults = document.getElementById('serialResults');
   var ageResults = document.getElementById('ageResults');
@@ -2798,6 +2944,11 @@ function decodeAnotherItem() {
   if (serialResults) serialResults.classList.add('hidden');
   if (ageResults) ageResults.classList.add('hidden');
   if (ageLoading) ageLoading.classList.add('hidden');
+  var serialSummaryLayer = document.getElementById('serialSummaryLayer');
+  if (serialSummaryLayer) {
+    serialSummaryLayer.innerHTML = '';
+    serialSummaryLayer.classList.add('hidden');
+  }
   if (serialInput) serialInput.value = '';
   var kenmorePrefix = document.getElementById('kenmoreModelPrefix');
   if (kenmorePrefix) kenmorePrefix.value = '';
@@ -2815,9 +2966,7 @@ function decodeAnotherItem() {
   LKQEngine.clearInstance('smart-lookup');
   clearSmartLookupAssist();
   updateDecodeBtn();
-  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-  if (document.documentElement) document.documentElement.scrollTop = 0;
-  if (document.body) document.body.scrollTop = 0;
+  scrollPageToTop(true);
   setTimeout(function() {
     if (serialInput) {
       try {
@@ -3097,6 +3246,27 @@ function showSmartLookupAssistLoading() {
     '</div>';
 }
 
+function looksLikeSpecificSmartLookupQuery(query) {
+  var value = normalizeSmartLookupQuery(query);
+  var compact;
+  var tokens;
+  var hasMixedToken;
+  var hasLongDigitRun;
+  if (!value) return false;
+
+  compact = value.replace(/[^A-Za-z0-9]/g, '');
+  tokens = value.split(/\s+/).filter(Boolean);
+  hasMixedToken = tokens.some(function (token) {
+    return /[A-Za-z]/.test(token) && /\d/.test(token) && token.replace(/[^A-Za-z0-9]/g, '').length >= 5;
+  });
+  hasLongDigitRun = /\b\d{5,}\b/.test(value);
+
+  if (hasMixedToken) return true;
+  if (compact.length >= 8 && /[A-Za-z]/.test(compact) && /\d/.test(compact)) return true;
+  if (tokens.length >= 3 && hasLongDigitRun) return true;
+  return false;
+}
+
 async function fetchSmartLookupInterpretation(query) {
   var res = await fetch('/api/smart-query-interpret', {
     method: 'POST',
@@ -3212,14 +3382,16 @@ async function runAgeOnlyLookup(query, opts) {
   try {
     var data = await fetchAgeLookup(query);
     var elapsed = Date.now() - loadStart;
-    var remaining = Math.max(0, 1000 - elapsed);
+    var remaining = Math.max(0, 200 - elapsed);
     currentFeedbackContext = { brand: data.brand || '', serial: displayQuery };
+    trackSmartLookupEvent('result_success', { query: displayQuery, queryKind: 'age-only', brand: data.brand || '', category: data.itemCategory || '', resultType: 'age-only' });
     setTimeout(function () {
       setLoadingSuccess(function () {
         showAgeLookupResults(displayQuery, data);
       });
     }, remaining);
   } catch (_) {
+    trackSmartLookupEvent('result_failure', { query: displayQuery, queryKind: 'age-only', resultType: 'age-only' });
     setLoadingHidden();
     showSmartLookupNotice('limit', 'Smart Lookup is temporarily unavailable. Please try again.');
   }
@@ -3239,16 +3411,25 @@ function showGeneralSmartLookupResults(query, data) {
   headingMeta.push('<span><strong>Category:</strong> ' + escapeSmartLookupHtml(category) + '</span>');
 
   resultsEl.innerHTML =
-    '<div class="smart-general-card">' +
-      '<div class="smart-general-section smart-general-overview">' +
-        '<div class="smart-general-section-title">General Item Overview</div>' +
+    '<div class="smart-general-card smart-general-card-upgraded">' +
+      '<div class="smart-general-section smart-general-overview smart-general-hero">' +
+        '<div class="smart-general-kicker">General result</div>' +
+        '<div class="smart-general-section-title">We found the product family, but not a single verified model yet</div>' +
         '<div class="smart-general-meta">' + headingMeta.join('') + '</div>' +
         '<p class="smart-general-overview-text">' + escapeSmartLookupHtml((data && data.overview) || '') + '</p>' +
-        '<p class="smart-general-overview-note">Showing general results. Select a model below for specific LKQ options.</p>' +
+        '<p class="smart-general-overview-note">This is intentional: your search is broad enough to describe a family of products, so the result stays general until you choose a more specific model path.</p>' +
+      '</div>' +
+      '<div class="smart-general-section smart-general-steps">' +
+        '<div class="smart-general-section-title">Best next step</div>' +
+        '<div class="smart-general-path-grid">' +
+          '<div class="smart-general-path-card smart-general-path-card-primary"><strong>1. Pick a likely model</strong><span>Best for a defendable replacement result.</span></div>' +
+          '<div class="smart-general-path-card"><strong>2. Run average-model comparison</strong><span>Useful when only the product family is known.</span></div>' +
+          '<div class="smart-general-path-card"><strong>3. Research more model numbers</strong><span>Open a broader search if you need to identify the exact unit first.</span></div>' +
+        '</div>' +
       '</div>' +
       '<div class="smart-general-section smart-general-refine">' +
-        '<div class="smart-general-section-title">Refine Your Result</div>' +
-        '<p class="smart-general-subtitle">Your search returned a general result. Select a specific model below or enter a model number to get full LKQ options.</p>' +
+        '<div class="smart-general-section-title">Choose a more specific model path</div>' +
+        '<p class="smart-general-subtitle">Tap one of these likely refinements to move from a general category result to a model-based replacement evaluation.</p>' +
         '<div class="smart-general-refine-list">' +
           refineOptions.map(function (item, index) {
             return '<button type="button" class="smart-general-refine-pill" data-refine-query="' + escapeSmartLookupHtml(item.query) + '" data-refine-index="' + index + '">' + escapeSmartLookupHtml(item.label) + '</button>';
@@ -3256,13 +3437,13 @@ function showGeneralSmartLookupResults(query, data) {
         '</div>' +
       '</div>' +
       '<div class="smart-general-section smart-general-lkq">' +
-        '<div class="smart-general-section-title">LKQ Options</div>' +
+        '<div class="smart-general-section-title">Continue with a guided fallback</div>' +
         '<div class="smart-general-lkq-placeholder" id="smart-general-lkq-placeholder">' +
           '<div class="smart-general-lkq-actions">' +
-            '<button type="button" class="smart-general-primary" id="smart-general-average-btn">Calculate LKQ Options Based on Average Model</button>' +
-            '<button type="button" class="smart-general-secondary" id="smart-general-research-btn">Research Possible Models</button>' +
+            '<button type="button" class="smart-general-primary" id="smart-general-average-btn">Run average-model replacement check</button>' +
+            '<button type="button" class="smart-general-secondary" id="smart-general-research-btn">Research more possible models</button>' +
           '</div>' +
-          '<p class="smart-general-subtitle">Choose an average representative model or research model numbers to refine this search.</p>' +
+          '<p class="smart-general-subtitle">If you cannot identify the exact model, use the average-model path as a rougher first pass and document that the result remains generalized.</p>' +
         '</div>' +
         '<div class="smart-general-lkq-note" id="smart-general-lkq-note"></div>' +
         '<div class="smart-general-lkq-target" id="smart-general-lkq-target"></div>' +
@@ -3277,6 +3458,7 @@ function showGeneralSmartLookupResults(query, data) {
       var nextQuery = normalizeSmartLookupQuery(btn.getAttribute('data-refine-query'));
       var inputEl = getSmartLookupInputEl();
       if (!nextQuery || !target) return;
+      trackSmartLookupEvent('refinement_click', { query: query, refinedQuery: nextQuery, queryKind: 'general' });
       if (inputEl) inputEl.value = nextQuery;
       if (placeholder) placeholder.classList.add('hidden');
       if (note) note.textContent = '';
@@ -3299,6 +3481,7 @@ function showGeneralSmartLookupResults(query, data) {
         var placeholder = document.getElementById('smart-general-lkq-placeholder');
         var inputEl = getSmartLookupInputEl();
         if (!averageQuery || !target) return;
+        trackSmartLookupEvent('refinement_click', { query: query, refinedQuery: averageQuery, queryKind: 'general', action: 'average-model' });
         if (inputEl) inputEl.value = averageQuery;
         if (placeholder) placeholder.classList.add('hidden');
         if (note) {
@@ -3315,11 +3498,13 @@ function showGeneralSmartLookupResults(query, data) {
     }
     if (researchBtn) {
       researchBtn.addEventListener('click', function () {
+        trackSmartLookupEvent('refinement_click', { query: query, queryKind: 'general', action: 'research-more-models' });
         window.open('https://www.google.com/search?q=' + encodeURIComponent(query + ' model numbers'), '_blank', 'noopener,noreferrer');
       });
     }
   })();
 
+  trackSmartLookupEvent('result_success', { query: query, queryKind: 'general', brand: brand, category: category, resultType: 'general' });
   if (ageResultsEl) {
     ageResultsEl.classList.remove('hidden');
     ageResultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -3415,6 +3600,7 @@ async function runGeneralSmartLookup(query) {
       });
     }, remaining);
   } catch (_) {
+    trackSmartLookupEvent('result_failure', { query: query, queryKind: 'general', resultType: 'general' });
     setLoadingHidden();
     showSmartLookupNotice('limit', 'Smart Lookup is temporarily unavailable. Please try again.');
   }
@@ -3478,6 +3664,13 @@ async function executeSmartLookup(query, opts) {
         });
       }
       prependSmartLookupSummaryLayer(resultsEl, normalizedResult);
+      trackSmartLookupEvent('result_success', {
+        query: originalQuery,
+        queryKind: (interpretData && interpretData.queryKind) || '',
+        brand: normalizedResult && normalizedResult.identity && normalizedResult.identity.brand,
+        category: normalizedResult && normalizedResult.identity && normalizedResult.identity.category,
+        resultType: preserveGeneral ? 'general-refined-lkq' : 'lkq'
+      });
       var elapsed = Date.now() - loadStart;
       var remaining = Math.max(0, 1400 - elapsed);
       setTimeout(function () {
@@ -3494,6 +3687,12 @@ async function executeSmartLookup(query, opts) {
       }, remaining);
     },
     onError: function (type, message) {
+      trackSmartLookupEvent('result_failure', {
+        query: originalQuery,
+        queryKind: (interpretData && interpretData.queryKind) || '',
+        failureType: type || 'unknown',
+        resultType: preserveGeneral ? 'general-refined-lkq' : 'lkq'
+      });
       if (preserveGeneral) {
         resultsEl.innerHTML =
           '<div class="smart-general-inline-error">' + escapeSmartLookupHtml(message || 'Smart Lookup is temporarily unavailable. Please try again.') + '</div>';
@@ -3574,20 +3773,47 @@ async function runLKQLookup() {
   var resolvedQuery;
   var interpreted;
   var includeComparisons;
+  var canBypassInterpret;
   if (!inputEl || !document.getElementById('smart-lookup-input')) return;
   query = normalizeSmartLookupQuery(inputEl.value || '');
   inputEl.value = query;
   if (!query) return;
   resolvedQuery = expandKnownSmartLookupQuery(query);
   includeComparisons = shouldIncludeSmartLookupComparisons();
+  trackSmartLookupEvent('search_started', { query: query, includeComparisons: includeComparisons });
+  if (typeof window.recordRecentSmartLookup === 'function') window.recordRecentSmartLookup(query);
+  canBypassInterpret = looksLikeSpecificSmartLookupQuery(resolvedQuery);
   clearSmartLookupAssist();
 
   try {
+    if (canBypassInterpret) {
+      interpreted = {
+        action: 'bypass',
+        queryKind: 'specific',
+        confidence: 'high',
+        scopeValid: true,
+        message: null,
+        suggestions: [resolvedQuery],
+        fastPath: true
+      };
+      trackSmartLookupEvent('query_path_selected', { query: query, queryKind: 'specific', path: 'fast-path' });
+      if (includeComparisons) {
+        executeSmartLookup(resolvedQuery, {
+          interpretData: interpreted,
+          originalQuery: query
+        });
+      } else {
+        runAgeOnlyLookup(resolvedQuery, { displayQuery: query });
+      }
+      return;
+    }
+
     showSmartLookupAssistLoading();
     interpreted = await fetchSmartLookupInterpretation(resolvedQuery);
     clearSmartLookupAssist();
 
     if (interpreted && interpreted.action === 'bypass' && interpreted.queryKind === 'specific') {
+      trackSmartLookupEvent('query_path_selected', { query: query, queryKind: 'specific', path: 'interpreted-bypass' });
       if (includeComparisons) {
         executeSmartLookup((interpreted.suggestions && interpreted.suggestions[0]) || resolvedQuery, {
           interpretData: interpreted,
@@ -3599,15 +3825,18 @@ async function runLKQLookup() {
       return;
     }
     if (interpreted && interpreted.queryKind === 'general') {
+      trackSmartLookupEvent('query_path_selected', { query: query, queryKind: 'general', path: 'general' });
       if (includeComparisons) runGeneralSmartLookup(resolvedQuery);
       else runAgeOnlyLookup(resolvedQuery, { displayQuery: query });
       return;
     }
     if (interpreted && (interpreted.action === 'suggest' || interpreted.action === 'no_results' || interpreted.action === 'out_of_scope')) {
+      trackSmartLookupEvent('query_path_selected', { query: query, queryKind: interpreted.queryKind || 'unrecognized', path: interpreted.action || 'suggest' });
       showUnrecognizedSmartLookupResults(query, interpreted);
       return;
     }
     if (interpreted && interpreted.queryKind === 'specific') {
+      trackSmartLookupEvent('query_path_selected', { query: query, queryKind: 'specific', path: 'specific' });
       if (includeComparisons) {
         executeSmartLookup(resolvedQuery, {
           interpretData: interpreted,
@@ -3689,16 +3918,19 @@ function closeGuide() {
 }
 
 // ===== FEEDBACK MODAL =====
-function openFeedbackModal() {
+function openFeedbackModal(defaultType) {
   var ctx = currentFeedbackContext;
   document.getElementById('fbBrand').value   = ctx.brand  || '';
   document.getElementById('fbSerial').value  = ctx.serial || '';
-  document.getElementById('fbType').value    = '';
+  document.getElementById('fbType').value    = defaultType || '';
   document.getElementById('fbDetails').value = '';
   document.getElementById('fbThanks').classList.add('hidden');
   document.getElementById('fbActions').style.display = '';
   document.getElementById('feedbackModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  if (typeof trackSmartLookupEvent === 'function') {
+    trackSmartLookupEvent('feedback_modal_opened', { issueType: defaultType || '', context: ctx.serial || ctx.brand || '' });
+  }
 }
 
 function closeFeedbackModal() {
@@ -3722,6 +3954,9 @@ async function submitFeedback() {
     // fail silently — still show thank-you
   }
 
+  if (typeof trackSmartLookupEvent === 'function') {
+    trackSmartLookupEvent('feedback_submitted', { brand: brand, query: serial, issueType: issueType });
+  }
   document.getElementById('fbThanks').classList.remove('hidden');
   document.getElementById('fbActions').style.display = 'none';
   setTimeout(closeFeedbackModal, 2200);
