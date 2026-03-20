@@ -3035,34 +3035,49 @@ var decoderData = {
       name: 'Vizio',
       parentManufacturer: 'Vizio Inc.',
       products: 'TV; Soundbar',
-      serialEra: '2010-Present',
-      serialLengthNote: 'Serial: chars 4-5 encode year and week (format varies by series â€” YYWW or WWYY).',
-      method: 'Chars 4-5 = Year/Week code. Decoded using YYWW and WWYY heuristics; verify with model info.',
-      notes: 'Vizio serial number formats vary by TV series. The decoder applies a best-effort heuristic to chars 4-5. If both interpretations are plausible, both are shown. Always verify with Vizio model documentation.',
-      decodeNotes: 'Vizio formats vary by series. Treat decoded results as estimates and verify when possible.',
-      exampleSerial: 'LFTREP23',
-      exampleResult: 'Chars 4-5: E=year hint, P=week hint (heuristic)',
+      serialEra: 'N/A — Decode by model number',
+      serialLengthNote: 'Vizio serial numbers are not reliably decodable. Enter the model number instead.',
+      method: 'Model number decoded using known Vizio naming conventions and product database.',
+      notes: 'Vizio serial number formats vary by TV series and cannot be reliably decoded. Use the model number (e.g., V505-J09, M55Q7-J01, P65Q9-J01) for accurate identification. The model number contains the screen size, series, and year indicator.',
+      decodeNotes: 'Model number required. Serial number decoding is not supported for Vizio.',
+      requiresModel: true,
+      modelInputLabel: 'Enter Vizio model number (e.g., V505-J09)',
+      exampleSerial: 'V505-J09',
+      exampleResult: 'V = Value series, 50 = 50-inch, 5 = sub-series, J = 2021, 09 = variant',
       yearMap: {},
       monthMap: {},
       decode: function(serial) {
-        var s = serial.replace(/\s/g, '');
-        if (s.length < 5) return null;
-        var c4 = s[3];
-        var c5 = s[4];
-        var n4 = parseInt(c4, 10);
-        var n5 = parseInt(c5, 10);
-        if (isNaN(n4) || isNaN(n5)) {
-          return { year: 'Non-numeric code', month: 'Vizio format varies by series - chars 4-5 are "' + c4 + c5 + '". Verify with model documentation.', yearCode: c4 + c5 };
+        // Treat input as model number
+        var model = String(serial).trim().toUpperCase();
+        if (!model) return null;
+
+        // Vizio model format: [Series][Size][Sub]-[YearCode][Variant]
+        // Year codes: G=2019, H=2020, J=2021, K=2022, L=2023, M=2024, N=2025
+        var yearCodes = {
+          'G': 2019, 'H': 2020, 'J': 2021, 'K': 2022,
+          'L': 2023, 'M': 2024, 'N': 2025, 'P': 2026
+        };
+
+        // Try to extract year code from model number
+        // Common formats: V505-J09, M55Q7-J01, P65Q9-J01, D24f-J09
+        var match = model.match(/-([A-Z])\d+$/i);
+        if (match) {
+          var code = match[1].toUpperCase();
+          if (yearCodes[code]) {
+            var yr = yearCodes[code];
+            var currentYear = new Date().getFullYear();
+            var age = currentYear - yr;
+            return {
+              year: String(yr),
+              month: 'Determined from model year code: ' + code,
+              method: 'Vizio model number year code. The letter after the hyphen indicates the model year: ' + code + ' = ' + yr + '.',
+              notes: 'Vizio model numbers encode the year as a letter after the hyphen. ' + code + ' → ' + yr + '. Age: approximately ' + age + ' year' + (age !== 1 ? 's' : '') + '.'
+            };
+          }
         }
-        var results = [];
-        var y1 = (n4 <= 6) ? '202' + c4 : '201' + c4;
-        if (n5 >= 1 && n5 <= 9) results.push(y1 + ', Week ' + c5 + 'x (YYWW read)');
-        var y2 = (n5 <= 6) ? '202' + c5 : '201' + c5;
-        if (n4 >= 1 && n4 <= 9) results.push('Week ' + c4 + 'x, ' + y2 + ' (WWYY read)');
-        if (results.length === 0) {
-          return { year: 'Unable to decode', month: 'Codes "' + c4 + c5 + '" do not match known Vizio patterns. Verify with model documentation.', yearCode: c4 + c5 };
-        }
-        return { year: results.length === 2 ? 'Ambiguous - see note' : (n4 <= 6 ? y1 : y2), month: results.join(' - OR - ') + '. Vizio formats vary; verify with model info.', yearCode: c4 + c5 };
+
+        // If we can't parse the model, return null to trigger fallback
+        return null;
       }
     },
     'panasonic': {
