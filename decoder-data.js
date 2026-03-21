@@ -148,25 +148,30 @@ var decoderData = {
       groupId: '1A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
-      serialLengthNote: 'Second alpha character = year code (letters only).',
-      decodeMethod: 'Second alpha character = year code',
-      yearCodePosition: 'Second alpha character',
+      serialLengthNote: 'Second character = year code for alphanumeric serials; fallback to second alpha character for legacy letter-heavy serials.',
+      decodeMethod: 'Second character = year code (fallback: second alpha character)',
+      yearCodePosition: 'Second character (fallback: second alpha character)',
       monthCodePosition: 'N/A',
       outputType: 'Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped. Some valid Sub-Zero serials use the second character overall as the year code even when it is numeric.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
-      method: 'Second alpha character = year code',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      method: 'Second character = year code (fallback: second alpha character)',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped. Some valid Sub-Zero serials use the second character overall as the year code even when it is numeric.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
       if (!serial) return null;
-      var letters = String(serial).match(/[A-Za-z]/g) || [];
-      if (letters.length < 2) return null;
-      var yearChar = letters[1].toUpperCase();
+      var normalized = String(serial).trim().toUpperCase();
+      if (normalized.length < 2) return null;
+      var yearChar = normalized.charAt(1);
+      if (!this.yearMap[yearChar]) {
+        var letters = normalized.match(/[A-Z]/g) || [];
+        if (letters.length < 2) return null;
+        yearChar = letters[1];
+      }
       var y = this.yearMap[yearChar];
       return { year: y || 'Unknown code: ' + yearChar, month: 'N/A', yearCode: yearChar };
     }

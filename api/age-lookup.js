@@ -1,5 +1,14 @@
 import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
+import {
+  extractLocalModelAgeLookupTerms,
+  findCloseLocalModelAgeCandidates,
+  findExactLocalModelAgeMatch,
+  formatLocalModelAgeMatch,
+  inferLocalModelAgeBrand,
+  loadLocalModelAgeDb,
+  normalizeModelNumber
+} from '../lib/model-age-db.js';
 
 // Initialise once per cold start — not inside the handler
 const redis = new Redis({
@@ -115,6 +124,9 @@ const TODAY_READABLE = new Date().toLocaleDateString('en-US', {
   month: 'long',
   day: 'numeric'
 });
+const LOCAL_DB_STRONG_CANDIDATE_CONFIDENCE = 0.85;
+const LOCAL_DB_SCAN_CONFIDENCE = 0.6;
+const LOCAL_DB_MIN_UNBRANDED_ALIAS_LENGTH = 5;
 
 function findHvacBrand(normalizedQuery) {
   for (const cfg of HVAC_SERIAL_CONFIG) {
@@ -136,6 +148,10 @@ function normalizeBrandKey(name) {
   return String(name || '').toLowerCase().replace(/[^a-z]/g, '');
 }
 
+function normalizeCategoryKey(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z]/g, '');
+}
+
 function normalizeKnownItemQuery(query) {
   const text = String(query || '').trim();
   const normalized = text.toLowerCase();
@@ -152,9 +168,90 @@ function normalizeKnownItemQuery(query) {
   return text;
 }
 
+function shouldReturnLocalExactMatch(match, matchedTerm, inferredBrand) {
+  if (!match) return false;
+  if (match.matchType === 'normalized-exact') return true;
+
+  // Short family aliases like "C3" are too ambiguous unless the brand is explicit.
+  return Boolean(inferredBrand) || normalizeModelNumber(matchedTerm).length >= LOCAL_DB_MIN_UNBRANDED_ALIAS_LENGTH;
+}
+
+function shouldReturnLocalStrongCandidate(candidate, matchedTerm, inferredBrand) {
+  const normalizedTerm = normalizeModelNumber(matchedTerm);
+  if (!candidate || !normalizedTerm) return false;
+
+  if (candidate.matchType === 'normalized-exact') return true;
+  if (candidate.matchType === 'alias-exact') {
+    return Boolean(inferredBrand) || normalizedTerm.length >= LOCAL_DB_MIN_UNBRANDED_ALIAS_LENGTH;
+  }
+
+  if (candidate.confidence < LOCAL_DB_STRONG_CANDIDATE_CONFIDENCE) return false;
+  if (!inferredBrand && normalizedTerm.length < 6) return false;
+  if (candidate.matchType === 'fuzzy' && candidate.metrics.bestDistance > 1) return false;
+  if (candidate.matchType === 'prefix' && candidate.metrics.bestPrefix < 6) return false;
+  if (candidate.metrics.bestDistance > 2 && !candidate.metrics.sharedTokens) return false;
+
+  return candidate.matchType === 'contains' || candidate.matchType === 'prefix' || candidate.matchType === 'fuzzy';
+}
+
+async function findLocalModelAgeResult(sanitizedQuery, normalizedQuery) {
+  const localDb = await loadLocalModelAgeDb();
+  const records = Array.isArray(localDb.records) ? localDb.records : [];
+  const inferredBrand = inferLocalModelAgeBrand(records, sanitizedQuery);
+  const lookupTerms = extractLocalModelAgeLookupTerms(sanitizedQuery);
+
+  if (!lookupTerms.length) return null;
+
+  // Decision path:
+  // 1. Return immediately on a safe exact local hit.
+  // 2. Otherwise only return a candidate if confidence is strong enough.
+  for (const lookupTerm of lookupTerms) {
+    const exactMatch = findExactLocalModelAgeMatch(records, lookupTerm, inferredBrand);
+    if (!shouldReturnLocalExactMatch(exactMatch, lookupTerm, inferredBrand)) continue;
+
+    return applyEraHints(
+      formatLocalModelAgeMatch(exactMatch.record, {
+        confidence: 1,
+        matchType: exactMatch.matchType
+      }),
+      normalizedQuery
+    );
+  }
+
+  let bestCandidate = null;
+  let bestLookupTerm = '';
+
+  for (const lookupTerm of lookupTerms) {
+    const [candidate] = findCloseLocalModelAgeCandidates(records, lookupTerm, inferredBrand, {
+      minConfidence: LOCAL_DB_SCAN_CONFIDENCE,
+      limit: 1
+    });
+
+    if (!candidate) continue;
+    if (!bestCandidate || candidate.confidence > bestCandidate.confidence) {
+      bestCandidate = candidate;
+      bestLookupTerm = lookupTerm;
+    }
+  }
+
+  if (!shouldReturnLocalStrongCandidate(bestCandidate, bestLookupTerm, inferredBrand)) {
+    return null;
+  }
+
+  return applyEraHints(
+    formatLocalModelAgeMatch(bestCandidate.record, {
+      confidence: bestCandidate.confidence,
+      matchType: bestCandidate.matchType
+    }),
+    normalizedQuery
+  );
+}
+
 function applyHvacEraHints(base, normalizedQuery) {
   const out = { ...base };
   const brandKey = normalizeBrandKey(out.brand);
+  const categoryKey = normalizeCategoryKey(out.itemCategory || out.category);
+  if (categoryKey && !/(hvac|airconditioner|furnace|heatpump|condenser|airhandler|heater)/.test(categoryKey)) return out;
   const era = HVAC_ERA_DATA[brandKey];
   if (!era) return out;
 
@@ -183,6 +280,8 @@ function applyHvacEraHints(base, normalizedQuery) {
 function applyApplianceEraHints(base, normalizedQuery) {
   const out = { ...base };
   const brandKey = normalizeBrandKey(out.brand);
+  const categoryKey = normalizeCategoryKey(out.itemCategory || out.category);
+  if (categoryKey && !/(washer|laundry)/.test(categoryKey)) return out;
   const era = APPLIANCE_ERA_DATA[brandKey];
   if (!era) return out;
 
@@ -439,6 +538,22 @@ export default async function handler(req, res) {
   const sanitizedQuery = normalizeKnownItemQuery(query.trim());
   const normalizedQuery = sanitizedQuery.toLowerCase().replace(/\s+/g, ' ');
   const queryCacheKey = `age-lookup:v3:${normalizedQuery}`;
+
+  // Local-first path:
+  // - exact local matches return immediately
+  // - only strong local candidates can override the remote fallback path
+  // - ambiguous or broad queries continue into the existing cache / AI flow
+  try {
+    const localResult = await findLocalModelAgeResult(sanitizedQuery, normalizedQuery);
+    if (localResult) {
+      try {
+        await redis.set(queryCacheKey, localResult, { ex: 14 * 24 * 60 * 60 });
+      } catch (_) {}
+      return res.status(200).json(localResult);
+    }
+  } catch (err) {
+    console.error('[Smart Lookup] Local model age DB lookup failed, continuing to fallback path.', err.message);
+  }
 
   // ── Query-level cache (14-day TTL) ────────────────────────────────────────
   try {
