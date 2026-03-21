@@ -204,16 +204,12 @@ var KENMORE_PREFIX_TO_DECODER = {
   '417': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
   '662': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
   '628': { manufacturer: 'Kelvinator', decoderId: 'kelvinator' },
-<<<<<<< HEAD
-  '795': { manufacturer: 'LG', decoderId: 'lg' },
-=======
   '795': {
     manufacturer: 'LG',
     decoderId: 'lg',
     productCategory: 'Refrigerator',
     notes: 'LG-built Kenmore refrigerators use LG appliance serial rules. The year digit repeats every 10 years, so model era and features help resolve the decade.'
   },
->>>>>>> origin/main
   '791': { manufacturer: 'Tappan', decoderId: 'tappan' },
   '790': { manufacturer: 'WCI', decoderId: 'white_consolidated_industries_wci' },
   '362': { manufacturer: 'General Electric', decoderId: 'ge' },
@@ -324,6 +320,21 @@ var TOP_BRANDS_BY_CATEGORY = {
   'hvac': ['goodman', 'carrier', 'trane', 'rheem', 'lennox'],
   'electronics': ['samsung', 'sony', 'lg', 'vizio', 'panasonic'],
   'water-heaters': ['rheem', 'a_o_smith', 'bradford_white', 'state_industries', 'whirlpool_water_heaters']
+};
+var MOST_COMMON_APPLIANCE_BRANDS = {
+  amana: true,
+  bosch: true,
+  cafe: true,
+  electrolux: true,
+  frigidaire: true,
+  ge: true,
+  hotpoint: true,
+  kenmore: true,
+  kitchenaid: true,
+  lg: true,
+  maytag: true,
+  samsung: true,
+  whirlpool: true
 };
 var SIDEBAR_CATEGORY_LABELS = {
   'appliances': 'Appliances ️',
@@ -828,16 +839,12 @@ function resetHomePageSearch() {
   }
 
   syncSidebarActiveState();
-<<<<<<< HEAD
 
   try {
     history.replaceState({}, '', '/');
   } catch (_) {}
 
   scrollPageToTop(true);
-=======
-  window.scrollTo(0, 0);
->>>>>>> origin/main
   setTimeout(function() {
     var dom3 = getDecodeDom();
     var si = dom3.serialEl;
@@ -2177,13 +2184,47 @@ function populateBrands(category) {
   });
 
   sel.innerHTML = '<option value="">-- Select Brand --</option>';
-  consolidated.forEach(function(b) {
-    var opt = document.createElement('option');
-    opt.value = b.id;
-    opt.textContent = b.name;
-    if (b.cycling) opt.dataset.cycling = '1';
-    sel.appendChild(opt);
-  });
+
+  if (category === 'appliances') {
+    var commonBrands = consolidated.filter(function(b) {
+      return !!MOST_COMMON_APPLIANCE_BRANDS[b.id];
+    });
+    var allBrands = consolidated.slice();
+
+    if (commonBrands.length) {
+      var commonGroup = document.createElement('optgroup');
+      commonGroup.label = 'Most Common';
+      commonBrands.forEach(function(b) {
+        var opt = document.createElement('option');
+        opt.value = b.id;
+        opt.textContent = b.name;
+        if (b.cycling) opt.dataset.cycling = '1';
+        commonGroup.appendChild(opt);
+      });
+      sel.appendChild(commonGroup);
+    }
+
+    if (allBrands.length) {
+      var allGroup = document.createElement('optgroup');
+      allGroup.label = 'All Brands';
+      allBrands.forEach(function(b) {
+        var opt = document.createElement('option');
+        opt.value = b.id;
+        opt.textContent = b.name;
+        if (b.cycling) opt.dataset.cycling = '1';
+        allGroup.appendChild(opt);
+      });
+      sel.appendChild(allGroup);
+    }
+  } else {
+    consolidated.forEach(function(b) {
+      var opt = document.createElement('option');
+      opt.value = b.id;
+      opt.textContent = b.name;
+      if (b.cycling) opt.dataset.cycling = '1';
+      sel.appendChild(opt);
+    });
+  }
   if (selectedBrand) sel.value = selectedBrand;
   if (sel.value !== selectedBrand) setSelectedBrandForCategory(category, sel.value || '');
   onBrandChange();
@@ -2253,16 +2294,44 @@ function normalizeBrandId(brandId) {
   var s = raw.toLowerCase();
   var cleaned = s.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
 
-  if (cleaned === 'cafe' || cleaned === 'caf�') return 'cafe';
-  if (cleaned === 'ge cafe' || cleaned === 'ge caf�' || cleaned === 'ge caf') return 'cafe';
-  if (cleaned === 'ge monogram' || cleaned === 'monogram') return 'ge';
-  if (cleaned === 'ge profile' || cleaned === 'profile') return 'ge';
-  if (cleaned === 'hotpoint' || cleaned === 'rca') return 'ge';
-  if (cleaned === 'ge') return 'ge';
+  if (
+    cleaned === 'ge' ||
+    cleaned === 'cafe' || cleaned === 'caf�' ||
+    cleaned === 'ge cafe' || cleaned === 'ge caf�' || cleaned === 'ge caf' ||
+    cleaned === 'ge monogram' || cleaned === 'monogram' ||
+    cleaned === 'ge profile' || cleaned === 'profile' ||
+    cleaned === 'hotpoint' || cleaned === 'rca'
+  ) return 'ge';
 
-  if (s === 'ge_caf') return 'cafe';
-  if (s === 'ge_profile' || s === 'ge_monogram' || s === 'hotpoint' || s === 'rca') return 'ge';
+  if (s === 'ge_caf' || s === 'cafe' || s === 'ge_profile' || s === 'ge_monogram' || s === 'hotpoint' || s === 'rca') return 'ge';
   return brandId;
+}
+
+function isGEFamilyBrand(brandId) {
+  var raw = String(brandId || '').trim().toLowerCase();
+  return raw === 'ge' || raw === 'cafe' || raw === 'ge_caf' || raw === 'ge_profile' || raw === 'ge_monogram' || raw === 'hotpoint' || raw === 'rca';
+}
+
+function getSelectedBrandLabel(brandId) {
+  var sel = document.getElementById('brand');
+  if (!sel) return String(brandId || '');
+  for (var i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value === brandId) {
+      return (sel.options[i].textContent || sel.options[i].value || '').trim();
+    }
+  }
+  return String(brandId || '');
+}
+
+function getResultBrandDisplayName(metaBrandId, decoderName, kenmoreResolution) {
+  if (normalizeBrandId(metaBrandId) === 'kenmore') {
+    return 'Kenmore (OEM: ' + (kenmoreResolution ? kenmoreResolution.manufacturer : decoderName) + ')';
+  }
+  if (isGEFamilyBrand(metaBrandId)) {
+    var selectedLabel = getSelectedBrandLabel(metaBrandId) || decoderName || 'GE';
+    return selectedLabel + ' (GE family decoding)';
+  }
+  return decoderName;
 }
 
 function resolveDecoderId(metaBrandId) {
@@ -2292,16 +2361,9 @@ function updateDecodeBtn() {
   var modelConfig = getSupplementalModelConfig(currentCategory, brand);
   var modelValue = getStoredSupplementalModel(currentCategory).trim();
   var decoderId = brand ? resolveDecoderId(brand) : null;
-<<<<<<< HEAD
-  var isKenmore = String(normalizeBrandId(brand) || '').toLowerCase() === 'kenmore';
-  var kenmorePrefix = kenmorePrefixEl ? String(kenmorePrefixEl.value || '').replace(/\D/g, '').substring(0, 3) : '';
-  var kenmoreReady = !isKenmore || kenmorePrefix.length === 3;
-  btnEl.disabled = !(brand && serial && decoderId && kenmoreReady);
-=======
   var primaryInput = modelConfig.useModelAsPrimaryInput ? modelValue : serial;
   var hasRequiredModel = modelConfig.required ? !!modelValue : true;
   btnEl.disabled = !(brand && primaryInput && decoderId && hasRequiredModel);
->>>>>>> origin/main
 }
 
 // ===== YEAR CAP (never return future dates) =====
@@ -2397,7 +2459,7 @@ function showDecodeFallback(decoder, serial, brandId, reason) {
     ageEl.textContent = '\u2014';
     if (ageEl.closest) { var ageRow = ageEl.closest('.result-row'); if (ageRow) ageRow.style.display = 'none'; }
   }
-  document.getElementById('resultBrand').textContent  = decoder.name;
+  document.getElementById('resultBrand').textContent  = getResultBrandDisplayName(brandId, decoder.name, null);
   document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'Check the product label and ensure the full serial number is entered.';
   document.getElementById('resultNotes').textContent  =
     sanitizeAlertText('We\u2019re sorry, our system is having trouble decoding that number. Please refer to the decoding method above.\n\nSerial entered: ' + serial);
@@ -2610,18 +2672,17 @@ function ensureBrandAliasSearch() {
     if (!query) return;
     var normalized = normalizeBrandId(query);
     var targetId = '';
-    if (normalized === 'ge' || normalized === 'cafe') {
-      targetId = normalized;
-    } else {
-      var qLower = query.toLowerCase();
-      for (var i = 0; i < brandSelect.options.length; i++) {
-        var opt = brandSelect.options[i];
-        var text = (opt.textContent || opt.value || '').toLowerCase();
-        if (text === qLower || opt.value.toLowerCase() === qLower) {
-          targetId = opt.value;
-          break;
-        }
+    var qLower = query.toLowerCase();
+    for (var i = 0; i < brandSelect.options.length; i++) {
+      var opt = brandSelect.options[i];
+      var text = (opt.textContent || opt.value || '').toLowerCase();
+      if (text === qLower || opt.value.toLowerCase() === qLower) {
+        targetId = opt.value;
+        break;
       }
+    }
+    if (!targetId && normalized === 'ge') {
+      targetId = 'ge';
     }
     if (targetId) {
       brandSelect.value = targetId;
@@ -2634,41 +2695,7 @@ function ensureBrandAliasSearch() {
   return input;
 }
 function ensureKenmorePrefixField() {
-<<<<<<< HEAD
-  var formArea = document.querySelector('.form-area');
-  var panelDecoder = document.getElementById('panel-decoder');
-  if (!formArea && !panelDecoder) return null;
-  if (document.getElementById('kenmoreModelPrefix')) return document.getElementById('kenmoreModelPrefix');
-  var serialInput = document.getElementById('serial');
-  var serialGroup = serialInput ? serialInput.closest('.form-group') : null;
-  var homeToolRow = serialInput ? serialInput.closest('.home-tool-row') : null;
-  var group = document.createElement('div');
-  group.className = 'form-group kenmore-prefix-group hidden';
-  group.innerHTML = '' +
-    '<label class="step-label" for="kenmoreModelPrefix">Kenmore Model Prefix (first 3 digits)</label>' +
-    '<input type="text" id="kenmoreModelPrefix" class="form-input search-input" placeholder="e.g., 795" maxlength="3" inputmode="numeric" pattern="[0-9]*">' +
-    '<div class="helper-text kenmore-prefix-note">Required for Kenmore: enter the first 3 digits of the model number so the correct OEM decoding method is used.</div>';
-  if (serialGroup && serialGroup.parentNode) {
-    serialGroup.insertAdjacentElement('afterend', group);
-  } else if (homeToolRow && homeToolRow.parentNode) {
-    homeToolRow.insertAdjacentElement('afterend', group);
-  } else if (formArea) {
-    formArea.appendChild(group);
-  } else if (panelDecoder) {
-    panelDecoder.appendChild(group);
-  }
-  var input = document.getElementById('kenmoreModelPrefix');
-  if (input && input.getAttribute('data-prefix-bound') !== '1') {
-    input.setAttribute('data-prefix-bound', '1');
-    input.addEventListener('input', function() {
-      input.value = (input.value || '').replace(/\D/g, '').substring(0, 3);
-      if (typeof updateDecodeBtn === 'function') updateDecodeBtn();
-    });
-  }
-  return input;
-=======
   return ensureModelField();
->>>>>>> origin/main
 }
 
 function updateKenmorePrefixVisibility(brandId) {
@@ -2983,18 +3010,7 @@ function decodeSerial() {
   var isKenmore = (normalizeBrandId(metaBrandId) === 'kenmore');
   var kenmoreResolution = null;
   if (isKenmore) {
-<<<<<<< HEAD
-    var kenmorePrefixEl = document.getElementById('kenmoreModelPrefix');
-    var kenmorePrefix = kenmorePrefixEl ? String(kenmorePrefixEl.value || '').replace(/\D/g, '').substring(0, 3) : '';
-    if (kenmorePrefix.length !== 3) {
-      showCustomAlert('Kenmore requires the first 3 digits of the model number so the correct OEM decoding method can be used. Example: 795.');
-      if (kenmorePrefixEl && kenmorePrefixEl.focus) kenmorePrefixEl.focus();
-      return;
-    }
-    kenmoreResolution = resolveKenmoreDecoderFromPrefix();
-=======
     kenmoreResolution = resolveKenmoreDecoderFromPrefix(supplementalModel);
->>>>>>> origin/main
     brandId = kenmoreResolution.decoderId;
   }
 
@@ -3083,9 +3099,7 @@ function decodeSerial() {
 
     document.getElementById('resultYear').textContent    = capYear(result.year);
     document.getElementById('resultMonth').textContent   = result.month;
-    document.getElementById('resultBrand').textContent   = isKenmore
-      ? ('Kenmore (OEM: ' + (kenmoreResolution ? kenmoreResolution.manufacturer : decoder.name) + ')')
-      : decoder.name;
+    document.getElementById('resultBrand').textContent = getResultBrandDisplayName(metaBrandId, decoder.name, kenmoreResolution);
     document.getElementById('resultMethod').textContent  = decoder.method || decoder.serialLengthNote || 'N/A';
 
     // Append decode detail (specific codes used for this decode)
@@ -3208,7 +3222,6 @@ function copyClaimFile() {
 }
 
 // ===== DECODE ANOTHER ITEM =====
-<<<<<<< HEAD
 function scrollPageToTop(forceInstant) {
   var behavior = forceInstant ? 'auto' : 'smooth';
   try {
@@ -3218,12 +3231,11 @@ function scrollPageToTop(forceInstant) {
   }
   if (document.documentElement) document.documentElement.scrollTop = 0;
   if (document.body) document.body.scrollTop = 0;
-=======
+}
+
 function scrollHomeSearchToTop() {
   function forceTop() {
-    window.scrollTo(0, 0);
-    if (document.documentElement) document.documentElement.scrollTop = 0;
-    if (document.body) document.body.scrollTop = 0;
+    scrollPageToTop(true);
   }
 
   forceTop();
@@ -3235,7 +3247,6 @@ function scrollHomeSearchToTop() {
   }
   setTimeout(forceTop, 60);
   setTimeout(forceTop, 180);
->>>>>>> origin/main
 }
 
 function decodeAnotherItem() {
@@ -3269,13 +3280,7 @@ function decodeAnotherItem() {
   LKQEngine.clearInstance('smart-lookup');
   clearSmartLookupAssist();
   updateDecodeBtn();
-<<<<<<< HEAD
   scrollPageToTop(true);
-=======
-  requestAnimationFrame(function() {
-    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-  });
->>>>>>> origin/main
   setTimeout(function() {
     if (serialInput) {
       try {
