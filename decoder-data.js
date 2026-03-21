@@ -36,8 +36,12 @@ var decoderData = {
       { id: 'estate', name: 'Estate' },
       { id: 'frigidaire', name: 'Frigidaire' },
       { id: 'gaggenau', name: 'Gaggenau' },
-      { id: 'ge', name: 'GE (including Cafe, Monogram, Profile, Hotpoint, RCA)' },
+      { id: 'ge', name: 'GE' },
       { id: 'cafe', name: 'Cafe' },
+      { id: 'ge_profile', name: 'GE Profile' },
+      { id: 'ge_monogram', name: 'GE Monogram' },
+      { id: 'hotpoint', name: 'Hotpoint' },
+      { id: 'rca', name: 'RCA' },
       { id: 'gibson', name: 'Gibson' },
       { id: 'inglis', name: 'Inglis' },
       { id: 'jenn_air_post_2006', name: 'Jenn-Air (post-2006)' },
@@ -1109,7 +1113,7 @@ var decoderData = {
     }
     },
     'ge': {
-      name: 'GE (including Cafe, Monogram, Profile, Hotpoint, RCA)',
+      name: 'GE',
       parentManufacturer: 'GE Appliances (owned by Haier since 2016)',
       groupId: '2',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
@@ -1119,12 +1123,12 @@ var decoderData = {
       yearCodePosition: 'Character 2 (second letter)',
       monthCodePosition: 'Character 1 (first letter)',
       outputType: 'Month + Year',
-      decodeNotes: '12-year repeating cycle. GE water heaters manufactured by Rheem â€” use Group 7A. Haier-era units (post-2016) continue using same format.',
+      decodeNotes: '12-year repeating cycle. This same GE-family decoding logic also applies to Cafe, GE Profile, GE Monogram, Hotpoint, and RCA appliance brands. GE water heaters manufactured by Rheem â€” use Group 7A. Haier-era units (post-2016) continue using same format.',
       exampleSerial: 'RG527327B',
       exampleResult: 'R=August G=1980/1992/2004/2016',
       sources: 'products.geappliances.com; cannonsappliance.com; lumayeconsulting.com; en.tab-tv.com',
       method: 'Characters 1-2 (Character 1 = month, Character 2 = year)',
-      notes: '12-year repeating cycle. GE water heaters manufactured by Rheem â€” use Group 7A. Haier-era units (post-2016) continue using same format.',
+      notes: '12-year repeating cycle. This same GE-family decoding logic also applies to Cafe, GE Profile, GE Monogram, Hotpoint, and RCA appliance brands. GE water heaters manufactured by Rheem â€” use Group 7A. Haier-era units (post-2016) continue using same format.',
       source: 'products.geappliances.com; cannonsappliance.com; lumayeconsulting.com; en.tab-tv.com',
       patterns: [
         { name: '8-char standard', length: 8, mask: 'AA######', notes: 'Starts with two letters, followed by six digits.' },
@@ -1170,7 +1174,11 @@ var decoderData = {
       var m = this.monthMap[monthChar];
       return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
     }
-    },
+    },
+
+
+
+
     'frigidaire': {
       name: 'Frigidaire',
       parentManufacturer: 'Electrolux AB (Sweden)',
