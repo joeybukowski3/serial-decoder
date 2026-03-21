@@ -478,6 +478,23 @@ function setStoredSupplementalModel(catKey, value) {
   getDecoderCategoryState(catKey).model = value || '';
 }
 
+function clearDecodeEntryFields(options) {
+  options = options || {};
+  var category = options.categoryKey || getActiveDecoderCategory();
+  var dom = getDecodeDom();
+  var serialEl = dom.serialEl;
+  var modelEl = document.getElementById('modelNumber');
+  var eraEl = document.getElementById('eraSelect');
+  var kenmorePrefixEl = document.getElementById('kenmoreModelPrefix');
+
+  if (serialEl) serialEl.value = '';
+  setStoredSupplementalModel(category, '');
+  if (modelEl) modelEl.value = '';
+  if (kenmorePrefixEl) kenmorePrefixEl.value = '';
+  if (options.clearEra && eraEl) eraEl.value = '';
+  clearSupplementalModelError();
+}
+
 function extractKenmoreModelPrefix(modelValue) {
   return String(modelValue || '').replace(/\D/g, '').substring(0, 3);
 }
@@ -1957,6 +1974,7 @@ function initPage() {
     if (brandSelect.getAttribute('data-brand-bound') !== '1') {
       brandSelect.setAttribute('data-brand-bound', '1');
       brandSelect.addEventListener('change', function() {
+        clearDecodeEntryFields({ categoryKey: getActiveDecoderCategory(), clearEra: true });
         onBrandChange();
         var selected = brandSelect.value || '';
         if (selected) {
@@ -2147,8 +2165,7 @@ function selectCategory(cat, btn) {
   prioritizeSidebarCategory(cat);
   syncSidebarActiveState();
   populateBrands(currentCategory);
-  var serialEl = getDecodeDom().serialEl;
-  if (serialEl) serialEl.value = '';
+  clearDecodeEntryFields({ categoryKey: currentCategory, clearEra: true });
   document.getElementById('serialResults').classList.add('hidden');
   document.getElementById('ageResults').classList.add('hidden');
   hideEraGroup();
@@ -3019,6 +3036,8 @@ function decodeSerial() {
   if (modelConfig.useModelAsPrimaryInput) {
     serial = supplementalModel.replace(/[^A-Za-z0-9-]/g, '').trim();
   }
+
+  clearDecodeEntryFields({ categoryKey: currentCategory });
 
   updateSearchQueryLine();
 
@@ -4098,6 +4117,7 @@ async function runLKQLookup() {
   inputEl.value = query;
   if (!query) return;
   resolvedQuery = expandKnownSmartLookupQuery(query);
+  inputEl.value = '';
   includeComparisons = shouldIncludeSmartLookupComparisons();
   trackSmartLookupEvent('search_started', { query: query, includeComparisons: includeComparisons });
   if (typeof window.recordRecentSmartLookup === 'function') window.recordRecentSmartLookup(query);
