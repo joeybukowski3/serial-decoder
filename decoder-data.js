@@ -1666,9 +1666,10 @@ var decoderData = {
       source: 'fastwaterheater.com; kcwaterheater.com; builderbuddy.com; final-analysis.com',
       yearMap: { '84': '1984' },
       monthMap: { '10': 'October', '11': 'November', '12': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
-      decode: function(serial) {
+      decode: function(serial, modelHint) {
       if (!serial || serial.length < 4) return null;
       var s = String(serial).toUpperCase().replace(/\s+/g, '');
+      var normalizedModel = String(modelHint || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
       function resolveTwoDigitYear(yy) {
         var currentYear = new Date().getFullYear();
@@ -1682,15 +1683,23 @@ var decoderData = {
         return null;
       }
 
-      function decodeRhPrefixed(match, weekIdx, yearIdx) {
-        if (!match) return null;
-        var ww = match[weekIdx];
-        var yy = match[yearIdx];
+      function decodeWeekYearDigits(ww, yy, styleLabel) {
         var week = parseInt(ww, 10);
         if (!(week >= 1 && week <= 53)) return null;
         var fullYearPrefix = resolveTwoDigitYear(yy);
         if (!fullYearPrefix) return null;
-        return { year: String(fullYearPrefix), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
+        return {
+          year: String(fullYearPrefix),
+          month: 'Week ' + ww,
+          yearCode: yy,
+          weekDigits: ww,
+          decodeStyle: styleLabel
+        };
+      }
+
+      function decodeRhPrefixed(match, weekIdx, yearIdx) {
+        if (!match) return null;
+        return decodeWeekYearDigits(match[weekIdx], match[yearIdx], 'RH-prefixed WWYY');
       }
 
       // Try RH + WWYY first, then RHx + WWYY (x = optional plant/line code).
@@ -1699,11 +1708,31 @@ var decoderData = {
       var rhWithExtra = decodeRhPrefixed(s.match(/^RH([A-Z0-9])(\d{2})(\d{2})([A-Z0-9].*)?$/), 2, 3);
       if (rhWithExtra) return rhWithExtra;
 
+      var style2 = decodeWeekYearDigits(s.substring(1, 3), s.substring(3, 5), 'Style 2');
+      var style3 = decodeWeekYearDigits(s.substring(2, 4), s.substring(4, 6), 'Style 3');
       var monthStr = s.substring(0, 2);
       var yearDigits = s.substring(2, 4);
       var fullYear = parseInt(yearDigits) >= 84 ? '19' + yearDigits : '20' + yearDigits;
       var m = this.monthMap[monthStr];
-      return { year: fullYear, month: m || 'Month ' + monthStr, yearCode: yearDigits, monthCode: monthStr };
+      var style1 = { year: fullYear, month: m || 'Month ' + monthStr, yearCode: yearDigits, monthCode: monthStr, decodeStyle: 'Style 1' };
+
+      // Some later all-numeric Rheem tank labels fit the documented week/year layouts
+      // better than the legacy MMYY pattern. Prefer Style 2 when it points to a clearly
+      // modern year and the MMYY interpretation lands far earlier, especially on RH9x models.
+      if (style2) {
+        var style1Year = parseInt(style1.year, 10);
+        var style2Year = parseInt(style2.year, 10);
+        var modelSuggestsModernRh = /RH9\d/.test(normalizedModel);
+        if (modelSuggestsModernRh && style2Year >= 2015) return style2;
+        if (/^\d{10}$/.test(s) && style1Year <= 2010 && style2Year >= 2015) return style2;
+      }
+
+      if (style1.month.indexOf('Month ') === 0) {
+        if (style2) return style2;
+        if (style3) return style3;
+      }
+
+      return style1;
     }
     },
     'ruud': {

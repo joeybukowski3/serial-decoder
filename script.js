@@ -571,6 +571,17 @@ function getSupplementalModelConfig(category, brandId) {
     };
   }
 
+  if (catKey === 'waterHeaters' && (key === 'rheem' || key === 'ruud' || key === 'richmond')) {
+    return {
+      visible: true,
+      required: false,
+      useModelAsPrimaryInput: false,
+      label: 'Model Number (optional)',
+      placeholder: 'Enter model number (e.g., E40 2 RH95)',
+      note: 'If available, include the model number to help resolve alternate Rheem-family serial layouts.'
+    };
+  }
+
   if (optionalBrands[key]) {
     return {
       visible: true,
@@ -3065,7 +3076,7 @@ function decodeSerial() {
       if (_ae && _ae.closest) { var r2 = _ae.closest('.result-row'); if (r2) r2.style.display = ''; }
     })();
 
-    var result = decoder.decode(serial);
+    var result = decoder.decode(serial, supplementalModel);
     var sanity  = sanitizeDecodeResult(result);
     var monthRow  = document.getElementById('resultMonthRow');
 
