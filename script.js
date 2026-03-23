@@ -571,6 +571,17 @@ function getSupplementalModelConfig(category, brandId) {
     };
   }
 
+  if (catKey === 'waterHeaters' && (key === 'rheem' || key === 'ruud' || key === 'richmond')) {
+    return {
+      visible: true,
+      required: false,
+      useModelAsPrimaryInput: false,
+      label: 'Model Number (optional)',
+      placeholder: 'Enter model number (e.g., E40 2 RH95)',
+      note: 'If available, include the model number to help resolve alternate Rheem-family serial layouts.'
+    };
+  }
+
   if (optionalBrands[key]) {
     return {
       visible: true,
@@ -1329,7 +1340,22 @@ function addGuidedSearchButtonToBrandDecoderCard() {
     if (altSection && !altSection.classList.contains('open')) {
       altSection.classList.add('open');
     }
-    if (altQuery) {
+    try {
+    var modeParams = new URLSearchParams(window.location.search || '');
+    var initialMode = (modeParams.get('mode') || '').toLowerCase();
+    var initialHash = (window.location.hash || '').toLowerCase();
+    if (initialMode === 'smart' || initialHash === '#panel-smart') {
+      setTimeout(function() {
+        if (typeof useSmartLookup === 'function') useSmartLookup();
+        var smartPanel = document.getElementById('panel-smart');
+        if (smartPanel && smartPanel.scrollIntoView) {
+          smartPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 120);
+    }
+  } catch (_) {}
+
+  if (altQuery) {
       if (!altQuery.value && slug) altQuery.value = slug.replace(/-/g, ' ') + ' model number';
       altQuery.focus();
     }
@@ -2042,6 +2068,16 @@ function initPage() {
       resetHomePageSearch();
     }
   }
+
+  try {
+    var modeParams = new URLSearchParams(window.location.search || '');
+    var initialMode = (modeParams.get('mode') || '').toLowerCase();
+    if (!shouldResetHomePageSearch() && initialMode === 'smart') {
+      setTimeout(function() {
+        if (typeof useSmartLookup === 'function') useSmartLookup();
+      }, 80);
+    }
+  } catch (_) {}
 
   if (altQuery) {
     if (altQuery.getAttribute('data-alt-bound') !== '1') {
@@ -3065,7 +3101,7 @@ function decodeSerial() {
       if (_ae && _ae.closest) { var r2 = _ae.closest('.result-row'); if (r2) r2.style.display = ''; }
     })();
 
-    var result = decoder.decode(serial);
+    var result = decoder.decode(serial, supplementalModel);
     var sanity  = sanitizeDecodeResult(result);
     var monthRow  = document.getElementById('resultMonthRow');
 

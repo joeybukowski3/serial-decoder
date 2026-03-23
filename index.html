@@ -14,28 +14,28 @@
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5946778263750869" crossorigin="anonymous"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Serial Number Decoder | Item Assist</title>
-  <meta name="description" content="Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.">
+  <title>Appliance Serial Number Decoder & Age Lookup | Item Assist</title>
+  <meta name="description" content="Find appliance age by serial number and decode manufacture dates for Whirlpool, GE, Samsung, LG, Goodman, and more. Use the free serial decoder or Smart Lookup for model-based research.">
       <link rel="canonical" href="https://www.decodemyitem.com/">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Item Assist">
-  <meta property="og:title" content="Serial Number Decoder | Item Assist">
-  <meta property="og:description" content="Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.">
+  <meta property="og:title" content="Appliance Serial Number Decoder & Age Lookup | Item Assist">
+  <meta property="og:description" content="Find appliance age by serial number and decode manufacture dates for Whirlpool, GE, Samsung, LG, Goodman, and more. Use the free serial decoder or Smart Lookup for model-based research.">
   <meta property="og:url" content="https://www.decodemyitem.com/">
   <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <meta property="og:image:alt" content="Item Assist preview image">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Serial Number Decoder | Item Assist">
-  <meta name="twitter:description" content="Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.">
+  <meta name="twitter:title" content="Appliance Serial Number Decoder & Age Lookup | Item Assist">
+  <meta name="twitter:description" content="Find appliance age by serial number and decode manufacture dates for Whirlpool, GE, Samsung, LG, Goodman, and more. Use the free serial decoder or Smart Lookup for model-based research.">
   <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Serial Number Decoder | Item Assist",
-    "description": "Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.",
+    "name": "Appliance Serial Number Decoder & Age Lookup | Item Assist",
+    "description": "Find appliance age by serial number and decode manufacture dates for Whirlpool, GE, Samsung, LG, Goodman, and more. Use the free serial decoder or Smart Lookup for model-based research.",
     "url": "https://www.decodemyitem.com/",
     "publisher": {
       "@type": "Organization",
@@ -646,18 +646,17 @@
 
 <!-- ─── NAV ─── -->
 <nav>
-  <a href="index.html" class="logo" aria-label="Decode My Item home">
+  <a href="/index.html" class="logo" aria-label="Decode My Item home">
     <div>
-      <div class="logo-text">Decodemyitem</div>
-      <div class="logo-sub">Decode · Research · Automate</div>
+      <div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Decode - Research - Automate</div>
     </div>
   </a>
   <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
     <span></span><span></span><span></span>
   </button>
   <ul>
-    <li><a href="index.html" data-page="index">Serial Number Decoder</a></li>
-    <li><a href="smart-lookup.html" data-page="smart">Smart Lookup</a></li>
+    <li><a href="/index.html" data-page="index">Serial Number Decoder</a></li>
+    <li><a href="/index.html?mode=smart#panel-smart" data-page="smart">Smart Lookup</a></li>
     <li><a href="assistant.html" data-page="assistant">AI Assistant</a></li>
     <li><a href="methodology.html" data-page="methodology">Methodology</a></li>
     <li><a href="contact.html" data-page="contact">Contact</a></li>
@@ -668,8 +667,9 @@
 
 <!-- ─── PAGE HERO ─── -->
 <section class="page-hero home-hero">
-  <h1>Item Assist for fast serial decoding and smarter replacement research</h1>
-  <p class="hero-sub">Two workflows, one faster decision path: decode serial numbers instantly when you have the plate, or use Smart Lookup to turn a model or description into a documented first-pass replacement recommendation with confidence cues and current-market context.</p>
+  <h1>Fast Serial Number Decoding and Smart Item Age Verification Tool</h1>
+  <p class="hero-sub"><strong>Two workflows, one faster decision path:</strong></p>
+  <p class="hero-sub">Instantly decode the serial number from most major brands for equipment age verification. Or use the smart lookup feature using a model or general description to retrieve an estimated age of your item using an industry-focused smart research tool.</p>
 </section>
 
 <!-- ─── DECODER TOOL ─── -->
@@ -734,9 +734,7 @@
             </label>
           </div>
           <p class="search-link" style="margin-top:10px;">Have a serial number? Use the Decode action in the Power Bar below.</p>
-        </div>
-      </div>
-    </div>
+        </div></div>
     <div class="power-bar" role="group" aria-label="Power Bar actions">
       <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">🔍 Decode Serial Number</button>
       <button class="btn-amber power-btn" type="button" onclick="runLKQLookup()">Search</button>
@@ -751,9 +749,7 @@
   <div id="ageLoading" class="results-card hidden">
     <div class="loading-inner">
       <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
-      <div class="loading-text" id="loadingText">Researching product information...</div>
-    </div>
-  </div>
+      <div class="loading-text" id="loadingText">Researching product information...</div></div>
 
   <!-- Serial Decode Results -->
   <div id="serialResults" class="results-card hidden">
@@ -814,10 +810,7 @@
     <div class="results-footer">
       <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
       <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
-    </div>
-  </div>
-
-</div><!-- /results-wrapper -->
+    </div></div><!-- /results-wrapper -->
 
 <!-- ─── TRUST BAR ─── -->
 <div class="trust-bar">
@@ -915,9 +908,7 @@
     </ul>
     <div class="warning-note">
       <strong>Note:</strong> Many serial number codes repeat every 10–20 years. Always verify the decade using physical condition, model features, purchase receipts, or installation records.
-    </div>
-  </div>
-</div>
+    </div></div>
 
 <!-- ─── FEEDBACK MODAL ─── -->
 <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
@@ -954,9 +945,7 @@
       <div id="fbActions" class="modal-actions">
         <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
         <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
+      </div></div>
 </div>
 
 <!-- Panel switching helpers (must be before decoder-data.js / script.js) -->
@@ -966,7 +955,81 @@ function selectCatAndShowDecoder(cat, btn) {
 }
 </script>
 
-<script src="decoder-data.js"></script>
+<section class="guide-faq">
+  <div class="eyebrow">Popular Lookups</div>
+  <h2>Find appliance age, decode serial numbers, or start from the model number</h2>
+  <div class="location-guide-grid">
+    <article class="guide-card">
+      <h3>Appliance age by serial number</h3>
+      <p>Use the serial number decoder when you want the fastest path to an estimated manufacture date for refrigerators, washers, dryers, ranges, dishwashers, and other home appliances.</p>
+      <div class="guide-links">
+        <a class="guide-chip" href="/appliance-age-by-serial-number">Appliance age by serial number</a>
+        <a class="guide-chip" href="/find-model-serial-number">Find the label first</a>
+      </div>
+    </article>
+    <article class="guide-card">
+      <h3>Brand-specific serial lookup</h3>
+      <p>Jump into high-demand brand pages for Whirlpool, Goodman, Samsung, ASUS, GE, and other manufacturers when you already know the brand and need a faster answer.</p>
+      <div class="guide-links">
+        <a class="guide-chip" href="/whirlpool-serial-number-lookup">Whirlpool serial lookup</a><a class="guide-chip" href="/whirlpool-model-number-lookup">Whirlpool model lookup</a>
+        <a class="guide-chip" href="/goodman-serial-number-lookup">Goodman serial lookup</a><a class="guide-chip" href="/goodman-model-number-lookup">Goodman model lookup</a>
+        <a class="guide-chip" href="/asus-serial-number-decoder">ASUS serial decoder</a>
+      </div>
+    </article>
+    <article class="guide-card">
+      <h3>Only have the model number?</h3>
+      <p>Smart Lookup helps when the serial tag is missing, worn, or unreadable. Use the model number plus a short description to research likely age range and replacement context.</p>
+      <div class="guide-links">
+        <a class="guide-chip" href="/index.html?mode=smart#panel-smart">Open Smart Lookup</a>
+        <a class="guide-chip" href="/find-model-serial-number">Where to find model number</a>
+      </div>
+    </article>
+  </div>
+
+  <div class="faq-stack">
+    <details class="determination-details" open>
+      <summary>How do I find appliance age by serial number?</summary>
+      <div class="determination-body">Select the brand, enter the serial number exactly as shown on the manufacturer label, and run the decoder. For supported brands, Item Assist applies known serial formatting rules to estimate the manufacture date and current age.</div>
+    </details>
+    <details class="determination-details">
+      <summary>What if I only have the model number?</summary>
+      <div class="determination-body">Use Smart Lookup. That path works best when the serial number is missing, the product tag is damaged, or you need a first-pass replacement workflow from a model number or plain-language description.</div>
+    </details>
+    <details class="determination-details">
+      <summary>Where do I find the model and serial number on an appliance?</summary>
+      <div class="determination-body">Most appliances place the label on the door frame, inside the fresh-food compartment, behind a drawer, or on the rear/service panel. Our <a href="/find-model-serial-number">model and serial number location guide</a> walks through refrigerators, dishwashers, laundry appliances, HVAC systems, TVs, and more.</div>
+    </details>
+    <details class="determination-details">
+      <summary>Which brands are strongest on the site right now?</summary>
+      <div class="determination-body">Whirlpool, Goodman, Samsung, ASUS, GE, LG, Rheem, Carrier, and Trane are some of the strongest paths for serial decoding, age lookup, and model-based research.</div>
+    </details>
+  </div>
+</section>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I find appliance age by serial number?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Select the brand, enter the serial number exactly as shown on the label, and run the decoder. Item Assist applies known brand formatting rules to estimate manufacture date and age."}
+    },
+    {
+      "@type": "Question",
+      "name": "What if I only have the model number?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Use Smart Lookup when the serial number is missing, worn, or unreadable. The model number plus a short description can still support a first-pass age and replacement workflow."}
+    },
+    {
+      "@type": "Question",
+      "name": "Where do I find the model and serial number on an appliance?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Most appliances place the label on a door frame, inside a compartment, behind a drawer, or on the rear/service panel. Item Assist also provides a dedicated model and serial number location guide."}
+    }
+  ]
+}
+</script>
+
+    <script src="decoder-data.js"></script>
 <script src="lkq-engine.js"></script>
 <script src="analytics.js"></script>
 <script src="smart-lookup-extras.js"></script>

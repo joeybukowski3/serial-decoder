@@ -85,6 +85,91 @@ function setTab(el, tab) {
   document.body.appendChild(badge);
 })();
 
+(function enhanceLandingPageCards() {
+  if (!document.body || document.body.dataset.pageKind !== 'landing') return;
+  document.querySelectorAll('.prose').forEach(function (prose) {
+    if (!prose || prose.dataset.cardified === 'true') return;
+
+    var children = Array.from(prose.children);
+    if (!children.length) return;
+
+    var fragment = document.createDocumentFragment();
+    var currentCard = null;
+
+    children.forEach(function (node) {
+      var tag = (node.tagName || '').toUpperCase();
+      if (tag === 'H2') {
+        currentCard = document.createElement('section');
+        currentCard.className = 'landing-info-card';
+        fragment.appendChild(currentCard);
+      }
+
+      if (!currentCard) {
+        currentCard = document.createElement('section');
+        currentCard.className = 'landing-info-card';
+        fragment.appendChild(currentCard);
+      }
+
+      if (tag === 'UL') node.classList.add('landing-bullet-list');
+      if (node.classList.contains('cta-block')) node.classList.add('landing-cta-card');
+      currentCard.appendChild(node);
+    });
+
+    prose.appendChild(fragment);
+    prose.dataset.cardified = 'true';
+  });
+})();
+
+(function enhanceBrandPageToolCards() {
+  if (!document.body) return;
+  if (!document.querySelector('.brand-helper-wrap')) return;
+
+  var decoderPanel = document.getElementById('panel-decoder');
+  var smartPanel = document.getElementById('panel-smart');
+  var powerBar = document.querySelector('.power-bar');
+  if (!decoderPanel || !smartPanel || !powerBar) return;
+
+  document.body.classList.add('brand-tool-layout-active');
+
+  function ensureButton(panel, selector, text, className, handlerName, id) {
+    if (!panel) return;
+    var slot = panel.querySelector('.panel-action-slot');
+    if (!slot) {
+      slot = document.createElement('div');
+      slot.className = 'panel-action-slot';
+      panel.appendChild(slot);
+    }
+    var btn = slot.querySelector(selector);
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = className;
+      if (id) btn.id = id;
+      btn.textContent = text;
+      btn.addEventListener('click', function () {
+        if (typeof window[handlerName] === 'function') window[handlerName]();
+      });
+      slot.appendChild(btn);
+    }
+    return btn;
+  }
+
+  var decodeBtn = ensureButton(decoderPanel, '.panel-decode-btn', 'Decode Serial Number', 'btn-primary power-btn panel-decode-btn', 'decodeSerial', 'brandPanelDecodeBtn');
+  var searchBtn = ensureButton(smartPanel, '.panel-search-btn', 'Search', 'btn-amber power-btn panel-search-btn', 'runLKQLookup', 'brandPanelSearchBtn');
+
+  function syncDecodeDisabled() {
+    var source = document.getElementById('decodeBtn');
+    if (source && decodeBtn) decodeBtn.disabled = !!source.disabled;
+  }
+
+  syncDecodeDisabled();
+  var observerTarget = document.getElementById('decodeBtn');
+  if (observerTarget && !observerTarget.dataset.brandMirrorBound) {
+    observerTarget.dataset.brandMirrorBound = '1';
+    new MutationObserver(syncDecodeDisabled).observe(observerTarget, { attributes: true, attributeFilter: ['disabled', 'class'] });
+  }
+})();
+
 (function loadBoltAiAssistBubble() {
   var path = window.location.pathname || '';
   if (path === '/assistant' || path.endsWith('/assistant.html') || path.endsWith('assistant.html')) return;

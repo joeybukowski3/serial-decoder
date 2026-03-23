@@ -218,6 +218,25 @@
         "4TTR4036",
         "Trane XR14 4TTR4036"
       ]
+    },
+    {
+      "brand": "Apple",
+      "model": "MPGA2LL/A",
+      "displayModel": "iPad (5th generation) 9.7-inch Wi-Fi 32GB",
+      "normalizedBrand": "apple",
+      "normalizedModel": "mpga2lla",
+      "category": "tablet",
+      "yearStart": 2017,
+      "yearEnd": 2019,
+      "estimatedYear": 2017,
+      "productionRange": "2017-2019",
+      "source": "Apple part-number mapping and iPad 5th generation retail lifecycle",
+      "notes": "MPGA2LL/A is an Apple iPad (5th generation) Wi-Fi configuration introduced in 2017. This is an iPad identifier, not an iPhone 8 family model.",
+      "aliases": [
+        "MPGA2LLA",
+        "MPGA2",
+        "Apple MPGA2LL/A"
+      ]
     }
   ]
 }
