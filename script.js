@@ -1340,7 +1340,22 @@ function addGuidedSearchButtonToBrandDecoderCard() {
     if (altSection && !altSection.classList.contains('open')) {
       altSection.classList.add('open');
     }
-    if (altQuery) {
+    try {
+    var modeParams = new URLSearchParams(window.location.search || '');
+    var initialMode = (modeParams.get('mode') || '').toLowerCase();
+    var initialHash = (window.location.hash || '').toLowerCase();
+    if (initialMode === 'smart' || initialHash === '#panel-smart') {
+      setTimeout(function() {
+        if (typeof useSmartLookup === 'function') useSmartLookup();
+        var smartPanel = document.getElementById('panel-smart');
+        if (smartPanel && smartPanel.scrollIntoView) {
+          smartPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 120);
+    }
+  } catch (_) {}
+
+  if (altQuery) {
       if (!altQuery.value && slug) altQuery.value = slug.replace(/-/g, ' ') + ' model number';
       altQuery.focus();
     }
@@ -2053,6 +2068,16 @@ function initPage() {
       resetHomePageSearch();
     }
   }
+
+  try {
+    var modeParams = new URLSearchParams(window.location.search || '');
+    var initialMode = (modeParams.get('mode') || '').toLowerCase();
+    if (!shouldResetHomePageSearch() && initialMode === 'smart') {
+      setTimeout(function() {
+        if (typeof useSmartLookup === 'function') useSmartLookup();
+      }, 80);
+    }
+  } catch (_) {}
 
   if (altQuery) {
     if (altQuery.getAttribute('data-alt-bound') !== '1') {
