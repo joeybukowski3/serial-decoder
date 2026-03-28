@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "npx serve .",
-    "test": "node tests/decoder-regressions.test.mjs"
+    "test": "node tests/decoder-regressions.test.mjs",
+    "refresh-pricebook": "node scripts/refresh-pricebook.js"
   },
   "dependencies": {
     "@upstash/ratelimit": "^2.0.8",

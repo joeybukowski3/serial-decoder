@@ -1,0 +1,36 @@
+name: Pricebook Daily Refresh
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 4 AM Eastern (UTC-5)
+  workflow_dispatch:      # Allow manual trigger
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run pricebook refresh
+        env:
+          BESTBUY_API_KEY: ${{ secrets.BESTBUY_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: node scripts/refresh-pricebook.js
+
+      - name: Commit updated pricebook
+        run: |
+          git config user.name "pricebook-bot"
+          git config user.email "actions@github.com"
+          git add data/pricebook.json
+          git diff --staged --quiet || git commit -m "chore: pricebook price refresh $(date +'%Y-%m-%d')"
+          git push
