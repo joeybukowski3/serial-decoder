@@ -4038,6 +4038,9 @@ async function executeSmartLookup(query, opts) {
         });
       }
       prependSmartLookupSummaryLayer(resultsEl, normalizedResult);
+      if (typeof window.fetchAndRenderPriceTier === 'function' && normalizedResult && normalizedResult.identity) {
+        window.fetchAndRenderPriceTier(normalizedResult.identity, resultsEl);
+      }
       trackSmartLookupEvent('result_success', {
         query: originalQuery,
         queryKind: (interpretData && interpretData.queryKind) || '',
