@@ -2153,8 +2153,77 @@ function applySidebarVisualHierarchy() {
     item.classList.add('sidebar-item');
   });
 }
+function setFeatureSidebarOpen(open) {
+  var next = !!open;
+  var toggle = document.getElementById('feature-sidebar-toggle');
+  var overlay = document.getElementById('feature-sidebar-overlay');
+  document.body.classList.toggle('feature-sidebar-open', next);
+  if (toggle) toggle.setAttribute('aria-expanded', next ? 'true' : 'false');
+  if (overlay) overlay.classList.toggle('hidden', !next);
+}
+
+function isFeatureSidebarDismissed() {
+  try {
+    return sessionStorage.getItem('featureSidebarDismissed') === '1';
+  } catch (_) {
+    return false;
+  }
+}
+
+function setFeatureSidebarDismissed(dismissed) {
+  var next = !!dismissed;
+  try {
+    if (next) sessionStorage.setItem('featureSidebarDismissed', '1');
+    else sessionStorage.removeItem('featureSidebarDismissed');
+  } catch (_) {}
+  if (next) setFeatureSidebarOpen(false);
+  document.body.classList.toggle('feature-sidebar-dismissed', next);
+}
+
+function bindFeatureSidebarControls() {
+  var toggle = document.getElementById('feature-sidebar-toggle');
+  var close = document.getElementById('feature-sidebar-close');
+  var dismiss = document.getElementById('feature-sidebar-dismiss');
+  var overlay = document.getElementById('feature-sidebar-overlay');
+  if (!toggle || toggle.getAttribute('data-feature-sidebar-bound') === '1') return;
+
+  setFeatureSidebarDismissed(isFeatureSidebarDismissed());
+  toggle.setAttribute('data-feature-sidebar-bound', '1');
+  toggle.addEventListener('click', function() {
+    setFeatureSidebarOpen(!document.body.classList.contains('feature-sidebar-open'));
+  });
+
+  if (close) {
+    close.addEventListener('click', function() {
+      setFeatureSidebarOpen(false);
+    });
+  }
+
+  if (dismiss) {
+    dismiss.addEventListener('click', function() {
+      setFeatureSidebarDismissed(true);
+    });
+  }
+
+  if (overlay) {
+    overlay.addEventListener('click', function() {
+      setFeatureSidebarOpen(false);
+    });
+  }
+
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') setFeatureSidebarOpen(false);
+  });
+
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 980) {
+      setFeatureSidebarOpen(false);
+    }
+  });
+}
+
 function renderSidebarFeatureRequestForm() {
-  var mount = document.getElementById('home-feature-request-slot');
+  var mount = document.getElementById('feature-sidebar-mount');
   if (!mount || document.getElementById('sidebar-feature-request-form')) return;
 
   var OPTIONS = [
@@ -2167,32 +2236,36 @@ function renderSidebarFeatureRequestForm() {
   var section = document.createElement('div');
   section.className = 'sidebar-section sidebar-feature-request';
 
+  var header = document.createElement('div');
+  header.className = 'sidebar-feature-header';
+  header.innerHTML = '<em>User Experience Survey</em>';
+  section.appendChild(header);
+
   var title = document.createElement('div');
   title.className = 'sidebar-section-title';
-  title.textContent = 'What features would you like to see added?';
+  title.textContent = 'What would improve this tool most?';
   section.appendChild(title);
 
   var sub = document.createElement('div');
   sub.className = 'sidebar-feature-sub';
-  sub.textContent = 'Select all that apply';
+  sub.textContent = 'Choose one idea or add your own';
   section.appendChild(sub);
 
   var form = document.createElement('form');
   form.id = 'sidebar-feature-request-form';
   form.noValidate = true;
 
+  var select = document.createElement('select');
+  select.name = 'feature';
+  select.className = 'sidebar-feature-select';
+  select.innerHTML = '<option value="">Select an option...</option>';
   OPTIONS.forEach(function (opt) {
-    var label = document.createElement('label');
-    label.className = 'sidebar-feature-check-label';
-    var cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.name = 'feature';
-    cb.value = opt;
-    cb.className = 'sidebar-feature-checkbox';
-    label.appendChild(cb);
-    label.appendChild(document.createTextNode(' ' + opt));
-    form.appendChild(label);
+    var option = document.createElement('option');
+    option.value = opt;
+    option.textContent = opt;
+    select.appendChild(option);
   });
+  form.appendChild(select);
 
   var writeIn = document.createElement('input');
   writeIn.type = 'text';
@@ -2215,11 +2288,9 @@ function renderSidebarFeatureRequestForm() {
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-    var checked = Array.prototype.slice
-      .call(form.querySelectorAll('input[type="checkbox"]:checked'))
-      .map(function (cb) { return cb.value; });
+    var selected = select.value.trim();
     var writeInVal = writeIn.value.trim();
-    if (!checked.length && !writeInVal) {
+    if (!selected && !writeInVal) {
       errorMsg.hidden = false;
       return;
     }
@@ -2229,7 +2300,7 @@ function renderSidebarFeatureRequestForm() {
     fetch('/api/forms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'feature-request', selections: checked, writeIn: writeInVal }),
+      body: JSON.stringify({ type: 'feature-request', selections: selected ? [selected] : [], writeIn: writeInVal }),
     })
       .then(function (r) { return r.json(); })
       .then(function (data) {
@@ -2269,6 +2340,7 @@ function initPage() {
   enhanceSmartLookupSidebarTop();
   renderStaticSidebar();
   renderSidebarFeatureRequestForm();
+  bindFeatureSidebarControls();
   enhanceDecodePanel();
   applySidebarVisualHierarchy();
   document.body.classList.toggle('brand-page', isBrandPage());
