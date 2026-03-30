@@ -241,6 +241,19 @@
     return renderPanel('Quick comparison summary', differences, 'Fast scan of the biggest differences between the searched item and the recommended replacement.', 'sl-panel-diff');
   }
 
+  function _wrapInDetails(summaryLabel, panel) {
+    var details = document.createElement('details');
+    var summary = document.createElement('summary');
+    summary.textContent = summaryLabel;
+    summary.style.fontSize = '0.75rem';
+    summary.style.fontWeight = '700';
+    summary.style.color = '#6b7280';
+    summary.style.cursor = 'pointer';
+    details.appendChild(summary);
+    details.appendChild(panel);
+    return details;
+  }
+
   function renderActionRow() {
     var row = _el('div', 'sl-action-row');
     var reportBtn = _el('button', 'sl-inline-action', 'Report incorrect replacement');
@@ -258,11 +271,11 @@
     var summaryBand;
     var confidenceStrip;
     var hero;
-    var panels;
     var whyPanel;
     var verificationPanel;
-    var differencesPanel;
     var methodologyPanel;
+    var whyTitle;
+    var methodTitle;
 
     if (!normalizedResult) return null;
 
@@ -272,22 +285,27 @@
     confidenceStrip = renderConfidenceStrip(normalizedResult);
     hero = renderRecommendedReplacementHero(normalizedResult);
 
-    panels = _el('div', 'sl-panel-grid');
     whyPanel = renderWhyReplacementPanel(normalizedResult);
     verificationPanel = renderVerificationPanel(normalizedResult);
-    differencesPanel = renderDifferencesPanel(normalizedResult);
     methodologyPanel = renderMethodologyPanel(normalizedResult);
 
     if (identityBar) layer.appendChild(identityBar);
     if (summaryBand) layer.appendChild(summaryBand);
     if (confidenceStrip) layer.appendChild(confidenceStrip);
     if (hero) layer.appendChild(hero);
-    if (whyPanel) panels.appendChild(whyPanel);
-    if (verificationPanel) panels.appendChild(verificationPanel);
-    if (differencesPanel) panels.appendChild(differencesPanel);
-    if (methodologyPanel) panels.appendChild(methodologyPanel);
-    if (panels.childNodes.length) layer.appendChild(panels);
     layer.appendChild(renderActionRow());
+
+    if (whyPanel) {
+      whyTitle = (normalizedResult.whyReplacement && normalizedResult.whyReplacement.title) || 'Why this replacement?';
+      layer.appendChild(_wrapInDetails(whyTitle, whyPanel));
+    }
+    if (verificationPanel) {
+      layer.appendChild(_wrapInDetails('Verification status', verificationPanel));
+    }
+    if (methodologyPanel) {
+      methodTitle = (normalizedResult.methodology && normalizedResult.methodology.title) || 'Source transparency';
+      layer.appendChild(_wrapInDetails(methodTitle, methodologyPanel));
+    }
 
     return layer.childNodes.length ? layer : null;
   }
