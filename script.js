@@ -150,6 +150,9 @@ var BRAND_LOGOS = {
 
 // ===== STATE =====
 var currentCategory = 'appliances';
+var decoderData = window.decoderData || null;
+var DECODER_DATA_SCRIPT_ID = 'decoder-data-script';
+var decoderDataLoadCallbacks = [];
 
 function toggleSidebar() {
   document.body.classList.toggle('sidebar-open');
@@ -364,6 +367,205 @@ function getDecodeDom() {
   var btnEl = document.getElementById('decodeBtn') ||
     scope.querySelector('button#decodeBtn, button.decode-btn[onclick*="decodeSerial"]');
   return { brandEl: brandEl, serialEl: serialEl, btnEl: btnEl };
+}
+
+function hasDecoderData() {
+  return !!(window.decoderData && typeof window.decoderData === 'object');
+}
+
+function syncDecoderDataRef() {
+  if (hasDecoderData()) {
+    decoderData = window.decoderData;
+  }
+  return decoderData;
+}
+
+function flushDecoderDataCallbacks(error) {
+  var callbacks = decoderDataLoadCallbacks.slice();
+  decoderDataLoadCallbacks = [];
+  callbacks.forEach(function(cb) {
+    if (typeof cb !== 'function') return;
+    try {
+      cb(error || null);
+    } catch (_) {}
+  });
+}
+
+function ensureDecoderDataLoaded(callback) {
+  if (typeof callback === 'function') {
+    decoderDataLoadCallbacks.push(callback);
+  }
+
+  if (hasDecoderData()) {
+    syncDecoderDataRef();
+    flushDecoderDataCallbacks(null);
+    return;
+  }
+
+  var existing = document.getElementById(DECODER_DATA_SCRIPT_ID);
+  if (existing) return;
+
+  var script = document.createElement('script');
+  script.id = DECODER_DATA_SCRIPT_ID;
+  script.src = '/decoder-data.js';
+  script.async = true;
+  script.onload = function() {
+    syncDecoderDataRef();
+    flushDecoderDataCallbacks(null);
+  };
+  script.onerror = function() {
+    console.error('[Decoder] Failed to load decoder-data.js');
+    flushDecoderDataCallbacks(new Error('decoder-data-load-failed'));
+  };
+  document.head.appendChild(script);
+}
+
+function initializeDecoderUiWhenReady() {
+  if (!hasDecoderData()) return;
+  syncDecoderDataRef();
+
+  var dom = getDecodeDom();
+  var brandSelect = dom.brandEl;
+  var serialInput = dom.serialEl;
+  var eraSelect = document.getElementById('eraSelect');
+  if (!brandSelect || !serialInput) return;
+  if (brandSelect.getAttribute('data-decoder-ui-ready') === '1') {
+    updateDecodeBtn();
+    return;
+  }
+
+  brandSelect.setAttribute('data-decoder-ui-ready', '1');
+
+  var initialCategory = 'appliances';
+  var resetHomeSearch = shouldResetHomePageSearch();
+  try {
+    var initParams = new URLSearchParams(window.location.search || '');
+    var initCat = initParams.get('cat');
+    if (resetHomeSearch) initialCategory = 'appliances';
+    else if (initCat) initialCategory = categoryNameToKey(initCat);
+    else if (window.DEFAULT_CATEGORY) initialCategory = categoryNameToKey(window.DEFAULT_CATEGORY);
+    else initialCategory = getSavedCategoryKey() || 'appliances';
+  } catch (_) {
+    initialCategory = getSavedCategoryKey() || 'appliances';
+  }
+
+  currentCategory = normalizeDecoderCategory(initialCategory);
+  populateBrands(currentCategory);
+  syncGlobalCategoryTabs(initialCategory);
+  saveCategoryKey(initialCategory);
+  applyBrandDefaultFromSlug();
+  ensureBrandAliasSearch();
+
+  if (brandSelect.getAttribute('data-brand-bound') !== '1') {
+    brandSelect.setAttribute('data-brand-bound', '1');
+    brandSelect.addEventListener('change', function() {
+      clearDecodeEntryFields({ categoryKey: getActiveDecoderCategory(), clearEra: true });
+      onBrandChange();
+      var selected = brandSelect.value || '';
+      if (selected) {
+        var clean = selected.replace(/_/g, '-');
+        var sidebarCat = sidebarCategoryForSlug(clean) || sidebarCategoryForSlug(selected);
+        if (sidebarCat) expandSidebarCategory(sidebarCat);
+      }
+      updateDecodeBtn();
+      syncSidebarActiveState();
+    });
+  }
+
+  if (serialInput.getAttribute('data-serial-bound') !== '1') {
+    serialInput.setAttribute('data-serial-bound', '1');
+    serialInput.addEventListener('input', updateDecodeBtn);
+    serialInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') decodeSerial();
+    });
+  }
+
+  if (eraSelect && eraSelect.getAttribute('data-era-bound') !== '1') {
+    eraSelect.setAttribute('data-era-bound', '1');
+    eraSelect.addEventListener('change', updateDecodeBtn);
+  }
+
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var catParam = params.get('cat');
+    var brandParam = params.get('brand');
+    brandParam = normalizeBrandId(brandParam);
+    if (!resetHomeSearch && !catParam && window.DEFAULT_CATEGORY) catParam = window.DEFAULT_CATEGORY;
+    if (!resetHomeSearch && catParam) {
+      var tabBtn = document.querySelector('.cat-tab[data-cat="' + catParam + '"]');
+      if (tabBtn) selectCategory(catParam, tabBtn);
+      else if (decoderData[normalizeDecoderCategory(catParam)]) {
+        currentCategory = normalizeDecoderCategory(catParam);
+        saveCategoryKey(catParam);
+        populateBrands(currentCategory);
+        prioritizeSidebarCategory(catParam);
+        syncGlobalCategoryTabs(catParam);
+        syncSidebarActiveState();
+        updateDecodeBtn();
+      }
+    }
+    if (!resetHomeSearch && brandParam) {
+      var sel = getDecodeDom().brandEl;
+      if (sel) {
+        for (var i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value === brandParam) {
+            sel.value = brandParam;
+            onBrandChange();
+            updateDecodeBtn();
+            setTimeout(function() {
+              var s = getDecodeDom().serialEl;
+              if (s && s.focus) s.focus();
+            }, 150);
+            break;
+          }
+        }
+      }
+    }
+  } catch (_) {}
+
+  if (resetHomeSearch) {
+    resetHomePageSearch();
+  }
+
+  updateDecodeBtn();
+}
+
+function bindDecoderDataLoadTriggers() {
+  var dom = getDecodeDom();
+  var brandSelect = dom.brandEl;
+  var serialInput = dom.serialEl;
+  var decodeBtn = dom.btnEl;
+
+  var onInteraction = function(event) {
+    if (event && event.isTrusted === false) return;
+    ensureDecoderDataLoaded(function(error) {
+      if (error) return;
+      initializeDecoderUiWhenReady();
+    });
+  };
+
+  if (serialInput && serialInput.getAttribute('data-decoder-load-bound') !== '1') {
+    serialInput.setAttribute('data-decoder-load-bound', '1');
+    serialInput.addEventListener('focus', onInteraction);
+    serialInput.addEventListener('click', onInteraction);
+  }
+
+  if (brandSelect && brandSelect.getAttribute('data-decoder-load-bound') !== '1') {
+    brandSelect.setAttribute('data-decoder-load-bound', '1');
+    brandSelect.addEventListener('focus', onInteraction);
+    brandSelect.addEventListener('click', onInteraction);
+  }
+
+  if (decodeBtn && decodeBtn.getAttribute('data-decoder-load-bound') !== '1') {
+    decodeBtn.setAttribute('data-decoder-load-bound', '1');
+    decodeBtn.addEventListener('click', onInteraction);
+  }
+
+  document.querySelectorAll('.cat-tab').forEach(function(tab) {
+    if (tab.getAttribute('data-decoder-load-bound') === '1') return;
+    tab.setAttribute('data-decoder-load-bound', '1');
+    tab.addEventListener('click', onInteraction);
+  });
 }
 
 function ensureSmartLookupDom() {
@@ -1630,6 +1832,7 @@ function ensurePageTitleAndCategoryTabs() {
 
 function applyBrandDefaultFromSlug() {
   if (!isBrandPage()) return;
+  if (!hasDecoderData()) return;
   var slug = getBrandPageSlug();
   var brandId = slugToBrandId(slug);
   var categoryName = sidebarCategoryForSlug(slug);
@@ -1720,6 +1923,7 @@ function pulseGuidedSearchButton() {
 // ===== BRAND CONTEXT (brand pages) =====
 function loadBrandContext() {
   try {
+    if (!hasDecoderData()) return;
     var slug = getBrandPageSlug();
     if (!slug) return;
     var BRAND_PAGE_MAP = {
@@ -1949,9 +2153,78 @@ function applySidebarVisualHierarchy() {
     item.classList.add('sidebar-item');
   });
 }
+function setFeatureSidebarOpen(open) {
+  var next = !!open;
+  var toggle = document.getElementById('feature-sidebar-toggle');
+  var overlay = document.getElementById('feature-sidebar-overlay');
+  document.body.classList.toggle('feature-sidebar-open', next);
+  if (toggle) toggle.setAttribute('aria-expanded', next ? 'true' : 'false');
+  if (overlay) overlay.classList.toggle('hidden', !next);
+}
+
+function isFeatureSidebarDismissed() {
+  try {
+    return sessionStorage.getItem('featureSidebarDismissed') === '1';
+  } catch (_) {
+    return false;
+  }
+}
+
+function setFeatureSidebarDismissed(dismissed) {
+  var next = !!dismissed;
+  try {
+    if (next) sessionStorage.setItem('featureSidebarDismissed', '1');
+    else sessionStorage.removeItem('featureSidebarDismissed');
+  } catch (_) {}
+  if (next) setFeatureSidebarOpen(false);
+  document.body.classList.toggle('feature-sidebar-dismissed', next);
+}
+
+function bindFeatureSidebarControls() {
+  var toggle = document.getElementById('feature-sidebar-toggle');
+  var close = document.getElementById('feature-sidebar-close');
+  var dismiss = document.getElementById('feature-sidebar-dismiss');
+  var overlay = document.getElementById('feature-sidebar-overlay');
+  if (!toggle || toggle.getAttribute('data-feature-sidebar-bound') === '1') return;
+
+  setFeatureSidebarDismissed(isFeatureSidebarDismissed());
+  toggle.setAttribute('data-feature-sidebar-bound', '1');
+  toggle.addEventListener('click', function() {
+    setFeatureSidebarOpen(!document.body.classList.contains('feature-sidebar-open'));
+  });
+
+  if (close) {
+    close.addEventListener('click', function() {
+      setFeatureSidebarOpen(false);
+    });
+  }
+
+  if (dismiss) {
+    dismiss.addEventListener('click', function() {
+      setFeatureSidebarDismissed(true);
+    });
+  }
+
+  if (overlay) {
+    overlay.addEventListener('click', function() {
+      setFeatureSidebarOpen(false);
+    });
+  }
+
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') setFeatureSidebarOpen(false);
+  });
+
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 980) {
+      setFeatureSidebarOpen(false);
+    }
+  });
+}
+
 function renderSidebarFeatureRequestForm() {
-  var sidebar = document.querySelector('.sidebar');
-  if (!sidebar || document.getElementById('sidebar-feature-request-form')) return;
+  var mount = document.getElementById('feature-sidebar-mount');
+  if (!mount || document.getElementById('sidebar-feature-request-form')) return;
 
   var OPTIONS = [
     'Ability to Decode through Picture Images',
@@ -1963,32 +2236,36 @@ function renderSidebarFeatureRequestForm() {
   var section = document.createElement('div');
   section.className = 'sidebar-section sidebar-feature-request';
 
+  var header = document.createElement('div');
+  header.className = 'sidebar-feature-header';
+  header.innerHTML = '<em>User Experience Survey</em>';
+  section.appendChild(header);
+
   var title = document.createElement('div');
   title.className = 'sidebar-section-title';
-  title.textContent = 'What features would you like to see added?';
+  title.textContent = 'What would improve this tool most?';
   section.appendChild(title);
 
   var sub = document.createElement('div');
   sub.className = 'sidebar-feature-sub';
-  sub.textContent = 'Select all that apply';
+  sub.textContent = 'Choose one idea or add your own';
   section.appendChild(sub);
 
   var form = document.createElement('form');
   form.id = 'sidebar-feature-request-form';
   form.noValidate = true;
 
+  var select = document.createElement('select');
+  select.name = 'feature';
+  select.className = 'sidebar-feature-select';
+  select.innerHTML = '<option value="">Select an option...</option>';
   OPTIONS.forEach(function (opt) {
-    var label = document.createElement('label');
-    label.className = 'sidebar-feature-check-label';
-    var cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.name = 'feature';
-    cb.value = opt;
-    cb.className = 'sidebar-feature-checkbox';
-    label.appendChild(cb);
-    label.appendChild(document.createTextNode(' ' + opt));
-    form.appendChild(label);
+    var option = document.createElement('option');
+    option.value = opt;
+    option.textContent = opt;
+    select.appendChild(option);
   });
+  form.appendChild(select);
 
   var writeIn = document.createElement('input');
   writeIn.type = 'text';
@@ -2011,11 +2288,9 @@ function renderSidebarFeatureRequestForm() {
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-    var checked = Array.prototype.slice
-      .call(form.querySelectorAll('input[type="checkbox"]:checked'))
-      .map(function (cb) { return cb.value; });
+    var selected = select.value.trim();
     var writeInVal = writeIn.value.trim();
-    if (!checked.length && !writeInVal) {
+    if (!selected && !writeInVal) {
       errorMsg.hidden = false;
       return;
     }
@@ -2025,7 +2300,7 @@ function renderSidebarFeatureRequestForm() {
     fetch('/api/forms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'feature-request', selections: checked, writeIn: writeInVal }),
+      body: JSON.stringify({ type: 'feature-request', selections: selected ? [selected] : [], writeIn: writeInVal }),
     })
       .then(function (r) { return r.json(); })
       .then(function (data) {
@@ -2051,7 +2326,8 @@ function renderSidebarFeatureRequestForm() {
   });
 
   section.appendChild(form);
-  sidebar.appendChild(section);
+  mount.innerHTML = '';
+  mount.appendChild(section);
 }
 
 function initPage() {
@@ -2064,6 +2340,7 @@ function initPage() {
   enhanceSmartLookupSidebarTop();
   renderStaticSidebar();
   renderSidebarFeatureRequestForm();
+  bindFeatureSidebarControls();
   enhanceDecodePanel();
   applySidebarVisualHierarchy();
   document.body.classList.toggle('brand-page', isBrandPage());
@@ -2078,102 +2355,9 @@ function initPage() {
   addGuidedSearchButtonToBrandDecoderCard();
   rewriteBrandLinks();
   var dom = getDecodeDom();
-  var brandSelect = dom.brandEl;
-  var serialInput = dom.serialEl;
-  var eraSelect   = document.getElementById('eraSelect');
   var altQuery    = getSmartLookupInputEl();
-
-  if (brandSelect && serialInput) {
-    var initialCategory = 'appliances';
-    var resetHomeSearch = shouldResetHomePageSearch();
-    try {
-      var initParams = new URLSearchParams(window.location.search || '');
-      var initCat = initParams.get('cat');
-      if (resetHomeSearch) initialCategory = 'appliances';
-      else if (initCat) initialCategory = categoryNameToKey(initCat);
-      else if (window.DEFAULT_CATEGORY) initialCategory = categoryNameToKey(window.DEFAULT_CATEGORY);
-      else initialCategory = getSavedCategoryKey() || 'appliances';
-    } catch (_) {
-      initialCategory = getSavedCategoryKey() || 'appliances';
-    }
-    currentCategory = normalizeDecoderCategory(initialCategory);
-    populateBrands(currentCategory);
-    syncGlobalCategoryTabs(initialCategory);
-    saveCategoryKey(initialCategory);
-    applyBrandDefaultFromSlug();
-    ensureBrandAliasSearch();
-
-    if (brandSelect.getAttribute('data-brand-bound') !== '1') {
-      brandSelect.setAttribute('data-brand-bound', '1');
-      brandSelect.addEventListener('change', function() {
-        clearDecodeEntryFields({ categoryKey: getActiveDecoderCategory(), clearEra: true });
-        onBrandChange();
-        var selected = brandSelect.value || '';
-        if (selected) {
-          var clean = selected.replace(/_/g, '-');
-          var sidebarCat = sidebarCategoryForSlug(clean) || sidebarCategoryForSlug(selected);
-          if (sidebarCat) expandSidebarCategory(sidebarCat);
-        }
-        updateDecodeBtn();
-        syncSidebarActiveState();
-      });
-    }
-    if (serialInput.getAttribute('data-serial-bound') !== '1') {
-      serialInput.setAttribute('data-serial-bound', '1');
-      serialInput.addEventListener('input', updateDecodeBtn);
-      serialInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') decodeSerial();
-      });
-    }
-    if (eraSelect && eraSelect.getAttribute('data-era-bound') !== '1') {
-      eraSelect.setAttribute('data-era-bound', '1');
-      eraSelect.addEventListener('change', updateDecodeBtn);
-    }
-
-    // URL parameter: pre-select brand/category from brand landing pages
-    // e.g. index.html?brand=ge&cat=appliances
-    try {
-      var params = new URLSearchParams(window.location.search);
-      var catParam   = params.get('cat');
-      var brandParam = params.get('brand');
-      brandParam = normalizeBrandId(brandParam);
-      if (!resetHomeSearch && !catParam && window.DEFAULT_CATEGORY) catParam = window.DEFAULT_CATEGORY;
-      if (!resetHomeSearch && catParam) {
-        var tabBtn = document.querySelector('.cat-tab[data-cat="' + catParam + '"]');
-        if (tabBtn) selectCategory(catParam, tabBtn);
-        else if (decoderData[normalizeDecoderCategory(catParam)]) {
-          currentCategory = normalizeDecoderCategory(catParam);
-          saveCategoryKey(catParam);
-          populateBrands(currentCategory);
-          prioritizeSidebarCategory(catParam);
-          syncGlobalCategoryTabs(catParam);
-          syncSidebarActiveState();
-          updateDecodeBtn();
-        }
-      }
-      if (!resetHomeSearch && brandParam) {
-        var sel = getDecodeDom().brandEl;
-        if (sel) {
-          for (var i = 0; i < sel.options.length; i++) {
-            if (sel.options[i].value === brandParam) {
-              sel.value = brandParam;
-              onBrandChange();
-              updateDecodeBtn();
-              setTimeout(function() {
-                var s = getDecodeDom().serialEl;
-                if (s && s.focus) s.focus();
-              }, 150);
-              break;
-            }
-          }
-        }
-      }
-    } catch (e) {}
-
-    if (resetHomeSearch) {
-      resetHomePageSearch();
-    }
-  }
+  bindDecoderDataLoadTriggers();
+  if (hasDecoderData()) initializeDecoderUiWhenReady();
 
   try {
     var modeParams = new URLSearchParams(window.location.search || '');
@@ -2287,7 +2471,6 @@ document.addEventListener('DOMContentLoaded', function() {
   ensureMainContentShell();
   initSpaNavigation();
   initPage();
-  renderSidebarFeatureRequestForm();
   if (typeof window.initSmartLookupPage === 'function') {
     window.initSmartLookupPage();
   }
@@ -2318,7 +2501,9 @@ function selectCategory(cat, btn) {
 // ===== BRAND DROPDOWN =====
 function populateBrands(category) {
   var sel = document.getElementById('brand');
-  if (!sel || !decoderData[category]) return;
+  if (!sel || !hasDecoderData()) return;
+  syncDecoderDataRef();
+  if (!decoderData[category]) return;
   var brands = decoderData[category].brands;
   var cyclingCat = CYCLING_BRANDS[category] || {};
   var selectedBrand = getSelectedBrandForCategory(category);
@@ -2393,7 +2578,8 @@ function populateBrands(category) {
 // ===== ERA DROPDOWN =====
 function onBrandChange() {
   var sel = document.getElementById('brand');
-  if (!sel) return;
+  if (!sel || !hasDecoderData()) return;
+  syncDecoderDataRef();
   currentCategory = getActiveDecoderCategory();
   var opt = sel.options[sel.selectedIndex];
   var brandId = opt ? opt.value : '';
@@ -2515,6 +2701,11 @@ function updateDecodeBtn() {
   var btnEl    = dom.btnEl;
   var kenmorePrefixEl = document.getElementById('kenmoreModelPrefix');
   if (!brandEl || !serialEl || !btnEl) return;
+  if (!hasDecoderData()) {
+    btnEl.disabled = true;
+    return;
+  }
+  syncDecoderDataRef();
   currentCategory = getActiveDecoderCategory();
   var brand  = getSelectedBrandForCategory(currentCategory) || brandEl.value;
   var serial = serialEl.value.trim();
@@ -3134,6 +3325,18 @@ async function refineAmbiguousResult() {
 function decodeSerial() {
   var dom = getDecodeDom();
   if (!dom.brandEl || !dom.serialEl) return;
+  if (!hasDecoderData()) {
+    ensureDecoderDataLoaded(function(error) {
+      if (error) {
+        showCustomAlert('The decoder is still loading. Please try again.');
+        return;
+      }
+      initializeDecoderUiWhenReady();
+      decodeSerial();
+    });
+    return;
+  }
+  syncDecoderDataRef();
   currentCategory = getActiveDecoderCategory();
   var metaBrandId = getSelectedBrandForCategory(currentCategory) || dom.brandEl.value;
   var modelConfig = getSupplementalModelConfig(currentCategory, metaBrandId);
