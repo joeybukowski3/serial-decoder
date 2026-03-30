@@ -150,6 +150,9 @@ var BRAND_LOGOS = {
 
 // ===== STATE =====
 var currentCategory = 'appliances';
+var decoderData = window.decoderData || null;
+var DECODER_DATA_SCRIPT_ID = 'decoder-data-script';
+var decoderDataLoadCallbacks = [];
 
 function toggleSidebar() {
   document.body.classList.toggle('sidebar-open');
@@ -364,6 +367,205 @@ function getDecodeDom() {
   var btnEl = document.getElementById('decodeBtn') ||
     scope.querySelector('button#decodeBtn, button.decode-btn[onclick*="decodeSerial"]');
   return { brandEl: brandEl, serialEl: serialEl, btnEl: btnEl };
+}
+
+function hasDecoderData() {
+  return !!(window.decoderData && typeof window.decoderData === 'object');
+}
+
+function syncDecoderDataRef() {
+  if (hasDecoderData()) {
+    decoderData = window.decoderData;
+  }
+  return decoderData;
+}
+
+function flushDecoderDataCallbacks(error) {
+  var callbacks = decoderDataLoadCallbacks.slice();
+  decoderDataLoadCallbacks = [];
+  callbacks.forEach(function(cb) {
+    if (typeof cb !== 'function') return;
+    try {
+      cb(error || null);
+    } catch (_) {}
+  });
+}
+
+function ensureDecoderDataLoaded(callback) {
+  if (typeof callback === 'function') {
+    decoderDataLoadCallbacks.push(callback);
+  }
+
+  if (hasDecoderData()) {
+    syncDecoderDataRef();
+    flushDecoderDataCallbacks(null);
+    return;
+  }
+
+  var existing = document.getElementById(DECODER_DATA_SCRIPT_ID);
+  if (existing) return;
+
+  var script = document.createElement('script');
+  script.id = DECODER_DATA_SCRIPT_ID;
+  script.src = '/decoder-data.js';
+  script.async = true;
+  script.onload = function() {
+    syncDecoderDataRef();
+    flushDecoderDataCallbacks(null);
+  };
+  script.onerror = function() {
+    console.error('[Decoder] Failed to load decoder-data.js');
+    flushDecoderDataCallbacks(new Error('decoder-data-load-failed'));
+  };
+  document.head.appendChild(script);
+}
+
+function initializeDecoderUiWhenReady() {
+  if (!hasDecoderData()) return;
+  syncDecoderDataRef();
+
+  var dom = getDecodeDom();
+  var brandSelect = dom.brandEl;
+  var serialInput = dom.serialEl;
+  var eraSelect = document.getElementById('eraSelect');
+  if (!brandSelect || !serialInput) return;
+  if (brandSelect.getAttribute('data-decoder-ui-ready') === '1') {
+    updateDecodeBtn();
+    return;
+  }
+
+  brandSelect.setAttribute('data-decoder-ui-ready', '1');
+
+  var initialCategory = 'appliances';
+  var resetHomeSearch = shouldResetHomePageSearch();
+  try {
+    var initParams = new URLSearchParams(window.location.search || '');
+    var initCat = initParams.get('cat');
+    if (resetHomeSearch) initialCategory = 'appliances';
+    else if (initCat) initialCategory = categoryNameToKey(initCat);
+    else if (window.DEFAULT_CATEGORY) initialCategory = categoryNameToKey(window.DEFAULT_CATEGORY);
+    else initialCategory = getSavedCategoryKey() || 'appliances';
+  } catch (_) {
+    initialCategory = getSavedCategoryKey() || 'appliances';
+  }
+
+  currentCategory = normalizeDecoderCategory(initialCategory);
+  populateBrands(currentCategory);
+  syncGlobalCategoryTabs(initialCategory);
+  saveCategoryKey(initialCategory);
+  applyBrandDefaultFromSlug();
+  ensureBrandAliasSearch();
+
+  if (brandSelect.getAttribute('data-brand-bound') !== '1') {
+    brandSelect.setAttribute('data-brand-bound', '1');
+    brandSelect.addEventListener('change', function() {
+      clearDecodeEntryFields({ categoryKey: getActiveDecoderCategory(), clearEra: true });
+      onBrandChange();
+      var selected = brandSelect.value || '';
+      if (selected) {
+        var clean = selected.replace(/_/g, '-');
+        var sidebarCat = sidebarCategoryForSlug(clean) || sidebarCategoryForSlug(selected);
+        if (sidebarCat) expandSidebarCategory(sidebarCat);
+      }
+      updateDecodeBtn();
+      syncSidebarActiveState();
+    });
+  }
+
+  if (serialInput.getAttribute('data-serial-bound') !== '1') {
+    serialInput.setAttribute('data-serial-bound', '1');
+    serialInput.addEventListener('input', updateDecodeBtn);
+    serialInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') decodeSerial();
+    });
+  }
+
+  if (eraSelect && eraSelect.getAttribute('data-era-bound') !== '1') {
+    eraSelect.setAttribute('data-era-bound', '1');
+    eraSelect.addEventListener('change', updateDecodeBtn);
+  }
+
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var catParam = params.get('cat');
+    var brandParam = params.get('brand');
+    brandParam = normalizeBrandId(brandParam);
+    if (!resetHomeSearch && !catParam && window.DEFAULT_CATEGORY) catParam = window.DEFAULT_CATEGORY;
+    if (!resetHomeSearch && catParam) {
+      var tabBtn = document.querySelector('.cat-tab[data-cat="' + catParam + '"]');
+      if (tabBtn) selectCategory(catParam, tabBtn);
+      else if (decoderData[normalizeDecoderCategory(catParam)]) {
+        currentCategory = normalizeDecoderCategory(catParam);
+        saveCategoryKey(catParam);
+        populateBrands(currentCategory);
+        prioritizeSidebarCategory(catParam);
+        syncGlobalCategoryTabs(catParam);
+        syncSidebarActiveState();
+        updateDecodeBtn();
+      }
+    }
+    if (!resetHomeSearch && brandParam) {
+      var sel = getDecodeDom().brandEl;
+      if (sel) {
+        for (var i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value === brandParam) {
+            sel.value = brandParam;
+            onBrandChange();
+            updateDecodeBtn();
+            setTimeout(function() {
+              var s = getDecodeDom().serialEl;
+              if (s && s.focus) s.focus();
+            }, 150);
+            break;
+          }
+        }
+      }
+    }
+  } catch (_) {}
+
+  if (resetHomeSearch) {
+    resetHomePageSearch();
+  }
+
+  updateDecodeBtn();
+}
+
+function bindDecoderDataLoadTriggers() {
+  var dom = getDecodeDom();
+  var brandSelect = dom.brandEl;
+  var serialInput = dom.serialEl;
+  var decodeBtn = dom.btnEl;
+
+  var onInteraction = function(event) {
+    if (event && event.isTrusted === false) return;
+    ensureDecoderDataLoaded(function(error) {
+      if (error) return;
+      initializeDecoderUiWhenReady();
+    });
+  };
+
+  if (serialInput && serialInput.getAttribute('data-decoder-load-bound') !== '1') {
+    serialInput.setAttribute('data-decoder-load-bound', '1');
+    serialInput.addEventListener('focus', onInteraction);
+    serialInput.addEventListener('click', onInteraction);
+  }
+
+  if (brandSelect && brandSelect.getAttribute('data-decoder-load-bound') !== '1') {
+    brandSelect.setAttribute('data-decoder-load-bound', '1');
+    brandSelect.addEventListener('focus', onInteraction);
+    brandSelect.addEventListener('click', onInteraction);
+  }
+
+  if (decodeBtn && decodeBtn.getAttribute('data-decoder-load-bound') !== '1') {
+    decodeBtn.setAttribute('data-decoder-load-bound', '1');
+    decodeBtn.addEventListener('click', onInteraction);
+  }
+
+  document.querySelectorAll('.cat-tab').forEach(function(tab) {
+    if (tab.getAttribute('data-decoder-load-bound') === '1') return;
+    tab.setAttribute('data-decoder-load-bound', '1');
+    tab.addEventListener('click', onInteraction);
+  });
 }
 
 function ensureSmartLookupDom() {
@@ -1630,6 +1832,7 @@ function ensurePageTitleAndCategoryTabs() {
 
 function applyBrandDefaultFromSlug() {
   if (!isBrandPage()) return;
+  if (!hasDecoderData()) return;
   var slug = getBrandPageSlug();
   var brandId = slugToBrandId(slug);
   var categoryName = sidebarCategoryForSlug(slug);
@@ -1720,6 +1923,7 @@ function pulseGuidedSearchButton() {
 // ===== BRAND CONTEXT (brand pages) =====
 function loadBrandContext() {
   try {
+    if (!hasDecoderData()) return;
     var slug = getBrandPageSlug();
     if (!slug) return;
     var BRAND_PAGE_MAP = {
@@ -2079,102 +2283,9 @@ function initPage() {
   addGuidedSearchButtonToBrandDecoderCard();
   rewriteBrandLinks();
   var dom = getDecodeDom();
-  var brandSelect = dom.brandEl;
-  var serialInput = dom.serialEl;
-  var eraSelect   = document.getElementById('eraSelect');
   var altQuery    = getSmartLookupInputEl();
-
-  if (brandSelect && serialInput) {
-    var initialCategory = 'appliances';
-    var resetHomeSearch = shouldResetHomePageSearch();
-    try {
-      var initParams = new URLSearchParams(window.location.search || '');
-      var initCat = initParams.get('cat');
-      if (resetHomeSearch) initialCategory = 'appliances';
-      else if (initCat) initialCategory = categoryNameToKey(initCat);
-      else if (window.DEFAULT_CATEGORY) initialCategory = categoryNameToKey(window.DEFAULT_CATEGORY);
-      else initialCategory = getSavedCategoryKey() || 'appliances';
-    } catch (_) {
-      initialCategory = getSavedCategoryKey() || 'appliances';
-    }
-    currentCategory = normalizeDecoderCategory(initialCategory);
-    populateBrands(currentCategory);
-    syncGlobalCategoryTabs(initialCategory);
-    saveCategoryKey(initialCategory);
-    applyBrandDefaultFromSlug();
-    ensureBrandAliasSearch();
-
-    if (brandSelect.getAttribute('data-brand-bound') !== '1') {
-      brandSelect.setAttribute('data-brand-bound', '1');
-      brandSelect.addEventListener('change', function() {
-        clearDecodeEntryFields({ categoryKey: getActiveDecoderCategory(), clearEra: true });
-        onBrandChange();
-        var selected = brandSelect.value || '';
-        if (selected) {
-          var clean = selected.replace(/_/g, '-');
-          var sidebarCat = sidebarCategoryForSlug(clean) || sidebarCategoryForSlug(selected);
-          if (sidebarCat) expandSidebarCategory(sidebarCat);
-        }
-        updateDecodeBtn();
-        syncSidebarActiveState();
-      });
-    }
-    if (serialInput.getAttribute('data-serial-bound') !== '1') {
-      serialInput.setAttribute('data-serial-bound', '1');
-      serialInput.addEventListener('input', updateDecodeBtn);
-      serialInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') decodeSerial();
-      });
-    }
-    if (eraSelect && eraSelect.getAttribute('data-era-bound') !== '1') {
-      eraSelect.setAttribute('data-era-bound', '1');
-      eraSelect.addEventListener('change', updateDecodeBtn);
-    }
-
-    // URL parameter: pre-select brand/category from brand landing pages
-    // e.g. index.html?brand=ge&cat=appliances
-    try {
-      var params = new URLSearchParams(window.location.search);
-      var catParam   = params.get('cat');
-      var brandParam = params.get('brand');
-      brandParam = normalizeBrandId(brandParam);
-      if (!resetHomeSearch && !catParam && window.DEFAULT_CATEGORY) catParam = window.DEFAULT_CATEGORY;
-      if (!resetHomeSearch && catParam) {
-        var tabBtn = document.querySelector('.cat-tab[data-cat="' + catParam + '"]');
-        if (tabBtn) selectCategory(catParam, tabBtn);
-        else if (decoderData[normalizeDecoderCategory(catParam)]) {
-          currentCategory = normalizeDecoderCategory(catParam);
-          saveCategoryKey(catParam);
-          populateBrands(currentCategory);
-          prioritizeSidebarCategory(catParam);
-          syncGlobalCategoryTabs(catParam);
-          syncSidebarActiveState();
-          updateDecodeBtn();
-        }
-      }
-      if (!resetHomeSearch && brandParam) {
-        var sel = getDecodeDom().brandEl;
-        if (sel) {
-          for (var i = 0; i < sel.options.length; i++) {
-            if (sel.options[i].value === brandParam) {
-              sel.value = brandParam;
-              onBrandChange();
-              updateDecodeBtn();
-              setTimeout(function() {
-                var s = getDecodeDom().serialEl;
-                if (s && s.focus) s.focus();
-              }, 150);
-              break;
-            }
-          }
-        }
-      }
-    } catch (e) {}
-
-    if (resetHomeSearch) {
-      resetHomePageSearch();
-    }
-  }
+  bindDecoderDataLoadTriggers();
+  if (hasDecoderData()) initializeDecoderUiWhenReady();
 
   try {
     var modeParams = new URLSearchParams(window.location.search || '');
@@ -2318,7 +2429,9 @@ function selectCategory(cat, btn) {
 // ===== BRAND DROPDOWN =====
 function populateBrands(category) {
   var sel = document.getElementById('brand');
-  if (!sel || !decoderData[category]) return;
+  if (!sel || !hasDecoderData()) return;
+  syncDecoderDataRef();
+  if (!decoderData[category]) return;
   var brands = decoderData[category].brands;
   var cyclingCat = CYCLING_BRANDS[category] || {};
   var selectedBrand = getSelectedBrandForCategory(category);
@@ -2393,7 +2506,8 @@ function populateBrands(category) {
 // ===== ERA DROPDOWN =====
 function onBrandChange() {
   var sel = document.getElementById('brand');
-  if (!sel) return;
+  if (!sel || !hasDecoderData()) return;
+  syncDecoderDataRef();
   currentCategory = getActiveDecoderCategory();
   var opt = sel.options[sel.selectedIndex];
   var brandId = opt ? opt.value : '';
@@ -2515,6 +2629,11 @@ function updateDecodeBtn() {
   var btnEl    = dom.btnEl;
   var kenmorePrefixEl = document.getElementById('kenmoreModelPrefix');
   if (!brandEl || !serialEl || !btnEl) return;
+  if (!hasDecoderData()) {
+    btnEl.disabled = true;
+    return;
+  }
+  syncDecoderDataRef();
   currentCategory = getActiveDecoderCategory();
   var brand  = getSelectedBrandForCategory(currentCategory) || brandEl.value;
   var serial = serialEl.value.trim();
@@ -3134,6 +3253,18 @@ async function refineAmbiguousResult() {
 function decodeSerial() {
   var dom = getDecodeDom();
   if (!dom.brandEl || !dom.serialEl) return;
+  if (!hasDecoderData()) {
+    ensureDecoderDataLoaded(function(error) {
+      if (error) {
+        showCustomAlert('The decoder is still loading. Please try again.');
+        return;
+      }
+      initializeDecoderUiWhenReady();
+      decodeSerial();
+    });
+    return;
+  }
+  syncDecoderDataRef();
   currentCategory = getActiveDecoderCategory();
   var metaBrandId = getSelectedBrandForCategory(currentCategory) || dom.brandEl.value;
   var modelConfig = getSupplementalModelConfig(currentCategory, metaBrandId);
