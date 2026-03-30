@@ -201,10 +201,10 @@ async function submitContact(e) {
   status.className = 'cf-status hidden';
 
   try {
-    var res = await fetch('/api/contact', {
+    var res = await fetch('/api/forms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: name, email: email, message: message }),
+      body: JSON.stringify({ type: 'contact', name: name, email: email, message: message }),
     });
     var data = await res.json();
     if (data.ok) {

@@ -67,7 +67,7 @@
   ],
   "crons": [
     {
-      "path": "/api/usage-alert",
+      "path": "/api/alerts",
       "schedule": "0 9 * * *"
     }
   ]

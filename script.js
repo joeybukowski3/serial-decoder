@@ -2022,10 +2022,10 @@ function renderSidebarFeatureRequestForm() {
     errorMsg.hidden = true;
     btn.disabled = true;
     btn.textContent = 'Sending...';
-    fetch('/api/feature-request', {
+    fetch('/api/forms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ selections: checked, writeIn: writeInVal }),
+      body: JSON.stringify({ type: 'feature-request', selections: checked, writeIn: writeInVal }),
     })
       .then(function (r) { return r.json(); })
       .then(function (data) {
@@ -2594,10 +2594,10 @@ function sanitizeDecodeResult(result) {
 // ===== DECODE FALLBACK ALERT (fire-and-forget) =====
 function fireFallbackAlert(brand, serial, category, reason) {
   try {
-    fetch('/api/decode-alert', {
+    fetch('/api/alerts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brand: brand, serial: serial, category: category, reason: reason, timestamp: new Date().toISOString() })
+      body: JSON.stringify({ type: 'decode', brand: brand, serial: serial, category: category, reason: reason, timestamp: new Date().toISOString() })
     }).catch(function() {});
   } catch (_) {}
 }
@@ -4429,10 +4429,10 @@ async function submitFeedback() {
   var details   = document.getElementById('fbDetails').value;
 
   try {
-    await fetch('/api/feedback', {
+    await fetch('/api/forms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brand: brand, serial: serial, issueType: issueType, details: details }),
+      body: JSON.stringify({ type: 'feedback', brand: brand, serial: serial, issueType: issueType, details: details }),
     });
   } catch (e) {
     // fail silently — still show thank-you

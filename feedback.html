@@ -259,10 +259,10 @@ async function submitSiteFeedback(event) {
   submitBtn.textContent = 'Sending...';
 
   try {
-    var response = await fetch('/api/site-feedback', {
+    var response = await fetch('/api/forms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(Object.assign({ type: 'site-feedback' }, payload))
     });
     var data = await response.json();
     if (!response.ok || !data.ok) {
