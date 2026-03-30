@@ -1950,8 +1950,8 @@ function applySidebarVisualHierarchy() {
   });
 }
 function renderSidebarFeatureRequestForm() {
-  var sidebar = document.querySelector('.sidebar');
-  if (!sidebar || document.getElementById('sidebar-feature-request-form')) return;
+  var mount = document.getElementById('home-feature-request-slot');
+  if (!mount || document.getElementById('sidebar-feature-request-form')) return;
 
   var OPTIONS = [
     'Ability to Decode through Picture Images',
@@ -2051,7 +2051,8 @@ function renderSidebarFeatureRequestForm() {
   });
 
   section.appendChild(form);
-  sidebar.appendChild(section);
+  mount.innerHTML = '';
+  mount.appendChild(section);
 }
 
 function initPage() {
@@ -2287,7 +2288,6 @@ document.addEventListener('DOMContentLoaded', function() {
   ensureMainContentShell();
   initSpaNavigation();
   initPage();
-  renderSidebarFeatureRequestForm();
   if (typeof window.initSmartLookupPage === 'function') {
     window.initSmartLookupPage();
   }

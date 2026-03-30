@@ -523,6 +523,66 @@
       display: flex;
       flex-direction: column;
     }
+    .decoder-panel-layout {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.86fr) minmax(0, 1.54fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .home-feature-request-slot {
+      min-width: 0;
+    }
+    .home-feature-request-slot .sidebar-feature-request {
+      height: 100%;
+      margin-bottom: 0;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(0, 201, 167, 0.18);
+      background:
+        linear-gradient(180deg, rgba(11, 27, 43, 0.96) 0%, rgba(10, 23, 36, 0.98) 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .home-feature-request-slot .sidebar-section-title {
+      margin-bottom: 6px;
+    }
+    .home-feature-request-slot .sidebar-feature-sub {
+      margin-bottom: 12px;
+      font-size: 0.76rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .home-feature-request-slot .sidebar-feature-check-label {
+      padding: 10px 0;
+      font-size: 0.84rem;
+      min-height: 42px;
+    }
+    .home-feature-request-slot .sidebar-feature-checkbox {
+      width: 18px;
+      height: 18px;
+      margin-top: 1px;
+    }
+    .home-feature-request-slot .sidebar-feature-writein {
+      margin-top: 12px;
+      min-height: 44px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+    }
+    .home-feature-request-slot .sidebar-feature-submit {
+      margin-top: 12px;
+      min-height: 44px;
+      border-color: rgba(0, 201, 167, 0.32);
+      background: linear-gradient(135deg, rgba(0, 201, 167, 0.2), rgba(49, 130, 206, 0.26));
+      color: #e6fdf8;
+    }
+    .home-feature-request-slot .sidebar-feature-submit:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(0, 201, 167, 0.28), rgba(49, 130, 206, 0.36));
+    }
+    .decoder-panel-main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
     .home-tool-row {
       display: flex;
       gap: 10px;
@@ -558,6 +618,9 @@
       .home-tools-grid {
         grid-template-columns: 1fr;
       }
+      .decoder-panel-layout {
+        grid-template-columns: 1fr;
+      }
       .home-tool-row {
         flex-direction: column;
       }
@@ -565,6 +628,25 @@
       #panel-decoder .home-tool-row .search-input {
         flex: 1 1 auto;
         width: 100%;
+      }
+    }
+    @media (max-width: 767px) {
+      .decoder-panel-layout {
+        gap: 14px;
+      }
+      .home-feature-request-slot {
+        order: 2;
+      }
+      .home-feature-request-slot .sidebar-feature-request {
+        padding: 14px;
+      }
+      .home-feature-request-slot .sidebar-feature-check-label {
+        min-height: 46px;
+        padding: 11px 0;
+      }
+      .home-feature-request-slot .sidebar-feature-writein,
+      .home-feature-request-slot .sidebar-feature-submit {
+        font-size: 0.9rem;
       }
     }
 
@@ -701,35 +783,41 @@
 
         <!-- DECODER PANEL -->
         <div class="search-panel" id="panel-decoder">
-          <div class="home-tool-row">
-            <label class="sr-only" for="brand">Select Brand</label>
-            <select id="brand" class="search-select">
-              <option value="">-- Select Brand --</option>
-            </select>
+          <div class="decoder-panel-layout">
+            <aside class="home-feature-request-slot" id="home-feature-request-slot" aria-label="Feature request survey"></aside>
 
-            <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
-            <input type="text" id="serial" class="search-input" placeholder="Enter serial number (e.g., CB2501800)">
-          </div>
+            <div class="decoder-panel-main">
+              <div class="home-tool-row">
+                <label class="sr-only" for="brand">Select Brand</label>
+                <select id="brand" class="search-select">
+                  <option value="">-- Select Brand --</option>
+                </select>
 
-          <!-- Era Selector (shown by script.js when needed) -->
-          <div class="era-group hidden" id="eraGroup">
-            <label class="sr-only" for="eraSelect">
-              Manufacture Era
-              <span title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">ⓘ</span>
-            </label>
-            <select id="eraSelect" class="search-select" style="margin-top:8px;">
-              <option value="">-- Select Era --</option>
-              <option value="post">Post-2006 (manufactured after 2006)</option>
-              <option value="pre">Pre-2006 (manufactured before 2006)</option>
-            </select>
-            <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
-          </div>
+                <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
+                <input type="text" id="serial" class="search-input" placeholder="Enter serial number (e.g., CB2501800)">
+              </div>
 
-          <p class="search-hint serial-helper-text">Enter the serial number exactly as shown on the product label</p>
+              <!-- Era Selector (shown by script.js when needed) -->
+              <div class="era-group hidden" id="eraGroup">
+                <label class="sr-only" for="eraSelect">
+                  Manufacture Era
+                  <span title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">ⓘ</span>
+                </label>
+                <select id="eraSelect" class="search-select" style="margin-top:8px;">
+                  <option value="">-- Select Era --</option>
+                  <option value="post">Post-2006 (manufactured after 2006)</option>
+                  <option value="pre">Pre-2006 (manufactured before 2006)</option>
+                </select>
+                <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
+              </div>
 
-          <p class="search-link" style="margin-top:10px;">No serial number? Use the Smart Lookup panel on the right.</p>
-          <div class="tool-panel-action">
-            <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">🔍 Decode Serial Number</button>
+              <p class="search-hint serial-helper-text">Enter the serial number exactly as shown on the product label</p>
+
+              <p class="search-link" style="margin-top:10px;">No serial number? Use the Smart Lookup panel on the right.</p>
+              <div class="tool-panel-action">
+                <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">🔍 Decode Serial Number</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
