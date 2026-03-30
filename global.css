@@ -5977,6 +5977,18 @@ img.ia-sidebar-logo {
   gap: 12px;
 }
 
+.sl-hero-tier-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+@media (max-width: 768px) {
+  .sl-hero-tier-row {
+    flex-direction: column;
+  }
+}
+
 .sl-summary-card {
   padding: 12px 14px;
 }

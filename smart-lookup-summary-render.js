@@ -270,6 +270,7 @@
     var identityBar;
     var confidenceStrip;
     var hero;
+    var heroRow;
     var whyPanel;
     var verificationPanel;
     var methodologyPanel;
@@ -289,7 +290,13 @@
 
     if (identityBar) layer.appendChild(identityBar);
     if (confidenceStrip) layer.appendChild(confidenceStrip);
-    if (hero) layer.appendChild(hero);
+    if (hero) {
+      heroRow = _el('div', 'sl-hero-tier-row');
+      hero.style.flex = '1';
+      hero.style.minWidth = '0';
+      heroRow.appendChild(hero);
+      layer.appendChild(heroRow);
+    }
     layer.appendChild(renderActionRow());
 
     if (whyPanel) {

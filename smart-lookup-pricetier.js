@@ -134,10 +134,14 @@
 
     if (!brand && !category) return;
 
+    // Inject alongside the hero card when the flex row is present
+    var heroRow = containerEl.querySelector && containerEl.querySelector('.sl-hero-tier-row');
+    var target  = heroRow || containerEl;
+
     // Loading indicator
     var loader = _el('div', 'sl-pricetier-loading', 'Finding replacement tier...');
-    loader.style.cssText = 'font-size:13px;color:#888;padding:8px 0';
-    containerEl.appendChild(loader);
+    loader.style.cssText = 'font-size:13px;color:#888;padding:8px 0;flex:1;min-width:0';
+    target.appendChild(loader);
 
     fetch('/api/pricebook-tier', {
       method: 'POST',
@@ -146,14 +150,17 @@
     })
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        containerEl.removeChild(loader);
+        target.removeChild(loader);
         if (data.matched && data.tier) {
-          containerEl.appendChild(renderPriceTierCard(data));
+          var card = renderPriceTierCard(data);
+          card.style.flex = '1';
+          card.style.minWidth = '0';
+          target.appendChild(card);
         }
         // If not matched, silently omit — don't show error to user
       })
       .catch(function () {
-        try { containerEl.removeChild(loader); } catch (_) {}
+        try { target.removeChild(loader); } catch (_) {}
       });
   };
 })();
