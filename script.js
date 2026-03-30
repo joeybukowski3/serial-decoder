@@ -1949,6 +1949,111 @@ function applySidebarVisualHierarchy() {
     item.classList.add('sidebar-item');
   });
 }
+function renderSidebarFeatureRequestForm() {
+  var sidebar = document.querySelector('.sidebar');
+  if (!sidebar || document.getElementById('sidebar-feature-request-form')) return;
+
+  var OPTIONS = [
+    'Ability to Decode through Picture Images',
+    'Multiple Serial Number Review for Large Loss',
+    'Saved Searches for Future Reference',
+    'Enhanced Mobile Interface',
+  ];
+
+  var section = document.createElement('div');
+  section.className = 'sidebar-section sidebar-feature-request';
+
+  var title = document.createElement('div');
+  title.className = 'sidebar-section-title';
+  title.textContent = 'What features would you like to see added?';
+  section.appendChild(title);
+
+  var sub = document.createElement('div');
+  sub.className = 'sidebar-feature-sub';
+  sub.textContent = 'Select all that apply';
+  section.appendChild(sub);
+
+  var form = document.createElement('form');
+  form.id = 'sidebar-feature-request-form';
+  form.noValidate = true;
+
+  OPTIONS.forEach(function (opt) {
+    var label = document.createElement('label');
+    label.className = 'sidebar-feature-check-label';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.name = 'feature';
+    cb.value = opt;
+    cb.className = 'sidebar-feature-checkbox';
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(' ' + opt));
+    form.appendChild(label);
+  });
+
+  var writeIn = document.createElement('input');
+  writeIn.type = 'text';
+  writeIn.placeholder = 'Write in your own idea...';
+  writeIn.className = 'sidebar-feature-writein';
+  writeIn.maxLength = 200;
+  form.appendChild(writeIn);
+
+  var errorMsg = document.createElement('div');
+  errorMsg.className = 'sidebar-feature-error';
+  errorMsg.hidden = true;
+  errorMsg.textContent = 'Please select at least one option or enter your idea.';
+  form.appendChild(errorMsg);
+
+  var btn = document.createElement('button');
+  btn.type = 'submit';
+  btn.className = 'sidebar-feature-submit';
+  btn.textContent = 'Send Feedback';
+  form.appendChild(btn);
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var checked = Array.prototype.slice
+      .call(form.querySelectorAll('input[type="checkbox"]:checked'))
+      .map(function (cb) { return cb.value; });
+    var writeInVal = writeIn.value.trim();
+    if (!checked.length && !writeInVal) {
+      errorMsg.hidden = false;
+      return;
+    }
+    errorMsg.hidden = true;
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    fetch('/api/feature-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ selections: checked, writeIn: writeInVal }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          while (form.firstChild) form.removeChild(form.firstChild);
+          var thanks = document.createElement('p');
+          thanks.className = 'sidebar-feature-thanks';
+          thanks.textContent = 'Thanks for your feedback!';
+          form.appendChild(thanks);
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'Send Feedback';
+          errorMsg.hidden = false;
+          errorMsg.textContent = 'Something went wrong. Please try again.';
+        }
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.textContent = 'Send Feedback';
+        errorMsg.hidden = false;
+        errorMsg.textContent = 'Something went wrong. Please try again.';
+      });
+  });
+
+  section.appendChild(form);
+  sidebar.appendChild(section);
+}
+
 function initPage() {
 
   ensureSmartLookupDom();
@@ -1958,6 +2063,7 @@ function initPage() {
   ensurePageTitleAndCategoryTabs();
   enhanceSmartLookupSidebarTop();
   renderStaticSidebar();
+  renderSidebarFeatureRequestForm();
   enhanceDecodePanel();
   applySidebarVisualHierarchy();
   document.body.classList.toggle('brand-page', isBrandPage());
