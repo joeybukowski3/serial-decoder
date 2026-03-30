@@ -2287,6 +2287,7 @@ document.addEventListener('DOMContentLoaded', function() {
   ensureMainContentShell();
   initSpaNavigation();
   initPage();
+  renderSidebarFeatureRequestForm();
   if (typeof window.initSmartLookupPage === 'function') {
     window.initSmartLookupPage();
   }
