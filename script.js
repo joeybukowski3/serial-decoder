@@ -156,6 +156,24 @@ function toggleSidebar() {
 }
 var currentFeedbackContext = {};
 var CURRENT_YEAR = new Date().getFullYear();
+
+function trackAnalyticsEvent(name, payload) {
+  try {
+    if (window.ItemAssistAnalytics && typeof window.ItemAssistAnalytics.track === 'function') {
+      window.ItemAssistAnalytics.track(name, payload || {});
+    }
+  } catch (_) {}
+}
+
+function trackSmartLookupEvent(name, payload) {
+  var inputEl = getSmartLookupInputEl ? getSmartLookupInputEl() : null;
+  var query = payload && payload.query ? payload.query : normalizeSmartLookupQuery((inputEl && inputEl.value) || '');
+  trackAnalyticsEvent(name, Object.assign({
+    context: 'smart-lookup',
+    query: query,
+    mobile: !!(window.matchMedia && window.matchMedia('(max-width: 760px)').matches)
+  }, payload || {}));
+}
 var KENMORE_DEFAULT_NOTE = 'For more accurate results, please enter the first 3 digits of your Kenmore model number.';
 var DECODER_FORM_STATE = {
   appliances: { brand: '', model: '' },
@@ -303,6 +321,21 @@ var TOP_BRANDS_BY_CATEGORY = {
   'electronics': ['samsung', 'sony', 'lg', 'vizio', 'panasonic'],
   'water-heaters': ['rheem', 'a_o_smith', 'bradford_white', 'state_industries', 'whirlpool_water_heaters']
 };
+var MOST_COMMON_APPLIANCE_BRANDS = {
+  amana: true,
+  bosch: true,
+  cafe: true,
+  electrolux: true,
+  frigidaire: true,
+  ge: true,
+  hotpoint: true,
+  kenmore: true,
+  kitchenaid: true,
+  lg: true,
+  maytag: true,
+  samsung: true,
+  whirlpool: true
+};
 var SIDEBAR_CATEGORY_LABELS = {
   'appliances': 'Appliances ️',
   'hvac': 'HVAC ️',
@@ -445,6 +478,23 @@ function setStoredSupplementalModel(catKey, value) {
   getDecoderCategoryState(catKey).model = value || '';
 }
 
+function clearDecodeEntryFields(options) {
+  options = options || {};
+  var category = options.categoryKey || getActiveDecoderCategory();
+  var dom = getDecodeDom();
+  var serialEl = dom.serialEl;
+  var modelEl = document.getElementById('modelNumber');
+  var eraEl = document.getElementById('eraSelect');
+  var kenmorePrefixEl = document.getElementById('kenmoreModelPrefix');
+
+  if (serialEl) serialEl.value = '';
+  setStoredSupplementalModel(category, '');
+  if (modelEl) modelEl.value = '';
+  if (kenmorePrefixEl) kenmorePrefixEl.value = '';
+  if (options.clearEra && eraEl) eraEl.value = '';
+  clearSupplementalModelError();
+}
+
 function extractKenmoreModelPrefix(modelValue) {
   return String(modelValue || '').replace(/\D/g, '').substring(0, 3);
 }
@@ -518,6 +568,17 @@ function getSupplementalModelConfig(category, brandId) {
         return extractKenmoreModelPrefix(value);
       },
       missingMessage: 'Model Prefix is required for Kenmore.'
+    };
+  }
+
+  if (catKey === 'waterHeaters' && (key === 'rheem' || key === 'ruud' || key === 'richmond')) {
+    return {
+      visible: true,
+      required: false,
+      useModelAsPrimaryInput: false,
+      label: 'Model Number (optional)',
+      placeholder: 'Enter model number (e.g., E40 2 RH95)',
+      note: 'If available, include the model number to help resolve alternate Rheem-family serial layouts.'
     };
   }
 
@@ -806,7 +867,12 @@ function resetHomePageSearch() {
   }
 
   syncSidebarActiveState();
-  window.scrollTo(0, 0);
+
+  try {
+    history.replaceState({}, '', '/');
+  } catch (_) {}
+
+  scrollPageToTop(true);
   setTimeout(function() {
     var dom3 = getDecodeDom();
     var si = dom3.serialEl;
@@ -1274,7 +1340,22 @@ function addGuidedSearchButtonToBrandDecoderCard() {
     if (altSection && !altSection.classList.contains('open')) {
       altSection.classList.add('open');
     }
-    if (altQuery) {
+    try {
+    var modeParams = new URLSearchParams(window.location.search || '');
+    var initialMode = (modeParams.get('mode') || '').toLowerCase();
+    var initialHash = (window.location.hash || '').toLowerCase();
+    if (initialMode === 'smart' || initialHash === '#panel-smart') {
+      setTimeout(function() {
+        if (typeof useSmartLookup === 'function') useSmartLookup();
+        var smartPanel = document.getElementById('panel-smart');
+        if (smartPanel && smartPanel.scrollIntoView) {
+          smartPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 120);
+    }
+  } catch (_) {}
+
+  if (altQuery) {
       if (!altQuery.value && slug) altQuery.value = slug.replace(/-/g, ' ') + ' model number';
       altQuery.focus();
     }
@@ -1868,6 +1949,111 @@ function applySidebarVisualHierarchy() {
     item.classList.add('sidebar-item');
   });
 }
+function renderSidebarFeatureRequestForm() {
+  var sidebar = document.querySelector('.sidebar');
+  if (!sidebar || document.getElementById('sidebar-feature-request-form')) return;
+
+  var OPTIONS = [
+    'Ability to Decode through Picture Images',
+    'Multiple Serial Number Review for Large Loss',
+    'Saved Searches for Future Reference',
+    'Enhanced Mobile Interface',
+  ];
+
+  var section = document.createElement('div');
+  section.className = 'sidebar-section sidebar-feature-request';
+
+  var title = document.createElement('div');
+  title.className = 'sidebar-section-title';
+  title.textContent = 'What features would you like to see added?';
+  section.appendChild(title);
+
+  var sub = document.createElement('div');
+  sub.className = 'sidebar-feature-sub';
+  sub.textContent = 'Select all that apply';
+  section.appendChild(sub);
+
+  var form = document.createElement('form');
+  form.id = 'sidebar-feature-request-form';
+  form.noValidate = true;
+
+  OPTIONS.forEach(function (opt) {
+    var label = document.createElement('label');
+    label.className = 'sidebar-feature-check-label';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.name = 'feature';
+    cb.value = opt;
+    cb.className = 'sidebar-feature-checkbox';
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(' ' + opt));
+    form.appendChild(label);
+  });
+
+  var writeIn = document.createElement('input');
+  writeIn.type = 'text';
+  writeIn.placeholder = 'Write in your own idea...';
+  writeIn.className = 'sidebar-feature-writein';
+  writeIn.maxLength = 200;
+  form.appendChild(writeIn);
+
+  var errorMsg = document.createElement('div');
+  errorMsg.className = 'sidebar-feature-error';
+  errorMsg.hidden = true;
+  errorMsg.textContent = 'Please select at least one option or enter your idea.';
+  form.appendChild(errorMsg);
+
+  var btn = document.createElement('button');
+  btn.type = 'submit';
+  btn.className = 'sidebar-feature-submit';
+  btn.textContent = 'Send Feedback';
+  form.appendChild(btn);
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var checked = Array.prototype.slice
+      .call(form.querySelectorAll('input[type="checkbox"]:checked'))
+      .map(function (cb) { return cb.value; });
+    var writeInVal = writeIn.value.trim();
+    if (!checked.length && !writeInVal) {
+      errorMsg.hidden = false;
+      return;
+    }
+    errorMsg.hidden = true;
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    fetch('/api/forms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'feature-request', selections: checked, writeIn: writeInVal }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          while (form.firstChild) form.removeChild(form.firstChild);
+          var thanks = document.createElement('p');
+          thanks.className = 'sidebar-feature-thanks';
+          thanks.textContent = 'Thanks for your feedback!';
+          form.appendChild(thanks);
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'Send Feedback';
+          errorMsg.hidden = false;
+          errorMsg.textContent = 'Something went wrong. Please try again.';
+        }
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.textContent = 'Send Feedback';
+        errorMsg.hidden = false;
+        errorMsg.textContent = 'Something went wrong. Please try again.';
+      });
+  });
+
+  section.appendChild(form);
+  sidebar.appendChild(section);
+}
+
 function initPage() {
 
   ensureSmartLookupDom();
@@ -1877,6 +2063,7 @@ function initPage() {
   ensurePageTitleAndCategoryTabs();
   enhanceSmartLookupSidebarTop();
   renderStaticSidebar();
+  renderSidebarFeatureRequestForm();
   enhanceDecodePanel();
   applySidebarVisualHierarchy();
   document.body.classList.toggle('brand-page', isBrandPage());
@@ -1919,6 +2106,7 @@ function initPage() {
     if (brandSelect.getAttribute('data-brand-bound') !== '1') {
       brandSelect.setAttribute('data-brand-bound', '1');
       brandSelect.addEventListener('change', function() {
+        clearDecodeEntryFields({ categoryKey: getActiveDecoderCategory(), clearEra: true });
         onBrandChange();
         var selected = brandSelect.value || '';
         if (selected) {
@@ -1986,6 +2174,16 @@ function initPage() {
       resetHomePageSearch();
     }
   }
+
+  try {
+    var modeParams = new URLSearchParams(window.location.search || '');
+    var initialMode = (modeParams.get('mode') || '').toLowerCase();
+    if (!shouldResetHomePageSearch() && initialMode === 'smart') {
+      setTimeout(function() {
+        if (typeof useSmartLookup === 'function') useSmartLookup();
+      }, 80);
+    }
+  } catch (_) {}
 
   if (altQuery) {
     if (altQuery.getAttribute('data-alt-bound') !== '1') {
@@ -2063,7 +2261,7 @@ function navigateSpa(url, options) {
       if (!options || !options.replace) {
         history.pushState({}, '', target.pathname + target.search);
       }
-      if (options && options.scroll) window.scrollTo(0, 0);
+      if (options && options.scroll) scrollPageToTop(true);
       initPage();
       if (typeof window.initSmartLookupPage === 'function') {
         window.initSmartLookupPage();
@@ -2078,13 +2276,25 @@ function navigateSpa(url, options) {
 }
 
 // ===== INIT =====
+try {
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+} catch (_) {}
+
 document.addEventListener('DOMContentLoaded', function() {
+  scrollPageToTop(true);
+  setTimeout(function() { scrollPageToTop(true); }, 0);
+  setTimeout(function() { scrollPageToTop(true); }, 120);
   ensureMainContentShell();
   initSpaNavigation();
   initPage();
   if (typeof window.initSmartLookupPage === 'function') {
     window.initSmartLookupPage();
   }
+});
+
+window.addEventListener('pageshow', function() {
+  scrollPageToTop(true);
+  setTimeout(function() { scrollPageToTop(true); }, 50);
 });
 
 // ===== CATEGORY SELECTION =====
@@ -2097,8 +2307,7 @@ function selectCategory(cat, btn) {
   prioritizeSidebarCategory(cat);
   syncSidebarActiveState();
   populateBrands(currentCategory);
-  var serialEl = getDecodeDom().serialEl;
-  if (serialEl) serialEl.value = '';
+  clearDecodeEntryFields({ categoryKey: currentCategory, clearEra: true });
   document.getElementById('serialResults').classList.add('hidden');
   document.getElementById('ageResults').classList.add('hidden');
   hideEraGroup();
@@ -2134,13 +2343,47 @@ function populateBrands(category) {
   });
 
   sel.innerHTML = '<option value="">-- Select Brand --</option>';
-  consolidated.forEach(function(b) {
-    var opt = document.createElement('option');
-    opt.value = b.id;
-    opt.textContent = b.name;
-    if (b.cycling) opt.dataset.cycling = '1';
-    sel.appendChild(opt);
-  });
+
+  if (category === 'appliances') {
+    var commonBrands = consolidated.filter(function(b) {
+      return !!MOST_COMMON_APPLIANCE_BRANDS[b.id];
+    });
+    var allBrands = consolidated.slice();
+
+    if (commonBrands.length) {
+      var commonGroup = document.createElement('optgroup');
+      commonGroup.label = 'Most Common';
+      commonBrands.forEach(function(b) {
+        var opt = document.createElement('option');
+        opt.value = b.id;
+        opt.textContent = b.name;
+        if (b.cycling) opt.dataset.cycling = '1';
+        commonGroup.appendChild(opt);
+      });
+      sel.appendChild(commonGroup);
+    }
+
+    if (allBrands.length) {
+      var allGroup = document.createElement('optgroup');
+      allGroup.label = 'All Brands';
+      allBrands.forEach(function(b) {
+        var opt = document.createElement('option');
+        opt.value = b.id;
+        opt.textContent = b.name;
+        if (b.cycling) opt.dataset.cycling = '1';
+        allGroup.appendChild(opt);
+      });
+      sel.appendChild(allGroup);
+    }
+  } else {
+    consolidated.forEach(function(b) {
+      var opt = document.createElement('option');
+      opt.value = b.id;
+      opt.textContent = b.name;
+      if (b.cycling) opt.dataset.cycling = '1';
+      sel.appendChild(opt);
+    });
+  }
   if (selectedBrand) sel.value = selectedBrand;
   if (sel.value !== selectedBrand) setSelectedBrandForCategory(category, sel.value || '');
   onBrandChange();
@@ -2198,6 +2441,8 @@ function showEraGroup() {
 }
 
 function hideEraGroup() {
+  var brandEl = document.getElementById('brand');
+  var brandId = brandEl ? brandEl.value : '';
   document.getElementById('eraGroup').classList.add('hidden');
   document.getElementById('eraSelect').value = '';
 }
@@ -2208,16 +2453,44 @@ function normalizeBrandId(brandId) {
   var s = raw.toLowerCase();
   var cleaned = s.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
 
-  if (cleaned === 'cafe' || cleaned === 'caf�') return 'cafe';
-  if (cleaned === 'ge cafe' || cleaned === 'ge caf�' || cleaned === 'ge caf') return 'cafe';
-  if (cleaned === 'ge monogram' || cleaned === 'monogram') return 'ge';
-  if (cleaned === 'ge profile' || cleaned === 'profile') return 'ge';
-  if (cleaned === 'hotpoint' || cleaned === 'rca') return 'ge';
-  if (cleaned === 'ge') return 'ge';
+  if (
+    cleaned === 'ge' ||
+    cleaned === 'cafe' || cleaned === 'caf�' ||
+    cleaned === 'ge cafe' || cleaned === 'ge caf�' || cleaned === 'ge caf' ||
+    cleaned === 'ge monogram' || cleaned === 'monogram' ||
+    cleaned === 'ge profile' || cleaned === 'profile' ||
+    cleaned === 'hotpoint' || cleaned === 'rca'
+  ) return 'ge';
 
-  if (s === 'ge_caf') return 'cafe';
-  if (s === 'ge_profile' || s === 'ge_monogram' || s === 'hotpoint' || s === 'rca') return 'ge';
+  if (s === 'ge_caf' || s === 'cafe' || s === 'ge_profile' || s === 'ge_monogram' || s === 'hotpoint' || s === 'rca') return 'ge';
   return brandId;
+}
+
+function isGEFamilyBrand(brandId) {
+  var raw = String(brandId || '').trim().toLowerCase();
+  return raw === 'ge' || raw === 'cafe' || raw === 'ge_caf' || raw === 'ge_profile' || raw === 'ge_monogram' || raw === 'hotpoint' || raw === 'rca';
+}
+
+function getSelectedBrandLabel(brandId) {
+  var sel = document.getElementById('brand');
+  if (!sel) return String(brandId || '');
+  for (var i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value === brandId) {
+      return (sel.options[i].textContent || sel.options[i].value || '').trim();
+    }
+  }
+  return String(brandId || '');
+}
+
+function getResultBrandDisplayName(metaBrandId, decoderName, kenmoreResolution) {
+  if (normalizeBrandId(metaBrandId) === 'kenmore') {
+    return 'Kenmore (OEM: ' + (kenmoreResolution ? kenmoreResolution.manufacturer : decoderName) + ')';
+  }
+  if (isGEFamilyBrand(metaBrandId)) {
+    var selectedLabel = getSelectedBrandLabel(metaBrandId) || decoderName || 'GE';
+    return selectedLabel + ' (GE family decoding)';
+  }
+  return decoderName;
 }
 
 function resolveDecoderId(metaBrandId) {
@@ -2239,6 +2512,7 @@ function updateDecodeBtn() {
   var brandEl  = dom.brandEl;
   var serialEl = dom.serialEl;
   var btnEl    = dom.btnEl;
+  var kenmorePrefixEl = document.getElementById('kenmoreModelPrefix');
   if (!brandEl || !serialEl || !btnEl) return;
   currentCategory = getActiveDecoderCategory();
   var brand  = getSelectedBrandForCategory(currentCategory) || brandEl.value;
@@ -2320,10 +2594,10 @@ function sanitizeDecodeResult(result) {
 // ===== DECODE FALLBACK ALERT (fire-and-forget) =====
 function fireFallbackAlert(brand, serial, category, reason) {
   try {
-    fetch('/api/decode-alert', {
+    fetch('/api/alerts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brand: brand, serial: serial, category: category, reason: reason, timestamp: new Date().toISOString() })
+      body: JSON.stringify({ type: 'decode', brand: brand, serial: serial, category: category, reason: reason, timestamp: new Date().toISOString() })
     }).catch(function() {});
   } catch (_) {}
 }
@@ -2344,7 +2618,7 @@ function showDecodeFallback(decoder, serial, brandId, reason) {
     ageEl.textContent = '\u2014';
     if (ageEl.closest) { var ageRow = ageEl.closest('.result-row'); if (ageRow) ageRow.style.display = 'none'; }
   }
-  document.getElementById('resultBrand').textContent  = decoder.name;
+  document.getElementById('resultBrand').textContent  = getResultBrandDisplayName(brandId, decoder.name, null);
   document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'Check the product label and ensure the full serial number is entered.';
   document.getElementById('resultNotes').textContent  =
     sanitizeAlertText('We\u2019re sorry, our system is having trouble decoding that number. Please refer to the decoding method above.\n\nSerial entered: ' + serial);
@@ -2402,7 +2676,7 @@ function ensureRefinementPanel() {
   panel = document.createElement('div');
   panel.className = 'narrow-date-panel hidden';
   panel.innerHTML = '' +
-    '<h4>Narrow the Date (Recommended)</h4>' +
+    '<h4>Narrow the Date</h4>' +
     '<p class="narrow-date-note">Multiple possible dates were found. Add model/context to refine.</p>' +
     '<div class="narrow-date-fields">' +
       '<input type="text" id="narrowModelInput" class="form-input" placeholder="Model number">' +
@@ -2412,8 +2686,10 @@ function ensureRefinementPanel() {
     '<div id="narrowDateOutput" class="narrow-date-output"></div>';
   var resultsBody = serialResults.querySelector('.results-body');
   if (resultsBody) {
+    var summaryLayer = resultsBody.querySelector('#serialSummaryLayer');
     var queryLine = resultsBody.querySelector('.result-query');
-    if (queryLine) queryLine.insertAdjacentElement('afterend', panel);
+    if (summaryLayer) summaryLayer.insertAdjacentElement('afterend', panel);
+    else if (queryLine) queryLine.insertAdjacentElement('afterend', panel);
     else resultsBody.insertAdjacentElement('afterbegin', panel);
   } else {
     var moreOptions = serialResults.querySelector('.more-options-section');
@@ -2466,9 +2742,10 @@ function buildSearchQueryText() {
 }
 
 function updateSearchQueryLine() {
-  var line = ensureSearchQueryLine();
-  if (!line) return;
-  line.textContent = buildSearchQueryText();
+  var serialResults = document.getElementById('serialResults');
+  if (!serialResults) return;
+  var existing = serialResults.querySelector('.result-query');
+  if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
 }
 
 function ensureResultWarningBlock() {
@@ -2554,18 +2831,17 @@ function ensureBrandAliasSearch() {
     if (!query) return;
     var normalized = normalizeBrandId(query);
     var targetId = '';
-    if (normalized === 'ge' || normalized === 'cafe') {
-      targetId = normalized;
-    } else {
-      var qLower = query.toLowerCase();
-      for (var i = 0; i < brandSelect.options.length; i++) {
-        var opt = brandSelect.options[i];
-        var text = (opt.textContent || opt.value || '').toLowerCase();
-        if (text === qLower || opt.value.toLowerCase() === qLower) {
-          targetId = opt.value;
-          break;
-        }
+    var qLower = query.toLowerCase();
+    for (var i = 0; i < brandSelect.options.length; i++) {
+      var opt = brandSelect.options[i];
+      var text = (opt.textContent || opt.value || '').toLowerCase();
+      if (text === qLower || opt.value.toLowerCase() === qLower) {
+        targetId = opt.value;
+        break;
       }
+    }
+    if (!targetId && normalized === 'ge') {
+      targetId = 'ge';
     }
     if (targetId) {
       brandSelect.value = targetId;
@@ -2720,6 +2996,85 @@ function chooseCandidateFromLookup(candidates, lookupData) {
   };
 }
 
+function renderSerialSummaryLayer() {
+  var layer = document.getElementById('serialSummaryLayer');
+  var serialEl = document.getElementById('serial');
+  var yearEl = document.getElementById('resultYear');
+  var monthEl = document.getElementById('resultMonth');
+  var brandEl = document.getElementById('resultBrand');
+  var ageEl = document.getElementById('resultEstimatedAge');
+  var methodEl = document.getElementById('resultMethod');
+  var notesEl = document.getElementById('resultNotes');
+  var monthRow = document.getElementById('resultMonthRow');
+  var determinationEl = document.getElementById('serialDeterminationBody');
+  var serialValue = serialEl ? (serialEl.value || '').trim() : '';
+  var year = yearEl ? (yearEl.textContent || '').trim() : '';
+  var month = monthEl ? (monthEl.textContent || '').trim() : '';
+  var brand = brandEl ? (brandEl.textContent || '').trim() : '';
+  var age = ageEl ? (ageEl.textContent || '').trim() : '';
+  var method = methodEl ? (methodEl.textContent || '').trim() : '';
+  var notes = notesEl ? (notesEl.textContent || '').trim() : '';
+  var determination = determinationEl ? (determinationEl.textContent || '').trim() : '';
+  var monthVisible = !monthRow || !window.getComputedStyle || window.getComputedStyle(monthRow).display !== 'none';
+  var queryText = buildSearchQueryText();
+  var heroRows = [];
+  var refinementMount;
+  var refinePanel;
+  var lkqMount;
+  var lkqEntrySection;
+
+  if (!layer) return;
+
+  if (monthVisible && month) heroRows.push('<div class="serial-hero-row"><span class="serial-hero-row-label">Month / Period</span><span class="serial-hero-row-value">' + esc(month) + '</span></div>');
+  heroRows.push('<div class="serial-hero-row"><span class="serial-hero-row-label">Brand</span><span class="serial-hero-row-value">' + esc(brand || 'N/A') + '</span></div>');
+  heroRows.push('<div class="serial-hero-row"><span class="serial-hero-row-label">Estimated Age</span><span class="serial-hero-row-value">' + esc((age && age !== '—') ? age : 'N/A') + '</span></div>');
+
+  layer.innerHTML = '' +
+    '<div class="serial-query-chip">' + esc(queryText || 'Search Query: —') + '</div>' +
+    '<div class="serial-top-grid">' +
+      '<section class="serial-result-hero">' +
+        '<div class="serial-result-eyebrow">Decoded Result</div>' +
+        '<div class="serial-result-main">' + esc(year || 'N/A') + '</div>' +
+        '<div class="serial-result-subline"><strong>Serial Number:</strong> ' + esc(serialValue || '—') + '</div>' +
+        '<div class="serial-hero-rows">' + heroRows.join('') + '</div>' +
+      '</section>' +
+      '<div class="sl-summary-card serial-method-card">' +
+        '<h4>Decoding Method</h4>' +
+        '<p class="sl-panel-copy">' + esc(method || 'Method unavailable.') + '</p>' +
+      '</div>' +
+    '</div>' +
+    '<div class="serial-secondary-grid">' +
+      '<div id="serialRefinementMount"></div>' +
+      '<div id="serialLkqMount"></div>' +
+    '</div>' +
+    '<div class="serial-bottom-grid">' +
+      '<div class="sl-summary-card">' +
+        '<h4>Important Notes</h4>' +
+        '<p class="sl-panel-copy">' + esc(notes || 'No additional notes.') + '</p>' +
+      '</div>' +
+      '<div class="sl-summary-card">' +
+        '<h4>How this was determined</h4>' +
+        '<p class="sl-panel-copy">' + esc(determination || 'We used the brand\'s serial format rules to estimate the manufacture date.') + '</p>' +
+      '</div>' +
+    '</div>';
+
+  refinementMount = document.getElementById('serialRefinementMount');
+  refinePanel = ensureRefinementPanel();
+  if (refinePanel && refinementMount) refinementMount.appendChild(refinePanel);
+
+  lkqMount = document.getElementById('serialLkqMount');
+  lkqEntrySection = document.querySelector('.lkq-entry-section');
+  if (lkqEntrySection && lkqMount) lkqMount.appendChild(lkqEntrySection);
+
+  if (refinePanel && refinePanel.classList && refinePanel.classList.contains('hidden')) {
+    layer.classList.add('serial-no-refine');
+  } else {
+    layer.classList.remove('serial-no-refine');
+  }
+
+  layer.classList.remove('hidden');
+}
+
 async function refineAmbiguousResult() {
   var output = document.getElementById('narrowDateOutput');
   var modelEl = document.getElementById('narrowModelInput');
@@ -2824,6 +3179,8 @@ function decodeSerial() {
     serial = supplementalModel.replace(/[^A-Za-z0-9-]/g, '').trim();
   }
 
+  clearDecodeEntryFields({ categoryKey: currentCategory });
+
   updateSearchQueryLine();
 
   // Show loading animation immediately
@@ -2850,7 +3207,7 @@ function decodeSerial() {
       if (_ae && _ae.closest) { var r2 = _ae.closest('.result-row'); if (r2) r2.style.display = ''; }
     })();
 
-    var result = decoder.decode(serial);
+    var result = decoder.decode(serial, supplementalModel);
     var sanity  = sanitizeDecodeResult(result);
     var monthRow  = document.getElementById('resultMonthRow');
 
@@ -2903,9 +3260,7 @@ function decodeSerial() {
 
     document.getElementById('resultYear').textContent    = capYear(result.year);
     document.getElementById('resultMonth').textContent   = result.month;
-    document.getElementById('resultBrand').textContent   = isKenmore
-      ? ('Kenmore (OEM: ' + (kenmoreResolution ? kenmoreResolution.manufacturer : decoder.name) + ')')
-      : decoder.name;
+    document.getElementById('resultBrand').textContent = getResultBrandDisplayName(metaBrandId, decoder.name, kenmoreResolution);
     document.getElementById('resultMethod').textContent  = decoder.method || decoder.serialLengthNote || 'N/A';
 
     // Append decode detail (specific codes used for this decode)
@@ -2951,6 +3306,8 @@ function decodeSerial() {
         if (refineOut) refineOut.innerHTML = '';
       }
     }
+
+    renderSerialSummaryLayer();
 
     setLoadingSuccess(function() {
       document.getElementById('serialResults').classList.remove('hidden');
@@ -3026,11 +3383,20 @@ function copyClaimFile() {
 }
 
 // ===== DECODE ANOTHER ITEM =====
+function scrollPageToTop(forceInstant) {
+  var behavior = forceInstant ? 'auto' : 'smooth';
+  try {
+    window.scrollTo({ top: 0, left: 0, behavior: behavior });
+  } catch (_) {
+    window.scrollTo(0, 0);
+  }
+  if (document.documentElement) document.documentElement.scrollTop = 0;
+  if (document.body) document.body.scrollTop = 0;
+}
+
 function scrollHomeSearchToTop() {
   function forceTop() {
-    window.scrollTo(0, 0);
-    if (document.documentElement) document.documentElement.scrollTop = 0;
-    if (document.body) document.body.scrollTop = 0;
+    scrollPageToTop(true);
   }
 
   forceTop();
@@ -3053,6 +3419,11 @@ function decodeAnotherItem() {
   if (serialResults) serialResults.classList.add('hidden');
   if (ageResults) ageResults.classList.add('hidden');
   if (ageLoading) ageLoading.classList.add('hidden');
+  var serialSummaryLayer = document.getElementById('serialSummaryLayer');
+  if (serialSummaryLayer) {
+    serialSummaryLayer.innerHTML = '';
+    serialSummaryLayer.classList.add('hidden');
+  }
   if (serialInput) serialInput.value = '';
   var kenmorePrefix = document.getElementById('kenmoreModelPrefix');
   if (kenmorePrefix) kenmorePrefix.value = '';
@@ -3070,9 +3441,7 @@ function decodeAnotherItem() {
   LKQEngine.clearInstance('smart-lookup');
   clearSmartLookupAssist();
   updateDecodeBtn();
-  requestAnimationFrame(function() {
-    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-  });
+  scrollPageToTop(true);
   setTimeout(function() {
     if (serialInput) {
       try {
@@ -3357,6 +3726,27 @@ function showSmartLookupAssistLoading() {
     '</div>';
 }
 
+function looksLikeSpecificSmartLookupQuery(query) {
+  var value = normalizeSmartLookupQuery(query);
+  var compact;
+  var tokens;
+  var hasMixedToken;
+  var hasLongDigitRun;
+  if (!value) return false;
+
+  compact = value.replace(/[^A-Za-z0-9]/g, '');
+  tokens = value.split(/\s+/).filter(Boolean);
+  hasMixedToken = tokens.some(function (token) {
+    return /[A-Za-z]/.test(token) && /\d/.test(token) && token.replace(/[^A-Za-z0-9]/g, '').length >= 5;
+  });
+  hasLongDigitRun = /\b\d{5,}\b/.test(value);
+
+  if (hasMixedToken) return true;
+  if (compact.length >= 8 && /[A-Za-z]/.test(compact) && /\d/.test(compact)) return true;
+  if (tokens.length >= 3 && hasLongDigitRun) return true;
+  return false;
+}
+
 async function fetchSmartLookupInterpretation(query) {
   var res = await fetch('/api/smart-query-interpret', {
     method: 'POST',
@@ -3472,14 +3862,16 @@ async function runAgeOnlyLookup(query, opts) {
   try {
     var data = await fetchAgeLookup(query);
     var elapsed = Date.now() - loadStart;
-    var remaining = Math.max(0, 1000 - elapsed);
+    var remaining = Math.max(0, 200 - elapsed);
     currentFeedbackContext = { brand: data.brand || '', serial: displayQuery };
+    trackSmartLookupEvent('result_success', { query: displayQuery, queryKind: 'age-only', brand: data.brand || '', category: data.itemCategory || '', resultType: 'age-only' });
     setTimeout(function () {
       setLoadingSuccess(function () {
         showAgeLookupResults(displayQuery, data);
       });
     }, remaining);
   } catch (_) {
+    trackSmartLookupEvent('result_failure', { query: displayQuery, queryKind: 'age-only', resultType: 'age-only' });
     setLoadingHidden();
     showSmartLookupNotice('limit', 'Smart Lookup is temporarily unavailable. Please try again.');
   }
@@ -3499,16 +3891,25 @@ function showGeneralSmartLookupResults(query, data) {
   headingMeta.push('<span><strong>Category:</strong> ' + escapeSmartLookupHtml(category) + '</span>');
 
   resultsEl.innerHTML =
-    '<div class="smart-general-card">' +
-      '<div class="smart-general-section smart-general-overview">' +
-        '<div class="smart-general-section-title">General Item Overview</div>' +
+    '<div class="smart-general-card smart-general-card-upgraded">' +
+      '<div class="smart-general-section smart-general-overview smart-general-hero">' +
+        '<div class="smart-general-kicker">General result</div>' +
+        '<div class="smart-general-section-title">We found the product family, but not a single verified model yet</div>' +
         '<div class="smart-general-meta">' + headingMeta.join('') + '</div>' +
         '<p class="smart-general-overview-text">' + escapeSmartLookupHtml((data && data.overview) || '') + '</p>' +
-        '<p class="smart-general-overview-note">Showing general results. Select a model below for specific LKQ options.</p>' +
+        '<p class="smart-general-overview-note">This is intentional: your search is broad enough to describe a family of products, so the result stays general until you choose a more specific model path.</p>' +
+      '</div>' +
+      '<div class="smart-general-section smart-general-steps">' +
+        '<div class="smart-general-section-title">Best next step</div>' +
+        '<div class="smart-general-path-grid">' +
+          '<div class="smart-general-path-card smart-general-path-card-primary"><strong>1. Pick a likely model</strong><span>Best for a defendable replacement result.</span></div>' +
+          '<div class="smart-general-path-card"><strong>2. Run average-model comparison</strong><span>Useful when only the product family is known.</span></div>' +
+          '<div class="smart-general-path-card"><strong>3. Research more model numbers</strong><span>Open a broader search if you need to identify the exact unit first.</span></div>' +
+        '</div>' +
       '</div>' +
       '<div class="smart-general-section smart-general-refine">' +
-        '<div class="smart-general-section-title">Refine Your Result</div>' +
-        '<p class="smart-general-subtitle">Your search returned a general result. Select a specific model below or enter a model number to get full LKQ options.</p>' +
+        '<div class="smart-general-section-title">Choose a more specific model path</div>' +
+        '<p class="smart-general-subtitle">Tap one of these likely refinements to move from a general category result to a model-based replacement evaluation.</p>' +
         '<div class="smart-general-refine-list">' +
           refineOptions.map(function (item, index) {
             return '<button type="button" class="smart-general-refine-pill" data-refine-query="' + escapeSmartLookupHtml(item.query) + '" data-refine-index="' + index + '">' + escapeSmartLookupHtml(item.label) + '</button>';
@@ -3516,13 +3917,13 @@ function showGeneralSmartLookupResults(query, data) {
         '</div>' +
       '</div>' +
       '<div class="smart-general-section smart-general-lkq">' +
-        '<div class="smart-general-section-title">LKQ Options</div>' +
+        '<div class="smart-general-section-title">Continue with a guided fallback</div>' +
         '<div class="smart-general-lkq-placeholder" id="smart-general-lkq-placeholder">' +
           '<div class="smart-general-lkq-actions">' +
-            '<button type="button" class="smart-general-primary" id="smart-general-average-btn">Calculate LKQ Options Based on Average Model</button>' +
-            '<button type="button" class="smart-general-secondary" id="smart-general-research-btn">Research Possible Models</button>' +
+            '<button type="button" class="smart-general-primary" id="smart-general-average-btn">Run average-model replacement check</button>' +
+            '<button type="button" class="smart-general-secondary" id="smart-general-research-btn">Research more possible models</button>' +
           '</div>' +
-          '<p class="smart-general-subtitle">Choose an average representative model or research model numbers to refine this search.</p>' +
+          '<p class="smart-general-subtitle">If you cannot identify the exact model, use the average-model path as a rougher first pass and document that the result remains generalized.</p>' +
         '</div>' +
         '<div class="smart-general-lkq-note" id="smart-general-lkq-note"></div>' +
         '<div class="smart-general-lkq-target" id="smart-general-lkq-target"></div>' +
@@ -3537,6 +3938,7 @@ function showGeneralSmartLookupResults(query, data) {
       var nextQuery = normalizeSmartLookupQuery(btn.getAttribute('data-refine-query'));
       var inputEl = getSmartLookupInputEl();
       if (!nextQuery || !target) return;
+      trackSmartLookupEvent('refinement_click', { query: query, refinedQuery: nextQuery, queryKind: 'general' });
       if (inputEl) inputEl.value = nextQuery;
       if (placeholder) placeholder.classList.add('hidden');
       if (note) note.textContent = '';
@@ -3559,6 +3961,7 @@ function showGeneralSmartLookupResults(query, data) {
         var placeholder = document.getElementById('smart-general-lkq-placeholder');
         var inputEl = getSmartLookupInputEl();
         if (!averageQuery || !target) return;
+        trackSmartLookupEvent('refinement_click', { query: query, refinedQuery: averageQuery, queryKind: 'general', action: 'average-model' });
         if (inputEl) inputEl.value = averageQuery;
         if (placeholder) placeholder.classList.add('hidden');
         if (note) {
@@ -3575,11 +3978,13 @@ function showGeneralSmartLookupResults(query, data) {
     }
     if (researchBtn) {
       researchBtn.addEventListener('click', function () {
+        trackSmartLookupEvent('refinement_click', { query: query, queryKind: 'general', action: 'research-more-models' });
         window.open('https://www.google.com/search?q=' + encodeURIComponent(query + ' model numbers'), '_blank', 'noopener,noreferrer');
       });
     }
   })();
 
+  trackSmartLookupEvent('result_success', { query: query, queryKind: 'general', brand: brand, category: category, resultType: 'general' });
   if (ageResultsEl) {
     ageResultsEl.classList.remove('hidden');
     ageResultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -3675,6 +4080,7 @@ async function runGeneralSmartLookup(query) {
       });
     }, remaining);
   } catch (_) {
+    trackSmartLookupEvent('result_failure', { query: query, queryKind: 'general', resultType: 'general' });
     setLoadingHidden();
     showSmartLookupNotice('limit', 'Smart Lookup is temporarily unavailable. Please try again.');
   }
@@ -3738,6 +4144,16 @@ async function executeSmartLookup(query, opts) {
         });
       }
       prependSmartLookupSummaryLayer(resultsEl, normalizedResult);
+      if (typeof window.fetchAndRenderPriceTier === 'function' && normalizedResult && normalizedResult.identity) {
+        window.fetchAndRenderPriceTier(normalizedResult.identity, resultsEl);
+      }
+      trackSmartLookupEvent('result_success', {
+        query: originalQuery,
+        queryKind: (interpretData && interpretData.queryKind) || '',
+        brand: normalizedResult && normalizedResult.identity && normalizedResult.identity.brand,
+        category: normalizedResult && normalizedResult.identity && normalizedResult.identity.category,
+        resultType: preserveGeneral ? 'general-refined-lkq' : 'lkq'
+      });
       var elapsed = Date.now() - loadStart;
       var remaining = Math.max(0, 1400 - elapsed);
       setTimeout(function () {
@@ -3754,6 +4170,12 @@ async function executeSmartLookup(query, opts) {
       }, remaining);
     },
     onError: function (type, message) {
+      trackSmartLookupEvent('result_failure', {
+        query: originalQuery,
+        queryKind: (interpretData && interpretData.queryKind) || '',
+        failureType: type || 'unknown',
+        resultType: preserveGeneral ? 'general-refined-lkq' : 'lkq'
+      });
       if (preserveGeneral) {
         resultsEl.innerHTML =
           '<div class="smart-general-inline-error">' + escapeSmartLookupHtml(message || 'Smart Lookup is temporarily unavailable. Please try again.') + '</div>';
@@ -3834,20 +4256,48 @@ async function runLKQLookup() {
   var resolvedQuery;
   var interpreted;
   var includeComparisons;
+  var canBypassInterpret;
   if (!inputEl || !document.getElementById('smart-lookup-input')) return;
   query = normalizeSmartLookupQuery(inputEl.value || '');
   inputEl.value = query;
   if (!query) return;
   resolvedQuery = expandKnownSmartLookupQuery(query);
+  inputEl.value = '';
   includeComparisons = shouldIncludeSmartLookupComparisons();
+  trackSmartLookupEvent('search_started', { query: query, includeComparisons: includeComparisons });
+  if (typeof window.recordRecentSmartLookup === 'function') window.recordRecentSmartLookup(query);
+  canBypassInterpret = looksLikeSpecificSmartLookupQuery(resolvedQuery);
   clearSmartLookupAssist();
 
   try {
+    if (canBypassInterpret) {
+      interpreted = {
+        action: 'bypass',
+        queryKind: 'specific',
+        confidence: 'high',
+        scopeValid: true,
+        message: null,
+        suggestions: [resolvedQuery],
+        fastPath: true
+      };
+      trackSmartLookupEvent('query_path_selected', { query: query, queryKind: 'specific', path: 'fast-path' });
+      if (includeComparisons) {
+        executeSmartLookup(resolvedQuery, {
+          interpretData: interpreted,
+          originalQuery: query
+        });
+      } else {
+        runAgeOnlyLookup(resolvedQuery, { displayQuery: query });
+      }
+      return;
+    }
+
     showSmartLookupAssistLoading();
     interpreted = await fetchSmartLookupInterpretation(resolvedQuery);
     clearSmartLookupAssist();
 
     if (interpreted && interpreted.action === 'bypass' && interpreted.queryKind === 'specific') {
+      trackSmartLookupEvent('query_path_selected', { query: query, queryKind: 'specific', path: 'interpreted-bypass' });
       if (includeComparisons) {
         executeSmartLookup((interpreted.suggestions && interpreted.suggestions[0]) || resolvedQuery, {
           interpretData: interpreted,
@@ -3859,15 +4309,18 @@ async function runLKQLookup() {
       return;
     }
     if (interpreted && interpreted.queryKind === 'general') {
+      trackSmartLookupEvent('query_path_selected', { query: query, queryKind: 'general', path: 'general' });
       if (includeComparisons) runGeneralSmartLookup(resolvedQuery);
       else runAgeOnlyLookup(resolvedQuery, { displayQuery: query });
       return;
     }
     if (interpreted && (interpreted.action === 'suggest' || interpreted.action === 'no_results' || interpreted.action === 'out_of_scope')) {
+      trackSmartLookupEvent('query_path_selected', { query: query, queryKind: interpreted.queryKind || 'unrecognized', path: interpreted.action || 'suggest' });
       showUnrecognizedSmartLookupResults(query, interpreted);
       return;
     }
     if (interpreted && interpreted.queryKind === 'specific') {
+      trackSmartLookupEvent('query_path_selected', { query: query, queryKind: 'specific', path: 'specific' });
       if (includeComparisons) {
         executeSmartLookup(resolvedQuery, {
           interpretData: interpreted,
@@ -3949,16 +4402,19 @@ function closeGuide() {
 }
 
 // ===== FEEDBACK MODAL =====
-function openFeedbackModal() {
+function openFeedbackModal(defaultType) {
   var ctx = currentFeedbackContext;
   document.getElementById('fbBrand').value   = ctx.brand  || '';
   document.getElementById('fbSerial').value  = ctx.serial || '';
-  document.getElementById('fbType').value    = '';
+  document.getElementById('fbType').value    = defaultType || '';
   document.getElementById('fbDetails').value = '';
   document.getElementById('fbThanks').classList.add('hidden');
   document.getElementById('fbActions').style.display = '';
   document.getElementById('feedbackModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  if (typeof trackSmartLookupEvent === 'function') {
+    trackSmartLookupEvent('feedback_modal_opened', { issueType: defaultType || '', context: ctx.serial || ctx.brand || '' });
+  }
 }
 
 function closeFeedbackModal() {
@@ -3973,15 +4429,18 @@ async function submitFeedback() {
   var details   = document.getElementById('fbDetails').value;
 
   try {
-    await fetch('/api/feedback', {
+    await fetch('/api/forms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brand: brand, serial: serial, issueType: issueType, details: details }),
+      body: JSON.stringify({ type: 'feedback', brand: brand, serial: serial, issueType: issueType, details: details }),
     });
   } catch (e) {
     // fail silently — still show thank-you
   }
 
+  if (typeof trackSmartLookupEvent === 'function') {
+    trackSmartLookupEvent('feedback_submitted', { brand: brand, query: serial, issueType: issueType });
+  }
   document.getElementById('fbThanks').classList.remove('hidden');
   document.getElementById('fbActions').style.display = 'none';
   setTimeout(closeFeedbackModal, 2200);

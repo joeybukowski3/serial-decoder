@@ -1,31 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src=https://www.googletagmanager.com/gtag/js?id=G-C3TXQS1DYP></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-C3TXQS1DYP');
+  </script>
+
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5946778263750869" crossorigin="anonymous"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Serial Number Decoder | Item Assist</title>
-  <meta name="description" content="Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.">
+  <title>Appliance Serial Number Decoder & Age Lookup | Item Assist</title>
+  <meta name="description" content="Find appliance age by serial number and decode manufacture dates for Whirlpool, GE, Samsung, LG, Goodman, and more. Use the free serial decoder or Smart Lookup for model-based research.">
       <link rel="canonical" href="https://www.decodemyitem.com/">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Item Assist">
-  <meta property="og:title" content="Serial Number Decoder | Item Assist">
-  <meta property="og:description" content="Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.">
+  <meta property="og:title" content="Appliance Serial Number Decoder & Age Lookup | Item Assist">
+  <meta property="og:description" content="Find appliance age by serial number and decode manufacture dates for Whirlpool, GE, Samsung, LG, Goodman, and more. Use the free serial decoder or Smart Lookup for model-based research.">
   <meta property="og:url" content="https://www.decodemyitem.com/">
   <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <meta property="og:image:alt" content="Item Assist preview image">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Serial Number Decoder | Item Assist">
-  <meta name="twitter:description" content="Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.">
+  <meta name="twitter:title" content="Appliance Serial Number Decoder & Age Lookup | Item Assist">
+  <meta name="twitter:description" content="Find appliance age by serial number and decode manufacture dates for Whirlpool, GE, Samsung, LG, Goodman, and more. Use the free serial decoder or Smart Lookup for model-based research.">
   <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Serial Number Decoder | Item Assist",
-    "description": "Instantly decode appliance and electronics serial numbers to find manufacture date and age. Supports GE, Whirlpool, Samsung, LG, Bosch and more.",
+    "name": "Appliance Serial Number Decoder & Age Lookup | Item Assist",
+    "description": "Find appliance age by serial number and decode manufacture dates for Whirlpool, GE, Samsung, LG, Goodman, and more. Use the free serial decoder or Smart Lookup for model-based research.",
     "url": "https://www.decodemyitem.com/",
     "publisher": {
       "@type": "Organization",
@@ -39,6 +49,7 @@
   }
   </script>
   <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="mobile-smart-lookup.css">
   <link rel='icon' type='image/png' href='/favicon.png'>
   <style>
     /* ─── UTILITIES ─── */
@@ -300,6 +311,198 @@
       padding-left: 18px;
       color: #334155;
     }
+    .serial-summary-layer.hidden { display: none; }
+    .serial-query-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 100%;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #475569;
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: 1px solid #dbe4ee;
+      background: rgba(255,255,255,0.88);
+    }
+    .serial-result-hero {
+      padding: 20px;
+      border-radius: 16px;
+      border: 2px solid #f5c451;
+      background: linear-gradient(180deg, #fffdf7 0%, #f8fbff 100%);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    }
+    .serial-top-grid,
+    .serial-secondary-grid,
+    .serial-bottom-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+    .serial-top-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .serial-top-grid > *,
+    .serial-secondary-grid > * {
+      min-width: 0;
+      height: 100%;
+    }
+    .serial-summary-layer.serial-no-refine #serialRefinementMount {
+      display: none;
+    }
+    .serial-summary-layer.serial-no-refine .serial-secondary-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .serial-summary-layer.serial-no-refine #serialLkqMount {
+      grid-column: 1;
+    }
+    .serial-result-eyebrow {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+    .serial-result-main {
+      font-size: clamp(1rem, 2.5vw, 1.5rem);
+      line-height: 1.08;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+    .serial-result-subline {
+      margin-top: 12px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #1e293b;
+    }
+    .serial-hero-rows {
+      margin-top: 14px;
+      border-top: 1px solid #dbe4ee;
+    }
+    .serial-hero-row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 12px 0;
+      border-bottom: 1px solid #e7eef6;
+    }
+    .serial-hero-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+    .serial-hero-row-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+    }
+    .serial-hero-row-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.4;
+    }
+    .serial-summary-layer .narrow-date-panel,
+    .serial-summary-layer .lkq-entry-section {
+      margin-top: 0;
+      padding: 14px;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      height: 100%;
+      max-width: none;
+      border: 2px solid #cbdcf1;
+    }
+    .serial-summary-layer .narrow-date-fields {
+      grid-template-columns: 1fr;
+      align-items: stretch;
+      flex: 1 1 auto;
+    }
+    .serial-summary-layer .narrow-date-fields .decode-btn,
+    .serial-summary-layer .lkq-entry-btn {
+      width: 100%;
+      justify-self: stretch;
+      margin-top: auto;
+    }
+    .serial-summary-layer .lkq-entry-input-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      align-items: stretch;
+      margin-top: 8px;
+      flex: 1 1 auto;
+    }
+    .serial-summary-layer .lkq-entry-title,
+    .serial-summary-layer .narrow-date-panel h4 {
+      font-size: 1rem;
+    }
+    .serial-summary-layer .lkq-entry-hd {
+      margin-bottom: 4px;
+    }
+    .serial-method-card {
+      height: 100%;
+      border: 2px solid #cbdcf1;
+    }
+    .back-to-top-fab {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 1200;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 12px 8px;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.94);
+      color: #0f172a;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+      backdrop-filter: blur(8px);
+    }
+    .back-to-top-fab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+    }
+    .back-to-top-icon {
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 900;
+    }
+    .back-to-top-label {
+      font-size: 11px;
+      line-height: 1.1;
+      font-weight: 700;
+      color: #475569;
+      text-align: center;
+    }
+    .serial-summary-layer .lkq-entry-section .search-hint {
+      margin-top: 10px;
+    }
+    .serial-summary-layer .sl-panel-copy {
+      margin-top: 10px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #334155;
+    }
+    .serial-summary-layer .sl-panel-subhead {
+      margin-top: 12px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+    }
 
     /* Home-only dual tool layout */
     .home-tools-wrap { max-width: 1240px; margin: 0 auto; }
@@ -342,6 +545,15 @@
       cursor: default;
       opacity: 1;
     }
+    .kenmore-prefix-group {
+      margin-top: 10px;
+    }
+    #panel-decoder .kenmore-prefix-group .form-input,
+    #panel-decoder .kenmore-prefix-group .search-input {
+      width: 100%;
+      height: 50px;
+      margin: 0;
+    }
     @media (max-width: 980px) {
       .home-tools-grid {
         grid-template-columns: 1fr;
@@ -377,11 +589,12 @@
       height: 50px;
       min-height: 50px;
     }
-    .power-bar {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 12px;
+    .tool-panel-action {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 18px;
     }
     .smart-lookup-actions {
       display: flex;
@@ -409,7 +622,8 @@
       flex: 0 0 16px;
     }
     .power-btn {
-      width: 100%;
+      width: min(100%, 300px);
+      min-width: 220px;
       height: 50px;
       border-radius: 12px;
       font-family: 'Sora', sans-serif;
@@ -417,6 +631,10 @@
       font-weight: 700;
       border: none;
       cursor: pointer;
+      margin: 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     .power-btn.btn-primary {
       background: #3182ce;
@@ -427,26 +645,32 @@
       color: #1a202c;
     }
     .power-btn.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
-    @media (max-width: 980px) { .power-bar { grid-template-columns: 1fr; } }
+    @media (max-width: 980px) {
+      .tool-panel-action {
+        padding-top: 16px;
+      }
+      .power-btn {
+        width: 100%;
+        min-width: 0;
+      }
+    }
   </style>
 </head>
-<body>
+<body data-page-kind="home">
 
 <!-- ─── NAV ─── -->
 <nav>
-  <a href="index.html" class="logo">
-    <div class="logo-icon"></div>
+  <a href="/index.html" class="logo" aria-label="Decode My Item home">
     <div>
-      <div class="logo-text">Decode My <span>Item</span></div>
-      <div class="logo-sub">Decode · Research · Automate</div>
+      <div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Decode - Research - Automate</div>
     </div>
   </a>
   <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
     <span></span><span></span><span></span>
   </button>
   <ul>
-    <li><a href="index.html" data-page="index">Serial Number Decoder</a></li>
-    <li><a href="smart-lookup.html" data-page="smart">Smart Lookup</a></li>
+    <li><a href="/index.html" data-page="index">Serial Number Decoder</a></li>
+    <li><a href="/index.html?mode=smart#panel-smart" data-page="smart">Smart Lookup</a></li>
     <li><a href="assistant.html" data-page="assistant">AI Assistant</a></li>
     <li><a href="methodology.html" data-page="methodology">Methodology</a></li>
     <li><a href="contact.html" data-page="contact">Contact</a></li>
@@ -457,8 +681,9 @@
 
 <!-- ─── PAGE HERO ─── -->
 <section class="page-hero home-hero">
-  <h1>Instant Equipment Age Verification</h1>
-  <p class="hero-sub">Two tools built for speed and efficiency. Utilize our Serial Number Decoder for quick, accurate results across a wide range of equipment, or leverage the Smart Lookup tool to generate advanced logic age estimations from model numbers or descriptions using authorized data sources.</p>
+  <h1>Fast Serial Number Decoding and Smart Item Age Verification Tool</h1>
+  <p class="hero-sub"><strong>Two workflows, one faster decision path:</strong></p>
+  <p class="hero-sub">Instantly decode the serial number from most major brands for equipment age verification. Or use the smart lookup feature using a model or general description to retrieve an estimated age of your item using an industry-focused smart research tool.</p>
 </section>
 
 <!-- ─── DECODER TOOL ─── -->
@@ -502,7 +727,10 @@
 
           <p class="search-hint serial-helper-text">Enter the serial number exactly as shown on the product label</p>
 
-          <p class="search-link" style="margin-top:10px;">No serial number? Use the Smart Lookup action in the Power Bar below.</p>
+          <p class="search-link" style="margin-top:10px;">No serial number? Use the Smart Lookup panel on the right.</p>
+          <div class="tool-panel-action">
+            <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">🔍 Decode Serial Number</button>
+          </div>
         </div>
       </div>
 
@@ -522,14 +750,11 @@
               <span>Include Replacement Options</span>
             </label>
           </div>
-          <p class="search-link" style="margin-top:10px;">Have a serial number? Use the Decode action in the Power Bar below.</p>
-        </div>
-      </div>
-    </div>
-    <div class="power-bar" role="group" aria-label="Power Bar actions">
-      <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">🔍 Decode Serial Number</button>
-      <button class="btn-amber power-btn" type="button" onclick="runLKQLookup()">Search</button>
-    </div>
+          <p class="search-link" style="margin-top:10px;">Have a serial number? Use the Decode Serial Number panel on the left.</p>
+          <div class="tool-panel-action">
+            <button class="btn-amber power-btn" type="button" onclick="runLKQLookup()">Search</button>
+          </div>
+        </div></div>
   </div>
 </section>
 
@@ -551,36 +776,39 @@
       <div class="brand-logo-wrap" id="serialBrandLogo"></div>
     </div>
     <div class="results-body">
-      <div class="result-row result-row--primary">
-        <span class="result-label">Manufacture Date</span>
-        <span class="result-value" id="resultYear"></span>
-      </div>
-      <div class="result-row" id="resultMonthRow">
-        <span class="result-label">Month / Period</span>
-        <span class="result-value" id="resultMonth"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">Brand</span>
-        <span class="result-value" id="resultBrand"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">Estimated Age</span>
-        <span class="result-value" id="resultEstimatedAge">—</span>
-      </div>
-      <div class="info-block method">
-        <h4>Decoding Method</h4>
-        <p id="resultMethod"></p>
-      </div>
-      <div class="info-block notes">
-        <h4>Important Notes</h4>
-        <p id="resultNotes"></p>
-      </div>
-      <details class="determination-details">
-        <summary>How this was determined</summary>
-        <div class="determination-body">
-          We use manufacturer serial format rules and published industry references to extract manufacture date information from serial numbers. Some brands reuse year codes across decades, which is why multiple valid years may appear. When two years are shown, the correct decade can typically be confirmed using physical condition, purchase records, or known installation dates.
+      <div id="serialSummaryLayer" class="sl-top-summary-layer serial-summary-layer hidden"></div>
+      <div class="serial-legacy-fields" hidden aria-hidden="true">
+        <div class="result-row result-row--primary">
+          <span class="result-label">Manufacture Date</span>
+          <span class="result-value" id="resultYear"></span>
         </div>
-      </details>
+        <div class="result-row" id="resultMonthRow">
+          <span class="result-label">Month / Period</span>
+          <span class="result-value" id="resultMonth"></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Brand</span>
+          <span class="result-value" id="resultBrand"></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Estimated Age</span>
+          <span class="result-value" id="resultEstimatedAge">—</span>
+        </div>
+        <div class="info-block method">
+          <h4>Decoding Method</h4>
+          <p id="resultMethod"></p>
+        </div>
+        <div class="info-block notes">
+          <h4>Important Notes</h4>
+          <p id="resultNotes"></p>
+        </div>
+        <details class="determination-details">
+          <summary>How this was determined</summary>
+          <div class="determination-body" id="serialDeterminationBody">
+            We use manufacturer serial format rules and published industry references to extract manufacture date information from serial numbers. Some brands reuse year codes across decades, which is why multiple valid years may appear. When two years are shown, the correct decade can typically be confirmed using physical condition, purchase records, or known installation dates.
+          </div>
+        </details>
+      </div>
     </div>
     <div class="results-footer">
       <button class="copy-btn" onclick="copyClaimFile()">Copy Information</button>
@@ -600,10 +828,7 @@
     <div class="results-footer">
       <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
       <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
-    </div>
-  </div>
-
-</div><!-- /results-wrapper -->
+    </div></div><!-- /results-wrapper -->
 
 <!-- ─── TRUST BAR ─── -->
 <div class="trust-bar">
@@ -643,6 +868,20 @@
   </div>
 </section>
 
+<section class="section">
+  <div style="max-width:1100px;margin:0 auto;">
+    <span class="section-label">Guides &amp; Landing Pages</span>
+    <h2 class="section-title">Popular replacement and age-estimate workflows</h2>
+    <p class="section-sub">Practical intent pages for the most common reasons people land on Item Assist.</p>
+    <div class="cards">
+      <a class="card teal" href="replacement-lookup.html"><div class="card-badge teal">Replacement lookup</div><div class="card-title">Find a practical replacement path</div><p class="card-desc">Use Smart Lookup when you need a current-market replacement recommendation with rationale and confidence.</p></a>
+      <a class="card amber" href="appliance-age-estimator.html"><div class="card-badge amber">Appliance age</div><div class="card-title">Estimate appliance age without the guesswork</div><p class="card-desc">Use model and serial clues to narrow the likely production window and document your reasoning.</p></a>
+      <a class="card purple" href="tv-replacement-guide.html"><div class="card-badge purple">TV replacement</div><div class="card-title">Compare modern TV replacements</div><p class="card-desc">Turn an older TV model or description into a more current replacement shortlist and decision summary.</p></a>
+      <a class="card teal" href="hvac-replacement-guide.html"><div class="card-badge teal">HVAC replacement</div><div class="card-title">Research HVAC replacement candidates</div><p class="card-desc">Start with brand, tonnage context, and equipment type to get a clearer first-pass replacement direction.</p></a>
+    </div>
+  </div>
+</section>
+
 <!-- ─── FOOTER ─── -->
 <footer>
   <div>© 2026 Decode My Item · Database verified February 2026</div>
@@ -653,6 +892,11 @@
     <a href="/privacy-policy">Privacy Policy</a>
   </div>
 </footer>
+
+<button class="back-to-top-fab" type="button" onclick="scrollPageToTop()" aria-label="Back to top">
+  <span class="back-to-top-icon">↑</span>
+  <span class="back-to-top-label">Back to Top</span>
+</button>
 
 <!-- ─── GUIDE DRAWER ─── -->
 <div id="guideOverlay" class="guide-overlay" onclick="closeGuide()"></div>
@@ -682,9 +926,7 @@
     </ul>
     <div class="warning-note">
       <strong>Note:</strong> Many serial number codes repeat every 10–20 years. Always verify the decade using physical condition, model features, purchase receipts, or installation records.
-    </div>
-  </div>
-</div>
+    </div></div>
 
 <!-- ─── FEEDBACK MODAL ─── -->
 <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
@@ -721,9 +963,7 @@
       <div id="fbActions" class="modal-actions">
         <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
         <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
+      </div></div>
 </div>
 
 <!-- Panel switching helpers (must be before decoder-data.js / script.js) -->
@@ -733,12 +973,90 @@ function selectCatAndShowDecoder(cat, btn) {
 }
 </script>
 
-<script src="decoder-data.js"></script>
+<section class="guide-faq">
+  <div class="eyebrow">Popular Lookups</div>
+  <h2>Find appliance age, decode serial numbers, or start from the model number</h2>
+  <div class="location-guide-grid">
+    <article class="guide-card">
+      <h3>Appliance age by serial number</h3>
+      <p>Use the serial number decoder when you want the fastest path to an estimated manufacture date for refrigerators, washers, dryers, ranges, dishwashers, and other home appliances.</p>
+      <div class="guide-links">
+        <a class="guide-chip" href="/appliance-age-by-serial-number">Appliance age by serial number</a>
+        <a class="guide-chip" href="/find-model-serial-number">Find the label first</a>
+      </div>
+    </article>
+    <article class="guide-card">
+      <h3>Brand-specific serial lookup</h3>
+      <p>Jump into high-demand brand pages for Whirlpool, Goodman, Samsung, ASUS, GE, and other manufacturers when you already know the brand and need a faster answer.</p>
+      <div class="guide-links">
+        <a class="guide-chip" href="/whirlpool-serial-number-lookup">Whirlpool serial lookup</a><a class="guide-chip" href="/whirlpool-model-number-lookup">Whirlpool model lookup</a>
+        <a class="guide-chip" href="/goodman-serial-number-lookup">Goodman serial lookup</a><a class="guide-chip" href="/goodman-model-number-lookup">Goodman model lookup</a>
+        <a class="guide-chip" href="/asus-serial-number-decoder">ASUS serial decoder</a>
+      </div>
+    </article>
+    <article class="guide-card">
+      <h3>Only have the model number?</h3>
+      <p>Smart Lookup helps when the serial tag is missing, worn, or unreadable. Use the model number plus a short description to research likely age range and replacement context.</p>
+      <div class="guide-links">
+        <a class="guide-chip" href="/index.html?mode=smart#panel-smart">Open Smart Lookup</a>
+        <a class="guide-chip" href="/find-model-serial-number">Where to find model number</a>
+      </div>
+    </article>
+  </div>
+
+  <div class="faq-stack">
+    <details class="determination-details" open>
+      <summary>How do I find appliance age by serial number?</summary>
+      <div class="determination-body">Select the brand, enter the serial number exactly as shown on the manufacturer label, and run the decoder. For supported brands, Item Assist applies known serial formatting rules to estimate the manufacture date and current age.</div>
+    </details>
+    <details class="determination-details">
+      <summary>What if I only have the model number?</summary>
+      <div class="determination-body">Use Smart Lookup. That path works best when the serial number is missing, the product tag is damaged, or you need a first-pass replacement workflow from a model number or plain-language description.</div>
+    </details>
+    <details class="determination-details">
+      <summary>Where do I find the model and serial number on an appliance?</summary>
+      <div class="determination-body">Most appliances place the label on the door frame, inside the fresh-food compartment, behind a drawer, or on the rear/service panel. Our <a href="/find-model-serial-number">model and serial number location guide</a> walks through refrigerators, dishwashers, laundry appliances, HVAC systems, TVs, and more.</div>
+    </details>
+    <details class="determination-details">
+      <summary>Which brands are strongest on the site right now?</summary>
+      <div class="determination-body">Whirlpool, Goodman, Samsung, ASUS, GE, LG, Rheem, Carrier, and Trane are some of the strongest paths for serial decoding, age lookup, and model-based research.</div>
+    </details>
+  </div>
+</section>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I find appliance age by serial number?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Select the brand, enter the serial number exactly as shown on the label, and run the decoder. Item Assist applies known brand formatting rules to estimate manufacture date and age."}
+    },
+    {
+      "@type": "Question",
+      "name": "What if I only have the model number?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Use Smart Lookup when the serial number is missing, worn, or unreadable. The model number plus a short description can still support a first-pass age and replacement workflow."}
+    },
+    {
+      "@type": "Question",
+      "name": "Where do I find the model and serial number on an appliance?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Most appliances place the label on a door frame, inside a compartment, behind a drawer, or on the rear/service panel. Item Assist also provides a dedicated model and serial number location guide."}
+    }
+  ]
+}
+</script>
+
+    <script src="decoder-data.js"></script>
 <script src="lkq-engine.js"></script>
+<script src="analytics.js"></script>
+<script src="smart-lookup-extras.js"></script>
 <script src="smart-lookup-normalizer.js"></script>
 <script src="smart-lookup-summary-render.js"></script>
 <script src="script.js"></script>
 <script src="smart-lookup.js"></script>
+<script src="smart-lookup-upgrade-patch.js"></script>
+<script src="smart-lookup-pricetier.js"></script>
 <script src="shared.js"></script>
 
 <script type="application/ld+json">

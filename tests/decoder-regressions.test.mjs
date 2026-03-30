@@ -167,6 +167,25 @@ test('Kenmore 795 refrigerator serial routes to LG decoding without missing-pref
   assert.equal(out.month, 'October');
 });
 
+test('Sub-Zero accepts alphanumeric serials where the second character is the year code', () => {
+  const subZero = api.decoderData.appliances.decoders.sub_zero;
+  const out = subZero.decode('C22501800');
+
+  assert.ok(out);
+  assert.equal(out.year, '2012/2042');
+  assert.equal(out.month, 'N/A');
+  assert.equal(out.yearCode, '2');
+});
+
+test('Sub-Zero legacy letter-based decode remains unchanged', () => {
+  const subZero = api.decoderData.appliances.decoders.sub_zero;
+  const out = subZero.decode('CB2501800');
+
+  assert.ok(out);
+  assert.equal(out.year, '1992/2022');
+  assert.equal(out.yearCode, 'B');
+});
+
 test('Rheem water heater MMYY format decodes month/year correctly', () => {
   const rheem = api.decoderData.waterHeaters.decoders.rheem;
   const out = rheem.decode('1291A39968');
@@ -183,6 +202,17 @@ test('Rheem water heater accepts generic MMYY serial starts without extra prefix
   assert.equal(out.year, '2014');
   assert.equal(out.month, 'April');
   assert.equal(out.monthCode, '04');
+});
+
+test('Rheem numeric serial 0302118742 resolves to 2021 using the documented Style 2 layout', () => {
+  const rheem = api.decoderData.waterHeaters.decoders.rheem;
+  const out = rheem.decode('0302118742', 'E40 2 RH95');
+
+  assert.ok(out);
+  assert.equal(out.year, '2021');
+  assert.equal(out.month, 'Week 30');
+  assert.equal(out.yearCode, '21');
+  assert.equal(out.weekDigits, '30');
 });
 
 test('Non-Rheem brand does not use Rheem RH prefix week/year rule', () => {

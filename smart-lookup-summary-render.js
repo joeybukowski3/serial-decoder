@@ -23,13 +23,25 @@
     card.appendChild(row);
   }
 
-  function _appendBadges(container, badges) {
-    var list = Array.isArray(badges) ? badges.filter(Boolean).slice(0, 4) : [];
+  function _appendBadges(container, badges, className) {
+    var list = Array.isArray(badges) ? badges.filter(Boolean).slice(0, 6) : [];
     var i;
     if (!list.length) return;
     for (i = 0; i < list.length; i += 1) {
-      container.appendChild(_el('span', 'sl-badge', list[i]));
+      container.appendChild(_el('span', className || 'sl-badge', list[i]));
     }
+  }
+
+  function _appendBulletList(parent, items, className) {
+    var list = Array.isArray(items) ? items.filter(Boolean) : [];
+    var ul;
+    var i;
+    if (!list.length) return;
+    ul = _el('ul', className || 'sl-bullet-list');
+    for (i = 0; i < list.length; i += 1) {
+      ul.appendChild(_el('li', null, list[i]));
+    }
+    parent.appendChild(ul);
   }
 
   function renderResultIdentityBar(normalizedResult) {
@@ -60,7 +72,7 @@
     textWrap.appendChild(resultRow);
     textWrap.appendChild(queryRow);
 
-    meta = _el('div');
+    meta = _el('div', 'sl-badge-row');
     _appendBadges(meta, normalizedResult.badges);
     bar.appendChild(textWrap);
     bar.appendChild(meta);
@@ -82,6 +94,7 @@
     _appendRow(card, 'Category', identity.category);
     _appendRow(card, 'Estimated year', ageSummary.estimatedYear);
     _appendRow(card, 'Production range', ageSummary.productionRange);
+    _appendRow(card, 'Availability', identity.availability);
     return card;
   }
 
@@ -89,12 +102,12 @@
     var card;
     var recommendation;
     var primary;
-    var successorStatus;
+    var verification;
 
     if (!normalizedResult) return null;
     recommendation = normalizedResult.recommendation || {};
     primary = recommendation.primary || null;
-    successorStatus = recommendation.successorStatus || {};
+    verification = normalizedResult.verification || {};
     card = _el('div', 'sl-summary-card');
     card.appendChild(_el('h4', null, recommendation.bestMatchLabel || 'Best Replacement Option'));
 
@@ -102,15 +115,15 @@
       _appendRow(card, 'Item', primary.name || primary.model);
       _appendRow(card, 'Model', primary.model);
       _appendRow(card, 'Brand', primary.brand);
-      _appendRow(card, 'LKQ Rating', primary.lkqRating);
-      _appendRow(card, 'Price Range', primary.priceRange);
+      _appendRow(card, 'LKQ rating', primary.lkqRating);
+      _appendRow(card, 'Price range', primary.priceRange);
       _appendRow(card, 'Retailer', primary.retailerName);
-      _appendRow(card, 'Reason', primary.notes || primary.explanation);
+      _appendRow(card, 'Verification', verification.badge);
       return card;
     }
 
-    _appendRow(card, 'Status', successorStatus.type || 'Unavailable');
-    _appendRow(card, 'Reason', successorStatus.explanation || 'No qualifying replacement option is available yet.');
+    _appendRow(card, 'Status', verification.badge || 'Unavailable');
+    _appendRow(card, 'Reason', verification.message || 'No qualifying replacement option is available yet.');
     return card;
   }
 
@@ -158,54 +171,145 @@
     var hero;
     var recommendation;
     var primary;
-    var list;
-    var items;
-    var i;
+    var verification;
+    var badgeRow;
+    var verificationText;
 
     if (!normalizedResult || !normalizedResult.recommendation) return null;
     recommendation = normalizedResult.recommendation;
     primary = recommendation.primary;
+    verification = normalizedResult.verification || {};
     if (!primary) return null;
 
     hero = _el('div', 'sl-recommendation-hero');
     hero.appendChild(_el('h4', null, recommendation.bestMatchLabel || 'Best Replacement Option'));
+    badgeRow = _el('div', 'sl-badge-row');
+    _appendBadges(badgeRow, [primary.lkqRating, verification.badge], 'sl-badge sl-badge-strong');
+    hero.appendChild(badgeRow);
     _appendRow(hero, 'Model', primary.model || primary.name);
     _appendRow(hero, 'Brand', primary.brand);
-    _appendRow(hero, 'LKQ rating', primary.lkqRating);
     _appendRow(hero, 'Price range', primary.priceRange);
-
-    items = [];
-    if (primary.notes) items.push(primary.notes);
-    if (primary.retailerName) items.push('Retailer: ' + primary.retailerName);
-    if (primary.name && primary.model && primary.name !== primary.model) items.push(primary.name);
-
-    if (items.length) {
-      list = _el('ul', 'sl-bullet-list');
-      for (i = 0; i < items.length; i += 1) {
-        list.appendChild(_el('li', null, items[i]));
-      }
-      hero.appendChild(list);
-    }
-
+    verificationText = _el('p', 'sl-panel-copy', verification.message || '');
+    if (verificationText.textContent) hero.appendChild(verificationText);
+    _appendBulletList(hero, normalizedResult.differences || []);
     return hero;
+  }
+
+  function renderPanel(title, items, copy, className) {
+    var card = _el('div', 'sl-summary-card ' + (className || ''));
+    card.appendChild(_el('h4', null, title));
+    if (copy) card.appendChild(_el('p', 'sl-panel-copy', copy));
+    _appendBulletList(card, items || []);
+    return card;
+  }
+
+  function renderWhyReplacementPanel(normalizedResult) {
+    var data = normalizedResult && normalizedResult.whyReplacement;
+    if (!data) return null;
+    return renderPanel(data.title || 'Why this replacement?', data.bullets || [], data.summary || '', 'sl-panel-why');
+  }
+
+  function renderVerificationPanel(normalizedResult) {
+    var verification = normalizedResult && normalizedResult.verification;
+    var card;
+    var badgeRow;
+    if (!verification) return null;
+    card = _el('div', 'sl-summary-card sl-panel-verify');
+    card.appendChild(_el('h4', null, 'Verification status'));
+    badgeRow = _el('div', 'sl-badge-row');
+    _appendBadges(badgeRow, [verification.badge, verification.verified ? 'Current-market check' : 'Manual review recommended'], 'sl-badge');
+    card.appendChild(badgeRow);
+    card.appendChild(_el('p', 'sl-panel-copy', verification.message || ''));
+    return card;
+  }
+
+  function renderMethodologyPanel(normalizedResult) {
+    var methodology = normalizedResult && normalizedResult.methodology;
+    var card;
+    if (!methodology) return null;
+    card = renderPanel(methodology.title || 'Source transparency', methodology.steps || [], 'How this result was built and what signals were used.', 'sl-panel-method');
+    if (methodology.sources && methodology.sources.length) {
+      card.appendChild(_el('div', 'sl-panel-subhead', 'Signals surfaced'));
+      _appendBulletList(card, methodology.sources, 'sl-bullet-list sl-bullet-list-compact');
+    }
+    return card;
+  }
+
+  function renderDifferencesPanel(normalizedResult) {
+    var differences = normalizedResult && normalizedResult.differences;
+    if (!differences || !differences.length) return null;
+    return renderPanel('Quick comparison summary', differences, 'Fast scan of the biggest differences between the searched item and the recommended replacement.', 'sl-panel-diff');
+  }
+
+  function _wrapInDetails(summaryLabel, panel) {
+    var details = document.createElement('details');
+    var summary = document.createElement('summary');
+    summary.textContent = summaryLabel;
+    summary.style.fontSize = '0.75rem';
+    summary.style.fontWeight = '700';
+    summary.style.color = '#6b7280';
+    summary.style.cursor = 'pointer';
+    details.appendChild(summary);
+    details.appendChild(panel);
+    return details;
+  }
+
+  function renderActionRow() {
+    var row = _el('div', 'sl-action-row');
+    var reportBtn = _el('button', 'sl-inline-action', 'Report incorrect replacement');
+    reportBtn.type = 'button';
+    reportBtn.addEventListener('click', function () {
+      if (typeof window.openFeedbackModal === 'function') window.openFeedbackModal('replacement_incorrect');
+    });
+    row.appendChild(reportBtn);
+    return row;
   }
 
   function renderSmartLookupTopSummaryLayer(normalizedResult) {
     var layer;
     var identityBar;
-    var summaryBand;
     var confidenceStrip;
+    var hero;
+    var heroRow;
+    var whyPanel;
+    var verificationPanel;
+    var methodologyPanel;
+    var whyTitle;
+    var methodTitle;
 
     if (!normalizedResult) return null;
 
     layer = _el('section', 'sl-top-summary-layer');
     identityBar = renderResultIdentityBar(normalizedResult);
-    summaryBand = renderSummaryBand(normalizedResult);
     confidenceStrip = renderConfidenceStrip(normalizedResult);
+    hero = renderRecommendedReplacementHero(normalizedResult);
+
+    whyPanel = renderWhyReplacementPanel(normalizedResult);
+    verificationPanel = renderVerificationPanel(normalizedResult);
+    methodologyPanel = renderMethodologyPanel(normalizedResult);
 
     if (identityBar) layer.appendChild(identityBar);
-    if (summaryBand) layer.appendChild(summaryBand);
     if (confidenceStrip) layer.appendChild(confidenceStrip);
+    if (hero) {
+      heroRow = _el('div', 'sl-hero-tier-row');
+      hero.style.flex = '1';
+      hero.style.minWidth = '0';
+      heroRow.appendChild(hero);
+      layer.appendChild(heroRow);
+    }
+    layer.appendChild(renderActionRow());
+
+    if (whyPanel) {
+      whyTitle = (normalizedResult.whyReplacement && normalizedResult.whyReplacement.title) || 'Why this replacement?';
+      layer.appendChild(_wrapInDetails(whyTitle, whyPanel));
+    }
+    if (verificationPanel) {
+      layer.appendChild(_wrapInDetails('Verification status', verificationPanel));
+    }
+    if (methodologyPanel) {
+      methodTitle = (normalizedResult.methodology && normalizedResult.methodology.title) || 'Source transparency';
+      layer.appendChild(_wrapInDetails(methodTitle, methodologyPanel));
+    }
 
     return layer.childNodes.length ? layer : null;
   }

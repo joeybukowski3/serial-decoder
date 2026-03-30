@@ -1,0 +1,242 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-03-21",
+  "description": "Local-first model age lookup seed data for known brands and model families.",
+  "records": [
+    {
+      "brand": "LG",
+      "model": "OLED55C3PUA",
+      "normalizedBrand": "lg",
+      "normalizedModel": "oled55c3pua",
+      "category": "television",
+      "yearStart": 2023,
+      "yearEnd": 2024,
+      "estimatedYear": 2023,
+      "productionRange": "2023-2024",
+      "source": "LG C3 launch cycle and retail release timeline",
+      "notes": "LG C3 OLED televisions were introduced for the 2023 model year and remained in retail circulation into 2024.",
+      "aliases": [
+        "OLED55C3",
+        "C3",
+        "LG C3 55"
+      ]
+    },
+    {
+      "brand": "Samsung",
+      "model": "QN65S90DAFXZA",
+      "normalizedBrand": "samsung",
+      "normalizedModel": "qn65s90dafxza",
+      "category": "television",
+      "yearStart": 2024,
+      "yearEnd": 2025,
+      "estimatedYear": 2024,
+      "productionRange": "2024-2025",
+      "source": "Samsung S90D product generation timeline",
+      "notes": "Samsung S90D OLED sets align to the 2024 model-year launch window and remained active in the following sales cycle.",
+      "aliases": [
+        "QN65S90D",
+        "S90D",
+        "Samsung S90D 65"
+      ]
+    },
+    {
+      "brand": "Whirlpool",
+      "model": "WRF535SWHZ",
+      "normalizedBrand": "whirlpool",
+      "normalizedModel": "wrf535swhz",
+      "category": "refrigerator",
+      "yearStart": 2018,
+      "yearEnd": 2023,
+      "estimatedYear": 2019,
+      "productionRange": "2018-2023",
+      "source": "Whirlpool French-door refrigerator retail/manual publication window",
+      "notes": "WRF535SWHZ appears across late-2010s to early-2020s Whirlpool literature and retail listings.",
+      "aliases": [
+        "WRF535",
+        "Whirlpool WRF535SWHZ",
+        "Whirlpool French Door WRF535"
+      ]
+    },
+    {
+      "brand": "GE",
+      "model": "PFE28KYNFS",
+      "normalizedBrand": "ge",
+      "normalizedModel": "pfe28kynfs",
+      "category": "refrigerator",
+      "yearStart": 2020,
+      "yearEnd": 2024,
+      "estimatedYear": 2021,
+      "productionRange": "2020-2024",
+      "source": "GE Profile refrigerator generation timing",
+      "notes": "This GE Profile refrigerator model is associated with early-2020s production and sales cycles.",
+      "aliases": [
+        "PFE28K",
+        "GE PFE28KYNFS",
+        "Profile PFE28"
+      ]
+    },
+    {
+      "brand": "Rheem",
+      "model": "XE40M09EL55U1",
+      "normalizedBrand": "rheem",
+      "normalizedModel": "xe40m09el55u1",
+      "category": "water-heater",
+      "yearStart": 2017,
+      "yearEnd": 2022,
+      "estimatedYear": 2019,
+      "productionRange": "2017-2022",
+      "source": "Rheem residential electric water heater product cycle",
+      "notes": "This Rheem electric water heater model family aligns with late-2010s through early-2020s production windows.",
+      "aliases": [
+        "XE40M09EL55",
+        "Rheem XE40M09EL55U1",
+        "Rheem XE40"
+      ]
+    },
+    {
+      "brand": "Carrier",
+      "model": "24ABC636A003",
+      "normalizedBrand": "carrier",
+      "normalizedModel": "24abc636a003",
+      "category": "hvac",
+      "yearStart": 2012,
+      "yearEnd": 2016,
+      "estimatedYear": 2014,
+      "productionRange": "2012-2016",
+      "source": "Carrier condenser model family production window",
+      "notes": "Carrier 24ABC6 series condensers are commonly associated with mid-2010s production.",
+      "aliases": [
+        "24ABC6",
+        "Carrier 24ABC636",
+        "Carrier Comfort 24ABC6"
+      ]
+    },
+    {
+      "brand": "Sony",
+      "model": "XR65A80L",
+      "normalizedBrand": "sony",
+      "normalizedModel": "xr65a80l",
+      "category": "television",
+      "yearStart": 2023,
+      "yearEnd": 2024,
+      "estimatedYear": 2023,
+      "productionRange": "2023-2024",
+      "source": "Sony BRAVIA A80L product cycle and retail availability",
+      "notes": "Sony A80L OLED televisions align with the 2023 BRAVIA lineup and continued through the following retail season.",
+      "aliases": [
+        "A80L",
+        "XR65A80",
+        "Sony A80L 65"
+      ]
+    },
+    {
+      "brand": "Bosch",
+      "model": "SHPM65Z55N",
+      "normalizedBrand": "bosch",
+      "normalizedModel": "shpm65z55n",
+      "category": "dishwasher",
+      "yearStart": 2019,
+      "yearEnd": 2023,
+      "estimatedYear": 2020,
+      "productionRange": "2019-2023",
+      "source": "Bosch 500 Series dishwasher product window",
+      "notes": "This Bosch 500 Series dishwasher model appears in late-2010s through early-2020s manuals and retailer catalogs.",
+      "aliases": [
+        "SHPM65Z55",
+        "Bosch SHPM65Z55N",
+        "Bosch 500 SHPM65"
+      ]
+    },
+    {
+      "brand": "Maytag",
+      "model": "MVW7232HW",
+      "normalizedBrand": "maytag",
+      "normalizedModel": "mvw7232hw",
+      "category": "washer",
+      "yearStart": 2020,
+      "yearEnd": 2024,
+      "estimatedYear": 2021,
+      "productionRange": "2020-2024",
+      "source": "Maytag top-load washer launch and retail support window",
+      "notes": "MVW7232HW is a current-generation Maytag top-load washer family associated with early-2020s production.",
+      "aliases": [
+        "MVW7232",
+        "Maytag MVW7232HW",
+        "Maytag Pet Pro MVW7232"
+      ]
+    },
+    {
+      "brand": "Frigidaire",
+      "model": "FFHT1425VV",
+      "normalizedBrand": "frigidaire",
+      "normalizedModel": "ffht1425vv",
+      "category": "refrigerator",
+      "yearStart": 2021,
+      "yearEnd": 2024,
+      "estimatedYear": 2022,
+      "productionRange": "2021-2024",
+      "source": "Frigidaire top-freezer refrigerator product listings and manuals",
+      "notes": "FFHT1425VV appears in early-2020s Frigidaire literature as a compact top-freezer refrigerator model.",
+      "aliases": [
+        "FFHT1425",
+        "Frigidaire FFHT1425VV",
+        "Frigidaire 14.5 FFHT1425"
+      ]
+    },
+    {
+      "brand": "Goodman",
+      "model": "GSX140361",
+      "normalizedBrand": "goodman",
+      "normalizedModel": "gsx140361",
+      "category": "hvac",
+      "yearStart": 2015,
+      "yearEnd": 2020,
+      "estimatedYear": 2017,
+      "productionRange": "2015-2020",
+      "source": "Goodman GSX14 condenser family production window",
+      "notes": "The Goodman GSX14 condenser family is commonly associated with mid-to-late 2010s installations and production.",
+      "aliases": [
+        "GSX14",
+        "GSX14036",
+        "Goodman GSX140361"
+      ]
+    },
+    {
+      "brand": "Trane",
+      "model": "4TTR4036N1000A",
+      "normalizedBrand": "trane",
+      "normalizedModel": "4ttr4036n1000a",
+      "category": "hvac",
+      "yearStart": 2018,
+      "yearEnd": 2023,
+      "estimatedYear": 2020,
+      "productionRange": "2018-2023",
+      "source": "Trane XR14 condenser family production cycle",
+      "notes": "This Trane XR-series condenser model aligns with late-2010s to early-2020s production windows.",
+      "aliases": [
+        "XR14",
+        "4TTR4036",
+        "Trane XR14 4TTR4036"
+      ]
+    },
+    {
+      "brand": "Apple",
+      "model": "MPGA2LL/A",
+      "displayModel": "iPad (5th generation) 9.7-inch Wi-Fi 32GB",
+      "normalizedBrand": "apple",
+      "normalizedModel": "mpga2lla",
+      "category": "tablet",
+      "yearStart": 2017,
+      "yearEnd": 2019,
+      "estimatedYear": 2017,
+      "productionRange": "2017-2019",
+      "source": "Apple part-number mapping and iPad 5th generation retail lifecycle",
+      "notes": "MPGA2LL/A is an Apple iPad (5th generation) Wi-Fi configuration introduced in 2017. This is an iPad identifier, not an iPhone 8 family model.",
+      "aliases": [
+        "MPGA2LLA",
+        "MPGA2",
+        "Apple MPGA2LL/A"
+      ]
+    }
+  ]
+}

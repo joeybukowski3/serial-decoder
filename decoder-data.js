@@ -36,8 +36,12 @@ var decoderData = {
       { id: 'estate', name: 'Estate' },
       { id: 'frigidaire', name: 'Frigidaire' },
       { id: 'gaggenau', name: 'Gaggenau' },
-      { id: 'ge', name: 'GE (including Cafe, Monogram, Profile, Hotpoint, RCA)' },
+      { id: 'ge', name: 'GE' },
       { id: 'cafe', name: 'Cafe' },
+      { id: 'ge_profile', name: 'GE Profile' },
+      { id: 'ge_monogram', name: 'GE Monogram' },
+      { id: 'hotpoint', name: 'Hotpoint' },
+      { id: 'rca', name: 'RCA' },
       { id: 'gibson', name: 'Gibson' },
       { id: 'inglis', name: 'Inglis' },
       { id: 'jenn_air_post_2006', name: 'Jenn-Air (post-2006)' },
@@ -144,25 +148,30 @@ var decoderData = {
       groupId: '1A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
-      serialLengthNote: 'Second alpha character = year code (letters only).',
-      decodeMethod: 'Second alpha character = year code',
-      yearCodePosition: 'Second alpha character',
+      serialLengthNote: 'Second character = year code for alphanumeric serials; fallback to second alpha character for legacy letter-heavy serials.',
+      decodeMethod: 'Second character = year code (fallback: second alpha character)',
+      yearCodePosition: 'Second character (fallback: second alpha character)',
       monthCodePosition: 'N/A',
       outputType: 'Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped. Some valid Sub-Zero serials use the second character overall as the year code even when it is numeric.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
-      method: 'Second alpha character = year code',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      method: 'Second character = year code (fallback: second alpha character)',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped. Some valid Sub-Zero serials use the second character overall as the year code even when it is numeric.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
       if (!serial) return null;
-      var letters = String(serial).match(/[A-Za-z]/g) || [];
-      if (letters.length < 2) return null;
-      var yearChar = letters[1].toUpperCase();
+      var normalized = String(serial).trim().toUpperCase();
+      if (normalized.length < 2) return null;
+      var yearChar = normalized.charAt(1);
+      if (!this.yearMap[yearChar]) {
+        var letters = normalized.match(/[A-Z]/g) || [];
+        if (letters.length < 2) return null;
+        yearChar = letters[1];
+      }
       var y = this.yearMap[yearChar];
       return { year: y || 'Unknown code: ' + yearChar, month: 'N/A', yearCode: yearChar };
     }
@@ -1109,7 +1118,7 @@ var decoderData = {
     }
     },
     'ge': {
-      name: 'GE (including Cafe, Monogram, Profile, Hotpoint, RCA)',
+      name: 'GE',
       parentManufacturer: 'GE Appliances (owned by Haier since 2016)',
       groupId: '2',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
@@ -1119,12 +1128,12 @@ var decoderData = {
       yearCodePosition: 'Character 2 (second letter)',
       monthCodePosition: 'Character 1 (first letter)',
       outputType: 'Month + Year',
-      decodeNotes: '12-year repeating cycle. GE water heaters manufactured by Rheem â€” use Group 7A. Haier-era units (post-2016) continue using same format.',
+      decodeNotes: '12-year repeating cycle. This same GE-family decoding logic also applies to Cafe, GE Profile, GE Monogram, Hotpoint, and RCA appliance brands. GE water heaters manufactured by Rheem â€” use Group 7A. Haier-era units (post-2016) continue using same format.',
       exampleSerial: 'RG527327B',
       exampleResult: 'R=August G=1980/1992/2004/2016',
       sources: 'products.geappliances.com; cannonsappliance.com; lumayeconsulting.com; en.tab-tv.com',
       method: 'Characters 1-2 (Character 1 = month, Character 2 = year)',
-      notes: '12-year repeating cycle. GE water heaters manufactured by Rheem â€” use Group 7A. Haier-era units (post-2016) continue using same format.',
+      notes: '12-year repeating cycle. This same GE-family decoding logic also applies to Cafe, GE Profile, GE Monogram, Hotpoint, and RCA appliance brands. GE water heaters manufactured by Rheem â€” use Group 7A. Haier-era units (post-2016) continue using same format.',
       source: 'products.geappliances.com; cannonsappliance.com; lumayeconsulting.com; en.tab-tv.com',
       patterns: [
         { name: '8-char standard', length: 8, mask: 'AA######', notes: 'Starts with two letters, followed by six digits.' },
@@ -1170,7 +1179,11 @@ var decoderData = {
       var m = this.monthMap[monthChar];
       return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
     }
-    },
+    },
+
+
+
+
     'frigidaire': {
       name: 'Frigidaire',
       parentManufacturer: 'Electrolux AB (Sweden)',
@@ -1653,9 +1666,10 @@ var decoderData = {
       source: 'fastwaterheater.com; kcwaterheater.com; builderbuddy.com; final-analysis.com',
       yearMap: { '84': '1984' },
       monthMap: { '10': 'October', '11': 'November', '12': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
-      decode: function(serial) {
+      decode: function(serial, modelHint) {
       if (!serial || serial.length < 4) return null;
       var s = String(serial).toUpperCase().replace(/\s+/g, '');
+      var normalizedModel = String(modelHint || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
       function resolveTwoDigitYear(yy) {
         var currentYear = new Date().getFullYear();
@@ -1669,15 +1683,23 @@ var decoderData = {
         return null;
       }
 
-      function decodeRhPrefixed(match, weekIdx, yearIdx) {
-        if (!match) return null;
-        var ww = match[weekIdx];
-        var yy = match[yearIdx];
+      function decodeWeekYearDigits(ww, yy, styleLabel) {
         var week = parseInt(ww, 10);
         if (!(week >= 1 && week <= 53)) return null;
         var fullYearPrefix = resolveTwoDigitYear(yy);
         if (!fullYearPrefix) return null;
-        return { year: String(fullYearPrefix), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
+        return {
+          year: String(fullYearPrefix),
+          month: 'Week ' + ww,
+          yearCode: yy,
+          weekDigits: ww,
+          decodeStyle: styleLabel
+        };
+      }
+
+      function decodeRhPrefixed(match, weekIdx, yearIdx) {
+        if (!match) return null;
+        return decodeWeekYearDigits(match[weekIdx], match[yearIdx], 'RH-prefixed WWYY');
       }
 
       // Try RH + WWYY first, then RHx + WWYY (x = optional plant/line code).
@@ -1686,11 +1708,31 @@ var decoderData = {
       var rhWithExtra = decodeRhPrefixed(s.match(/^RH([A-Z0-9])(\d{2})(\d{2})([A-Z0-9].*)?$/), 2, 3);
       if (rhWithExtra) return rhWithExtra;
 
+      var style2 = decodeWeekYearDigits(s.substring(1, 3), s.substring(3, 5), 'Style 2');
+      var style3 = decodeWeekYearDigits(s.substring(2, 4), s.substring(4, 6), 'Style 3');
       var monthStr = s.substring(0, 2);
       var yearDigits = s.substring(2, 4);
       var fullYear = parseInt(yearDigits) >= 84 ? '19' + yearDigits : '20' + yearDigits;
       var m = this.monthMap[monthStr];
-      return { year: fullYear, month: m || 'Month ' + monthStr, yearCode: yearDigits, monthCode: monthStr };
+      var style1 = { year: fullYear, month: m || 'Month ' + monthStr, yearCode: yearDigits, monthCode: monthStr, decodeStyle: 'Style 1' };
+
+      // Some later all-numeric Rheem tank labels fit the documented week/year layouts
+      // better than the legacy MMYY pattern. Prefer Style 2 when it points to a clearly
+      // modern year and the MMYY interpretation lands far earlier, especially on RH9x models.
+      if (style2) {
+        var style1Year = parseInt(style1.year, 10);
+        var style2Year = parseInt(style2.year, 10);
+        var modelSuggestsModernRh = /RH9\d/.test(normalizedModel);
+        if (modelSuggestsModernRh && style2Year >= 2015) return style2;
+        if (/^\d{10}$/.test(s) && style1Year <= 2010 && style2Year >= 2015) return style2;
+      }
+
+      if (style1.month.indexOf('Month ') === 0) {
+        if (style2) return style2;
+        if (style3) return style3;
+      }
+
+      return style1;
     }
     },
     'ruud': {
