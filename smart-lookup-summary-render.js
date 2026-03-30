@@ -268,7 +268,6 @@
   function renderSmartLookupTopSummaryLayer(normalizedResult) {
     var layer;
     var identityBar;
-    var summaryBand;
     var confidenceStrip;
     var hero;
     var whyPanel;
@@ -281,7 +280,6 @@
 
     layer = _el('section', 'sl-top-summary-layer');
     identityBar = renderResultIdentityBar(normalizedResult);
-    summaryBand = renderSummaryBand(normalizedResult);
     confidenceStrip = renderConfidenceStrip(normalizedResult);
     hero = renderRecommendedReplacementHero(normalizedResult);
 
@@ -290,7 +288,6 @@
     methodologyPanel = renderMethodologyPanel(normalizedResult);
 
     if (identityBar) layer.appendChild(identityBar);
-    if (summaryBand) layer.appendChild(summaryBand);
     if (confidenceStrip) layer.appendChild(confidenceStrip);
     if (hero) layer.appendChild(hero);
     layer.appendChild(renderActionRow());
