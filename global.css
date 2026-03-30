@@ -6443,3 +6443,9 @@ img.ia-sidebar-logo {
     text-transform: uppercase;
     color: #475569;
 }
+
+/* ── Back to top button: bottom-left position ───────────────────────────── */
+.back-to-top-fab {
+    right: auto !important;
+    left: 18px !important;
+}
