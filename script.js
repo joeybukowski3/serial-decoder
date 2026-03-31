@@ -84,6 +84,35 @@ var BRAND_CATEGORY_LABELS = {
   electronics: 'Electronics'
 };
 
+var BRAND_DIRECTORY_LOGOS = {
+  'apple': { src: 'https://cdn.simpleicons.org/apple', alt: 'Apple logo', type: 'symbol' },
+  'asus': { src: 'https://cdn.simpleicons.org/asus', alt: 'ASUS logo', type: 'wordmark' },
+  'bosch': { src: 'https://cdn.simpleicons.org/bosch', alt: 'Bosch logo', type: 'wordmark' },
+  'ge': { src: 'https://cdn.simpleicons.org/generalelectric', alt: 'GE logo', type: 'symbol' },
+  'ge_monogram': { src: 'https://cdn.simpleicons.org/generalelectric', alt: 'GE Monogram logo', type: 'symbol' },
+  'ge_profile': { src: 'https://cdn.simpleicons.org/generalelectric', alt: 'GE Profile logo', type: 'symbol' },
+  'google_pixel': { src: 'https://cdn.simpleicons.org/google', alt: 'Google logo', type: 'symbol' },
+  'hp': { src: 'https://cdn.simpleicons.org/hp', alt: 'HP logo', type: 'symbol' },
+  'lg': { src: 'https://cdn.simpleicons.org/lg', alt: 'LG logo', type: 'symbol' },
+  'maytag': { src: 'https://cdn.simpleicons.org/maytag', alt: 'Maytag logo', type: 'wordmark' },
+  'panasonic': { src: 'https://cdn.simpleicons.org/panasonic', alt: 'Panasonic logo', type: 'wordmark' },
+  'samsung': { src: 'https://cdn.simpleicons.org/samsung', alt: 'Samsung logo', type: 'wordmark' },
+  'sony': { src: 'https://cdn.simpleicons.org/sony', alt: 'Sony logo', type: 'wordmark' }
+};
+
+var BRAND_DIRECTORY_PRIMARY_CATEGORY_OVERRIDES = {
+  amana: 'appliances',
+  ge: 'appliances',
+  lg: 'appliances',
+  rheem: 'waterHeaters',
+  ruud: 'hvac',
+  samsung: 'appliances',
+  whirlpool: 'appliances'
+};
+
+var BRAND_DIRECTORY_CATEGORY_PRIORITY = ['appliances', 'electronics', 'hvac', 'waterHeaters'];
+var BRAND_DIRECTORY_CACHE = null;
+
 var BRAND_NORMALIZER_PRESERVE_IDS = {
   whirlpool_water_heaters: true
 };
@@ -214,12 +243,160 @@ function getNormalizedBrandEntry(categoryKey, uiBrandId) {
   return null;
 }
 
+function getCategoryDropdownBrands(categoryKey) {
+  var normalizedCategory = normalizeDecoderCategory(categoryKey);
+  var catalog = getNormalizedBrandCatalog();
+  var entries = catalog.byCategory[normalizedCategory] || [];
+  var cyclingCat = CYCLING_BRANDS[normalizedCategory] || {};
+  var seen = {};
+  var brands = [];
+
+  entries.forEach(function(entry) {
+    var displayId = entry.id;
+    var displayName = entry.name;
+    var isCycling = false;
+
+    Object.keys(cyclingCat).forEach(function(baseId) {
+      var cfg = cyclingCat[baseId];
+      if (!cfg) return;
+      var decoderIds = entry.decoderIds || [];
+      if (decoderIds.indexOf(cfg.post) !== -1 || decoderIds.indexOf(cfg.pre) !== -1 || decoderIds.indexOf(cfg.single) !== -1) {
+        displayId = baseId;
+        displayName = cfg.label || entry.name;
+        isCycling = true;
+      }
+    });
+
+    if (!seen[displayId]) {
+      seen[displayId] = true;
+      brands.push({ id: displayId, name: displayName, cycling: isCycling });
+    }
+  });
+
+  brands.sort(function(a, b) {
+    return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' });
+  });
+  return brands;
+}
+
+function getCategoryControlId(categoryKey, rawBrandId) {
+  var normalizedCategory = normalizeDecoderCategory(categoryKey);
+  var cyclingCat = CYCLING_BRANDS[normalizedCategory] || {};
+  var controlId = rawBrandId;
+  Object.keys(cyclingCat).forEach(function(baseId) {
+    var cfg = cyclingCat[baseId];
+    if (!cfg) return;
+    if (cfg.post === rawBrandId || cfg.pre === rawBrandId || cfg.single === rawBrandId) {
+      controlId = baseId;
+    }
+  });
+  return controlId;
+}
+
+function normalizeBrandDirectoryName(rawName, categoryKey) {
+  var name = String(rawName || '').trim();
+  if (normalizeDecoderCategory(categoryKey) === 'waterHeaters') {
+    name = name.replace(/\s+Water Heaters$/i, '').trim();
+  }
+  if (normalizeDecoderCategory(categoryKey) === 'electronics') {
+    var match = name.match(/^(.*?)\s+\(([^)]+)\)$/);
+    if (match && /(tv|monitor|phone|tablet)/i.test(match[2])) {
+      name = match[1].trim();
+    }
+  }
+  name = name.replace(/\s+\((?:post|pre)-\d{4}\)$/i, '').trim();
+  return name;
+}
+
+function slugifyBrandDirectoryKey(name, fallbackId) {
+  return slugifyUiBrandId(name, fallbackId).replace(/^a_o_/, 'a_o_');
+}
+
+function getBrandDirectoryCategorySummary(categories) {
+  return categories.map(function(categoryKey) {
+    return getBrandCategoryLabel(categoryKey);
+  }).join(' • ');
+}
+
+function getBrandDirectoryLogoMeta(item) {
+  var logo = BRAND_DIRECTORY_LOGOS[item.slug] || null;
+  if (logo) return logo;
+  if (item.slug === 'google_pixel' && BRAND_DIRECTORY_LOGOS.google_pixel) return BRAND_DIRECTORY_LOGOS.google_pixel;
+  return { src: '', alt: '', type: 'none' };
+}
+
+function getBrandDirectoryItems() {
+  if (BRAND_DIRECTORY_CACHE) return BRAND_DIRECTORY_CACHE;
+  if (!hasDecoderData()) return [];
+  syncDecoderDataRef();
+
+  var map = {};
+
+  Object.keys(decoderData).forEach(function(categoryKey) {
+    var category = decoderData[categoryKey];
+    if (!category || !category.brands) return;
+
+    category.brands.forEach(function(brand) {
+      if (!brand || !brand.id) return;
+
+      var name = normalizeBrandDirectoryName(brand.name, categoryKey);
+      var controlId = getCategoryControlId(categoryKey, brand.id);
+      var slug = slugifyBrandDirectoryKey(name, controlId || brand.id);
+      if (!map[slug]) {
+        map[slug] = {
+          slug: slug,
+          name: name,
+          href: '#decoder-tool',
+          categories: [],
+          categorySet: {},
+          prefillByCategory: {}
+        };
+      }
+
+      if (!map[slug].categorySet[categoryKey]) {
+        map[slug].categorySet[categoryKey] = true;
+        map[slug].categories.push(categoryKey);
+      }
+      if (!map[slug].prefillByCategory[categoryKey]) {
+        map[slug].prefillByCategory[categoryKey] = controlId || brand.id;
+      }
+    });
+  });
+
+  BRAND_DIRECTORY_CACHE = Object.keys(map).map(function(slug) {
+    var item = map[slug];
+    item.categories.sort(function(a, b) {
+      return BRAND_DIRECTORY_CATEGORY_PRIORITY.indexOf(a) - BRAND_DIRECTORY_CATEGORY_PRIORITY.indexOf(b);
+    });
+
+    var preferredCategory = BRAND_DIRECTORY_PRIMARY_CATEGORY_OVERRIDES[slug];
+    if (!preferredCategory || item.categories.indexOf(preferredCategory) === -1) {
+      preferredCategory = item.categories[0];
+    }
+    item.prefillCat = preferredCategory;
+    item.prefillBrand = item.prefillByCategory[preferredCategory] || '';
+    item.categorySummary = getBrandDirectoryCategorySummary(item.categories);
+
+    var logo = getBrandDirectoryLogoMeta(item);
+    item.logoSrc = logo.src || '';
+    item.logoAlt = logo.alt || '';
+    item.logoType = logo.type || 'none';
+    return item;
+  }).sort(function(a, b) {
+    return String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' });
+  });
+
+  return BRAND_DIRECTORY_CACHE;
+}
+
 function buildMobileBrandCategoriesMap() {
   if (MOBILE_BRAND_CATEGORIES) return MOBILE_BRAND_CATEGORIES;
   var map = {};
-  var catalog = getNormalizedBrandCatalog();
-  Object.keys(catalog.byUiId || {}).forEach(function(uiId) {
-    map[uiId] = (catalog.byUiId[uiId].categories || []).slice();
+  Object.keys(decoderData || {}).forEach(function(categoryKey) {
+    getCategoryDropdownBrands(categoryKey).forEach(function(brand) {
+      if (!map[brand.id]) map[brand.id] = [];
+      if (map[brand.id].indexOf(categoryKey) === -1) map[brand.id].push(categoryKey);
+    });
   });
   MOBILE_BRAND_CATEGORIES = map;
   return map;
@@ -227,10 +404,15 @@ function buildMobileBrandCategoriesMap() {
 
 function populateMobileBrands() {
   var sel = document.getElementById('brand');
-  var catalog = getNormalizedBrandCatalog();
-  if (!sel || !catalog.byUiId) return;
-  var allBrands = Object.keys(catalog.byUiId).map(function(uiId) {
-    return { id: uiId, name: catalog.byUiId[uiId].name };
+  if (!sel || !hasDecoderData()) return;
+  var seen = {};
+  var allBrands = [];
+  Object.keys(decoderData || {}).forEach(function(categoryKey) {
+    getCategoryDropdownBrands(categoryKey).forEach(function(brand) {
+      if (seen[brand.id]) return;
+      seen[brand.id] = true;
+      allBrands.push({ id: brand.id, name: brand.name });
+    });
   });
   allBrands.sort(function(a, b) {
     return String(a.name).localeCompare(String(b.name), undefined, { sensitivity: 'base' });
@@ -2748,6 +2930,89 @@ function bindFeatureSidebarControls() {
   });
 }
 
+function renderBrandDirectorySection() {
+  var grid = document.getElementById('brandDirectoryGrid');
+  if (!grid) return;
+
+  var items = getBrandDirectoryItems();
+  if (!items.length) return;
+
+  grid.innerHTML = items.map(function(item) {
+    var cardClass = 'brand-tile';
+    if (item.logoType === 'wordmark') cardClass += ' brand-tile--wordmark';
+    if (item.logoType === 'none') cardClass += ' brand-tile--textonly';
+
+    var logoInner = '';
+    if (item.logoType === 'none') {
+      logoInner = '<span class="brand-tile-fallback brand-tile-fallback--visible">' + escapeHtml(item.name) + '</span>';
+    } else {
+      logoInner =
+        '<img src="' + escapeHtml(item.logoSrc) + '" alt="' + escapeHtml(item.logoAlt || (item.name + ' logo')) + '" loading="lazy" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';">' +
+        '<span class="brand-tile-fallback">' + escapeHtml(item.name) + '</span>';
+    }
+
+    var titleMarkup = item.logoType === 'symbol'
+      ? '<h3 class="brand-tile-name">' + escapeHtml(item.name) + '</h3>'
+      : '<span class="sr-only">' + escapeHtml(item.name) + '</span>';
+
+    return (
+      '<a href="' + escapeHtml(item.href) + '" class="' + cardClass + '" data-prefill-cat="' + escapeHtml(item.prefillCat) + '" data-prefill-brand="' + escapeHtml(item.prefillBrand) + '" aria-label="Decode ' + escapeHtml(item.name) + ' serial numbers">' +
+        '<div class="brand-tile-logo">' + logoInner + '</div>' +
+        titleMarkup +
+        '<p class="brand-tile-desc">' + escapeHtml(item.categorySummary) + '</p>' +
+      '</a>'
+    );
+  }).join('');
+
+  rewriteBrandLinks(grid);
+}
+
+function initMobileBrandGridToggle() {
+  var grid = document.getElementById('brandDirectoryGrid');
+  var toggle = document.getElementById('brandGridToggle');
+  if (!grid || !toggle) return;
+
+  var cards = Array.prototype.slice.call(grid.querySelectorAll('.brand-tile'));
+  var mobileLimit = parseInt(grid.getAttribute('data-mobile-limit') || '8', 10);
+  if (!mobileLimit || cards.length <= mobileLimit) {
+    toggle.hidden = true;
+    cards.forEach(function(card) { card.classList.remove('is-mobile-hidden'); });
+    return;
+  }
+
+  function sync() {
+    var mobile = window.innerWidth <= 768;
+    var expanded = grid.getAttribute('data-mobile-expanded') === '1';
+
+    if (!mobile) {
+      toggle.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+      grid.setAttribute('data-mobile-expanded', '0');
+      cards.forEach(function(card) { card.classList.remove('is-mobile-hidden'); });
+      return;
+    }
+
+    toggle.hidden = false;
+    toggle.textContent = expanded ? 'Show fewer' : 'Show all brands';
+    toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    cards.forEach(function(card, index) {
+      card.classList.toggle('is-mobile-hidden', !expanded && index >= mobileLimit);
+    });
+  }
+
+  if (toggle.getAttribute('data-brand-toggle-bound') !== '1') {
+    toggle.setAttribute('data-brand-toggle-bound', '1');
+    toggle.addEventListener('click', function() {
+      var expanded = grid.getAttribute('data-mobile-expanded') === '1';
+      grid.setAttribute('data-mobile-expanded', expanded ? '0' : '1');
+      sync();
+    });
+    window.addEventListener('resize', sync);
+  }
+
+  sync();
+}
+
 function renderSidebarFeatureRequestForm() {
   var mount = document.getElementById('feature-sidebar-mount');
   if (!mount || document.getElementById('sidebar-feature-request-form')) return;
@@ -2880,7 +3145,9 @@ function initPage() {
   ensureFooterPrivacyPolicyLink();
   updateFooterBranding();
   addGuidedSearchButtonToBrandDecoderCard();
+  renderBrandDirectorySection();
   rewriteBrandLinks();
+  initMobileBrandGridToggle();
   var dom = getDecodeDom();
   var altQuery    = getSmartLookupInputEl();
   bindDecoderDataLoadTriggers();
@@ -3029,17 +3296,9 @@ function selectCategory(cat, btn) {
 // ===== BRAND DROPDOWN =====
 function populateBrands(category) {
   var sel = document.getElementById('brand');
-  var catalog = getNormalizedBrandCatalog();
-  if (!sel || !catalog.byCategory[category]) return;
+  if (!sel || !hasDecoderData()) return;
   var selectedBrand = getSelectedBrandForCategory(category);
-
-  var consolidated = catalog.byCategory[category].map(function(entry) {
-    return {
-      id: entry.id,
-      name: entry.name,
-      cycling: !!(CYCLING_BRANDS[category] && CYCLING_BRANDS[category][entry.id])
-    };
-  });
+  var consolidated = getCategoryDropdownBrands(category);
 
   sel.innerHTML = '<option value="">-- Select Brand --</option>';
 

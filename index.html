@@ -178,6 +178,10 @@
     .brand-logo-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
     /* ─── POPULAR BRANDS ─── */
+    .brand-directory-shell {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
     .brands-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -185,23 +189,101 @@
       margin-top: 28px;
     }
     .brand-tile {
-      display: flex; flex-direction: column; gap: 4px;
+      display: flex;
+      flex-direction: column;
+      min-height: 156px;
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px 18px;
+      border-radius: 14px;
+      padding: 16px;
       text-decoration: none;
       transition: all 0.2s;
     }
     .brand-tile:hover { border-color: rgba(0,201,167,0.4); background: rgba(255,255,255,0.07); transform: translateY(-2px); }
-    .brand-tile-name { font-size: 14px; font-weight: 700; color: var(--white); }
-    .brand-tile-logo { display: flex; align-items: center; min-height: 32px; }
-    .brand-tile-desc { font-size: 11px; color: #d8e3ee; }
+    .brand-tile-logo {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .brand-tile-logo img {
+      max-height: 32px;
+      max-width: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      object-position: left center;
+      display: block;
+    }
+    .brand-tile-fallback {
+      display: none;
+      font-weight: 700;
+      font-size: 13px;
+      line-height: 1.2;
+      color: var(--white);
+    }
+    .brand-tile-fallback--visible {
+      display: block;
+    }
+    .brand-tile-name {
+      margin: 0 0 8px;
+      font-size: 14px;
+      line-height: 1.2;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .brand-tile--wordmark .brand-tile-logo {
+      justify-content: flex-start;
+    }
+    .brand-tile--wordmark .brand-tile-desc {
+      margin-top: auto;
+    }
+    .brand-tile--textonly .brand-tile-logo {
+      align-items: flex-end;
+    }
+    .brand-tile--textonly .brand-tile-desc {
+      margin-top: auto;
+    }
+    .brand-tile-desc {
+      margin: 0;
+      font-size: 11px;
+      line-height: 1.45;
+      color: #d8e3ee;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .brand-grid-toggle {
+      display: none;
+      margin: 16px auto 0;
+      min-height: 44px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,201,167,0.22);
+      background: rgba(255,255,255,0.04);
+      color: var(--white);
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.2s;
+    }
+    .brand-grid-toggle:hover {
+      border-color: rgba(0,201,167,0.42);
+      background: rgba(255,255,255,0.08);
+      transform: translateY(-1px);
+    }
+    .brand-grid-toggle[hidden] { display: none !important; }
     @media (min-width: 768px) and (max-width: 1024px) {
       .brands-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
       .brand-tile {
+        min-height: 148px;
         padding: 14px 15px;
       }
       .brand-tile-name {
@@ -212,6 +294,9 @@
       }
     }
     @media (max-width: 768px) {
+      .brand-directory-shell {
+        padding: 0 16px;
+      }
       .decoder-card-shell {
         border-radius: 20px;
         padding: 1.5px;
@@ -224,20 +309,36 @@
       }
       .brands-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 12px;
       }
       .brand-tile {
-        padding: 12px 12px 11px;
-        border-radius: 10px;
-        gap: 3px;
+        min-height: 164px;
+        padding: 15px;
+        border-radius: 14px;
+      }
+      .brand-tile-logo {
+        height: 34px;
+        margin-bottom: 12px;
+      }
+      .brand-tile-logo img {
+        max-height: 28px;
       }
       .brand-tile-name {
         font-size: 13px;
         line-height: 1.2;
+        margin-bottom: 8px;
       }
       .brand-tile-desc {
         font-size: 10px;
-        line-height: 1.35;
+        line-height: 1.4;
+      }
+      .brand-tile.is-mobile-hidden {
+        display: none;
+      }
+      .brand-grid-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
     }
 
@@ -1105,31 +1206,12 @@
 
 <!-- ─── POPULAR BRANDS ─── -->
 <section class="section alt">
-  <div style="max-width:1100px;margin:0 auto;">
+  <div class="brand-directory-shell">
     <span class="section-label">Browse by Brand</span>
     <h2 class="section-title">Decode by Brand</h2>
     <p class="section-sub">Dedicated serial number decode guides for major appliance and electronics brands.</p>
-    <div class="brands-grid">
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="ge"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/f/ff/General_Electric_logo.svg" alt="GE logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">GE</span></div><span class="brand-tile-desc">Refrigerators, ranges, washers</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="whirlpool"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Whirlpool_logo.svg" alt="Whirlpool logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Whirlpool</span></div><span class="brand-tile-desc">All Whirlpool family brands</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="samsung"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg" alt="Samsung logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Samsung</span></div><span class="brand-tile-desc">Appliances &amp; TVs</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="lg"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/b/bf/LG_logo_%282015%29.svg" alt="LG logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">LG</span></div><span class="brand-tile-desc">Appliances &amp; TVs</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="bosch"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/0/0a/Bosch-logo.svg" alt="Bosch logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Bosch</span></div><span class="brand-tile-desc">Dishwashers, washers, ranges</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="maytag"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/4/43/Maytag_logo.svg" alt="Maytag logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Maytag</span></div><span class="brand-tile-desc">Pre &amp; post-2006 formats</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="frigidaire"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/8/8e/Frigidaire_logo.svg" alt="Frigidaire logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Frigidaire</span></div><span class="brand-tile-desc">Refrigerators, ranges, washers</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="kenmore"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/8/8f/Kenmore_logo.svg" alt="Kenmore logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Kenmore</span></div><span class="brand-tile-desc">OEM identification guide</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="apple"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Apple</span></div><span class="brand-tile-desc">iPhones, iPads, Macs</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="hp"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/a/ad/HP_logo_2012.svg" alt="HP logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">HP</span></div><span class="brand-tile-desc">Laptops, desktops, printers</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="asus"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2e/ASUS_Logo.svg" alt="ASUS logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">ASUS</span></div><span class="brand-tile-desc">Laptops, motherboards, desktops</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="google-pixel"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google Pixel logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Google Pixel</span></div><span class="brand-tile-desc">Pixel phones &amp; tablets</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="sony"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/Sony_logo.svg" alt="Sony logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Sony</span></div><span class="brand-tile-desc">Bravia TVs &amp; home theater</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="vizio"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9d/Vizio_logo.svg" alt="Vizio logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Vizio</span></div><span class="brand-tile-desc">Vizio TVs all series</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="panasonic"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/0/0d/Panasonic_logo_%28Blue%29.svg" alt="Panasonic logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Panasonic</span></div><span class="brand-tile-desc">TVs &amp; home theater</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="hvac" data-prefill-brand="carrier"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/8/8e/Carrier_logo.svg" alt="Carrier logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Carrier</span></div><span class="brand-tile-desc">HVAC systems &amp; heat pumps</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="waterHeaters" data-prefill-brand="rheem"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b2/Rheem_logo.svg" alt="Rheem logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Rheem</span></div><span class="brand-tile-desc">Water heaters &amp; HVAC</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="hvac" data-prefill-brand="goodman"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Goodman_Manufacturing_logo.svg" alt="Goodman logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Goodman</span></div><span class="brand-tile-desc">HVAC systems</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="hvac" data-prefill-brand="trane"><div class="brand-tile-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/4/49/Trane_logo.svg" alt="Trane logo" style="height:32px; width:auto; object-fit:contain; display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none; font-weight:700; font-size:13px;">Trane</span></div><span class="brand-tile-desc">HVAC systems</span></a>
-    </div>
+    <div class="brands-grid" id="brandDirectoryGrid" data-mobile-limit="12" data-mobile-collapsible="1"></div>
+    <button type="button" class="brand-grid-toggle" id="brandGridToggle" hidden aria-expanded="false" aria-controls="brandDirectoryGrid">Show all brands</button>
   </div>
 </section>
 
