@@ -4328,6 +4328,134 @@ function showAgeLookupResults(displayQuery, data) {
   }
 }
 
+function buildProgressiveAgeLookupMarkup(displayQuery, data) {
+  var fields = [
+    { label: 'Search', value: displayQuery || 'â€”' },
+    { label: 'Brand', value: data.brand || 'Unknown' },
+    { label: 'Model', value: data.model || 'Unknown' },
+    { label: 'Specificity', value: data.specificityLevel || 'Unknown' },
+    { label: 'Estimated Year', value: data.estimatedYear || 'Unknown' },
+    { label: 'Production Range', value: data.yearRange || 'Unknown' }
+  ];
+  var details = [];
+
+  if (data.inventionSummary) details.push('<p>' + escapeSmartLookupHtml(data.inventionSummary) + '</p>');
+  if (data.notes) details.push('<p>' + escapeSmartLookupHtml(data.notes) + '</p>');
+  if (data.refinementSuggestion) details.push('<p><strong>Refine Search:</strong> ' + escapeSmartLookupHtml(data.refinementSuggestion) + '</p>');
+  if (data.serialRule) details.push('<p><strong>Serial Rule:</strong> ' + escapeSmartLookupHtml(data.serialRule) + '</p>');
+  if (data.serialLocation) details.push('<p><strong>Serial Location:</strong> ' + escapeSmartLookupHtml(data.serialLocation) + '</p>');
+  if (data.exampleModelNumber) details.push('<p><strong>Example Model:</strong> ' + escapeSmartLookupHtml(data.exampleModelNumber) + '</p>');
+  if (Array.isArray(data.suggestedModelNumbers) && data.suggestedModelNumbers.length) {
+    details.push('<p><strong>Suggested Models:</strong> ' + escapeSmartLookupHtml(data.suggestedModelNumbers.join(', ')) + '</p>');
+  }
+
+  return '' +
+    '<div class="smart-age-grid">' +
+      '<div class="smart-general-section smart-age-section">' +
+        '<div class="smart-general-section-title">Item Identification</div>' +
+        '<div class="smart-age-rows">' +
+          fields.map(function (field) {
+            return '' +
+              '<div class="smart-age-row">' +
+                '<span class="smart-age-label">' + escapeSmartLookupHtml(field.label) + '</span>' +
+                '<span class="smart-age-value">' + escapeSmartLookupHtml(field.value) + '</span>' +
+              '</div>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+      '<div class="smart-general-section smart-age-section">' +
+        '<div class="smart-general-section-title">Research Notes</div>' +
+        '<div class="smart-age-copy">' + (details.join('') || '<p>No additional details found.</p>') + '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function createSmartLookupProgressiveShell(resultsEl) {
+  var stack;
+  if (!resultsEl) return null;
+  resultsEl.innerHTML =
+    '<div class="sl-progressive-stack">' +
+      '<div class="sl-progressive-card-slot is-loading" data-slot="age">' +
+        '<div class="sl-progressive-skeleton">' +
+          '<div class="sl-progressive-skeleton-title"></div>' +
+          '<div class="sl-progressive-skeleton-line w-100"></div>' +
+          '<div class="sl-progressive-skeleton-line w-70"></div>' +
+          '<div class="sl-progressive-skeleton-line w-85"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sl-progressive-card-slot is-loading" data-slot="lkq">' +
+        '<div class="sl-progressive-skeleton">' +
+          '<div class="sl-progressive-skeleton-title"></div>' +
+          '<div class="sl-progressive-skeleton-line w-100"></div>' +
+          '<div class="sl-progressive-skeleton-line w-90"></div>' +
+          '<div class="sl-progressive-skeleton-line w-60"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sl-progressive-card-slot is-loading" data-slot="price">' +
+        '<div class="sl-progressive-skeleton">' +
+          '<div class="sl-progressive-skeleton-title"></div>' +
+          '<div class="sl-progressive-skeleton-line w-80"></div>' +
+          '<div class="sl-progressive-skeleton-line w-65"></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  stack = resultsEl.querySelector('.sl-progressive-stack');
+  return stack ? {
+    ageSlot: stack.querySelector('[data-slot="age"]'),
+    lkqSlot: stack.querySelector('[data-slot="lkq"]'),
+    priceSlot: stack.querySelector('[data-slot="price"]')
+  } : null;
+}
+
+function buildSmartLookupCardElement(innerHtml, extraClass) {
+  var wrapper = document.createElement('div');
+  wrapper.className = 'sl-progressive-card' + (extraClass ? (' ' + extraClass) : '');
+  wrapper.innerHTML = innerHtml;
+  return wrapper;
+}
+
+function buildSmartLookupStatusCard(title, message) {
+  return buildSmartLookupCardElement(
+    '<div class="smart-general-section smart-age-section">' +
+      '<div class="smart-general-section-title">' + escapeSmartLookupHtml(title) + '</div>' +
+      '<div class="smart-age-copy"><p>' + escapeSmartLookupHtml(message) + '</p></div>' +
+    '</div>',
+    'sl-progressive-card--status'
+  );
+}
+
+function mountSmartLookupProgressiveSlot(slot, contentEl) {
+  if (!slot || !contentEl) return;
+  slot.classList.remove('is-hidden', 'is-ready', 'is-loading');
+  slot.innerHTML = '';
+  slot.appendChild(contentEl);
+  requestAnimationFrame(function () {
+    slot.classList.add('is-ready');
+  });
+}
+
+function hideSmartLookupProgressiveSlot(slot) {
+  if (!slot) return;
+  slot.innerHTML = '';
+  slot.classList.remove('is-loading', 'is-ready');
+  slot.classList.add('is-hidden');
+}
+
+function evaluateSmartLookupLkq(instanceId, query, resultsEl) {
+  return new Promise(function (resolve, reject) {
+    LKQEngine.evaluate(instanceId, query, resultsEl, {
+      onSuccess: function (lkqData) {
+        resolve(lkqData || {});
+      },
+      onError: function (type, message) {
+        var err = new Error(message || 'Smart Lookup is temporarily unavailable. Please try again.');
+        err.lookupType = type || 'unknown';
+        reject(err);
+      }
+    });
+  });
+}
+
 async function runAgeOnlyLookup(query, opts) {
   var ageResultsEl = document.getElementById('ageResults');
   var serialResultsEl = document.getElementById('serialResults');
@@ -4573,25 +4701,33 @@ async function executeSmartLookup(query, opts) {
   var ageResultsEl;
   var serialResultsEl;
   var ageLoadingEl;
-  var loadStart;
   var resultsEl = (opts && opts.targetEl) ? opts.targetEl : getSmartLookupResultsEl();
   var preserveGeneral = !!(opts && opts.preserveGeneral);
   var instanceId = (opts && opts.instanceId) || 'smart-lookup';
   var interpretData = (opts && opts.interpretData) || null;
   var originalQuery = normalizeSmartLookupQuery((opts && opts.originalQuery) || query);
   var normalizedOriginalQuery = String(originalQuery || '').toLowerCase().trim();
-  var ageLookupPromise;
   var includeComparisons = (opts && typeof opts.includeComparisons === 'boolean')
     ? opts.includeComparisons
     : shouldIncludeSmartLookupComparisons();
+  var ageLookupPromise;
+  var lkqRenderEl;
+  var lkqPromise;
+  var lookupSettlePromise;
+  var slots;
+  var ageData = null;
+  var lkqData = null;
+  var lkqSlotContent = null;
+  var normalizedResult = null;
+  var ageRendered = false;
+  var ageFailed = false;
+  var resultsShown = false;
+  var analyticsTracked = false;
 
   if (!preserveGeneral) clearSmartLookupAssist();
   query = normalizeSmartLookupQuery(query);
   if (!query) return;
   if (!resultsEl) { setLoadingHidden(); return; }
-  ageLookupPromise = preserveGeneral
-    ? Promise.resolve(null)
-    : fetchAgeLookup(query).catch(function () { return null; });
 
   if (!preserveGeneral) {
     ageResultsEl = document.getElementById('ageResults');
@@ -4601,35 +4737,44 @@ async function executeSmartLookup(query, opts) {
     setLoadingActive();
     ageLoadingEl = document.getElementById('ageLoading');
     if (ageLoadingEl) ageLoadingEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    loadStart = Date.now();
   } else {
-    resultsEl.innerHTML =
-      '<div class="smart-general-inline-loading">Evaluating LKQ options...</div>';
     resultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    loadStart = Date.now();
   }
 
-  LKQEngine.evaluate(instanceId, query, resultsEl, {
-    onSuccess: async function (lkqData) {
-      var ageData;
-      var normalizedResult;
-      currentFeedbackContext = { brand: '', serial: query };
-      applySmartLookupComparisonPreference(resultsEl, includeComparisons);
-      ageData = await ageLookupPromise;
-      if (typeof normalizeSmartLookupResult === 'function') {
-        normalizedResult = normalizeSmartLookupResult({
-          interpret: interpretData,
-          age: ageData,
-          lkq: lkqData,
-          candidate: null,
-          originalQuery: originalQuery,
-          normalizedQuery: normalizedOriginalQuery
-        });
-      }
-      prependSmartLookupSummaryLayer(resultsEl, normalizedResult);
-      if (typeof window.fetchAndRenderPriceTier === 'function' && normalizedResult && normalizedResult.identity) {
-        window.fetchAndRenderPriceTier(normalizedResult.identity, resultsEl);
-      }
+  slots = createSmartLookupProgressiveShell(resultsEl);
+  ageLookupPromise = preserveGeneral ? Promise.resolve(null) : fetchAgeLookup(query);
+  lkqRenderEl = document.createElement('div');
+  lkqPromise = evaluateSmartLookupLkq(instanceId, query, lkqRenderEl);
+  lookupSettlePromise = Promise.allSettled([ageLookupPromise, lkqPromise]);
+
+  function ensureVisibleResults() {
+    if (resultsShown) return;
+    resultsShown = true;
+    if (preserveGeneral) {
+      resultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
+    setLoadingHidden();
+    if (ageResultsEl) {
+      ageResultsEl.classList.remove('hidden');
+      ageResultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  function updateNormalizedArtifacts() {
+    if (!lkqSlotContent || typeof normalizeSmartLookupResult !== 'function') return;
+    normalizedResult = normalizeSmartLookupResult({
+      interpret: interpretData,
+      age: ageData,
+      lkq: lkqData,
+      candidate: null,
+      originalQuery: originalQuery,
+      normalizedQuery: normalizedOriginalQuery
+    });
+    prependSmartLookupSummaryLayer(lkqSlotContent, normalizedResult);
+
+    if (!analyticsTracked && lkqData) {
+      analyticsTracked = true;
       trackSmartLookupEvent('result_success', {
         query: originalQuery,
         queryKind: (interpretData && interpretData.queryKind) || '',
@@ -4637,40 +4782,91 @@ async function executeSmartLookup(query, opts) {
         category: normalizedResult && normalizedResult.identity && normalizedResult.identity.category,
         resultType: preserveGeneral ? 'general-refined-lkq' : 'lkq'
       });
-      var elapsed = Date.now() - loadStart;
-      var remaining = Math.max(0, 1400 - elapsed);
-      setTimeout(function () {
-        if (preserveGeneral) {
-          resultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        } else {
-          setLoadingSuccess(function () {
-            if (ageResultsEl) {
-              ageResultsEl.classList.remove('hidden');
-              ageResultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-          });
-        }
-      }, remaining);
-    },
-    onError: function (type, message) {
-      trackSmartLookupEvent('result_failure', {
-        query: originalQuery,
-        queryKind: (interpretData && interpretData.queryKind) || '',
-        failureType: type || 'unknown',
-        resultType: preserveGeneral ? 'general-refined-lkq' : 'lkq'
-      });
+    }
+
+    if (slots && slots.priceSlot && typeof window.fetchAndRenderPriceTier === 'function') {
+      if (normalizedResult && normalizedResult.identity && !slots.priceSlot.getAttribute('data-price-tier-started')) {
+        slots.priceSlot.setAttribute('data-price-tier-started', '1');
+        window.fetchAndRenderPriceTier(normalizedResult.identity, lkqSlotContent, { progressiveSlot: slots.priceSlot });
+      } else if ((!normalizedResult || !normalizedResult.identity) && !slots.priceSlot.getAttribute('data-price-tier-started')) {
+        hideSmartLookupProgressiveSlot(slots.priceSlot);
+      }
+    }
+  }
+
+  ageLookupPromise.then(function (resolvedAgeData) {
+    ageData = resolvedAgeData || null;
+    ageRendered = true;
+    currentFeedbackContext = { brand: (resolvedAgeData && resolvedAgeData.brand) || '', serial: originalQuery };
+    if (slots && slots.ageSlot && resolvedAgeData) {
+      mountSmartLookupProgressiveSlot(
+        slots.ageSlot,
+        buildSmartLookupCardElement(buildProgressiveAgeLookupMarkup(originalQuery, resolvedAgeData), 'sl-progressive-card--age')
+      );
+    } else if (slots && slots.ageSlot) {
+      hideSmartLookupProgressiveSlot(slots.ageSlot);
+    }
+    ensureVisibleResults();
+    updateNormalizedArtifacts();
+  }).catch(function () {
+    ageFailed = true;
+    if (slots && slots.ageSlot) hideSmartLookupProgressiveSlot(slots.ageSlot);
+    if (lkqData) ensureVisibleResults();
+  });
+
+  lkqPromise.then(function (resolvedLkqData) {
+    var lkqWrapper = document.createElement('div');
+    currentFeedbackContext = { brand: '', serial: query };
+    lkqData = resolvedLkqData || {};
+    applySmartLookupComparisonPreference(lkqRenderEl, includeComparisons);
+    lkqWrapper.className = 'sl-progressive-card sl-progressive-card--lkq';
+    while (lkqRenderEl.firstChild) {
+      lkqWrapper.appendChild(lkqRenderEl.firstChild);
+    }
+    lkqSlotContent = lkqWrapper;
+    if (slots && slots.lkqSlot) {
+      mountSmartLookupProgressiveSlot(slots.lkqSlot, lkqWrapper);
+    }
+    if (ageRendered || ageFailed) ensureVisibleResults();
+    updateNormalizedArtifacts();
+  }).catch(function (err) {
+    if (slots && slots.lkqSlot) {
+      mountSmartLookupProgressiveSlot(
+        slots.lkqSlot,
+        buildSmartLookupStatusCard('Replacement lookup unavailable', err && err.message ? err.message : 'Smart Lookup is temporarily unavailable. Please try again.')
+      );
+    }
+    if (slots && slots.priceSlot) hideSmartLookupProgressiveSlot(slots.priceSlot);
+    if (ageRendered) ensureVisibleResults();
+  });
+
+  lookupSettlePromise.then(function (settled) {
+    var ageRejected = settled[0] && settled[0].status === 'rejected';
+    var lkqRejected = settled[1] && settled[1].status === 'rejected';
+    if (!ageRejected && !lkqRejected) return;
+    if (!lkqRejected) return;
+
+    trackSmartLookupEvent('result_failure', {
+      query: originalQuery,
+      queryKind: (interpretData && interpretData.queryKind) || '',
+      failureType: (settled[1] && settled[1].reason && settled[1].reason.lookupType) || 'unknown',
+      resultType: preserveGeneral ? 'general-refined-lkq' : 'lkq'
+    });
+
+    if (ageRejected && lkqRejected) {
+      var err = settled[1] && settled[1].reason;
       if (preserveGeneral) {
         resultsEl.innerHTML =
-          '<div class="smart-general-inline-error">' + escapeSmartLookupHtml(message || 'Smart Lookup is temporarily unavailable. Please try again.') + '</div>';
+          '<div class="smart-general-inline-error">' + escapeSmartLookupHtml((err && err.message) || 'Smart Lookup is temporarily unavailable. Please try again.') + '</div>';
       } else {
         setLoadingHidden();
-        if (type === 'capacity') {
+        if (err && err.lookupType === 'capacity') {
           showSmartLookupNotice('capacity', 'Wow! Due to the popular demand of this tool, the capacity of the free version has been reached. Please utilize the serial number decoder. The smart lookup function will be available again soon. Interested in utilizing smart lookup within personalized data limits? <a href="contact.html" style="color:inherit;font-weight:700;">Contact us today</a> to become a pro member.');
         } else {
-          showSmartLookupNotice('limit', message || 'Smart Lookup is temporarily unavailable. Please try again.');
+          showSmartLookupNotice('limit', (err && err.message) || 'Smart Lookup is temporarily unavailable. Please try again.');
         }
       }
-    },
+    }
   });
 }
 
@@ -4719,7 +4915,7 @@ function applySmartLookupComparisonPreference(resultsEl, includeComparisons) {
 function prependSmartLookupSummaryLayer(resultsEl, normalizedResult) {
   var existingLayer;
   var summaryLayer;
-  if (!resultsEl || resultsEl.id !== 'smart-lookup-results') return;
+  if (!resultsEl) return;
 
   existingLayer = resultsEl.querySelector('.sl-top-summary-layer');
   if (existingLayer && existingLayer.parentNode) {

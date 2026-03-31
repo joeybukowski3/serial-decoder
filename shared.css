@@ -773,6 +773,72 @@ footer {
   color: #1a202c;
 }
 
+.sl-progressive-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sl-progressive-card-slot {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.sl-progressive-card-slot.is-loading,
+.sl-progressive-card-slot.is-ready {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sl-progressive-card-slot.is-hidden {
+  display: none;
+}
+
+.sl-progressive-card {
+  width: 100%;
+}
+
+.sl-progressive-skeleton {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.sl-progressive-skeleton-title,
+.sl-progressive-skeleton-line {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f8fafc 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: sl-skeleton-shimmer 1.15s linear infinite;
+}
+
+.sl-progressive-skeleton-title {
+  height: 14px;
+  width: 32%;
+  margin-bottom: 0.9rem;
+}
+
+.sl-progressive-skeleton-line {
+  height: 10px;
+  margin-top: 0.7rem;
+}
+
+.sl-progressive-skeleton-line.w-100 { width: 100%; }
+.sl-progressive-skeleton-line.w-90 { width: 90%; }
+.sl-progressive-skeleton-line.w-85 { width: 85%; }
+.sl-progressive-skeleton-line.w-80 { width: 80%; }
+.sl-progressive-skeleton-line.w-70 { width: 70%; }
+.sl-progressive-skeleton-line.w-65 { width: 65%; }
+.sl-progressive-skeleton-line.w-60 { width: 60%; }
+
+@keyframes sl-skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .lkq-id-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
