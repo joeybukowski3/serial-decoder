@@ -693,6 +693,7 @@ footer {
   .aud-card { width: 100%; max-width: 340px; }
   .comparison-header, .comp-row { grid-template-columns: 1fr; }
   .comp-col:first-child, .comp-cell:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+  .search-tabs:has(.cat-tab) { display: none; }
 }
 
 /* --- Internal version timestamp badge --- */

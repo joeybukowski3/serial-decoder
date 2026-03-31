@@ -65,6 +65,144 @@ var ERA_ID_TO_BASE = {};
   });
 })();
 
+// ===== MOBILE BRAND-FIRST CATEGORY FLOW =====
+var MOBILE_BRAND_CATEGORIES = null;
+
+var MOBILE_CAT_LABELS = {
+  appliances:   '🏠 Appliances',
+  waterHeaters: '💧 Water Heaters',
+  hvac:         '❄️ HVAC',
+  electronics:  '📺 Electronics'
+};
+
+function isMobileView() {
+  return window.innerWidth <= 768;
+}
+
+function buildMobileBrandCategoriesMap() {
+  if (MOBILE_BRAND_CATEGORIES) return MOBILE_BRAND_CATEGORIES;
+  if (!hasDecoderData()) return {};
+  syncDecoderDataRef();
+  var map = {};
+  Object.keys(decoderData).forEach(function(cat) {
+    if (!decoderData[cat] || !decoderData[cat].brands) return;
+    var cyclingCat = CYCLING_BRANDS[cat] || {};
+    decoderData[cat].brands.forEach(function(b) {
+      var baseId = ERA_ID_TO_BASE[b.id] || b.id;
+      var cyclingBase = null;
+      Object.keys(cyclingCat).forEach(function(k) {
+        var cfg = cyclingCat[k];
+        if (cfg.post === b.id || cfg.pre === b.id || cfg.single === b.id) cyclingBase = k;
+      });
+      var key = cyclingBase || baseId;
+      if (!map[key]) map[key] = [];
+      if (map[key].indexOf(cat) === -1) map[key].push(cat);
+    });
+  });
+  MOBILE_BRAND_CATEGORIES = map;
+  return map;
+}
+
+function populateMobileBrands() {
+  var sel = document.getElementById('brand');
+  if (!sel || !hasDecoderData()) return;
+  syncDecoderDataRef();
+  var seen = {};
+  var allBrands = [];
+  Object.keys(decoderData).forEach(function(cat) {
+    if (!decoderData[cat] || !decoderData[cat].brands) return;
+    var cyclingCat = CYCLING_BRANDS[cat] || {};
+    decoderData[cat].brands.forEach(function(b) {
+      var baseId = ERA_ID_TO_BASE[b.id] || b.id;
+      var cyclingBase = null;
+      Object.keys(cyclingCat).forEach(function(k) {
+        var cfg = cyclingCat[k];
+        if (cfg.post === b.id || cfg.pre === b.id || cfg.single === b.id) cyclingBase = k;
+      });
+      var displayId = cyclingBase || baseId;
+      var displayName = cyclingBase ? cyclingCat[cyclingBase].label : b.name;
+      if (!seen[displayId]) {
+        seen[displayId] = true;
+        allBrands.push({ id: displayId, name: displayName });
+      }
+    });
+  });
+  allBrands.sort(function(a, b) {
+    return String(a.name).localeCompare(String(b.name), undefined, { sensitivity: 'base' });
+  });
+  sel.innerHTML = '<option value="">-- Select Brand --</option>';
+  allBrands.forEach(function(b) {
+    var opt = document.createElement('option');
+    opt.value = b.id;
+    opt.textContent = b.name;
+    sel.appendChild(opt);
+  });
+}
+
+function getMobileItemTypeSelect() {
+  return document.getElementById('mobileItemType');
+}
+
+function ensureMobileItemTypeSelect() {
+  var existing = getMobileItemTypeSelect();
+  if (existing) return existing;
+  var brandSel = document.getElementById('brand');
+  if (!brandSel) return null;
+  var sel = document.createElement('select');
+  sel.id = 'mobileItemType';
+  sel.className = 'search-select';
+  sel.style.display = 'none';
+  sel.setAttribute('aria-label', 'Item Type');
+  sel.addEventListener('change', onMobileItemTypeChange);
+  brandSel.parentNode.insertBefore(sel, brandSel.nextSibling);
+  return sel;
+}
+
+function onMobileItemTypeChange() {
+  var sel = getMobileItemTypeSelect();
+  if (!sel || !sel.value) return;
+  var cat = sel.value;
+  currentCategory = normalizeDecoderCategory(cat);
+  document.querySelectorAll('.cat-tab').forEach(function(t) {
+    t.classList.toggle('active', t.getAttribute('data-cat') === cat);
+  });
+  updateDecodeBtn();
+}
+
+function updateMobileItemTypeDropdown(brandId) {
+  var itSel = getMobileItemTypeSelect();
+  if (!brandId) {
+    if (itSel) itSel.style.display = 'none';
+    return;
+  }
+  var map = buildMobileBrandCategoriesMap();
+  var cats = map[brandId] || ['appliances'];
+  if (cats.length >= 2) {
+    var sel = ensureMobileItemTypeSelect();
+    if (!sel) return;
+    sel.innerHTML = '<option value="">-- Select Item Type --</option>';
+    cats.forEach(function(cat) {
+      var opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = MOBILE_CAT_LABELS[cat] || cat;
+      sel.appendChild(opt);
+    });
+    sel.value = cats[0];
+    currentCategory = normalizeDecoderCategory(cats[0]);
+    document.querySelectorAll('.cat-tab').forEach(function(t) {
+      t.classList.toggle('active', t.getAttribute('data-cat') === cats[0]);
+    });
+    sel.style.display = '';
+  } else {
+    var cat = cats[0];
+    currentCategory = normalizeDecoderCategory(cat);
+    document.querySelectorAll('.cat-tab').forEach(function(t) {
+      t.classList.toggle('active', t.getAttribute('data-cat') === cat);
+    });
+    if (itSel) itSel.style.display = 'none';
+  }
+}
+
 // ===== BRAND LOGO DOMAINS =====
 var BRAND_LOGOS = {
   'whirlpool': 'whirlpool.com',
@@ -452,7 +590,12 @@ function initializeDecoderUiWhenReady() {
   }
 
   currentCategory = normalizeDecoderCategory(initialCategory);
-  populateBrands(currentCategory);
+  if (isMobileView()) {
+    populateMobileBrands();
+    ensureMobileItemTypeSelect();
+  } else {
+    populateBrands(currentCategory);
+  }
   syncGlobalCategoryTabs(initialCategory);
   saveCategoryKey(initialCategory);
   applyBrandDefaultFromSlug();
@@ -2862,6 +3005,10 @@ function onBrandChange() {
   currentCategory = getActiveDecoderCategory();
   var opt = sel.options[sel.selectedIndex];
   var brandId = opt ? opt.value : '';
+  if (isMobileView()) {
+    updateMobileItemTypeDropdown(brandId);
+    currentCategory = getActiveDecoderCategory();
+  }
   setSelectedBrandForCategory(currentCategory, brandId);
   var cyclingCat = CYCLING_BRANDS[currentCategory] || {};
   var cfg = cyclingCat[brandId];
