@@ -234,6 +234,7 @@ var SIDEBAR_BRAND_CATEGORY_MAP = {
   'kenmore': 'Appliances',
   'whirlpool': 'Appliances',
   'apple': 'Electronics',
+  'samsung-tv-serial-number-decoder': 'Electronics',
   'hp': 'Electronics',
   'asus': 'Electronics',
   'google-pixel': 'Electronics',
@@ -270,6 +271,7 @@ var BRAND_PAGE_BY_ID = {
   'kenmore': 'kenmore',
   'whirlpool': 'whirlpool',
   'apple': 'apple',
+  'samsung_tv': 'samsung-tv-serial-number-decoder',
   'hp': 'hp',
   'asus': 'asus',
   'google_pixel': 'google-pixel',
@@ -1689,6 +1691,7 @@ function enhanceGlobalCategoryTabs() {
 function slugToBrandId(slug) {
   if (!slug) return '';
   if (slug === 'google-pixel') return 'google_pixel';
+  if (slug === 'samsung-tv-serial-number-decoder') return 'samsung_tv';
   return slug.replace(/-/g, '_');
 }
 
@@ -1873,6 +1876,280 @@ function smartLookupAboutInnerHtml() {
     '<p class="technical-methodology-note">Designed for insurance claim accuracy and equipment lifecycle audits.</p>';
 }
 
+var BRAND_PAGE_CONTENT = {
+  'whirlpool': {
+    displayName: 'Whirlpool',
+    tagline: 'Decode Whirlpool Serial Numbers Instantly',
+    description: 'Use the Whirlpool decoder on this page to estimate manufacture date from refrigerators, washers, dryers, dishwashers, and cooking appliances. Whirlpool is preselected so you can land on the page and decode immediately.',
+    helperText: 'Whirlpool serial formats commonly appear on refrigerators, laundry appliances, dishwashers, ranges, wall ovens, and microwaves.',
+    chips: ['Refrigerators', 'Washers', 'Dishwashers'],
+    helperLocations: ['<strong>Refrigerators:</strong> inside the fresh-food section wall or behind a crisper drawer', '<strong>Washers and dryers:</strong> under the lid, around the door opening, or on the rear panel', '<strong>Dishwashers and ranges:</strong> inner door frame, tub lip, oven frame, or behind the drawer'],
+    formats: [{ product: 'Refrigerators', format: '9-character serials commonly use character 2 for the year code and characters 3-4 for the production week.', note: 'Whirlpool letter cycles repeat across decades, so age range and model era help confirm the decade.' }, { product: 'Washers and dryers', format: 'Many 10-character serials use character 3 for the year code and characters 4-5 for the production week.', note: 'Letters I, O, Q, and V are skipped in the Whirlpool year cycle.' }, { product: 'Dishwashers, ranges, and microwaves', format: 'Whirlpool cooking and dishwashing products follow the same 9- or 10-character week/year logic depending on plant and era.', note: 'The decoder already applies the correct Whirlpool-family rule set after selection.' }],
+    locations: [{ product: 'Refrigerators', items: ['Inside the fresh-food compartment side wall', 'Behind the produce drawers on some bottom-freezer units'] }, { product: 'Washers and dryers', items: ['Washer lid opening or door frame', 'Dryer door opening, rear bulkhead, or back panel'] }, { product: 'Dishwashers and cooking products', items: ['Dishwasher tub lip or inner door frame', 'Range oven frame, storage drawer opening, or rear service label'] }],
+    related: [{ href: '/maytag', label: 'Maytag Decoder' }, { href: '/kenmore', label: 'Kenmore Decoder' }, { href: '/ge', label: 'GE Decoder' }, { href: '/frigidaire', label: 'Frigidaire Decoder' }]
+  },
+  'ge': {
+    displayName: 'GE',
+    tagline: 'Decode GE Serial Numbers Instantly',
+    description: 'Use the GE decoder to read manufacture date codes from refrigerators, ranges, washers, dryers, dishwashers, and other GE-family appliances. The page loads with GE ready to decode so you can move straight to the serial number.',
+    helperText: 'GE appliances usually encode the month in the first character and the year in the second character of the serial number.',
+    chips: ['Refrigerators', 'Ranges', 'Washers'],
+    helperLocations: ['<strong>Refrigerators:</strong> inside the fresh-food compartment or behind a drawer', '<strong>Laundry:</strong> lid opening, door frame, or rear panel', '<strong>Ranges and dishwashers:</strong> oven frame, storage drawer opening, or inner door frame'],
+    formats: [{ product: 'Refrigerators', format: 'GE often uses the first character for month and the second character for year.', note: 'The GE year code repeats on a 12-year cycle, so installation era matters.' }, { product: 'Washers and dryers', format: 'Laundry products typically use the same first-letter month and second-letter year pattern.', note: 'This rule also appears across other GE family appliance lines.' }, { product: 'Ranges and dishwashers', format: 'Cooking and dishwashing products generally follow the same 2-character month/year opening code.', note: 'Once decoded, the remaining serial characters act as production sequence data.' }],
+    locations: [{ product: 'Refrigerators', items: ['Side wall inside the fresh-food section', 'Behind the crisper pan or top ceiling trim on some models'] }, { product: 'Washers and dryers', items: ['Washer lid rim or underside of the lid', 'Dryer door opening or rear cabinet panel'] }, { product: 'Ranges and dishwashers', items: ['Range oven frame behind the door', 'Dishwasher tub lip, side edge, or inner door'] }],
+    related: [{ href: '/whirlpool', label: 'Whirlpool Decoder' }, { href: '/frigidaire', label: 'Frigidaire Decoder' }, { href: '/bosch', label: 'Bosch Decoder' }, { href: '/kenmore', label: 'Kenmore Decoder' }]
+  },
+  'samsung': {
+    displayName: 'Samsung',
+    tagline: 'Decode Samsung Serial Numbers Instantly',
+    description: 'This Samsung decoder is set up for supported Samsung appliances so you can estimate manufacture date from the serial number without switching brands first. It works best for refrigerators, laundry, and other major home appliances covered by the decoder.',
+    helperText: 'Samsung appliance serials commonly use a year/month code inside either a 15-character or 11-character serial pattern.',
+    chips: ['Refrigerators', 'Laundry', 'Kitchen appliances'],
+    helperLocations: ['<strong>Refrigerators:</strong> inside the fresh-food section wall or near the crisper area', '<strong>Washers and dryers:</strong> around the door opening, rear panel, or under the lid', '<strong>Ranges and dishwashers:</strong> oven frame, drawer opening, or inner door frame'],
+    formats: [{ product: 'Refrigerators', format: '15-character Samsung serials usually store the year in character 8 and the month in character 9.', note: 'Some Samsung code families repeat over roughly 20 years, so model era can help resolve the decade.' }, { product: 'Washers and dryers', format: '11-character serials commonly use character 4 for year and character 5 for month.', note: 'The decoder checks which Samsung serial family matches the entry.' }, { product: 'Dishwashers and ranges', format: 'Kitchen appliances generally follow the same year/month character-position logic used across Samsung major appliances.', note: 'If the serial does not match, use Smart Lookup with the full model number.' }],
+    locations: [{ product: 'Refrigerators', items: ['Inside the refrigerator compartment wall', 'Behind produce drawers or near the upper liner on some units'] }, { product: 'Washers and dryers', items: ['Washer lid underside or door opening', 'Dryer door rim, rear panel, or lower frame'] }, { product: 'Dishwashers and ranges', items: ['Dishwasher inner door frame or tub lip', 'Range oven frame or storage drawer opening'] }],
+    related: [{ href: '/samsung-tv-serial-number-decoder', label: 'Samsung TV Decoder' }, { href: '/lg', label: 'LG Decoder' }, { href: '/ge', label: 'GE Decoder' }, { href: '/whirlpool', label: 'Whirlpool Decoder' }]
+  },
+  'lg': {
+    displayName: 'LG',
+    tagline: 'Decode LG Serial Numbers Instantly',
+    description: 'Use the LG decoder on this page to estimate manufacture date for refrigerators, washers, dryers, dishwashers, and other supported LG appliances. LG is preselected so the decode tool is ready as soon as the page opens.',
+    helperText: 'LG appliance serial numbers typically begin with a year digit followed by a 2-digit month code.',
+    chips: ['Refrigerators', 'Washers', 'Dryers'],
+    helperLocations: ['<strong>Refrigerators:</strong> interior wall, ceiling liner, or behind crisper drawers', '<strong>Washers and dryers:</strong> door opening, lid rim, or rear panel', '<strong>Dishwashers and ranges:</strong> inner door frame, oven frame, or lower drawer area'],
+    formats: [{ product: 'Refrigerators', format: 'LG commonly uses character 1 as the last digit of the year and characters 2-3 as the month.', note: 'Because the year is a single digit, decade is determined by model era and product age.' }, { product: 'Washers and dryers', format: 'Laundry appliances generally follow the same first-digit year and 2-digit month pattern.', note: 'The decoder uses the current year and product context to narrow the likely decade.' }, { product: 'Dishwashers and cooking products', format: 'Other major LG appliances typically use the same leading year-plus-month logic.', note: 'If a serial looks atypical, the model number can help verify the result.' }],
+    locations: [{ product: 'Refrigerators', items: ['Inside the fresh-food compartment side wall', 'Behind a crisper drawer or on the upper interior liner'] }, { product: 'Washers and dryers', items: ['Washer lid or door opening', 'Dryer door opening or rear service panel'] }, { product: 'Dishwashers and cooking products', items: ['Dishwasher tub lip or side edge', 'Range oven frame or warming drawer opening'] }],
+    related: [{ href: '/samsung', label: 'Samsung Decoder' }, { href: '/bosch', label: 'Bosch Decoder' }, { href: '/whirlpool', label: 'Whirlpool Decoder' }, { href: '/kenmore', label: 'Kenmore Decoder' }]
+  },
+  'frigidaire': {
+    displayName: 'Frigidaire',
+    tagline: 'Decode Frigidaire Serial Numbers Instantly',
+    description: 'Use the Frigidaire decoder to estimate manufacture date from refrigerators, ranges, laundry appliances, dishwashers, and other Frigidaire-built products. The brand is preselected here so you can start with the serial number right away.',
+    helperText: 'Frigidaire serials often place factory letters first, followed by a single year digit and production week digits.',
+    chips: ['Refrigerators', 'Ranges', 'Laundry'],
+    helperLocations: ['<strong>Refrigerators:</strong> interior wall or behind produce drawers', '<strong>Washers and dryers:</strong> lid rim, door opening, or rear panel', '<strong>Ranges and dishwashers:</strong> oven frame, lower drawer area, or inner door frame'],
+    formats: [{ product: 'Refrigerators', format: 'After the opening factory letters, Frigidaire commonly uses the next digit for year and the following digits for production week.', note: 'The year digit repeats by decade, so age and styling help anchor the result.' }, { product: 'Ranges and wall ovens', format: 'Cooking appliances typically use the same factory-letter plus year/week structure.', note: 'The decoder reads the serial after the plant prefix rather than the whole string as one date code.' }, { product: 'Washers, dryers, and dishwashers', format: 'Laundry and dishwashing products generally follow the same year-digit and week-digit pattern.', note: 'Use the full serial exactly as printed because leading letters matter.' }],
+    locations: [{ product: 'Refrigerators', items: ['Fresh-food compartment side wall', 'Behind a produce drawer or on the ceiling liner'] }, { product: 'Washers and dryers', items: ['Washer lid opening or underside of lid', 'Dryer door rim or rear cabinet label'] }, { product: 'Ranges and dishwashers', items: ['Range oven frame or storage drawer opening', 'Dishwasher tub lip or side frame'] }],
+    related: [{ href: '/ge', label: 'GE Decoder' }, { href: '/whirlpool', label: 'Whirlpool Decoder' }, { href: '/bosch', label: 'Bosch Decoder' }, { href: '/kenmore', label: 'Kenmore Decoder' }]
+  },
+  'bosch': {
+    displayName: 'Bosch',
+    tagline: 'Decode Bosch Serial Numbers Instantly',
+    description: 'Use the Bosch decoder to estimate manufacture year from supported Bosch appliance serial labels. Bosch is preselected on the page so you can move straight into the decoder instead of resetting the brand each visit.',
+    helperText: 'Bosch appliance labels often include an FD date code that carries the production year information.',
+    chips: ['Dishwashers', 'Laundry', 'Cooking'],
+    helperLocations: ['<strong>Dishwashers:</strong> inner door edge or upper tub lip', '<strong>Washers and dryers:</strong> door opening, soap drawer area, or rear panel', '<strong>Ovens and ranges:</strong> frame behind the door or warming drawer opening'],
+    formats: [{ product: 'Dishwashers', format: 'Bosch commonly uses an FD code where the first 2 digits plus 20 indicate the production year.', note: 'If the FD calculation reaches 100 or higher, drop the leading digit to read the 2-digit year.' }, { product: 'Washers and dryers', format: 'Laundry labels often rely on the same FD code logic rather than a simple serial-only year digit.', note: 'Look for FD near the serial/model information block.' }, { product: 'Ovens, ranges, and cooktops', format: 'Cooking appliances also tend to use the FD-based manufacturing year convention.', note: 'Production month can also be embedded, but the page decoder focuses on the year logic already supported.' }],
+    locations: [{ product: 'Dishwashers', items: ['Upper edge of the dishwasher door', 'Tub lip or side frame near the hinges'] }, { product: 'Washers and dryers', items: ['Door opening or behind the detergent drawer', 'Rear service label on stacked laundry units'] }, { product: 'Cooking products', items: ['Oven frame behind the door', 'Storage drawer opening or rear panel label'] }],
+    related: [{ href: '/ge', label: 'GE Decoder' }, { href: '/lg', label: 'LG Decoder' }, { href: '/frigidaire', label: 'Frigidaire Decoder' }, { href: '/whirlpool', label: 'Whirlpool Decoder' }]
+  },
+  'kenmore': {
+    displayName: 'Kenmore',
+    tagline: 'Decode Kenmore Serial Numbers Instantly',
+    description: 'Kenmore serial decoding starts by identifying the original manufacturer from the model prefix, then applying the matching Whirlpool, GE, LG, or other OEM rule. This page opens with Kenmore ready so you can test the serial and model combination immediately.',
+    helperText: 'Kenmore is an OEM-driven decoder path, so the first 3 digits of the model number are often needed before the serial rule can be applied correctly.',
+    chips: ['Whirlpool-built', 'GE-built', 'LG-built'],
+    helperLocations: ['<strong>Refrigerators:</strong> inside the fresh-food section plus capture the model prefix if possible', '<strong>Laundry:</strong> lid opening, door frame, or rear panel with both model and serial tags', '<strong>Ranges and dishwashers:</strong> oven frame or inner door area where the model prefix is visible'],
+    formats: [{ product: 'Whirlpool-built Kenmore', format: 'Model prefixes such as 106 or 110 usually point to Whirlpool-family decoding, including 9- and 10-character year/week serial patterns.', note: 'If you know the model prefix, the decoder can route the serial to the right OEM logic.' }, { product: 'GE-built Kenmore', format: 'Prefixes such as 362 or 363 usually use the GE pattern where character 1 is month and character 2 is year.', note: 'GE year codes repeat every 12 years.' }, { product: 'LG-built Kenmore', format: 'Prefix 795 commonly follows LG appliance logic with character 1 as year digit and characters 2-3 as month.', note: 'LG-built refrigerators are one of the strongest Kenmore decoder paths.' }],
+    locations: [{ product: 'Refrigerators', items: ['Fresh-food side wall or behind a crisper drawer', 'Capture the model number so the 3-digit prefix is visible'] }, { product: 'Washers and dryers', items: ['Lid rim, door opening, or rear panel', 'Use the model prefix and serial together for best results'] }, { product: 'Ranges and dishwashers', items: ['Range oven frame or lower drawer opening', 'Dishwasher door frame or tub lip near the full model tag'] }],
+    related: [{ href: '/whirlpool', label: 'Whirlpool Decoder' }, { href: '/lg', label: 'LG Decoder' }, { href: '/ge', label: 'GE Decoder' }, { href: '/maytag', label: 'Maytag Decoder' }]
+  },
+  'maytag': {
+    displayName: 'Maytag',
+    tagline: 'Decode Maytag Serial Numbers Instantly',
+    description: 'Use the Maytag decoder to estimate manufacture date across both modern Whirlpool-era Maytag appliances and older legacy Maytag products. The decoder on this page is ready for Maytag immediately, including era selection when the format requires it.',
+    helperText: 'Maytag can follow two different families: Whirlpool-style post-2006 year/week decoding and older pre-2006 month/year character codes.',
+    chips: ['Post-2006', 'Pre-2006', 'Laundry'],
+    helperLocations: ['<strong>Washers and dryers:</strong> lid opening, door frame, or rear panel', '<strong>Refrigerators:</strong> inside the cabinet wall or behind drawers', '<strong>Dishwashers and ranges:</strong> inner door frame, tub lip, or oven frame'],
+    formats: [{ product: 'Post-2006 Maytag appliances', format: 'Many newer Maytag serials follow Whirlpool-family logic with a year code character and a 2-digit production week.', note: 'The decoder asks for era when needed because code families repeat.' }, { product: 'Pre-2006 Maytag appliances', format: 'Older Maytag serials often use the last 2 characters, with the second-to-last for year and the last for month.', note: 'Legacy Maytag decoding is most reliable when the era is known.' }, { product: 'Laundry and kitchen products', format: 'Both laundry and kitchen products can appear under either the legacy Maytag system or the Whirlpool-era system depending on manufacture year.', note: 'Use the era selector if it appears after brand selection.' }],
+    locations: [{ product: 'Washers and dryers', items: ['Washer lid underside or door frame', 'Dryer door opening or rear bulkhead label'] }, { product: 'Refrigerators', items: ['Fresh-food compartment wall', 'Behind produce drawers or near the ceiling liner'] }, { product: 'Dishwashers and ranges', items: ['Dishwasher tub lip or inner door', 'Range oven frame or lower drawer opening'] }],
+    related: [{ href: '/whirlpool', label: 'Whirlpool Decoder' }, { href: '/kenmore', label: 'Kenmore Decoder' }, { href: '/frigidaire', label: 'Frigidaire Decoder' }, { href: '/ge', label: 'GE Decoder' }]
+  },
+  'rheem': {
+    displayName: 'Rheem',
+    tagline: 'Decode Rheem Serial Numbers Instantly',
+    description: 'Use the Rheem decoder to estimate manufacture date for supported HVAC equipment using the serial number on the outdoor unit, air handler, or furnace. Rheem is preselected on this page so you can move directly into the HVAC decode flow.',
+    helperText: 'Rheem HVAC serial numbers often include a 4-digit week/year block immediately following a leading letter.',
+    chips: ['Condensers', 'Air handlers', 'Furnaces'],
+    helperLocations: ['<strong>Outdoor condensers:</strong> rating plate on the side cabinet near refrigerant lines', '<strong>Air handlers:</strong> blower compartment or exterior cabinet label', '<strong>Furnaces:</strong> inside the burner compartment door or side wall plate'],
+    formats: [{ product: 'Air conditioners and heat pumps', format: 'Rheem commonly uses 4 digits after a leading letter in a WWYY sequence.', note: 'The first 2 digits represent production week and the next 2 represent year.' }, { product: 'Air handlers', format: 'Indoor units generally follow the same WWYY block immediately after the opening letter.', note: 'This makes Rheem one of the clearer HVAC decoder paths on the site.' }, { product: 'Furnaces', format: 'Furnace serials often use the same week/year block format.', note: 'Always enter the full serial because plant letters can matter.' }],
+    locations: [{ product: 'Outdoor condensers', items: ['Side panel near the service valves', 'Rear or side cabinet data plate'] }, { product: 'Air handlers', items: ['Inside the access panel', 'Exterior cabinet sticker near the electrical data'] }, { product: 'Furnaces', items: ['Inside the front service door', 'Side wall rating plate near the burner compartment'] }],
+    related: [{ href: '/trane', label: 'Trane Decoder' }, { href: '/carrier', label: 'Carrier Decoder' }, { href: '/goodman', label: 'Goodman Decoder' }, { href: '/ge', label: 'GE Decoder' }]
+  },
+  'trane': {
+    displayName: 'Trane',
+    tagline: 'Decode Trane Serial Numbers Instantly',
+    description: 'Use the Trane decoder for supported furnaces, condensers, air handlers, and heat pumps. Trane is already selected on this page so the HVAC tool is ready when you land.',
+    helperText: 'Many Trane HVAC serial numbers store the year in digits 3-4 of the serial number.',
+    chips: ['Furnaces', 'Condensers', 'Heat pumps'],
+    helperLocations: ['<strong>Outdoor units:</strong> side cabinet data plate near service valves', '<strong>Air handlers:</strong> access panel or side wall sticker', '<strong>Furnaces:</strong> inside the front door or on the side plate'],
+    formats: [{ product: 'Air conditioners and heat pumps', format: 'Trane often uses digits 3-4 of the serial number as the production year.', note: 'The surrounding characters identify plant and sequence information.' }, { product: 'Air handlers', format: 'Indoor units commonly use the same digits-3-and-4 year position.', note: 'Pair the serial result with model family if you need more era confidence.' }, { product: 'Furnaces', format: 'Furnaces usually follow the same year-position rule.', note: 'The decoder extracts the year once Trane is selected in HVAC.' }],
+    locations: [{ product: 'Outdoor condensers', items: ['Side cabinet plate near the refrigerant line connections', 'Rear corner data plate on some units'] }, { product: 'Air handlers', items: ['Inside the blower door or service panel', 'Exterior cabinet label near electrical specs'] }, { product: 'Furnaces', items: ['Front burner-door interior', 'Side cabinet rating plate'] }],
+    related: [{ href: '/carrier', label: 'Carrier Decoder' }, { href: '/goodman', label: 'Goodman Decoder' }, { href: '/rheem', label: 'Rheem Decoder' }, { href: '/whirlpool', label: 'Whirlpool Decoder' }]
+  },
+  'goodman': {
+    displayName: 'Goodman',
+    tagline: 'Decode Goodman Serial Numbers Instantly',
+    description: 'Use the Goodman decoder to estimate manufacture date for condensers, furnaces, package units, and air handlers. Goodman is preloaded here so the HVAC panel is ready without any extra switching.',
+    helperText: 'Goodman serial numbers are one of the more direct HVAC paths because the first 2 digits usually give the year and the next 2 digits give the month.',
+    chips: ['Condensers', 'Furnaces', 'Package units'],
+    helperLocations: ['<strong>Outdoor units:</strong> side cabinet label near service lines', '<strong>Furnaces:</strong> inside the front panel or side rating plate', '<strong>Air handlers:</strong> access panel or blower compartment label'],
+    formats: [{ product: 'Air conditioners and heat pumps', format: 'Goodman commonly uses the first 2 digits for year and the next 2 digits for month.', note: 'This is one of the clearest date formats in the HVAC decoder.' }, { product: 'Furnaces', format: 'Furnaces often use the same YYYY-style opening positions with year first, month second.', note: 'Enter the full serial to avoid trimming important plant characters.' }, { product: 'Package units and air handlers', format: 'Other Goodman HVAC products generally follow the same first-4-digit year/month structure.', note: 'The decoder will present the month directly when available.' }],
+    locations: [{ product: 'Outdoor units', items: ['Side cabinet rating plate', 'Near the refrigerant service connection panel'] }, { product: 'Furnaces', items: ['Inside the burner compartment door', 'Side cabinet label behind the front panel'] }, { product: 'Air handlers and package units', items: ['Access panel sticker', 'Blower compartment label or side wall plate'] }],
+    related: [{ href: '/carrier', label: 'Carrier Decoder' }, { href: '/trane', label: 'Trane Decoder' }, { href: '/rheem', label: 'Rheem Decoder' }, { href: '/ge', label: 'GE Decoder' }]
+  },
+  'carrier': {
+    displayName: 'Carrier',
+    tagline: 'Decode Carrier Serial Numbers Instantly',
+    description: 'Use the Carrier decoder on this page to estimate manufacture year for furnaces, condensers, air handlers, and heat pumps. Carrier is preselected in the HVAC decoder so you can start with the serial immediately.',
+    helperText: 'Carrier serial numbers typically store the production year in digits 3-4 of the serial number.',
+    chips: ['Condensers', 'Air handlers', 'Furnaces'],
+    helperLocations: ['<strong>Outdoor units:</strong> side cabinet data plate near service valves', '<strong>Air handlers:</strong> access door or exterior cabinet sticker', '<strong>Furnaces:</strong> inside the service panel or side wall plate'],
+    formats: [{ product: 'Air conditioners and heat pumps', format: 'Carrier commonly uses digits 3-4 as the production year.', note: 'Other digits identify week, plant, or sequence depending on the era.' }, { product: 'Air handlers', format: 'Indoor units often use the same year placement in digits 3-4.', note: 'If more context is needed, compare the result to the model family.' }, { product: 'Furnaces', format: 'Furnaces generally follow the same year-position logic.', note: 'The decoder is strongest for the major Carrier-family serial structures already mapped.' }],
+    locations: [{ product: 'Outdoor units', items: ['Side panel near refrigerant lines', 'Rear or side rating plate'] }, { product: 'Air handlers', items: ['Inside the blower access panel', 'External cabinet sticker near electrical data'] }, { product: 'Furnaces', items: ['Service door interior', 'Side cabinet rating plate'] }],
+    related: [{ href: '/trane', label: 'Trane Decoder' }, { href: '/goodman', label: 'Goodman Decoder' }, { href: '/rheem', label: 'Rheem Decoder' }, { href: '/bosch', label: 'Bosch Decoder' }]
+  },
+  'sony': {
+    displayName: 'Sony',
+    tagline: 'Decode Sony Serial Numbers Instantly',
+    description: 'Use this Sony page when you need a fast path into the Sony electronics decoder. For many Sony products, the strongest signal comes from the model family or suffix rather than the serial alone, so the page keeps both the decoder and Smart Lookup close together.',
+    helperText: 'Sony date decoding often depends on model-number conventions, especially the year letter suffix used on many modern Bravia TVs.',
+    chips: ['Bravia TVs', 'Audio gear', 'Electronics'],
+    helperLocations: ['<strong>TVs:</strong> rear panel sticker, side edge label, or settings menu', '<strong>Audio gear:</strong> rear panel or underside label', '<strong>Other electronics:</strong> underside case, battery compartment, or packaging label'],
+    formats: [{ product: 'Bravia TVs', format: 'Sony often encodes model year in the last model-number letter: H=2020, J=2021, K=2022, L=2023, M=2024, N=2025.', note: 'This is a model-based decoder path, not a pure serial-only calendar code.' }, { product: 'Sound bars and receivers', format: 'Many Sony A/V products need model-family context first, then serial details second.', note: 'Use Smart Lookup if the serial does not map cleanly to a supported pattern.' }, { product: 'Other Sony electronics', format: 'Where Sony does not expose a reliable serial date code, model naming conventions provide the best first-pass age estimate.', note: 'That is why the page keeps Smart Lookup alongside the serial decoder.' }],
+    locations: [{ product: 'TVs', items: ['Rear label near the HDMI/input area', 'Settings menu if the screen still powers on'] }, { product: 'Audio gear', items: ['Rear chassis label', 'Underside sticker on smaller speakers and players'] }, { product: 'Other electronics', items: ['Battery compartment or underside case', 'Original box label or registration record'] }],
+    related: [{ href: '/vizio', label: 'Vizio Decoder' }, { href: '/samsung-tv-serial-number-decoder', label: 'Samsung TV Decoder' }, { href: '/apple', label: 'Apple Decoder' }, { href: '/hp', label: 'HP Decoder' }]
+  },
+  'vizio': {
+    displayName: 'Vizio',
+    tagline: 'Decode Vizio Serial Numbers Instantly',
+    description: 'Use the Vizio page when you need a practical path for TVs and home entertainment products. Vizio age estimates are usually strongest from model conventions and product generation context, with serial numbers used as supporting information instead of the main date code.',
+    helperText: 'Vizio decoding is primarily model-based because the serial alone is not a reliable manufacturing-date source across product lines.',
+    chips: ['TVs', 'Sound bars', 'Streaming devices'],
+    helperLocations: ['<strong>TVs:</strong> rear label, side sticker, or settings menu', '<strong>Sound bars:</strong> underside or rear label near ports', '<strong>Streaming devices:</strong> underside label or packaging barcode'],
+    formats: [{ product: 'TVs', format: 'Vizio model numbers provide the strongest age clues because serial-only date logic is not consistently reliable.', note: 'Use the full model number whenever possible.' }, { product: 'Sound bars', format: 'Sound bars also lean on model family and generation rather than a consistent serial date code.', note: 'Smart Lookup is the best fallback when the label is partial.' }, { product: 'Streaming devices and accessories', format: 'Smaller Vizio electronics typically require model-based research instead of direct serial decoding.', note: 'The page still keeps the serial tool available for supported cases.' }],
+    locations: [{ product: 'TVs', items: ['Rear sticker near the input panel', 'On-screen system information if the TV still turns on'] }, { product: 'Sound bars', items: ['Rear port cluster label', 'Underside sticker near the mounting area'] }, { product: 'Streaming devices', items: ['Underside barcode label', 'Retail box or account registration information'] }],
+    related: [{ href: '/sony', label: 'Sony Decoder' }, { href: '/samsung-tv-serial-number-decoder', label: 'Samsung TV Decoder' }, { href: '/apple', label: 'Apple Decoder' }, { href: '/hp', label: 'HP Decoder' }]
+  },
+  'samsung-tv-serial-number-decoder': {
+    displayName: 'Samsung TV',
+    tagline: 'Decode Samsung TV Serial Numbers Instantly',
+    description: 'Use this Samsung TV decoder to estimate manufacturing date from supported Samsung television serial numbers. The page opens with the electronics decoder ready to go and the Samsung TV brand preselected so you can start from the label immediately.',
+    helperText: 'Samsung TVs typically use the same supported 15-character and 11-character year/month serial patterns already mapped in the decoder data.',
+    chips: ['QLED TVs', 'OLED TVs', 'LED TVs'],
+    helperLocations: ['<strong>TVs:</strong> rear panel sticker, side edge label, or settings menu', '<strong>Monitors:</strong> rear stand mount area or underside label', '<strong>Home theater displays:</strong> rear chassis sticker near the inputs'],
+    formats: [{ product: '15-character TV serials', format: 'Samsung TV serials often place the year in character 8 and the month in character 9.', note: 'This is the strongest modern Samsung TV serial pattern in the decoder data.' }, { product: '11-character TV serials', format: 'Some Samsung TVs use character 4 for the year and character 5 for the month.', note: 'The decoder checks both 15-character and 11-character Samsung TV structures.' }, { product: 'Model-supported fallback', format: 'If the serial is partial or missing, pair the model number with Smart Lookup to estimate the product generation.', note: 'That fallback is useful for wall-mounted sets where the serial sticker is hard to access.' }],
+    locations: [{ product: 'TVs', items: ['Rear label near the input panel', 'Support menu or about screen if the TV powers on'] }, { product: 'Monitors', items: ['Rear stand neck or VESA mount area', 'Underside label on the cabinet edge'] }, { product: 'Packaging and records', items: ['Original carton barcode label', 'Purchase receipt or account registration'] }],
+    related: [{ href: '/sony', label: 'Sony Decoder' }, { href: '/vizio', label: 'Vizio Decoder' }, { href: '/samsung', label: 'Samsung Appliance Decoder' }, { href: '/apple', label: 'Apple Decoder' }]
+  },
+  'apple': {
+    displayName: 'Apple',
+    tagline: 'Decode Apple Serial Numbers Instantly',
+    description: 'Use the Apple decoder to estimate manufacture date for supported Macs, iPads, iPhones, and other Apple hardware. The page keeps Apple selected so you can go straight from the label or system settings into the decoder.',
+    helperText: 'Legacy 12-character Apple serials still carry date information, while newer 10-character randomized serials usually need model-based fallback instead.',
+    chips: ['MacBooks', 'iPads', 'iMacs'],
+    helperLocations: ['<strong>MacBooks:</strong> underside case or About This Mac', '<strong>iPads and iPhones:</strong> back enclosure, SIM tray, or Settings', '<strong>Desktop Macs:</strong> underside base, rear foot, or system information'],
+    formats: [{ product: 'Legacy 12-character Apple serials', format: 'Character 4 stores the year code and characters 5-6 store the production week.', note: 'This is the main Apple date pattern supported in decoder data.' }, { product: 'Macs and iPads built before randomized serials', format: 'Older Apple hardware usually follows the same year-plus-week 12-character pattern.', note: 'The decoder can estimate manufacture period from those positions directly.' }, { product: 'Post-2021 randomized serials', format: 'Many newer 10-character Apple serials are randomized and no longer expose direct date codes.', note: 'Use the model number and Smart Lookup when the serial no longer contains date logic.' }],
+    locations: [{ product: 'MacBooks', items: ['Underside aluminum case', 'System Settings or About This Mac'] }, { product: 'iPads and iPhones', items: ['Rear enclosure or SIM tray area', 'Settings > General > About'] }, { product: 'Desktop Macs', items: ['Bottom base, rear foot, or underside panel', 'About This Mac or System Information'] }],
+    related: [{ href: '/hp', label: 'HP Decoder' }, { href: '/sony', label: 'Sony Decoder' }, { href: '/samsung-tv-serial-number-decoder', label: 'Samsung TV Decoder' }, { href: '/vizio', label: 'Vizio Decoder' }]
+  },
+  'hp': {
+    displayName: 'HP',
+    tagline: 'Decode HP Serial Numbers Instantly',
+    description: 'Use the HP decoder for supported laptops, desktops, printers, and displays. HP is already selected here so the electronics decoder is ready as soon as the page loads.',
+    helperText: 'HP serial decoding often uses character 4 for the year digit and characters 5-6 for the production week.',
+    chips: ['Laptops', 'Desktops', 'Printers'],
+    helperLocations: ['<strong>Laptops:</strong> underside case, battery bay, or BIOS/system information', '<strong>Desktops:</strong> rear tower label or underside of the stand', '<strong>Printers:</strong> rear panel, cartridge door area, or base label'],
+    formats: [{ product: 'Laptops', format: 'HP commonly uses character 4 as the year digit and characters 5-6 as the production week.', note: 'The year is usually the last digit, so decade is resolved from the model generation.' }, { product: 'Desktops and monitors', format: 'Desktop and display products often follow the same year-digit plus week-number pattern.', note: 'Enter the serial exactly as printed because leading characters matter.' }, { product: 'Printers and peripherals', format: 'Many HP printers also use the same character-4 year and character-5-6 week logic.', note: 'Model family helps confirm the likely decade when the year digit repeats.' }],
+    locations: [{ product: 'Laptops', items: ['Underside service label', 'Inside the battery bay on older systems', 'BIOS or system information screen'] }, { product: 'Desktops and monitors', items: ['Rear chassis sticker', 'Bottom edge or stand mount label'] }, { product: 'Printers', items: ['Rear panel data sticker', 'Inside the cartridge or access door area'] }],
+    related: [{ href: '/apple', label: 'Apple Decoder' }, { href: '/sony', label: 'Sony Decoder' }, { href: '/vizio', label: 'Vizio Decoder' }, { href: '/samsung-tv-serial-number-decoder', label: 'Samsung TV Decoder' }]
+  }
+};
+
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderBrandPageEnhancements() {
+  var slug = getBrandPageSlug();
+  var content = BRAND_PAGE_CONTENT[slug];
+  if (!content) return;
+
+  var hero = document.querySelector('.brand-home-hero .brand-hero-copy');
+  if (hero) {
+    var title = hero.querySelector('h1');
+    if (title) title.textContent = content.displayName + ' Serial Number Decoder';
+    var heroSubs = hero.querySelectorAll('.hero-sub');
+    if (heroSubs[0]) heroSubs[0].innerHTML = '<strong>' + escapeHtml(content.tagline) + '</strong>';
+    if (heroSubs[1]) heroSubs[1].textContent = content.description;
+  }
+
+  var helperCards = document.querySelectorAll('.brand-helper-wrap .brand-helper-card');
+  if (helperCards[0]) {
+    var title0 = helperCards[0].querySelector('h2');
+    var text0 = helperCards[0].querySelector('p');
+    var chips0 = helperCards[0].querySelector('.brand-mini-chip-row');
+    if (title0) title0.textContent = 'Common ' + content.displayName + ' products';
+    if (text0) text0.textContent = content.helperText;
+    if (chips0) {
+      chips0.innerHTML = content.chips.map(function(chip) {
+        return '<span class="brand-mini-chip">' + escapeHtml(chip) + '</span>';
+      }).join('');
+    }
+  }
+  if (helperCards[1]) {
+    var title1 = helperCards[1].querySelector('h2');
+    var list1 = helperCards[1].querySelector('.serial-checklist');
+    if (title1) title1.textContent = 'Where the label usually is';
+    if (list1) {
+      list1.innerHTML = content.helperLocations.map(function(item) {
+        return '<li>' + item + '</li>';
+      }).join('');
+    }
+  }
+
+  var guide = document.querySelector('.guide-faq');
+  if (!guide) return;
+  guide.setAttribute('data-brand-guide', slug);
+  guide.innerHTML = '' +
+    '<div class="eyebrow">Brand Guide</div>' +
+    '<h2>' + escapeHtml(content.displayName) + ' serial number format guide</h2>' +
+    '<p class="section-sub">These format notes mirror the supported rules already used in the decoder for this brand. Use them as a quick reference before you run the serial.</p>' +
+    '<div class="location-guide-grid">' +
+      content.formats.map(function(item) {
+        return '<article class="guide-card">' +
+          '<h3>' + escapeHtml(item.product) + '</h3>' +
+          '<p><strong>Format:</strong> ' + escapeHtml(item.format) + '</p>' +
+          '<div class="determination-body" style="padding:14px 0 0;">' + escapeHtml(item.note) + '</div>' +
+        '</article>';
+      }).join('') +
+    '</div>' +
+    '<h2 style="margin-top:28px;">Where to find your serial number</h2>' +
+    '<div class="location-guide-grid">' +
+      content.locations.map(function(item) {
+        return '<article class="guide-card">' +
+          '<h3>' + escapeHtml(item.product) + '</h3>' +
+          '<ul class="serial-checklist">' +
+            item.items.map(function(line) {
+              return '<li>' + escapeHtml(line) + '</li>';
+            }).join('') +
+          '</ul>' +
+        '</article>';
+      }).join('') +
+    '</div>' +
+    '<h2 style="margin-top:28px;">Related brands</h2>' +
+    '<div class="guide-links">' +
+      content.related.map(function(item) {
+        return '<a class="guide-chip" href="' + escapeHtml(item.href) + '">' + escapeHtml(item.label) + '</a>';
+      }).join('') +
+    '</div>';
+}
+
 function mountSharedSmartLookupAboutSection() {
   var slug = getBrandPageSlug();
   var existing = document.querySelector('.technical-methodology-card');
@@ -1940,6 +2217,7 @@ function loadBrandContext() {
       'kenmore': { name: 'Kenmore', category: 'appliances', brandId: 'kenmore' },
       'whirlpool': { name: 'Whirlpool', category: 'appliances', brandId: 'whirlpool' },
       'apple': { name: 'Apple', category: 'electronics', brandId: 'apple' },
+      'samsung-tv-serial-number-decoder': { name: 'Samsung TV', category: 'electronics', brandId: 'samsung_tv' },
       'hp': { name: 'HP', category: 'electronics', brandId: 'hp' },
       'asus': { name: 'ASUS', category: 'electronics', brandId: 'asus' },
       'google-pixel': { name: 'Google Pixel', category: 'electronics', brandId: 'google_pixel' },
@@ -2349,6 +2627,7 @@ function initPage() {
   syncHeaderNavActive();
   enhanceBrandPageEmbeddedDecoder();
   updateMainPageSmartLookupHelperText();
+  renderBrandPageEnhancements();
   mountSharedSmartLookupAboutSection();
   ensureFooterPrivacyPolicyLink();
   updateFooterBranding();
