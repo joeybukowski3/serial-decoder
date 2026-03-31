@@ -65,6 +65,18 @@ function detectCategory(category, features) {
   return null;
 }
 
+function detectPanelType(category, features) {
+  const text = normalizeText((category || '') + ' ' + (features || ''));
+  if (!text) return null;
+  if (text.includes('neo qled')) return 'neo qled';
+  if (text.includes('mini led') || text.includes('mini-led')) return 'mini led';
+  if (text.includes('qned')) return 'qned';
+  if (text.includes('qled')) return 'qled';
+  if (text.includes('oled')) return 'oled';
+  if (/\bled\b/.test(text) || text.includes('lcd')) return 'led';
+  return null;
+}
+
 function detectBrandTier(brand) {
   const b = normalizeText(brand);
   for (const [key, tier] of Object.entries(BRAND_TIER_MAP)) {
@@ -73,9 +85,31 @@ function detectBrandTier(brand) {
   return null;
 }
 
+function extractNumericSize(value) {
+  const match = String(value || '').match(/(\d{2,3})(?=\s*(?:["”]|inch|in\b))/i) || String(value || '').match(/\b(\d{2,3})\b/);
+  return match ? parseInt(match[1], 10) : null;
+}
+
+function extractEntrySizeRange(entry) {
+  const styleText = normalizeText(entry && entry.style);
+  const sizeText = normalizeText(entry && entry.size);
+  const rangeMatch = styleText.match(/(\d{2,3})\s*["”]?\s*-\s*(\d{2,3})\s*["”]?/);
+  if (rangeMatch) {
+    return {
+      low: parseInt(rangeMatch[1], 10),
+      high: parseInt(rangeMatch[2], 10),
+    };
+  }
+  const sizeValue = extractNumericSize(sizeText || styleText);
+  if (sizeValue === null) return null;
+  return { low: sizeValue, high: sizeValue };
+}
+
 function scoreEntry(entry, params) {
   let score = 0;
-  const { brand_tier, category_hint, size_hint, style_hint, finish_hint } = params;
+  const { brand_tier, category_hint, size_hint, style_hint, finish_hint, panel_hint } = params;
+  const entryPanelSignals = normalizeText([entry?.features, entry?.section, entry?.finish].join(' '));
+  const entryPanelType = detectPanelType(entry?.section || '', [entry?.features, entry?.finish].join(' '));
 
   // Brand tier match — most important
   if (brand_tier && entry.brand_tier) {
@@ -89,12 +123,30 @@ function scoreEntry(entry, params) {
     if (sec.includes(sty) || sty.includes(normalizeText(entry.style || ''))) score += 40;
   }
 
-  // Size match
+  // Panel type match / mismatch
+  if (panel_hint) {
+    const panel = normalizeText(panel_hint);
+    if (entryPanelSignals.includes(panel)) {
+      score += 50;
+    } else if (entryPanelType && entryPanelType !== panel) {
+      score -= 30;
+    }
+  }
+
+  // Size match by numeric range
   if (size_hint && entry.size) {
-    const sz = normalizeText(size_hint);
-    const esz = normalizeText(entry.size);
-    if (sz === esz) score += 30;
-    else if (sz.replace(/[^0-9]/g, '') === esz.replace(/[^0-9]/g, '')) score += 20;
+    const inputSize = extractNumericSize(size_hint);
+    const entryRange = extractEntrySizeRange(entry);
+    if (inputSize !== null && entryRange) {
+      if (inputSize >= entryRange.low && inputSize <= entryRange.high) score += 30;
+      else {
+        const delta = Math.min(
+          Math.abs(inputSize - entryRange.low),
+          Math.abs(inputSize - entryRange.high)
+        );
+        if (delta <= 3) score += 10;
+      }
+    }
   }
 
   // Finish match
@@ -150,7 +202,8 @@ export default async function handler(req, res) {
     }
   } catch (_) {}
 
-  const cacheKey = `pricebook-tier-v1:${normalizeText([brand,category,size,style,finish].join('|'))}`;
+  const detected_panel_type = detectPanelType(category, features);
+  const cacheKey = `pricebook-tier-v2:${normalizeText([brand,category,size,style,finish,detected_panel_type].join('|'))}`;
   try {
     const cached = await redis.get(cacheKey);
     if (cached) return res.status(200).json(cached);
@@ -183,6 +236,7 @@ export default async function handler(req, res) {
     size_hint: size,
     style_hint: style,
     finish_hint: finish,
+    panel_hint: detected_panel_type,
   };
 
   const match = matchTier(pricebook, params);
