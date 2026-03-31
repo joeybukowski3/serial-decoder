@@ -638,29 +638,50 @@ footer {
 /* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
   nav { padding: 12px 16px; }
-  .hamburger { display: flex; }
+  .hamburger {
+    display: flex;
+    position: relative;
+    z-index: 10001;
+  }
+  .hamburger.active {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    border-radius: 10px;
+  }
   nav ul {
     display: none;
     position: fixed;
     top: 0;
     right: 0;
-    width: 280px;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
     height: 100vh;
-    background: var(--card-bg, #0d1b2a);
+    background: #0f172a;
     flex-direction: column;
-    padding: 80px 24px 24px;
-    gap: 4px;
-    z-index: 1000;
-    box-shadow: -4px 0 20px rgba(0,0,0,0.5);
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 84px 24px 28px;
+    gap: 10px;
+    z-index: 9999;
+    box-shadow: none;
     overflow-y: auto;
+    opacity: 1;
   }
   nav ul.open { display: flex; }
+  body.nav-menu-open { overflow: hidden; }
   nav ul li { width: 100%; }
   nav ul li a {
     display: block;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 15px;
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    color: #e2e8f0;
+    background: rgba(255,255,255,0.04);
   }
   nav ul li a:hover { background: rgba(255,255,255,0.05); }
   .hero, .page-hero { padding: 36px 20px 48px; }

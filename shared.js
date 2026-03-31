@@ -52,21 +52,37 @@ function setTab(el, tab) {
   var btn = document.getElementById('hamburgerBtn');
   var nav = document.querySelector('nav ul');
   if (!btn || !nav) return;
+
+  function closeMenu() {
+    btn.classList.remove('active');
+    nav.classList.remove('open');
+    btn.setAttribute('aria-label', 'Open menu');
+    document.body.classList.remove('nav-menu-open');
+  }
+
+  function openMenu() {
+    btn.classList.add('active');
+    nav.classList.add('open');
+    btn.setAttribute('aria-label', 'Close menu');
+    document.body.classList.add('nav-menu-open');
+  }
+
   btn.addEventListener('click', function() {
-    btn.classList.toggle('active');
-    nav.classList.toggle('open');
+    if (nav.classList.contains('open')) closeMenu();
+    else openMenu();
   });
   nav.querySelectorAll('a').forEach(function(link) {
     link.addEventListener('click', function() {
-      btn.classList.remove('active');
-      nav.classList.remove('open');
+      closeMenu();
     });
   });
   document.addEventListener('click', function(e) {
     if (!btn.contains(e.target) && !nav.contains(e.target)) {
-      btn.classList.remove('active');
-      nav.classList.remove('open');
+      closeMenu();
     }
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeMenu();
   });
 })();
 
