@@ -1599,6 +1599,148 @@ footer {
   transform: translateY(-1px);
 }
 
+@media (max-width: 768px) {
+  .sl-progressive-stack {
+    gap: 10px;
+  }
+
+  .sl-progressive-card-slot {
+    margin-bottom: 0;
+  }
+
+  .sl-progressive-skeleton,
+  .sl-summary-card,
+  .lkq-result-card,
+  .lkq-id-card,
+  .lkq-successor-card,
+  .lkq-table-section,
+  .sl-pricetier-card,
+  .smart-general-section.smart-age-section {
+    padding: 12px !important;
+  }
+
+  .lkq-id-card,
+  .lkq-successor-card,
+  .lkq-table-section,
+  .sl-summary-card,
+  .sl-pricetier-card {
+    margin-bottom: 10px !important;
+  }
+
+  #smart-lookup-results,
+  #smart-lookup-results p,
+  #smart-lookup-results li,
+  #smart-lookup-results .lkq-id-value,
+  #smart-lookup-results .lkq-id-desc,
+  #smart-lookup-results .lkq-id-specs,
+  #smart-lookup-results .sl-result-label,
+  #smart-lookup-results .sl-result-value,
+  .lkq-comparison-table td,
+  .lkq-id-value,
+  .lkq-successor-desc,
+  .smart-age-copy p,
+  .smart-age-value {
+    font-size: 13px !important;
+    line-height: 1.45;
+  }
+
+  #smart-lookup-results h3,
+  #smart-lookup-results h4,
+  .sl-summary-card h4,
+  .lkq-successor-name,
+  .smart-general-section-title,
+  .sl-pricetier-header h4 {
+    font-size: 14px !important;
+    line-height: 1.35;
+  }
+
+  .lkq-section-title,
+  .lkq-step-title,
+  .smart-age-label,
+  .lkq-id-label,
+  .lkq-successor-label {
+    font-size: 11px !important;
+  }
+
+  .sl-summary-band,
+  .lkq-top-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .smart-age-grid {
+    gap: 10px !important;
+  }
+
+  .smart-age-row,
+  .lkq-id-row,
+  .lkq-successor-rowline {
+    gap: 8px;
+  }
+
+  .lkq-id-row {
+    grid-template-columns: 108px 1fr;
+    padding: 8px 10px !important;
+  }
+
+  .lkq-successor-rowline,
+  .lkq-successor-name,
+  .lkq-successor-model,
+  .lkq-successor-desc,
+  .lkq-section-hd {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .lkq-successor-desc {
+    padding-top: 8px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .lkq-bottom-actions {
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+
+  .lkq-comparison-table td,
+  .lkq-comparison-table th,
+  .lkq-td,
+  .lkq-td-original,
+  .lkq-td-best,
+  .lkq-td-yourpick,
+  .lkq-td-name,
+  .lkq-td-model {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+  }
+
+  .sl-pricetier-prices {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .sl-pricetier-price-box {
+    padding: 8px 6px !important;
+    min-width: 0;
+  }
+
+  .sl-pricetier-price-box div:first-child {
+    font-size: 14px !important;
+    line-height: 1.2;
+  }
+
+  .sl-pricetier-price-box div:last-child,
+  .sl-pricetier-badge,
+  .sl-pricetier-explanation {
+    font-size: 11px !important;
+    line-height: 1.3;
+  }
+}
+
 .smart-general-lkq-note {
   margin-top: 12px;
   font-size: 0.85rem;
