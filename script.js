@@ -1,6 +1,7 @@
 // ===== ROUTE NORMALIZATION =====
 (function normalizeHtmlRoutes() {
   var path = window.location.pathname;
+  if (!(path === '/' || path.includes('index'))) return;
   if (path === '/' || path.endsWith('.html') || path.indexOf('.') !== -1) return;
   var normalized = path.replace(/\/$/, '') + '.html';
   window.location.replace(normalized + window.location.search);
