@@ -3,11 +3,113 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>smart-lookup.html redirect</title>
-  <meta name="robots" content="noindex, follow">
-  <meta http-equiv="refresh" content="0; url=/index.html?mode=smart">
-  <script>window.location.replace("/index.html?mode=smart" + window.location.hash);</script>
-  <style>body{font-family:Arial,sans-serif;background:#0d1b2a;color:#f0f4f8;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}.card{background:#102033;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:24px;max-width:560px}a{color:#7dd3fc}</style>
+  <title>Smart Lookup &mdash; Decode My Item</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .lookup-box {
+      max-width: 640px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 28px 24px;
+    }
+    .lookup-box .section-label { margin-bottom: 16px; }
+    .tips { margin-top: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 16px; max-width: 640px; margin-left: auto; margin-right: auto; }
+    .tip-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+    .tip-icon { font-size: 22px; margin-bottom: 8px; }
+    .tip-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+    .tip-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  </style>
 </head>
-<body><div class="card"><h1>Opening the current Item Assist UI?</h1><p>This URL now routes into the current experience.</p><p>If you are not redirected automatically, <a href="/index.html?mode=smart#panel-smart">click here</a>.</p></div></body>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo" aria-label="Decode My Item home">
+    <div>
+      <div class="logo-text">Decode My <span>Item</span></div>
+      <div class="logo-sub">Decode - Research - Automate</div>
+    </div>
+  </a>
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="decoder-tool" data-page="index">Serial Number Decoder</a></li>
+    <li><a href="smart-lookup" data-page="smart" class="nav-active">Smart Lookup</a></li>
+    <li><a href="assistant.html" data-page="assistant">AI Assistant</a></li>
+    <li><a href="methodology.html" data-page="methodology">Methodology</a></li>
+    <li><a href="contact.html" data-page="contact">Contact</a></li>
+    <li><a href="security.html" data-page="security" class="nav-cta">Security &amp; Data</a></li>
+  </ul>
+</nav>
+
+<!-- PAGE HERO -->
+<section class="page-hero">
+  <div class="hero-badge">
+    <span class="badge-dot" style="background:var(--amber);"></span>
+    <span style="color:var(--amber);">AI-Powered</span>
+  </div>
+  <h1>Smart <em>Lookup</em></h1>
+  <p class="hero-sub">No serial number? No problem. Enter a model number, brand name, or product description and our AI will research and estimate the manufacture date range.</p>
+</section>
+
+<!-- LOOKUP TOOL -->
+<section class="section" style="padding-top:32px;">
+  <div class="lookup-box">
+    <span class="section-label">&#10024; Smart Lookup</span>
+
+    <label for="lookup-brand">Brand (optional)</label>
+    <input type="text" id="lookup-brand" placeholder="e.g. Carrier, Rheem, GE..." />
+
+    <label for="lookup-model">Model Number or Description</label>
+    <input type="text" id="lookup-model" placeholder="e.g. 24ACC636A003, 50-gallon water heater..." />
+
+    <label for="lookup-category">Category</label>
+    <select id="lookup-category">
+      <option value="">-- Select Category --</option>
+      <option>Appliances</option>
+      <option>HVAC</option>
+      <option>Electronics</option>
+      <option>Water Heaters</option>
+    </select>
+
+    <label for="lookup-notes">Additional Notes (optional)</label>
+    <textarea id="lookup-notes" placeholder="Any other details &mdash; color, size, features, where it was installed..."></textarea>
+
+    <button class="btn-amber" style="width:100%;">&#10024; Run Smart Lookup</button>
+    <p class="search-link" style="margin-top:12px;">Have a serial number? <a href="serial-decoder.html">Use the Serial Decoder &rarr;</a></p>
+  </div>
+
+  <!-- TIPS -->
+  <div class="tips" style="margin-top:32px;">
+    <div class="tip-card">
+      <div class="tip-icon">&#127919;</div>
+      <div class="tip-title">Be Specific</div>
+      <p class="tip-desc">Include the full model number when possible &mdash; this gives the AI the best chance of a precise date range.</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">&#127991;</div>
+      <div class="tip-title">Include Brand</div>
+      <p class="tip-desc">Even a partial brand name helps narrow down the results significantly.</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">&#9201;</div>
+      <div class="tip-title">Expect a Range</div>
+      <p class="tip-desc">Smart Lookup returns an estimated year range, not an exact date. Use Serial Decoder for precision.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>&copy; 2025 Decode My Item &#8226; Decode - Research - Automate</div>
+  <div class="footer-links">
+    <a href="methodology.html">Methodology</a>
+    <a href="contact.html">Contact</a>
+    <a href="security.html">Security &amp; Data Notice</a>
+  </div>
+</footer>
+
+<script src="shared.js"></script>
+</body>
 </html>

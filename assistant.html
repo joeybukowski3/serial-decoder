@@ -3,11 +3,386 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>assistant.html redirect</title>
-  <meta name="robots" content="noindex, follow">
-  <meta http-equiv="refresh" content="0; url=/?mode=smart">
-  <script>window.location.replace("/?mode=smart" + window.location.hash);</script>
-  <style>body{font-family:Arial,sans-serif;background:#0d1b2a;color:#f0f4f8;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}.card{background:#102033;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:24px;max-width:560px}a{color:#7dd3fc}</style>
+  <title>AI Assistant &mdash; Decode My Item</title>
+  <meta name="description" content="Chat with the Decode My Item AI Assistant for appliance research, serial decoding help, replacement guidance, and more.">
+  <link rel="canonical" href="https://www.decodemyitem.com/assistant">
+  <link rel="stylesheet" href="shared.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    /* AI ASSISTANT PAGE */
+    body { display: flex; flex-direction: column; min-height: 100dvh; }
+
+    .ai-hero {
+      padding: 36px 20px 24px;
+      max-width: 860px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .ai-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(138,92,246,0.12); border: 1px solid rgba(138,92,246,0.35);
+      border-radius: 999px; padding: 5px 14px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+      color: #a78bfa; margin-bottom: 14px;
+    }
+    .ai-hero h1 {
+      font-size: clamp(1.4rem, 3vw, 1.9rem);
+      font-weight: 800; color: #ffffff; margin-bottom: 10px;
+      letter-spacing: -0.025em; line-height: 1.15;
+    }
+    .ai-hero p { font-size: 0.95rem; color: #d8e3ee; line-height: 1.6; max-width: 640px; }
+
+    /* USE CASE CHIPS */
+    .use-cases {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px;
+    }
+    .use-case-chip {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: 7px 12px;
+      font-size: 12px; color: #d8e3ee; cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .use-case-chip:hover { background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.35); color: #fff; }
+    .use-case-chip .chip-icon { font-size: 14px; }
+
+    /* CHAT WINDOW */
+    .chat-wrap {
+      flex: 1;
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 16px 24px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .chat-window {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border: 1.5px solid rgba(138,92,246,0.4);
+      border-radius: 18px;
+      box-shadow:
+        0 0 0 1px rgba(138,92,246,0.08),
+        0 0 32px rgba(138,92,246,0.1),
+        0 20px 48px rgba(0,0,0,0.4);
+      background: var(--navy-mid, #0d1f33);
+      overflow: hidden;
+      min-height: 420px;
+    }
+    .chat-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.02);
+      flex-shrink: 0;
+    }
+    .chat-header-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #a78bfa;
+      box-shadow: 0 0 8px rgba(167,139,250,0.6);
+    }
+    .chat-header-title { font-size: 13px; font-weight: 700; color: #ffffff; }
+    .chat-header-sub { font-size: 11px; color: #7a8fa8; margin-left: auto; }
+
+    /* MESSAGES */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-track { background: transparent; }
+    .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+    .msg { display: flex; gap: 10px; align-items: flex-start; max-width: 85%; }
+    .msg.user { margin-left: auto; flex-direction: row-reverse; }
+    .msg-avatar {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .msg.assistant .msg-avatar { background: rgba(167,139,250,0.15); color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); }
+    .msg.user .msg-avatar { background: rgba(0,201,167,0.15); color: #00c9a7; border: 1px solid rgba(0,201,167,0.25); }
+    .msg-bubble {
+      padding: 10px 14px; border-radius: 12px;
+      font-size: 13px; line-height: 1.6; max-width: 100%;
+    }
+    .msg.assistant .msg-bubble {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #e2e8f4;
+      border-radius: 4px 12px 12px 12px;
+    }
+    .msg.user .msg-bubble {
+      background: rgba(0,201,167,0.12); border: 1px solid rgba(0,201,167,0.25); color: #e2e8f4;
+      border-radius: 12px 4px 12px 12px;
+    }
+    .msg-bubble p { margin: 0 0 8px; }
+    .msg-bubble p:last-child { margin-bottom: 0; }
+
+    /* TYPING INDICATOR */
+    .typing-indicator { display: flex; gap: 4px; align-items: center; padding: 4px 2px; }
+    .typing-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #a78bfa;
+      animation: typingPulse 1.2s ease-in-out infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingPulse { 0%,60%,100%{opacity:0.3;transform:scale(0.85)} 30%{opacity:1;transform:scale(1)} }
+
+    /* INPUT BAR */
+    .chat-input-bar {
+      display: flex; gap: 10px; align-items: flex-end;
+      padding: 14px 16px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.02);
+      flex-shrink: 0;
+    }
+    .chat-input {
+      flex: 1; min-height: 44px; max-height: 140px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px; padding: 11px 14px;
+      font-family: Sora, sans-serif; font-size: 13px; color: #e2e8f4;
+      resize: none; outline: none; line-height: 1.5;
+      transition: border-color 0.2s;
+    }
+    .chat-input::placeholder { color: #4a6080; }
+    .chat-input:focus { border-color: rgba(167,139,250,0.45); }
+    .chat-send-btn {
+      width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+      background: linear-gradient(135deg, #8a5cf6, #6d28d9);
+      border: none; color: #ffffff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; transition: opacity 0.15s, transform 0.15s;
+      box-shadow: 0 4px 14px rgba(138,92,246,0.3);
+    }
+    .chat-send-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .chat-send-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+    /* DISCLAIMER */
+    .ai-disclaimer {
+      text-align: center; font-size: 11px; color: #4a6080;
+      margin-top: 10px; padding: 0 8px;
+    }
+
+    @media (max-width: 600px) {
+      .ai-hero { padding: 24px 16px 16px; }
+      .chat-wrap { padding: 0 12px 16px; }
+      .chat-window { min-height: 360px; }
+      .msg { max-width: 92%; }
+      .use-cases { gap: 6px; }
+    }
+  </style>
 </head>
-<body><div class="card"><h1>Opening the current Item Assist UI?</h1><p>This URL now routes into the current experience.</p><p>If you are not redirected automatically, <a href="/index.html?mode=smart#panel-smart">click here</a>.</p></div></body>
+<body data-page-kind="assistant">
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo" aria-label="Decode My Item home">
+    <div>
+      <div class="logo-text">Decode My <span>Item</span></div>
+      <div class="logo-sub">Decode - Research - Automate</div>
+    </div>
+  </a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span><span></span><span></span><span></span></button>
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="decoder-tool" data-page="index">Serial Number Decoder</a></li>
+    <li><a href="smart-lookup" data-page="smart">Smart Lookup</a></li>
+    <li><a href="assistant.html" data-page="assistant" class="nav-active">AI Assistant</a></li>
+    <li><a href="methodology.html" data-page="methodology">Methodology</a></li>
+    <li><a href="contact.html" data-page="contact">Contact</a></li>
+    <li><a href="feedback.html" data-page="feedback">Feedback &amp; Bugs</a></li>
+    <li><a href="security.html" data-page="security" class="nav-cta">Security &amp; Data</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="ai-hero">
+  <div class="ai-badge">&#129302; AI Assistant</div>
+  <h1>Ask Anything About Your Appliance or Device</h1>
+  <p>Get instant answers on appliance age, replacement guidance, serial decoding help, and product research &mdash; all in a natural conversation.</p>
+  <div class="use-cases">
+    <button class="use-case-chip" onclick="prefillChat('How old is my Whirlpool refrigerator with serial number XY2301234?')">
+      <span class="chip-icon">&#129695;</span> Age from serial number
+    </button>
+    <button class="use-case-chip" onclick="prefillChat('What should I replace my 2009 GE Profile refrigerator with?')">
+      <span class="chip-icon">&#128260;</span> Replacement options
+    </button>
+    <button class="use-case-chip" onclick="prefillChat('How do I find the serial number on my LG washing machine?')">
+      <span class="chip-icon">&#128270;</span> Find serial number
+    </button>
+    <button class="use-case-chip" onclick="prefillChat('Is it worth repairing a 14 year old HVAC system or replace it?')">
+      <span class="chip-icon">&#129520;</span> Repair vs replace
+    </button>
+    <button class="use-case-chip" onclick="prefillChat('Decode this Goodman serial number: 1203456789')">
+      <span class="chip-icon">&#128202;</span> Decode a serial
+    </button>
+  </div>
+</div>
+
+<!-- CHAT WINDOW -->
+<div class="chat-wrap">
+  <div class="chat-window">
+    <div class="chat-header">
+      <div class="chat-header-dot"></div>
+      <div class="chat-header-title">Decode My Item &mdash; AI Assistant</div>
+      <div class="chat-header-sub" id="chatStatus">Ready</div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <!-- Welcome message -->
+      <div class="msg assistant">
+        <div class="msg-avatar">AI</div>
+        <div class="msg-bubble">
+          <p>Hi! I'm the Decode My Item AI Assistant. I can help you with:</p>
+          <p>&#9679; Decoding serial numbers &amp; finding manufacture dates<br>
+          &#9679; Estimating appliance age from model numbers or descriptions<br>
+          &#9679; Finding replacement options for old appliances<br>
+          &#9679; Repair vs. replace guidance<br>
+          &#9679; Locating serial &amp; model number labels on any appliance</p>
+          <p>What can I help you with today?</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-bar">
+      <textarea
+        class="chat-input"
+        id="chatInput"
+        placeholder="Ask about a serial number, model, appliance age..."
+        rows="1"
+        onkeydown="handleChatKey(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <button class="chat-send-btn" id="chatSendBtn" onclick="sendMessage()" aria-label="Send message">
+        &#10148;
+      </button>
+    </div>
+  </div>
+  <div class="ai-disclaimer">AI responses are for research guidance only. Verify important decisions with a qualified technician.</div>
+</div>
+
+<footer style="margin-top:auto;">
+  <div>&copy; 2026 Decode My Item &mdash; Database verified February 2026</div>
+  <div class="footer-links">
+    <a href="methodology.html">Methodology</a>
+    <a href="contact.html">Contact</a>
+    <a href="security.html">Security &amp; Data Notice</a>
+    <a href="privacy-policy">Privacy Policy</a>
+  </div>
+</footer>
+
+<script src="shared.js"></script>
+<script>
+  // Chat state
+  const messages = [];
+  let isLoading = false;
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+  }
+
+  function handleChatKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  function prefillChat(text) {
+    const input = document.getElementById('chatInput');
+    input.value = text;
+    autoResize(input);
+    input.focus();
+  }
+
+  function scrollToBottom() {
+    const el = document.getElementById('chatMessages');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function appendMessage(role, html) {
+    const wrap = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    const avatar = role === 'user' ? 'You' : 'AI';
+    div.innerHTML = `<div class="msg-avatar">${avatar}</div><div class="msg-bubble">${html}</div>`;
+    wrap.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+
+  function showTyping() {
+    const wrap = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'msg assistant';
+    div.id = 'typingIndicator';
+    div.innerHTML = `<div class="msg-avatar">AI</div><div class="msg-bubble"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+    wrap.appendChild(div);
+    scrollToBottom();
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typingIndicator');
+    if (el) el.remove();
+  }
+
+  function setStatus(text) {
+    document.getElementById('chatStatus').textContent = text;
+  }
+
+  async function sendMessage() {
+    if (isLoading) return;
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('chatSendBtn').disabled = true;
+    isLoading = true;
+    setStatus('Thinking...');
+
+    appendMessage('user', `<p>${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>`);
+    messages.push({ role: 'user', content: text });
+    showTyping();
+
+    try {
+      const res = await fetch('/api/assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages })
+      });
+
+      removeTyping();
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        appendMessage('assistant', `<p>Sorry, something went wrong: ${err.error || res.status}. Please try again.</p>`);
+      } else {
+        const data = await res.json();
+        const reply = data.reply || data.message || 'No response received.';
+        messages.push({ role: 'assistant', content: reply });
+        const formatted = reply
+          .replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+          .replace(/\n\n/g,'</p><p>')
+          .replace(/\n/g,'<br>');
+        appendMessage('assistant', `<p>${formatted}</p>`);
+      }
+    } catch (e) {
+      removeTyping();
+      appendMessage('assistant', '<p>Connection error. Please check your connection and try again.</p>');
+    }
+
+    isLoading = false;
+    document.getElementById('chatSendBtn').disabled = false;
+    setStatus('Ready');
+    scrollToBottom();
+  }
+</script>
+</body>
 </html>
