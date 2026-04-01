@@ -177,25 +177,78 @@
     .brand-logo-wrap { width: 32px; height: 32px; }
     .brand-logo-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-    /* ─── POPULAR BRANDS ─── */
-    .brands-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 12px;
-      margin-top: 28px;
-    }
-    .brand-tile {
-      display: flex; flex-direction: column; gap: 4px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px 18px;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-    .brand-tile:hover { border-color: rgba(0,201,167,0.4); background: rgba(255,255,255,0.07); transform: translateY(-2px); }
-    .brand-tile-name { font-size: 14px; font-weight: 700; color: var(--white); }
-    .brand-tile-desc { font-size: 11px; color: #d8e3ee; }
+    /* ─── BRAND TABLE ─── */
+.brand-table-wrap {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+.brand-group {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.brand-group-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7a8fa8;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+}
+.brand-group-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.brand-group-dot.appliances { background: #00c9a7; }
+.brand-group-dot.electronics { background: #3b82f6; }
+.brand-group-dot.hvac { background: #f59e0b; }
+
+.brand-list { display: flex; flex-direction: column; }
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.15s, color 0.15s;
+}
+.brand-row:last-child { border-bottom: none; }
+.brand-row:hover { background: rgba(0,201,167,0.07); }
+.brand-row:hover .brand-row-name { color: var(--teal); }
+.brand-row:hover .brand-row-arrow { opacity: 1; color: var(--teal); }
+.brand-row-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  min-width: 90px;
+  flex-shrink: 0;
+}
+.brand-row-desc {
+  font-size: 11px;
+  color: #7a8fa8;
+  flex: 1;
+}
+.brand-row-arrow {
+  font-size: 12px;
+  color: #3a4f63;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+@media (max-width: 780px) {
+  .brand-table-wrap { grid-template-columns: 1fr; }
+}
 
     /* ─── FEEDBACK MODAL ─── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -1063,41 +1116,56 @@
     <span class="section-label">Browse by Brand</span>
     <h2 class="section-title">Decode by Brand</h2>
     <p class="section-sub">Dedicated serial number decode guides for major appliance and electronics brands.</p>
-    <div class="brands-grid">
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="ge"><span class="brand-tile-name">GE</span><span class="brand-tile-desc">Refrigerators, ranges, washers</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="whirlpool"><span class="brand-tile-name">Whirlpool</span><span class="brand-tile-desc">All Whirlpool family brands</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="samsung"><span class="brand-tile-name">Samsung</span><span class="brand-tile-desc">Appliances &amp; TVs</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="lg"><span class="brand-tile-name">LG</span><span class="brand-tile-desc">Appliances &amp; TVs</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="bosch"><span class="brand-tile-name">Bosch</span><span class="brand-tile-desc">Dishwashers, washers, ranges</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="maytag"><span class="brand-tile-name">Maytag</span><span class="brand-tile-desc">Pre &amp; post-2006 formats</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="frigidaire"><span class="brand-tile-name">Frigidaire</span><span class="brand-tile-desc">Refrigerators, ranges, washers</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="appliances" data-prefill-brand="kenmore"><span class="brand-tile-name">Kenmore</span><span class="brand-tile-desc">OEM identification guide</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="apple"><span class="brand-tile-name">Apple</span><span class="brand-tile-desc">iPhones, iPads, Macs</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="hp"><span class="brand-tile-name">HP</span><span class="brand-tile-desc">Laptops, desktops, printers</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="asus"><span class="brand-tile-name">ASUS</span><span class="brand-tile-desc">Laptops, motherboards, desktops</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="google-pixel"><span class="brand-tile-name">Google Pixel</span><span class="brand-tile-desc">Pixel phones &amp; tablets</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="sony"><span class="brand-tile-name">Sony</span><span class="brand-tile-desc">Bravia TVs &amp; home theater</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="vizio"><span class="brand-tile-name">Vizio</span><span class="brand-tile-desc">Vizio TVs all series</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="electronics" data-prefill-brand="panasonic"><span class="brand-tile-name">Panasonic</span><span class="brand-tile-desc">TVs &amp; home theater</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="hvac" data-prefill-brand="carrier"><span class="brand-tile-name">Carrier</span><span class="brand-tile-desc">HVAC systems &amp; heat pumps</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="waterHeaters" data-prefill-brand="rheem"><span class="brand-tile-name">Rheem</span><span class="brand-tile-desc">Water heaters &amp; HVAC</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="hvac" data-prefill-brand="goodman"><span class="brand-tile-name">Goodman</span><span class="brand-tile-desc">HVAC systems</span></a>
-      <a href="#decoder-tool" class="brand-tile" data-prefill-cat="hvac" data-prefill-brand="trane"><span class="brand-tile-name">Trane</span><span class="brand-tile-desc">HVAC systems</span></a>
-    </div>
-  </div>
-</section>
 
-<section class="section">
-  <div style="max-width:1100px;margin:0 auto;">
-    <span class="section-label">Guides &amp; Landing Pages</span>
-    <h2 class="section-title">Popular replacement and age-estimate workflows</h2>
-    <p class="section-sub">Practical intent pages for the most common reasons people land on Item Assist.</p>
-    <div class="cards">
-      <a class="card teal" href="replacement-lookup.html"><div class="card-badge teal">Replacement lookup</div><div class="card-title">Find a practical replacement path</div><p class="card-desc">Use Smart Lookup when you need a current-market replacement recommendation with rationale and confidence.</p></a>
-      <a class="card amber" href="appliance-age-estimator.html"><div class="card-badge amber">Appliance age</div><div class="card-title">Estimate appliance age without the guesswork</div><p class="card-desc">Use model and serial clues to narrow the likely production window and document your reasoning.</p></a>
-      <a class="card purple" href="tv-replacement-guide.html"><div class="card-badge purple">TV replacement</div><div class="card-title">Compare modern TV replacements</div><p class="card-desc">Turn an older TV model or description into a more current replacement shortlist and decision summary.</p></a>
-      <a class="card teal" href="hvac-replacement-guide.html"><div class="card-badge teal">HVAC replacement</div><div class="card-title">Research HVAC replacement candidates</div><p class="card-desc">Start with brand, tonnage context, and equipment type to get a clearer first-pass replacement direction.</p></a>
+    <div class="brand-table-wrap">
+
+      <div class="brand-group">
+        <div class="brand-group-header">
+          <span class="brand-group-dot appliances"></span>Appliances
+        </div>
+        <div class="brand-list">
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="appliances" data-prefill-brand="ge"><span class="brand-row-name">GE</span><span class="brand-row-desc">Refrigerators, ranges, washers</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="appliances" data-prefill-brand="whirlpool"><span class="brand-row-name">Whirlpool</span><span class="brand-row-desc">All Whirlpool family brands</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="appliances" data-prefill-brand="samsung"><span class="brand-row-name">Samsung</span><span class="brand-row-desc">Appliances &amp; TVs</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="appliances" data-prefill-brand="lg"><span class="brand-row-name">LG</span><span class="brand-row-desc">Appliances &amp; TVs</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="appliances" data-prefill-brand="bosch"><span class="brand-row-name">Bosch</span><span class="brand-row-desc">Dishwashers, washers, ranges</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="appliances" data-prefill-brand="maytag"><span class="brand-row-name">Maytag</span><span class="brand-row-desc">Pre &amp; post-2006 formats</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="appliances" data-prefill-brand="frigidaire"><span class="brand-row-name">Frigidaire</span><span class="brand-row-desc">Refrigerators, ranges, washers</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="appliances" data-prefill-brand="kenmore"><span class="brand-row-name">Kenmore</span><span class="brand-row-desc">OEM identification guide</span><span class="brand-row-arrow">&#8594;</span></a>
+        </div>
+      </div>
+
+      <div class="brand-group">
+        <div class="brand-group-header">
+          <span class="brand-group-dot electronics"></span>Electronics
+        </div>
+        <div class="brand-list">
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="electronics" data-prefill-brand="apple"><span class="brand-row-name">Apple</span><span class="brand-row-desc">iPhones, iPads, Macs</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="electronics" data-prefill-brand="hp"><span class="brand-row-name">HP</span><span class="brand-row-desc">Laptops, desktops, printers</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="electronics" data-prefill-brand="asus"><span class="brand-row-name">ASUS</span><span class="brand-row-desc">Laptops, motherboards, desktops</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="electronics" data-prefill-brand="google-pixel"><span class="brand-row-name">Google Pixel</span><span class="brand-row-desc">Pixel phones &amp; tablets</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="electronics" data-prefill-brand="sony"><span class="brand-row-name">Sony</span><span class="brand-row-desc">Bravia TVs &amp; home theater</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="electronics" data-prefill-brand="vizio"><span class="brand-row-name">Vizio</span><span class="brand-row-desc">Vizio TVs all series</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="electronics" data-prefill-brand="panasonic"><span class="brand-row-name">Panasonic</span><span class="brand-row-desc">TVs &amp; home theater</span><span class="brand-row-arrow">&#8594;</span></a>
+        </div>
+      </div>
+
+      <div class="brand-group">
+        <div class="brand-group-header">
+          <span class="brand-group-dot hvac"></span>HVAC &amp; Water Heaters
+        </div>
+        <div class="brand-list">
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="hvac" data-prefill-brand="carrier"><span class="brand-row-name">Carrier</span><span class="brand-row-desc">HVAC systems &amp; heat pumps</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="hvac" data-prefill-brand="goodman"><span class="brand-row-name">Goodman</span><span class="brand-row-desc">HVAC systems</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="hvac" data-prefill-brand="trane"><span class="brand-row-name">Trane</span><span class="brand-row-desc">HVAC systems</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="#decoder-tool" class="brand-row" data-prefill-cat="waterHeaters" data-prefill-brand="rheem"><span class="brand-row-name">Rheem</span><span class="brand-row-desc">Water heaters &amp; HVAC</span><span class="brand-row-arrow">&#8594;</span></a>
+        </div>
+      </div>
+
     </div>
+    <p style="margin-top:14px;font-size:12px;color:#7a8fa8;">
+      <a href="#decoder-tool" style="color:var(--teal);text-decoration:none;">More brands available in Decoder Tool Search Menu &#8594;</a>
+    </p>
   </div>
 </section>
 
