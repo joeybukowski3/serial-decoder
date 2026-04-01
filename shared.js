@@ -6,8 +6,6 @@
 
 /* ─── NAV: mark current page link as active ─── */
 (function () {
-  const landingPages = ['/decoder-tool', '/smart-lookup', '/assistant'];
-  if (landingPages.some(p => window.location.pathname.includes(p))) return;
   if (document.querySelector('nav ul li a.nav-active')) return;
   const links = document.querySelectorAll('nav ul li a');
   links.forEach(link => {
