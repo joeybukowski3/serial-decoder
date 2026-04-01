@@ -122,8 +122,8 @@
   }
 
   // ── Main export: call after Smart Lookup resolves ─────────────────────────
-  window.fetchAndRenderPriceTier = function (itemData, containerEl) {
-    if (!itemData || !containerEl) return;
+  window.fetchAndRenderPriceTier = function (itemData, containerEl, opts) {
+    if (!itemData || !containerEl) return Promise.resolve(false);
 
     var brand    = itemData.brand || '';
     var category = itemData.category || itemData.itemCategory || '';
@@ -132,35 +132,60 @@
     var finish   = itemData.finish || '';
     var features = itemData.features || itemData.keyFeatures || '';
 
-    if (!brand && !category) return;
+    if (!brand && !category) return Promise.resolve(false);
 
     // Inject alongside the hero card when the flex row is present
+    var progressiveSlot = opts && opts.progressiveSlot;
     var heroRow = containerEl.querySelector && containerEl.querySelector('.sl-hero-tier-row');
-    var target  = heroRow || containerEl;
+    var target  = progressiveSlot || heroRow || containerEl;
 
     // Loading indicator
-    var loader = _el('div', 'sl-pricetier-loading', 'Finding replacement tier...');
-    loader.style.cssText = 'font-size:13px;color:#888;padding:8px 0;flex:1;min-width:0';
-    target.appendChild(loader);
+    var loader = null;
+    if (!progressiveSlot) {
+      loader = _el('div', 'sl-pricetier-loading', 'Finding replacement tier...');
+      loader.style.cssText = 'font-size:13px;color:#888;padding:8px 0;flex:1;min-width:0';
+      target.appendChild(loader);
+    }
 
-    fetch('/api/pricebook-tier', {
+    return fetch('/api/pricebook-tier', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ brand: brand, category: category, size: size, style: style, finish: finish, features: features }),
     })
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        target.removeChild(loader);
+        if (loader && target.contains(loader)) target.removeChild(loader);
         if (data.matched && data.tier) {
           var card = renderPriceTierCard(data);
           card.style.flex = '1';
           card.style.minWidth = '0';
-          target.appendChild(card);
+          if (progressiveSlot) {
+            progressiveSlot.classList.remove('is-hidden', 'is-ready', 'is-loading');
+            progressiveSlot.innerHTML = '';
+            progressiveSlot.appendChild(card);
+            requestAnimationFrame(function () {
+              progressiveSlot.classList.add('is-ready');
+            });
+          } else {
+            target.appendChild(card);
+          }
+          return true;
         }
-        // If not matched, silently omit — don't show error to user
+        if (progressiveSlot) {
+          progressiveSlot.innerHTML = '';
+          progressiveSlot.classList.remove('is-loading', 'is-ready');
+          progressiveSlot.classList.add('is-hidden');
+        }
+        return false;
       })
       .catch(function () {
-        try { target.removeChild(loader); } catch (_) {}
+        try { if (loader && target.contains(loader)) target.removeChild(loader); } catch (_) {}
+        if (progressiveSlot) {
+          progressiveSlot.innerHTML = '';
+          progressiveSlot.classList.remove('is-loading', 'is-ready');
+          progressiveSlot.classList.add('is-hidden');
+        }
+        return false;
       });
   };
 })();
