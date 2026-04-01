@@ -1,10 +1,11 @@
 // ===== ROUTE NORMALIZATION =====
 (function normalizeHtmlRoutes() {
   var path = window.location.pathname;
-  if (!(path === '/' || path.includes('index'))) return;
   if (path === '/' || path.endsWith('.html') || path.indexOf('.') !== -1) return;
   var normalized = path.replace(/\/$/, '') + '.html';
-  window.location.replace(normalized + window.location.search);
+  if (path === '/' || path.includes('index')) {
+    window.location.replace(normalized + window.location.search);
+  }
 })();
 
 (function loadBoltAiAssistBubble() {
@@ -3247,7 +3248,10 @@ function navigateSpa(url, options) {
       }
     })
     .catch(function() {
-      window.location.href = target.href;
+      var path = window.location.pathname || '';
+      if (path === '/' || path.includes('index')) {
+        window.location.href = target.href;
+      }
     })
     .finally(function() {
       window.__iaSpaLoading = false;
@@ -4147,7 +4151,10 @@ function decodeSerial() {
     var currentSlug = getBrandPageSlug();
     var targetSlug = BRAND_PAGE_BY_ID[metaBrandId] || BRAND_PAGE_BY_ID[(metaBrandId || '').replace(/-/g, '_')];
     if (targetSlug && currentSlug && targetSlug !== currentSlug) {
-      window.location.href = '/' + targetSlug + '?serial=' + encodeURIComponent(serial);
+      var path = window.location.pathname || '';
+      if (path === '/' || path.includes('index')) {
+        window.location.href = '/' + targetSlug + '?serial=' + encodeURIComponent(serial);
+      }
       return;
     }
   }
