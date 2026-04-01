@@ -1,6 +1,4 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": false,
   "headers": [
     {
       "source": "/(.*)",
@@ -29,6 +27,9 @@
     }
   ],
   "rewrites": [
+    { "source": "/decoder-tool", "destination": "/decoder-tool.html" },
+    { "source": "/smart-lookup", "destination": "/smart-lookup.html" },
+    { "source": "/assistant", "destination": "/assistant.html" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/about", "destination": "/about.html" },
     { "source": "/brands", "destination": "/brands.html" },
