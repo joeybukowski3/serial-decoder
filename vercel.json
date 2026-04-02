@@ -27,6 +27,9 @@
     }
   ],
   "rewrites": [
+    { "source": "/decoder-tool", "destination": "/decoder-tool.html" },
+    { "source": "/smart-lookup", "destination": "/smart-lookup.html" },
+    { "source": "/assistant", "destination": "/assistant.html" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/about", "destination": "/about.html" },
     { "source": "/brands", "destination": "/brands.html" },
@@ -49,7 +52,6 @@
     { "source": "/google-pixel", "destination": "/google-pixel.html" },
     { "source": "/vizio", "destination": "/vizio.html" },
     { "source": "/panasonic", "destination": "/panasonic.html" },
-    { "source": "/smart-lookup", "destination": "/smart-lookup.html" },
     { "source": "/hvac", "destination": "/hvac.html" },
     { "source": "/appliances", "destination": "/appliances.html" },
     { "source": "/electronics", "destination": "/electronics.html" },
@@ -57,7 +59,6 @@
     { "source": "/serial-number-decoding", "destination": "/index.html" },
     { "source": "/serial-number-decoding.html", "destination": "/index.html" },
     { "source": "/universal-decoder", "destination": "/universal-decoder.html" },
-    { "source": "/assistant", "destination": "/assistant.html" },
     { "source": "/methodology", "destination": "/methodology.html" },
     { "source": "/disclaimer", "destination": "/disclaimer.html" },
     { "source": "/contact", "destination": "/contact.html" },

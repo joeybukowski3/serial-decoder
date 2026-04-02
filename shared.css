@@ -129,6 +129,10 @@ nav ul li a.active {
   color: var(--navy);
   font-weight: 600;
 }
+.nav-active {
+  color: var(--teal);
+  border-bottom: 2px solid var(--teal);
+}
 .nav-cta {
   background: transparent !important;
   border: 1px solid rgba(0,201,167,0.4) !important;

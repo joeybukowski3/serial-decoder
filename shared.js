@@ -6,6 +6,7 @@
 
 /* ─── NAV: mark current page link as active ─── */
 (function () {
+  if (document.querySelector('nav ul li a.nav-active')) return;
   const links = document.querySelectorAll('nav ul li a');
   links.forEach(link => {
     if (link.href === window.location.href || window.location.pathname.includes(link.dataset.page)) {
