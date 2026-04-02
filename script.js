@@ -3354,9 +3354,12 @@ function populateBrands(category) {
     });
   }
   if (selectedBrand) sel.value = selectedBrand;
-  var prefillBrand = document.body.getAttribute('data-prefill-brand');
-  var prefillCat = document.body.getAttribute('data-prefill-cat');
-  if (prefillBrand && prefillCat) {
+  // Auto-preselect brand if data attributes are set on body
+  (function() {
+    var body = document.body;
+    var prefillCat = body.getAttribute('data-prefill-cat');
+    var prefillBrand = body.getAttribute('data-prefill-brand');
+    if (!prefillCat || !prefillBrand) return;
     var catTab = document.querySelector('[data-cat="' + prefillCat + '"]');
     if (catTab && typeof selectCatAndShowDecoder === 'function') {
       selectCatAndShowDecoder(prefillCat, catTab);
@@ -3366,7 +3369,7 @@ function populateBrands(category) {
       brandSelect.value = prefillBrand;
       brandSelect.dispatchEvent(new Event('change'));
     }
-  }
+  })();
   if (sel.value !== selectedBrand) setSelectedBrandForCategory(category, sel.value || '');
   onBrandChange();
 }
