@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Decode [BRAND] Serial Numbers -- Find Manufacture Date | Decode My Item</title>
+  <meta name="description" content="Decode any [BRAND] serial number instantly. Find the manufacture date and estimated age of your [BRAND] appliance, HVAC, or electronics device.">
+  <link rel="canonical" href="https://www.decodemyitem.com/[slug]">
+  <link rel="stylesheet" href="shared.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    html, body {
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    .hidden { display: none !important; }
+
+    .tool-hero {
+      padding: 48px 20px 32px;
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .tool-hero .tool-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,201,167,0.1);
+      border: 1px solid rgba(0,201,167,0.3);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #00c9a7;
+      margin-bottom: 16px;
+    }
+    .tool-hero h1 {
+      font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 12px;
+      max-width: 680px;
+      margin-left: auto;
+      margin-right: auto;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+    .tool-hero p {
+      font-size: 1rem;
+      color: #d8e3ee;
+      line-height: 1.6;
+      max-width: 680px;
+      margin-left: auto;
+      margin-right: auto;
+      margin-bottom: 28px;
+    }
+    .how-steps {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .how-step {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12px;
+      color: #d8e3ee;
+      font-weight: 500;
+    }
+    .how-step-num {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(0,201,167,0.18);
+      color: #00c9a7;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .tool-focus-wrap {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0 16px 0;
+    }
+
+    .era-group { margin-top: 8px; }
+    .era-note { font-size: 11px; color: #d8e3ee; margin-top: 6px; line-height: 1.5; }
+    .search-hint { font-size: 12px; color: #7a8fa8; margin-top: 8px; }
+    .power-btn {
+      width: 100%;
+      max-width: 340px;
+      height: 50px;
+      border-radius: 12px;
+      font-family: Sora, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-primary { background: #3182ce; color: #ffffff; }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .results-wrapper {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 16px 32px;
+    }
+
+    .serial-location-guide {
+      max-width: 780px;
+      margin: 0 auto 18px;
+      padding: 20px 22px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      color: #d8e3ee;
+    }
+    .serial-location-guide h3 {
+      margin: 0 0 12px;
+      color: #ffffff;
+      font-size: 1.05rem;
+    }
+    .serial-location-guide ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .serial-location-guide li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+    .tool-crosslink {
+      max-width: 780px;
+      margin: 0 auto 28px;
+      padding: 0 16px;
+      text-align: center;
+      color: #d8e3ee;
+      font-size: 13px;
+    }
+    .tool-crosslink a {
+      color: #00c9a7;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 20px; max-width: 480px; width: 100%; overflow: hidden; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .modal-header h3 { font-size: 14px; font-weight: 700; color: var(--white); margin: 0; }
+    .modal-close { background: transparent; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
+    .modal-close:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+    .modal-body { padding: 20px 22px; }
+    .modal-field { margin-bottom: 14px; }
+    .modal-field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .fb-thanks { background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--teal); margin-top: 12px; }
+    .form-input { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
+    .form-input:focus { border-color: var(--teal); }
+    .form-select { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; appearance: none; cursor: pointer; }
+    textarea.form-input { resize: vertical; min-height: 80px; }
+
+    @media (max-width: 600px) {
+      .tool-hero { padding: 32px 16px 24px; }
+      .how-steps { gap: 6px; }
+    }
+  </style>
+</head>
+<body data-page-kind="brand-page">
+<nav>
+  <a href="/" class="logo" aria-label="Decode My Item home">
+    <div>
+      <div class="logo-text">Decode My <span>Item</span></div>
+      <div class="logo-sub">Decode - Research - Automate</div>
+    </div>
+  </a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span><span></span><span></span><span></span></button>
+  <ul>
+    <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+    <li><a href="/smart-lookup">Smart Lookup</a></li>
+    <li><a href="/assistant">AI Assistant</a></li>
+    <li><a href="/methodology">Methodology</a></li>
+    <li><a href="/contact">Contact</a></li>
+    <li><a href="/feedback">Feedback &amp; Bugs</a></li>
+    <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+  </ul>
+</nav>
+
+<section class="page-hero">
+  <div class="tool-hero">
+    <div class="tool-badge">[BRAND] Serial Number Decoder</div>
+    <h1>Decode [BRAND] Serial Numbers Instantly</h1>
+    <p>Find the manufacture date and estimated age of your [BRAND] appliance in seconds using the serial number on the product label.</p>
+    <div class="how-steps">
+      <div class="how-step"><span class="how-step-num">1</span> Your brand is pre-selected below</div>
+      <div class="how-step"><span class="how-step-num">2</span> Enter your serial number exactly as shown</div>
+      <div class="how-step"><span class="how-step-num">3</span> Click Decode for an instant result</div>
+      <div class="how-step"><span class="how-step-num">4</span> No serial number? Use Smart Lookup instead</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="decoder-tool" style="padding-top:0;padding-bottom:16px;">
+  <div class="tool-focus-wrap">
+    <div style="max-width:780px;margin:0 auto;padding:0 16px 48px;border:1.5px solid rgba(0,201,167,0.4);border-radius:18px;box-shadow:0 0 32px rgba(0,201,167,0.12),0 20px 48px rgba(0,0,0,0.4);background:var(--navy-mid,#0d1f33);overflow:hidden;">
+      <div class="home-tools-wrap">
+        <div class="home-tools-grid">
+          <div class="decoder-card-shell">
+            <div class="search-box">
+              <div class="search-tabs">
+                <button class="search-tab cat-tab active" data-cat="appliances" onclick="selectCatAndShowDecoder('appliances', this)">Appliances</button>
+                <button class="search-tab cat-tab" data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">Water Heaters</button>
+                <button class="search-tab cat-tab" data-cat="hvac" onclick="selectCatAndShowDecoder('hvac', this)">HVAC</button>
+                <button class="search-tab cat-tab" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
+              </div>
+
+              <div class="search-panel" id="panel-decoder">
+                <div class="home-tool-row">
+                  <label class="sr-only" for="brand">Select Brand</label>
+                  <select id="brand" class="search-select">
+                    <option value="">-- Select Brand --</option>
+                  </select>
+
+                  <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
+                  <input type="text" id="serial" class="search-input" placeholder="Enter serial number (e.g., CB2501800)">
+                </div>
+
+                <div class="era-group hidden" id="eraGroup">
+                  <label class="sr-only" for="eraSelect">
+                    Manufacture Era
+                    <span title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">&#9432;</span>
+                  </label>
+                  <select id="eraSelect" class="search-select" style="margin-top:8px;">
+                    <option value="">-- Select Era --</option>
+                    <option value="post">Post-2006 (manufactured after 2006)</option>
+                    <option value="pre">Pre-2006 (manufactured before 2006)</option>
+                  </select>
+                  <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
+                </div>
+
+                <p class="search-hint serial-helper-text">Enter the serial number exactly as shown on the product label</p>
+                <p class="search-link" style="margin-top:10px;">No serial number? Use the smart lookup panel.</p>
+                <div class="tool-panel-action">
+                  <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">&#128269; Decode Serial Number</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="results-wrapper" style="padding:0 48px 32px;">
+  <div id="ageLoading" class="results-card hidden">
+    <div class="loading-inner">
+      <span class="loading-emoji lightning" id="loadingEmoji">&#127785;&#65039;</span>
+      <div class="loading-text" id="loadingText">Researching product information...</div>
+    </div>
+  </div>
+
+  <div id="serialResults" class="results-card hidden">
+    <div class="results-header">
+      <h3>&#128202; Decoded Results</h3>
+      <div class="brand-logo-wrap" id="serialBrandLogo"></div>
+    </div>
+    <div class="results-body">
+      <div id="serialSummaryLayer" class="sl-top-summary-layer serial-summary-layer hidden"></div>
+      <div class="serial-legacy-fields" hidden aria-hidden="true">
+        <div class="result-row result-row--primary">
+          <span class="result-label">Manufacture Date</span>
+          <span class="result-value" id="resultYear"></span>
+        </div>
+        <div class="result-row" id="resultMonthRow">
+          <span class="result-label">Month / Period</span>
+          <span class="result-value" id="resultMonth"></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Brand</span>
+          <span class="result-value" id="resultBrand"></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Estimated Age</span>
+          <span class="result-value" id="resultEstimatedAge">&mdash;</span>
+        </div>
+        <div class="info-block method">
+          <h4>Decoding Method</h4>
+          <p id="resultMethod"></p>
+        </div>
+        <div class="info-block notes">
+          <h4>Important Notes</h4>
+          <p id="resultNotes"></p>
+        </div>
+        <details class="determination-details">
+          <summary>How this was determined</summary>
+          <div class="determination-body" id="serialDeterminationBody">
+            We use manufacturer serial format rules and published industry references to extract manufacture date information from serial numbers. Some brands reuse year codes across decades, which is why multiple valid years may appear. When two years are shown, the correct decade can typically be confirmed using physical condition, purchase records, or known installation dates.
+          </div>
+        </details>
+      </div>
+    </div>
+    <div class="results-footer">
+      <button class="copy-btn" onclick="copyClaimFile()">Copy Information</button>
+      <button class="decode-again-btn btn-amber" onclick="decodeAnotherItem()">Decode Another Item</button>
+      <button class="decode-again-btn btn-teal" onclick="useSmartLookup()">Use Smart Lookup</button>
+      <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
+    </div>
+  </div>
+</div>
+
+<div class="serial-location-guide">
+  <h3>Where to Find Your [BRAND] Serial Number</h3>
+  <ul>
+    <li>[SERIAL_TIP_1]</li>
+    <li>[SERIAL_TIP_2]</li>
+    <li>[SERIAL_TIP_3]</li>
+  </ul>
+</div>
+
+<p class="tool-crosslink">
+  Need to search another brand? <a href="/">Go to the home page</a> --
+  or <a href="/smart-lookup">use Smart Lookup</a> if you don't have a serial number.
+</p>
+
+<div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>&#9888; Report an Issue</h3>
+      <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label class="sr-only" for="fbBrand">Brand</label>
+        <input type="text" id="fbBrand" class="form-input" readonly>
+      </div>
+      <div class="modal-field">
+        <label class="sr-only" for="fbSerial">Serial Number / Search Query</label>
+        <input type="text" id="fbSerial" class="form-input" readonly>
+      </div>
+      <div class="modal-field">
+        <label class="sr-only" for="fbType">Issue Type</label>
+        <select id="fbType" class="form-select">
+          <option value="">-- Select issue type --</option>
+          <option value="wrong_year">Wrong year / date</option>
+          <option value="wrong_month">Wrong month</option>
+          <option value="wrong_brand">Wrong brand identified</option>
+          <option value="format_error">Format / decode error</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="sr-only" for="fbDetails">Details (optional)</label>
+        <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong? What is the correct date if known?"></textarea>
+      </div>
+      <div id="fbThanks" class="fb-thanks hidden">&#10003; Thank you! Your feedback helps improve this tool.</div>
+      <div id="fbActions" class="modal-actions">
+        <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
+        <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div>&copy; 2026 Decode My Item -- Database verified February 2026</div>
+  <div class="footer-links">
+    <a href="methodology.html">Methodology</a>
+    <a href="contact.html">Contact</a>
+    <a href="security.html">Security &amp; Data Notice</a>
+    <a href="privacy-policy">Privacy Policy</a>
+  </div>
+</footer>
+
+<script>
+function selectCatAndShowDecoder(cat, btn) {
+  if (typeof selectCategory === 'function') selectCategory(cat, btn);
+}
+function useSmartLookup() { window.location.href = 'smart-lookup'; }
+
+window.addEventListener('DOMContentLoaded', function() {
+  var brandSelect = document.getElementById('brand');
+  if (brandSelect) {
+    selectCatAndShowDecoder('[CATEGORY]', document.querySelector('[data-cat="[CATEGORY]"]'));
+    brandSelect.value = '[BRAND_VALUE]';
+    brandSelect.dispatchEvent(new Event('change'));
+  }
+});
+
+window.addEventListener('pageshow', function () {
+  var feedbackModal = document.getElementById('feedbackModal');
+  var navList = document.querySelector('nav ul');
+  var hamburger = document.getElementById('hamburgerBtn');
+
+  if (!feedbackModal || feedbackModal.classList.contains('hidden')) {
+    document.body.style.overflow = '';
+  }
+  document.body.classList.remove('nav-menu-open');
+  if (navList) navList.classList.remove('open');
+  if (hamburger) hamburger.classList.remove('active');
+});
+</script>
+<script type="text/placeholder" data-src="decoder-data.js"></script>
+<script src="lkq-engine.js"></script>
+<script src="analytics.js"></script>
+<script src="smart-lookup-extras.js"></script>
+<script src="smart-lookup-normalizer.js"></script>
+<script src="smart-lookup-summary-render.js"></script>
+<script src="script.js"></script>
+<script src="smart-lookup.js"></script>
+<script src="smart-lookup-upgrade-patch.js"></script>
+<script src="smart-lookup-pricetier.js"></script>
+<script src="shared.js"></script>
+</body>
+</html>
