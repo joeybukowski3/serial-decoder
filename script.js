@@ -1,7 +1,18 @@
 // ===== ROUTE NORMALIZATION =====
 (function normalizeHtmlRoutes() {
   var path = window.location.pathname;
+  var cleanRoutes = [
+    '/decoder-tool', '/smart-lookup', '/assistant',
+    '/ge', '/whirlpool', '/samsung', '/lg', '/bosch', '/maytag', '/frigidaire', '/kenmore',
+    '/apple', '/hp', '/asus', '/google-pixel', '/sony', '/vizio', '/panasonic',
+    '/carrier', '/goodman', '/trane', '/rheem',
+    '/methodology', '/contact', '/feedback', '/security', '/privacy-policy',
+    '/about', '/brands', '/hvac', '/appliances', '/electronics', '/water-heaters',
+    '/universal-decoder', '/disclaimer', '/replacement-lookup', '/appliance-age-estimator',
+    '/tv-replacement-guide', '/hvac-replacement-guide'
+  ];
   if (path === '/' || path.endsWith('.html') || path.indexOf('.') !== -1) return;
+  if (cleanRoutes.some(function(r) { return path === r || path.startsWith(r + '/'); })) return;
   var normalized = path.replace(/\/$/, '') + '.html';
   if (path === '/' || path.includes('index')) {
     window.location.replace(normalized + window.location.search);
@@ -3348,6 +3359,22 @@ function populateBrands(category) {
     });
   }
   if (selectedBrand) sel.value = selectedBrand;
+  // Auto-preselect brand if data attributes are set on body
+  (function() {
+    var body = document.body;
+    var prefillCat = body.getAttribute('data-prefill-cat');
+    var prefillBrand = body.getAttribute('data-prefill-brand');
+    if (!prefillCat || !prefillBrand) return;
+    var catTab = document.querySelector('[data-cat="' + prefillCat + '"]');
+    if (catTab && typeof selectCatAndShowDecoder === 'function') {
+      selectCatAndShowDecoder(prefillCat, catTab);
+    }
+    var brandSelect = document.getElementById('brand');
+    if (brandSelect) {
+      brandSelect.value = prefillBrand;
+      brandSelect.dispatchEvent(new Event('change'));
+    }
+  })();
   if (sel.value !== selectedBrand) setSelectedBrandForCategory(category, sel.value || '');
   onBrandChange();
 }

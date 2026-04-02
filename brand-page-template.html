@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Serial Number Decoder &mdash; Decode My Item</title>
-  <meta name="description" content="Decode any appliance, HVAC, or electronics serial number instantly. Find manufacture date and estimated age for 100+ brands.">
-  <link rel="canonical" href="https://www.decodemyitem.com/decoder-tool">
+  <title>Decode [BRAND] Serial Numbers -- Find Manufacture Date | Decode My Item</title>
+  <meta name="description" content="Decode any [BRAND] serial number instantly. Find the manufacture date and estimated age of your [BRAND] appliance, HVAC, or electronics device.">
+  <link rel="canonical" href="https://www.decodemyitem.com/[slug]">
   <link rel="stylesheet" href="shared.css">
   <link rel="icon" type="image/png" href="favicon.png">
   <style>
@@ -16,7 +16,6 @@
 
     .hidden { display: none !important; }
 
-    /* PAGE-SPECIFIC: DECODER LANDING */
     .tool-hero {
       padding: 48px 20px 32px;
       text-align: center;
@@ -97,7 +96,6 @@
       padding: 0 16px 0;
     }
 
-    /* DECODER INTERNALS */
     .era-group { margin-top: 8px; }
     .era-note { font-size: 11px; color: #d8e3ee; margin-top: 6px; line-height: 1.5; }
     .search-hint { font-size: 12px; color: #7a8fa8; margin-top: 8px; }
@@ -124,6 +122,42 @@
       padding: 0 16px 32px;
     }
 
+    .serial-location-guide {
+      max-width: 780px;
+      margin: 0 auto 18px;
+      padding: 20px 22px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      color: #d8e3ee;
+    }
+    .serial-location-guide h3 {
+      margin: 0 0 12px;
+      color: #ffffff;
+      font-size: 1.05rem;
+    }
+    .serial-location-guide ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .serial-location-guide li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+    .tool-crosslink {
+      max-width: 780px;
+      margin: 0 auto 28px;
+      padding: 0 16px;
+      text-align: center;
+      color: #d8e3ee;
+      font-size: 13px;
+    }
+    .tool-crosslink a {
+      color: #00c9a7;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .modal-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 20px; max-width: 480px; width: 100%; overflow: hidden; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid rgba(255,255,255,0.06); }
@@ -146,9 +180,7 @@
     }
   </style>
 </head>
-<body data-page-kind="decoder-tool">
-
-<!-- NAV -->
+<body data-page-kind="brand-page">
 <nav>
   <a href="/" class="logo" aria-label="Decode My Item home">
     <div>
@@ -156,36 +188,32 @@
       <div class="logo-sub">Decode - Research - Automate</div>
     </div>
   </a>
-  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
-    <span></span><span></span><span></span><span></span><span></span><span></span>
-  </button>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span><span></span><span></span><span></span></button>
   <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="decoder-tool" data-page="index" class="nav-active">Serial Number Decoder</a></li>
-    <li><a href="smart-lookup" data-page="smart">Smart Lookup</a></li>
-    <li><a href="assistant.html" data-page="assistant">AI Assistant</a></li>
-    <li><a href="methodology.html" data-page="methodology">Methodology</a></li>
-    <li><a href="contact.html" data-page="contact">Contact</a></li>
-    <li><a href="feedback.html" data-page="feedback">Feedback &amp; Bugs</a></li>
-    <li><a href="security.html" data-page="security" class="nav-cta">Security &amp; Data</a></li>
+    <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+    <li><a href="/smart-lookup">Smart Lookup</a></li>
+    <li><a href="/assistant">AI Assistant</a></li>
+    <li><a href="/methodology">Methodology</a></li>
+    <li><a href="/contact">Contact</a></li>
+    <li><a href="/feedback">Feedback &amp; Bugs</a></li>
+    <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
   </ul>
 </nav>
 
-<!-- HERO -->
-<section class="page-hero" style="padding-bottom:0;">
+<section class="page-hero">
   <div class="tool-hero">
-    <div class="tool-badge">&#9875; Serial Number Decoder</div>
-    <h1>Find Your Appliance's Manufacture Date Instantly</h1>
-    <p>Enter the serial number from any major appliance, HVAC system, or electronic device. We decode the embedded date code using verified manufacturer formats.</p>
+    <div class="tool-badge">[BRAND] Serial Number Decoder</div>
+    <h1>Decode [BRAND] Serial Numbers Instantly</h1>
+    <p>Find the manufacture date and estimated age of your [BRAND] appliance in seconds using the serial number on the product label.</p>
     <div class="how-steps">
-      <div class="how-step"><span class="how-step-num">1</span> Select a category &amp; brand</div>
-      <div class="how-step"><span class="how-step-num">2</span> Enter serial number exactly as shown</div>
-      <div class="how-step"><span class="how-step-num">3</span> Click Decode &mdash; instant result</div>
+      <div class="how-step"><span class="how-step-num">1</span> Your brand is pre-selected below</div>
+      <div class="how-step"><span class="how-step-num">2</span> Enter your serial number exactly as shown</div>
+      <div class="how-step"><span class="how-step-num">3</span> Click Decode for an instant result</div>
+      <div class="how-step"><span class="how-step-num">4</span> No serial number? Use Smart Lookup instead</div>
     </div>
   </div>
 </section>
 
-<!-- TOOL -->
 <section class="section" id="decoder-tool" style="padding-top:0;padding-bottom:16px;">
   <div class="tool-focus-wrap">
     <div style="max-width:780px;margin:0 auto;padding:0 16px 48px;border:1.5px solid rgba(0,201,167,0.4);border-radius:18px;box-shadow:0 0 32px rgba(0,201,167,0.12),0 20px 48px rgba(0,0,0,0.4);background:var(--navy-mid,#0d1f33);overflow:hidden;">
@@ -193,7 +221,6 @@
         <div class="home-tools-grid">
           <div class="decoder-card-shell">
             <div class="search-box">
-              <!-- Decoder Category Tabs -->
               <div class="search-tabs">
                 <button class="search-tab cat-tab active" data-cat="appliances" onclick="selectCatAndShowDecoder('appliances', this)">Appliances</button>
                 <button class="search-tab cat-tab" data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">Water Heaters</button>
@@ -201,7 +228,6 @@
                 <button class="search-tab cat-tab" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
               </div>
 
-              <!-- DECODER PANEL -->
               <div class="search-panel" id="panel-decoder">
                 <div class="home-tool-row">
                   <label class="sr-only" for="brand">Select Brand</label>
@@ -237,14 +263,9 @@
         </div>
       </div>
     </div>
-
-    <p style="text-align:center;margin-top:14px;font-size:12px;color:#7a8fa8;">
-      Don't have a serial number? <a href="smart-lookup" style="color:#00c9a7;text-decoration:none;font-weight:600;">Use the Smart Lookup feature</a>
-    </p>
   </div>
 </section>
 
-<!-- RESULTS -->
 <div class="results-wrapper" style="padding:0 48px 32px;">
   <div id="ageLoading" class="results-card hidden">
     <div class="loading-inner">
@@ -302,7 +323,20 @@
   </div>
 </div>
 
-<!-- FEEDBACK MODAL -->
+<div class="serial-location-guide">
+  <h3>Where to Find Your [BRAND] Serial Number</h3>
+  <ul>
+    <li>[SERIAL_TIP_1]</li>
+    <li>[SERIAL_TIP_2]</li>
+    <li>[SERIAL_TIP_3]</li>
+  </ul>
+</div>
+
+<p class="tool-crosslink">
+  Need to search another brand? <a href="/">Go to the home page</a> --
+  or <a href="/smart-lookup">use Smart Lookup</a> if you don't have a serial number.
+</p>
+
 <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
   <div class="modal-card">
     <div class="modal-header">
@@ -343,7 +377,7 @@
 </div>
 
 <footer>
-  <div>&copy; 2026 Decode My Item &mdash; Database verified February 2026</div>
+  <div>&copy; 2026 Decode My Item -- Database verified February 2026</div>
   <div class="footer-links">
     <a href="methodology.html">Methodology</a>
     <a href="contact.html">Contact</a>
@@ -357,6 +391,15 @@ function selectCatAndShowDecoder(cat, btn) {
   if (typeof selectCategory === 'function') selectCategory(cat, btn);
 }
 function useSmartLookup() { window.location.href = 'smart-lookup'; }
+
+window.addEventListener('DOMContentLoaded', function() {
+  var brandSelect = document.getElementById('brand');
+  if (brandSelect) {
+    selectCatAndShowDecoder('[CATEGORY]', document.querySelector('[data-cat="[CATEGORY]"]'));
+    brandSelect.value = '[BRAND_VALUE]';
+    brandSelect.dispatchEvent(new Event('change'));
+  }
+});
 
 window.addEventListener('pageshow', function () {
   var feedbackModal = document.getElementById('feedbackModal');

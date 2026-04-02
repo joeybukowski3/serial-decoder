@@ -670,7 +670,7 @@
 @media (max-width: 900px) { .brand-home-hero { grid-template-columns: 1fr; } .brand-helper-wrap { grid-template-columns: 1fr; } }
 </style>
 </head>
-<body data-page-kind="home">
+<body data-page-kind="home" data-prefill-cat="electronics" data-prefill-brand="vizio">
 
 <!-- ─── NAV ─── -->
 <nav>
@@ -683,6 +683,7 @@
     <span></span><span></span><span></span>
   </button>
   <ul>
+    <li><a href="/">Home</a></li>
     <li><a href="/index.html" data-page="index">Serial Number Decoder</a></li>
     <li><a href="/index.html?mode=smart#panel-smart" data-page="smart">Smart Lookup</a></li>
     <li><a href="assistant.html" data-page="assistant">AI Assistant</a></li>
@@ -1090,16 +1091,6 @@ function selectCatAndShowDecoder(cat, btn) {
 <script src="smart-lookup-extras.js"></script>
 <script src="smart-lookup-normalizer.js"></script>
 <script src="smart-lookup-summary-render.js"></script>
-<script>
-(function(){
-  try {
-    var url = new URL(window.location.href);
-    url.searchParams.set('cat', 'electronics');
-    url.searchParams.set('brand', 'vizio');
-    history.replaceState({}, '', url.pathname + '?' + url.searchParams.toString() + (url.hash || ''));
-  } catch (_) {}
-})();
-</script>
 <script src="script.js"></script>
 <script src="smart-lookup.js"></script>
 <script src="smart-lookup-upgrade-patch.js"></script>
