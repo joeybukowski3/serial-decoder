@@ -3354,6 +3354,19 @@ function populateBrands(category) {
     });
   }
   if (selectedBrand) sel.value = selectedBrand;
+  var prefillBrand = document.body.getAttribute('data-prefill-brand');
+  var prefillCat = document.body.getAttribute('data-prefill-cat');
+  if (prefillBrand && prefillCat) {
+    var catTab = document.querySelector('[data-cat="' + prefillCat + '"]');
+    if (catTab && typeof selectCatAndShowDecoder === 'function') {
+      selectCatAndShowDecoder(prefillCat, catTab);
+    }
+    var brandSelect = document.getElementById('brand');
+    if (brandSelect) {
+      brandSelect.value = prefillBrand;
+      brandSelect.dispatchEvent(new Event('change'));
+    }
+  }
   if (sel.value !== selectedBrand) setSelectedBrandForCategory(category, sel.value || '');
   onBrandChange();
 }

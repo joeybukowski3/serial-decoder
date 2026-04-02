@@ -670,7 +670,7 @@
 @media (max-width: 900px) { .brand-home-hero { grid-template-columns: 1fr; } .brand-helper-wrap { grid-template-columns: 1fr; } }
 </style>
 </head>
-<body data-page-kind="home">
+<body data-page-kind="home" data-prefill-cat="electronics" data-prefill-brand="google-pixel">
 
 <!-- ─── NAV ─── -->
 <nav>
@@ -1090,33 +1090,6 @@ function selectCatAndShowDecoder(cat, btn) {
 <script src="smart-lookup-extras.js"></script>
 <script src="smart-lookup-normalizer.js"></script>
 <script src="smart-lookup-summary-render.js"></script>
-<script>
-function preselectBrand(category, brandValue) {
-  var attempts = 0;
-  var interval = setInterval(function() {
-    attempts++;
-    var brandSelect = document.getElementById('brand');
-    if (!brandSelect) return;
-
-    var catTab = document.querySelector('[data-cat="' + category + '"]');
-    if (catTab && typeof selectCatAndShowDecoder === 'function') {
-      selectCatAndShowDecoder(category, catTab);
-    }
-
-    if (brandSelect.options.length > 1) {
-      brandSelect.value = brandValue;
-      brandSelect.dispatchEvent(new Event('change'));
-      clearInterval(interval);
-    }
-
-    if (attempts > 30) clearInterval(interval);
-  }, 100);
-}
-
-window.addEventListener('load', function() {
-  preselectBrand('electronics', 'google-pixel');
-});
-</script>
 <script src="script.js"></script>
 <script src="smart-lookup.js"></script>
 <script src="smart-lookup-upgrade-patch.js"></script>
