@@ -1,7 +1,18 @@
 // ===== ROUTE NORMALIZATION =====
 (function normalizeHtmlRoutes() {
   var path = window.location.pathname;
+  var cleanRoutes = [
+    '/decoder-tool', '/smart-lookup', '/assistant',
+    '/ge', '/whirlpool', '/samsung', '/lg', '/bosch', '/maytag', '/frigidaire', '/kenmore',
+    '/apple', '/hp', '/asus', '/google-pixel', '/sony', '/vizio', '/panasonic',
+    '/carrier', '/goodman', '/trane', '/rheem',
+    '/methodology', '/contact', '/feedback', '/security', '/privacy-policy',
+    '/about', '/brands', '/hvac', '/appliances', '/electronics', '/water-heaters',
+    '/universal-decoder', '/disclaimer', '/replacement-lookup', '/appliance-age-estimator',
+    '/tv-replacement-guide', '/hvac-replacement-guide'
+  ];
   if (path === '/' || path.endsWith('.html') || path.indexOf('.') !== -1) return;
+  if (cleanRoutes.some(function(r) { return path === r || path.startsWith(r + '/'); })) return;
   var normalized = path.replace(/\/$/, '') + '.html';
   if (path === '/' || path.includes('index')) {
     window.location.replace(normalized + window.location.search);

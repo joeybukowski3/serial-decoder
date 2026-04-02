@@ -670,7 +670,7 @@
 @media (max-width: 900px) { .brand-home-hero { grid-template-columns: 1fr; } .brand-helper-wrap { grid-template-columns: 1fr; } }
 </style>
 </head>
-<body data-page-kind="home">
+<body data-page-kind="home" data-prefill-cat="appliances" data-prefill-brand="maytag">
 
 <!-- ─── NAV ─── -->
 <nav>
@@ -1091,16 +1091,6 @@ function selectCatAndShowDecoder(cat, btn) {
 <script src="smart-lookup-extras.js"></script>
 <script src="smart-lookup-normalizer.js"></script>
 <script src="smart-lookup-summary-render.js"></script>
-<script>
-(function(){
-  try {
-    var url = new URL(window.location.href);
-    url.searchParams.set('cat', 'appliances');
-    url.searchParams.set('brand', 'maytag');
-    history.replaceState({}, '', url.pathname + '?' + url.searchParams.toString() + (url.hash || ''));
-  } catch (_) {}
-})();
-</script>
 <script src="script.js"></script>
 <script src="smart-lookup.js"></script>
 <script src="smart-lookup-upgrade-patch.js"></script>
