@@ -38,7 +38,9 @@
   window.runSmartLookup = runSmartLookup;
   window.initSmartLookupPage = initSmartLookupPage;
 
-  document.addEventListener('DOMContentLoaded', function () {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSmartLookupPage);
+  } else {
     initSmartLookupPage();
-  });
+  }
 })();
