@@ -225,5 +225,59 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://www.decodemyitem.com/refrigerator-age-lookup</loc>
+    <changefreq>monthly</changefreq>
+    <lastmod>2026-04-02</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/dishwasher-serial-number-age</loc>
+    <changefreq>monthly</changefreq>
+    <lastmod>2026-04-02</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/washer-dryer-age-lookup</loc>
+    <changefreq>monthly</changefreq>
+    <lastmod>2026-04-02</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/range-oven-age-lookup</loc>
+    <changefreq>monthly</changefreq>
+    <lastmod>2026-04-02</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/hvac-unit-age-lookup</loc>
+    <changefreq>monthly</changefreq>
+    <lastmod>2026-04-02</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/water-heater-age-lookup</loc>
+    <changefreq>monthly</changefreq>
+    <lastmod>2026-04-02</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/tv-age-serial-number</loc>
+    <changefreq>monthly</changefreq>
+    <lastmod>2026-04-02</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/laptop-age-serial-number</loc>
+    <changefreq>monthly</changefreq>
+    <lastmod>2026-04-02</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/phone-tablet-age-lookup</loc>
+    <changefreq>monthly</changefreq>
+    <lastmod>2026-04-02</lastmod>
+    <priority>0.8</priority>
+  </url>
 </urlset>
 
