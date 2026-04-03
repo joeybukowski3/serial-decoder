@@ -74,6 +74,9 @@ function setTab(el, tab) {
   });
   nav.querySelectorAll('a').forEach(function(link) {
     link.addEventListener('click', function() {
+      var href = this.getAttribute('href');
+      // Never intercept absolute navigation links.
+      if (href && (href.indexOf('/') === 0 || href.indexOf('http') === 0)) return;
       closeMenu();
     });
   });

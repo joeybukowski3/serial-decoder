@@ -3214,6 +3214,7 @@ function initSpaNavigation() {
     var href = link.getAttribute('href') || '';
     if (!href || href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
     if (href.indexOf('javascript:') === 0) return;
+    if (href.indexOf('/') === 0 || href.indexOf('http') === 0) return;
     if (link.hasAttribute('download')) return;
     if (href.indexOf('#') === 0) return;
     var url = new URL(href, window.location.origin);
