@@ -3305,7 +3305,8 @@ function selectCategory(cat, btn) {
   else populateBrands(currentCategory);
   clearDecodeEntryFields({ categoryKey: currentCategory, clearEra: true });
   document.getElementById('serialResults').classList.add('hidden');
-  document.getElementById('ageResults').classList.add('hidden');
+  var _ageResultsCat = document.getElementById('ageResults');
+  if (_ageResultsCat) _ageResultsCat.classList.add('hidden');
   hideEraGroup();
   updateDecodeBtn();
 }
@@ -4212,7 +4213,8 @@ function decodeSerial() {
 
   // Show loading animation immediately
   document.getElementById('serialResults').classList.add('hidden');
-  document.getElementById('ageResults').classList.add('hidden');
+  var _ageResultsDecode = document.getElementById('ageResults');
+  if (_ageResultsDecode) _ageResultsDecode.classList.add('hidden');
   // Reset progressive disclosure state
   var _moreBody = document.getElementById('moreOptionsBody');
   if (_moreBody) _moreBody.classList.add('hidden');
