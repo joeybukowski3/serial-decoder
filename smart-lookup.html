@@ -65,8 +65,8 @@
     <label for="lookup-brand">Brand (optional)</label>
     <input type="text" id="lookup-brand" placeholder="e.g. Carrier, Rheem, GE..." />
 
-    <label for="lookup-model">Model Number or Description</label>
-    <input type="text" id="lookup-model" placeholder="e.g. 24ACC636A003, 50-gallon water heater..." />
+    <label for="smart-lookup-input">Model Number or Description</label>
+    <input type="text" id="smart-lookup-input" placeholder="e.g. 24ACC636A003, 50-gallon water heater..." />
 
     <label for="lookup-category">Category</label>
     <select id="lookup-category">
@@ -80,7 +80,8 @@
     <label for="lookup-notes">Additional Notes (optional)</label>
     <textarea id="lookup-notes" placeholder="Any other details &mdash; color, size, features, where it was installed..."></textarea>
 
-    <button class="btn-amber" style="width:100%;">&#10024; Run Smart Lookup</button>
+    <button id="smartLookupBtn" class="btn-amber" style="width:100%;">&#10024; Run Smart Lookup</button>
+    <div id="smart-lookup-results"></div>
     <p class="search-link" style="margin-top:12px;">Have a serial number? <a href="decoder-tool">Use the Serial Decoder &rarr;</a></p>
   </div>
 
