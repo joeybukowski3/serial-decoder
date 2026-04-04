@@ -1,13 +1,13 @@
 function normalizeMessages(messages) {
   return Array.isArray(messages) ? messages
     .filter(function (message) {
-      return message && (message.role === 'user' || message.role === 'model') && String(message.text || '').trim();
+      return message && (message.role === 'user' || message.role === 'model' || message.role === 'assistant') && String(message.content || message.text || '').trim();
     })
     .slice(-20)
     .map(function (message) {
       return {
-        role: message.role,
-        parts: [{ text: String(message.text || '').trim() }],
+        role: message.role === 'assistant' ? 'model' : message.role,
+        parts: [{ text: String(message.content || message.text || '').trim() }],
       };
     }) : [];
 }
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'Gemini API key is not configured' });
   }
