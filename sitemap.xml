@@ -11,29 +11,9 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/appliances</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.decodemyitem.com/assistant</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/apple</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/asus</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/bosch</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.decodemyitem.com/brands</loc>
@@ -46,14 +26,9 @@
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/disclaimer</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/electronics</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <loc>https://www.decodemyitem.com/decoder-tool</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.decodemyitem.com/feedback</loc>
@@ -61,29 +36,34 @@
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/google-pixel</loc>
+    <loc>https://www.decodemyitem.com/find-model-serial-number</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/hp</loc>
+    <loc>https://www.decodemyitem.com/how-old-is-my-appliance</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/how-to-find-hvac-age</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/hvac</loc>
+    <loc>https://www.decodemyitem.com/how-to-read-serial-number</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/hvac-age-by-serial-number</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.decodemyitem.com/methodology</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/panasonic</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://www.decodemyitem.com/privacy-policy</loc>
@@ -98,32 +78,52 @@
   <url>
     <loc>https://www.decodemyitem.com/smart-lookup</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/sony</loc>
+    <loc>https://www.decodemyitem.com/appliance-age-estimator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/replacement-lookup</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/hvac-replacement-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/tv-replacement-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/refrigerator-serial-number</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/universal-decoder</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/vizio</loc>
+    <loc>https://www.decodemyitem.com/washer-serial-number</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/water-heaters</loc>
+    <loc>https://www.decodemyitem.com/dryer-serial-number</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/find-model-serial-number</loc>
+    <loc>https://www.decodemyitem.com/dishwasher-serial-number</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/range-oven-serial-number</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.decodemyitem.com/whirlpool-serial-number-lookup</loc>
@@ -131,57 +131,12 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/goodman-serial-number-lookup</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/asus-serial-number-decoder</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/appliance-age-by-serial-number</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/whirlpool-model-number-lookup</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/whirlpool-refrigerator-serial-number-lookup</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/whirlpool-dishwasher-serial-number-lookup</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/goodman-model-number-lookup</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/samsung-tv-serial-number-decoder</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/carrier-serial-number-lookup</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.decodemyitem.com/kenmore-serial-number-lookup</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://www.decodemyitem.com/ge-serial-number-lookup</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/samsung-serial-number-lookup</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -201,7 +156,17 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/rheem-serial-number-lookup</loc>
+    <loc>https://www.decodemyitem.com/kenmore-serial-number-lookup</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/goodman-serial-number-lookup</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/carrier-serial-number-lookup</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -211,49 +176,58 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/samsung-serial-number-lookup</loc>
+    <loc>https://www.decodemyitem.com/rheem-serial-number-lookup</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/refrigerator-serial-number-lookup</loc>
+    <loc>https://www.decodemyitem.com/asus-serial-number-decoder</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/washer-serial-number-lookup</loc>
+    <loc>https://www.decodemyitem.com/samsung-tv-serial-number-decoder</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/dryer-serial-number-lookup</loc>
+    <loc>https://www.decodemyitem.com/apple</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/dishwasher-serial-number-lookup</loc>
+    <loc>https://www.decodemyitem.com/hp</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/oven-serial-number-lookup</loc>
+    <loc>https://www.decodemyitem.com/sony</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/how-to-find-hvac-age</loc>
+    <loc>https://www.decodemyitem.com/bosch</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/how-to-read-serial-number</loc>
+    <loc>https://www.decodemyitem.com/whirlpool-model-number-lookup</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.decodemyitem.com/hvac-age-by-serial-number</loc>
+    <loc>https://www.decodemyitem.com/goodman-model-number-lookup</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/whirlpool-refrigerator-serial-number-lookup</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.decodemyitem.com/whirlpool-dishwasher-serial-number-lookup</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 </urlset>
-

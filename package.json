@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "node scripts/generate-seo-pages.js",
     "dev": "npx serve .",
     "test": "node tests/decoder-regressions.test.mjs",
     "refresh-pricebook": "node scripts/refresh-pricebook.js"

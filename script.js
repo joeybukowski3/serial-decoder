@@ -2874,74 +2874,6 @@ function applySidebarVisualHierarchy() {
     item.classList.add('sidebar-item');
   });
 }
-function setFeatureSidebarOpen(open) {
-  var next = !!open;
-  var toggle = document.getElementById('feature-sidebar-toggle');
-  var overlay = document.getElementById('feature-sidebar-overlay');
-  document.body.classList.toggle('feature-sidebar-open', next);
-  if (toggle) toggle.setAttribute('aria-expanded', next ? 'true' : 'false');
-  if (overlay) overlay.classList.toggle('hidden', !next);
-}
-
-function isFeatureSidebarDismissed() {
-  try {
-    return sessionStorage.getItem('featureSidebarDismissed') === '1';
-  } catch (_) {
-    return false;
-  }
-}
-
-function setFeatureSidebarDismissed(dismissed) {
-  var next = !!dismissed;
-  try {
-    if (next) sessionStorage.setItem('featureSidebarDismissed', '1');
-    else sessionStorage.removeItem('featureSidebarDismissed');
-  } catch (_) {}
-  if (next) setFeatureSidebarOpen(false);
-  document.body.classList.toggle('feature-sidebar-dismissed', next);
-}
-
-function bindFeatureSidebarControls() {
-  var toggle = document.getElementById('feature-sidebar-toggle');
-  var close = document.getElementById('feature-sidebar-close');
-  var dismiss = document.getElementById('feature-sidebar-dismiss');
-  var overlay = document.getElementById('feature-sidebar-overlay');
-  if (!toggle || toggle.getAttribute('data-feature-sidebar-bound') === '1') return;
-
-  setFeatureSidebarDismissed(isFeatureSidebarDismissed());
-  toggle.setAttribute('data-feature-sidebar-bound', '1');
-  toggle.addEventListener('click', function() {
-    setFeatureSidebarOpen(!document.body.classList.contains('feature-sidebar-open'));
-  });
-
-  if (close) {
-    close.addEventListener('click', function() {
-      setFeatureSidebarOpen(false);
-    });
-  }
-
-  if (dismiss) {
-    dismiss.addEventListener('click', function() {
-      setFeatureSidebarDismissed(true);
-    });
-  }
-
-  if (overlay) {
-    overlay.addEventListener('click', function() {
-      setFeatureSidebarOpen(false);
-    });
-  }
-
-  window.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') setFeatureSidebarOpen(false);
-  });
-
-  window.addEventListener('resize', function() {
-    if (window.innerWidth > 980) {
-      setFeatureSidebarOpen(false);
-    }
-  });
-}
 
 function renderBrandDirectorySection() {
   var grid = document.getElementById('brandDirectoryGrid');
@@ -3026,114 +2958,6 @@ function initMobileBrandGridToggle() {
   sync();
 }
 
-function renderSidebarFeatureRequestForm() {
-  var mount = document.getElementById('feature-sidebar-mount');
-  if (!mount || document.getElementById('sidebar-feature-request-form')) return;
-
-  var OPTIONS = [
-    'Ability to Decode through Picture Images',
-    'Multiple Serial Number Review for Large Loss',
-    'Saved Searches for Future Reference',
-    'Enhanced Mobile Interface',
-  ];
-
-  var section = document.createElement('div');
-  section.className = 'sidebar-section sidebar-feature-request';
-
-  var header = document.createElement('div');
-  header.className = 'sidebar-feature-header';
-  header.innerHTML = '<em>User Experience Survey</em>';
-  section.appendChild(header);
-
-  var title = document.createElement('div');
-  title.className = 'sidebar-section-title';
-  title.textContent = 'What would improve this tool most?';
-  section.appendChild(title);
-
-  var sub = document.createElement('div');
-  sub.className = 'sidebar-feature-sub';
-  sub.textContent = 'Choose one idea or add your own';
-  section.appendChild(sub);
-
-  var form = document.createElement('form');
-  form.id = 'sidebar-feature-request-form';
-  form.noValidate = true;
-
-  var select = document.createElement('select');
-  select.name = 'feature';
-  select.className = 'sidebar-feature-select';
-  select.innerHTML = '<option value="">Select an option...</option>';
-  OPTIONS.forEach(function (opt) {
-    var option = document.createElement('option');
-    option.value = opt;
-    option.textContent = opt;
-    select.appendChild(option);
-  });
-  form.appendChild(select);
-
-  var writeIn = document.createElement('input');
-  writeIn.type = 'text';
-  writeIn.placeholder = 'Write in your own idea...';
-  writeIn.className = 'sidebar-feature-writein';
-  writeIn.maxLength = 200;
-  form.appendChild(writeIn);
-
-  var errorMsg = document.createElement('div');
-  errorMsg.className = 'sidebar-feature-error';
-  errorMsg.hidden = true;
-  errorMsg.textContent = 'Please select at least one option or enter your idea.';
-  form.appendChild(errorMsg);
-
-  var btn = document.createElement('button');
-  btn.type = 'submit';
-  btn.className = 'sidebar-feature-submit';
-  btn.textContent = 'Send Feedback';
-  form.appendChild(btn);
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var selected = select.value.trim();
-    var writeInVal = writeIn.value.trim();
-    if (!selected && !writeInVal) {
-      errorMsg.hidden = false;
-      return;
-    }
-    errorMsg.hidden = true;
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
-    fetch('/api/forms', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'feature-request', selections: selected ? [selected] : [], writeIn: writeInVal }),
-    })
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        if (data.ok) {
-          while (form.firstChild) form.removeChild(form.firstChild);
-          var thanks = document.createElement('p');
-          thanks.className = 'sidebar-feature-thanks';
-          thanks.textContent = 'Thanks for your feedback!';
-          form.appendChild(thanks);
-        } else {
-          btn.disabled = false;
-          btn.textContent = 'Send Feedback';
-          errorMsg.hidden = false;
-          errorMsg.textContent = 'Something went wrong. Please try again.';
-        }
-      })
-      .catch(function () {
-        btn.disabled = false;
-        btn.textContent = 'Send Feedback';
-        errorMsg.hidden = false;
-        errorMsg.textContent = 'Something went wrong. Please try again.';
-      });
-  });
-
-  section.appendChild(form);
-  mount.innerHTML = '';
-  mount.appendChild(section);
-}
-
 function initPage() {
 
   ensureSmartLookupDom();
@@ -3143,8 +2967,6 @@ function initPage() {
   ensurePageTitleAndCategoryTabs();
   enhanceSmartLookupSidebarTop();
   renderStaticSidebar();
-  renderSidebarFeatureRequestForm();
-  bindFeatureSidebarControls();
   enhanceDecodePanel();
   applySidebarVisualHierarchy();
   document.body.classList.toggle('brand-page', isBrandPage());
