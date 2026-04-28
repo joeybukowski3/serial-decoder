@@ -98,6 +98,16 @@
   font-size: 12px;
 }
 
+.how-steps-stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.how-steps-stack li {
+  width: 100%;
+  justify-content: flex-start;
+}
+
 .how-step-num {
   display: inline-flex;
   align-items: center;
@@ -260,6 +270,7 @@
   border-radius: 18px;
   padding: 24px;
   min-width: 0;
+  scroll-margin-top: 96px;
 }
 
 .seo-card-wide {

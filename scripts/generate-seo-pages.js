@@ -33,6 +33,8 @@ const applianceBrandLinks = [
 
 const applianceTypeLinks = [
   ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
+  ['where-is-my-serial-number', 'Where Is My Serial Number?'],
+  ['appliance-age-for-insurance-and-replacement', 'Insurance, Repair & Replacement'],
   ['refrigerator-serial-number', 'Refrigerator Serial Number Lookup'],
   ['washer-serial-number', 'Washer Serial Number Lookup'],
   ['dryer-serial-number', 'Dryer Serial Number Lookup'],
@@ -226,6 +228,111 @@ function renderLocationBlocks(blocks) {
             <h3>${block.title}</h3>
             <ul class="bullet-list">${renderChecklist(block.items)}</ul>
           </article>`).join('');
+}
+
+function renderJumpLinks(links) {
+  return links.map((link) => `<a href="${link.href}">${link.label}</a>`).join('');
+}
+
+function renderInfoRows(rows) {
+  return rows.map((row) => `
+            <tr>
+              <td>${row.field}</td>
+              <td>${row.meaning}</td>
+              <td>${row.why}</td>
+            </tr>`).join('');
+}
+
+function renderOrderedSteps(items) {
+  return items.map((item, index) => `
+            <li><span class="how-list-index">${index + 1}</span><span>${item}</span></li>`).join('');
+}
+
+function renderExtraSections(sections = []) {
+  return sections.map((section) => {
+    const sectionId = section.id ? ` id="${section.id}"` : '';
+    if (section.type === 'jump-links') {
+      return `
+    <section class="section"${sectionId}>
+      <div class="seo-copy-wrap">
+        <h2>${section.title}</h2>
+        <div class="related-brands">${renderJumpLinks(section.links)}</div>
+      </div>
+    </section>`;
+    }
+
+    if (section.type === 'mini-grid') {
+      return `
+    <section class="section"${sectionId}>
+      <div class="seo-copy-wrap">
+        <h2>${section.title}</h2>
+        ${section.intro ? `<p>${section.intro}</p>` : ''}
+      </div>
+      <div class="seo-copy-wrap">
+        <div class="mini-card-grid">${renderLocationBlocks(section.blocks)}</div>
+      </div>
+    </section>`;
+    }
+
+    if (section.type === 'table') {
+      return `
+    <section class="section"${sectionId}>
+      <div class="seo-copy-wrap">
+        <h2>${section.title}</h2>
+        ${section.intro ? `<p>${section.intro}</p>` : ''}
+        <div class="table-wrap">
+          <table class="format-table">
+            <thead>
+              <tr>
+                <th>Label Field</th>
+                <th>What It Usually Means</th>
+                <th>Why It Matters</th>
+              </tr>
+            </thead>
+            <tbody>${renderInfoRows(section.rows)}</tbody>
+          </table>
+        </div>
+      </div>
+    </section>`;
+    }
+
+    if (section.type === 'ordered-list') {
+      return `
+    <section class="section"${sectionId}>
+      <div class="seo-copy-wrap">
+        <h2>${section.title}</h2>
+        ${section.intro ? `<p>${section.intro}</p>` : ''}
+        <ol class="how-steps how-steps-list how-steps-stack">${renderOrderedSteps(section.items)}
+        </ol>
+      </div>
+    </section>`;
+    }
+
+    if (section.type === 'link-cards') {
+      return `
+    <section class="section"${sectionId}>
+      <div class="seo-copy-wrap">
+        <h2>${section.title}</h2>
+        ${section.intro ? `<p>${section.intro}</p>` : ''}
+      </div>
+      <div class="seo-copy-wrap">
+        <div class="link-group-grid">${renderLinkGroupCards(section.groups)}</div>
+      </div>
+    </section>`;
+    }
+
+    if (section.type === 'copy-block') {
+      return `
+    <section class="section"${sectionId}>
+      <div class="seo-copy-wrap">
+        <h2>${section.title}</h2>
+        ${section.body.map((paragraph) => `<p>${paragraph}</p>`).join('')}
+      </div>
+    </section>`;
+    }
+
+    return '';
+  }).join('');
 }
 
 function renderPage(page) {
@@ -431,16 +538,18 @@ function renderPage(page) {
       </div>
     </div>
 
+    ${renderExtraSections(page.preGridSections)}
+
     <section class="section seo-section-grid">
-      <div class="seo-card">
+      <div class="seo-card"${page.decodeSectionId ? ` id="${page.decodeSectionId}"` : ''}>
         <h2>${page.decodeSectionTitle}</h2>
         <p>${page.decodeSectionBody}</p>
       </div>
-      <div class="seo-card">
+      <div class="seo-card"${page.modelSectionId ? ` id="${page.modelSectionId}"` : ''}>
         <h2>${page.modelSectionTitle}</h2>
         <p>${page.modelSectionBody}</p>
       </div>
-      <div class="seo-card seo-card-wide">
+      <div class="seo-card seo-card-wide"${page.formatSectionId ? ` id="${page.formatSectionId}"` : ''}>
         <h2>${page.formatSectionTitle}</h2>
         <div class="table-wrap">
           <table class="format-table">
@@ -457,17 +566,17 @@ function renderPage(page) {
           </table>
         </div>
       </div>
-      <div class="seo-card seo-card-wide">
+      <div class="seo-card seo-card-wide"${page.exampleSectionId ? ` id="${page.exampleSectionId}"` : ''}>
         <h2>${page.exampleSectionTitle}</h2>
         <div class="example-grid">${renderExampleCards(page.examples)}
         </div>
       </div>
-      <div class="seo-card seo-card-wide">
+      <div class="seo-card seo-card-wide"${page.locationSectionId ? ` id="${page.locationSectionId}"` : ''}>
         <h2>${page.locationSectionTitle}</h2>
         <div class="mini-card-grid">${renderLocationBlocks(page.locations)}
         </div>
       </div>
-      <div class="seo-card">
+      <div class="seo-card"${page.problemSectionId ? ` id="${page.problemSectionId}"` : ''}>
         <h2>${page.problemSectionTitle}</h2>
         <ul class="bullet-list">${renderChecklist(page.problems)}
         </ul>
@@ -478,6 +587,8 @@ function renderPage(page) {
         </div>
       </div>
     </section>
+
+    ${renderExtraSections(page.postGridSections)}
 
     <section class="section related-section">
       <div class="seo-copy-wrap">
@@ -600,7 +711,7 @@ function renderPage(page) {
 
 function baseLinkGroups() {
   return [
-    { title: 'Appliance Age Lookup', links: [['how-old-is-my-appliance', 'How Old Is My Appliance?'], ['find-model-serial-number', 'Find Model & Serial Labels'], ['how-to-read-serial-number', 'How to Read a Serial Number']] },
+    { title: 'Appliance Age Lookup', links: [['how-old-is-my-appliance', 'How Old Is My Appliance?'], ['where-is-my-serial-number', 'Where Is My Serial Number?'], ['appliance-age-for-insurance-and-replacement', 'Insurance, Repair & Replacement'], ['find-model-serial-number', 'Find Model & Serial Labels']] },
     { title: 'Popular Appliance Brands', links: applianceBrandLinks.slice(0, 8) },
     { title: 'Appliance Type Lookups', links: applianceTypeLinks.slice(1, 6) },
     { title: 'HVAC Age Lookup', links: hvacLinks },
@@ -674,7 +785,236 @@ const pages = [
       ['dryer-serial-number', 'Dryer Serial Number Lookup'],
       ['dishwasher-serial-number', 'Dishwasher Serial Number Lookup'],
       ['range-oven-serial-number', 'Range & Oven Serial Number Lookup'],
+      ['where-is-my-serial-number', 'Where Is My Serial Number?'],
+      ['appliance-age-for-insurance-and-replacement', 'Insurance, Repair & Replacement'],
       ['find-model-serial-number', 'Find Model & Serial Labels']
+    ],
+    linkGroups: baseLinkGroups()
+  },
+  {
+    slug: 'where-is-my-serial-number',
+    title: 'Where Is My Serial Number? Appliance, HVAC & Electronics Guide',
+    description: 'Find where to locate serial numbers and model numbers on appliances, HVAC equipment, and electronics before using the decoder.',
+    h1: 'Where Is My Serial Number?',
+    badge: 'Label location guide',
+    category: 'appliances',
+    brandValue: '',
+    intro: 'Most age, model, and replacement lookups work best when you have both the brand and the serial or model label in front of you.',
+    supportingIntro: 'Found the label? Enter the brand, model, and serial number below. If not, use the quick sections on this page to narrow the most common label locations before you move into the decoder.',
+    decoderIntro: 'Found the label? Enter the brand, model, and serial number below.',
+    decoderPlaceholder: 'Enter serial number from the label',
+    howToSteps: [
+      'Pick the product category and brand.',
+      'Find the label on the product, cabinet, or settings screen.',
+      'Enter the serial number exactly as printed before using Smart Lookup as a fallback.'
+    ],
+    preGridSections: [
+      {
+        type: 'jump-links',
+        title: 'Quick Jump',
+        links: [
+          { href: '#refrigerators', label: 'Refrigerators' },
+          { href: '#washers', label: 'Washers' },
+          { href: '#appliance-label-locations', label: 'Dryers' },
+          { href: '#appliance-label-locations', label: 'Dishwashers' },
+          { href: '#appliance-label-locations', label: 'Ranges & Ovens' },
+          { href: '#hvac-electronics', label: 'HVAC Systems' },
+          { href: '#hvac-electronics', label: 'Electronics' },
+          { href: '#label-guide', label: 'What the Label Looks Like' },
+          { href: '#missing-label', label: 'What if the Label Is Missing?' }
+        ]
+      }
+    ],
+    decodeSectionId: 'refrigerators',
+    decodeSectionTitle: 'Refrigerator serial number location',
+    decodeSectionBody: 'Most refrigerators place the data label inside the fresh-food compartment on a side wall, on the door frame, or behind a lower drawer or kick plate. Use <a href="/refrigerator-serial-number">the refrigerator serial number lookup page</a> if you need the next step after finding it, or jump to <a href="/how-old-is-my-appliance">the appliance age hub</a> when the goal is an age estimate.',
+    modelSectionId: 'washers',
+    modelSectionTitle: 'Washer serial number location',
+    modelSectionBody: 'Washer labels are commonly inside the lid opening, around the door opening, on the rear panel, or along the control-panel edge. The <a href="/washer-serial-number">washer serial number page</a> narrows the decode path by brand once the tag is readable.',
+    formatSectionId: 'label-guide',
+    formatSectionTitle: 'What does the serial/model label look like?',
+    formats: [
+      { label: 'Brand / manufacturer', pattern: 'Brand name or logo', meaning: 'Confirms which decoder path to use first.', confidence: 'High value for routing the lookup.' },
+      { label: 'Model number', pattern: 'Family or platform identifier', meaning: 'Helps confirm product family, capacity, and OEM context.', confidence: 'Strong support signal.' },
+      { label: 'Serial number', pattern: 'Unit-specific identifier', meaning: 'Usually carries the best age or production clue.', confidence: 'Primary date signal on supported brands.' },
+      { label: 'Product number / SKU', pattern: 'Retail or internal catalog code', meaning: 'Useful for paperwork and parts matching, but not always the age clue.', confidence: 'Supportive only.' },
+      { label: 'Date code if shown', pattern: 'Direct month/year or factory code', meaning: 'Can confirm or override an estimated serial decode.', confidence: 'Higher when printed directly.' }
+    ],
+    exampleSectionId: 'appliance-label-locations',
+    exampleSectionTitle: 'Dryer, dishwasher, and range label locations',
+    examples: [
+      { label: 'Dryers', serial: 'Door opening / rear panel', note: 'Many dryers place the label inside the door opening, on the rear panel, or around the lint filter opening on some models. Use <a href="/dryer-serial-number">the dryer serial number lookup page</a> after you find it.' },
+      { label: 'Dishwashers', serial: 'Inner door edge / tub opening', note: 'Dishwasher labels are often on the inner door edge, on the side of the tub opening, or on the door jamb. Use <a href="/dishwasher-serial-number">the dishwasher serial number page</a> for the next decode step.' },
+      { label: 'Ranges & ovens', serial: 'Oven frame / drawer area', note: 'Cooking products often hide the label on the oven door frame, in the storage drawer opening, on the rear panel, or under the cooktop on some models. Use <a href="/range-oven-serial-number">the range and oven serial number page</a> once the tag is visible.' }
+    ],
+    locationSectionId: 'hvac-electronics',
+    locationSectionTitle: 'HVAC and electronics label locations',
+    locations: [
+      { title: 'HVAC systems', items: ['Outdoor condenser rating plate on the side panel', 'Furnace cabinet interior panel or service door', 'Air handler data plate near the access panel', 'Use <a href="/rheem-serial-number-lookup">Rheem</a>, <a href="/carrier-serial-number-lookup">Carrier</a>, <a href="/trane-serial-number-lookup">Trane</a>, or <a href="/goodman-serial-number-lookup">Goodman</a> once the rating plate is found.'] },
+      { title: 'Electronics', items: ['Bottom label on laptops and small devices', 'Rear case label on TVs, monitors, desktops, and appliances with smart screens', 'System Settings or About screen on supported electronics', 'Original box, invoice, or receipt if the hardware label is worn', 'Use <a href="/asus-serial-number-decoder">the ASUS serial number decoder</a> or other electronics pages after you confirm the label.'] },
+      { title: 'What if the label is missing?', items: ['Check original paperwork and warranty registration emails', 'Check the original invoice, install record, or retailer account', 'Use Smart Lookup when only a partial model or serial survives', 'Inspect photos before discarding old equipment', 'Try the model number first if the serial is damaged or unreadable'] }
+    ],
+    problemSectionId: 'missing-label',
+    problemSectionTitle: 'What if the serial number label is missing or unreadable?',
+    problems: [
+      'Check purchase paperwork, warranty registration, or installation records before assuming the label is gone.',
+      'Use a photo from before removal or disposal if the equipment is already out of service.',
+      'Try the model number first when the serial is damaged, then move into Smart Lookup for a broader match.',
+      'Private-label brands and older products may need both the model prefix and the partial serial to route correctly.',
+      'Save a clear label photo before service work, repainting, or cabinet replacement changes the tag area.'
+    ],
+    postGridSections: [
+      {
+        id: 'dishwashers',
+        type: 'mini-grid',
+        title: 'More common label locations by product type',
+        blocks: [
+          { title: 'Refrigerators', items: ['Inside the fresh-food compartment', 'Side wall or door frame', 'Behind lower kick plate on some models', '<a href="/refrigerator-serial-number">Refrigerator serial number lookup</a>', '<a href="/how-old-is-my-appliance">How old is my appliance?</a>'] },
+          { title: 'Washers', items: ['Inside door or lid opening', 'Rear panel', 'Control-panel edge', '<a href="/washer-serial-number">Washer serial number lookup</a>'] },
+          { title: 'Dryers', items: ['Inside door opening', 'Rear panel', 'Around lint filter opening on some models', '<a href="/dryer-serial-number">Dryer serial number lookup</a>'] },
+          { title: 'Dishwashers', items: ['Inner door edge', 'Side of tub opening', 'Door jamb', '<a href="/dishwasher-serial-number">Dishwasher serial number lookup</a>'] },
+          { title: 'Ranges & ovens', items: ['Oven door frame', 'Storage drawer area', 'Rear panel', 'Cooktop underside on some models', '<a href="/range-oven-serial-number">Range & oven serial number lookup</a>'] }
+        ]
+      },
+      {
+        id: 'label-guide-table',
+        type: 'table',
+        title: 'What the label fields usually mean',
+        intro: 'Most labels include several identifiers. The decoder works best when you know which field is the model and which field is the serial.',
+        rows: [
+          { field: 'Brand / manufacturer', meaning: 'Identifies the maker or OEM family.', why: 'Routes you into the right decoder or lookup page.' },
+          { field: 'Model number', meaning: 'Identifies the product family or configuration.', why: 'Useful for parts, compatibility, and OEM confirmation.' },
+          { field: 'Serial number', meaning: 'Identifies the specific unit.', why: 'Usually carries the best age or production clue.' },
+          { field: 'Product number / SKU', meaning: 'Internal or retail catalog identifier.', why: 'Helpful for paperwork and parts matching when the model is broad.' },
+          { field: 'Manufacture date or date code', meaning: 'A direct date or a factory code if printed.', why: 'Can confirm a serial-based estimate.' }
+        ]
+      }
+    ],
+    faqs: [
+      ['Is the model number the same as the serial number?', 'No. The model number identifies the product family, while the serial number identifies the specific unit and is more likely to carry age information.'],
+      ['Do I need both model and serial number?', 'Not always, but having both is the fastest path. The serial usually drives the age estimate, while the model number helps confirm family, OEM, and compatibility.'],
+      ['Can I decode an appliance without the serial number?', 'Sometimes. Smart Lookup and model-number research can still help, but the serial number is usually the stronger age signal.'],
+      ['Where is the serial number on older appliances?', 'Older appliances still commonly place the label on the frame, interior wall, rear panel, or behind a drawer or kick plate, but the tag may be smaller or more worn.'],
+      ['Why is the serial number label hard to read?', 'Heat, cleaning chemicals, sunlight, service wear, repainting, and paper or foil labels breaking down over time are common reasons.'],
+      ['Can I use a photo of the label?', 'Yes. A clear photo is often the best way to preserve the exact model and serial fields for decoding, parts research, and claim documentation.'],
+      ['What if the decoder does not recognize my serial number?', 'Double-check the brand path, then try the model number and Smart Lookup if the serial is partial, damaged, or outside a supported format.']
+    ],
+    relatedLinks: [
+      ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
+      ['refrigerator-serial-number', 'Refrigerator Serial Number Lookup'],
+      ['washer-serial-number', 'Washer Serial Number Lookup'],
+      ['dryer-serial-number', 'Dryer Serial Number Lookup'],
+      ['dishwasher-serial-number', 'Dishwasher Serial Number Lookup'],
+      ['range-oven-serial-number', 'Range & Oven Serial Number Lookup'],
+      ['asus-serial-number-decoder', 'ASUS Serial Number Decoder']
+    ],
+    linkGroups: baseLinkGroups()
+  },
+  {
+    slug: 'appliance-age-for-insurance-and-replacement',
+    title: 'Why Appliance Age Matters for Insurance, Repair & Replacement',
+    description: 'Learn why appliance age verification matters for insurance claims, repair decisions, replacement research, depreciation, and technician documentation.',
+    h1: 'Why Appliance Age Matters for Insurance, Repair & Replacement',
+    badge: 'Documentation workflow guide',
+    category: 'appliances',
+    brandValue: '',
+    intro: 'Appliance age is often part of repair, replacement, depreciation, parts-availability, and documentation workflows long before anyone makes a final decision.',
+    supportingIntro: 'Start by checking the brand, model, and serial number. This page explains why age verification can be useful for claim files, service decisions, technician research, and replacement planning without turning a date estimate into legal or coverage advice.',
+    decoderIntro: 'Start by checking the brand, model, and serial number.',
+    decoderPlaceholder: 'Enter serial number for age research',
+    howToSteps: [
+      'Identify the brand on the product label.',
+      'Capture the model number and serial number exactly as shown.',
+      'Decode the date pattern, then cross-check it with the label, invoice, manual, or manufacturer resources when needed.'
+    ],
+    preGridSections: [
+      {
+        type: 'ordered-list',
+        title: 'How item age is usually verified',
+        items: [
+          'Identify the brand.',
+          'Locate the model number.',
+          'Locate the serial number.',
+          'Decode the date pattern when a supported serial format is available.',
+          'Cross-check the result with the label, manual, invoice, or manufacturer resources for higher-stakes decisions.'
+        ]
+      }
+    ],
+    decodeSectionTitle: 'Why age verification matters',
+    decodeSectionBody: 'Age can be useful for repair-versus-replace decisions, parts availability, replacement compatibility, claim documentation, and depreciation context. It is usually one of the first facts a homeowner, adjuster, or technician tries to confirm after the brand and model are known.',
+    modelSectionTitle: 'For insurance adjusters',
+    modelSectionBody: 'Serial-based age research may help support documentation, estimate depreciation context, compare a damaged item to current equivalent models, and reduce unclear claim notes. It does not provide legal, policy, or coverage advice, and manufacturer confirmation may still be needed for high-stakes files.',
+    formatSectionTitle: 'Common limitations to keep in mind',
+    formats: [
+      { label: 'Repeating year codes', pattern: 'Many brands reuse letters or digits by decade', meaning: 'An age result may stay estimated until model era or install context narrows it.', confidence: 'Common limitation.' },
+      { label: 'Private-label brands', pattern: 'OEM may differ from the retail badge', meaning: 'The model prefix may be needed before the serial can route correctly.', confidence: 'Common with Kenmore and similar brands.' },
+      { label: 'Partial or damaged labels', pattern: 'Missing opening characters or factory block', meaning: 'The strongest date positions may be gone, forcing a broader estimate.', confidence: 'Common field issue.' },
+      { label: 'High-stakes files', pattern: 'Insurance, legal, or warranty disputes', meaning: 'Manufacturer confirmation or supporting paperwork may still be needed.', confidence: 'Use caution.' }
+    ],
+    exampleSectionTitle: 'Age verification can be useful for these workflows',
+    examples: [
+      { label: 'Replacement research', serial: 'Age + model family', note: 'Age and model family together can help narrow a comparable replacement path when the exact product is discontinued.' },
+      { label: 'Repair vs replace', serial: 'Age + parts availability', note: 'Technicians and owners often use age alongside visible condition, labor cost, and part availability rather than as a stand-alone decision.' },
+      { label: 'Claim documentation', serial: 'Age + label photo', note: 'A saved photo of the label plus the estimated age can make the file clearer when the product will be removed or discarded.' }
+    ],
+    locationSectionTitle: 'Common items where age matters most',
+    locations: [
+      { title: 'Major appliances', items: ['<a href="/refrigerator-serial-number">Refrigerators</a>', '<a href="/washer-serial-number">Washers</a>', '<a href="/dryer-serial-number">Dryers</a>', '<a href="/dishwasher-serial-number">Dishwashers</a>', '<a href="/range-oven-serial-number">Ranges & ovens</a>'] },
+      { title: 'HVAC equipment', items: ['<a href="/carrier-serial-number-lookup">Carrier</a>', '<a href="/trane-serial-number-lookup">Trane</a>', '<a href="/rheem-serial-number-lookup">Rheem</a>', '<a href="/goodman-serial-number-lookup">Goodman</a>', '<a href="/hvac-age-by-serial-number">HVAC age lookup</a>'] },
+      { title: 'Support and replacement workflow', items: ['<a href="/how-old-is-my-appliance">How old is my appliance?</a>', '<a href="/where-is-my-serial-number">Where is my serial number?</a>', '<a href="/replacement-lookup">Replacement lookup</a>', 'Use Smart Lookup when the label is partial or missing'] }
+    ],
+    problemSectionTitle: 'Appliance age vs condition',
+    problems: [
+      'Age is only one factor. Maintenance history, usage, environment, and visible damage still matter.',
+      'Parts availability can make a newer product harder to repair than an older one with stronger support.',
+      'Comparable replacement cost can matter more than age alone in research and documentation workflows.',
+      'A well-maintained product may outlast average expectations, while a poorly maintained unit may fail early.',
+      'Technician notes should separate age estimates from condition findings and repairability conclusions.'
+    ],
+    postGridSections: [
+      {
+        type: 'copy-block',
+        title: 'For homeowners and consumers',
+        body: [
+          'Age verification can be useful for deciding whether a repair still makes sense, checking where a product sits in or out of its likely warranty period, preparing for a service call, and narrowing replacement options before spending time on model research.',
+          'The most practical workflow is usually to capture the label first, estimate the age second, and only then compare condition, repair cost, and replacement options.'
+        ]
+      },
+      {
+        type: 'copy-block',
+        title: 'For technicians and contractors',
+        body: [
+          'Technicians often use serial numbers to confirm equipment generation, support parts lookup, check model-family compatibility, and document why a product belongs in one repair or replacement path rather than another.',
+          'That does not make serial decoding exact in every case. Results may vary by brand, product line, and whether the manufacturer repeats code cycles.'
+        ]
+      },
+      {
+        type: 'copy-block',
+        title: 'Limitations',
+        body: [
+          'Serial formats vary by manufacturer and product line. Private-label brands can be harder because the retail badge does not always match the true OEM path.',
+          'Codes can repeat by decade, labels can be damaged, and some results stay estimated until they are cross-checked against the model family, paperwork, or manufacturer resources.',
+          'For insurance, warranty, legal, or other high-stakes decisions, manufacturer confirmation may still be needed.'
+        ]
+      }
+    ],
+    faqs: [
+      ['Can appliance age affect insurance claim documentation?', 'Yes. It may help support documentation, depreciation context, and replacement research, but it does not determine coverage or guarantee a claim outcome.'],
+      ['Is serial number decoding always exact?', 'No. Some brands repeat codes across decades or vary by product line, so the result may stay estimated until more context is available.'],
+      ['What is LKQ replacement research?', 'It is research used to find a like-kind and quality replacement path when the original product is damaged, discontinued, or no longer practical to repair.'],
+      ['What is ACV depreciation?', 'Actual cash value depreciation is a context term often used in claims to describe value after age and condition are considered. This site does not provide legal or policy advice.'],
+      ['Should age be the only factor in replacement?', 'No. Condition, maintenance, parts availability, comparable replacement cost, and safety or performance concerns all matter too.'],
+      ['Can technicians use serial numbers for parts research?', 'Yes. The serial and model together can be useful for identifying the right generation, parts family, and replacement compatibility path.'],
+      ['What should I do if the decoder cannot confirm the age?', 'Keep the result marked as estimated, cross-check the model family and paperwork, and seek manufacturer confirmation if the decision is high-stakes.']
+    ],
+    relatedLinks: [
+      ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
+      ['where-is-my-serial-number', 'Where Is My Serial Number?'],
+      ['refrigerator-serial-number', 'Refrigerator Serial Number Lookup'],
+      ['washer-serial-number', 'Washer Serial Number Lookup'],
+      ['dishwasher-serial-number', 'Dishwasher Serial Number Lookup'],
+      ['carrier-serial-number-lookup', 'Carrier'],
+      ['rheem-serial-number-lookup', 'Rheem']
     ],
     linkGroups: baseLinkGroups()
   },
@@ -1713,6 +2053,8 @@ const sitemapEntries = [
   ['/feedback', 'monthly', '0.4'],
   ['/find-model-serial-number', 'monthly', '0.8'],
   ['/how-old-is-my-appliance', 'monthly', '0.9'],
+  ['/where-is-my-serial-number', 'monthly', '0.8'],
+  ['/appliance-age-for-insurance-and-replacement', 'monthly', '0.8'],
   ['/how-to-find-hvac-age', 'monthly', '0.8'],
   ['/how-to-read-serial-number', 'monthly', '0.8'],
   ['/hvac-age-by-serial-number', 'monthly', '0.8'],

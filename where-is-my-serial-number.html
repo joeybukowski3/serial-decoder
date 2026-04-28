@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-C3TXQS1DYP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-C3TXQS1DYP');
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5946778263750869" crossorigin="anonymous"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Where Is My Serial Number? Appliance, HVAC & Electronics Guide | Item Assist</title>
+  <meta name="description" content="Find where to locate serial numbers and model numbers on appliances, HVAC equipment, and electronics before using the decoder.">
+  <link rel="canonical" href="https://www.decodemyitem.com/where-is-my-serial-number">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Item Assist">
+  <meta property="og:title" content="Where Is My Serial Number? Appliance, HVAC & Electronics Guide | Item Assist">
+  <meta property="og:description" content="Find where to locate serial numbers and model numbers on appliances, HVAC equipment, and electronics before using the decoder.">
+  <meta property="og:url" content="https://www.decodemyitem.com/where-is-my-serial-number">
+  <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Where Is My Serial Number? Appliance, HVAC & Electronics Guide | Item Assist">
+  <meta name="twitter:description" content="Find where to locate serial numbers and model numbers on appliances, HVAC equipment, and electronics before using the decoder.">
+  <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="seo-landing.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body data-page-kind="brand-page">
+  <nav>
+    <a href="/" class="logo" aria-label="Item Assist home">
+      <div>
+        <div class="logo-text">Decode My <span>Item</span></div>
+        <div class="logo-sub">Decode - Research - Automate</div>
+      </div>
+    </a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span><span></span><span></span><span></span></button>
+    <ul>
+  <li><a href="/">Home</a></li>
+  <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+  <li><a href="/smart-lookup">Smart Lookup</a></li>
+  <li><a href="/assistant">AI Assistant</a></li>
+  <li><a href="/methodology">Methodology</a></li>
+  <li><a href="/contact">Contact</a></li>
+  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
+  <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+
+    </ul>
+  </nav>
+
+  <main>
+    <section class="page-hero seo-hero">
+      <div class="seo-copy-wrap">
+        <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+          <a href="/">Home</a><span class="breadcrumb-sep">/</span><span aria-current="page">Where Is My Serial Number?</span>
+        </nav>
+      </div>
+      <div class="tool-hero">
+        <div class="tool-badge">Label location guide</div>
+        <h1>Where Is My Serial Number?</h1>
+        <p>Most age, model, and replacement lookups work best when you have both the brand and the serial or model label in front of you.</p>
+        <ol class="how-steps how-steps-list">
+            <li><span class="how-list-index">1</span><span>Pick the product category and brand.</span></li>
+            <li><span class="how-list-index">2</span><span>Find the label on the product, cabinet, or settings screen.</span></li>
+            <li><span class="how-list-index">3</span><span>Enter the serial number exactly as printed before using Smart Lookup as a fallback.</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section seo-copy-section">
+      <div class="seo-copy-wrap">
+        <p>Found the label? Enter the brand, model, and serial number below. If not, use the quick sections on this page to narrow the most common label locations before you move into the decoder.</p>
+      </div>
+    </section>
+
+    <section class="section" id="decoder-tool" style="padding-top:0;padding-bottom:16px;">
+      <div class="tool-focus-wrap">
+        <div class="seo-tool-shell">
+          <div class="home-tools-wrap">
+            <div class="home-tools-grid">
+              <div class="decoder-card-shell">
+                <div class="search-box">
+                  <div class="search-tabs">
+                    <button class="search-tab cat-tab active" data-cat="appliances" onclick="selectCatAndShowDecoder('appliances', this)">Appliances</button>
+                    <button class="search-tab cat-tab" data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">Water Heaters</button>
+                    <button class="search-tab cat-tab" data-cat="hvac" onclick="selectCatAndShowDecoder('hvac', this)">HVAC</button>
+                    <button class="search-tab cat-tab" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
+                  </div>
+
+                  <div class="search-panel" id="panel-decoder">
+                    <div class="home-tool-row">
+                      <label class="sr-only" for="brand">Select Brand</label>
+                      <select id="brand" class="search-select">
+                        <option value="">-- Select Brand --</option>
+                      </select>
+
+                      <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
+                      <input type="text" id="serial" class="search-input" placeholder="Enter serial number from the label">
+                    </div>
+
+                    <div class="era-group hidden" id="eraGroup">
+                      <label class="sr-only" for="eraSelect">Manufacture Era</label>
+                      <select id="eraSelect" class="search-select" style="margin-top:8px;">
+                        <option value="">-- Select Era --</option>
+                        <option value="post">Post-2006</option>
+                        <option value="pre">Pre-2006</option>
+                      </select>
+                      <p class="era-note">Some brands reuse serial layouts across decades. Select the era when prompted to improve accuracy.</p>
+                    </div>
+
+                    <p class="search-hint serial-helper-text">Found the label? Enter the brand, model, and serial number below.</p>
+                    <div class="tool-panel-action">
+                      <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">Decode Serial Number</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="utility-strip">
+          <span>Built for fast serial/model research.</span><span>Useful for appliance age estimates, replacement research, and claim documentation.</span><span>Results may vary by brand, model family, and available serial data.</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="results-wrapper">
+      <div id="ageLoading" class="results-card hidden">
+        <div class="loading-inner">
+          <span class="loading-emoji lightning" id="loadingEmoji">&#127785;&#65039;</span>
+          <div class="loading-text" id="loadingText">Researching product information...</div>
+        </div>
+      </div>
+
+      <div id="serialResults" class="results-card hidden">
+        <div class="results-header">
+          <h3>Decoded Results</h3>
+          <div class="brand-logo-wrap" id="serialBrandLogo"></div>
+        </div>
+        <div class="results-body">
+          <div id="serialSummaryLayer" class="sl-top-summary-layer serial-summary-layer hidden"></div>
+          <div class="serial-legacy-fields" hidden aria-hidden="true">
+            <div class="result-row result-row--primary">
+              <span class="result-label">Manufacture Date</span>
+              <span class="result-value" id="resultYear"></span>
+            </div>
+            <div class="result-row" id="resultMonthRow">
+              <span class="result-label">Month / Period</span>
+              <span class="result-value" id="resultMonth"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Brand</span>
+              <span class="result-value" id="resultBrand"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Estimated Age</span>
+              <span class="result-value" id="resultEstimatedAge">&mdash;</span>
+            </div>
+            <div class="info-block method">
+              <h4>Decoding Method</h4>
+              <p id="resultMethod"></p>
+            </div>
+            <div class="info-block notes">
+              <h4>Important Notes</h4>
+              <p id="resultNotes"></p>
+            </div>
+            <details class="determination-details">
+              <summary>How this was determined</summary>
+              <div class="determination-body" id="serialDeterminationBody">
+                We use the brand-specific serial rules already supported in Item Assist. When a brand repeats codes across decades, the result stays estimated until model era or installation context confirms the right cycle.
+              </div>
+            </details>
+          </div>
+        </div>
+        <div class="results-footer">
+          <button class="copy-btn" onclick="copyClaimFile()">Copy Information</button>
+          <button class="decode-again-btn btn-amber" onclick="decodeAnotherItem()">Decode Another Item</button>
+          <button class="decode-again-btn btn-teal" onclick="window.location.href='/smart-lookup'">Use Smart Lookup</button>
+          <button class="error-btn" onclick="openFeedbackModal()">Possible Error?</button>
+        </div>
+      </div>
+    </div>
+
+    
+    <section class="section">
+      <div class="seo-copy-wrap">
+        <h2>Quick Jump</h2>
+        <div class="related-brands"><a href="#refrigerators">Refrigerators</a><a href="#washers">Washers</a><a href="#appliance-label-locations">Dryers</a><a href="#appliance-label-locations">Dishwashers</a><a href="#appliance-label-locations">Ranges & Ovens</a><a href="#hvac-electronics">HVAC Systems</a><a href="#hvac-electronics">Electronics</a><a href="#label-guide">What the Label Looks Like</a><a href="#missing-label">What if the Label Is Missing?</a></div>
+      </div>
+    </section>
+
+    <section class="section seo-section-grid">
+      <div class="seo-card" id="refrigerators">
+        <h2>Refrigerator serial number location</h2>
+        <p>Most refrigerators place the data label inside the fresh-food compartment on a side wall, on the door frame, or behind a lower drawer or kick plate. Use <a href="/refrigerator-serial-number">the refrigerator serial number lookup page</a> if you need the next step after finding it, or jump to <a href="/how-old-is-my-appliance">the appliance age hub</a> when the goal is an age estimate.</p>
+      </div>
+      <div class="seo-card" id="washers">
+        <h2>Washer serial number location</h2>
+        <p>Washer labels are commonly inside the lid opening, around the door opening, on the rear panel, or along the control-panel edge. The <a href="/washer-serial-number">washer serial number page</a> narrows the decode path by brand once the tag is readable.</p>
+      </div>
+      <div class="seo-card seo-card-wide" id="label-guide">
+        <h2>What does the serial/model label look like?</h2>
+        <div class="table-wrap">
+          <table class="format-table">
+            <thead>
+              <tr>
+                <th>Pattern</th>
+                <th>Common Format</th>
+                <th>What It May Indicate</th>
+                <th>Confidence</th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td>Brand / manufacturer</td>
+              <td>Brand name or logo</td>
+              <td>Confirms which decoder path to use first.</td>
+              <td>High value for routing the lookup.</td>
+            </tr>
+            <tr>
+              <td>Model number</td>
+              <td>Family or platform identifier</td>
+              <td>Helps confirm product family, capacity, and OEM context.</td>
+              <td>Strong support signal.</td>
+            </tr>
+            <tr>
+              <td>Serial number</td>
+              <td>Unit-specific identifier</td>
+              <td>Usually carries the best age or production clue.</td>
+              <td>Primary date signal on supported brands.</td>
+            </tr>
+            <tr>
+              <td>Product number / SKU</td>
+              <td>Retail or internal catalog code</td>
+              <td>Useful for paperwork and parts matching, but not always the age clue.</td>
+              <td>Supportive only.</td>
+            </tr>
+            <tr>
+              <td>Date code if shown</td>
+              <td>Direct month/year or factory code</td>
+              <td>Can confirm or override an estimated serial decode.</td>
+              <td>Higher when printed directly.</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="seo-card seo-card-wide" id="appliance-label-locations">
+        <h2>Dryer, dishwasher, and range label locations</h2>
+        <div class="example-grid">
+          <article class="example-card">
+            <div class="example-eyebrow">Dryers</div>
+            <code>Door opening / rear panel</code>
+            <p>Many dryers place the label inside the door opening, on the rear panel, or around the lint filter opening on some models. Use <a href="/dryer-serial-number">the dryer serial number lookup page</a> after you find it.</p>
+          </article>
+          <article class="example-card">
+            <div class="example-eyebrow">Dishwashers</div>
+            <code>Inner door edge / tub opening</code>
+            <p>Dishwasher labels are often on the inner door edge, on the side of the tub opening, or on the door jamb. Use <a href="/dishwasher-serial-number">the dishwasher serial number page</a> for the next decode step.</p>
+          </article>
+          <article class="example-card">
+            <div class="example-eyebrow">Ranges & ovens</div>
+            <code>Oven frame / drawer area</code>
+            <p>Cooking products often hide the label on the oven door frame, in the storage drawer opening, on the rear panel, or under the cooktop on some models. Use <a href="/range-oven-serial-number">the range and oven serial number page</a> once the tag is visible.</p>
+          </article>
+        </div>
+      </div>
+      <div class="seo-card seo-card-wide" id="hvac-electronics">
+        <h2>HVAC and electronics label locations</h2>
+        <div class="mini-card-grid">
+          <article class="mini-card">
+            <h3>HVAC systems</h3>
+            <ul class="bullet-list"><li>Outdoor condenser rating plate on the side panel</li><li>Furnace cabinet interior panel or service door</li><li>Air handler data plate near the access panel</li><li>Use <a href="/rheem-serial-number-lookup">Rheem</a>, <a href="/carrier-serial-number-lookup">Carrier</a>, <a href="/trane-serial-number-lookup">Trane</a>, or <a href="/goodman-serial-number-lookup">Goodman</a> once the rating plate is found.</li></ul>
+          </article>
+          <article class="mini-card">
+            <h3>Electronics</h3>
+            <ul class="bullet-list"><li>Bottom label on laptops and small devices</li><li>Rear case label on TVs, monitors, desktops, and appliances with smart screens</li><li>System Settings or About screen on supported electronics</li><li>Original box, invoice, or receipt if the hardware label is worn</li><li>Use <a href="/asus-serial-number-decoder">the ASUS serial number decoder</a> or other electronics pages after you confirm the label.</li></ul>
+          </article>
+          <article class="mini-card">
+            <h3>What if the label is missing?</h3>
+            <ul class="bullet-list"><li>Check original paperwork and warranty registration emails</li><li>Check the original invoice, install record, or retailer account</li><li>Use Smart Lookup when only a partial model or serial survives</li><li>Inspect photos before discarding old equipment</li><li>Try the model number first if the serial is damaged or unreadable</li></ul>
+          </article>
+        </div>
+      </div>
+      <div class="seo-card" id="missing-label">
+        <h2>What if the serial number label is missing or unreadable?</h2>
+        <ul class="bullet-list"><li>Check purchase paperwork, warranty registration, or installation records before assuming the label is gone.</li><li>Use a photo from before removal or disposal if the equipment is already out of service.</li><li>Try the model number first when the serial is damaged, then move into Smart Lookup for a broader match.</li><li>Private-label brands and older products may need both the model prefix and the partial serial to route correctly.</li><li>Save a clear label photo before service work, repainting, or cabinet replacement changes the tag area.</li>
+        </ul>
+      </div>
+      <div class="seo-card faq-card">
+        <h2>FAQ</h2>
+        <div class="faq-list">
+          <details class="faq-item" open>
+            <summary>Is the model number the same as the serial number?</summary>
+            <div class="faq-answer"><p>No. The model number identifies the product family, while the serial number identifies the specific unit and is more likely to carry age information.</p></div>
+          </details>
+          <details class="faq-item" open>
+            <summary>Do I need both model and serial number?</summary>
+            <div class="faq-answer"><p>Not always, but having both is the fastest path. The serial usually drives the age estimate, while the model number helps confirm family, OEM, and compatibility.</p></div>
+          </details>
+          <details class="faq-item" open>
+            <summary>Can I decode an appliance without the serial number?</summary>
+            <div class="faq-answer"><p>Sometimes. Smart Lookup and model-number research can still help, but the serial number is usually the stronger age signal.</p></div>
+          </details>
+          <details class="faq-item" open>
+            <summary>Where is the serial number on older appliances?</summary>
+            <div class="faq-answer"><p>Older appliances still commonly place the label on the frame, interior wall, rear panel, or behind a drawer or kick plate, but the tag may be smaller or more worn.</p></div>
+          </details>
+          <details class="faq-item" open>
+            <summary>Why is the serial number label hard to read?</summary>
+            <div class="faq-answer"><p>Heat, cleaning chemicals, sunlight, service wear, repainting, and paper or foil labels breaking down over time are common reasons.</p></div>
+          </details>
+          <details class="faq-item" open>
+            <summary>Can I use a photo of the label?</summary>
+            <div class="faq-answer"><p>Yes. A clear photo is often the best way to preserve the exact model and serial fields for decoding, parts research, and claim documentation.</p></div>
+          </details>
+          <details class="faq-item" open>
+            <summary>What if the decoder does not recognize my serial number?</summary>
+            <div class="faq-answer"><p>Double-check the brand path, then try the model number and Smart Lookup if the serial is partial, damaged, or outside a supported format.</p></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="section" id="dishwashers">
+      <div class="seo-copy-wrap">
+        <h2>More common label locations by product type</h2>
+        
+      </div>
+      <div class="seo-copy-wrap">
+        <div class="mini-card-grid">
+          <article class="mini-card">
+            <h3>Refrigerators</h3>
+            <ul class="bullet-list"><li>Inside the fresh-food compartment</li><li>Side wall or door frame</li><li>Behind lower kick plate on some models</li><li><a href="/refrigerator-serial-number">Refrigerator serial number lookup</a></li><li><a href="/how-old-is-my-appliance">How old is my appliance?</a></li></ul>
+          </article>
+          <article class="mini-card">
+            <h3>Washers</h3>
+            <ul class="bullet-list"><li>Inside door or lid opening</li><li>Rear panel</li><li>Control-panel edge</li><li><a href="/washer-serial-number">Washer serial number lookup</a></li></ul>
+          </article>
+          <article class="mini-card">
+            <h3>Dryers</h3>
+            <ul class="bullet-list"><li>Inside door opening</li><li>Rear panel</li><li>Around lint filter opening on some models</li><li><a href="/dryer-serial-number">Dryer serial number lookup</a></li></ul>
+          </article>
+          <article class="mini-card">
+            <h3>Dishwashers</h3>
+            <ul class="bullet-list"><li>Inner door edge</li><li>Side of tub opening</li><li>Door jamb</li><li><a href="/dishwasher-serial-number">Dishwasher serial number lookup</a></li></ul>
+          </article>
+          <article class="mini-card">
+            <h3>Ranges & ovens</h3>
+            <ul class="bullet-list"><li>Oven door frame</li><li>Storage drawer area</li><li>Rear panel</li><li>Cooktop underside on some models</li><li><a href="/range-oven-serial-number">Range & oven serial number lookup</a></li></ul>
+          </article></div>
+      </div>
+    </section>
+    <section class="section" id="label-guide-table">
+      <div class="seo-copy-wrap">
+        <h2>What the label fields usually mean</h2>
+        <p>Most labels include several identifiers. The decoder works best when you know which field is the model and which field is the serial.</p>
+        <div class="table-wrap">
+          <table class="format-table">
+            <thead>
+              <tr>
+                <th>Label Field</th>
+                <th>What It Usually Means</th>
+                <th>Why It Matters</th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td>Brand / manufacturer</td>
+              <td>Identifies the maker or OEM family.</td>
+              <td>Routes you into the right decoder or lookup page.</td>
+            </tr>
+            <tr>
+              <td>Model number</td>
+              <td>Identifies the product family or configuration.</td>
+              <td>Useful for parts, compatibility, and OEM confirmation.</td>
+            </tr>
+            <tr>
+              <td>Serial number</td>
+              <td>Identifies the specific unit.</td>
+              <td>Usually carries the best age or production clue.</td>
+            </tr>
+            <tr>
+              <td>Product number / SKU</td>
+              <td>Internal or retail catalog identifier.</td>
+              <td>Helpful for paperwork and parts matching when the model is broad.</td>
+            </tr>
+            <tr>
+              <td>Manufacture date or date code</td>
+              <td>A direct date or a factory code if printed.</td>
+              <td>Can confirm a serial-based estimate.</td>
+            </tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section related-section">
+      <div class="seo-copy-wrap">
+        <h2>Related Decoder Pages</h2>
+        <div class="related-brands"><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a><a href="/refrigerator-serial-number">Refrigerator Serial Number Lookup</a><a href="/washer-serial-number">Washer Serial Number Lookup</a><a href="/dryer-serial-number">Dryer Serial Number Lookup</a><a href="/dishwasher-serial-number">Dishwasher Serial Number Lookup</a><a href="/range-oven-serial-number">Range & Oven Serial Number Lookup</a><a href="/asus-serial-number-decoder">ASUS Serial Number Decoder</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="seo-copy-wrap">
+        <h2>Research Paths</h2>
+        <div class="link-group-grid">
+        <article class="link-group-card">
+          <h3>Appliance Age Lookup</h3>
+          <div class="link-pill-grid"><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a><a href="/where-is-my-serial-number">Where Is My Serial Number?</a><a href="/appliance-age-for-insurance-and-replacement">Insurance, Repair & Replacement</a><a href="/find-model-serial-number">Find Model & Serial Labels</a></div>
+        </article>
+        <article class="link-group-card">
+          <h3>Popular Appliance Brands</h3>
+          <div class="link-pill-grid"><a href="/whirlpool-serial-number-lookup">Whirlpool</a><a href="/ge-serial-number-lookup">GE</a><a href="/samsung-serial-number-lookup">Samsung</a><a href="/lg-serial-number-lookup">LG</a><a href="/frigidaire-serial-number-lookup">Frigidaire</a><a href="/maytag-serial-number-lookup">Maytag</a><a href="/kenmore-serial-number-lookup">Kenmore</a><a href="/bosch">Bosch</a></div>
+        </article>
+        <article class="link-group-card">
+          <h3>Appliance Type Lookups</h3>
+          <div class="link-pill-grid"><a href="/where-is-my-serial-number">Where Is My Serial Number?</a><a href="/appliance-age-for-insurance-and-replacement">Insurance, Repair & Replacement</a><a href="/refrigerator-serial-number">Refrigerator Serial Number Lookup</a><a href="/washer-serial-number">Washer Serial Number Lookup</a><a href="/dryer-serial-number">Dryer Serial Number Lookup</a></div>
+        </article>
+        <article class="link-group-card">
+          <h3>HVAC Age Lookup</h3>
+          <div class="link-pill-grid"><a href="/hvac-age-by-serial-number">HVAC Age by Serial Number</a><a href="/how-to-find-hvac-age">How to Find HVAC Age</a><a href="/carrier-serial-number-lookup">Carrier</a><a href="/trane-serial-number-lookup">Trane</a><a href="/rheem-serial-number-lookup">Rheem</a><a href="/goodman-serial-number-lookup">Goodman</a></div>
+        </article>
+        <article class="link-group-card">
+          <h3>Electronics Serial & Model Lookup</h3>
+          <div class="link-pill-grid"><a href="/asus-serial-number-decoder">ASUS Serial Number Lookup</a><a href="/samsung-tv-serial-number-decoder">Samsung TV Serial Number Decoder</a><a href="/apple">Apple</a><a href="/hp">HP</a><a href="/sony">Sony</a><a href="/find-model-serial-number">Find Device Labels</a></div>
+        </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="seo-copy-wrap">
+        <div class="cta-note">
+          <h2>Need a claim-ready replacement summary?</h2>
+          <p>Use the decoder above to start.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Report an Issue</h3>
+        <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-field">
+          <label class="sr-only" for="fbBrand">Brand</label>
+          <input type="text" id="fbBrand" class="form-input" readonly>
+        </div>
+        <div class="modal-field">
+          <label class="sr-only" for="fbSerial">Serial Number / Search Query</label>
+          <input type="text" id="fbSerial" class="form-input" readonly>
+        </div>
+        <div class="modal-field">
+          <label class="sr-only" for="fbType">Issue Type</label>
+          <select id="fbType" class="form-select">
+            <option value="">-- Select issue type --</option>
+            <option value="wrong_year">Wrong year / date</option>
+            <option value="wrong_month">Wrong month</option>
+            <option value="wrong_brand">Wrong brand identified</option>
+            <option value="format_error">Format / decode error</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label class="sr-only" for="fbDetails">Details</label>
+          <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong?"></textarea>
+        </div>
+        <div id="fbThanks" class="fb-thanks hidden">Thank you. Your feedback helps improve the decoder.</div>
+        <div id="fbActions" class="modal-actions">
+          <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
+          <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div>&copy; 2026 Item Assist</div>
+    <div class="footer-links">
+      <a href="/methodology">Methodology</a>
+      <a href="/contact">Contact</a>
+      <a href="/security">Security &amp; Data Notice</a>
+      <a href="/privacy-policy">Privacy Policy</a>
+    </div>
+  </footer>
+
+  <script>
+    function selectCatAndShowDecoder(cat, btn) {
+      if (typeof selectCategory === 'function') selectCategory(cat, btn);
+    }
+
+    function applySeoBrandSelection(attempt) {
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      var activeTab = document.querySelector('[data-cat="appliances"]');
+      if (activeTab) selectCatAndShowDecoder('appliances', activeTab);
+      applySeoBrandSelection(0);
+    });
+
+    window.addEventListener('pageshow', function () {
+      var feedbackModal = document.getElementById('feedbackModal');
+      var navList = document.querySelector('nav ul');
+      var hamburger = document.getElementById('hamburgerBtn');
+
+      if (!feedbackModal || feedbackModal.classList.contains('hidden')) {
+        document.body.style.overflow = '';
+      }
+      document.body.classList.remove('nav-menu-open');
+      if (navList) navList.classList.remove('open');
+      if (hamburger) hamburger.classList.remove('active');
+    });
+  </script>
+  <script src="decoder-data.js"></script>
+  <script src="lkq-engine.js"></script>
+  <script src="analytics.js"></script>
+  <script src="smart-lookup-extras.js"></script>
+  <script src="smart-lookup-normalizer.js"></script>
+  <script src="smart-lookup-summary-render.js"></script>
+  <script src="script.js"></script>
+  <script src="smart-lookup.js"></script>
+  <script src="smart-lookup-upgrade-patch.js"></script>
+  <script src="smart-lookup-pricetier.js"></script>
+  <script src="shared.js"></script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/where-is-my-serial-number#webpage","name":"Where Is My Serial Number? Appliance, HVAC & Electronics Guide","description":"Find where to locate serial numbers and model numbers on appliances, HVAC equipment, and electronics before using the decoder.","url":"https://www.decodemyitem.com/where-is-my-serial-number","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Item Assist","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"Where Is My Serial Number?"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","@id":"https://www.decodemyitem.com/where-is-my-serial-number#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.decodemyitem.com"},{"@type":"ListItem","position":2,"name":"Where Is My Serial Number?","item":"https://www.decodemyitem.com/where-is-my-serial-number"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://www.decodemyitem.com/where-is-my-serial-number#app","name":"Item Assist Serial Number Decoder","url":"https://www.decodemyitem.com/where-is-my-serial-number","description":"Found the label? Enter the brand, model, and serial number below.","applicationCategory":"UtilityApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/where-is-my-serial-number#faq","mainEntity":[{"@type":"Question","name":"Is the model number the same as the serial number?","acceptedAnswer":{"@type":"Answer","text":"No. The model number identifies the product family, while the serial number identifies the specific unit and is more likely to carry age information."}},{"@type":"Question","name":"Do I need both model and serial number?","acceptedAnswer":{"@type":"Answer","text":"Not always, but having both is the fastest path. The serial usually drives the age estimate, while the model number helps confirm family, OEM, and compatibility."}},{"@type":"Question","name":"Can I decode an appliance without the serial number?","acceptedAnswer":{"@type":"Answer","text":"Sometimes. Smart Lookup and model-number research can still help, but the serial number is usually the stronger age signal."}},{"@type":"Question","name":"Where is the serial number on older appliances?","acceptedAnswer":{"@type":"Answer","text":"Older appliances still commonly place the label on the frame, interior wall, rear panel, or behind a drawer or kick plate, but the tag may be smaller or more worn."}},{"@type":"Question","name":"Why is the serial number label hard to read?","acceptedAnswer":{"@type":"Answer","text":"Heat, cleaning chemicals, sunlight, service wear, repainting, and paper or foil labels breaking down over time are common reasons."}},{"@type":"Question","name":"Can I use a photo of the label?","acceptedAnswer":{"@type":"Answer","text":"Yes. A clear photo is often the best way to preserve the exact model and serial fields for decoding, parts research, and claim documentation."}},{"@type":"Question","name":"What if the decoder does not recognize my serial number?","acceptedAnswer":{"@type":"Answer","text":"Double-check the brand path, then try the model number and Smart Lookup if the serial is partial, damaged, or outside a supported format."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","@id":"https://www.decodemyitem.com/where-is-my-serial-number#howto","name":"Where Is My Serial Number?","description":"Pick the product category and brand. Find the label on the product, cabinet, or settings screen. Enter the serial number exactly as printed before using Smart Lookup as a fallback.","step":[{"@type":"HowToStep","position":1,"name":"Step 1","text":"Pick the product category and brand."},{"@type":"HowToStep","position":2,"name":"Step 2","text":"Find the label on the product, cabinet, or settings screen."},{"@type":"HowToStep","position":3,"name":"Step 3","text":"Enter the serial number exactly as printed before using Smart Lookup as a fallback."}]}</script>
+</body>
+</html>
