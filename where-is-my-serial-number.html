@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="seo-landing.css">
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
-<body data-page-kind="brand-page">
+<body class="serial-location-page" data-page-kind="brand-page">
   <nav>
     <a href="/" class="logo" aria-label="Item Assist home">
       <div>
@@ -53,33 +53,18 @@
   </nav>
 
   <main>
-    <section class="page-hero seo-hero">
-      <div class="seo-copy-wrap">
-        <nav class="breadcrumb-nav" aria-label="Breadcrumb">
-          <a href="/">Home</a><span class="breadcrumb-sep">/</span><span aria-current="page">Where Is My Serial Number?</span>
-        </nav>
-      </div>
-      <div class="tool-hero">
-        <div class="tool-badge">Label location guide</div>
-        <h1>Where Is My Serial Number?</h1>
-        <p>Most age, model, and replacement lookups work best when you have both the brand and the serial or model label in front of you.</p>
-        <ol class="how-steps how-steps-list">
-            <li><span class="how-list-index">1</span><span>Pick the product category and brand.</span></li>
-            <li><span class="how-list-index">2</span><span>Find the label on the product, cabinet, or settings screen.</span></li>
-            <li><span class="how-list-index">3</span><span>Enter the serial number exactly as printed before using Smart Lookup as a fallback.</span></li>
-        </ol>
-      </div>
-    </section>
-
-    <section class="section seo-copy-section">
-      <div class="seo-copy-wrap">
-        <p>Found the label? Enter the brand, model, and serial number below. If not, use the quick sections on this page to narrow the most common label locations before you move into the decoder.</p>
-      </div>
-    </section>
-
-    <section class="section" id="decoder-tool" style="padding-top:0;padding-bottom:16px;">
-      <div class="tool-focus-wrap">
-        <div class="seo-tool-shell">
+    <section class="section serial-location-hero">
+      <div class="serial-location-hero-grid">
+        <div class="serial-location-copy">
+          <nav class="breadcrumb-nav breadcrumb-nav-left" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="breadcrumb-sep">/</span><span aria-current="page">Where Is My Serial Number?</span>
+          </nav>
+          <div class="tool-badge serial-light-badge">Label location guide</div>
+          <h1>Where Is My Serial Number?</h1>
+          <p class="serial-hero-subtitle">Find your serial number or model number location for appliances, HVAC equipment, and electronics.</p>
+          
+      <div class="serial-location-decoder-wrap">
+        <div class="seo-tool-shell serial-decoder-card">
           <div class="home-tools-wrap">
             <div class="home-tools-grid">
               <div class="decoder-card-shell">
@@ -122,13 +107,41 @@
             </div>
           </div>
         </div>
-
-        <div class="utility-strip">
-          <span>Built for fast serial/model research.</span><span>Useful for appliance age estimates, replacement research, and claim documentation.</span><span>Results may vary by brand, model family, and available serial data.</span>
+        <div class="utility-strip"><span>Built for fast serial/model research.</span><span>Useful for appliance age estimates, replacement research, and claim documentation.</span><span>Results may vary by brand, model family, and available serial data.</span></div>
+      </div>
         </div>
+        
+    <div class="serial-hero-diagram" aria-label="Illustrated refrigerator serial number locations">
+      
+    <div class="serial-illustration-shell" role="img" aria-label="Refrigerator with common serial label locations highlighted">
+      <svg viewBox="0 0 320 272" class="serial-illustration-svg" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="panelGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffffff"></stop>
+            <stop offset="100%" stop-color="#e8f3ff"></stop>
+          </linearGradient>
+        </defs>
+        <rect x="12" y="12" width="296" height="248" rx="28" fill="url(#panelGlow)" stroke="#d5e7f7" stroke-width="4"></rect>
+        
+      <rect x="96" y="20" width="126" height="228" rx="18" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <line x1="96" y1="112" x2="222" y2="112" stroke="#7fb0e6" stroke-width="6"></line>
+      <line x1="208" y1="58" x2="208" y2="92" stroke="#1a202c" stroke-width="6" stroke-linecap="round"></line>
+      <line x1="208" y1="144" x2="208" y2="208" stroke="#1a202c" stroke-width="6" stroke-linecap="round"></line>
+      <rect x="84" y="244" width="150" height="12" rx="6" fill="#c6dcf5"></rect>
+        
+      <circle cx="214" cy="178" r="10" fill="#3182ce"></circle>
+      <circle cx="214" cy="178" r="20" fill="none" stroke="rgba(49,130,206,0.28)" stroke-width="8"></circle>
+      </svg>
+    </div>
+      <div class="diagram-callout callout-top-left"><span class="diagram-dot"></span><div><strong>Inside fresh food compartment</strong><small>Often on the interior wall or liner</small></div></div>
+      <div class="diagram-callout callout-top-right"><span class="diagram-dot"></span><div><strong>Side wall</strong><small>Common first check on many fridges</small></div></div>
+      <div class="diagram-callout callout-mid-right"><span class="diagram-dot"></span><div><strong>Door frame</strong><small>Look around the main cabinet opening</small></div></div>
+      <div class="diagram-callout callout-bottom-left"><span class="diagram-dot"></span><div><strong>Behind lower kick plate</strong><small>Fallback location on some models</small></div></div>
+    </div>
       </div>
     </section>
 
+    
     <div class="results-wrapper">
       <div id="ageLoading" class="results-card hidden">
         <div class="loading-inner">
@@ -186,115 +199,414 @@
       </div>
     </div>
 
-    
-    <section class="section">
+    <section class="section serial-jump-section">
       <div class="seo-copy-wrap">
-        <h2>Quick Jump</h2>
-        <div class="related-brands"><a href="#refrigerators">Refrigerators</a><a href="#washers">Washers</a><a href="#appliance-label-locations">Dryers</a><a href="#appliance-label-locations">Dishwashers</a><a href="#appliance-label-locations">Ranges & Ovens</a><a href="#hvac-electronics">HVAC Systems</a><a href="#hvac-electronics">Electronics</a><a href="#label-guide">What the Label Looks Like</a><a href="#missing-label">What if the Label Is Missing?</a></div>
+        <h2>Jump to the right product type</h2>
+        <p>Start with the product family you have in front of you. Each jump card lands on the most common label locations and the fastest next lookup path.</p>
+      </div>
+      <div class="seo-copy-wrap">
+        <div class="appliance-jump-grid">
+          
+          <a class="jump-nav-card" href="#refrigerators">
+            <span class="jump-icon">RF</span>
+            <span class="jump-copy">
+              <strong>Refrigerators</strong>
+              <small>Interior walls and door frames</small>
+            </span>
+          </a>
+          <a class="jump-nav-card" href="#washers">
+            <span class="jump-icon">WS</span>
+            <span class="jump-copy">
+              <strong>Washers</strong>
+              <small>Lid, door, or rear panel</small>
+            </span>
+          </a>
+          <a class="jump-nav-card" href="#dryers">
+            <span class="jump-icon">DR</span>
+            <span class="jump-copy">
+              <strong>Dryers</strong>
+              <small>Door opening or lint area</small>
+            </span>
+          </a>
+          <a class="jump-nav-card" href="#dishwashers">
+            <span class="jump-icon">DW</span>
+            <span class="jump-copy">
+              <strong>Dishwashers</strong>
+              <small>Inner edge and tub lip</small>
+            </span>
+          </a>
+          <a class="jump-nav-card" href="#ranges-ovens">
+            <span class="jump-icon">RG</span>
+            <span class="jump-copy">
+              <strong>Ranges & Ovens</strong>
+              <small>Drawer, frame, or rear panel</small>
+            </span>
+          </a>
+          <a class="jump-nav-card" href="#hvac-systems">
+            <span class="jump-icon">HV</span>
+            <span class="jump-copy">
+              <strong>HVAC Systems</strong>
+              <small>Rating plates and service panels</small>
+            </span>
+          </a>
+          <a class="jump-nav-card" href="#electronics">
+            <span class="jump-icon">EL</span>
+            <span class="jump-copy">
+              <strong>Electronics</strong>
+              <small>Bottom labels and settings screens</small>
+            </span>
+          </a>
+          <a class="jump-nav-card" href="#label-examples">
+            <span class="jump-icon">LB</span>
+            <span class="jump-copy">
+              <strong>Label Examples</strong>
+              <small>Brand, model, serial, MFD</small>
+            </span>
+          </a>
+          <a class="jump-nav-card" href="#missing-label">
+            <span class="jump-icon">ML</span>
+            <span class="jump-copy">
+              <strong>Missing Label?</strong>
+              <small>Fallback checks and Smart Lookup</small>
+            </span>
+          </a>
+        </div>
       </div>
     </section>
 
-    <section class="section seo-section-grid">
-      <div class="seo-card" id="refrigerators">
-        <h2>Refrigerator serial number location</h2>
-        <p>Most refrigerators place the data label inside the fresh-food compartment on a side wall, on the door frame, or behind a lower drawer or kick plate. Use <a href="/refrigerator-serial-number">the refrigerator serial number lookup page</a> if you need the next step after finding it, or jump to <a href="/how-old-is-my-appliance">the appliance age hub</a> when the goal is an age estimate.</p>
+    <section class="section" id="location-cards">
+      <div class="seo-copy-wrap">
+        <h2>Appliance, HVAC, and electronics serial number locations</h2>
+        <p>Use these visual location cards when you need a fast field reference before opening the decoder or documenting the label for service, claims, or replacement research.</p>
       </div>
-      <div class="seo-card" id="washers">
-        <h2>Washer serial number location</h2>
-        <p>Washer labels are commonly inside the lid opening, around the door opening, on the rear panel, or along the control-panel edge. The <a href="/washer-serial-number">washer serial number page</a> narrows the decode path by brand once the tag is readable.</p>
+      <div class="seo-copy-wrap">
+        <div class="appliance-location-grid">
+          
+          <article class="appliance-location-card" id="refrigerators">
+            <div class="location-visual">
+              
+    <div class="serial-illustration-shell" role="img" aria-label="Refrigerator illustration showing a common serial-number label location.">
+      <svg viewBox="0 0 320 272" class="serial-illustration-svg" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="panelGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffffff"></stop>
+            <stop offset="100%" stop-color="#e8f3ff"></stop>
+          </linearGradient>
+        </defs>
+        <rect x="12" y="12" width="296" height="248" rx="28" fill="url(#panelGlow)" stroke="#d5e7f7" stroke-width="4"></rect>
+        
+      <rect x="96" y="20" width="126" height="228" rx="18" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <line x1="96" y1="112" x2="222" y2="112" stroke="#7fb0e6" stroke-width="6"></line>
+      <line x1="208" y1="58" x2="208" y2="92" stroke="#1a202c" stroke-width="6" stroke-linecap="round"></line>
+      <line x1="208" y1="144" x2="208" y2="208" stroke="#1a202c" stroke-width="6" stroke-linecap="round"></line>
+      <rect x="84" y="244" width="150" height="12" rx="6" fill="#c6dcf5"></rect>
+        
+      <circle cx="218" cy="182" r="10" fill="#3182ce"></circle>
+      <circle cx="218" cy="182" r="20" fill="none" stroke="rgba(49,130,206,0.28)" stroke-width="8"></circle>
+      </svg>
+    </div>
+            </div>
+            <div class="location-card-body">
+              <h3>Refrigerators</h3>
+              <ul class="bullet-list"><li>Inside fresh food compartment</li><li>Side wall label</li><li>Door frame opening</li><li>Behind lower kick plate on some models</li></ul>
+              <a class="location-card-link" href="/refrigerator-serial-number">View details &rarr;</a>
+            </div>
+          </article>
+          <article class="appliance-location-card" id="washers">
+            <div class="location-visual">
+              
+    <div class="serial-illustration-shell" role="img" aria-label="Washer illustration showing a common serial-number label location.">
+      <svg viewBox="0 0 320 272" class="serial-illustration-svg" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="panelGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffffff"></stop>
+            <stop offset="100%" stop-color="#e8f3ff"></stop>
+          </linearGradient>
+        </defs>
+        <rect x="12" y="12" width="296" height="248" rx="28" fill="url(#panelGlow)" stroke="#d5e7f7" stroke-width="4"></rect>
+        
+      <rect x="78" y="28" width="164" height="208" rx="18" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <rect x="92" y="42" width="136" height="26" rx="8" fill="#dcecff"></rect>
+      <circle cx="160" cy="146" r="56" fill="#eaf4ff" stroke="#7fb0e6" stroke-width="6"></circle>
+      <circle cx="160" cy="146" r="26" fill="#c8dff6"></circle>
+        
+      <circle cx="210" cy="60" r="10" fill="#3182ce"></circle>
+      <circle cx="210" cy="60" r="20" fill="none" stroke="rgba(49,130,206,0.28)" stroke-width="8"></circle>
+      </svg>
+    </div>
+            </div>
+            <div class="location-card-body">
+              <h3>Washers</h3>
+              <ul class="bullet-list"><li>Inside door or lid opening</li><li>Rear panel sticker</li><li>Control panel edge</li><li>Sometimes below lid rim</li></ul>
+              <a class="location-card-link" href="/washer-serial-number">View details &rarr;</a>
+            </div>
+          </article>
+          <article class="appliance-location-card" id="dryers">
+            <div class="location-visual">
+              
+    <div class="serial-illustration-shell" role="img" aria-label="Dryer illustration showing a common serial-number label location.">
+      <svg viewBox="0 0 320 272" class="serial-illustration-svg" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="panelGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffffff"></stop>
+            <stop offset="100%" stop-color="#e8f3ff"></stop>
+          </linearGradient>
+        </defs>
+        <rect x="12" y="12" width="296" height="248" rx="28" fill="url(#panelGlow)" stroke="#d5e7f7" stroke-width="4"></rect>
+        
+      <rect x="78" y="28" width="164" height="208" rx="18" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <circle cx="160" cy="142" r="56" fill="#eef6ff" stroke="#7fb0e6" stroke-width="6"></circle>
+      <circle cx="160" cy="142" r="30" fill="#daeafc"></circle>
+      <rect x="118" y="52" width="84" height="18" rx="9" fill="#dcecff"></rect>
+        
+      <circle cx="160" cy="74" r="10" fill="#3182ce"></circle>
+      <circle cx="160" cy="74" r="20" fill="none" stroke="rgba(49,130,206,0.28)" stroke-width="8"></circle>
+      </svg>
+    </div>
+            </div>
+            <div class="location-card-body">
+              <h3>Dryers</h3>
+              <ul class="bullet-list"><li>Inside door opening</li><li>Rear panel label</li><li>Around lint filter opening</li><li>Cabinet frame on stacked units</li></ul>
+              <a class="location-card-link" href="/dryer-serial-number">View details &rarr;</a>
+            </div>
+          </article>
+          <article class="appliance-location-card" id="dishwashers">
+            <div class="location-visual">
+              
+    <div class="serial-illustration-shell" role="img" aria-label="Dishwasher illustration showing a common serial-number label location.">
+      <svg viewBox="0 0 320 272" class="serial-illustration-svg" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="panelGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffffff"></stop>
+            <stop offset="100%" stop-color="#e8f3ff"></stop>
+          </linearGradient>
+        </defs>
+        <rect x="12" y="12" width="296" height="248" rx="28" fill="url(#panelGlow)" stroke="#d5e7f7" stroke-width="4"></rect>
+        
+      <rect x="84" y="24" width="152" height="220" rx="18" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <rect x="96" y="42" width="128" height="22" rx="8" fill="#dcecff"></rect>
+      <rect x="106" y="82" width="108" height="130" rx="12" fill="#edf6ff" stroke="#bfd7f2" stroke-width="4"></rect>
+        
+      <circle cx="220" cy="60" r="10" fill="#3182ce"></circle>
+      <circle cx="220" cy="60" r="20" fill="none" stroke="rgba(49,130,206,0.28)" stroke-width="8"></circle>
+      </svg>
+    </div>
+            </div>
+            <div class="location-card-body">
+              <h3>Dishwashers</h3>
+              <ul class="bullet-list"><li>Inner door edge</li><li>Side of tub opening</li><li>Door jamb</li><li>Upper trim edge on some models</li></ul>
+              <a class="location-card-link" href="/dishwasher-serial-number">View details &rarr;</a>
+            </div>
+          </article>
+          <article class="appliance-location-card" id="ranges-ovens">
+            <div class="location-visual">
+              
+    <div class="serial-illustration-shell" role="img" aria-label="Range and oven illustration showing a common serial-number label location.">
+      <svg viewBox="0 0 320 272" class="serial-illustration-svg" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="panelGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffffff"></stop>
+            <stop offset="100%" stop-color="#e8f3ff"></stop>
+          </linearGradient>
+        </defs>
+        <rect x="12" y="12" width="296" height="248" rx="28" fill="url(#panelGlow)" stroke="#d5e7f7" stroke-width="4"></rect>
+        
+      <rect x="78" y="38" width="164" height="198" rx="18" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <rect x="84" y="24" width="152" height="24" rx="10" fill="#dcecff"></rect>
+      <circle cx="118" cy="34" r="7" fill="#3182ce"></circle>
+      <circle cx="158" cy="34" r="7" fill="#3182ce"></circle>
+      <circle cx="198" cy="34" r="7" fill="#3182ce"></circle>
+      <rect x="110" y="102" width="100" height="90" rx="12" fill="#eef6ff" stroke="#bfd7f2" stroke-width="4"></rect>
+        
+      <circle cx="88" cy="216" r="10" fill="#3182ce"></circle>
+      <circle cx="88" cy="216" r="20" fill="none" stroke="rgba(49,130,206,0.28)" stroke-width="8"></circle>
+      </svg>
+    </div>
+            </div>
+            <div class="location-card-body">
+              <h3>Ranges & Ovens</h3>
+              <ul class="bullet-list"><li>Oven door frame</li><li>Storage drawer area</li><li>Rear panel</li><li>Cooktop underside on some models</li></ul>
+              <a class="location-card-link" href="/range-oven-serial-number">View details &rarr;</a>
+            </div>
+          </article>
+          <article class="appliance-location-card" id="hvac-systems">
+            <div class="location-visual">
+              
+    <div class="serial-illustration-shell" role="img" aria-label="HVAC illustration showing a common rating-plate location.">
+      <svg viewBox="0 0 320 272" class="serial-illustration-svg" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="panelGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffffff"></stop>
+            <stop offset="100%" stop-color="#e8f3ff"></stop>
+          </linearGradient>
+        </defs>
+        <rect x="12" y="12" width="296" height="248" rx="28" fill="url(#panelGlow)" stroke="#d5e7f7" stroke-width="4"></rect>
+        
+      <rect x="62" y="74" width="96" height="122" rx="16" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <circle cx="110" cy="136" r="32" fill="#eaf4ff" stroke="#7fb0e6" stroke-width="6"></circle>
+      <circle cx="110" cy="136" r="9" fill="#7fb0e6"></circle>
+      <rect x="176" y="52" width="84" height="154" rx="16" fill="#eef6ff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <rect x="190" y="76" width="56" height="18" rx="8" fill="#dcecff"></rect>
+        
+      <circle cx="226" cy="94" r="10" fill="#3182ce"></circle>
+      <circle cx="226" cy="94" r="20" fill="none" stroke="rgba(49,130,206,0.28)" stroke-width="8"></circle>
+      </svg>
+    </div>
+            </div>
+            <div class="location-card-body">
+              <h3>HVAC Systems</h3>
+              <ul class="bullet-list"><li>Outdoor condenser rating plate</li><li>Furnace cabinet interior panel</li><li>Air handler data plate</li><li>Equipment side panel</li></ul>
+              <a class="location-card-link" href="/carrier-serial-number-lookup">View details &rarr;</a>
+            </div>
+          </article>
+          <article class="appliance-location-card" id="electronics">
+            <div class="location-visual">
+              
+    <div class="serial-illustration-shell" role="img" aria-label="Electronics illustration showing a common serial-number label location.">
+      <svg viewBox="0 0 320 272" class="serial-illustration-svg" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="panelGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffffff"></stop>
+            <stop offset="100%" stop-color="#e8f3ff"></stop>
+          </linearGradient>
+        </defs>
+        <rect x="12" y="12" width="296" height="248" rx="28" fill="url(#panelGlow)" stroke="#d5e7f7" stroke-width="4"></rect>
+        
+      <rect x="56" y="46" width="208" height="126" rx="18" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <rect x="72" y="60" width="176" height="92" rx="10" fill="#edf6ff"></rect>
+      <rect x="118" y="178" width="84" height="10" rx="5" fill="#7fb0e6"></rect>
+      <rect x="142" y="188" width="36" height="22" rx="8" fill="#bfd7f2"></rect>
+        
+      <circle cx="232" cy="160" r="10" fill="#3182ce"></circle>
+      <circle cx="232" cy="160" r="20" fill="none" stroke="rgba(49,130,206,0.28)" stroke-width="8"></circle>
+      </svg>
+    </div>
+            </div>
+            <div class="location-card-body">
+              <h3>Electronics</h3>
+              <ul class="bullet-list"><li>Bottom label</li><li>Rear case label</li><li>System settings / About screen</li><li>Original box or receipt</li></ul>
+              <a class="location-card-link" href="/asus-serial-number-decoder">View details &rarr;</a>
+            </div>
+          </article>
+          <article class="appliance-location-card appliance-location-card--value">
+            <div class="value-card-badge">Field-service utility</div>
+            <h3>Why Finding the Right Serial Number Matters</h3>
+            <ul class="bullet-list"><li>Look up age and manufacture date</li><li>Verify warranty eligibility</li><li>Find the right parts and accessories</li><li>Assist with insurance and replacement documentation</li></ul>
+            <a class="location-card-link location-card-link--button" href="#decoder-tool">Start Lookup Now</a>
+          </article>
+        </div>
       </div>
-      <div class="seo-card seo-card-wide" id="label-guide">
-        <h2>What does the serial/model label look like?</h2>
-        <div class="table-wrap">
-          <table class="format-table">
-            <thead>
+    </section>
+
+    <section class="section label-example-section" id="label-examples">
+      <div class="seo-copy-wrap">
+        <h2>What Does the Serial Number Label Look Like?</h2>
+      </div>
+      <div class="seo-copy-wrap">
+        <div class="label-example-grid">
+          <div class="label-diagram-panel">
+            <div class="label-plate" role="img" aria-label="Example appliance serial label showing brand, model number, serial number, and manufacture date callouts">
+              <div class="label-plate-header">Whirlpool</div>
+              <div class="label-plate-row"><span>MOD.</span><strong>WRF535SWHZ00</strong></div>
+              <div class="label-plate-row"><span>SER.</span><strong>D12345678</strong></div>
+              <div class="label-plate-row"><span>MFD.</span><strong>04/2019</strong></div>
+              <div class="label-plate-row"><span>TYPE</span><strong>BCDM-000</strong></div>
+              <div class="label-plate-row"><span>ELEC</span><strong>120V 60Hz 5.0A</strong></div>
+              <div class="label-callout label-callout-1"><span>1</span><small>Brand / manufacturer</small></div>
+              <div class="label-callout label-callout-2"><span>2</span><small>Model number</small></div>
+              <div class="label-callout label-callout-3"><span>3</span><small>Serial number</small></div>
+              <div class="label-callout label-callout-4"><span>4</span><small>Manufacture date / code</small></div>
+            </div>
+          </div>
+          <div class="label-table-panel">
+            <div class="table-wrap">
+              <table class="label-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Label Field</th>
+                    <th>What It Usually Means</th>
+                    <th>Why It Matters</th>
+                  </tr>
+                </thead>
+                <tbody>
               <tr>
-                <th>Pattern</th>
-                <th>Common Format</th>
-                <th>What It May Indicate</th>
-                <th>Confidence</th>
+                <td>1</td>
+                <td>Brand / Manufacturer</td>
+                <td>Company that made the item</td>
+                <td>Identifies the correct lookup rules</td>
               </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td>Brand / manufacturer</td>
-              <td>Brand name or logo</td>
-              <td>Confirms which decoder path to use first.</td>
-              <td>High value for routing the lookup.</td>
-            </tr>
-            <tr>
-              <td>Model number</td>
-              <td>Family or platform identifier</td>
-              <td>Helps confirm product family, capacity, and OEM context.</td>
-              <td>Strong support signal.</td>
-            </tr>
-            <tr>
-              <td>Serial number</td>
-              <td>Unit-specific identifier</td>
-              <td>Usually carries the best age or production clue.</td>
-              <td>Primary date signal on supported brands.</td>
-            </tr>
-            <tr>
-              <td>Product number / SKU</td>
-              <td>Retail or internal catalog code</td>
-              <td>Useful for paperwork and parts matching, but not always the age clue.</td>
-              <td>Supportive only.</td>
-            </tr>
-            <tr>
-              <td>Date code if shown</td>
-              <td>Direct month/year or factory code</td>
-              <td>Can confirm or override an estimated serial decode.</td>
-              <td>Higher when printed directly.</td>
-            </tr>
-            </tbody>
-          </table>
+              <tr>
+                <td>2</td>
+                <td>Model Number</td>
+                <td>Specific model of the product</td>
+                <td>Helps confirm compatibility</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>Serial Number</td>
+                <td>Unique ID for the unit</td>
+                <td>Used to estimate age/origin</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>Manufacture Date</td>
+                <td>Date/code showing when it was made</td>
+                <td>Helps verify age/warranty</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>Product Number / SKU</td>
+                <td>Internal ID for the model</td>
+                <td>Helpful for parts/support</td>
+              </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="seo-card seo-card-wide" id="appliance-label-locations">
-        <h2>Dryer, dishwasher, and range label locations</h2>
-        <div class="example-grid">
-          <article class="example-card">
-            <div class="example-eyebrow">Dryers</div>
-            <code>Door opening / rear panel</code>
-            <p>Many dryers place the label inside the door opening, on the rear panel, or around the lint filter opening on some models. Use <a href="/dryer-serial-number">the dryer serial number lookup page</a> after you find it.</p>
-          </article>
-          <article class="example-card">
-            <div class="example-eyebrow">Dishwashers</div>
-            <code>Inner door edge / tub opening</code>
-            <p>Dishwasher labels are often on the inner door edge, on the side of the tub opening, or on the door jamb. Use <a href="/dishwasher-serial-number">the dishwasher serial number page</a> for the next decode step.</p>
-          </article>
-          <article class="example-card">
-            <div class="example-eyebrow">Ranges & ovens</div>
-            <code>Oven frame / drawer area</code>
-            <p>Cooking products often hide the label on the oven door frame, in the storage drawer opening, on the rear panel, or under the cooktop on some models. Use <a href="/range-oven-serial-number">the range and oven serial number page</a> once the tag is visible.</p>
-          </article>
+    </section>
+
+    <section class="section missing-label-strip" id="missing-label">
+      <div class="seo-copy-wrap missing-strip-head">
+        <div>
+          <h2>Can't Find Your Serial Number?</h2>
+          <p>Use the fallback checks below before assuming the label is gone. A quick photo, manual, or lower access cover often solves the problem.</p>
         </div>
+        <a class="location-card-link location-card-link--button" href="/smart-lookup">View Smart Lookup</a>
       </div>
-      <div class="seo-card seo-card-wide" id="hvac-electronics">
-        <h2>HVAC and electronics label locations</h2>
-        <div class="mini-card-grid">
-          <article class="mini-card">
-            <h3>HVAC systems</h3>
-            <ul class="bullet-list"><li>Outdoor condenser rating plate on the side panel</li><li>Furnace cabinet interior panel or service door</li><li>Air handler data plate near the access panel</li><li>Use <a href="/rheem-serial-number-lookup">Rheem</a>, <a href="/carrier-serial-number-lookup">Carrier</a>, <a href="/trane-serial-number-lookup">Trane</a>, or <a href="/goodman-serial-number-lookup">Goodman</a> once the rating plate is found.</li></ul>
+      <div class="seo-copy-wrap">
+        <div class="missing-help-grid">
+          
+          <article class="missing-help-card">
+            <span class="missing-help-icon">1</span>
+            <p>Check the owner's manual or paperwork</p>
           </article>
-          <article class="mini-card">
-            <h3>Electronics</h3>
-            <ul class="bullet-list"><li>Bottom label on laptops and small devices</li><li>Rear case label on TVs, monitors, desktops, and appliances with smart screens</li><li>System Settings or About screen on supported electronics</li><li>Original box, invoice, or receipt if the hardware label is worn</li><li>Use <a href="/asus-serial-number-decoder">the ASUS serial number decoder</a> or other electronics pages after you confirm the label.</li></ul>
+          <article class="missing-help-card">
+            <span class="missing-help-icon">2</span>
+            <p>Look behind panels or lower access covers</p>
           </article>
-          <article class="mini-card">
-            <h3>What if the label is missing?</h3>
-            <ul class="bullet-list"><li>Check original paperwork and warranty registration emails</li><li>Check the original invoice, install record, or retailer account</li><li>Use Smart Lookup when only a partial model or serial survives</li><li>Inspect photos before discarding old equipment</li><li>Try the model number first if the serial is damaged or unreadable</li></ul>
+          <article class="missing-help-card">
+            <span class="missing-help-icon">3</span>
+            <p>Check warranty registration email</p>
+          </article>
+          <article class="missing-help-card">
+            <span class="missing-help-icon">4</span>
+            <p>Use a flashlight to inspect the label</p>
+          </article>
+          <article class="missing-help-card">
+            <span class="missing-help-icon">5</span>
+            <p>Take a clear photo and try Smart Lookup</p>
           </article>
         </div>
       </div>
-      <div class="seo-card" id="missing-label">
-        <h2>What if the serial number label is missing or unreadable?</h2>
-        <ul class="bullet-list"><li>Check purchase paperwork, warranty registration, or installation records before assuming the label is gone.</li><li>Use a photo from before removal or disposal if the equipment is already out of service.</li><li>Try the model number first when the serial is damaged, then move into Smart Lookup for a broader match.</li><li>Private-label brands and older products may need both the model prefix and the partial serial to route correctly.</li><li>Save a clear label photo before service work, repainting, or cabinet replacement changes the tag area.</li>
-        </ul>
-      </div>
-      <div class="seo-card faq-card">
+    </section>
+
+    <section class="section faq-light-section">
+      <div class="seo-copy-wrap">
         <h2>FAQ</h2>
-        <div class="faq-list">
+        <div class="faq-list faq-list-light">
           <details class="faq-item" open>
             <summary>Is the model number the same as the serial number?</summary>
             <div class="faq-answer"><p>No. The model number identifies the product family, while the serial number identifies the specific unit and is more likely to carry age information.</p></div>
@@ -327,84 +639,10 @@
       </div>
     </section>
 
-    
-    <section class="section" id="dishwashers">
-      <div class="seo-copy-wrap">
-        <h2>More common label locations by product type</h2>
-        
-      </div>
-      <div class="seo-copy-wrap">
-        <div class="mini-card-grid">
-          <article class="mini-card">
-            <h3>Refrigerators</h3>
-            <ul class="bullet-list"><li>Inside the fresh-food compartment</li><li>Side wall or door frame</li><li>Behind lower kick plate on some models</li><li><a href="/refrigerator-serial-number">Refrigerator serial number lookup</a></li><li><a href="/how-old-is-my-appliance">How old is my appliance?</a></li></ul>
-          </article>
-          <article class="mini-card">
-            <h3>Washers</h3>
-            <ul class="bullet-list"><li>Inside door or lid opening</li><li>Rear panel</li><li>Control-panel edge</li><li><a href="/washer-serial-number">Washer serial number lookup</a></li></ul>
-          </article>
-          <article class="mini-card">
-            <h3>Dryers</h3>
-            <ul class="bullet-list"><li>Inside door opening</li><li>Rear panel</li><li>Around lint filter opening on some models</li><li><a href="/dryer-serial-number">Dryer serial number lookup</a></li></ul>
-          </article>
-          <article class="mini-card">
-            <h3>Dishwashers</h3>
-            <ul class="bullet-list"><li>Inner door edge</li><li>Side of tub opening</li><li>Door jamb</li><li><a href="/dishwasher-serial-number">Dishwasher serial number lookup</a></li></ul>
-          </article>
-          <article class="mini-card">
-            <h3>Ranges & ovens</h3>
-            <ul class="bullet-list"><li>Oven door frame</li><li>Storage drawer area</li><li>Rear panel</li><li>Cooktop underside on some models</li><li><a href="/range-oven-serial-number">Range & oven serial number lookup</a></li></ul>
-          </article></div>
-      </div>
-    </section>
-    <section class="section" id="label-guide-table">
-      <div class="seo-copy-wrap">
-        <h2>What the label fields usually mean</h2>
-        <p>Most labels include several identifiers. The decoder works best when you know which field is the model and which field is the serial.</p>
-        <div class="table-wrap">
-          <table class="format-table">
-            <thead>
-              <tr>
-                <th>Label Field</th>
-                <th>What It Usually Means</th>
-                <th>Why It Matters</th>
-              </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td>Brand / manufacturer</td>
-              <td>Identifies the maker or OEM family.</td>
-              <td>Routes you into the right decoder or lookup page.</td>
-            </tr>
-            <tr>
-              <td>Model number</td>
-              <td>Identifies the product family or configuration.</td>
-              <td>Useful for parts, compatibility, and OEM confirmation.</td>
-            </tr>
-            <tr>
-              <td>Serial number</td>
-              <td>Identifies the specific unit.</td>
-              <td>Usually carries the best age or production clue.</td>
-            </tr>
-            <tr>
-              <td>Product number / SKU</td>
-              <td>Internal or retail catalog identifier.</td>
-              <td>Helpful for paperwork and parts matching when the model is broad.</td>
-            </tr>
-            <tr>
-              <td>Manufacture date or date code</td>
-              <td>A direct date or a factory code if printed.</td>
-              <td>Can confirm a serial-based estimate.</td>
-            </tr></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
     <section class="section related-section">
       <div class="seo-copy-wrap">
         <h2>Related Decoder Pages</h2>
-        <div class="related-brands"><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a><a href="/refrigerator-serial-number">Refrigerator Serial Number Lookup</a><a href="/washer-serial-number">Washer Serial Number Lookup</a><a href="/dryer-serial-number">Dryer Serial Number Lookup</a><a href="/dishwasher-serial-number">Dishwasher Serial Number Lookup</a><a href="/range-oven-serial-number">Range & Oven Serial Number Lookup</a><a href="/asus-serial-number-decoder">ASUS Serial Number Decoder</a>
+        <div class="related-brands related-brands-light"><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a><a href="/refrigerator-serial-number">Refrigerator Serial Number Lookup</a><a href="/washer-serial-number">Washer Serial Number Lookup</a><a href="/dryer-serial-number">Dryer Serial Number Lookup</a><a href="/dishwasher-serial-number">Dishwasher Serial Number Lookup</a><a href="/range-oven-serial-number">Range & Oven Serial Number Lookup</a><a href="/asus-serial-number-decoder">ASUS Serial Number Decoder</a>
         </div>
       </div>
     </section>
@@ -433,15 +671,6 @@
           <h3>Electronics Serial & Model Lookup</h3>
           <div class="link-pill-grid"><a href="/asus-serial-number-decoder">ASUS Serial Number Lookup</a><a href="/samsung-tv-serial-number-decoder">Samsung TV Serial Number Decoder</a><a href="/apple">Apple</a><a href="/hp">HP</a><a href="/sony">Sony</a><a href="/find-model-serial-number">Find Device Labels</a></div>
         </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="seo-copy-wrap">
-        <div class="cta-note">
-          <h2>Need a claim-ready replacement summary?</h2>
-          <p>Use the decoder above to start.</p>
         </div>
       </div>
     </section>

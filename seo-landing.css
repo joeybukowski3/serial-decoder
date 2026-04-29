@@ -527,6 +527,487 @@ textarea.form-input {
   min-height: 80px;
 }
 
+.serial-location-page main {
+  background: linear-gradient(180deg, #f6fbff 0%, #eef6fd 34%, #f8fbff 100%);
+  color: #1a202c;
+}
+
+.serial-location-page .section {
+  padding-top: 28px;
+  padding-bottom: 28px;
+}
+
+.serial-location-page .seo-copy-wrap,
+.serial-location-page .serial-location-hero-grid,
+.serial-location-page .results-wrapper {
+  max-width: 1180px;
+}
+
+.serial-location-page .breadcrumb-nav,
+.serial-location-page .breadcrumb-nav a,
+.serial-location-page .seo-copy-wrap p,
+.serial-location-page .faq-item p,
+.serial-location-page .utility-strip span,
+.serial-location-page .bullet-list,
+.serial-location-page .format-table td {
+  color: #425466;
+}
+
+.serial-location-page .breadcrumb-nav-left {
+  justify-content: flex-start;
+  margin-bottom: 18px;
+}
+
+.serial-location-hero {
+  padding-top: 40px;
+  padding-bottom: 20px;
+}
+
+.serial-location-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: center;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.serial-location-copy {
+  min-width: 0;
+}
+
+.serial-location-copy h1,
+.serial-location-page h2,
+.serial-location-page .appliance-location-card h3,
+.serial-location-page .faq-item summary,
+.serial-location-page .link-group-card h3,
+.serial-location-page .cta-note h2,
+.serial-location-page .mini-card h3 {
+  color: #1a202c;
+}
+
+.serial-location-copy h1 {
+  font-size: clamp(2rem, 11vw, 2.6rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  margin-bottom: 14px;
+  max-width: 9ch;
+  overflow-wrap: anywhere;
+}
+
+.serial-light-badge {
+  background: rgba(49, 130, 206, 0.12);
+  border-color: rgba(49, 130, 206, 0.26);
+  color: #3182ce;
+}
+
+.serial-hero-subtitle {
+  font-size: 1.1rem;
+  line-height: 1.65;
+  color: #425466;
+  max-width: 34rem;
+  margin-bottom: 20px;
+}
+
+.serial-location-decoder-wrap {
+  padding: 0;
+}
+
+.serial-location-page .serial-decoder-card {
+  max-width: none;
+  background: #ffffff;
+  border: 1px solid #d3e4f4;
+  box-shadow: 0 20px 45px rgba(100, 139, 179, 0.16);
+  padding: 0 20px 24px;
+}
+
+.serial-location-page .serial-decoder-card .search-tabs {
+  border-bottom: 1px solid #dce9f5;
+}
+
+.serial-location-page .serial-decoder-card .search-panel,
+.serial-location-page .serial-decoder-card .search-box {
+  background: transparent;
+}
+
+.serial-location-page .serial-decoder-card .search-select,
+.serial-location-page .serial-decoder-card .search-input {
+  background: #f7fbff;
+  color: #1a202c;
+  border: 1px solid #cfe0ef;
+}
+
+.serial-location-page .search-hint,
+.serial-location-page .era-note {
+  color: #61758a;
+}
+
+.serial-location-page .utility-strip {
+  border: 1px solid #dce9f5;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 12px 28px rgba(100, 139, 179, 0.08);
+}
+
+.serial-hero-diagram {
+  position: relative;
+  min-height: 380px;
+  border-radius: 28px;
+  padding: 30px;
+  background: linear-gradient(180deg, #ffffff, #eef6fd);
+  border: 1px solid #d8e7f5;
+  box-shadow: 0 26px 60px rgba(101, 136, 173, 0.18);
+  overflow: hidden;
+}
+
+.serial-hero-diagram::after {
+  content: "";
+  position: absolute;
+  inset: 24px;
+  border-radius: 24px;
+  border: 1px dashed rgba(49, 130, 206, 0.16);
+  pointer-events: none;
+}
+
+.serial-illustration-shell {
+  width: 100%;
+  min-width: 0;
+}
+
+.serial-illustration-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.diagram-callout {
+  position: absolute;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  max-width: 230px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #d5e5f4;
+  box-shadow: 0 14px 34px rgba(113, 143, 176, 0.16);
+  color: #1a202c;
+}
+
+.diagram-callout strong,
+.jump-copy strong {
+  display: block;
+  font-size: 13px;
+  color: #1a202c;
+}
+
+.diagram-callout small,
+.jump-copy small {
+  display: block;
+  color: #61758a;
+  line-height: 1.45;
+}
+
+.diagram-dot,
+.jump-icon,
+.missing-help-icon,
+.label-callout span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #3182ce;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.callout-top-left { top: 32px; left: 28px; }
+.callout-top-right { top: 54px; right: 28px; }
+.callout-mid-right { top: 214px; right: 14px; }
+.callout-bottom-left { bottom: 28px; left: 36px; }
+
+.appliance-jump-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.jump-nav-card {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  min-width: 0;
+  padding: 18px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid #d8e7f5;
+  box-shadow: 0 16px 40px rgba(111, 142, 177, 0.11);
+  text-decoration: none;
+}
+
+.jump-nav-card:hover,
+.appliance-location-card:hover,
+.location-card-link:hover,
+.related-brands-light a:hover {
+  transform: translateY(-2px);
+}
+
+.jump-copy {
+  min-width: 0;
+}
+
+.appliance-location-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.appliance-location-card {
+  min-width: 0;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #d8e7f5;
+  box-shadow: 0 18px 42px rgba(111, 142, 177, 0.12);
+}
+
+.location-visual {
+  padding: 20px;
+  background: linear-gradient(180deg, #f7fbff 0%, #edf6ff 100%);
+  border-bottom: 1px solid #d8e7f5;
+}
+
+.location-card-body {
+  padding: 20px;
+}
+
+.location-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: #3182ce;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.location-card-link--button {
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: #3182ce;
+  color: #ffffff;
+  box-shadow: 0 12px 28px rgba(49, 130, 206, 0.22);
+}
+
+.appliance-location-card--value {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px;
+  background: linear-gradient(180deg, #ffffff, #edf6ff);
+}
+
+.value-card-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(49, 130, 206, 0.12);
+  color: #3182ce;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.label-example-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.label-diagram-panel,
+.label-table-panel,
+.missing-label-strip,
+.serial-location-page .link-group-card,
+.serial-location-page .faq-item {
+  background: #ffffff;
+  border: 1px solid #d8e7f5;
+  box-shadow: 0 18px 40px rgba(111, 142, 177, 0.1);
+}
+
+.label-diagram-panel,
+.label-table-panel {
+  border-radius: 24px;
+  padding: 22px;
+}
+
+.label-plate {
+  position: relative;
+  border-radius: 22px;
+  padding: 26px;
+  background: linear-gradient(180deg, #ffffff, #f3f8fd);
+  border: 2px solid #d9e6f2;
+  font-family: "JetBrains Mono", monospace;
+  color: #1a202c;
+}
+
+.label-plate-header {
+  margin-bottom: 18px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.label-plate-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px dashed #d4e2ef;
+  font-size: 14px;
+}
+
+.label-plate-row span {
+  color: #61758a;
+  font-weight: 700;
+}
+
+.label-callout {
+  position: absolute;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #d7e5f3;
+  box-shadow: 0 12px 26px rgba(111, 142, 177, 0.12);
+}
+
+.label-callout small {
+  color: #425466;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.label-callout-1 { top: 18px; right: -10px; }
+.label-callout-2 { top: 94px; right: -12px; }
+.label-callout-3 { top: 150px; right: -12px; }
+.label-callout-4 { top: 208px; right: -12px; }
+
+.label-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.label-table th,
+.label-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #dfeaf4;
+  text-align: left;
+  vertical-align: top;
+  color: #425466;
+}
+
+.label-table th {
+  color: #1a202c;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.missing-label-strip {
+  margin: 0 auto;
+  max-width: 1180px;
+  border-radius: 28px;
+  padding: 26px 0;
+}
+
+.missing-strip-head {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.missing-help-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.missing-help-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: 18px;
+  background: #f7fbff;
+  border: 1px solid #d8e7f5;
+}
+
+.missing-help-card p {
+  margin: 0;
+  color: #425466;
+  line-height: 1.55;
+}
+
+.faq-light-section .faq-item {
+  background: #ffffff;
+}
+
+.faq-list-light .faq-item summary {
+  color: #1a202c;
+}
+
+.related-brands-light a {
+  color: #1a202c;
+  border-color: #d8e7f5;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(111, 142, 177, 0.08);
+}
+
+@media (min-width: 700px) {
+  .appliance-jump-grid,
+  .appliance-location-grid,
+  .missing-help-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 901px) {
+  .serial-location-hero-grid,
+  .label-example-grid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+  }
+
+  .serial-location-copy h1 {
+    font-size: clamp(2.6rem, 5.2vw, 4.4rem);
+    line-height: 0.95;
+    max-width: 10ch;
+  }
+
+  .serial-hero-diagram {
+    min-height: 520px;
+  }
+
+  .appliance-jump-grid,
+  .appliance-location-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .missing-help-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
   .seo-section-grid {
     grid-template-columns: 1fr;
@@ -540,6 +1021,47 @@ textarea.form-input {
 }
 
 @media (max-width: 600px) {
+  .serial-location-hero {
+    padding-top: 24px;
+  }
+
+  .serial-location-copy h1 {
+    max-width: 8ch;
+  }
+
+  .serial-hero-diagram {
+    min-height: 380px;
+    padding: 18px;
+  }
+
+  .diagram-callout {
+    max-width: 190px;
+    padding: 10px 12px;
+  }
+
+  .callout-top-left { top: 16px; left: 12px; }
+  .callout-top-right { top: 74px; right: 10px; }
+  .callout-mid-right { top: 206px; right: 8px; }
+  .callout-bottom-left { bottom: 16px; left: 12px; }
+
+  .jump-nav-card,
+  .appliance-location-card,
+  .label-diagram-panel,
+  .label-table-panel,
+  .missing-help-card {
+    border-radius: 20px;
+  }
+
+  .missing-strip-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .label-callout {
+    position: static;
+    margin-top: 10px;
+  }
+
   .tool-hero {
     padding: 34px 16px 24px;
   }

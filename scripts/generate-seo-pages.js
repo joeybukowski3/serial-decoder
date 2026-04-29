@@ -335,6 +335,513 @@ function renderExtraSections(sections = []) {
   }).join('');
 }
 
+function renderBreadcrumbHtml(breadcrumbs) {
+  return breadcrumbs.map((item, index) => index === breadcrumbs.length - 1
+    ? `<span aria-current="page">${item.name}</span>`
+    : `<a href="${item.url.replace(siteUrl, '') || '/'}">${item.name}</a>`).join('<span class="breadcrumb-sep">/</span>');
+}
+
+function renderDecoderModule(page, opts = {}) {
+  const shellClass = opts.shellClass ? ` ${opts.shellClass}` : '';
+  const wrapperClass = opts.wrapperClass || 'tool-focus-wrap';
+  const includeUtility = opts.includeUtility !== false;
+  return `
+      <div class="${wrapperClass}">
+        <div class="seo-tool-shell${shellClass}">
+          <div class="home-tools-wrap">
+            <div class="home-tools-grid">
+              <div class="decoder-card-shell">
+                <div class="search-box">
+                  <div class="search-tabs">
+                    <button class="search-tab cat-tab${page.category === 'appliances' ? ' active' : ''}" data-cat="appliances" onclick="selectCatAndShowDecoder('appliances', this)">Appliances</button>
+                    <button class="search-tab cat-tab${page.category === 'waterHeaters' ? ' active' : ''}" data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">Water Heaters</button>
+                    <button class="search-tab cat-tab${page.category === 'hvac' ? ' active' : ''}" data-cat="hvac" onclick="selectCatAndShowDecoder('hvac', this)">HVAC</button>
+                    <button class="search-tab cat-tab${page.category === 'electronics' ? ' active' : ''}" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
+                  </div>
+
+                  <div class="search-panel" id="panel-decoder">
+                    <div class="home-tool-row">
+                      <label class="sr-only" for="brand">Select Brand</label>
+                      <select id="brand" class="search-select">
+                        <option value="">-- Select Brand --</option>
+                      </select>
+
+                      <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
+                      <input type="text" id="serial" class="search-input" placeholder="${page.decoderPlaceholder || 'Enter serial number exactly as shown'}">
+                    </div>
+
+                    <div class="era-group hidden" id="eraGroup">
+                      <label class="sr-only" for="eraSelect">Manufacture Era</label>
+                      <select id="eraSelect" class="search-select" style="margin-top:8px;">
+                        <option value="">-- Select Era --</option>
+                        <option value="post">Post-2006</option>
+                        <option value="pre">Pre-2006</option>
+                      </select>
+                      <p class="era-note">Some brands reuse serial layouts across decades. Select the era when prompted to improve accuracy.</p>
+                    </div>
+
+                    <p class="search-hint serial-helper-text">${page.decoderIntro}</p>
+                    <div class="tool-panel-action">
+                      <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">Decode Serial Number</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        ${includeUtility ? `<div class="utility-strip">${trustBullets.map((item) => `<span>${item}</span>`).join('')}</div>` : ''}
+      </div>`;
+}
+
+function renderResultsShell() {
+  return `
+    <div class="results-wrapper">
+      <div id="ageLoading" class="results-card hidden">
+        <div class="loading-inner">
+          <span class="loading-emoji lightning" id="loadingEmoji">&#127785;&#65039;</span>
+          <div class="loading-text" id="loadingText">Researching product information...</div>
+        </div>
+      </div>
+
+      <div id="serialResults" class="results-card hidden">
+        <div class="results-header">
+          <h3>Decoded Results</h3>
+          <div class="brand-logo-wrap" id="serialBrandLogo"></div>
+        </div>
+        <div class="results-body">
+          <div id="serialSummaryLayer" class="sl-top-summary-layer serial-summary-layer hidden"></div>
+          <div class="serial-legacy-fields" hidden aria-hidden="true">
+            <div class="result-row result-row--primary">
+              <span class="result-label">Manufacture Date</span>
+              <span class="result-value" id="resultYear"></span>
+            </div>
+            <div class="result-row" id="resultMonthRow">
+              <span class="result-label">Month / Period</span>
+              <span class="result-value" id="resultMonth"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Brand</span>
+              <span class="result-value" id="resultBrand"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Estimated Age</span>
+              <span class="result-value" id="resultEstimatedAge">&mdash;</span>
+            </div>
+            <div class="info-block method">
+              <h4>Decoding Method</h4>
+              <p id="resultMethod"></p>
+            </div>
+            <div class="info-block notes">
+              <h4>Important Notes</h4>
+              <p id="resultNotes"></p>
+            </div>
+            <details class="determination-details">
+              <summary>How this was determined</summary>
+              <div class="determination-body" id="serialDeterminationBody">
+                We use the brand-specific serial rules already supported in Item Assist. When a brand repeats codes across decades, the result stays estimated until model era or installation context confirms the right cycle.
+              </div>
+            </details>
+          </div>
+        </div>
+        <div class="results-footer">
+          <button class="copy-btn" onclick="copyClaimFile()">Copy Information</button>
+          <button class="decode-again-btn btn-amber" onclick="decodeAnotherItem()">Decode Another Item</button>
+          <button class="decode-again-btn btn-teal" onclick="window.location.href='/smart-lookup'">Use Smart Lookup</button>
+          <button class="error-btn" onclick="openFeedbackModal()">Possible Error?</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderSerialLocationIllustration(kind, marker, label) {
+  const markerCircle = marker ? `
+      <circle cx="${marker.x}" cy="${marker.y}" r="10" fill="#3182ce"></circle>
+      <circle cx="${marker.x}" cy="${marker.y}" r="20" fill="none" stroke="rgba(49,130,206,0.28)" stroke-width="8"></circle>` : '';
+
+  const shapes = {
+    refrigerator: `
+      <rect x="96" y="20" width="126" height="228" rx="18" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <line x1="96" y1="112" x2="222" y2="112" stroke="#7fb0e6" stroke-width="6"></line>
+      <line x1="208" y1="58" x2="208" y2="92" stroke="#1a202c" stroke-width="6" stroke-linecap="round"></line>
+      <line x1="208" y1="144" x2="208" y2="208" stroke="#1a202c" stroke-width="6" stroke-linecap="round"></line>
+      <rect x="84" y="244" width="150" height="12" rx="6" fill="#c6dcf5"></rect>`,
+    washer: `
+      <rect x="78" y="28" width="164" height="208" rx="18" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <rect x="92" y="42" width="136" height="26" rx="8" fill="#dcecff"></rect>
+      <circle cx="160" cy="146" r="56" fill="#eaf4ff" stroke="#7fb0e6" stroke-width="6"></circle>
+      <circle cx="160" cy="146" r="26" fill="#c8dff6"></circle>`,
+    dryer: `
+      <rect x="78" y="28" width="164" height="208" rx="18" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <circle cx="160" cy="142" r="56" fill="#eef6ff" stroke="#7fb0e6" stroke-width="6"></circle>
+      <circle cx="160" cy="142" r="30" fill="#daeafc"></circle>
+      <rect x="118" y="52" width="84" height="18" rx="9" fill="#dcecff"></rect>`,
+    dishwasher: `
+      <rect x="84" y="24" width="152" height="220" rx="18" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <rect x="96" y="42" width="128" height="22" rx="8" fill="#dcecff"></rect>
+      <rect x="106" y="82" width="108" height="130" rx="12" fill="#edf6ff" stroke="#bfd7f2" stroke-width="4"></rect>`,
+    range: `
+      <rect x="78" y="38" width="164" height="198" rx="18" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <rect x="84" y="24" width="152" height="24" rx="10" fill="#dcecff"></rect>
+      <circle cx="118" cy="34" r="7" fill="#3182ce"></circle>
+      <circle cx="158" cy="34" r="7" fill="#3182ce"></circle>
+      <circle cx="198" cy="34" r="7" fill="#3182ce"></circle>
+      <rect x="110" y="102" width="100" height="90" rx="12" fill="#eef6ff" stroke="#bfd7f2" stroke-width="4"></rect>`,
+    hvac: `
+      <rect x="62" y="74" width="96" height="122" rx="16" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <circle cx="110" cy="136" r="32" fill="#eaf4ff" stroke="#7fb0e6" stroke-width="6"></circle>
+      <circle cx="110" cy="136" r="9" fill="#7fb0e6"></circle>
+      <rect x="176" y="52" width="84" height="154" rx="16" fill="#eef6ff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <rect x="190" y="76" width="56" height="18" rx="8" fill="#dcecff"></rect>`,
+    electronics: `
+      <rect x="56" y="46" width="208" height="126" rx="18" fill="#f8fbff" stroke="#7fb0e6" stroke-width="6"></rect>
+      <rect x="72" y="60" width="176" height="92" rx="10" fill="#edf6ff"></rect>
+      <rect x="118" y="178" width="84" height="10" rx="5" fill="#7fb0e6"></rect>
+      <rect x="142" y="188" width="36" height="22" rx="8" fill="#bfd7f2"></rect>`
+  };
+
+  return `
+    <div class="serial-illustration-shell" role="img" aria-label="${label}">
+      <svg viewBox="0 0 320 272" class="serial-illustration-svg" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="panelGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffffff"></stop>
+            <stop offset="100%" stop-color="#e8f3ff"></stop>
+          </linearGradient>
+        </defs>
+        <rect x="12" y="12" width="296" height="248" rx="28" fill="url(#panelGlow)" stroke="#d5e7f7" stroke-width="4"></rect>
+        ${shapes[kind] || shapes.refrigerator}
+        ${markerCircle}
+      </svg>
+    </div>`;
+}
+
+function renderHeroFridgeDiagram() {
+  return `
+    <div class="serial-hero-diagram" aria-label="Illustrated refrigerator serial number locations">
+      ${renderSerialLocationIllustration('refrigerator', { x: 214, y: 178 }, 'Refrigerator with common serial label locations highlighted')}
+      <div class="diagram-callout callout-top-left"><span class="diagram-dot"></span><div><strong>Inside fresh food compartment</strong><small>Often on the interior wall or liner</small></div></div>
+      <div class="diagram-callout callout-top-right"><span class="diagram-dot"></span><div><strong>Side wall</strong><small>Common first check on many fridges</small></div></div>
+      <div class="diagram-callout callout-mid-right"><span class="diagram-dot"></span><div><strong>Door frame</strong><small>Look around the main cabinet opening</small></div></div>
+      <div class="diagram-callout callout-bottom-left"><span class="diagram-dot"></span><div><strong>Behind lower kick plate</strong><small>Fallback location on some models</small></div></div>
+    </div>`;
+}
+
+function renderJumpNavCards(items) {
+  return items.map((item) => `
+          <a class="jump-nav-card" href="${item.href}">
+            <span class="jump-icon">${item.icon}</span>
+            <span class="jump-copy">
+              <strong>${item.label}</strong>
+              <small>${item.meta}</small>
+            </span>
+          </a>`).join('');
+}
+
+function renderApplianceLocationCards(cards) {
+  return cards.map((card) => {
+    if (card.type === 'value-card') {
+      return `
+          <article class="appliance-location-card appliance-location-card--value">
+            <div class="value-card-badge">Field-service utility</div>
+            <h3>${card.title}</h3>
+            <ul class="bullet-list">${renderChecklist(card.items)}</ul>
+            <a class="location-card-link location-card-link--button" href="${card.href}">${card.cta}</a>
+          </article>`;
+    }
+
+    return `
+          <article class="appliance-location-card" id="${card.id}">
+            <div class="location-visual">
+              ${renderSerialLocationIllustration(card.kind, card.marker, card.alt)}
+            </div>
+            <div class="location-card-body">
+              <h3>${card.title}</h3>
+              <ul class="bullet-list">${renderChecklist(card.items)}</ul>
+              <a class="location-card-link" href="${card.href}">${card.linkLabel}</a>
+            </div>
+          </article>`;
+  }).join('');
+}
+
+function renderLabelExampleRows(rows) {
+  return rows.map((row) => `
+              <tr>
+                <td>${row.num}</td>
+                <td>${row.field}</td>
+                <td>${row.meaning}</td>
+                <td>${row.why}</td>
+              </tr>`).join('');
+}
+
+function renderMissingHelpCards(cards) {
+  return cards.map((card) => `
+          <article class="missing-help-card">
+            <span class="missing-help-icon">${card.icon}</span>
+            <p>${card.text}</p>
+          </article>`).join('');
+}
+
+function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, preselectScript) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-C3TXQS1DYP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-C3TXQS1DYP');
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5946778263750869" crossorigin="anonymous"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${pageTitle(page.title)}</title>
+  <meta name="description" content="${page.description}">
+  <link rel="canonical" href="${url}">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Item Assist">
+  <meta property="og:title" content="${pageTitle(page.title)}">
+  <meta property="og:description" content="${page.description}">
+  <meta property="og:url" content="${url}">
+  <meta property="og:image" content="${siteUrl}/assets/item-assist-banner.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${pageTitle(page.title)}">
+  <meta name="twitter:description" content="${page.description}">
+  <meta name="twitter:image" content="${siteUrl}/assets/item-assist-banner.png">
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="seo-landing.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body class="serial-location-page" data-page-kind="brand-page">
+  <nav>
+    <a href="/" class="logo" aria-label="Item Assist home">
+      <div>
+        <div class="logo-text">Decode My <span>Item</span></div>
+        <div class="logo-sub">Decode - Research - Automate</div>
+      </div>
+    </a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span><span></span><span></span><span></span></button>
+    <ul>${navLinks}
+    </ul>
+  </nav>
+
+  <main>
+    <section class="section serial-location-hero">
+      <div class="serial-location-hero-grid">
+        <div class="serial-location-copy">
+          <nav class="breadcrumb-nav breadcrumb-nav-left" aria-label="Breadcrumb">
+            ${renderBreadcrumbHtml(breadcrumbs)}
+          </nav>
+          <div class="tool-badge serial-light-badge">${page.badge}</div>
+          <h1>${page.h1}</h1>
+          <p class="serial-hero-subtitle">${page.subtitle}</p>
+          ${renderDecoderModule(page, { wrapperClass: 'serial-location-decoder-wrap', shellClass: 'serial-decoder-card' })}
+        </div>
+        ${renderHeroFridgeDiagram()}
+      </div>
+    </section>
+
+    ${renderResultsShell()}
+
+    <section class="section serial-jump-section">
+      <div class="seo-copy-wrap">
+        <h2>Jump to the right product type</h2>
+        <p>Start with the product family you have in front of you. Each jump card lands on the most common label locations and the fastest next lookup path.</p>
+      </div>
+      <div class="seo-copy-wrap">
+        <div class="appliance-jump-grid">
+          ${renderJumpNavCards(page.jumpCards)}
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="location-cards">
+      <div class="seo-copy-wrap">
+        <h2>Appliance, HVAC, and electronics serial number locations</h2>
+        <p>Use these visual location cards when you need a fast field reference before opening the decoder or documenting the label for service, claims, or replacement research.</p>
+      </div>
+      <div class="seo-copy-wrap">
+        <div class="appliance-location-grid">
+          ${renderApplianceLocationCards(page.locationCards)}
+        </div>
+      </div>
+    </section>
+
+    <section class="section label-example-section" id="label-examples">
+      <div class="seo-copy-wrap">
+        <h2>What Does the Serial Number Label Look Like?</h2>
+      </div>
+      <div class="seo-copy-wrap">
+        <div class="label-example-grid">
+          <div class="label-diagram-panel">
+            <div class="label-plate" role="img" aria-label="Example appliance serial label showing brand, model number, serial number, and manufacture date callouts">
+              <div class="label-plate-header">Whirlpool</div>
+              <div class="label-plate-row"><span>MOD.</span><strong>WRF535SWHZ00</strong></div>
+              <div class="label-plate-row"><span>SER.</span><strong>D12345678</strong></div>
+              <div class="label-plate-row"><span>MFD.</span><strong>04/2019</strong></div>
+              <div class="label-plate-row"><span>TYPE</span><strong>BCDM-000</strong></div>
+              <div class="label-plate-row"><span>ELEC</span><strong>120V 60Hz 5.0A</strong></div>
+              <div class="label-callout label-callout-1"><span>1</span><small>Brand / manufacturer</small></div>
+              <div class="label-callout label-callout-2"><span>2</span><small>Model number</small></div>
+              <div class="label-callout label-callout-3"><span>3</span><small>Serial number</small></div>
+              <div class="label-callout label-callout-4"><span>4</span><small>Manufacture date / code</small></div>
+            </div>
+          </div>
+          <div class="label-table-panel">
+            <div class="table-wrap">
+              <table class="label-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Label Field</th>
+                    <th>What It Usually Means</th>
+                    <th>Why It Matters</th>
+                  </tr>
+                </thead>
+                <tbody>${renderLabelExampleRows(page.labelRows)}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section missing-label-strip" id="missing-label">
+      <div class="seo-copy-wrap missing-strip-head">
+        <div>
+          <h2>Can't Find Your Serial Number?</h2>
+          <p>Use the fallback checks below before assuming the label is gone. A quick photo, manual, or lower access cover often solves the problem.</p>
+        </div>
+        <a class="location-card-link location-card-link--button" href="/smart-lookup">View Smart Lookup</a>
+      </div>
+      <div class="seo-copy-wrap">
+        <div class="missing-help-grid">
+          ${renderMissingHelpCards(page.missingHelp)}
+        </div>
+      </div>
+    </section>
+
+    <section class="section faq-light-section">
+      <div class="seo-copy-wrap">
+        <h2>FAQ</h2>
+        <div class="faq-list faq-list-light">${renderFaqHtml(page.faqs)}
+        </div>
+      </div>
+    </section>
+
+    <section class="section related-section">
+      <div class="seo-copy-wrap">
+        <h2>Related Decoder Pages</h2>
+        <div class="related-brands related-brands-light">${renderLinks(page.relatedLinks)}
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="seo-copy-wrap">
+        <h2>Research Paths</h2>
+        <div class="link-group-grid">${renderLinkGroupCards(page.linkGroups)}
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Report an Issue</h3>
+        <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-field">
+          <label class="sr-only" for="fbBrand">Brand</label>
+          <input type="text" id="fbBrand" class="form-input" readonly>
+        </div>
+        <div class="modal-field">
+          <label class="sr-only" for="fbSerial">Serial Number / Search Query</label>
+          <input type="text" id="fbSerial" class="form-input" readonly>
+        </div>
+        <div class="modal-field">
+          <label class="sr-only" for="fbType">Issue Type</label>
+          <select id="fbType" class="form-select">
+            <option value="">-- Select issue type --</option>
+            <option value="wrong_year">Wrong year / date</option>
+            <option value="wrong_month">Wrong month</option>
+            <option value="wrong_brand">Wrong brand identified</option>
+            <option value="format_error">Format / decode error</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label class="sr-only" for="fbDetails">Details</label>
+          <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong?"></textarea>
+        </div>
+        <div id="fbThanks" class="fb-thanks hidden">Thank you. Your feedback helps improve the decoder.</div>
+        <div id="fbActions" class="modal-actions">
+          <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
+          <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div>&copy; 2026 Item Assist</div>
+    <div class="footer-links">
+      <a href="/methodology">Methodology</a>
+      <a href="/contact">Contact</a>
+      <a href="/security">Security &amp; Data Notice</a>
+      <a href="/privacy-policy">Privacy Policy</a>
+    </div>
+  </footer>
+
+  <script>
+    function selectCatAndShowDecoder(cat, btn) {
+      if (typeof selectCategory === 'function') selectCategory(cat, btn);
+    }
+
+    function applySeoBrandSelection(attempt) {${preselectScript}
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      var activeTab = document.querySelector('[data-cat="${page.category}"]');
+      if (activeTab) selectCatAndShowDecoder('${page.category}', activeTab);
+      applySeoBrandSelection(0);
+    });
+
+    window.addEventListener('pageshow', function () {
+      var feedbackModal = document.getElementById('feedbackModal');
+      var navList = document.querySelector('nav ul');
+      var hamburger = document.getElementById('hamburgerBtn');
+
+      if (!feedbackModal || feedbackModal.classList.contains('hidden')) {
+        document.body.style.overflow = '';
+      }
+      document.body.classList.remove('nav-menu-open');
+      if (navList) navList.classList.remove('open');
+      if (hamburger) hamburger.classList.remove('active');
+    });
+  </script>
+  <script src="decoder-data.js"></script>
+  <script src="lkq-engine.js"></script>
+  <script src="analytics.js"></script>
+  <script src="smart-lookup-extras.js"></script>
+  <script src="smart-lookup-normalizer.js"></script>
+  <script src="smart-lookup-summary-render.js"></script>
+  <script src="script.js"></script>
+  <script src="smart-lookup.js"></script>
+  <script src="smart-lookup-upgrade-patch.js"></script>
+  <script src="smart-lookup-pricetier.js"></script>
+  <script src="shared.js"></script>
+  ${schema.map(scriptJson).join('\n  ')}
+</body>
+</html>`;
+}
+
 function renderPage(page) {
   const url = canonical(page.slug);
   const breadcrumbs = page.breadcrumbs || [
@@ -359,6 +866,10 @@ function renderPage(page) {
       brandSelect.value = '${page.brandValue}';
       brandSelect.dispatchEvent(new Event('change'));`
     : '';
+
+  if (page.template === 'serial-location-hub') {
+    return renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, preselectScript);
+  }
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -793,14 +1304,14 @@ const pages = [
   },
   {
     slug: 'where-is-my-serial-number',
+    template: 'serial-location-hub',
     title: 'Where Is My Serial Number? Appliance, HVAC & Electronics Guide',
     description: 'Find where to locate serial numbers and model numbers on appliances, HVAC equipment, and electronics before using the decoder.',
     h1: 'Where Is My Serial Number?',
     badge: 'Label location guide',
     category: 'appliances',
     brandValue: '',
-    intro: 'Most age, model, and replacement lookups work best when you have both the brand and the serial or model label in front of you.',
-    supportingIntro: 'Found the label? Enter the brand, model, and serial number below. If not, use the quick sections on this page to narrow the most common label locations before you move into the decoder.',
+    subtitle: 'Find your serial number or model number location for appliances, HVAC equipment, and electronics.',
     decoderIntro: 'Found the label? Enter the brand, model, and serial number below.',
     decoderPlaceholder: 'Enter serial number from the label',
     howToSteps: [
@@ -808,87 +1319,109 @@ const pages = [
       'Find the label on the product, cabinet, or settings screen.',
       'Enter the serial number exactly as printed before using Smart Lookup as a fallback.'
     ],
-    preGridSections: [
+    jumpCards: [
+      { href: '#refrigerators', label: 'Refrigerators', meta: 'Interior walls and door frames', icon: 'RF' },
+      { href: '#washers', label: 'Washers', meta: 'Lid, door, or rear panel', icon: 'WS' },
+      { href: '#dryers', label: 'Dryers', meta: 'Door opening or lint area', icon: 'DR' },
+      { href: '#dishwashers', label: 'Dishwashers', meta: 'Inner edge and tub lip', icon: 'DW' },
+      { href: '#ranges-ovens', label: 'Ranges & Ovens', meta: 'Drawer, frame, or rear panel', icon: 'RG' },
+      { href: '#hvac-systems', label: 'HVAC Systems', meta: 'Rating plates and service panels', icon: 'HV' },
+      { href: '#electronics', label: 'Electronics', meta: 'Bottom labels and settings screens', icon: 'EL' },
+      { href: '#label-examples', label: 'Label Examples', meta: 'Brand, model, serial, MFD', icon: 'LB' },
+      { href: '#missing-label', label: 'Missing Label?', meta: 'Fallback checks and Smart Lookup', icon: 'ML' }
+    ],
+    locationCards: [
       {
-        type: 'jump-links',
-        title: 'Quick Jump',
-        links: [
-          { href: '#refrigerators', label: 'Refrigerators' },
-          { href: '#washers', label: 'Washers' },
-          { href: '#appliance-label-locations', label: 'Dryers' },
-          { href: '#appliance-label-locations', label: 'Dishwashers' },
-          { href: '#appliance-label-locations', label: 'Ranges & Ovens' },
-          { href: '#hvac-electronics', label: 'HVAC Systems' },
-          { href: '#hvac-electronics', label: 'Electronics' },
-          { href: '#label-guide', label: 'What the Label Looks Like' },
-          { href: '#missing-label', label: 'What if the Label Is Missing?' }
-        ]
-      }
-    ],
-    decodeSectionId: 'refrigerators',
-    decodeSectionTitle: 'Refrigerator serial number location',
-    decodeSectionBody: 'Most refrigerators place the data label inside the fresh-food compartment on a side wall, on the door frame, or behind a lower drawer or kick plate. Use <a href="/refrigerator-serial-number">the refrigerator serial number lookup page</a> if you need the next step after finding it, or jump to <a href="/how-old-is-my-appliance">the appliance age hub</a> when the goal is an age estimate.',
-    modelSectionId: 'washers',
-    modelSectionTitle: 'Washer serial number location',
-    modelSectionBody: 'Washer labels are commonly inside the lid opening, around the door opening, on the rear panel, or along the control-panel edge. The <a href="/washer-serial-number">washer serial number page</a> narrows the decode path by brand once the tag is readable.',
-    formatSectionId: 'label-guide',
-    formatSectionTitle: 'What does the serial/model label look like?',
-    formats: [
-      { label: 'Brand / manufacturer', pattern: 'Brand name or logo', meaning: 'Confirms which decoder path to use first.', confidence: 'High value for routing the lookup.' },
-      { label: 'Model number', pattern: 'Family or platform identifier', meaning: 'Helps confirm product family, capacity, and OEM context.', confidence: 'Strong support signal.' },
-      { label: 'Serial number', pattern: 'Unit-specific identifier', meaning: 'Usually carries the best age or production clue.', confidence: 'Primary date signal on supported brands.' },
-      { label: 'Product number / SKU', pattern: 'Retail or internal catalog code', meaning: 'Useful for paperwork and parts matching, but not always the age clue.', confidence: 'Supportive only.' },
-      { label: 'Date code if shown', pattern: 'Direct month/year or factory code', meaning: 'Can confirm or override an estimated serial decode.', confidence: 'Higher when printed directly.' }
-    ],
-    exampleSectionId: 'appliance-label-locations',
-    exampleSectionTitle: 'Dryer, dishwasher, and range label locations',
-    examples: [
-      { label: 'Dryers', serial: 'Door opening / rear panel', note: 'Many dryers place the label inside the door opening, on the rear panel, or around the lint filter opening on some models. Use <a href="/dryer-serial-number">the dryer serial number lookup page</a> after you find it.' },
-      { label: 'Dishwashers', serial: 'Inner door edge / tub opening', note: 'Dishwasher labels are often on the inner door edge, on the side of the tub opening, or on the door jamb. Use <a href="/dishwasher-serial-number">the dishwasher serial number page</a> for the next decode step.' },
-      { label: 'Ranges & ovens', serial: 'Oven frame / drawer area', note: 'Cooking products often hide the label on the oven door frame, in the storage drawer opening, on the rear panel, or under the cooktop on some models. Use <a href="/range-oven-serial-number">the range and oven serial number page</a> once the tag is visible.' }
-    ],
-    locationSectionId: 'hvac-electronics',
-    locationSectionTitle: 'HVAC and electronics label locations',
-    locations: [
-      { title: 'HVAC systems', items: ['Outdoor condenser rating plate on the side panel', 'Furnace cabinet interior panel or service door', 'Air handler data plate near the access panel', 'Use <a href="/rheem-serial-number-lookup">Rheem</a>, <a href="/carrier-serial-number-lookup">Carrier</a>, <a href="/trane-serial-number-lookup">Trane</a>, or <a href="/goodman-serial-number-lookup">Goodman</a> once the rating plate is found.'] },
-      { title: 'Electronics', items: ['Bottom label on laptops and small devices', 'Rear case label on TVs, monitors, desktops, and appliances with smart screens', 'System Settings or About screen on supported electronics', 'Original box, invoice, or receipt if the hardware label is worn', 'Use <a href="/asus-serial-number-decoder">the ASUS serial number decoder</a> or other electronics pages after you confirm the label.'] },
-      { title: 'What if the label is missing?', items: ['Check original paperwork and warranty registration emails', 'Check the original invoice, install record, or retailer account', 'Use Smart Lookup when only a partial model or serial survives', 'Inspect photos before discarding old equipment', 'Try the model number first if the serial is damaged or unreadable'] }
-    ],
-    problemSectionId: 'missing-label',
-    problemSectionTitle: 'What if the serial number label is missing or unreadable?',
-    problems: [
-      'Check purchase paperwork, warranty registration, or installation records before assuming the label is gone.',
-      'Use a photo from before removal or disposal if the equipment is already out of service.',
-      'Try the model number first when the serial is damaged, then move into Smart Lookup for a broader match.',
-      'Private-label brands and older products may need both the model prefix and the partial serial to route correctly.',
-      'Save a clear label photo before service work, repainting, or cabinet replacement changes the tag area.'
-    ],
-    postGridSections: [
-      {
-        id: 'dishwashers',
-        type: 'mini-grid',
-        title: 'More common label locations by product type',
-        blocks: [
-          { title: 'Refrigerators', items: ['Inside the fresh-food compartment', 'Side wall or door frame', 'Behind lower kick plate on some models', '<a href="/refrigerator-serial-number">Refrigerator serial number lookup</a>', '<a href="/how-old-is-my-appliance">How old is my appliance?</a>'] },
-          { title: 'Washers', items: ['Inside door or lid opening', 'Rear panel', 'Control-panel edge', '<a href="/washer-serial-number">Washer serial number lookup</a>'] },
-          { title: 'Dryers', items: ['Inside door opening', 'Rear panel', 'Around lint filter opening on some models', '<a href="/dryer-serial-number">Dryer serial number lookup</a>'] },
-          { title: 'Dishwashers', items: ['Inner door edge', 'Side of tub opening', 'Door jamb', '<a href="/dishwasher-serial-number">Dishwasher serial number lookup</a>'] },
-          { title: 'Ranges & ovens', items: ['Oven door frame', 'Storage drawer area', 'Rear panel', 'Cooktop underside on some models', '<a href="/range-oven-serial-number">Range & oven serial number lookup</a>'] }
-        ]
+        id: 'refrigerators',
+        kind: 'refrigerator',
+        marker: { x: 218, y: 182 },
+        title: 'Refrigerators',
+        alt: 'Refrigerator illustration showing a common serial-number label location.',
+        items: ['Inside fresh food compartment', 'Side wall label', 'Door frame opening', 'Behind lower kick plate on some models'],
+        href: '/refrigerator-serial-number',
+        linkLabel: 'View details &rarr;'
       },
       {
-        id: 'label-guide-table',
-        type: 'table',
-        title: 'What the label fields usually mean',
-        intro: 'Most labels include several identifiers. The decoder works best when you know which field is the model and which field is the serial.',
-        rows: [
-          { field: 'Brand / manufacturer', meaning: 'Identifies the maker or OEM family.', why: 'Routes you into the right decoder or lookup page.' },
-          { field: 'Model number', meaning: 'Identifies the product family or configuration.', why: 'Useful for parts, compatibility, and OEM confirmation.' },
-          { field: 'Serial number', meaning: 'Identifies the specific unit.', why: 'Usually carries the best age or production clue.' },
-          { field: 'Product number / SKU', meaning: 'Internal or retail catalog identifier.', why: 'Helpful for paperwork and parts matching when the model is broad.' },
-          { field: 'Manufacture date or date code', meaning: 'A direct date or a factory code if printed.', why: 'Can confirm a serial-based estimate.' }
-        ]
+        id: 'washers',
+        kind: 'washer',
+        marker: { x: 210, y: 60 },
+        title: 'Washers',
+        alt: 'Washer illustration showing a common serial-number label location.',
+        items: ['Inside door or lid opening', 'Rear panel sticker', 'Control panel edge', 'Sometimes below lid rim'],
+        href: '/washer-serial-number',
+        linkLabel: 'View details &rarr;'
+      },
+      {
+        id: 'dryers',
+        kind: 'dryer',
+        marker: { x: 160, y: 74 },
+        title: 'Dryers',
+        alt: 'Dryer illustration showing a common serial-number label location.',
+        items: ['Inside door opening', 'Rear panel label', 'Around lint filter opening', 'Cabinet frame on stacked units'],
+        href: '/dryer-serial-number',
+        linkLabel: 'View details &rarr;'
+      },
+      {
+        id: 'dishwashers',
+        kind: 'dishwasher',
+        marker: { x: 220, y: 60 },
+        title: 'Dishwashers',
+        alt: 'Dishwasher illustration showing a common serial-number label location.',
+        items: ['Inner door edge', 'Side of tub opening', 'Door jamb', 'Upper trim edge on some models'],
+        href: '/dishwasher-serial-number',
+        linkLabel: 'View details &rarr;'
+      },
+      {
+        id: 'ranges-ovens',
+        kind: 'range',
+        marker: { x: 88, y: 216 },
+        title: 'Ranges & Ovens',
+        alt: 'Range and oven illustration showing a common serial-number label location.',
+        items: ['Oven door frame', 'Storage drawer area', 'Rear panel', 'Cooktop underside on some models'],
+        href: '/range-oven-serial-number',
+        linkLabel: 'View details &rarr;'
+      },
+      {
+        id: 'hvac-systems',
+        kind: 'hvac',
+        marker: { x: 226, y: 94 },
+        title: 'HVAC Systems',
+        alt: 'HVAC illustration showing a common rating-plate location.',
+        items: ['Outdoor condenser rating plate', 'Furnace cabinet interior panel', 'Air handler data plate', 'Equipment side panel'],
+        href: '/carrier-serial-number-lookup',
+        linkLabel: 'View details &rarr;'
+      },
+      {
+        id: 'electronics',
+        kind: 'electronics',
+        marker: { x: 232, y: 160 },
+        title: 'Electronics',
+        alt: 'Electronics illustration showing a common serial-number label location.',
+        items: ['Bottom label', 'Rear case label', 'System settings / About screen', 'Original box or receipt'],
+        href: '/asus-serial-number-decoder',
+        linkLabel: 'View details &rarr;'
+      },
+      {
+        type: 'value-card',
+        title: 'Why Finding the Right Serial Number Matters',
+        items: ['Look up age and manufacture date', 'Verify warranty eligibility', 'Find the right parts and accessories', 'Assist with insurance and replacement documentation'],
+        href: '#decoder-tool',
+        cta: 'Start Lookup Now'
       }
+    ],
+    labelRows: [
+      { num: '1', field: 'Brand / Manufacturer', meaning: 'Company that made the item', why: 'Identifies the correct lookup rules' },
+      { num: '2', field: 'Model Number', meaning: 'Specific model of the product', why: 'Helps confirm compatibility' },
+      { num: '3', field: 'Serial Number', meaning: 'Unique ID for the unit', why: 'Used to estimate age/origin' },
+      { num: '4', field: 'Manufacture Date', meaning: 'Date/code showing when it was made', why: 'Helps verify age/warranty' },
+      { num: '5', field: 'Product Number / SKU', meaning: 'Internal ID for the model', why: 'Helpful for parts/support' }
+    ],
+    missingHelp: [
+      { icon: '1', text: "Check the owner's manual or paperwork" },
+      { icon: '2', text: 'Look behind panels or lower access covers' },
+      { icon: '3', text: 'Check warranty registration email' },
+      { icon: '4', text: 'Use a flashlight to inspect the label' },
+      { icon: '5', text: 'Take a clear photo and try Smart Lookup' }
     ],
     faqs: [
       ['Is the model number the same as the serial number?', 'No. The model number identifies the product family, while the serial number identifies the specific unit and is more likely to carry age information.'],
