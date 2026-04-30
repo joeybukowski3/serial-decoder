@@ -38,12 +38,9 @@
 <body data-page-kind="analytics">
 <nav class="site-nav">
   <div class="nav-inner">
-    <a href="/" class="nav-logo logo" aria-label="Decode My Item home">
-      <span class="nav-logo-mark" aria-hidden="true">DMI</span>
-      <span class="nav-logo-copy">
-        <span class="logo-text">Decode My <span>Item</span></span>
-        <span class="logo-sub">Decode - Research - Automate</span>
-      </span>
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-name">Decode My Item</div>
+      <div class="nav-logo-tag">Decode &middot; Research &middot; Automate</div>
     </a>
     <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
       <span></span><span></span><span></span>
@@ -90,7 +87,7 @@
 <script>
 (function () {
   function row(item) {
-    if (!item) return '<div class="mini-row"><span>—</span><strong>0</strong></div>';
+    if (!item) return '<div class="mini-row"><span>â€”</span><strong>0</strong></div>';
     return '<div class="mini-row"><span>' + item.key + '</span><strong>' + item.count + '</strong></div>';
   }
   function render() {
@@ -111,8 +108,8 @@
     document.getElementById('queryKinds').innerHTML = (report.queryKinds.length ? report.queryKinds : [null]).map(row).join('');
     document.getElementById('recentEvents').innerHTML = (report.recentEvents.length ? report.recentEvents : [{ name:'No events yet', at:'', payload:{} }]).map(function (event) {
       var payload = event.payload || {};
-      var context = [payload.query, payload.queryKind, payload.brand, payload.category].filter(Boolean).join(' · ');
-      return '<div class="recent-item"><div class="recent-item-title">' + event.name + '</div><div class="recent-item-meta">' + (event.at || '') + (context ? ' — ' + context : '') + '</div></div>';
+      var context = [payload.query, payload.queryKind, payload.brand, payload.category].filter(Boolean).join(' Â· ');
+      return '<div class="recent-item"><div class="recent-item-title">' + event.name + '</div><div class="recent-item-meta">' + (event.at || '') + (context ? ' â€” ' + context : '') + '</div></div>';
     }).join('');
   }
   document.getElementById('refreshReportBtn').addEventListener('click', render);
@@ -128,7 +125,8 @@
   <div class="footer-inner">
     <div class="footer-top">
       <div class="footer-col-brand">
-        <a href="/" class="footer-brand">Decode My <span>Item</span></a>
+        <div class="footer-logo">Decode My Item</div>
+        <div class="footer-tagline">Decode &middot; Research &middot; Automate</div>
         <p class="footer-copy">Serial number, model number, and age research for appliances, HVAC, and electronics.</p>
       </div>
       <div class="footer-col-links">

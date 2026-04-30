@@ -10,28 +10,44 @@
     .lookup-box {
       max-width: 640px;
       margin: 0 auto;
-      background: rgba(255,255,255,0.05);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
       padding: 28px 28px 24px;
     }
-    .lookup-box .section-label { margin-bottom: 16px; }
+    .lookup-box .section-label { margin-bottom: 16px; color: var(--blue); }
+    .lookup-box label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .lookup-box input,
+    .lookup-box textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font: inherit;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+    .lookup-box textarea { min-height: 112px; resize: vertical; }
     .tips { margin-top: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 16px; max-width: 640px; margin-left: auto; margin-right: auto; }
-    .tip-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
-    .tip-icon { font-size: 22px; margin-bottom: 8px; }
-    .tip-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
-    .tip-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .page-hero h1 { color: var(--navy); }
+    .page-hero .hero-sub { color: var(--text-2); opacity: 1; }
+    .page-hero .hero-badge span:last-child { color: var(--blue) !important; }
   </style>
 </head>
 <body>
 <nav class="site-nav">
   <div class="nav-inner">
-    <a href="/" class="nav-logo logo" aria-label="Decode My Item home">
-      <span class="nav-logo-mark" aria-hidden="true">DMI</span>
-      <span class="nav-logo-copy">
-        <span class="logo-text">Decode My <span>Item</span></span>
-        <span class="logo-sub">Decode - Research - Automate</span>
-      </span>
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-name">Decode My Item</div>
+      <div class="nav-logo-tag">Decode &middot; Research &middot; Automate</div>
     </a>
     <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
       <span></span><span></span><span></span>
@@ -74,7 +90,7 @@
     <label for="lookup-notes">Additional Notes (optional)</label>
     <textarea id="lookup-notes" placeholder="Any other details &mdash; color, size, features, where it was installed..."></textarea>
 
-    <button id="smartLookupBtn" class="btn-amber" style="width:100%;">&#10024; Run Smart Lookup</button>
+    <button id="smartLookupBtn" class="btn-primary" style="width:100%;background:var(--navy);color:#ffffff;">&#10024; Run Smart Lookup</button>
     <div id="smart-lookup-results"></div>
     <p class="search-link" style="margin-top:12px;">Have a serial number? <a href="decoder-tool">Use the Serial Decoder &rarr;</a></p>
   </div>
@@ -83,18 +99,15 @@
   <div class="tips" style="margin-top:32px;">
     <div class="tip-card">
       <div class="tip-icon">&#127919;</div>
-      <div class="tip-title">Be Specific</div>
-      <p class="tip-desc">Include the full model number when possible &mdash; this gives the AI the best chance of a precise date range.</p>
+      <p class="tip-text">Include the full model number when possible &mdash; this gives the AI the best chance of a precise date range.</p>
     </div>
     <div class="tip-card">
-      <div class="tip-icon">&#127991;</div>
-      <div class="tip-title">Add Context</div>
-      <p class="tip-desc">Include the brand name in your description for better results &mdash; e.g. "Carrier 24ACC636A003".</p>
+      <div class="tip-icon">&#127991;&#65039;</div>
+      <p class="tip-text">Include the brand name in your description for better results &mdash; e.g. "Carrier 24ACC636A003".</p>
     </div>
     <div class="tip-card">
       <div class="tip-icon">&#9201;</div>
-      <div class="tip-title">Expect a Range</div>
-      <p class="tip-desc">Smart Lookup returns an estimated year range, not an exact date. Use Serial Decoder for precision.</p>
+      <p class="tip-text">Smart Lookup returns an estimated year range, not an exact date. Use Serial Decoder for precision.</p>
     </div>
   </div>
 </section>
@@ -116,7 +129,8 @@
   <div class="footer-inner">
     <div class="footer-top">
       <div class="footer-col-brand">
-        <a href="/" class="footer-brand">Decode My <span>Item</span></a>
+        <div class="footer-logo">Decode My Item</div>
+        <div class="footer-tagline">Decode &middot; Research &middot; Automate</div>
         <p class="footer-copy">Serial number, model number, and age research for appliances, HVAC, and electronics.</p>
       </div>
       <div class="footer-col-links">
