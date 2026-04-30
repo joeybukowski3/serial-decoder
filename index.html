@@ -64,12 +64,12 @@
     .brands-section,
     .lookups-section,
     .faq-section {
-      width: min(1160px, calc(100% - 32px));
+      max-width: 1160px;
       margin: 0 auto;
     }
 
     .hero {
-      padding: 72px 0 36px;
+      padding: 72px 32px 56px;
       text-align: center;
     }
 
@@ -104,7 +104,7 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px;
-      padding: 0 0 84px;
+      padding: 0 32px 80px;
     }
 
     .path-card {
@@ -252,10 +252,11 @@
       font-size: clamp(2rem, 4vw, 3.3rem);
       line-height: 1.06;
       letter-spacing: -0.04em;
+      color: #fff;
     }
 
     .spotlight h2 em {
-      color: #bcd4ff;
+      color: #93c5fd;
       font-style: normal;
     }
 
@@ -266,43 +267,43 @@
     }
 
     .spotlight-features {
-      display: grid;
-      gap: 16px;
-      margin-bottom: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 36px;
     }
 
     .spotlight-feature {
-      display: grid;
-      grid-template-columns: 44px 1fr;
+      display: flex;
+      align-items: flex-start;
       gap: 14px;
-      align-items: start;
     }
 
     .spotlight-feature-icon {
-      display: inline-flex;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(37,99,235,0.2);
+      border: 1px solid rgba(37,99,235,0.3);
+      display: flex;
       align-items: center;
       justify-content: center;
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      border: 1px solid rgba(147,197,253,0.28);
-      background: rgba(49,130,206,0.2);
-      color: #cfe2ff;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
     }
 
     .spotlight-feature-title {
-      margin-bottom: 4px;
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 600;
       color: #fff;
+      margin-bottom: 2px;
     }
 
     .spotlight-feature-desc {
-      color: rgba(255,255,255,0.68);
-      font-size: 0.96rem;
-      line-height: 1.7;
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.5;
     }
 
     .spotlight-btn {
@@ -701,10 +702,29 @@
     }
 
     .brands-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
     }
 
-    .brand-card,
+    .brand-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.15s;
+    }
+
+    .brand-card:hover {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.06);
+      transform: translateY(-1px);
+    }
+
     .lookup-link {
       display: flex;
       align-items: center;
@@ -720,19 +740,36 @@
     }
 
     .brand-name {
-      margin-bottom: 4px;
+      font-size: 15px;
+      font-weight: 600;
       color: var(--navy);
-      font-weight: 800;
+      margin-bottom: 2px;
+      font-family: 'Outfit', sans-serif;
     }
 
-    .brand-desc,
+    .brand-desc {
+      font-size: 12px;
+      color: var(--text-3);
+      line-height: 1.4;
+    }
+
     .lookup-group-sub {
       color: var(--text-2);
       font-size: 14px;
       line-height: 1.6;
     }
 
-    .brand-arrow,
+    .brand-arrow {
+      font-size: 14px;
+      color: var(--text-3);
+      transition: color 0.15s, transform 0.15s;
+    }
+
+    .brand-card:hover .brand-arrow {
+      color: var(--blue);
+      transform: translateX(2px);
+    }
+
     .lookup-link-arrow {
       color: var(--blue-dk);
       font-weight: 800;
@@ -989,15 +1026,6 @@
     }
 
     @media (max-width: 640px) {
-      .hero,
-      .decoder-section,
-      .stats-section,
-      .brands-section,
-      .lookups-section,
-      .faq-section {
-        width: min(100% - 24px, 1160px);
-      }
-
       .hero {
         padding: 48px 0 28px;
       }
@@ -1028,11 +1056,9 @@
 <body>
   <nav class="site-nav">
     <div class="nav-inner">
-      <a href="/" class="nav-logo logo" aria-label="Decode My Item home">
-        <span class="nav-logo-copy">
-          <span class="nav-logo-name logo-text">Decode My Item</span>
-          <span class="nav-logo-tag logo-sub">Decode &middot; Research &middot; Automate</span>
-        </span>
+      <a href="/" class="nav-logo">
+        <div class="nav-logo-name">Decode My Item</div>
+        <div class="nav-logo-tag">Decode &middot; Research &middot; Automate</div>
       </a>
       <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
         <span></span><span></span><span></span>
@@ -1093,21 +1119,21 @@
 
         <div class="spotlight-features">
           <div class="spotlight-feature">
-            <div class="spotlight-feature-icon" aria-hidden="true">01</div>
+            <div class="spotlight-feature-icon"></div>
             <div class="spotlight-feature-text">
               <div class="spotlight-feature-title">Works from a model number alone</div>
               <div class="spotlight-feature-desc">Enter a model number and we'll research the manufacture era, specifications, and estimated age &mdash; no serial required.</div>
             </div>
           </div>
           <div class="spotlight-feature">
-            <div class="spotlight-feature-icon" aria-hidden="true">02</div>
+            <div class="spotlight-feature-icon"></div>
             <div class="spotlight-feature-text">
               <div class="spotlight-feature-title">Plain-language descriptions work too</div>
               <div class="spotlight-feature-desc">Don't even have a model number? Describe the item and Smart Lookup will still find it &mdash; useful for generators, commercial equipment, and more.</div>
             </div>
           </div>
           <div class="spotlight-feature">
-            <div class="spotlight-feature-icon" aria-hidden="true">03</div>
+            <div class="spotlight-feature-icon"></div>
             <div class="spotlight-feature-text">
               <div class="spotlight-feature-title">LKQ replacement evaluation included</div>
               <div class="spotlight-feature-desc">Toggle on replacement options and Smart Lookup returns like-kind-and-quality alternatives alongside the age estimate.</div>
@@ -1294,7 +1320,7 @@
       <button class="brand-tab" type="button" onclick="switchBrandTab(this)">Electronics</button>
       <button class="brand-tab" type="button" onclick="switchBrandTab(this)">HVAC &amp; Water Heaters</button>
     </div>
-    <div class="brands-grid" id="brandDirectoryGrid">
+    <div class="brands-grid">
       <a href="/ge-serial-number-lookup" class="brand-card"><div><div class="brand-name">GE</div><div class="brand-desc">Refrigerators, ranges, washers</div></div><span class="brand-arrow">&rarr;</span></a>
       <a href="/whirlpool-serial-number-lookup" class="brand-card"><div><div class="brand-name">Whirlpool</div><div class="brand-desc">All Whirlpool family brands</div></div><span class="brand-arrow">&rarr;</span></a>
       <a href="/samsung-serial-number-lookup" class="brand-card"><div><div class="brand-name">Samsung</div><div class="brand-desc">Appliances &amp; TVs</div></div><span class="brand-arrow">&rarr;</span></a>

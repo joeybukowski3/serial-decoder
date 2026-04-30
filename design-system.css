@@ -122,60 +122,35 @@ nav,
   min-height: 78px;
 }
 
-.nav-logo,
-.logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
+.nav-logo {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
-.nav-logo:hover,
-.logo:hover {
+.nav-logo:hover {
   color: inherit;
 }
 
-.nav-logo-mark,
-.logo-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--blue), var(--blue-md));
-  color: #fff;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 0.95rem;
-  box-shadow: 0 10px 20px rgba(49, 130, 206, 0.24);
-  flex-shrink: 0;
+.nav-logo-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--navy);
+  letter-spacing: -0.4px;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
-.nav-logo-copy {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.logo-text {
-  color: var(--text);
-  font-family: var(--font-display);
-  font-size: 1.08rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-}
-
-.logo-text span {
-  color: var(--blue);
-}
-
-.logo-sub {
-  color: var(--text-3);
-  font-size: 0.69rem;
-  letter-spacing: 0.16em;
+.nav-logo-tag {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  margin-top: 2px;
+  color: var(--blue);
+  white-space: nowrap;
 }
 
 .nav-links,
@@ -424,6 +399,95 @@ footer,
   padding: 20px;
 }
 
+.spotlight-features {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 36px;
+}
+
+.spotlight-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.spotlight-feature-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(37,99,235,0.2);
+  border: 1px solid rgba(37,99,235,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.spotlight-feature-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.spotlight-feature-desc {
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.5;
+}
+
+.brands-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.brand-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.15s;
+}
+
+.brand-card:hover {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.06);
+  transform: translateY(-1px);
+}
+
+.brand-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 2px;
+  font-family: 'Outfit', sans-serif;
+}
+
+.brand-desc {
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.4;
+}
+
+.brand-arrow {
+  font-size: 14px;
+  color: var(--text-3);
+  transition: color 0.15s, transform 0.15s;
+}
+
+.brand-card:hover .brand-arrow {
+  color: var(--blue);
+  transform: translateX(2px);
+}
+
 .field-label {
   display: block;
   margin-bottom: 8px;
@@ -659,15 +723,6 @@ footer,
 @media (max-width: 640px) {
   .nav-inner {
     min-height: 72px;
-  }
-
-  .logo-text {
-    font-size: 1rem;
-  }
-
-  .logo-sub {
-    font-size: 0.62rem;
-    letter-spacing: 0.12em;
   }
 
   .footer-inner {
