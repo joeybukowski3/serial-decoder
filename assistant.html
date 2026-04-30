@@ -6,7 +6,6 @@
   <title>AI Assistant &mdash; Decode My Item</title>
   <meta name="description" content="Chat with the Decode My Item AI Assistant for appliance research, serial decoding help, replacement guidance, and more.">
   <link rel="canonical" href="https://www.decodemyitem.com/assistant">
-  <link rel="stylesheet" href="/design-system.css">
   <link rel="stylesheet" href="shared.css">
   <link rel="icon" type="image/png" href="favicon.png">
   <style>
@@ -111,7 +110,7 @@
     .msg.assistant .msg-avatar { background: rgba(167,139,250,0.15); color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); }
     .msg.user .msg-avatar { background: rgba(0,201,167,0.15); color: #00c9a7; border: 1px solid rgba(0,201,167,0.25); }
     .msg-bubble {
-      padding: 10px 14px; border-radius: var(--radius);
+      padding: 10px 14px; border-radius: 12px;
       font-size: 13px; line-height: 1.6; max-width: 100%;
     }
     .msg.assistant .msg-bubble {
@@ -146,15 +145,15 @@
     .chat-input {
       flex: 1; min-height: 44px; max-height: 140px;
       background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
-      border-radius: var(--radius); padding: 11px 14px;
-      font-family: var(--font-body); font-size: 13px; color: #e2e8f4;
+      border-radius: 12px; padding: 11px 14px;
+      font-family: Sora, sans-serif; font-size: 13px; color: #e2e8f4;
       resize: none; outline: none; line-height: 1.5;
       transition: border-color 0.2s;
     }
     .chat-input::placeholder { color: #4a6080; }
     .chat-input:focus { border-color: rgba(167,139,250,0.45); }
     .chat-send-btn {
-      width: 44px; height: 44px; border-radius: var(--radius); flex-shrink: 0;
+      width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
       background: linear-gradient(135deg, #8a5cf6, #6d28d9);
       border: none; color: #ffffff; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
@@ -180,31 +179,29 @@
   </style>
 </head>
 <body data-page-kind="assistant">
-<nav class="site-nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo">
-      <div class="nav-logo-name">Decode My Item</div>
-      <div class="nav-logo-tag">Decode &middot; Research &middot; Automate</div>
-    </a>
-    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
-      <span></span><span></span><span></span>
-    </button>
-    <ul class="nav-links">
-      <li><a href="/">Home</a></li>
-      <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-      <li><a href="/smart-lookup">Smart Lookup</a></li>
-      <li><a href="/assistant">AI Assistant</a></li>
-      <li><a href="/methodology">Methodology</a></li>
-      <li><a href="/contact">Contact</a></li>
-      <li><a href="/feedback">Feedback &amp; Bugs</a></li>
-      <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
-    </ul>
-  </div>
-</nav>
-
 
 <!-- NAV -->
-
+<nav>
+  <a href="/" class="logo" aria-label="Decode My Item home">
+    <div>
+      <div class="logo-text">Decode My <span>Item</span></div>
+      <div class="logo-sub">Decode - Research - Automate</div>
+    </div>
+  </a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+  </button>
+  <ul>
+  <li><a href="/">Home</a></li>
+  <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+  <li><a href="/smart-lookup">Smart Lookup</a></li>
+  <li><a href="/assistant" class="nav-active">AI Assistant</a></li>
+  <li><a href="/methodology">Methodology</a></li>
+  <li><a href="/contact">Contact</a></li>
+  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
+  <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+</ul>
+</nav>
 
 <!-- HERO -->
 <div class="ai-hero">
@@ -272,7 +269,15 @@
   <div class="ai-disclaimer">AI responses are for research guidance only. Verify important decisions with a qualified technician.</div>
 </div>
 
-
+<footer style="margin-top:auto;">
+  <div>&copy; 2026 Decode My Item &mdash; Database verified February 2026</div>
+  <div class="footer-links">
+    <a href="methodology.html">Methodology</a>
+    <a href="contact.html">Contact</a>
+    <a href="security.html">Security &amp; Data Notice</a>
+    <a href="privacy-policy">Privacy Policy</a>
+  </div>
+</footer>
 
 <script src="shared.js"></script>
 <script>
@@ -381,28 +386,5 @@
     scrollToBottom();
   }
 </script>
-<footer class="site-footer footer">
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div class="footer-col-brand">
-        <div class="footer-logo">Decode My Item</div>
-        <div class="footer-tagline">Decode &middot; Research &middot; Automate</div>
-        <p class="footer-copy">Serial number, model number, and age research for appliances, HVAC, and electronics.</p>
-      </div>
-      <div class="footer-col-links">
-        <span class="footer-heading">Resources</span>
-        <div class="footer-links">
-          <a href="/methodology">Methodology</a>
-          <a href="/contact">Contact</a>
-          <a href="/security">Security &amp; Data Notice</a>
-          <a href="/privacy-policy">Privacy Policy</a>
-        </div>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 Decode My Item &middot; Database verified February 2026</p>
-    </div>
-  </div>
-</footer>
 </body>
 </html>

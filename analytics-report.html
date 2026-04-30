@@ -16,7 +16,6 @@
   <title>Analytics Report | Item Assist</title>
   <meta name="description" content="Local demo analytics dashboard for Item Assist search, Smart Lookup, refinements, feedback, and mobile usage.">
         <link rel="canonical" href="https://www.decodemyitem.com/analytics-report">
-  <link rel="stylesheet" href="/design-system.css">
   <link rel="stylesheet" href="shared.css">
   <style>
     body[data-page-kind="analytics"] .report-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
@@ -36,29 +35,19 @@
   </style>
 </head>
 <body data-page-kind="analytics">
-<nav class="site-nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo">
-      <div class="nav-logo-name">Decode My Item</div>
-      <div class="nav-logo-tag">Decode &middot; Research &middot; Automate</div>
-    </a>
-    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
-      <span></span><span></span><span></span>
-    </button>
-    <ul class="nav-links">
-      <li><a href="/">Home</a></li>
-      <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-      <li><a href="/smart-lookup">Smart Lookup</a></li>
-      <li><a href="/assistant">AI Assistant</a></li>
-      <li><a href="/methodology">Methodology</a></li>
-      <li><a href="/contact">Contact</a></li>
-      <li><a href="/feedback">Feedback &amp; Bugs</a></li>
-      <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
-    </ul>
-  </div>
+<nav>
+  <a href="/" class="logo"><div class="logo-icon"></div><div><div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Decode - Research - Automate</div></div></a>
+  <ul>
+  <li><a href="/">Home</a></li>
+  <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+  <li><a href="/smart-lookup">Smart Lookup</a></li>
+  <li><a href="/assistant">AI Assistant</a></li>
+  <li><a href="/methodology">Methodology</a></li>
+  <li><a href="/contact">Contact</a></li>
+  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
+  <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+</ul>
 </nav>
-
-
 <section class="page-hero">
   <span class="hero-badge"><span class="badge-dot"></span> In-browser reporting</span>
   <h1>Local analytics <em>reporting dashboard</em></h1>
@@ -87,7 +76,7 @@
 <script>
 (function () {
   function row(item) {
-    if (!item) return '<div class="mini-row"><span>â€”</span><strong>0</strong></div>';
+    if (!item) return '<div class="mini-row"><span>—</span><strong>0</strong></div>';
     return '<div class="mini-row"><span>' + item.key + '</span><strong>' + item.count + '</strong></div>';
   }
   function render() {
@@ -108,8 +97,8 @@
     document.getElementById('queryKinds').innerHTML = (report.queryKinds.length ? report.queryKinds : [null]).map(row).join('');
     document.getElementById('recentEvents').innerHTML = (report.recentEvents.length ? report.recentEvents : [{ name:'No events yet', at:'', payload:{} }]).map(function (event) {
       var payload = event.payload || {};
-      var context = [payload.query, payload.queryKind, payload.brand, payload.category].filter(Boolean).join(' Â· ');
-      return '<div class="recent-item"><div class="recent-item-title">' + event.name + '</div><div class="recent-item-meta">' + (event.at || '') + (context ? ' â€” ' + context : '') + '</div></div>';
+      var context = [payload.query, payload.queryKind, payload.brand, payload.category].filter(Boolean).join(' · ');
+      return '<div class="recent-item"><div class="recent-item-title">' + event.name + '</div><div class="recent-item-meta">' + (event.at || '') + (context ? ' — ' + context : '') + '</div></div>';
     }).join('');
   }
   document.getElementById('refreshReportBtn').addEventListener('click', render);
@@ -121,28 +110,5 @@
   render();
 }());
 </script>
-<footer class="site-footer footer">
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div class="footer-col-brand">
-        <div class="footer-logo">Decode My Item</div>
-        <div class="footer-tagline">Decode &middot; Research &middot; Automate</div>
-        <p class="footer-copy">Serial number, model number, and age research for appliances, HVAC, and electronics.</p>
-      </div>
-      <div class="footer-col-links">
-        <span class="footer-heading">Resources</span>
-        <div class="footer-links">
-          <a href="/methodology">Methodology</a>
-          <a href="/contact">Contact</a>
-          <a href="/security">Security &amp; Data Notice</a>
-          <a href="/privacy-policy">Privacy Policy</a>
-        </div>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 Decode My Item &middot; Database verified February 2026</p>
-    </div>
-  </div>
-</footer>
 </body>
 </html>

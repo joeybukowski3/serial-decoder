@@ -47,7 +47,6 @@
     }
   }
   </script>
-  <link rel="stylesheet" href="/design-system.css">
   <link rel="stylesheet" href="shared.css">
   <style>
     .feedback-shell {
@@ -119,30 +118,28 @@
   </style>
 </head>
 <body>
-<nav class="site-nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo">
-      <div class="nav-logo-name">Decode My Item</div>
-      <div class="nav-logo-tag">Decode &middot; Research &middot; Automate</div>
-    </a>
-    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
-      <span></span><span></span><span></span>
-    </button>
-    <ul class="nav-links">
-      <li><a href="/">Home</a></li>
-      <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-      <li><a href="/smart-lookup">Smart Lookup</a></li>
-      <li><a href="/assistant">AI Assistant</a></li>
-      <li><a href="/methodology">Methodology</a></li>
-      <li><a href="/contact">Contact</a></li>
-      <li><a href="/feedback">Feedback &amp; Bugs</a></li>
-      <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
-    </ul>
-  </div>
+
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-icon"></div>
+    <div>
+      <div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Decode - Research - Automate</div>
+    </div>
+  </a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+  <ul>
+  <li><a href="/">Home</a></li>
+  <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+  <li><a href="/smart-lookup">Smart Lookup</a></li>
+  <li><a href="/assistant">AI Assistant</a></li>
+  <li><a href="/methodology">Methodology</a></li>
+  <li><a href="/contact">Contact</a></li>
+  <li><a href="/feedback" class="nav-active">Feedback &amp; Bugs</a></li>
+  <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+</ul>
 </nav>
-
-
-
 
 <section class="page-hero">
   <div class="hero-badge">
@@ -223,7 +220,15 @@
   </div>
 </section>
 
-
+<footer>
+  <div>© 2026 Decode My Item · Database verified February 2026</div>
+  <div class="footer-links">
+    <a href="methodology.html">Methodology</a>
+    <a href="contact.html">Contact</a>
+    <a href="security.html">Security &amp; Data Notice</a>
+    <a href="/privacy-policy">Privacy Policy</a>
+  </div>
+</footer>
 
 <script>
 async function submitSiteFeedback(event) {
@@ -279,28 +284,5 @@ async function submitSiteFeedback(event) {
 }
 </script>
 <script src="shared.js"></script>
-<footer class="site-footer footer">
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div class="footer-col-brand">
-        <div class="footer-logo">Decode My Item</div>
-        <div class="footer-tagline">Decode &middot; Research &middot; Automate</div>
-        <p class="footer-copy">Serial number, model number, and age research for appliances, HVAC, and electronics.</p>
-      </div>
-      <div class="footer-col-links">
-        <span class="footer-heading">Resources</span>
-        <div class="footer-links">
-          <a href="/methodology">Methodology</a>
-          <a href="/contact">Contact</a>
-          <a href="/security">Security &amp; Data Notice</a>
-          <a href="/privacy-policy">Privacy Policy</a>
-        </div>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 Decode My Item &middot; Database verified February 2026</p>
-    </div>
-  </div>
-</footer>
 </body>
 </html>

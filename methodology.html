@@ -13,27 +13,27 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Methodology â€“ Item Assist</title>
+  <title>Methodology – Item Assist</title>
   <meta name="description" content="How Item Assist determines manufacture dates from serial numbers. Rules-based decoding methodology, confidence levels, and reference sources.">
       <link rel="canonical" href="https://www.decodemyitem.com/methodology">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Item Assist">
-  <meta property="og:title" content="Methodology â€“ Item Assist">
+  <meta property="og:title" content="Methodology – Item Assist">
   <meta property="og:description" content="How Item Assist determines manufacture dates from serial numbers. Rules-based decoding methodology, confidence levels, and reference sources.">
   <meta property="og:url" content="https://www.decodemyitem.com/methodology">
   <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <meta property="og:image:alt" content="Item Assist preview image">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Methodology â€“ Item Assist">
+  <meta name="twitter:title" content="Methodology – Item Assist">
   <meta name="twitter:description" content="How Item Assist determines manufacture dates from serial numbers. Rules-based decoding methodology, confidence levels, and reference sources.">
   <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "name": "Methodology â€“ Item Assist",
+    "name": "Methodology – Item Assist",
     "description": "How Item Assist determines manufacture dates from serial numbers. Rules-based decoding methodology, confidence levels, and reference sources.",
     "url": "https://www.decodemyitem.com/methodology",
     "publisher": {
@@ -47,13 +47,12 @@
     }
   }
   </script>
-  <link rel="stylesheet" href="/design-system.css">
   <link rel="stylesheet" href="shared.css">
   <style>
     .step-list { list-style: none; padding: 0; margin: 16px 0; }
     .step-list li { display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
     .step-num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; min-width: 26px; border-radius: 50%; background: rgba(0,201,167,0.12); border: 1px solid rgba(0,201,167,0.3); color: var(--teal); font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-top: 1px; }
-    .confidence-table { margin: 16px 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+    .confidence-table { margin: 16px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
     .confidence-row { display: flex; gap: 16px; align-items: flex-start; padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .confidence-row:last-child { border-bottom: none; }
     .conf-badge { display: inline-block; font-size: 10px; font-family: 'JetBrains Mono', monospace; padding: 3px 10px; border-radius: 99px; font-weight: 700; flex-shrink: 0; margin-top: 3px; letter-spacing: 0.3px; }
@@ -63,48 +62,46 @@
     .conf-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0; }
     .source-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
     .source-chip { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 5px 14px; font-size: 12px; color: var(--muted); }
-    .caveat-block { background: rgba(245,166,35,0.07); border: 1px solid rgba(245,166,35,0.22); border-radius: var(--radius); padding: 16px 20px; margin-top: 32px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .caveat-block { background: rgba(245,166,35,0.07); border: 1px solid rgba(245,166,35,0.22); border-radius: 12px; padding: 16px 20px; margin-top: 32px; font-size: 13px; color: var(--muted); line-height: 1.6; }
     .caveat-block strong { color: var(--amber); }
   </style>
 </head>
 <body>
-<nav class="site-nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo">
-      <div class="nav-logo-name">Decode My Item</div>
-      <div class="nav-logo-tag">Decode &middot; Research &middot; Automate</div>
-    </a>
-    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
-      <span></span><span></span><span></span>
-    </button>
-    <ul class="nav-links">
-      <li><a href="/">Home</a></li>
-      <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-      <li><a href="/smart-lookup">Smart Lookup</a></li>
-      <li><a href="/assistant">AI Assistant</a></li>
-      <li><a href="/methodology">Methodology</a></li>
-      <li><a href="/contact">Contact</a></li>
-      <li><a href="/feedback">Feedback &amp; Bugs</a></li>
-      <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
-    </ul>
-  </div>
+
+<!-- ─── NAV ─── -->
+<nav>
+  <a href="/" class="logo">
+    <div class="logo-icon"></div>
+    <div>
+      <div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Decode - Research - Automate</div>
+    </div>
+  </a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+  <ul>
+  <li><a href="/">Home</a></li>
+  <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+  <li><a href="/smart-lookup">Smart Lookup</a></li>
+  <li><a href="/assistant">AI Assistant</a></li>
+  <li><a href="/methodology" class="nav-active">Methodology</a></li>
+  <li><a href="/contact">Contact</a></li>
+  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
+  <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+</ul>
 </nav>
 
-
-<!-- â”€â”€â”€ NAV â”€â”€â”€ -->
-
-
-<!-- â”€â”€â”€ PAGE HERO â”€â”€â”€ -->
+<!-- ─── PAGE HERO ─── -->
 <section class="page-hero">
   <div class="hero-badge">
     <span class="badge-dot"></span>
     How It Works
   </div>
   <h1>Our <em>Methodology</em></h1>
-  <p class="hero-sub">Item Assist uses a curated database of manufacturer serial format rules to extract manufacture dates â€” and AI-powered Smart Lookup as a fallback when no serial number is available.</p>
+  <p class="hero-sub">Item Assist uses a curated database of manufacturer serial format rules to extract manufacture dates — and AI-powered Smart Lookup as a fallback when no serial number is available.</p>
 </section>
 
-<!-- â”€â”€â”€ CONTENT â”€â”€â”€ -->
+<!-- ─── CONTENT ─── -->
 <section class="section">
   <div class="prose">
 
@@ -116,7 +113,7 @@
     <ol class="step-list">
       <li><span class="step-num">1</span><span>The user selects the brand and enters the full serial number as shown on the product label.</span></li>
       <li><span class="step-num">2</span><span>The decoder applies the brand's documented format rules to extract the manufacture date.</span></li>
-      <li><span class="step-num">3</span><span>The result is returned immediately â€” no external API calls are made for the serial decode path.</span></li>
+      <li><span class="step-num">3</span><span>The result is returned immediately — no external API calls are made for the serial decode path.</span></li>
       <li><span class="step-num">4</span><span>A confidence level is assigned based on whether the result is a single unambiguous year or a dual-decade result (see below).</span></li>
     </ol>
 
@@ -130,7 +127,7 @@
       </div>
       <div class="confidence-row">
         <span class="conf-badge medium">Medium</span>
-        <p class="conf-desc">The brand's serial format reuses year codes on a repeating cycle (commonly 20â€“30 years), resulting in two possible valid years. Physical inspection or supporting documentation is needed to confirm the correct decade.</p>
+        <p class="conf-desc">The brand's serial format reuses year codes on a repeating cycle (commonly 20–30 years), resulting in two possible valid years. Physical inspection or supporting documentation is needed to confirm the correct decade.</p>
       </div>
       <div class="confidence-row">
         <span class="conf-badge low">Low</span>
@@ -141,7 +138,7 @@
     <hr class="divider">
 
     <h2>Alternative Lookup (AI-Assisted)</h2>
-    <span class="pill amber" style="margin-bottom:16px;display:inline-block;">AI-Powered Â· Estimated Range</span>
+    <span class="pill amber" style="margin-bottom:16px;display:inline-block;">AI-Powered · Estimated Range</span>
     <p>When no serial number is available, our Smart Lookup section accepts a model number or free-text description. This path uses an AI language model to estimate the product's manufacture era based on publicly known product history. Results from this path carry lower certainty than direct serial decoding and should be treated as estimates only.</p>
 
     <hr class="divider">
@@ -163,32 +160,16 @@
   </div>
 </section>
 
-<!-- â”€â”€â”€ FOOTER â”€â”€â”€ -->
-
-
-<script src="shared.js"></script>
-<footer class="site-footer footer">
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div class="footer-col-brand">
-        <div class="footer-logo">Decode My Item</div>
-        <div class="footer-tagline">Decode &middot; Research &middot; Automate</div>
-        <p class="footer-copy">Serial number, model number, and age research for appliances, HVAC, and electronics.</p>
-      </div>
-      <div class="footer-col-links">
-        <span class="footer-heading">Resources</span>
-        <div class="footer-links">
-          <a href="/methodology">Methodology</a>
-          <a href="/contact">Contact</a>
-          <a href="/security">Security &amp; Data Notice</a>
-          <a href="/privacy-policy">Privacy Policy</a>
-        </div>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 Decode My Item &middot; Database verified February 2026</p>
-    </div>
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div>© 2026 Decode My Item · Database verified February 2026</div>
+  <div class="footer-links">
+    <a href="methodology.html">Methodology</a>
+    <a href="contact.html">Contact</a>
+    <a href="security.html">Security &amp; Data Notice</a>
   </div>
 </footer>
+
+<script src="shared.js"></script>
 </body>
 </html>

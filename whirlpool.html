@@ -48,25 +48,24 @@
     }
   }
   </script>
-  <link rel="stylesheet" href="/design-system.css">
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="mobile-smart-lookup.css">
   <link rel='icon' type='image/png' href='/favicon.png'>
   <style>
-    /* â”€â”€â”€ UTILITIES â”€â”€â”€ */
+    /* ─── UTILITIES ─── */
     .hidden { display: none !important; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
 
-    /* â”€â”€â”€ DECODER FORM â”€â”€â”€ */
+    /* ─── DECODER FORM ─── */
     .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
     .era-group { margin-top: 8px; }
     .era-note { font-size: 11px; color: #d8e3ee; margin-top: 6px; line-height: 1.5; }
 
-    /* â”€â”€â”€ RESULTS CARD â”€â”€â”€ */
+    /* ─── RESULTS CARD ─── */
     .results-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
       overflow: hidden;
       width: 100%;
       max-width: 1240px;
@@ -84,10 +83,10 @@
       display: flex; gap: 10px; flex-wrap: wrap;
       padding: 12px 20px;
       border-top: 1px solid #e2e8f0;
-      background: var(--surface);
+      background: #ffffff;
     }
 
-    /* â”€â”€â”€ RESULT ROWS â”€â”€â”€ */
+    /* ─── RESULT ROWS ─── */
     .result-row {
       display: flex; justify-content: space-between; align-items: center;
       padding: 10px 0;
@@ -95,27 +94,27 @@
       font-size: 13px;
     }
     .result-row:last-of-type { border-bottom: none; }
-    .result-label { color: var(--text-3); }
-    .result-value { color: var(--blue); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
-    .result-row--primary .result-label { font-weight: 700; color: var(--text); }
-    .result-row--primary .result-value { font-size: 15px; color: var(--blue); }
+    .result-label { color: #4a5568; }
+    .result-value { color: #3182ce; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .result-row--primary .result-label { font-weight: 700; color: #1a202c; }
+    .result-row--primary .result-value { font-size: 15px; color: #3182ce; }
 
-    /* â”€â”€â”€ INFO BLOCKS â”€â”€â”€ */
-    .info-block { background: var(--blue-lt); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-top: 12px; }
-    .info-block h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text); margin-bottom: 6px; }
-    .info-block p { font-size: 13px; color: var(--text-3); line-height: 1.5; margin: 0; }
+    /* ─── INFO BLOCKS ─── */
+    .info-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-top: 12px; }
+    .info-block h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #1a202c; margin-bottom: 6px; }
+    .info-block p { font-size: 13px; color: #4a5568; line-height: 1.5; margin: 0; }
 
-    /* â”€â”€â”€ DETERMINATION DETAILS â”€â”€â”€ */
+    /* ─── DETERMINATION DETAILS ─── */
     .determination-details { margin-top: 12px; }
-    .determination-details summary { font-size: 12px; color: var(--text-3); cursor: pointer; padding: 6px 0; list-style: none; display: flex; align-items: center; gap: 6px; }
-    .determination-details summary::before { content: 'â–¶'; font-size: 9px; transition: transform 0.2s; }
+    .determination-details summary { font-size: 12px; color: #4a5568; cursor: pointer; padding: 6px 0; list-style: none; display: flex; align-items: center; gap: 6px; }
+    .determination-details summary::before { content: '▶'; font-size: 9px; transition: transform 0.2s; }
     .determination-details[open] summary::before { transform: rotate(90deg); }
     .determination-details summary:hover { color: var(--teal); }
-    .determination-body { font-size: 12px; color: var(--text-3); line-height: 1.6; padding: 8px 0; }
+    .determination-body { font-size: 12px; color: #4a5568; line-height: 1.6; padding: 8px 0; }
 
-    /* â”€â”€â”€ MORE OPTIONS â”€â”€â”€ */
+    /* ─── MORE OPTIONS ─── */
     .more-options-section { border-top: 1px solid rgba(255,255,255,0.06); }
-    .more-options-toggle { width: 100%; padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-family: var(--font-body); font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; transition: color 0.2s; }
+    .more-options-toggle { width: 100%; padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; transition: color 0.2s; }
     .more-options-toggle:hover { color: var(--teal); }
     .more-options-arrow { margin-right: 6px; font-size: 10px; display: inline-block; transition: transform 0.2s; }
     .more-options-body { padding: 0 20px 16px; }
@@ -124,14 +123,14 @@
     .options-drawer summary:hover { color: var(--teal); }
     .options-drawer-body { padding: 12px 14px; }
     .placeholder-note { font-size: 13px; color: #334155; margin-bottom: 4px; }
-    .placeholder-hint { font-size: 12px; color: var(--text-3); opacity: 1; margin-bottom: 12px; }
-    .ai-generate-btn { background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25); border-radius: 8px; padding: 8px 16px; font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--teal); cursor: pointer; transition: all 0.2s; }
+    .placeholder-hint { font-size: 12px; color: #475569; opacity: 1; margin-bottom: 12px; }
+    .ai-generate-btn { background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25); border-radius: 8px; padding: 8px 16px; font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; color: var(--teal); cursor: pointer; transition: all 0.2s; }
     .ai-generate-btn:hover { background: rgba(0,201,167,0.18); }
     .ai-generate-result { margin-top: 12px; font-size: 13px; color: #334155; line-height: 1.6; }
 
-    /* â”€â”€â”€ RESULT ACTION BUTTONS â”€â”€â”€ */
+    /* ─── RESULT ACTION BUTTONS ─── */
     .copy-btn, .decode-again-btn, .error-btn, .cancel-btn {
-      font-family: var(--font-body); font-size: 12px; font-weight: 600;
+      font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600;
       padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
     }
     .copy-btn { background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25); color: var(--teal); }
@@ -165,20 +164,20 @@
     .error-btn:hover { border-color: rgba(245,166,35,0.4); }
     .cancel-btn { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
     .cancel-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.25); }
-    .decode-btn { background: linear-gradient(135deg, var(--teal), #0099ff); color: var(--navy); font-family: var(--font-body); font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; }
+    .decode-btn { background: linear-gradient(135deg, var(--teal), #0099ff); color: var(--navy); font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; }
 
-    /* â”€â”€â”€ LOADING â”€â”€â”€ */
+    /* ─── LOADING ─── */
     .loading-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px; }
     .loading-emoji { font-size: 36px; }
     @keyframes lightning-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.1)} }
     .loading-emoji.lightning { animation: lightning-pulse 1s ease-in-out infinite; }
     .loading-text { font-size: 13px; color: #334155; }
 
-    /* â”€â”€â”€ BRAND LOGO â”€â”€â”€ */
+    /* ─── BRAND LOGO ─── */
     .brand-logo-wrap { width: 32px; height: 32px; }
     .brand-logo-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-    /* â”€â”€â”€ POPULAR BRANDS â”€â”€â”€ */
+    /* ─── POPULAR BRANDS ─── */
     .brands-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -189,7 +188,7 @@
       display: flex; flex-direction: column; gap: 4px;
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 12px;
       padding: 16px 18px;
       text-decoration: none;
       transition: all 0.2s;
@@ -198,7 +197,7 @@
     .brand-tile-name { font-size: 14px; font-weight: 700; color: var(--white); }
     .brand-tile-desc { font-size: 11px; color: #d8e3ee; }
 
-    /* â”€â”€â”€ FEEDBACK MODAL â”€â”€â”€ */
+    /* ─── FEEDBACK MODAL ─── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .modal-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 20px; max-width: 480px; width: 100%; overflow: hidden; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid rgba(255,255,255,0.06); }
@@ -210,12 +209,12 @@
     .modal-field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
     .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
     .fb-thanks { background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--teal); margin-top: 12px; }
-    .form-input { width: 100%; background: #eef2f6; border: 1px solid var(--border); border-radius: 10px; color: var(--navy-2); font-family: var(--font-body); font-size: 13px; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
+    .form-input { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
     .form-input:focus { border-color: var(--teal); }
-    .form-select { width: 100%; background: #eef2f6; border: 1px solid var(--border); border-radius: 10px; color: var(--navy-2); font-family: var(--font-body); font-size: 13px; padding: 10px 13px; outline: none; appearance: none; cursor: pointer; }
+    .form-select { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; appearance: none; cursor: pointer; }
     textarea.form-input { resize: vertical; min-height: 80px; }
 
-    /* â”€â”€â”€ GUIDE DRAWER â”€â”€â”€ */
+    /* ─── GUIDE DRAWER ─── */
     .guide-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 150; display: none; }
     .guide-drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 340px; max-width: 90vw; background: var(--navy-mid); border-left: 1px solid var(--border); z-index: 160; overflow-y: auto; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; }
     .guide-drawer.open { transform: translateX(0); }
@@ -232,7 +231,7 @@
     .warning-note { background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.2); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 16px; }
     .warning-note strong { color: var(--amber); }
 
-    /* â”€â”€â”€ RESULTS WRAPPER â”€â”€â”€ */
+    /* ─── RESULTS WRAPPER ─── */
     .results-wrapper { max-width: 1240px; margin: 0 auto; padding: 0 0 32px; }
 
     /* Ensure Smart Lookup panel text remains readable on white result cards */
@@ -266,8 +265,8 @@
     .sl-summary-card {
       padding: 14px;
       border: 1px solid #dbe4ee;
-      border-radius: var(--radius);
-      background: var(--surface);
+      border-radius: 12px;
+      background: #ffffff;
       box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
     }
     .sl-summary-row {
@@ -283,13 +282,13 @@
     }
     .sl-confidence-card {
       padding: 12px 14px;
-      border-radius: var(--radius);
+      border-radius: 12px;
       border: 1px solid #cfe3dc;
       background: #f7fffb;
     }
     .sl-recommendation-hero {
       padding: 14px;
-      border-radius: var(--radius);
+      border-radius: 12px;
       border: 1px solid #f7d9a6;
       background: linear-gradient(135deg, #fff8ea 0%, #fff3d6 100%);
     }
@@ -300,7 +299,7 @@
       padding: 5px 10px;
       border-radius: 999px;
       border: 1px solid #cbd5e1;
-      background: var(--surface);
+      background: #ffffff;
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
@@ -320,7 +319,7 @@
       max-width: 100%;
       font-size: 12px;
       line-height: 1.45;
-      color: var(--text-3);
+      color: #475569;
       padding: 7px 11px;
       border-radius: 999px;
       border: 1px solid #dbe4ee;
@@ -328,7 +327,7 @@
     }
     .serial-result-hero {
       padding: 20px;
-      border-radius: var(--radius-lg);
+      border-radius: 16px;
       border: 2px solid #f5c451;
       background: linear-gradient(180deg, #fffdf7 0%, #f8fbff 100%);
       box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
@@ -412,8 +411,8 @@
     .serial-summary-layer .lkq-entry-section {
       margin-top: 0;
       padding: 14px;
-      border-radius: var(--radius);
-      background: var(--surface);
+      border-radius: 12px;
+      background: #ffffff;
       box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
       display: flex;
       flex-direction: column;
@@ -463,7 +462,7 @@
       gap: 4px;
       padding: 10px 12px 8px;
       border: 1px solid rgba(15, 23, 42, 0.12);
-      border-radius: var(--radius-lg);
+      border-radius: 16px;
       background: rgba(255,255,255,0.94);
       color: #0f172a;
       box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
@@ -484,7 +483,7 @@
       font-size: 11px;
       line-height: 1.1;
       font-weight: 700;
-      color: var(--text-3);
+      color: #475569;
       text-align: center;
     }
     .serial-summary-layer .lkq-entry-section .search-hint {
@@ -608,7 +607,7 @@
       align-items: center;
       gap: 8px;
       min-height: 24px;
-      font-family: var(--font-body);
+      font-family: 'Sora', sans-serif;
       font-size: 12px;
       font-weight: 600;
       color: #ffffff;
@@ -624,8 +623,8 @@
     .power-btn {
       width: 100%;
       height: 50px;
-      border-radius: var(--radius);
-      font-family: var(--font-body);
+      border-radius: 12px;
+      font-family: 'Sora', sans-serif;
       font-size: 14px;
       font-weight: 700;
       border: none;
@@ -637,7 +636,7 @@
     }
     .power-btn.btn-amber {
       background: #f6ad55;
-      color: var(--text);
+      color: #1a202c;
     }
     .power-btn.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
     @media (max-width: 980px) { .power-bar { grid-template-columns: 1fr; } }
@@ -672,33 +671,30 @@
 </style>
 </head>
 <body data-page-kind="home" data-prefill-cat="appliances" data-prefill-brand="whirlpool">
-<nav class="site-nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo">
-      <div class="nav-logo-name">Decode My Item</div>
-      <div class="nav-logo-tag">Decode &middot; Research &middot; Automate</div>
-    </a>
-    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
-      <span></span><span></span><span></span>
-    </button>
-    <ul class="nav-links">
-      <li><a href="/">Home</a></li>
-      <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-      <li><a href="/smart-lookup">Smart Lookup</a></li>
-      <li><a href="/assistant">AI Assistant</a></li>
-      <li><a href="/methodology">Methodology</a></li>
-      <li><a href="/contact">Contact</a></li>
-      <li><a href="/feedback">Feedback &amp; Bugs</a></li>
-      <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
-    </ul>
-  </div>
+
+<!-- ─── NAV ─── -->
+<nav>
+  <a href="/" class="logo" aria-label="Decode My Item home">
+    <div>
+      <div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Decode - Research - Automate</div>
+    </div>
+  </a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+  <ul>
+  <li><a href="/">Home</a></li>
+  <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+  <li><a href="/smart-lookup">Smart Lookup</a></li>
+  <li><a href="/assistant">AI Assistant</a></li>
+  <li><a href="/methodology">Methodology</a></li>
+  <li><a href="/contact">Contact</a></li>
+  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
+  <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+</ul>
 </nav>
 
-
-<!-- â”€â”€â”€ NAV â”€â”€â”€ -->
-
-
-<!-- â”€â”€â”€ PAGE HERO â”€â”€â”€ -->
+<!-- ─── PAGE HERO ─── -->
 
 <section class="page-hero home-hero brand-home-hero">
 <div class="brand-hero-copy">
@@ -709,7 +705,7 @@
   </div>
 </section>
 
-<!-- â”€â”€â”€ DECODER TOOL â”€â”€â”€ -->
+<!-- ─── DECODER TOOL ─── -->
 
 <section class="section" style="padding-top:0; padding-bottom:18px;">
   <div class="brand-helper-wrap">
@@ -738,10 +734,10 @@
       <div class="search-box">
         <!-- Decoder Category Tabs -->
         <div class="search-tabs">
-          <button class="search-tab cat-tab active" data-cat="appliances"   onclick="selectCatAndShowDecoder('appliances', this)">ðŸ  Appliances</button>
-          <button class="search-tab cat-tab"         data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">ðŸ’§ Water Heaters</button>
-          <button class="search-tab cat-tab"         data-cat="hvac"        onclick="selectCatAndShowDecoder('hvac', this)">â„ï¸ HVAC</button>
-          <button class="search-tab cat-tab"         data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">ðŸ“º Electronics</button>
+          <button class="search-tab cat-tab active" data-cat="appliances"   onclick="selectCatAndShowDecoder('appliances', this)">🏠 Appliances</button>
+          <button class="search-tab cat-tab"         data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">💧 Water Heaters</button>
+          <button class="search-tab cat-tab"         data-cat="hvac"        onclick="selectCatAndShowDecoder('hvac', this)">❄️ HVAC</button>
+          <button class="search-tab cat-tab"         data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">📺 Electronics</button>
         </div>
 
         <!-- DECODER PANEL -->
@@ -760,7 +756,7 @@
           <div class="era-group hidden" id="eraGroup">
             <label class="sr-only" for="eraSelect">
               Manufacture Era
-              <span title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">â“˜</span>
+              <span title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">ⓘ</span>
             </label>
             <select id="eraSelect" class="search-select" style="margin-top:8px;">
               <option value="">-- Select Era --</option>
@@ -778,7 +774,7 @@
 
       <div class="search-box">
         <div class="search-tabs">
-          <button class="search-tab smart-tab active" type="button" disabled>âœ¨ Smart Lookup</button>
+          <button class="search-tab smart-tab active" type="button" disabled>✨ Smart Lookup</button>
         </div>
 
         <div class="search-panel" id="panel-smart">
@@ -795,25 +791,25 @@
           <p class="search-link" style="margin-top:10px;">Have a serial number? Use the Decode action in the Power Bar below.</p>
         </div></div>
     <div class="power-bar" role="group" aria-label="Power Bar actions">
-      <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">ðŸ” Decode Serial Number</button>
+      <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">🔍 Decode Serial Number</button>
       <button class="btn-amber power-btn" type="button" onclick="runLKQLookup()">Search</button>
     </div>
   </div>
 </section>
 
-<!-- â”€â”€â”€ RESULTS WRAPPER â”€â”€â”€ -->
+<!-- ─── RESULTS WRAPPER ─── -->
 <div class="results-wrapper" style="padding:0 48px 32px;">
 
   <!-- Loading -->
   <div id="ageLoading" class="results-card hidden">
     <div class="loading-inner">
-      <span class="loading-emoji lightning" id="loadingEmoji">ðŸŒ©ï¸</span>
+      <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
       <div class="loading-text" id="loadingText">Researching product information...</div></div>
 
   <!-- Serial Decode Results -->
   <div id="serialResults" class="results-card hidden">
     <div class="results-header">
-      <h3>ðŸ“Š Decoded Results</h3>
+      <h3>📊 Decoded Results</h3>
       <div class="brand-logo-wrap" id="serialBrandLogo"></div>
     </div>
     <div class="results-body">
@@ -833,7 +829,7 @@
         </div>
         <div class="result-row">
           <span class="result-label">Estimated Age</span>
-          <span class="result-value" id="resultEstimatedAge">â€”</span>
+          <span class="result-value" id="resultEstimatedAge">—</span>
         </div>
         <div class="info-block method">
           <h4>Decoding Method</h4>
@@ -871,15 +867,15 @@
       <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
     </div></div><!-- /results-wrapper -->
 
-<!-- â”€â”€â”€ TRUST BAR â”€â”€â”€ -->
+<!-- ─── TRUST BAR ─── -->
 <div class="trust-bar">
-  <div class="trust-item"><span>ðŸ¢</span><span><strong>100+</strong> Brands covered</span></div>
-  <div class="trust-item"><span>âš¡</span><span><strong>Instant</strong> results</span></div>
-  <div class="trust-item"><span>ðŸ¤–</span><span><strong>AI Fallback</strong> via Smart Lookup</span></div>
-  <div class="trust-item"><span>ðŸ </span><span>Appliances, HVAC, Electronics &amp; Water Heaters</span></div>
+  <div class="trust-item"><span>🏢</span><span><strong>100+</strong> Brands covered</span></div>
+  <div class="trust-item"><span>⚡</span><span><strong>Instant</strong> results</span></div>
+  <div class="trust-item"><span>🤖</span><span><strong>AI Fallback</strong> via Smart Lookup</span></div>
+  <div class="trust-item"><span>🏠</span><span>Appliances, HVAC, Electronics &amp; Water Heaters</span></div>
 </div>
 
-<!-- â”€â”€â”€ POPULAR BRANDS â”€â”€â”€ -->
+<!-- ─── POPULAR BRANDS ─── -->
 <section class="section alt">
   <div style="max-width:1100px;margin:0 auto;">
     <span class="section-label">Browse by Brand</span>
@@ -923,15 +919,23 @@
   </div>
 </section>
 
-<!-- â”€â”€â”€ FOOTER â”€â”€â”€ -->
-
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div>© 2026 Decode My Item · Database verified February 2026</div>
+  <div class="footer-links">
+    <a href="methodology.html">Methodology</a>
+    <a href="contact.html">Contact</a>
+    <a href="security.html">Security &amp; Data Notice</a>
+    <a href="/privacy-policy">Privacy Policy</a>
+  </div>
+</footer>
 
 <button class="back-to-top-fab" type="button" onclick="scrollPageToTop()" aria-label="Back to top">
-  <span class="back-to-top-icon">â†‘</span>
+  <span class="back-to-top-icon">↑</span>
   <span class="back-to-top-label">Back to Top</span>
 </button>
 
-<!-- â”€â”€â”€ GUIDE DRAWER â”€â”€â”€ -->
+<!-- ─── GUIDE DRAWER ─── -->
 <div id="guideOverlay" class="guide-overlay" onclick="closeGuide()"></div>
 <div id="guideDrawer" class="guide-drawer">
   <div class="guide-drawer-header">
@@ -948,7 +952,7 @@
       <li>Click <strong>Decode Serial Number</strong></li>
     </ol>
     <h4>No Serial Number?</h4>
-    <p>Click the <strong>âœ¨ Smart Lookup</strong> tab. Enter a model number, brand name, or description (e.g., "GE Profile PFE28KSKSS") to get an AI-powered age estimate.</p>
+    <p>Click the <strong>✨ Smart Lookup</strong> tab. Enter a model number, brand name, or description (e.g., "GE Profile PFE28KSKSS") to get an AI-powered age estimate.</p>
     <h4>Finding Serial Numbers</h4>
     <ul>
       <li><strong>Refrigerators:</strong> Inside on the left or right wall</li>
@@ -958,10 +962,10 @@
       <li><strong>Water Heaters:</strong> On a sticker/plate on the side of the tank</li>
     </ul>
     <div class="warning-note">
-      <strong>Note:</strong> Many serial number codes repeat every 10â€“20 years. Always verify the decade using physical condition, model features, purchase receipts, or installation records.
+      <strong>Note:</strong> Many serial number codes repeat every 10–20 years. Always verify the decade using physical condition, model features, purchase receipts, or installation records.
     </div></div>
 
-<!-- â”€â”€â”€ FEEDBACK MODAL â”€â”€â”€ -->
+<!-- ─── FEEDBACK MODAL ─── -->
 <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
   <div class="modal-card">
     <div class="modal-header">
@@ -1144,29 +1148,6 @@ function selectCatAndShowDecoder(cat, btn) {
   ]
 }
 </script>
-<footer class="site-footer footer">
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div class="footer-col-brand">
-        <div class="footer-logo">Decode My Item</div>
-        <div class="footer-tagline">Decode &middot; Research &middot; Automate</div>
-        <p class="footer-copy">Serial number, model number, and age research for appliances, HVAC, and electronics.</p>
-      </div>
-      <div class="footer-col-links">
-        <span class="footer-heading">Resources</span>
-        <div class="footer-links">
-          <a href="/methodology">Methodology</a>
-          <a href="/contact">Contact</a>
-          <a href="/security">Security &amp; Data Notice</a>
-          <a href="/privacy-policy">Privacy Policy</a>
-        </div>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 Decode My Item &middot; Database verified February 2026</p>
-    </div>
-  </div>
-</footer>
 </body>
 </html>
 

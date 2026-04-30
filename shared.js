@@ -6,8 +6,8 @@
 
 /* ─── NAV: mark current page link as active ─── */
 (function () {
-  if (document.querySelector('nav .nav-links a.nav-active, nav ul li a.nav-active')) return;
-  const links = document.querySelectorAll('nav .nav-links a, nav ul li a');
+  if (document.querySelector('nav ul li a.nav-active')) return;
+  const links = document.querySelectorAll('nav ul li a');
   links.forEach(link => {
     if (link.href === window.location.href || window.location.pathname.includes(link.dataset.page)) {
       link.classList.add('active');
@@ -51,7 +51,7 @@ function setTab(el, tab) {
 /* ─── MOBILE HAMBURGER ─── */
 (function() {
   var btn = document.getElementById('hamburgerBtn');
-  var nav = document.querySelector('nav .nav-links') || document.querySelector('nav ul');
+  var nav = document.querySelector('nav ul');
   if (!btn || !nav) return;
 
   function closeMenu() {

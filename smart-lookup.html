@@ -4,70 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Lookup &mdash; Decode My Item</title>
-  <link rel="stylesheet" href="/design-system.css">
   <link rel="stylesheet" href="shared.css">
   <style>
     .lookup-box {
       max-width: 640px;
       margin: 0 auto;
-      background: var(--surface);
+      background: rgba(255,255,255,0.05);
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-md);
+      border-radius: 20px;
       padding: 28px 28px 24px;
     }
-    .lookup-box .section-label { margin-bottom: 16px; color: var(--blue); }
-    .lookup-box label {
-      display: block;
-      margin-bottom: 8px;
-      color: var(--navy);
-      font-size: 13px;
-      font-weight: 700;
-    }
-    .lookup-box input,
-    .lookup-box textarea {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text);
-      font: inherit;
-      padding: 12px 14px;
-      margin-bottom: 16px;
-    }
-    .lookup-box textarea { min-height: 112px; resize: vertical; }
+    .lookup-box .section-label { margin-bottom: 16px; }
     .tips { margin-top: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 16px; max-width: 640px; margin-left: auto; margin-right: auto; }
-    .page-hero h1 { color: var(--navy); }
-    .page-hero .hero-sub { color: var(--text-2); opacity: 1; }
-    .page-hero .hero-badge span:last-child { color: var(--blue) !important; }
+    .tip-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+    .tip-icon { font-size: 22px; margin-bottom: 8px; }
+    .tip-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+    .tip-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
   </style>
 </head>
 <body>
-<nav class="site-nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo">
-      <div class="nav-logo-name">Decode My Item</div>
-      <div class="nav-logo-tag">Decode &middot; Research &middot; Automate</div>
-    </a>
-    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
-      <span></span><span></span><span></span>
-    </button>
-    <ul class="nav-links">
-      <li><a href="/">Home</a></li>
-      <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-      <li><a href="/smart-lookup">Smart Lookup</a></li>
-      <li><a href="/assistant">AI Assistant</a></li>
-      <li><a href="/methodology">Methodology</a></li>
-      <li><a href="/contact">Contact</a></li>
-      <li><a href="/feedback">Feedback &amp; Bugs</a></li>
-      <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
-    </ul>
-  </div>
-</nav>
-
 
 <!-- NAV -->
-
+<nav>
+  <a href="/" class="logo" aria-label="Decode My Item home">
+    <div>
+      <div class="logo-text">Decode My <span>Item</span></div>
+      <div class="logo-sub">Decode - Research - Automate</div>
+    </div>
+  </a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+  </button>
+  <ul>
+  <li><a href="/">Home</a></li>
+  <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+  <li><a href="/smart-lookup" class="nav-active">Smart Lookup</a></li>
+  <li><a href="/assistant">AI Assistant</a></li>
+  <li><a href="/methodology">Methodology</a></li>
+  <li><a href="/contact">Contact</a></li>
+  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
+  <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+</ul>
+</nav>
 
 <!-- PAGE HERO -->
 <section class="page-hero">
@@ -90,7 +68,7 @@
     <label for="lookup-notes">Additional Notes (optional)</label>
     <textarea id="lookup-notes" placeholder="Any other details &mdash; color, size, features, where it was installed..."></textarea>
 
-    <button id="smartLookupBtn" class="btn-primary" style="width:100%;background:var(--navy);color:#ffffff;">&#10024; Run Smart Lookup</button>
+    <button id="smartLookupBtn" class="btn-amber" style="width:100%;">&#10024; Run Smart Lookup</button>
     <div id="smart-lookup-results"></div>
     <p class="search-link" style="margin-top:12px;">Have a serial number? <a href="decoder-tool">Use the Serial Decoder &rarr;</a></p>
   </div>
@@ -99,21 +77,31 @@
   <div class="tips" style="margin-top:32px;">
     <div class="tip-card">
       <div class="tip-icon">&#127919;</div>
-      <p class="tip-text">Include the full model number when possible &mdash; this gives the AI the best chance of a precise date range.</p>
+      <div class="tip-title">Be Specific</div>
+      <p class="tip-desc">Include the full model number when possible &mdash; this gives the AI the best chance of a precise date range.</p>
     </div>
     <div class="tip-card">
-      <div class="tip-icon">&#127991;&#65039;</div>
-      <p class="tip-text">Include the brand name in your description for better results &mdash; e.g. "Carrier 24ACC636A003".</p>
+      <div class="tip-icon">&#127991;</div>
+      <div class="tip-title">Add Context</div>
+      <p class="tip-desc">Include the brand name in your description for better results &mdash; e.g. "Carrier 24ACC636A003".</p>
     </div>
     <div class="tip-card">
       <div class="tip-icon">&#9201;</div>
-      <p class="tip-text">Smart Lookup returns an estimated year range, not an exact date. Use Serial Decoder for precision.</p>
+      <div class="tip-title">Expect a Range</div>
+      <p class="tip-desc">Smart Lookup returns an estimated year range, not an exact date. Use Serial Decoder for precision.</p>
     </div>
   </div>
 </section>
 
 <!-- FOOTER -->
-
+<footer>
+  <div>&copy; 2025 Decode My Item &#8226; Decode - Research - Automate</div>
+  <div class="footer-links">
+    <a href="methodology.html">Methodology</a>
+    <a href="contact.html">Contact</a>
+    <a href="security.html">Security &amp; Data Notice</a>
+  </div>
+</footer>
 
 <script src="lkq-engine.js"></script>
 <script src="analytics.js"></script>
@@ -125,28 +113,5 @@
 <script src="smart-lookup-upgrade-patch.js"></script>
 <script src="smart-lookup-pricetier.js"></script>
 <script src="shared.js"></script>
-<footer class="site-footer footer">
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div class="footer-col-brand">
-        <div class="footer-logo">Decode My Item</div>
-        <div class="footer-tagline">Decode &middot; Research &middot; Automate</div>
-        <p class="footer-copy">Serial number, model number, and age research for appliances, HVAC, and electronics.</p>
-      </div>
-      <div class="footer-col-links">
-        <span class="footer-heading">Resources</span>
-        <div class="footer-links">
-          <a href="/methodology">Methodology</a>
-          <a href="/contact">Contact</a>
-          <a href="/security">Security &amp; Data Notice</a>
-          <a href="/privacy-policy">Privacy Policy</a>
-        </div>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 Decode My Item &middot; Database verified February 2026</p>
-    </div>
-  </div>
-</footer>
 </body>
 </html>

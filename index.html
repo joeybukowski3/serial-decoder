@@ -1,568 +1,1164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Decode My Item — Serial Number Decoder &amp; Age Lookup</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body { font-family: 'DM Sans', system-ui, sans-serif; background: #f7f9ff; color: #0c1630; line-height: 1.6; font-size: 16px; -webkit-font-smoothing: antialiased; }
-:root {
-  --navy:#0c1630; --navy-2:#1a2847; --blue:#2563eb; --blue-lt:#eff6ff;
-  --blue-md:#bfdbfe; --blue-dk:#1d4ed8; --border:#e2e8f4; --bg:#f7f9ff;
-  --surface:#ffffff; --text:#0c1630; --text-2:#475569; --text-3:#94a3b8;
-  --r:12px; --r-lg:20px;
-  --shadow:0 1px 3px rgba(12,22,48,.06),0 4px 16px rgba(12,22,48,.06);
-  --shadow-md:0 2px 8px rgba(12,22,48,.08),0 12px 40px rgba(12,22,48,.08);
+  <!-- Google tag (gtag.js) -->
+  <script async src=https://www.googletagmanager.com/gtag/js?id=G-C3TXQS1DYP></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-C3TXQS1DYP');
+  </script>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5946778263750869" crossorigin="anonymous"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appliance Serial Number Decoder & Age Lookup | Item Assist</title>
+  <meta name="description" content="Find appliance age by serial number and decode manufacture dates for Whirlpool, GE, Samsung, LG, Goodman, and more. Use the free serial decoder or Smart Lookup for model-based research.">
+      <link rel="canonical" href="https://www.decodemyitem.com/">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Item Assist">
+  <meta property="og:title" content="Appliance Serial Number Decoder & Age Lookup | Item Assist">
+  <meta property="og:description" content="Find appliance age by serial number and decode manufacture dates for Whirlpool, GE, Samsung, LG, Goodman, and more. Use the free serial decoder or Smart Lookup for model-based research.">
+  <meta property="og:url" content="https://www.decodemyitem.com/">
+  <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
+  <meta property="og:image:alt" content="Item Assist preview image">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Appliance Serial Number Decoder & Age Lookup | Item Assist">
+  <meta name="twitter:description" content="Find appliance age by serial number and decode manufacture dates for Whirlpool, GE, Samsung, LG, Goodman, and more. Use the free serial decoder or Smart Lookup for model-based research.">
+  <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Appliance Serial Number Decoder & Age Lookup | Item Assist",
+    "description": "Find appliance age by serial number and decode manufacture dates for Whirlpool, GE, Samsung, LG, Goodman, and more. Use the free serial decoder or Smart Lookup for model-based research.",
+    "url": "https://www.decodemyitem.com/",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Item Assist",
+      "url": "https://www.decodemyitem.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.decodemyitem.com/assets/item-assist-logo.png"
+      }
+    }
+  }
+  </script>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="mobile-smart-lookup.css">
+  <link rel='icon' type='image/png' href='/favicon.png'>
+  <style>
+    /* ─── UTILITIES ─── */
+    .hidden { display: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+    /* ─── DECODER FORM ─── */
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+    .era-group { margin-top: 8px; }
+    .era-note { font-size: 11px; color: #d8e3ee; margin-top: 6px; line-height: 1.5; }
+
+    /* ─── RESULTS CARD ─── */
+    .results-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 1240px;
+      margin: 0 auto 24px;
+    }
+    .results-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: #0f172a;
+    }
+    .results-header h3 { font-size: 14px; font-weight: 700; color: #ffffff; margin: 0; }
+    .results-body { padding: 16px 20px; }
+    .results-footer {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      padding: 12px 20px;
+      border-top: 1px solid #e2e8f0;
+      background: #ffffff;
+    }
+
+    /* ─── RESULT ROWS ─── */
+    .result-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 13px;
+    }
+    .result-row:last-of-type { border-bottom: none; }
+    .result-label { color: #4a5568; }
+    .result-value { color: #3182ce; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .result-row--primary .result-label { font-weight: 700; color: #1a202c; }
+    .result-row--primary .result-value { font-size: 15px; color: #3182ce; }
+
+    /* ─── INFO BLOCKS ─── */
+    .info-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-top: 12px; }
+    .info-block h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #1a202c; margin-bottom: 6px; }
+    .info-block p { font-size: 13px; color: #4a5568; line-height: 1.5; margin: 0; }
+
+    /* ─── DETERMINATION DETAILS ─── */
+    .determination-details { margin-top: 12px; }
+    .determination-details summary { font-size: 12px; color: #4a5568; cursor: pointer; padding: 6px 0; list-style: none; display: flex; align-items: center; gap: 6px; }
+    .determination-details summary::before { content: '▶'; font-size: 9px; transition: transform 0.2s; }
+    .determination-details[open] summary::before { transform: rotate(90deg); }
+    .determination-details summary:hover { color: var(--teal); }
+    .determination-body { font-size: 12px; color: #4a5568; line-height: 1.6; padding: 8px 0; }
+
+    /* ─── MORE OPTIONS ─── */
+    .more-options-section { border-top: 1px solid rgba(255,255,255,0.06); }
+    .more-options-toggle { width: 100%; padding: 12px 20px; background: transparent; border: none; color: var(--muted); font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; transition: color 0.2s; }
+    .more-options-toggle:hover { color: var(--teal); }
+    .more-options-arrow { margin-right: 6px; font-size: 10px; display: inline-block; transition: transform 0.2s; }
+    .more-options-body { padding: 0 20px 16px; }
+    .options-drawer { margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden; }
+    .options-drawer summary { font-size: 13px; font-weight: 600; color: var(--white); cursor: pointer; padding: 10px 14px; background: rgba(255,255,255,0.02); }
+    .options-drawer summary:hover { color: var(--teal); }
+    .options-drawer-body { padding: 12px 14px; }
+    .placeholder-note { font-size: 13px; color: #334155; margin-bottom: 4px; }
+    .placeholder-hint { font-size: 12px; color: #475569; opacity: 1; margin-bottom: 12px; }
+    .ai-generate-btn { background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25); border-radius: 8px; padding: 8px 16px; font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600; color: var(--teal); cursor: pointer; transition: all 0.2s; }
+    .ai-generate-btn:hover { background: rgba(0,201,167,0.18); }
+    .ai-generate-result { margin-top: 12px; font-size: 13px; color: #334155; line-height: 1.6; }
+
+    /* ─── RESULT ACTION BUTTONS ─── */
+    .copy-btn, .decode-again-btn, .error-btn, .cancel-btn {
+      font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600;
+      padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .copy-btn { background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.25); color: var(--teal); }
+    .copy-btn:hover { background: rgba(0,201,167,0.18); }
+    .decode-again-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 52px; padding: 14px 26px; border-radius: 14px; border: none;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      color: #081321; font-size: 15px; font-weight: 800; letter-spacing: 0.01em;
+      box-shadow: 0 12px 28px rgba(249,115,22,0.28);
+    }
+    .decode-again-btn:hover {
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 16px 34px rgba(249,115,22,0.36);
+      color: #081321;
+    }
+    .decode-again-btn.btn-teal {
+      background: linear-gradient(135deg, #00c9ff, #2f7bff);
+      color: #f7fbff;
+      box-shadow: 0 12px 28px rgba(47,123,255,0.32);
+    }
+    .decode-again-btn.btn-teal:hover {
+      color: #f7fbff;
+      box-shadow: 0 16px 34px rgba(47,123,255,0.42);
+    }
+    .decode-again-btn:focus-visible {
+      outline: 3px solid rgba(255,255,255,0.4);
+      outline-offset: 3px;
+    }
+    .error-btn { background: transparent; border: 1px solid rgba(245,166,35,0.2); color: var(--amber); }
+    .error-btn:hover { border-color: rgba(245,166,35,0.4); }
+    .cancel-btn { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
+    .cancel-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.25); }
+    .decode-btn { background: linear-gradient(135deg, var(--teal), #0099ff); color: var(--navy); font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; }
+
+    /* ─── LOADING ─── */
+    .loading-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px; }
+    .loading-emoji { font-size: 36px; }
+    @keyframes lightning-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.1)} }
+    .loading-emoji.lightning { animation: lightning-pulse 1s ease-in-out infinite; }
+    .loading-text { font-size: 13px; color: #334155; }
+
+    /* ─── BRAND LOGO ─── */
+    .brand-logo-wrap { width: 32px; height: 32px; }
+    .brand-logo-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+    /* ─── BRAND TABLE ─── */
+.brand-table-wrap {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+.brand-group {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.brand-group-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7a8fa8;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+}
+.brand-group-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.brand-group-dot.appliances { background: #00c9a7; }
+.brand-group-dot.electronics { background: #3b82f6; }
+.brand-group-dot.hvac { background: #f59e0b; }
+
+.brand-list { display: flex; flex-direction: column; }
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.15s, color 0.15s;
+}
+.brand-row:last-child { border-bottom: none; }
+.brand-row:hover { background: rgba(0,201,167,0.07); }
+.brand-row:hover .brand-row-name { color: var(--teal); }
+.brand-row:hover .brand-row-arrow { opacity: 1; color: var(--teal); }
+.brand-row-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  min-width: 90px;
+  flex-shrink: 0;
+}
+.brand-row-desc {
+  font-size: 11px;
+  color: #7a8fa8;
+  flex: 1;
+}
+.brand-row-arrow {
+  font-size: 12px;
+  color: #3a4f63;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+@media (max-width: 780px) {
+  .brand-table-wrap { grid-template-columns: 1fr; }
 }
 
-/* NAV */
-nav { position:sticky; top:0; z-index:100; background:rgba(247,249,255,.92); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-bottom:1px solid var(--border); }
-.nav-inner { max-width:1160px; margin:0 auto; padding:0 32px; height:64px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
-.nav-logo { display:flex; flex-direction:column; text-decoration:none; flex-shrink:0; line-height:1; }
-.nav-logo-name { font-family:'Outfit',sans-serif; font-weight:700; font-size:16px; color:var(--navy); letter-spacing:-.4px; white-space:nowrap; }
-.nav-logo-tag { font-size:9.5px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--blue); white-space:nowrap; margin-top:2px; }
-.nav-links { display:flex; align-items:center; gap:2px; list-style:none; flex-wrap:nowrap; }
-.nav-links a { font-size:13.5px; color:var(--text-2); text-decoration:none; padding:6px 10px; border-radius:8px; white-space:nowrap; transition:color .15s,background .15s; }
-.nav-links a:hover { color:var(--navy); background:rgba(37,99,235,.06); }
-.nav-cta { background:var(--navy)!important; color:#fff!important; font-weight:500!important; border-radius:8px!important; }
-.nav-cta:hover { background:var(--navy-2)!important; }
+    /* ─── FEEDBACK MODAL ─── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 20px; max-width: 480px; width: 100%; overflow: hidden; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .modal-header h3 { font-size: 14px; font-weight: 700; color: var(--white); margin: 0; }
+    .modal-close { background: transparent; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
+    .modal-close:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+    .modal-body { padding: 20px 22px; }
+    .modal-field { margin-bottom: 14px; }
+    .modal-field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .fb-thanks { background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--teal); margin-top: 12px; }
+    .form-input { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
+    .form-input:focus { border-color: var(--teal); }
+    .form-select { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; appearance: none; cursor: pointer; }
+    textarea.form-input { resize: vertical; min-height: 80px; }
 
-/* HERO */
-.hero { max-width:1160px; margin:0 auto; padding:60px 32px 36px; text-align:center; }
-.hero-eyebrow { font-size:11px; font-weight:600; letter-spacing:.13em; text-transform:uppercase; color:var(--blue); margin-bottom:14px; }
-.hero h1 { font-family:'Outfit',sans-serif; font-size:clamp(30px,4.2vw,48px); font-weight:700; letter-spacing:-1.5px; line-height:1.1; color:var(--navy); max-width:620px; margin:0 auto 16px; }
-.hero-sub { font-size:16px; color:var(--text-2); max-width:560px; margin:0 auto; line-height:1.7; }
+    /* ─── GUIDE DRAWER ─── */
+    .guide-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 150; display: none; }
+    .guide-drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 340px; max-width: 90vw; background: var(--navy-mid); border-left: 1px solid var(--border); z-index: 160; overflow-y: auto; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; }
+    .guide-drawer.open { transform: translateX(0); }
+    .guide-drawer-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); position: sticky; top: 0; background: var(--navy-mid); }
+    .guide-drawer-header h3 { font-size: 14px; font-weight: 700; color: var(--white); margin: 0; }
+    .guide-drawer-close { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; }
+    .guide-drawer-close:hover { color: var(--white); }
+    .guide-drawer-body { padding: 20px; flex: 1; }
+    .guide-drawer-body h4 { font-size: 13px; font-weight: 700; color: var(--white); margin: 16px 0 8px; }
+    .guide-drawer-body h4:first-child { margin-top: 0; }
+    .guide-drawer-body ol, .guide-drawer-body ul { padding-left: 18px; }
+    .guide-drawer-body li { font-size: 13px; color: var(--muted); margin-bottom: 6px; line-height: 1.5; }
+    .guide-drawer-body p { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+    .warning-note { background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.2); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 16px; }
+    .warning-note strong { color: var(--amber); }
 
-/* TOOL SECTION */
-.tool-section { max-width:1160px; margin:0 auto; padding:32px 32px 64px; }
-.tool-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+    /* ─── RESULTS WRAPPER ─── */
+    .results-wrapper { max-width: 1240px; margin: 0 auto; padding: 0 0 32px; }
 
-/* TOOL CARDS */
-.tool-card { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow-md); overflow:hidden; }
-.tool-card.smart { border-color:var(--blue); background:linear-gradient(160deg,#f0f6ff 0%,#fafcff 55%,#fff 100%); }
-.tool-card-header { padding:18px 22px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; background:var(--bg); }
-.tool-card.smart .tool-card-header { background:linear-gradient(135deg,rgba(37,99,235,.07) 0%,transparent 100%); border-bottom-color:var(--blue-md); }
-.tool-card-icon { width:36px; height:36px; border-radius:10px; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
-.tool-card.smart .tool-card-icon { background:var(--blue); border-color:var(--blue-dk); }
-.tool-card-title { font-family:'Outfit',sans-serif; font-size:15px; font-weight:700; color:var(--navy); line-height:1.1; }
-.tool-card-sub { font-size:11px; color:var(--text-3); margin-top:2px; }
-.smart-badge { margin-left:auto; display:inline-flex; align-items:center; gap:5px; background:var(--blue); color:#fff; font-size:9.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:4px 10px; border-radius:100px; white-space:nowrap; }
-.smart-badge-dot { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,.55); flex-shrink:0; }
-.tool-card-body { padding:22px; }
+    /* Ensure Smart Lookup panel text remains readable on white result cards */
+    #smart-lookup-results,
+    #smart-lookup-results * {
+      color: #1a1a2e !important;
+    }
+    .sl-top-summary-layer {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 18px;
+      padding: 16px;
+      border: 1px solid #dbe4ee;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
+    }
+    .sl-result-identity-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #dbe4ee;
+    }
+    .sl-summary-band {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+    .sl-summary-card {
+      padding: 14px;
+      border: 1px solid #dbe4ee;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+    }
+    .sl-summary-row {
+      margin-top: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #334155;
+    }
+    .sl-confidence-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .sl-confidence-card {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #cfe3dc;
+      background: #f7fffb;
+    }
+    .sl-recommendation-hero {
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #f7d9a6;
+      background: linear-gradient(135deg, #fff8ea 0%, #fff3d6 100%);
+    }
+    .sl-badge {
+      display: inline-flex;
+      align-items: center;
+      margin: 0 8px 8px 0;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #0f172a;
+    }
+    .sl-bullet-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: #334155;
+    }
+    .serial-summary-layer.hidden { display: none; }
+    .serial-query-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 100%;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #475569;
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: 1px solid #dbe4ee;
+      background: rgba(255,255,255,0.88);
+    }
+    .serial-result-hero {
+      padding: 20px;
+      border-radius: 16px;
+      border: 2px solid #f5c451;
+      background: linear-gradient(180deg, #fffdf7 0%, #f8fbff 100%);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    }
+    .serial-top-grid,
+    .serial-secondary-grid,
+    .serial-bottom-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+    .serial-top-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .serial-top-grid > *,
+    .serial-secondary-grid > * {
+      min-width: 0;
+      height: 100%;
+    }
+    .serial-summary-layer.serial-no-refine #serialRefinementMount {
+      display: none;
+    }
+    .serial-summary-layer.serial-no-refine .serial-secondary-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .serial-summary-layer.serial-no-refine #serialLkqMount {
+      grid-column: 1;
+    }
+    .serial-result-eyebrow {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+    .serial-result-main {
+      font-size: clamp(1rem, 2.5vw, 1.5rem);
+      line-height: 1.08;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+    .serial-result-subline {
+      margin-top: 12px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #1e293b;
+    }
+    .serial-hero-rows {
+      margin-top: 14px;
+      border-top: 1px solid #dbe4ee;
+    }
+    .serial-hero-row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 12px 0;
+      border-bottom: 1px solid #e7eef6;
+    }
+    .serial-hero-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+    .serial-hero-row-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+    }
+    .serial-hero-row-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.4;
+    }
+    .serial-summary-layer .narrow-date-panel,
+    .serial-summary-layer .lkq-entry-section {
+      margin-top: 0;
+      padding: 14px;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      height: 100%;
+      max-width: none;
+      border: 2px solid #cbdcf1;
+    }
+    .serial-summary-layer .narrow-date-fields {
+      grid-template-columns: 1fr;
+      align-items: stretch;
+      flex: 1 1 auto;
+    }
+    .serial-summary-layer .narrow-date-fields .decode-btn,
+    .serial-summary-layer .lkq-entry-btn {
+      width: 100%;
+      justify-self: stretch;
+      margin-top: auto;
+    }
+    .serial-summary-layer .lkq-entry-input-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      align-items: stretch;
+      margin-top: 8px;
+      flex: 1 1 auto;
+    }
+    .serial-summary-layer .lkq-entry-title,
+    .serial-summary-layer .narrow-date-panel h4 {
+      font-size: 1rem;
+    }
+    .serial-summary-layer .lkq-entry-hd {
+      margin-bottom: 4px;
+    }
+    .serial-method-card {
+      height: 100%;
+      border: 2px solid #cbdcf1;
+    }
+    .back-to-top-fab {
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      z-index: 1200;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 12px 8px;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.94);
+      color: #0f172a;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+      backdrop-filter: blur(8px);
+    }
+    .back-to-top-fab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+    }
+    .back-to-top-icon {
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 900;
+    }
+    .back-to-top-label {
+      font-size: 11px;
+      line-height: 1.1;
+      font-weight: 700;
+      color: #475569;
+      text-align: center;
+    }
+    .serial-summary-layer .lkq-entry-section .search-hint {
+      margin-top: 10px;
+    }
+    .serial-summary-layer .sl-panel-copy {
+      margin-top: 10px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #334155;
+    }
+    .serial-summary-layer .sl-panel-subhead {
+      margin-top: 12px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+    }
 
-/* CAT TABS */
-.cat-tabs { display:flex; gap:0; margin-bottom:16px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:3px; }
-.cat-tab { flex:1; padding:7px 6px; font-size:11.5px; font-weight:500; color:var(--text-3); border:none; background:none; border-radius:7px; cursor:pointer; font-family:'DM Sans',sans-serif; text-align:center; transition:all .15s; white-space:nowrap; }
-.cat-tab.active { background:var(--surface); color:var(--navy); box-shadow:0 1px 3px rgba(12,22,48,.09); }
+    /* Home-only dual tool layout */
+    .home-tools-wrap { max-width: 1240px; margin: 0 auto; }
+    .home-tools-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+    .home-tools-grid .search-box {
+      max-width: none;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .home-tools-grid .search-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .home-tool-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    #panel-decoder .home-tool-row .search-select {
+      flex: 0 0 35%;
+      width: 35%;
+      margin-bottom: 0;
+      height: 50px;
+    }
+    #panel-decoder .home-tool-row .search-input {
+      flex: 1 1 65%;
+      width: 65%;
+      margin: 0;
+      height: 50px;
+    }
+    .home-tools-grid .search-tab[disabled] {
+      cursor: default;
+      opacity: 1;
+    }
+    .kenmore-prefix-group {
+      margin-top: 10px;
+    }
+    #panel-decoder .kenmore-prefix-group .form-input,
+    #panel-decoder .kenmore-prefix-group .search-input {
+      width: 100%;
+      height: 50px;
+      margin: 0;
+    }
+    @media (max-width: 980px) {
+      .home-tools-grid {
+        grid-template-columns: 1fr;
+      }
+      .home-tool-row {
+        flex-direction: column;
+      }
+      #panel-decoder .home-tool-row .search-select,
+      #panel-decoder .home-tool-row .search-input {
+        flex: 1 1 auto;
+        width: 100%;
+      }
+    }
 
-/* FORM */
-.field-group { margin-bottom:14px; }
-.field-label { display:block; font-size:12px; font-weight:500; color:var(--text-2); margin-bottom:5px; }
-.field-select,.field-input { width:100%; height:42px; padding:0 13px; font-size:14px; font-family:'DM Sans',sans-serif; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:10px; outline:none; transition:border-color .15s,box-shadow .15s; appearance:none; -webkit-appearance:none; }
-.field-select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 13px center; padding-right:34px; cursor:pointer; }
-.field-select:focus,.field-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
-.field-input::placeholder { color:var(--text-3); }
-.field-hint { font-size:11.5px; color:var(--text-3); margin-top:5px; line-height:1.5; }
-.era-group { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:14px; }
-.era-group .field-label { margin-bottom:7px; display:flex; align-items:center; gap:5px; }
-.info-chip { width:14px; height:14px; border-radius:50%; background:var(--border); color:var(--text-3); font-size:9px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; cursor:help; flex-shrink:0; }
-.era-hint { font-size:11px; color:var(--text-3); line-height:1.5; margin-top:7px; }
-.smart-textarea { width:100%; min-height:86px; padding:11px 13px; font-size:14px; font-family:'DM Sans',sans-serif; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:10px; outline:none; resize:vertical; line-height:1.5; transition:border-color .15s,box-shadow .15s; }
-.smart-textarea::placeholder { color:var(--text-3); }
-.smart-textarea:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
-
-/* TOGGLE */
-.toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-top:1px solid var(--border); margin-top:2px; margin-bottom:14px; }
-.toggle-label { font-size:13px; font-weight:500; color:var(--text-2); }
-input.toggle-cb { display:none; }
-.toggle-track { position:relative; width:38px; height:21px; background:var(--border); border-radius:100px; cursor:pointer; transition:background .2s; display:inline-block; flex-shrink:0; }
-.toggle-track.on { background:var(--blue); }
-.toggle-track::after { content:''; position:absolute; top:2.5px; left:2.5px; width:16px; height:16px; background:#fff; border-radius:50%; transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,.15); }
-.toggle-track.on::after { transform:translateX(17px); }
-
-/* BUTTONS */
-.btn-navy { width:100%; height:46px; background:var(--navy); color:#fff; border:none; border-radius:11px; font-family:'DM Sans',sans-serif; font-size:14.5px; font-weight:500; cursor:pointer; transition:background .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
-.btn-navy:hover { background:var(--navy-2); }
-.btn-navy:disabled { opacity:.4; cursor:not-allowed; }
-.btn-blue { width:100%; height:46px; background:var(--blue); color:#fff; border:none; border-radius:11px; font-family:'DM Sans',sans-serif; font-size:14.5px; font-weight:500; cursor:pointer; transition:background .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
-.btn-blue:hover { background:var(--blue-dk); }
-.tool-note { font-size:11.5px; color:var(--text-3); text-align:center; margin-top:12px; }
-.tool-note a { color:var(--blue); text-decoration:none; font-weight:500; }
-
-/* RESULTS */
-.results-area { border-top:1px solid var(--border); padding:18px 22px; background:var(--bg); }
-.r-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
-.r-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:13px; }
-.r-box-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.1em; color:var(--text-3); margin-bottom:5px; }
-.r-box-value { font-family:'Outfit',sans-serif; font-size:18px; font-weight:600; color:var(--text-3); }
-.r-box-value.pop { color:var(--navy); }
-.r-box-full { grid-column:1/-1; }
-.ghost-row { display:flex; gap:8px; }
-.ghost-btn { flex:1; height:38px; background:transparent; border:1px solid var(--border); border-radius:9px; font-size:13px; font-family:'DM Sans',sans-serif; color:var(--text-2); cursor:pointer; transition:all .15s; }
-.ghost-btn:hover { border-color:var(--blue); color:var(--blue); }
-
-/* CALLOUT */
-.callout-wrap { max-width:1160px; margin:0 auto 64px; padding:0 32px; }
-.smart-callout { background:linear-gradient(135deg,#0c1630 0%,#1a2847 100%); border-radius:var(--r-lg); padding:32px 40px; display:grid; grid-template-columns:1fr auto; align-items:center; gap:32px; }
-.callout-eyebrow { font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:rgba(147,197,253,.8); margin-bottom:8px; }
-.callout-title { font-family:'Outfit',sans-serif; font-size:21px; font-weight:700; color:#fff; letter-spacing:-.4px; line-height:1.2; margin-bottom:10px; }
-.callout-title em { font-style:normal; color:#93c5fd; }
-.callout-desc { font-size:14px; color:rgba(255,255,255,.48); line-height:1.65; max-width:460px; }
-.callout-features { display:flex; gap:20px; margin-top:14px; flex-wrap:wrap; }
-.callout-feat { display:flex; align-items:center; gap:7px; }
-.feat-dot { width:6px; height:6px; border-radius:50%; background:var(--blue); flex-shrink:0; }
-.feat-text { font-size:13px; color:rgba(255,255,255,.58); font-weight:500; }
-.callout-btn { display:inline-flex; align-items:center; gap:8px; background:var(--blue); color:#fff; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; padding:12px 22px; border-radius:11px; text-decoration:none; white-space:nowrap; transition:background .15s; border:none; cursor:pointer; }
-.callout-btn:hover { background:var(--blue-dk); }
-
-/* STATS */
-.stats-section { max-width:1160px; margin:0 auto; padding:0 32px 64px; }
-.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
-.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:22px; text-align:center; transition:box-shadow .15s,transform .15s; }
-.stat-card:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
-.stat-icon { width:38px; height:38px; background:var(--blue-lt); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; margin:0 auto 10px; }
-.stat-value { font-family:'Outfit',sans-serif; font-size:26px; font-weight:700; color:var(--navy); letter-spacing:-.5px; line-height:1; margin-bottom:4px; }
-.stat-label { font-size:12.5px; color:var(--text-2); }
-
-/* BRANDS */
-.brands-section { max-width:1160px; margin:0 auto; padding:0 32px 64px; }
-.section-eyebrow { font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--blue); margin-bottom:6px; }
-.section-title { font-family:'Outfit',sans-serif; font-size:24px; font-weight:700; letter-spacing:-.5px; color:var(--navy); }
-.section-header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:22px; }
-.section-link { font-size:13.5px; color:var(--blue); text-decoration:none; font-weight:500; }
-.section-link:hover { opacity:.72; }
-.brand-filter-tabs { display:flex; gap:4px; margin-bottom:16px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:4px; width:fit-content; }
-.brand-ftab { padding:6px 14px; font-size:13px; font-weight:500; color:var(--text-2); border:none; background:none; border-radius:7px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
-.brand-ftab.active { background:var(--surface); color:var(--navy); box-shadow:0 1px 3px rgba(12,22,48,.09); }
-.brands-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-.brand-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:15px 17px; text-decoration:none; display:flex; align-items:center; justify-content:space-between; transition:all .15s; }
-.brand-card:hover { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.07); transform:translateY(-1px); }
-.brand-name { font-size:14.5px; font-weight:600; color:var(--navy); font-family:'Outfit',sans-serif; margin-bottom:2px; }
-.brand-desc { font-size:11.5px; color:var(--text-3); line-height:1.4; }
-.brand-arrow { font-size:13px; color:var(--text-3); transition:color .15s,transform .15s; }
-.brand-card:hover .brand-arrow { color:var(--blue); transform:translateX(2px); }
-
-/* LOOKUPS */
-.lookups-section { max-width:1160px; margin:0 auto; padding:0 32px 64px; }
-.lookups-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-.lookup-group { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:22px; }
-.lookup-group-title { font-family:'Outfit',sans-serif; font-size:15px; font-weight:600; color:var(--navy); margin-bottom:4px; }
-.lookup-group-sub { font-size:12.5px; color:var(--text-3); margin-bottom:16px; line-height:1.5; }
-.lookup-links { display:flex; flex-direction:column; gap:2px; }
-.lookup-link { font-size:13px; color:var(--blue); text-decoration:none; padding:5px 0; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; transition:color .15s; }
-.lookup-link:last-child { border-bottom:none; }
-.lookup-link:hover { color:var(--blue-dk); }
-.lookup-arrow { font-size:11px; color:var(--text-3); transition:transform .15s; }
-.lookup-link:hover .lookup-arrow { transform:translateX(2px); color:var(--blue); }
-
-/* FAQ */
-.faq-section { max-width:1160px; margin:0 auto; padding:0 32px 64px; }
-.faq-list { border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; background:var(--surface); }
-.faq-item { border-bottom:1px solid var(--border); }
-.faq-item:last-child { border-bottom:none; }
-.faq-q { padding:18px 24px; font-size:14.5px; font-weight:500; color:var(--navy); cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:16px; user-select:none; }
-.faq-q:hover { background:var(--bg); }
-.faq-chevron { font-size:11px; color:var(--text-3); transition:transform .2s; flex-shrink:0; }
-.faq-item.open .faq-chevron { transform:rotate(180deg); }
-.faq-a { display:none; padding:0 24px 18px; font-size:13.5px; color:var(--text-2); line-height:1.7; }
-.faq-item.open .faq-a { display:block; }
-
-/* FOOTER */
-footer { background:var(--navy); padding:44px 32px 32px; }
-.footer-inner { max-width:1160px; margin:0 auto; }
-.footer-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:36px; gap:40px; }
-.footer-logo { font-family:'Outfit',sans-serif; font-size:17px; font-weight:700; color:#fff; margin-bottom:4px; letter-spacing:-.3px; }
-.footer-tag { font-size:10.5px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.28); }
-.footer-cols { display:flex; gap:44px; }
-.footer-col-title { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.28); margin-bottom:12px; }
-.footer-col-links { display:flex; flex-direction:column; gap:9px; list-style:none; }
-.footer-col-links a { font-size:13px; color:rgba(255,255,255,.52); text-decoration:none; transition:color .15s; }
-.footer-col-links a:hover { color:#fff; }
-.footer-bottom { border-top:1px solid rgba(255,255,255,.08); padding-top:22px; display:flex; justify-content:space-between; align-items:center; }
-.footer-copy { font-size:12.5px; color:rgba(255,255,255,.28); }
-.footer-legal { display:flex; gap:18px; }
-.footer-legal a { font-size:12.5px; color:rgba(255,255,255,.28); text-decoration:none; transition:color .15s; }
-.footer-legal a:hover { color:rgba(255,255,255,.65); }
-.back-top { position:fixed; bottom:24px; right:24px; width:38px; height:38px; background:var(--navy); color:#fff; border:none; border-radius:10px; font-size:15px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 12px rgba(12,22,48,.25); text-decoration:none; transition:background .15s; cursor:pointer; }
-.back-top:hover { background:var(--navy-2); }
-#mobileItemType { display:none; }
-</style>
+    .home-hero {
+      padding-bottom: 40px;
+    }
+    .home-hero h1 {
+      font-size: clamp(1.65rem, 2.8vw, 2rem);
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 10px;
+      letter-spacing: -0.6px;
+      line-height: 1.15;
+    }
+    .home-hero .hero-sub {
+      font-size: 1rem;
+      line-height: 1.5;
+      max-width: 750px;
+      color: #ffffff;
+    }
+    #smart-lookup-input {
+      height: 50px;
+      min-height: 50px;
+    }
+    .tool-panel-action {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 18px;
+    }
+    .smart-lookup-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .lookup-checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 24px;
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+    .lookup-checkbox input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--teal);
+      flex: 0 0 16px;
+    }
+    .power-btn {
+      width: min(100%, 300px);
+      min-width: 220px;
+      height: 50px;
+      border-radius: 12px;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      margin: 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .power-btn.btn-primary {
+      background: #3182ce;
+      color: #ffffff;
+    }
+    .power-btn.btn-amber {
+      background: #f6ad55;
+      color: #1a202c;
+    }
+    .power-btn.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+    @media (max-width: 980px) {
+      .tool-panel-action {
+        padding-top: 16px;
+      }
+      .power-btn {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+  </style>
 </head>
-<body>
+<body data-page-kind="home">
 
-<!-- NAV -->
+<!-- ─── NAV ─── -->
 <nav>
-  <div class="nav-inner">
-    <a href="/" class="nav-logo">
-      <span class="nav-logo-name">Decode My Item</span>
-      <span class="nav-logo-tag">Decode · Research · Automate</span>
-    </a>
-    <ul class="nav-links">
-      <li><a href="/">Home</a></li>
-      <li><a href="/serial-decoder.html">Serial Number Decoder</a></li>
-      <li><a href="/smart-lookup.html">Smart Lookup</a></li>
-      <li><a href="/ai-assistant.html">AI Assistant</a></li>
-      <li><a href="/methodology.html">Methodology</a></li>
-      <li><a href="/contact.html">Contact</a></li>
-      <li><a href="/feedback.html">Feedback &amp; Bugs</a></li>
-      <li><a href="/security.html" class="nav-cta">Security &amp; Data</a></li>
-    </ul>
-  </div>
-</nav>
-
-<!-- Required by script.js — always hidden -->
-<select id="mobileItemType" aria-hidden="true" tabindex="-1">
-  <option value="appliances">Appliances</option>
-  <option value="waterHeaters">Water Heaters</option>
-  <option value="hvac">HVAC</option>
-  <option value="electronics">Electronics</option>
-</select>
-
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-eyebrow">Appliances · HVAC · Electronics · Water Heaters</div>
-  <h1>Find out how old your item is — fast.</h1>
-  <p class="hero-sub">Reduce the guesswork in item age verification. Utilize our customized AI agent and serial number database to research the age of your items and increase the accuracy of your settlements. Built for speed and accuracy.</p>
-</section>
-
-<!-- TWO TOOLS -->
-<section class="tool-section">
-  <div class="tool-grid">
-
-    <!-- LEFT: Serial Decoder -->
-    <div class="tool-card">
-      <div class="tool-card-header">
-        <div class="tool-card-icon">🔍</div>
-        <div>
-          <div class="tool-card-title">Serial Number Decoder</div>
-          <div class="tool-card-sub">Have the serial number from your product label</div>
-        </div>
-      </div>
-      <div class="tool-card-body">
-        <div class="cat-tabs">
-          <button class="cat-tab active" data-cat="appliances">Appliances</button>
-          <button class="cat-tab" data-cat="waterHeaters">Water Heaters</button>
-          <button class="cat-tab" data-cat="hvac">HVAC</button>
-          <button class="cat-tab" data-cat="electronics">Electronics</button>
-        </div>
-        <div class="field-group">
-          <label class="field-label" for="brand">Brand</label>
-          <select class="field-select" id="brand" name="brand">
-            <option value="">— Select Brand —</option>
-            <option value="ge">GE</option>
-            <option value="whirlpool">Whirlpool</option>
-            <option value="samsung">Samsung</option>
-            <option value="lg">LG</option>
-            <option value="bosch">Bosch</option>
-            <option value="maytag">Maytag</option>
-            <option value="frigidaire">Frigidaire</option>
-            <option value="kenmore">Kenmore</option>
-            <option value="kitchenaid">KitchenAid</option>
-            <option value="amana">Amana</option>
-            <option value="carrier">Carrier</option>
-            <option value="goodman">Goodman</option>
-            <option value="trane">Trane</option>
-            <option value="lennox">Lennox</option>
-            <option value="york">York</option>
-            <option value="rheem">Rheem</option>
-            <option value="bradford-white">Bradford White</option>
-            <option value="ao-smith">A.O. Smith</option>
-            <option value="apple">Apple</option>
-            <option value="asus">ASUS</option>
-          </select>
-        </div>
-        <div class="field-group">
-          <label class="field-label" for="serial">Serial Number</label>
-          <input class="field-input" type="text" id="serial" name="serial" placeholder="e.g. GF123456L" autocomplete="off" autocorrect="off" spellcheck="false">
-          <span class="field-hint">Enter exactly as shown on the product label</span>
-        </div>
-        <div class="era-group" id="eraGroup">
-          <label class="field-label" for="eraSelect">
-            Manufacture Era
-            <span class="info-chip" title="Manufacturers often recycle serial formats every 20 years.">i</span>
-          </label>
-          <select class="field-select" id="eraSelect">
-            <option value="">— Select era (if prompted) —</option>
-            <option value="post2006">Post-2006 (manufactured after 2006)</option>
-            <option value="pre2006">Pre-2006 (manufactured before 2006)</option>
-          </select>
-          <p class="era-hint">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the correct decoding logic is applied.</p>
-        </div>
-        <button class="btn-navy" id="decodeBtn" disabled>Decode Serial Number →</button>
-        <p class="tool-note">No serial number? <a href="#smart-lookup">Use Smart Lookup instead →</a></p>
-      </div>
-
-      <!-- Results placeholder -->
-      <div class="results-area" id="resultsPlaceholder">
-        <div class="r-grid">
-          <div class="r-box"><div class="r-box-label">Manufacture Date</div><div class="r-box-value">— / —</div></div>
-          <div class="r-box"><div class="r-box-label">Estimated Age</div><div class="r-box-value">—</div></div>
-          <div class="r-box r-box-full"><div class="r-box-label">Status</div><div style="font-size:13px;color:var(--text-3);line-height:1.6;">Select a brand and enter a serial number above to decode.</div></div>
-        </div>
-      </div>
-
-      <!-- Loading state -->
-      <div id="ageLoading" style="display:none;border-top:1px solid var(--border);padding:28px 22px;background:var(--bg);text-align:center;">
-        <div id="loadingEmoji" style="font-size:26px;display:block;margin-bottom:8px;">⏳</div>
-        <div id="loadingText" style="font-size:14px;color:var(--text-3);">Decoding serial number…</div>
-      </div>
-
-      <!-- Serial results -->
-      <div id="serialResults" style="display:none;">
-        <div class="results-area">
-          <div id="serialBrandLogo" style="margin-bottom:10px;"></div>
-          <div id="serialSummaryLayer"></div>
-          <div class="r-grid">
-            <div class="r-box"><div class="r-box-label">Manufacture Year</div><div class="r-box-value pop" id="resultYear">—</div></div>
-            <div class="r-box" id="resultMonthRow"><div class="r-box-label">Month / Period</div><div class="r-box-value pop" id="resultMonth">—</div></div>
-            <div class="r-box"><div class="r-box-label">Brand</div><div class="r-box-value pop" id="resultBrand">—</div></div>
-            <div class="r-box"><div class="r-box-label">Estimated Age</div><div class="r-box-value pop" id="resultEstimatedAge">—</div></div>
-            <div class="r-box r-box-full"><div class="r-box-label">Decode Method</div><div style="font-size:13px;color:var(--text-2);line-height:1.6;" id="resultMethod">—</div></div>
-            <div class="r-box r-box-full" id="resultNotes" style="display:none;"><div class="r-box-label">Notes</div><div style="font-size:13px;color:var(--text-2);line-height:1.6;" id="serialDeterminationBody"></div></div>
-          </div>
-          <div class="ghost-row" style="margin-top:12px;">
-            <button class="ghost-btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('resultYear').textContent+' · '+document.getElementById('resultEstimatedAge').textContent)">Copy Results</button>
-            <button class="ghost-btn" onclick="location.reload()">Decode Another</button>
-          </div>
-          <p class="tool-note" style="margin-top:10px;"><a href="/contact.html" style="color:var(--text-3);text-decoration:none;">⚠ Possible error? Let us know</a></p>
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT: Smart Lookup -->
-    <div class="tool-card smart" id="smart-lookup">
-      <div class="tool-card-header">
-        <div class="tool-card-icon">✨</div>
-        <div>
-          <div class="tool-card-title">Smart Lookup</div>
-          <div class="tool-card-sub">No serial number? Works from model or description</div>
-        </div>
-        <span class="smart-badge"><span class="smart-badge-dot"></span>No serial needed</span>
-      </div>
-      <div class="tool-card-body">
-        <div class="field-group">
-          <label class="field-label" for="smart-lookup-input">Model Number or Item Description</label>
-          <textarea class="smart-textarea" id="smart-lookup-input" name="smartLookupInput" placeholder='e.g. "Carrier 2 ton heat pump" or "GE Profile PFE28KSKSS"'></textarea>
-          <input type="hidden" id="altQuery">
-          <span class="field-hint">Works for appliances, HVAC, electronics, generators, commercial equipment, and more.</span>
-        </div>
-        <div class="toggle-row">
-          <span class="toggle-label">Include replacement options</span>
-          <label style="display:flex;align-items:center;cursor:pointer;">
-            <input type="checkbox" class="toggle-cb" id="include-replacement-comparisons">
-            <span class="toggle-track"></span>
-          </label>
-        </div>
-        <button class="btn-blue" id="smartLookupBtn" onclick="runLKQLookup()">Search with AI →</button>
-        <p class="tool-note">Have a serial number? <a href="#" onclick="document.getElementById('serial').focus();return false;">Use the Serial Decoder →</a></p>
-      </div>
-      <!-- Smart Lookup results -->
-      <div id="ageResults" style="display:none;border-top:1px solid var(--blue-md);padding:18px 22px;background:var(--blue-lt);">
-        <div id="ageBrandLogo" style="margin-bottom:8px;"></div>
-        <div id="smart-lookup-results" style="font-size:14px;color:var(--text-2);line-height:1.7;"></div>
-        <div id="ageResultsBody" style="display:none;font-size:14px;color:var(--text-2);line-height:1.7;"></div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- SMART CALLOUT -->
-<div class="callout-wrap">
-  <div class="smart-callout">
+  <a href="/" class="logo" aria-label="Decode My Item home">
     <div>
-      <div class="callout-eyebrow">Why Smart Lookup?</div>
-      <div class="callout-title">Don't have a serial number? <em>That's exactly what we built this for.</em></div>
-      <div class="callout-desc">Most serial lookup tools stop working the moment the label is missing. Smart Lookup uses AI to research your item from a model number or plain-language description — no label required.</div>
-      <div class="callout-features">
-        <div class="callout-feat"><div class="feat-dot"></div><span class="feat-text">Works from model numbers</span></div>
-        <div class="callout-feat"><div class="feat-dot"></div><span class="feat-text">Plain-language descriptions</span></div>
-        <div class="callout-feat"><div class="feat-dot"></div><span class="feat-text">LKQ replacement options</span></div>
+      <div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Decode - Research - Automate</div>
+    </div>
+  </a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+  <ul>
+  <li><a href="/" class="nav-active">Home</a></li>
+  <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+  <li><a href="/smart-lookup">Smart Lookup</a></li>
+  <li><a href="/assistant">AI Assistant</a></li>
+  <li><a href="/methodology">Methodology</a></li>
+  <li><a href="/contact">Contact</a></li>
+  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
+  <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+</ul>
+</nav>
+<!-- ─── PAGE HERO ─── -->
+<section class="page-hero home-hero">
+  <h1>Fast Serial Number Decoding and Smart Item Age Verification Tool</h1>
+  <p class="hero-sub"><strong>Two workflows, one faster decision path:</strong></p>
+  <p class="hero-sub">Instantly decode the serial number from most major brands for equipment age verification. Or use the smart lookup feature using a model or general description to retrieve an estimated age of your item using an industry-focused smart research tool.</p>
+</section>
+
+<!-- ─── DECODER TOOL ─── -->
+<section class="section" id="decoder-tool" style="padding-top:0;padding-bottom:16px;">
+  <div class="home-tools-wrap">
+    <div class="home-tools-grid">
+      <div class="decoder-card-shell">
+      <div class="search-box">
+        <!-- Decoder Category Tabs -->
+        <div class="search-tabs">
+          <button class="search-tab cat-tab active" data-cat="appliances"   onclick="selectCatAndShowDecoder('appliances', this)">🏠 Appliances</button>
+          <button class="search-tab cat-tab"         data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">💧 Water Heaters</button>
+          <button class="search-tab cat-tab"         data-cat="hvac"        onclick="selectCatAndShowDecoder('hvac', this)">❄️ HVAC</button>
+          <button class="search-tab cat-tab"         data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">📺 Electronics</button>
+        </div>
+
+        <!-- DECODER PANEL -->
+        <div class="search-panel" id="panel-decoder">
+              <div class="home-tool-row">
+                <label class="sr-only" for="brand">Select Brand</label>
+                <select id="brand" class="search-select">
+                  <option value="">-- Select Brand --</option>
+                </select>
+
+                <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
+                <input type="text" id="serial" class="search-input" placeholder="Enter serial number (e.g., CB2501800)">
+              </div>
+
+              <!-- Era Selector (shown by script.js when needed) -->
+              <div class="era-group hidden" id="eraGroup">
+                <label class="sr-only" for="eraSelect">
+                  Manufacture Era
+                  <span title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">ⓘ</span>
+                </label>
+                <select id="eraSelect" class="search-select" style="margin-top:8px;">
+                  <option value="">-- Select Era --</option>
+                  <option value="post">Post-2006 (manufactured after 2006)</option>
+                  <option value="pre">Pre-2006 (manufactured before 2006)</option>
+                </select>
+                <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
+              </div>
+
+              <p class="search-hint serial-helper-text">Enter the serial number exactly as shown on the product label</p>
+
+              <p class="search-link" style="margin-top:10px;">No serial number? Use the smart lookup panel.</p>
+              <div class="tool-panel-action">
+                <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">🔍 Decode Serial Number</button>
+              </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="search-box">
+        <div class="search-tabs">
+          <button class="search-tab smart-tab active" type="button" disabled>✨ Smart Lookup</button>
+        </div>
+
+        <div class="search-panel" id="panel-smart">
+          <label class="sr-only" for="smart-lookup-input">Model Number or Description</label>
+          <input type="text" id="smart-lookup-input" class="search-input"
+                 placeholder="e.g., LG WM4000HWA or LG front load washing machine">
+          <p class="search-hint">Enter a model number or item description. Works for appliances, HVAC, electronics, generators, commercial equipment, and more.</p>
+          <div class="smart-lookup-actions">
+            <label class="lookup-checkbox" for="include-replacement-comparisons">
+              <input type="checkbox" id="include-replacement-comparisons" checked>
+              <span>Include Replacement Options</span>
+            </label>
+          </div>
+          <p class="search-link" style="margin-top:10px;">Have a serial number? Use the Decode Serial Number panel on the left.</p>
+          <div class="tool-panel-action">
+            <button class="btn-amber power-btn" type="button" onclick="runLKQLookup()">Search</button>
+          </div>
+        </div></div>
+  </div>
+</section>
+
+<!-- ─── RESULTS WRAPPER ─── -->
+<div class="results-wrapper" style="padding:0 48px 32px;">
+
+  <!-- Loading -->
+  <div id="ageLoading" class="results-card hidden">
+    <div class="loading-inner">
+      <span class="loading-emoji lightning" id="loadingEmoji">🌩️</span>
+      <div class="loading-text" id="loadingText">Researching product information...</div>
+    </div>
+  </div>
+
+  <!-- Serial Decode Results -->
+  <div id="serialResults" class="results-card hidden">
+    <div class="results-header">
+      <h3>📊 Decoded Results</h3>
+      <div class="brand-logo-wrap" id="serialBrandLogo"></div>
+    </div>
+    <div class="results-body">
+      <div id="serialSummaryLayer" class="sl-top-summary-layer serial-summary-layer hidden"></div>
+      <div class="serial-legacy-fields" hidden aria-hidden="true">
+        <div class="result-row result-row--primary">
+          <span class="result-label">Manufacture Date</span>
+          <span class="result-value" id="resultYear"></span>
+        </div>
+        <div class="result-row" id="resultMonthRow">
+          <span class="result-label">Month / Period</span>
+          <span class="result-value" id="resultMonth"></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Brand</span>
+          <span class="result-value" id="resultBrand"></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Estimated Age</span>
+          <span class="result-value" id="resultEstimatedAge">—</span>
+        </div>
+        <div class="info-block method">
+          <h4>Decoding Method</h4>
+          <p id="resultMethod"></p>
+        </div>
+        <div class="info-block notes">
+          <h4>Important Notes</h4>
+          <p id="resultNotes"></p>
+        </div>
+        <details class="determination-details">
+          <summary>How this was determined</summary>
+          <div class="determination-body" id="serialDeterminationBody">
+            We use manufacturer serial format rules and published industry references to extract manufacture date information from serial numbers. Some brands reuse year codes across decades, which is why multiple valid years may appear. When two years are shown, the correct decade can typically be confirmed using physical condition, purchase records, or known installation dates.
+          </div>
+        </details>
       </div>
     </div>
-    <div><a href="#smart-lookup" class="callout-btn">Try Smart Lookup ✨</a></div>
+    <div class="results-footer">
+      <button class="copy-btn" onclick="copyClaimFile()">Copy Information</button>
+      <button class="decode-again-btn btn-amber" onclick="decodeAnotherItem()">Decode Another Item</button>
+      <button class="decode-again-btn btn-teal" onclick="useSmartLookup()">Use Smart Lookup</button>
+      <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
+    </div>
   </div>
+
+  <!-- LKQ Results (Smart Lookup) -->
+  <div id="ageResults" class="results-card hidden">
+    <div class="results-header">
+      <h3>&#9878; LKQ Replacement Evaluation</h3>
+      <div class="brand-logo-wrap" id="ageBrandLogo"></div>
+    </div>
+    <div class="results-body" id="smart-lookup-results"></div>
+    <div class="results-footer">
+      <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
+      <button class="error-btn" onclick="openFeedbackModal()">&#9888; Possible Error? Let Us Know</button>
+    </div></div><!-- /results-wrapper -->
+
+<!-- ─── TRUST BAR ─── -->
+<div class="trust-bar">
+  <div class="trust-item"><span>🏢</span><span><strong>100+</strong> Brands covered</span></div>
+  <div class="trust-item"><span>⚡</span><span><strong>Instant</strong> results</span></div>
+  <div class="trust-item"><span>🤖</span><span><strong>AI Fallback</strong> via Smart Lookup</span></div>
+  <div class="trust-item"><span>🏠</span><span>Appliances, HVAC, Electronics &amp; Water Heaters</span></div>
 </div>
 
-<!-- STATS -->
-<section class="stats-section">
-  <div class="stats-grid">
-    <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-value">100+</div><div class="stat-label">Brands covered</div></div>
-    <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-value">Instant</div><div class="stat-label">Serial decode results</div></div>
-    <div class="stat-card"><div class="stat-icon">✨</div><div class="stat-value">AI</div><div class="stat-label">Smart Lookup — no serial needed</div></div>
-    <div class="stat-card"><div class="stat-icon">🏠</div><div class="stat-value">4</div><div class="stat-label">Equipment categories</div></div>
-  </div>
-</section>
+<!-- ─── POPULAR BRANDS ─── -->
+<section class="section alt">
+  <div class="brand-directory-shell">
+    <span class="section-label">Browse by Brand</span>
+    <h2 class="section-title">Decode by Brand</h2>
+    <p class="section-sub">Dedicated serial number decode guides for major appliance and electronics brands.</p>
 
-<!-- BRANDS -->
-<section class="brands-section">
-  <div class="section-header">
-    <div><div class="section-eyebrow">Browse by Brand</div><h2 class="section-title">Decode by Brand</h2></div>
-    <a href="/brands.html" class="section-link">View all brands →</a>
-  </div>
-  <div class="brand-filter-tabs">
-    <button class="brand-ftab active" onclick="switchBrandTab(this)">Appliances</button>
-    <button class="brand-ftab" onclick="switchBrandTab(this)">Electronics</button>
-    <button class="brand-ftab" onclick="switchBrandTab(this)">HVAC &amp; Water Heaters</button>
-  </div>
-  <div class="brands-grid">
-    <a href="/ge.html" class="brand-card"><div><div class="brand-name">GE</div><div class="brand-desc">Refrigerators, ranges, washers</div></div><span class="brand-arrow">→</span></a>
-    <a href="/whirlpool.html" class="brand-card"><div><div class="brand-name">Whirlpool</div><div class="brand-desc">All Whirlpool family brands</div></div><span class="brand-arrow">→</span></a>
-    <a href="/samsung.html" class="brand-card"><div><div class="brand-name">Samsung</div><div class="brand-desc">Appliances &amp; TVs</div></div><span class="brand-arrow">→</span></a>
-    <a href="/lg.html" class="brand-card"><div><div class="brand-name">LG</div><div class="brand-desc">Appliances &amp; TVs</div></div><span class="brand-arrow">→</span></a>
-    <a href="/bosch.html" class="brand-card"><div><div class="brand-name">Bosch</div><div class="brand-desc">Dishwashers, washers, ranges</div></div><span class="brand-arrow">→</span></a>
-    <a href="/maytag.html" class="brand-card"><div><div class="brand-name">Maytag</div><div class="brand-desc">Pre &amp; post-2006 formats</div></div><span class="brand-arrow">→</span></a>
-    <a href="/frigidaire.html" class="brand-card"><div><div class="brand-name">Frigidaire</div><div class="brand-desc">Refrigerators, ranges, washers</div></div><span class="brand-arrow">→</span></a>
-    <a href="/kenmore.html" class="brand-card"><div><div class="brand-name">Kenmore</div><div class="brand-desc">OEM identification guide</div></div><span class="brand-arrow">→</span></a>
-  </div>
-</section>
+    <div class="brand-table-wrap">
 
-<!-- POPULAR LOOKUPS -->
-<section class="lookups-section">
-  <div class="section-header">
-    <div><div class="section-eyebrow">Common Workflows</div><h2 class="section-title">Popular Lookups</h2></div>
-  </div>
-  <div class="lookups-grid">
-    <div class="lookup-group">
-      <div class="lookup-group-title">How old is my appliance?</div>
-      <div class="lookup-group-sub">Fastest path to a serial number age estimate.</div>
-      <div class="lookup-links">
-        <a href="/how-old-is-my-appliance.html" class="lookup-link">How old is my appliance? <span class="lookup-arrow">→</span></a>
-        <a href="/refrigerator-serial-lookup.html" class="lookup-link">Refrigerator serial lookup <span class="lookup-arrow">→</span></a>
-        <a href="/washer-serial-lookup.html" class="lookup-link">Washer serial lookup <span class="lookup-arrow">→</span></a>
-        <a href="/dryer-serial-lookup.html" class="lookup-link">Dryer serial lookup <span class="lookup-arrow">→</span></a>
-        <a href="/dishwasher-serial-lookup.html" class="lookup-link">Dishwasher serial lookup <span class="lookup-arrow">→</span></a>
-        <a href="/range-oven-serial-lookup.html" class="lookup-link">Range &amp; oven serial lookup <span class="lookup-arrow">→</span></a>
-        <a href="/where-is-my-serial-number.html" class="lookup-link">Where is my serial number? <span class="lookup-arrow">→</span></a>
-        <a href="/insurance-repair-replacement.html" class="lookup-link">Insurance, repair &amp; replacement <span class="lookup-arrow">→</span></a>
+      <div class="brand-group">
+        <div class="brand-group-header">
+          <span class="brand-group-dot appliances"></span>Appliances
+        </div>
+        <div class="brand-list">
+          <a href="/ge-serial-number-lookup" class="brand-row"><span class="brand-row-name">GE</span><span class="brand-row-desc">Refrigerators, ranges, washers</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/whirlpool-serial-number-lookup" class="brand-row"><span class="brand-row-name">Whirlpool</span><span class="brand-row-desc">All Whirlpool family brands</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/samsung-serial-number-lookup" class="brand-row"><span class="brand-row-name">Samsung</span><span class="brand-row-desc">Appliances &amp; TVs</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/lg-serial-number-lookup" class="brand-row"><span class="brand-row-name">LG</span><span class="brand-row-desc">Appliances &amp; TVs</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/bosch" class="brand-row"><span class="brand-row-name">Bosch</span><span class="brand-row-desc">Dishwashers, washers, ranges</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/maytag-serial-number-lookup" class="brand-row"><span class="brand-row-name">Maytag</span><span class="brand-row-desc">Pre &amp; post-2006 formats</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/frigidaire-serial-number-lookup" class="brand-row"><span class="brand-row-name">Frigidaire</span><span class="brand-row-desc">Refrigerators, ranges, washers</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/kenmore-serial-number-lookup" class="brand-row"><span class="brand-row-name">Kenmore</span><span class="brand-row-desc">OEM identification guide</span><span class="brand-row-arrow">&#8594;</span></a>
+        </div>
       </div>
-    </div>
-    <div class="lookup-group">
-      <div class="lookup-group-title">Brand-specific lookup</div>
-      <div class="lookup-group-sub">Jump to brand pages when you know the manufacturer.</div>
-      <div class="lookup-links">
-        <a href="/whirlpool.html" class="lookup-link">Whirlpool serial lookup <span class="lookup-arrow">→</span></a>
-        <a href="/ge.html" class="lookup-link">GE serial lookup <span class="lookup-arrow">→</span></a>
-        <a href="/samsung.html" class="lookup-link">Samsung serial lookup <span class="lookup-arrow">→</span></a>
-        <a href="/lg.html" class="lookup-link">LG serial lookup <span class="lookup-arrow">→</span></a>
-        <a href="/frigidaire.html" class="lookup-link">Frigidaire serial lookup <span class="lookup-arrow">→</span></a>
-        <a href="/maytag.html" class="lookup-link">Maytag serial lookup <span class="lookup-arrow">→</span></a>
-        <a href="/goodman.html" class="lookup-link">Goodman serial lookup <span class="lookup-arrow">→</span></a>
-        <a href="/asus.html" class="lookup-link">ASUS serial decoder <span class="lookup-arrow">→</span></a>
+
+      <div class="brand-group">
+        <div class="brand-group-header">
+          <span class="brand-group-dot electronics"></span>Electronics
+        </div>
+        <div class="brand-list">
+          <a href="/apple" class="brand-row"><span class="brand-row-name">Apple</span><span class="brand-row-desc">iPhones, iPads, Macs</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/hp" class="brand-row"><span class="brand-row-name">HP</span><span class="brand-row-desc">Laptops, desktops, printers</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/asus-serial-number-decoder" class="brand-row"><span class="brand-row-name">ASUS</span><span class="brand-row-desc">Laptops, motherboards, desktops</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/google-pixel" class="brand-row"><span class="brand-row-name">Google Pixel</span><span class="brand-row-desc">Pixel phones &amp; tablets</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/sony" class="brand-row"><span class="brand-row-name">Sony</span><span class="brand-row-desc">Bravia TVs &amp; home theater</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/vizio" class="brand-row"><span class="brand-row-name">Vizio</span><span class="brand-row-desc">Vizio TVs all series</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/panasonic" class="brand-row"><span class="brand-row-name">Panasonic</span><span class="brand-row-desc">TVs &amp; home theater</span><span class="brand-row-arrow">&#8594;</span></a>
+        </div>
       </div>
-    </div>
-    <div class="lookup-group">
-      <div class="lookup-group-title">Research by workflow</div>
-      <div class="lookup-group-sub">Smart Lookup helps when the serial tag is missing or worn.</div>
-      <div class="lookup-links">
-        <a href="#smart-lookup" class="lookup-link">Open Smart Lookup <span class="lookup-arrow">→</span></a>
-        <a href="/hvac-age-lookup.html" class="lookup-link">HVAC age lookup <span class="lookup-arrow">→</span></a>
-        <a href="/how-to-find-hvac-age.html" class="lookup-link">How to find HVAC age <span class="lookup-arrow">→</span></a>
-        <a href="/samsung-tv-serial-decoder.html" class="lookup-link">Samsung TV serial decoder <span class="lookup-arrow">→</span></a>
-        <a href="/where-is-my-serial-number.html" class="lookup-link">Where to find serial number <span class="lookup-arrow">→</span></a>
-        <a href="/why-age-matters.html" class="lookup-link">Why age matters <span class="lookup-arrow">→</span></a>
-        <a href="/where-is-my-model-number.html" class="lookup-link">Where to find model number <span class="lookup-arrow">→</span></a>
-        <a href="/find-the-label-first.html" class="lookup-link">Find the label first <span class="lookup-arrow">→</span></a>
+
+      <div class="brand-group">
+        <div class="brand-group-header">
+          <span class="brand-group-dot hvac"></span>HVAC &amp; Water Heaters
+        </div>
+        <div class="brand-list">
+          <a href="/carrier-serial-number-lookup" class="brand-row"><span class="brand-row-name">Carrier</span><span class="brand-row-desc">HVAC systems &amp; heat pumps</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/goodman-serial-number-lookup" class="brand-row"><span class="brand-row-name">Goodman</span><span class="brand-row-desc">HVAC systems</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/trane-serial-number-lookup" class="brand-row"><span class="brand-row-name">Trane</span><span class="brand-row-desc">HVAC systems</span><span class="brand-row-arrow">&#8594;</span></a>
+          <a href="/rheem-serial-number-lookup" class="brand-row"><span class="brand-row-name">Rheem</span><span class="brand-row-desc">Water heaters &amp; HVAC</span><span class="brand-row-arrow">&#8594;</span></a>
+        </div>
       </div>
+
     </div>
+    <p style="margin-top:14px;font-size:12px;color:#7a8fa8;">
+      <a href="#decoder-tool" style="color:var(--teal);text-decoration:none;">More brands available in Decoder Tool Search Menu &#8594;</a>
+    </p>
   </div>
 </section>
 
-<!-- FAQ -->
-<section class="faq-section">
-  <div class="section-header">
-    <div><div class="section-eyebrow">Help</div><h2 class="section-title">Frequently Asked Questions</h2></div>
-  </div>
-  <div class="faq-list">
-    <div class="faq-item open">
-      <div class="faq-q" onclick="toggleFaq(this)">What if I don't have a serial number? <span class="faq-chevron">▾</span></div>
-      <div class="faq-a">That's what Smart Lookup was built for. Enter a model number, brand name, or a plain-language description and Smart Lookup will research the manufacture era and estimated age without needing a serial number at all.</div>
-    </div>
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">How do I find appliance age by serial number? <span class="faq-chevron">▾</span></div>
-      <div class="faq-a">Select the brand, enter the serial number exactly as shown on the manufacturer label, choose the manufacture era if prompted, and click Decode. The tool applies known serial formatting rules to estimate the manufacture date and current age.</div>
-    </div>
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">Where do I find the model and serial number on an appliance? <span class="faq-chevron">▾</span></div>
-      <div class="faq-a">Most appliances place the label on the door frame, inside the fresh-food compartment, behind a drawer, or on the rear or service panel. Our guide covers refrigerators, dishwashers, laundry appliances, HVAC systems, TVs, and more.</div>
-    </div>
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">Which brands are strongest on the site right now? <span class="faq-chevron">▾</span></div>
-      <div class="faq-a">Whirlpool, Goodman, Samsung, ASUS, GE, LG, Rheem, Carrier, and Trane are some of the strongest paths for serial decoding, age lookup, and model-based research.</div>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
+<!-- ─── FOOTER ─── -->
 <footer>
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div>
-        <div class="footer-logo">Decode My Item</div>
-        <div class="footer-tag">Decode · Research · Automate</div>
-      </div>
-      <div class="footer-cols">
-        <div>
-          <div class="footer-col-title">Tools</div>
-          <ul class="footer-col-links">
-            <li><a href="/serial-decoder.html">Serial Number Decoder</a></li>
-            <li><a href="/smart-lookup.html">Smart Lookup</a></li>
-            <li><a href="/ai-assistant.html">AI Assistant</a></li>
-          </ul>
-        </div>
-        <div>
-          <div class="footer-col-title">Info</div>
-          <ul class="footer-col-links">
-            <li><a href="/methodology.html">Methodology</a></li>
-            <li><a href="/security.html">Security &amp; Data</a></li>
-            <li><a href="/privacy.html">Privacy Policy</a></li>
-          </ul>
-        </div>
-        <div>
-          <div class="footer-col-title">Support</div>
-          <ul class="footer-col-links">
-            <li><a href="/contact.html">Contact</a></li>
-            <li><a href="/feedback.html">Feedback &amp; Bugs</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <div class="footer-copy">© 2026 Decode My Item · Database verified February 2026</div>
-      <div class="footer-legal">
-        <a href="/methodology.html">Methodology</a>
-        <a href="/contact.html">Contact</a>
-        <a href="/privacy.html">Privacy Policy</a>
-      </div>
-    </div>
+  <div>© 2026 Decode My Item · Database verified February 2026</div>
+  <div class="footer-links">
+    <a href="methodology.html">Methodology</a>
+    <a href="contact.html">Contact</a>
+    <a href="security.html">Security &amp; Data Notice</a>
+    <a href="/privacy-policy">Privacy Policy</a>
   </div>
 </footer>
 
-<a href="#" class="back-top">↑</a>
+<button class="back-to-top-fab" type="button" onclick="scrollPageToTop()" aria-label="Back to top">
+  <span class="back-to-top-icon">↑</span>
+  <span class="back-to-top-label">Back to Top</span>
+</button>
 
-<script src="/decoder-data.js"></script>
-<script src="/script.js"></script>
+<!-- ─── GUIDE DRAWER ─── -->
+<div id="guideOverlay" class="guide-overlay" onclick="closeGuide()"></div>
+<div id="guideDrawer" class="guide-drawer">
+  <div class="guide-drawer-header">
+    <h3>&#9432; How to Use This Tool</h3>
+    <button class="guide-drawer-close" onclick="closeGuide()">&#x2715;</button>
+  </div>
+  <div class="guide-drawer-body">
+    <h4>Quick Decoding</h4>
+    <ol>
+      <li>Click <strong>Appliances</strong>, <strong>Water Heaters</strong>, <strong>HVAC</strong>, or <strong>Electronics</strong></li>
+      <li>Choose the <strong>brand</strong> from the dropdown</li>
+      <li>If an <strong>Era selector</strong> appears, choose Pre-2006 or Post-2006</li>
+      <li>Enter the <strong>serial number</strong> exactly as shown on the label</li>
+      <li>Click <strong>Decode Serial Number</strong></li>
+    </ol>
+    <h4>No Serial Number?</h4>
+    <p>Click the <strong>✨ Smart Lookup</strong> tab. Enter a model number, brand name, or description (e.g., "GE Profile PFE28KSKSS") to get an AI-powered age estimate.</p>
+    <h4>Finding Serial Numbers</h4>
+    <ul>
+      <li><strong>Refrigerators:</strong> Inside on the left or right wall</li>
+      <li><strong>Ovens/Ranges:</strong> Inside the door or on the back panel</li>
+      <li><strong>Dishwashers:</strong> Top edge of the door or side panel</li>
+      <li><strong>Washers/Dryers:</strong> Inside the door or on the back</li>
+      <li><strong>Water Heaters:</strong> On a sticker/plate on the side of the tank</li>
+    </ul>
+    <div class="warning-note">
+      <strong>Note:</strong> Many serial number codes repeat every 10–20 years. Always verify the decade using physical condition, model features, purchase receipts, or installation records.
+    </div></div>
+
+<!-- ─── FEEDBACK MODAL ─── -->
+<div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>&#9888; Report an Issue</h3>
+      <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label class="sr-only" for="fbBrand">Brand</label>
+        <input type="text" id="fbBrand" class="form-input" readonly>
+      </div>
+      <div class="modal-field">
+        <label class="sr-only" for="fbSerial">Serial Number / Search Query</label>
+        <input type="text" id="fbSerial" class="form-input" readonly>
+      </div>
+      <div class="modal-field">
+        <label class="sr-only" for="fbType">Issue Type</label>
+        <select id="fbType" class="form-select">
+          <option value="">-- Select issue type --</option>
+          <option value="wrong_year">Wrong year / date</option>
+          <option value="wrong_month">Wrong month</option>
+          <option value="wrong_brand">Wrong brand identified</option>
+          <option value="format_error">Format / decode error</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="sr-only" for="fbDetails">Details (optional)</label>
+        <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong? What is the correct date if known?"></textarea>
+      </div>
+      <div id="fbThanks" class="fb-thanks hidden">&#10003; Thank you! Your feedback helps improve this tool.</div>
+      <div id="fbActions" class="modal-actions">
+        <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
+        <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
+      </div></div>
+</div>
+
+<!-- Panel switching helpers (must be before decoder-data.js / script.js) -->
 <script>
-function switchBrandTab(el) {
-  document.querySelectorAll('.brand-ftab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+function selectCatAndShowDecoder(cat, btn) {
+  if (typeof selectCategory === 'function') selectCategory(cat, btn);
 }
-function toggleFaq(el) {
-  el.parentElement.classList.toggle('open');
+</script>
+
+<section class="guide-faq">
+  <div class="eyebrow">Popular Lookups</div>
+  <h2>Find appliance age, decode serial numbers, or start from the model number</h2>
+  <div class="location-guide-grid">
+    <article class="guide-card">
+      <h3>How old is my appliance?</h3>
+      <p>Use the main appliance-age hub when you want the fastest path to a supported serial-number age estimate, label-location help, and brand shortcuts for major home appliances.</p>
+      <div class="guide-links">
+        <a class="guide-chip" href="/how-old-is-my-appliance">How old is my appliance?</a>
+        <a class="guide-chip" href="/refrigerator-serial-number">Refrigerator serial lookup</a>
+        <a class="guide-chip" href="/washer-serial-number">Washer serial lookup</a>
+        <a class="guide-chip" href="/dryer-serial-number">Dryer serial lookup</a>
+        <a class="guide-chip" href="/dishwasher-serial-number">Dishwasher serial lookup</a>
+        <a class="guide-chip" href="/range-oven-serial-number">Range &amp; oven serial lookup</a>
+        <a class="guide-chip" href="/where-is-my-serial-number">Where is my serial number?</a>
+        <a class="guide-chip" href="/appliance-age-for-insurance-and-replacement">Insurance, repair &amp; replacement</a>
+        <a class="guide-chip" href="/find-model-serial-number">Find the label first</a>
+      </div>
+    </article>
+    <article class="guide-card">
+      <h3>Brand-specific serial lookup</h3>
+      <p>Jump into the strongest brand pages when you already know the manufacturer and want the decoder, common format notes, and related links close to the top.</p>
+      <div class="guide-links">
+        <a class="guide-chip" href="/whirlpool-serial-number-lookup">Whirlpool serial lookup</a><a class="guide-chip" href="/whirlpool-model-number-lookup">Whirlpool model lookup</a>
+        <a class="guide-chip" href="/ge-serial-number-lookup">GE serial lookup</a>
+        <a class="guide-chip" href="/samsung-serial-number-lookup">Samsung serial lookup</a>
+        <a class="guide-chip" href="/lg-serial-number-lookup">LG serial lookup</a>
+        <a class="guide-chip" href="/frigidaire-serial-number-lookup">Frigidaire serial lookup</a>
+        <a class="guide-chip" href="/maytag-serial-number-lookup">Maytag serial lookup</a>
+        <a class="guide-chip" href="/kenmore-serial-number-lookup">Kenmore serial lookup</a>
+        <a class="guide-chip" href="/goodman-serial-number-lookup">Goodman serial lookup</a><a class="guide-chip" href="/goodman-model-number-lookup">Goodman model lookup</a>
+        <a class="guide-chip" href="/asus-serial-number-decoder">ASUS serial decoder</a>
+      </div>
+    </article>
+    <article class="guide-card">
+      <h3>Research by workflow</h3>
+      <p>Smart Lookup helps when the serial tag is missing, worn, or unreadable. The HVAC and electronics pages are grouped separately so the age path stays closer to the actual product type.</p>
+      <div class="guide-links">
+        <a class="guide-chip" href="/index.html?mode=smart#panel-smart">Open Smart Lookup</a>
+        <a class="guide-chip" href="/hvac-age-by-serial-number">HVAC age lookup</a>
+        <a class="guide-chip" href="/how-to-find-hvac-age">How to find HVAC age</a>
+        <a class="guide-chip" href="/asus-serial-number-decoder">ASUS model &amp; serial help</a>
+        <a class="guide-chip" href="/samsung-tv-serial-number-decoder">Samsung TV serial decoder</a>
+        <a class="guide-chip" href="/where-is-my-serial-number">Where to find serial number</a>
+        <a class="guide-chip" href="/appliance-age-for-insurance-and-replacement">Why age matters</a>
+        <a class="guide-chip" href="/find-model-serial-number">Where to find model number</a>
+      </div>
+    </article>
+  </div>
+
+  <div class="faq-stack">
+    <details class="determination-details" open>
+      <summary>How do I find appliance age by serial number?</summary>
+      <div class="determination-body">Select the brand, enter the serial number exactly as shown on the manufacturer label, and run the decoder. For supported brands, Item Assist applies known serial formatting rules to estimate the manufacture date and current age.</div>
+    </details>
+    <details class="determination-details">
+      <summary>What if I only have the model number?</summary>
+      <div class="determination-body">Use Smart Lookup. That path works best when the serial number is missing, the product tag is damaged, or you need a first-pass replacement workflow from a model number or plain-language description.</div>
+    </details>
+    <details class="determination-details">
+      <summary>Where do I find the model and serial number on an appliance?</summary>
+      <div class="determination-body">Most appliances place the label on the door frame, inside the fresh-food compartment, behind a drawer, or on the rear/service panel. Our <a href="/find-model-serial-number">model and serial number location guide</a> walks through refrigerators, dishwashers, laundry appliances, HVAC systems, TVs, and more.</div>
+    </details>
+    <details class="determination-details">
+      <summary>Which brands are strongest on the site right now?</summary>
+      <div class="determination-body">Whirlpool, Goodman, Samsung, ASUS, GE, LG, Rheem, Carrier, and Trane are some of the strongest paths for serial decoding, age lookup, and model-based research.</div>
+    </details>
+  </div>
+</section>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I find appliance age by serial number?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Select the brand, enter the serial number exactly as shown on the label, and run the decoder. Item Assist applies known brand formatting rules to estimate manufacture date and age."}
+    },
+    {
+      "@type": "Question",
+      "name": "What if I only have the model number?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Use Smart Lookup when the serial number is missing, worn, or unreadable. The model number plus a short description can still support a first-pass age and replacement workflow."}
+    },
+    {
+      "@type": "Question",
+      "name": "Where do I find the model and serial number on an appliance?",
+      "acceptedAnswer": {"@type": "Answer", "text": "Most appliances place the label on a door frame, inside a compartment, behind a drawer, or on the rear/service panel. Item Assist also provides a dedicated model and serial number location guide."}
+    }
+  ]
 }
-(function() {
-  var ta = document.getElementById('smart-lookup-input');
-  var hid = document.getElementById('altQuery');
-  if (ta && hid) ta.addEventListener('input', function(){ hid.value = ta.value; });
-  var cb = document.getElementById('include-replacement-comparisons');
-  var track = cb ? cb.nextElementSibling : null;
-  if (cb && track) cb.addEventListener('change', function(){ track.classList.toggle('on', cb.checked); });
-})();
+</script>
+
+    <script src="decoder-data.js"></script>
+<script src="lkq-engine.js"></script>
+<script src="analytics.js"></script>
+<script src="smart-lookup-extras.js"></script>
+<script src="smart-lookup-normalizer.js"></script>
+<script src="smart-lookup-summary-render.js"></script>
+<script src="script.js"></script>
+<script src="smart-lookup.js"></script>
+<script src="smart-lookup-upgrade-patch.js"></script>
+<script src="smart-lookup-pricetier.js"></script>
+<script src="shared.js"></script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Serial Number Decoder",
+  "url": "https://www.decodemyitem.com",
+  "description": "Decode appliance and electronics serial numbers to find manufacture date and age. Free, instant results for GE, Whirlpool, Samsung, LG, Bosch and more.",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
 </script>
 </body>
 </html>
