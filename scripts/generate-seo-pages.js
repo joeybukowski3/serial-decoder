@@ -6,17 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const root = path.resolve(__dirname, '..');
 const siteUrl = 'https://www.decodemyitem.com';
-
-const navLinks = `
-  <li><a href="/">Home</a></li>
-  <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-  <li><a href="/smart-lookup">Smart Lookup</a></li>
-  <li><a href="/assistant">AI Assistant</a></li>
-  <li><a href="/methodology">Methodology</a></li>
-  <li><a href="/contact">Contact</a></li>
-  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
-  <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
-`;
+const standardNav = fs.readFileSync(path.join(root, '_nav.html'), 'utf8').trim();
+const standardFooter = fs.readFileSync(path.join(root, '_footer.html'), 'utf8').trim();
 
 const applianceBrandLinks = [
   ['whirlpool-serial-number-lookup', 'Whirlpool'],
@@ -611,22 +602,13 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
   <meta name="twitter:title" content="${pageTitle(page.title)}">
   <meta name="twitter:description" content="${page.description}">
   <meta name="twitter:image" content="${siteUrl}/assets/item-assist-banner.png">
+  <link rel="stylesheet" href="/design-system.css">
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="seo-landing.css">
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body class="serial-location-page" data-page-kind="brand-page">
-  <nav>
-    <a href="/" class="logo" aria-label="Item Assist home">
-      <div>
-        <div class="logo-text">Decode My <span>Item</span></div>
-        <div class="logo-sub">Decode - Research - Automate</div>
-      </div>
-    </a>
-    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span><span></span><span></span><span></span></button>
-    <ul>${navLinks}
-    </ul>
-  </nav>
+  ${standardNav}
 
   <main>
     <section class="section serial-location-hero">
@@ -789,15 +771,7 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
     </div>
   </div>
 
-  <footer>
-    <div>&copy; 2026 Item Assist</div>
-    <div class="footer-links">
-      <a href="/methodology">Methodology</a>
-      <a href="/contact">Contact</a>
-      <a href="/security">Security &amp; Data Notice</a>
-      <a href="/privacy-policy">Privacy Policy</a>
-    </div>
-  </footer>
+  ${standardFooter}
 
   <script>
     function selectCatAndShowDecoder(cat, btn) {
@@ -815,7 +789,7 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
 
     window.addEventListener('pageshow', function () {
       var feedbackModal = document.getElementById('feedbackModal');
-      var navList = document.querySelector('nav ul');
+      var navList = document.querySelector('nav .nav-links') || document.querySelector('nav ul');
       var hamburger = document.getElementById('hamburgerBtn');
 
       if (!feedbackModal || feedbackModal.classList.contains('hidden')) {
@@ -899,22 +873,13 @@ function renderPage(page) {
   <meta name="twitter:title" content="${pageTitle(page.title)}">
   <meta name="twitter:description" content="${page.description}">
   <meta name="twitter:image" content="${siteUrl}/assets/item-assist-banner.png">
+  <link rel="stylesheet" href="/design-system.css">
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="seo-landing.css">
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body data-page-kind="brand-page">
-  <nav>
-    <a href="/" class="logo" aria-label="Item Assist home">
-      <div>
-        <div class="logo-text">Decode My <span>Item</span></div>
-        <div class="logo-sub">Decode - Research - Automate</div>
-      </div>
-    </a>
-    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span><span></span><span></span><span></span></button>
-    <ul>${navLinks}
-    </ul>
-  </nav>
+  ${standardNav}
 
   <main>
     <section class="page-hero seo-hero">
@@ -1166,15 +1131,7 @@ function renderPage(page) {
     </div>
   </div>
 
-  <footer>
-    <div>&copy; 2026 Item Assist</div>
-    <div class="footer-links">
-      <a href="/methodology">Methodology</a>
-      <a href="/contact">Contact</a>
-      <a href="/security">Security &amp; Data Notice</a>
-      <a href="/privacy-policy">Privacy Policy</a>
-    </div>
-  </footer>
+  ${standardFooter}
 
   <script>
     function selectCatAndShowDecoder(cat, btn) {
@@ -1192,7 +1149,7 @@ function renderPage(page) {
 
     window.addEventListener('pageshow', function () {
       var feedbackModal = document.getElementById('feedbackModal');
-      var navList = document.querySelector('nav ul');
+      var navList = document.querySelector('nav .nav-links') || document.querySelector('nav ul');
       var hamburger = document.getElementById('hamburgerBtn');
 
       if (!feedbackModal || feedbackModal.classList.contains('hidden')) {

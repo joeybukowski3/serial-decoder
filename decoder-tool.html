@@ -6,6 +6,7 @@
   <title>Serial Number Decoder &mdash; Decode My Item</title>
   <meta name="description" content="Decode any appliance, HVAC, or electronics serial number instantly. Find manufacture date and estimated age for 100+ brands.">
   <link rel="canonical" href="https://www.decodemyitem.com/decoder-tool">
+  <link rel="stylesheet" href="/design-system.css">
   <link rel="stylesheet" href="shared.css">
   <link rel="icon" type="image/png" href="favicon.png">
   <style>
@@ -105,8 +106,8 @@
       width: 100%;
       max-width: 340px;
       height: 50px;
-      border-radius: 12px;
-      font-family: Sora, sans-serif;
+      border-radius: var(--radius);
+      font-family: var(--font-body);
       font-size: 14px;
       font-weight: 700;
       border: none;
@@ -135,9 +136,9 @@
     .modal-field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
     .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
     .fb-thanks { background: rgba(0,201,167,0.08); border: 1px solid rgba(0,201,167,0.2); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--teal); margin-top: 12px; }
-    .form-input { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
+    .form-input { width: 100%; background: #eef2f6; border: 1px solid var(--border); border-radius: 10px; color: var(--navy-2); font-family: var(--font-body); font-size: 13px; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
     .form-input:focus { border-color: var(--teal); }
-    .form-select { width: 100%; background: #eef2f6; border: 1px solid #ccd6e0; border-radius: 10px; color: #1a2d42; font-family: 'Sora', sans-serif; font-size: 13px; padding: 10px 13px; outline: none; appearance: none; cursor: pointer; }
+    .form-select { width: 100%; background: #eef2f6; border: 1px solid var(--border); border-radius: 10px; color: var(--navy-2); font-family: var(--font-body); font-size: 13px; padding: 10px 13px; outline: none; appearance: none; cursor: pointer; }
     textarea.form-input { resize: vertical; min-height: 80px; }
 
     @media (max-width: 600px) {
@@ -147,29 +148,34 @@
   </style>
 </head>
 <body data-page-kind="decoder-tool">
+<nav class="site-nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo logo" aria-label="Decode My Item home">
+      <span class="nav-logo-mark" aria-hidden="true">DMI</span>
+      <span class="nav-logo-copy">
+        <span class="logo-text">Decode My <span>Item</span></span>
+        <span class="logo-sub">Decode - Research - Automate</span>
+      </span>
+    </a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+      <li><a href="/smart-lookup">Smart Lookup</a></li>
+      <li><a href="/assistant">AI Assistant</a></li>
+      <li><a href="/methodology">Methodology</a></li>
+      <li><a href="/contact">Contact</a></li>
+      <li><a href="/feedback">Feedback &amp; Bugs</a></li>
+      <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+    </ul>
+  </div>
+</nav>
+
 
 <!-- NAV -->
-<nav>
-  <a href="/" class="logo" aria-label="Decode My Item home">
-    <div>
-      <div class="logo-text">Decode My <span>Item</span></div>
-      <div class="logo-sub">Decode - Research - Automate</div>
-    </div>
-  </a>
-  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
-    <span></span><span></span><span></span><span></span><span></span><span></span>
-  </button>
-  <ul>
-  <li><a href="/">Home</a></li>
-  <li><a href="/decoder-tool" class="nav-active">Serial Number Decoder</a></li>
-  <li><a href="/smart-lookup">Smart Lookup</a></li>
-  <li><a href="/assistant">AI Assistant</a></li>
-  <li><a href="/methodology">Methodology</a></li>
-  <li><a href="/contact">Contact</a></li>
-  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
-  <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
-</ul>
-</nav>
+
 
 <!-- HERO -->
 <section class="page-hero" style="padding-bottom:0;">
@@ -342,15 +348,7 @@
   </div>
 </div>
 
-<footer>
-  <div>&copy; 2026 Decode My Item &mdash; Database verified February 2026</div>
-  <div class="footer-links">
-    <a href="methodology.html">Methodology</a>
-    <a href="contact.html">Contact</a>
-    <a href="security.html">Security &amp; Data Notice</a>
-    <a href="privacy-policy">Privacy Policy</a>
-  </div>
-</footer>
+
 
 <script>
 function selectCatAndShowDecoder(cat, btn) {
@@ -382,5 +380,27 @@ window.addEventListener('pageshow', function () {
 <script src="smart-lookup-upgrade-patch.js"></script>
 <script src="smart-lookup-pricetier.js"></script>
 <script src="shared.js"></script>
+<footer class="site-footer footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-col-brand">
+        <a href="/" class="footer-brand">Decode My <span>Item</span></a>
+        <p class="footer-copy">Serial number, model number, and age research for appliances, HVAC, and electronics.</p>
+      </div>
+      <div class="footer-col-links">
+        <span class="footer-heading">Resources</span>
+        <div class="footer-links">
+          <a href="/methodology">Methodology</a>
+          <a href="/contact">Contact</a>
+          <a href="/security">Security &amp; Data Notice</a>
+          <a href="/privacy-policy">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Decode My Item &middot; Database verified February 2026</p>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

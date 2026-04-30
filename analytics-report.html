@@ -16,6 +16,7 @@
   <title>Analytics Report | Item Assist</title>
   <meta name="description" content="Local demo analytics dashboard for Item Assist search, Smart Lookup, refinements, feedback, and mobile usage.">
         <link rel="canonical" href="https://www.decodemyitem.com/analytics-report">
+  <link rel="stylesheet" href="/design-system.css">
   <link rel="stylesheet" href="shared.css">
   <style>
     body[data-page-kind="analytics"] .report-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
@@ -35,19 +36,32 @@
   </style>
 </head>
 <body data-page-kind="analytics">
-<nav>
-  <a href="/" class="logo"><div class="logo-icon"></div><div><div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Decode - Research - Automate</div></div></a>
-  <ul>
-  <li><a href="/">Home</a></li>
-  <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-  <li><a href="/smart-lookup">Smart Lookup</a></li>
-  <li><a href="/assistant">AI Assistant</a></li>
-  <li><a href="/methodology">Methodology</a></li>
-  <li><a href="/contact">Contact</a></li>
-  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
-  <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
-</ul>
+<nav class="site-nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo logo" aria-label="Decode My Item home">
+      <span class="nav-logo-mark" aria-hidden="true">DMI</span>
+      <span class="nav-logo-copy">
+        <span class="logo-text">Decode My <span>Item</span></span>
+        <span class="logo-sub">Decode - Research - Automate</span>
+      </span>
+    </a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+      <li><a href="/smart-lookup">Smart Lookup</a></li>
+      <li><a href="/assistant">AI Assistant</a></li>
+      <li><a href="/methodology">Methodology</a></li>
+      <li><a href="/contact">Contact</a></li>
+      <li><a href="/feedback">Feedback &amp; Bugs</a></li>
+      <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+    </ul>
+  </div>
 </nav>
+
+
 <section class="page-hero">
   <span class="hero-badge"><span class="badge-dot"></span> In-browser reporting</span>
   <h1>Local analytics <em>reporting dashboard</em></h1>
@@ -110,5 +124,27 @@
   render();
 }());
 </script>
+<footer class="site-footer footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-col-brand">
+        <a href="/" class="footer-brand">Decode My <span>Item</span></a>
+        <p class="footer-copy">Serial number, model number, and age research for appliances, HVAC, and electronics.</p>
+      </div>
+      <div class="footer-col-links">
+        <span class="footer-heading">Resources</span>
+        <div class="footer-links">
+          <a href="/methodology">Methodology</a>
+          <a href="/contact">Contact</a>
+          <a href="/security">Security &amp; Data Notice</a>
+          <a href="/privacy-policy">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Decode My Item &middot; Database verified February 2026</p>
+    </div>
+  </div>
+</footer>
 </body>
 </html>
