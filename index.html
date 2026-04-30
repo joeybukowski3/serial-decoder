@@ -69,35 +69,39 @@
     }
 
     .hero {
-      padding: 72px 32px 56px;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 56px 32px 40px;
       text-align: center;
+      min-height: 0;
     }
 
     .hero-eyebrow {
-      margin-bottom: 16px;
-      color: var(--blue);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.16em;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 14px;
     }
 
     .hero h1 {
-      max-width: 760px;
-      margin: 0 auto 18px;
       font-family: 'Outfit', sans-serif;
-      font-size: clamp(2.35rem, 6vw, 4.2rem);
-      line-height: 1.02;
-      letter-spacing: -0.05em;
+      font-size: clamp(32px, 4.5vw, 50px);
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      line-height: 1.08;
       color: var(--navy);
+      max-width: 640px;
+      margin: 0 auto 14px;
     }
 
     .hero-sub {
-      max-width: 760px;
-      margin: 0 auto;
+      font-size: 16px;
       color: var(--text-2);
-      font-size: 1.05rem;
-      line-height: 1.75;
+      max-width: 580px;
+      margin: 0 auto;
+      line-height: 1.65;
     }
 
     .path-grid {
@@ -1009,40 +1013,83 @@
       box-shadow: 0 16px 32px rgba(15,23,42,0.22);
     }
 
+    .homepage-tool-results {
+      display: grid;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .tool-results-placeholder {
+      padding: 18px 20px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      color: var(--text-3);
+      font-size: 13px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .smart-toggle-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-2);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .smart-toggle-control input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--blue);
+      margin: 0;
+    }
+
+    .footer-link-columns {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .footer-link-stack {
+      display: grid;
+      gap: 8px;
+    }
+
     @media (max-width: 960px) {
-      .path-grid,
-      .spotlight-inner,
-      .decoder-panels,
+      .tool-grid,
       .stats-grid,
       .brands-grid,
-      .lookups-grid {
+      .lookups-grid,
+      .footer-link-columns,
+      .smart-callout {
         grid-template-columns: 1fr;
       }
 
-      .decoder-panel + .decoder-panel {
-        border-left: none;
-        border-top: 1px solid var(--border);
+      .smart-callout {
+        gap: 18px;
       }
     }
 
     @media (max-width: 640px) {
       .hero {
-        padding: 48px 0 28px;
+        padding: 48px 20px 32px;
       }
 
-      .path-grid {
-        padding-bottom: 60px;
+      .tool-section,
+      .stats-section,
+      .brands-section,
+      .lookups-section,
+      .faq-section {
+        padding-left: 20px;
+        padding-right: 20px;
       }
 
-      .path-card,
-      .spotlight-demo,
+      .tool-card-body,
       .lookup-group,
-      .decoder-panel {
+      .smart-callout {
         padding: 22px;
-      }
-
-      .spotlight {
-        padding: 56px 0;
       }
 
       .decoder-header,
@@ -1070,110 +1117,28 @@
         <li><a href="/assistant">AI Assistant</a></li>
         <li><a href="/methodology">Methodology</a></li>
         <li><a href="/contact">Contact</a></li>
-        <li><a href="/feedback">Feedback &amp; Bugs</a></li>
-        <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+        <li><a href="/feedback" class="nav-cta">Feedback</a></li>
       </ul>
     </div>
   </nav>
 
   <section class="hero">
     <div class="hero-eyebrow">Appliances &middot; HVAC &middot; Electronics &middot; Water Heaters</div>
-    <h1>Find out how old<br>your item is &mdash; fast.</h1>
+    <h1>Find out how old your item is &mdash; fast.</h1>
     <p class="hero-sub">Reduce the guesswork in item age verification. Utilize our customized AI agent and serial number database to research the age of your items and increase the accuracy of your settlements. Built for speed and accuracy.</p>
   </section>
 
-  <div class="path-grid">
-    <a href="#decoder" class="path-card serial">
-      <span class="path-badge serial-badge"><span class="path-badge-dot"></span> Classic path</span>
-      <span class="path-icon" aria-hidden="true">SN</span>
-      <div class="path-title">I have the<br>serial number</div>
-      <p class="path-desc">Enter the serial number from your product label and we'll decode the manufacture date and estimated age in seconds.</p>
-      <div class="path-tags">
-        <span class="path-tag">100+ brands</span>
-        <span class="path-tag">Instant results</span>
-        <span class="path-tag">No account needed</span>
-      </div>
-      <span class="path-cta">Go to Serial Decoder &rarr;</span>
-    </a>
-
-    <a href="#smart-lookup" class="path-card smart">
-      <span class="path-badge smart-badge"><span class="path-badge-dot"></span> Recommended &middot; No serial needed</span>
-      <span class="path-icon" aria-hidden="true">AI</span>
-      <div class="path-title">I only have a model<br>number or description</div>
-      <p class="path-desc">No serial number? No problem. Smart Lookup uses AI to research your item from a model number, brand, or plain-language description &mdash; no label required.</p>
-      <div class="path-tags">
-        <span class="path-tag blue">Works without a serial number</span>
-        <span class="path-tag blue">AI-powered research</span>
-        <span class="path-tag blue">Replacement options</span>
-      </div>
-      <span class="path-cta">Go to Smart Lookup &rarr;</span>
-    </a>
-  </div>
-
-  <section class="spotlight" id="smart-lookup">
-    <div class="spotlight-inner" id="altSection">
-      <div>
-        <div class="spotlight-label">Smart Lookup</div>
-        <h2>Don't have a serial number? <em>That's exactly what we built this for.</em></h2>
-        <p class="spotlight-sub">Most serial lookup tools stop working the moment you can't find the label. Smart Lookup is different &mdash; it's built specifically for the situations where serial numbers are missing, worn off, or never existed.</p>
-
-        <div class="spotlight-features">
-          <div class="spotlight-feature">
-            <div class="spotlight-feature-icon"></div>
-            <div class="spotlight-feature-text">
-              <div class="spotlight-feature-title">Works from a model number alone</div>
-              <div class="spotlight-feature-desc">Enter a model number and we'll research the manufacture era, specifications, and estimated age &mdash; no serial required.</div>
-            </div>
-          </div>
-          <div class="spotlight-feature">
-            <div class="spotlight-feature-icon"></div>
-            <div class="spotlight-feature-text">
-              <div class="spotlight-feature-title">Plain-language descriptions work too</div>
-              <div class="spotlight-feature-desc">Don't even have a model number? Describe the item and Smart Lookup will still find it &mdash; useful for generators, commercial equipment, and more.</div>
-            </div>
-          </div>
-          <div class="spotlight-feature">
-            <div class="spotlight-feature-icon"></div>
-            <div class="spotlight-feature-text">
-              <div class="spotlight-feature-title">LKQ replacement evaluation included</div>
-              <div class="spotlight-feature-desc">Toggle on replacement options and Smart Lookup returns like-kind-and-quality alternatives alongside the age estimate.</div>
-            </div>
+  <section class="tool-section">
+    <div class="tool-grid">
+      <div class="tool-card decoder-card main-card" id="decoder">
+        <div class="tool-card-header">
+          <div class="tool-card-icon">SN</div>
+          <div class="tool-card-title-group">
+            <div class="tool-card-title">Serial Number Decoder</div>
+            <div class="tool-card-sub">Have the serial number from your product label</div>
           </div>
         </div>
-
-        <button class="spotlight-btn" type="button" onclick="document.getElementById('smart-lookup-input').focus()">Try Smart Lookup &rarr;</button>
-      </div>
-
-      <div class="spotlight-demo">
-        <div class="demo-label">Smart Lookup &middot; Live demo</div>
-        <div id="panel-smart">
-          <label class="sr-only" for="smart-lookup-input">Model Number or Description</label>
-          <textarea id="smart-lookup-input" class="demo-field" placeholder="e.g. 'Carrier 2 ton heat pump' or 'GE Profile PFE28KSKSS'"></textarea>
-          <div class="demo-toggle-row">
-            <span class="demo-toggle-label">Include replacement options</span>
-            <label class="lookup-checkbox" for="include-replacement-comparisons">
-              <input type="checkbox" id="include-replacement-comparisons" checked>
-              <span>Enabled</span>
-            </label>
-          </div>
-          <button id="smartLookupBtn" class="demo-btn" type="button" onclick="runLKQLookup()">Search with AI &rarr;</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="decoder-section" id="decoder">
-    <div class="decoder-header">
-      <div>
-        <div class="section-eyebrow">Have a serial number?</div>
-        <h2 class="section-title">Serial Number Decoder</h2>
-      </div>
-    </div>
-
-    <div class="decoder-card">
-      <div class="decoder-panels">
-        <div class="decoder-panel">
-          <div class="panel-label">Enter your serial number</div>
+        <div class="tool-card-body form-area">
           <div class="search-tabs" style="margin-bottom:20px;">
             <button class="search-tab cat-tab active" data-cat="appliances" type="button" onclick="selectCatAndShowDecoder('appliances', this)">Appliances</button>
             <button class="search-tab cat-tab" data-cat="waterHeaters" type="button" onclick="selectCatAndShowDecoder('waterHeaters', this)">Water Heaters</button>
@@ -1199,104 +1164,129 @@
                 <option value="post">Post-2006 (manufactured after 2006)</option>
                 <option value="pre">Pre-2006 (manufactured before 2006)</option>
               </select>
-              <p class="field-hint era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your unit.</p>
+              <p class="era-hint">Manufacturers often recycle serial formats. Selecting the era ensures the correct decoding logic.</p>
             </div>
             <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">Decode Serial Number &rarr;</button>
-            <p style="font-size:12.5px; color:var(--text-3); text-align:center; margin-top:14px;">No serial number? <a href="#smart-lookup" style="color:var(--blue); text-decoration:none; font-weight:500;">Use Smart Lookup instead &rarr;</a></p>
+            <p class="tool-footer-note" style="margin-top:12px;">No serial number? <a href="#smart-lookup">Use Smart Lookup instead &rarr;</a></p>
           </div>
         </div>
+      </div>
 
-        <div class="decoder-panel">
-          <div class="panel-label">Decoded results</div>
-          <div id="resultsPlaceholder">
-            <div class="result-grid">
-              <div class="result-box">
-                <div class="result-box-label">Manufacture Date</div>
-                <div class="result-box-value">&mdash; / &mdash;</div>
-              </div>
-              <div class="result-box">
-                <div class="result-box-label">Estimated Age</div>
-                <div class="result-box-value">&mdash;</div>
-              </div>
-              <div class="result-box">
-                <div class="result-box-label">Brand</div>
-                <div class="result-box-value">&mdash;</div>
-              </div>
-              <div class="result-box result-box-full">
-                <div class="result-box-label">Ready when you are</div>
-                <div class="result-box-value" style="font-size:13px; font-family:'DM Sans',sans-serif; color:var(--text-3); font-weight:400; padding-top:4px;">Enter details on the left to see results.</div>
-              </div>
-            </div>
+      <div class="tool-card smart smart-lookup-standalone" id="smart-lookup">
+        <div class="tool-card-header">
+          <div class="tool-card-icon">AI</div>
+          <div class="tool-card-title-group">
+            <div class="tool-card-title">Smart Lookup</div>
+            <div class="tool-card-sub">No serial number? Works from model or description</div>
           </div>
-
-          <div id="ageLoading" class="results-card hidden" style="margin-top:0;">
-            <div class="loading-inner">
-              <span class="loading-emoji lightning" id="loadingEmoji" aria-hidden="true">...</span>
-              <div class="loading-text" id="loadingText">Researching product information...</div>
+          <span class="smart-badge"><span class="smart-badge-dot"></span> No serial needed</span>
+        </div>
+        <div class="tool-card-body" id="altSection">
+          <div id="panel-smart">
+            <div class="field-group">
+              <label class="field-label" for="smart-lookup-input">Model Number or Item Description</label>
+              <textarea id="smart-lookup-input" class="smart-textarea" placeholder="e.g. 'Carrier 2 ton heat pump' or 'GE Profile PFE28KSKSS'"></textarea>
+              <span class="field-hint">Works for appliances, HVAC, electronics, generators, commercial equipment, and more.</span>
             </div>
-          </div>
-
-          <div id="serialResults" class="results-card hidden" style="margin-top:0;">
-            <div class="results-header">
-              <h3>Decoded Results</h3>
-              <div class="brand-logo-wrap" id="serialBrandLogo"></div>
+            <div class="toggle-row">
+              <span class="toggle-label">Include replacement options</span>
+              <label class="smart-toggle-control" for="include-replacement-comparisons">
+                <input type="checkbox" id="include-replacement-comparisons" checked>
+                <span>Enabled</span>
+              </label>
             </div>
-            <div class="results-body">
-              <div id="serialSummaryLayer" class="sl-top-summary-layer serial-summary-layer hidden"></div>
-              <div class="serial-legacy-fields" hidden aria-hidden="true">
-                <div class="result-row result-row--primary">
-                  <span class="result-label">Manufacture Date</span>
-                  <span class="result-value" id="resultYear"></span>
-                </div>
-                <div class="result-row" id="resultMonthRow">
-                  <span class="result-label">Month / Period</span>
-                  <span class="result-value" id="resultMonth"></span>
-                </div>
-                <div class="result-row">
-                  <span class="result-label">Brand</span>
-                  <span class="result-value" id="resultBrand"></span>
-                </div>
-                <div class="result-row">
-                  <span class="result-label">Estimated Age</span>
-                  <span class="result-value" id="resultEstimatedAge">&mdash;</span>
-                </div>
-                <div class="info-block method">
-                  <h4>Decoding Method</h4>
-                  <p id="resultMethod"></p>
-                </div>
-                <div class="info-block notes">
-                  <h4>Important Notes</h4>
-                  <p id="resultNotes"></p>
-                </div>
-                <details class="determination-details">
-                  <summary>How this was determined</summary>
-                  <div class="determination-body" id="serialDeterminationBody">We use manufacturer serial format rules and published industry references to extract manufacture date information from serial numbers. Some brands reuse year codes across decades, which is why multiple valid years may appear.</div>
-                </details>
-              </div>
-            </div>
-            <div class="results-footer">
-              <button class="copy-btn" onclick="copyClaimFile()">Copy Information</button>
-              <button class="decode-again-btn btn-amber" onclick="decodeAnotherItem()">Decode Another Item</button>
-              <button class="decode-again-btn btn-teal" onclick="useSmartLookup()">Use Smart Lookup</button>
-              <button class="error-btn" onclick="openFeedbackModal()">Report a possible error</button>
-            </div>
-          </div>
-
-          <div id="ageResults" class="results-card hidden" style="margin-top:0;">
-            <div class="results-header">
-              <h3>LKQ Replacement Evaluation</h3>
-              <div class="brand-logo-wrap" id="ageBrandLogo"></div>
-            </div>
-            <div class="results-body" id="smart-lookup-results"></div>
-            <div class="results-footer">
-              <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
-              <button class="error-btn" onclick="openFeedbackModal()">Report a possible error</button>
-            </div>
+            <button id="smartLookupBtn" class="btn-blue" type="button" onclick="runLKQLookup()">Search with AI &rarr;</button>
+            <p class="tool-footer-note" style="margin-top:12px;">Have a serial number? <a href="#decoder">Use the Serial Decoder instead &rarr;</a></p>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="homepage-tool-results">
+      <div id="resultsPlaceholder" class="tool-results-placeholder">Enter a brand and serial number above, or run Smart Lookup to see results.</div>
+
+      <div id="ageLoading" class="results-card hidden" style="margin-top:0;">
+        <div class="loading-inner">
+          <span class="loading-emoji lightning" id="loadingEmoji" aria-hidden="true">...</span>
+          <div class="loading-text" id="loadingText">Researching product information...</div>
+        </div>
+      </div>
+
+      <div id="serialResults" class="results-card hidden" style="margin-top:0;">
+        <div class="results-header">
+          <h3>Decoded Results</h3>
+          <div class="brand-logo-wrap" id="serialBrandLogo"></div>
+        </div>
+        <div class="results-body">
+          <div id="serialSummaryLayer" class="sl-top-summary-layer serial-summary-layer hidden"></div>
+          <div class="serial-legacy-fields" hidden aria-hidden="true">
+            <div class="result-row result-row--primary">
+              <span class="result-label">Manufacture Date</span>
+              <span class="result-value" id="resultYear"></span>
+            </div>
+            <div class="result-row" id="resultMonthRow">
+              <span class="result-label">Month / Period</span>
+              <span class="result-value" id="resultMonth"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Brand</span>
+              <span class="result-value" id="resultBrand"></span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Estimated Age</span>
+              <span class="result-value" id="resultEstimatedAge">&mdash;</span>
+            </div>
+            <div class="info-block method">
+              <h4>Decoding Method</h4>
+              <p id="resultMethod"></p>
+            </div>
+            <div class="info-block notes">
+              <h4>Important Notes</h4>
+              <p id="resultNotes"></p>
+            </div>
+            <details class="determination-details">
+              <summary>How this was determined</summary>
+              <div class="determination-body" id="serialDeterminationBody">We use manufacturer serial format rules and published industry references to extract manufacture date information from serial numbers. Some brands reuse year codes across decades, which is why multiple valid years may appear.</div>
+            </details>
+          </div>
+        </div>
+        <div class="results-footer">
+          <button class="copy-btn" onclick="copyClaimFile()">Copy Information</button>
+          <button class="decode-again-btn btn-amber" onclick="decodeAnotherItem()">Decode Another Item</button>
+          <button class="decode-again-btn btn-teal" onclick="useSmartLookup()">Use Smart Lookup</button>
+          <button class="error-btn" onclick="openFeedbackModal()">Report a possible error</button>
+        </div>
+      </div>
+
+      <div id="ageResults" class="results-card hidden" style="margin-top:0;">
+        <div class="results-header">
+          <h3>LKQ Replacement Evaluation</h3>
+          <div class="brand-logo-wrap" id="ageBrandLogo"></div>
+        </div>
+        <div class="results-body" id="smart-lookup-results"></div>
+        <div class="results-footer">
+          <button class="decode-again-btn" onclick="decodeAnotherItem()">Decode Another Item</button>
+          <button class="error-btn" onclick="openFeedbackModal()">Report a possible error</button>
+        </div>
+      </div>
+    </div>
   </section>
+
+  <div class="smart-callout">
+    <div class="smart-callout-left">
+      <div class="smart-callout-eyebrow">Why Smart Lookup?</div>
+      <div class="smart-callout-title">Don't have a serial number? <em>That's exactly what we built this for.</em></div>
+      <div class="smart-callout-desc">Most serial lookup tools stop working the moment the label is missing. Smart Lookup uses AI to research your item from a model number or plain-language description &mdash; no label required.</div>
+      <div class="smart-callout-features">
+        <div class="smart-callout-feature"><div class="feature-dot"></div><span class="feature-text">Works from model numbers</span></div>
+        <div class="smart-callout-feature"><div class="feature-dot"></div><span class="feature-text">Plain-language descriptions</span></div>
+        <div class="smart-callout-feature"><div class="feature-dot"></div><span class="feature-text">LKQ replacement options</span></div>
+      </div>
+    </div>
+    <div class="smart-callout-right">
+      <a href="#smart-lookup" class="callout-btn">Try Smart Lookup</a>
+    </div>
+  </div>
 
   <section class="stats-section">
     <div class="stats-grid">
@@ -1412,6 +1402,52 @@
     </div>
   </section>
 
+  <footer class="site-footer footer">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-col-brand">
+          <div class="footer-logo">Decode My Item</div>
+          <div class="footer-tagline">Decode &middot; Research &middot; Automate</div>
+          <p class="footer-copy">Serial number, model number, and age research for appliances, HVAC, and electronics.</p>
+        </div>
+        <div class="footer-col-links footer-link-columns">
+          <div>
+            <span class="footer-heading">Tools</span>
+            <div class="footer-links footer-link-stack">
+              <a href="/decoder-tool">Serial Number Decoder</a>
+              <a href="/smart-lookup">Smart Lookup</a>
+              <a href="/assistant">AI Assistant</a>
+            </div>
+          </div>
+          <div>
+            <span class="footer-heading">Info</span>
+            <div class="footer-links footer-link-stack">
+              <a href="/methodology">Methodology</a>
+              <a href="/security">Security &amp; Data</a>
+              <a href="/privacy-policy">Privacy Policy</a>
+            </div>
+          </div>
+          <div>
+            <span class="footer-heading">Support</span>
+            <div class="footer-links footer-link-stack">
+              <a href="/contact">Contact</a>
+              <a href="/feedback">Feedback &amp; Bugs</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Decode My Item &middot; Database verified February 2026</p>
+        <div class="footer-links">
+          <a href="/methodology">Methodology</a>
+          <a href="/contact">Contact</a>
+          <a href="/privacy-policy">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <a href="#" class="back-top" onclick="scrollPageToTop(true); return false;" aria-label="Back to top">&uarr;</a>
+
   <div id="guideOverlay" class="guide-overlay" onclick="closeGuide()"></div>
   <div id="guideDrawer" class="guide-drawer">
     <div class="guide-drawer-header">
@@ -1480,30 +1516,6 @@
       </div>
     </div>
   </div>
-
-  <footer class="site-footer footer">
-    <div class="footer-inner">
-      <div class="footer-top">
-        <div class="footer-col-brand">
-          <a href="/" class="footer-brand">Decode My <span>Item</span></a>
-          <p class="footer-copy">Serial number, model number, and age research for appliances, HVAC, and electronics.</p>
-        </div>
-        <div class="footer-col-links">
-          <span class="footer-heading">Resources</span>
-          <div class="footer-links">
-            <a href="/methodology">Methodology</a>
-            <a href="/contact">Contact</a>
-            <a href="/security">Security &amp; Data Notice</a>
-            <a href="/privacy-policy">Privacy Policy</a>
-          </div>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2026 Decode My Item &middot; Database verified February 2026</p>
-      </div>
-    </div>
-  </footer>
-  <a href="#" class="back-top" onclick="scrollPageToTop(true); return false;" aria-label="Back to top">&uarr;</a>
 
   <script>
     function selectCatAndShowDecoder(cat, btn) {
