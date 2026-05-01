@@ -3387,13 +3387,13 @@ function capYear(yearStr) {
 function computeEstimatedAge(displayedYear) {
   if (!displayedYear) return '—';
   var s = String(displayedYear).trim();
-  // Dual year "1992/2022"
-  if (/^\d{4}\/\d{4}$/.test(s)) {
-    var parts = s.split('/');
-    var a1 = CURRENT_YEAR - parseInt(parts[0]);
-    var a2 = CURRENT_YEAR - parseInt(parts[1]);
-    if (a2 < 0) return a1 + ' years';
-    return a2 + ' or ' + a1 + ' years';
+  var candidateYears = parseCandidateYears(s).filter(function(year) {
+    return year >= 1980 && year <= CURRENT_YEAR;
+  });
+  if (candidateYears.length) {
+    var newestYear = Math.max.apply(null, candidateYears);
+    var newestAge = CURRENT_YEAR - newestYear;
+    return newestAge >= 0 ? newestAge + ' year' + (newestAge !== 1 ? 's' : '') : '—';
   }
   // Single year
   if (/^\d{4}$/.test(s)) {
@@ -4131,6 +4131,11 @@ function decodeSerial() {
     })();
 
     var notesText = decoder.notes || decoder.decodeNotes || 'N/A';
+    if (parseCandidateYears(result.year).length > 1) {
+      var verificationNote = 'Multiple manufacturer dates match this serial format. Estimated age uses the most recent valid date. Search the model number for full verification.';
+      if (notesText === 'N/A') notesText = verificationNote;
+      else if (notesText.indexOf(verificationNote) === -1) notesText += ' ' + verificationNote;
+    }
     if (isKenmore && kenmoreResolution && kenmoreResolution.note) {
       notesText = kenmoreResolution.note + (notesText ? ' ' + notesText : '');
     }

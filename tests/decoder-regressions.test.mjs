@@ -55,6 +55,7 @@ function loadDecoderContext() {
     globalThis.__api = {
       decoderData: __decoderData,
       parseCandidateYears,
+      computeEstimatedAge,
       chooseCandidateFromLookup,
       KENMORE_PREFIX_TO_DECODER,
       expandKnownSmartLookupQuery,
@@ -91,6 +92,14 @@ test('GE Narrow Date refinement selects the closest serial-valid candidate to lo
 
   assert.ok(selected);
   assert.equal(selected.chosenYear, 2007);
+});
+
+test('Estimated age uses the most recent valid manufacturer year when multiple years are returned', () => {
+  const ge = api.decoderData.appliances.decoders.ge;
+  const result = ge.decode('GM028928Q');
+
+  assert.equal(result.year, '1983/1995/2007/2019');
+  assert.equal(api.computeEstimatedAge(result.year), '7 years');
 });
 
 test('Narrow Date still allows legitimate strong-evidence adjustment', () => {
