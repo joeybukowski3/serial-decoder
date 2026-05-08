@@ -2096,3 +2096,115 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
     min-width: 0;
   }
 }
+
+/* ─── HERO PATHS ─── */
+.hero-paths {
+  display: grid;
+  grid-template-columns: 1fr 36px 1fr;
+  border: 1px solid #e0e4ea;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 1.5rem auto 1.25rem;
+  max-width: 720px;
+  background: #fff;
+}
+
+.hero-path {
+  padding: 1.25rem;
+}
+
+.hero-path-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #999;
+  font-style: italic;
+  border-left: 1px solid #e0e4ea;
+  border-right: 1px solid #e0e4ea;
+  background: #f7f8fa;
+}
+
+.hero-path-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin-bottom: 0.75rem;
+}
+
+.hero-icon-teal  { background: #E1F5EE; color: #0F6E56; }
+.hero-icon-purple { background: #EEEDFE; color: #534AB7; }
+
+.hero-path-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  margin: 0 0 0.5rem;
+}
+
+.hero-path-desc {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.6;
+  margin: 0 0 0.75rem;
+}
+
+.hero-path-tag {
+  display: inline-block;
+  font-size: 11px;
+  color: #888;
+  border: 1px solid #e0e4ea;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+/* ─── HERO STATS ─── */
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.hero-stat {
+  background: #f7f8fa;
+  border-radius: 8px;
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+}
+
+.hero-stat-num {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 2px;
+}
+
+.hero-stat-label {
+  display: block;
+  font-size: 11px;
+  color: #777;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 600px) {
+  .hero-paths {
+    grid-template-columns: 1fr;
+  }
+  .hero-path-divider {
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid #e0e4ea;
+    border-bottom: 1px solid #e0e4ea;
+    padding: 6px;
+  }
+  .hero-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
