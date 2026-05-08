@@ -2101,16 +2101,17 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
 .hero-paths {
   display: grid;
   grid-template-columns: 1fr 36px 1fr;
-  border: 1px solid #e0e4ea;
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 12px;
   overflow: hidden;
   margin: 1.5rem auto 1.25rem;
   max-width: 720px;
-  background: #fff;
+  background: rgba(255,255,255,0.04);
 }
 
 .hero-path {
   padding: 1.25rem;
+  background: rgba(255,255,255,0.04);
 }
 
 .hero-path-divider {
@@ -2118,11 +2119,11 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
   align-items: center;
   justify-content: center;
   font-size: 11px;
-  color: #999;
+  color: rgba(255,255,255,0.35);
   font-style: italic;
-  border-left: 1px solid #e0e4ea;
-  border-right: 1px solid #e0e4ea;
-  background: #f7f8fa;
+  border-left: 1px solid rgba(255,255,255,0.1);
+  border-right: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.02);
 }
 
 .hero-path-icon {
@@ -2136,19 +2137,19 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
   margin-bottom: 0.75rem;
 }
 
-.hero-icon-teal  { background: #E1F5EE; color: #0F6E56; }
-.hero-icon-purple { background: #EEEDFE; color: #534AB7; }
+.hero-icon-teal   { background: rgba(29,158,117,0.25); color: #5DCAA5; }
+.hero-icon-purple { background: rgba(127,119,221,0.25); color: #AFA9EC; }
 
 .hero-path-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--white);
+  color: #ffffff;
   margin: 0 0 0.5rem;
 }
 
 .hero-path-desc {
   font-size: 13px;
-  color: #555;
+  color: rgba(255,255,255,0.6);
   line-height: 1.6;
   margin: 0 0 0.75rem;
 }
@@ -2156,8 +2157,8 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
 .hero-path-tag {
   display: inline-block;
   font-size: 11px;
-  color: #888;
-  border: 1px solid #e0e4ea;
+  color: rgba(255,255,255,0.45);
+  border: 1px solid rgba(255,255,255,0.15);
   border-radius: 6px;
   padding: 2px 8px;
 }
@@ -2172,7 +2173,8 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
 }
 
 .hero-stat {
-  background: #f7f8fa;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 8px;
   padding: 0.75rem 0.5rem;
   text-align: center;
@@ -2182,14 +2184,14 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
   display: block;
   font-size: 16px;
   font-weight: 600;
-  color: var(--white);
+  color: #ffffff;
   margin-bottom: 2px;
 }
 
 .hero-stat-label {
   display: block;
   font-size: 11px;
-  color: #777;
+  color: rgba(255,255,255,0.5);
 }
 
 /* ─── RESPONSIVE ─── */
@@ -2200,8 +2202,8 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
   .hero-path-divider {
     border-left: none;
     border-right: none;
-    border-top: 1px solid #e0e4ea;
-    border-bottom: 1px solid #e0e4ea;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
     padding: 6px;
   }
   .hero-stats {
