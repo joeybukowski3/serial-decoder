@@ -1,44 +1,74 @@
 async function handleContact(body, res) {
   const apiKey = process.env.RESEND_API_KEY;
-  const alertTo = process.env.ALERT_EMAIL_TO;
-  if (!apiKey || !alertTo) {
-    return res.status(500).json({ error: 'Email service not configured' });
+  const alertTo =
+    process.env.CONTACT_EMAIL_TO ||
+    process.env.FEEDBACK_EMAIL ||
+    process.env.ALERT_EMAIL_TO ||
+    'joeybuk03@gmail.com';
+  const publicContactEmail =
+    process.env.CONTACT_EMAIL_PUBLIC ||
+    process.env.FEEDBACK_EMAIL ||
+    'feedback@decodemyitem.com';
+  const { name, email, subject, message } = body;
+  const cleanName = String(name || '').trim();
+  const cleanEmail = String(email || '').trim();
+  const cleanSubject = String(subject || '').trim();
+  const cleanMessage = String(message || '').trim();
+  const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail);
+  const fallbackPayload = {
+    fallbackEmail: publicContactEmail,
+    fallbackMailto:
+      'mailto:' + encodeURIComponent(publicContactEmail) +
+      '?subject=' + encodeURIComponent(cleanSubject || 'Decode My Item contact request'),
+  };
+
+  if (!cleanName) {
+    return res.status(400).json({ error: 'Name is required' });
   }
 
-  const { name, email, message } = body;
+  if (!emailLooksValid) {
+    return res.status(400).json({ error: 'A valid email is required' });
+  }
 
-  if (!message || !message.trim()) {
+  if (!cleanMessage) {
     return res.status(400).json({ error: 'Message is required' });
   }
 
+  if (!apiKey) {
+    return res.status(503).json({
+      error: 'Contact email is temporarily unavailable',
+      ...fallbackPayload,
+    });
+  }
+
   const bodyText = [
-    'Serial Number Decoder — Contact Form Submission',
-    '────────────────────────────────────────────────',
-    `Name:    ${name    || '(not provided)'}`,
-    `Email:   ${email   || '(not provided)'}`,
+    'Serial Number Decoder - Contact Form Submission',
+    '-'.repeat(48),
+    `Name:    ${cleanName}`,
+    `Email:   ${cleanEmail}`,
+    `Subject: ${cleanSubject || '(not provided)'}`,
     '',
-    `Message:`,
-    message,
+    'Message:',
+    cleanMessage,
     '',
     'Submitted via decodemyitem.com contact form.',
   ].join('\n');
 
   try {
     const payload = {
-      from:    'Serial Decoder <onboarding@resend.dev>',
-      to:      [alertTo],
-      subject: `[Decoder] Contact from ${name || email || 'visitor'}`,
-      text:    bodyText,
+      from: 'Serial Decoder <onboarding@resend.dev>',
+      to: [alertTo],
+      subject: cleanSubject
+        ? `[Decoder] ${cleanSubject}`
+        : `[Decoder] Contact from ${cleanName || cleanEmail || 'visitor'}`,
+      text: bodyText,
+      reply_to: cleanEmail,
     };
-
-    if (email && email.includes('@')) {
-      payload.reply_to = email;
-    }
 
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + apiKey,
+        Authorization: 'Bearer ' + apiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
@@ -47,13 +77,19 @@ async function handleContact(body, res) {
     if (!response.ok) {
       const errText = await response.text();
       console.error('Resend error:', errText);
-      return res.status(502).json({ error: 'Failed to send email' });
+      return res.status(502).json({
+        error: 'Failed to send email',
+        ...fallbackPayload,
+      });
     }
 
     return res.status(200).json({ ok: true });
   } catch (e) {
     console.error('contact handler error:', e);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({
+      error: 'Internal server error',
+      ...fallbackPayload,
+    });
   }
 }
 
@@ -67,20 +103,20 @@ async function handleFeedback(body, res) {
   const { brand, serial, issueType, details } = body;
 
   const issueLabels = {
-    wrong_year:   'Wrong year / date',
-    wrong_month:  'Wrong month',
-    wrong_brand:  'Wrong brand identified',
+    wrong_year: 'Wrong year / date',
+    wrong_month: 'Wrong month',
+    wrong_brand: 'Wrong brand identified',
     format_error: 'Format / decode error',
-    other:        'Other',
+    other: 'Other',
   };
 
   const bodyText = [
-    'Serial Number Decoder — Possible Error Report',
-    '─────────────────────────────────────────────',
-    `Brand:        ${brand      || '(not specified)'}`,
-    `Serial/Query: ${serial     || '(not specified)'}`,
+    'Serial Number Decoder - Possible Error Report',
+    '-'.repeat(45),
+    `Brand:        ${brand || '(not specified)'}`,
+    `Serial/Query: ${serial || '(not specified)'}`,
     `Issue Type:   ${issueLabels[issueType] || issueType || '(not specified)'}`,
-    `Details:      ${details    || '(none provided)'}`,
+    `Details:      ${details || '(none provided)'}`,
     '',
     'Submitted via the Serial Number Decoder feedback form.',
   ].join('\n');
@@ -89,14 +125,14 @@ async function handleFeedback(body, res) {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + apiKey,
+        Authorization: 'Bearer ' + apiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from:    'Serial Decoder <onboarding@resend.dev>',
-        to:      [alertTo],
-        subject: `[Decoder] Possible error — ${brand || 'Unknown Brand'} / ${serial || 'no serial'}`,
-        text:    bodyText,
+        from: 'Serial Decoder <onboarding@resend.dev>',
+        to: [alertTo],
+        subject: `[Decoder] Possible error - ${brand || 'Unknown Brand'} / ${serial || 'no serial'}`,
+        text: bodyText,
       }),
     });
 
@@ -153,7 +189,7 @@ async function handleSiteFeedback(body, res) {
       body: JSON.stringify({
         from: 'Item Assist <onboarding@resend.dev>',
         to: [feedbackTo],
-        subject: `ItemAssist Feedback — ${cleanFeedbackType}`,
+        subject: `ItemAssist Feedback - ${cleanFeedbackType}`,
         text: bodyText,
       }),
     });
@@ -184,12 +220,12 @@ async function handleFeatureRequest(body, res) {
   }
 
   const lines = [
-    'Feature Request — Decode My Item',
-    '─'.repeat(40),
+    'Feature Request - Decode My Item',
+    '-'.repeat(40),
   ];
   if (selections.length) {
     lines.push('Selected Features:');
-    selections.forEach(function (s) { lines.push('  • ' + s); });
+    selections.forEach(function (s) { lines.push('  - ' + s); });
   }
   if (String(writeIn).trim()) {
     lines.push('Write-in: ' + String(writeIn).trim());
@@ -199,13 +235,13 @@ async function handleFeatureRequest(body, res) {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + apiKey,
+        Authorization: 'Bearer ' + apiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         from: 'Item Assist <feedback@decodemyitem.com>',
         to: ['joeybuk03@gmail.com'],
-        subject: 'Feature Request — Decode My Item',
+        subject: 'Feature Request - Decode My Item',
         text: lines.join('\n'),
       }),
     });
@@ -230,9 +266,9 @@ export default async function handler(req, res) {
 
   const { type, ...body } = req.body || {};
 
-  if (type === 'contact')         return handleContact(body, res);
-  if (type === 'feedback')        return handleFeedback(body, res);
-  if (type === 'site-feedback')   return handleSiteFeedback(body, res);
+  if (type === 'contact') return handleContact(body, res);
+  if (type === 'feedback') return handleFeedback(body, res);
+  if (type === 'site-feedback') return handleSiteFeedback(body, res);
   if (type === 'feature-request') return handleFeatureRequest(body, res);
 
   return res.status(400).json({ error: 'Missing or unrecognized type' });
