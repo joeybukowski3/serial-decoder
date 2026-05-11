@@ -6354,3 +6354,19 @@ img.ia-sidebar-logo {
     right: auto !important;
     left: 18px !important;
 }
+
+/* Final guard: LKQ result section headers must remain visible */
+.lkq-id-header,
+.lkq-successor-header,
+.lkq-replace-header,
+.lkq-section-hd {
+    background: #111827 !important;
+    color: #ffffff !important;
+}
+
+.lkq-id-header *,
+.lkq-successor-header *,
+.lkq-replace-header *,
+.lkq-section-hd * {
+    color: #ffffff !important;
+}
