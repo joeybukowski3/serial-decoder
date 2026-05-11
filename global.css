@@ -6370,3 +6370,23 @@ img.ia-sidebar-logo {
 .lkq-section-hd * {
     color: #ffffff !important;
 }
+
+.lkq-id-header span,
+.lkq-successor-header span,
+.lkq-replace-header span,
+.lkq-section-hd span,
+.lkq-id-header div,
+.lkq-successor-header div,
+.lkq-replace-header div,
+.lkq-section-hd div,
+.lkq-id-header strong,
+.lkq-successor-header strong,
+.lkq-replace-header strong,
+.lkq-section-hd strong,
+.lkq-section-title,
+.lkq-step-title,
+.lkq-section-num,
+.lkq-step-num {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
