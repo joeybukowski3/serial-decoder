@@ -5345,6 +5345,8 @@ async function runLKQLookup() {
     }
 
     showSmartLookupAssistLoading();
+    // Keep interpretation sequential here: it determines whether the query should
+    // route to general lookup, age-only lookup, or the specific-model path.
     interpreted = await fetchSmartLookupInterpretation(resolvedQuery);
     clearSmartLookupAssist();
 

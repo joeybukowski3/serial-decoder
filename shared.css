@@ -2210,3 +2210,70 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ─── RESPONSIVE CONTENT TABLES (brand pages) ─── */
+.landing-info-card table,
+.prose table,
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 760px) {
+  .landing-info-card table,
+  .prose table,
+  .article-content table { display: block; }
+
+  .landing-info-card table thead,
+  .prose table thead,
+  .article-content table thead { display: none; }
+
+  .landing-info-card table tbody,
+  .landing-info-card table tr,
+  .prose table tbody,
+  .prose table tr,
+  .article-content table tbody,
+  .article-content table tr { display: block; }
+
+  .landing-info-card table tr,
+  .prose table tr,
+  .article-content table tr {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    background: #fff;
+  }
+
+  .landing-info-card table td,
+  .prose table td,
+  .article-content table td {
+    display: block;
+    padding: 8px 12px;
+    border: none;
+    border-top: 1px solid #f1f5f9;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #334155;
+  }
+
+  .landing-info-card table td:first-child,
+  .prose table td:first-child,
+  .article-content table td:first-child {
+    border-top: none;
+    background: #f8fafc;
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #475569;
+  }
+
+  /* Override hardcoded LKQ table min-width on mobile */
+  .lkq-comparison-table { min-width: 0 !important; }
+  .lkq-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
