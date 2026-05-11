@@ -2300,3 +2300,28 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
     grid-template-columns: 100px 1fr !important;
   }
 }
+
+/* Final guard: Smart Lookup LKQ section headers must stay white */
+.lkq-id-header,
+.lkq-successor-header,
+.lkq-replace-header,
+.lkq-section-hd {
+  background: #1a202c !important;
+  color: #ffffff !important;
+}
+
+.lkq-id-header *,
+.lkq-successor-header *,
+.lkq-replace-header *,
+.lkq-section-hd *,
+.lkq-id-header span,
+.lkq-successor-header span,
+.lkq-replace-header span,
+.lkq-section-hd span,
+.lkq-section-title,
+.lkq-step-title,
+.lkq-section-num,
+.lkq-step-num {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
