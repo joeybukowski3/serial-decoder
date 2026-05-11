@@ -2277,3 +2277,26 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* ─── FIX: lkq-section-hd dark background guard ─── */
+.lkq-id-header,
+.lkq-successor-header,
+.lkq-replace-header,
+.lkq-section-hd {
+  background: #1a202c !important;
+}
+
+.lkq-section-title,
+.lkq-step-title {
+  color: #ffffff !important;
+}
+
+/* ─── FIX: stack lkq-top-grid to 1 column on phones ─── */
+@media (max-width: 520px) {
+  .lkq-top-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .lkq-id-row {
+    grid-template-columns: 100px 1fr !important;
+  }
+}
