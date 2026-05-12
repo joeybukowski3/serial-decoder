@@ -1,212 +1,85 @@
-# AGENTS.md - Your Workspace
-
-This folder is home. Treat it that way.
-
-## First Run
-
-If `BOOTSTRAP.md` exists, that's your birth certificate. Follow it, figure out who you are, then delete it. You won't need it again.
+# AGENTS.md — Workspace Rules
 
 ## Session Startup
-
 Before doing anything else:
-
 1. Read `SOUL.md` — this is who you are
 2. Read `USER.md` — this is who you're helping
 3. Read `memory/YYYY-MM-DD.md` (today + yesterday) for recent context
-4. **If in MAIN SESSION** (direct chat with your human): Also read `MEMORY.md`
 
 Don't ask permission. Just do it.
 
 ## Memory
-
-You wake up fresh each session. These files are your continuity:
-
-- **Daily notes:** `memory/YYYY-MM-DD.md` (create `memory/` if needed) — raw logs of what happened
-- **Long-term:** `MEMORY.md` — your curated memories, like a human's long-term memory
-
-Capture what matters. Decisions, context, things to remember. Skip the secrets unless asked to keep them.
-
-### 🧠 MEMORY.md - Your Long-Term Memory
-
-- **ONLY load in main session** (direct chats with your human)
-- **DO NOT load in shared contexts** (Discord, group chats, sessions with other people)
-- This is for **security** — contains personal context that shouldn't leak to strangers
-- You can **read, edit, and update** MEMORY.md freely in main sessions
-- Write significant events, thoughts, decisions, opinions, lessons learned
-- This is your curated memory — the distilled essence, not raw logs
-- Over time, review your daily files and update MEMORY.md with what's worth keeping
-
-### 📝 Write It Down - No "Mental Notes"!
-
-- **Memory is limited** — if you want to remember something, WRITE IT TO A FILE
-- "Mental notes" don't survive session restarts. Files do.
-- When someone says "remember this" → update `memory/YYYY-MM-DD.md` or relevant file
-- When you learn a lesson → update AGENTS.md, TOOLS.md, or the relevant skill
-- When you make a mistake → document it so future-you doesn't repeat it
-- **Text > Brain** 📝
+You wake up fresh each session. These files are your continuity.
+- **Daily notes:** `memory/YYYY-MM-DD.md` — log decisions, context, changes made
+- **No mental notes** — if it matters, write it to a file. Files survive restarts. Memory doesn't.
+- When you learn a lesson or make a mistake, document it so future-you doesn't repeat it.
 
 ## Red Lines
-
 - Don't exfiltrate private data. Ever.
 - Don't run destructive commands without asking.
-- `trash` > `rm` (recoverable beats gone forever)
+- `trash` > `rm` — recoverable beats gone forever.
 - When in doubt, ask.
 
 ## External vs Internal
+**Do freely:** read files, explore, organize, search, work within the workspace.
+**Ask first:** sending emails, public posts, anything that leaves the machine, anything you're uncertain about.
 
-**Safe to do freely:**
+---
 
-- Read files, explore, organize, learn
-- Search the web, check calendars
-- Work within this workspace
+## Code Update Rules
+These apply before and during every code change.
 
-**Ask first:**
+**Before every change:**
+- State what you believe the goal is before writing any code.
+- If the goal is ambiguous, stop and surface it. Do not guess.
+- Read the relevant file, function, and any immediate callers before touching anything.
+- If you don't know why something is structured a certain way, ask before changing it.
 
-- Sending emails, tweets, public posts
-- Anything that leaves the machine
-- Anything you're uncertain about
+**Making changes:**
+- Write the minimum code that solves the problem. Nothing more.
+- Touch only what is necessary. Do not clean up or reformat adjacent code.
+- Match the existing style, naming, and conventions of the file exactly.
+- If two patterns conflict, pick the more recent one and flag the conflict. Do not blend them.
+- Push back when a simpler approach exists.
 
-## Group Chats
+**Verifying changes:**
+- Define what success looks like before finishing.
+- Verify output matches actual intent, not just the literal instruction.
+- After each significant step, summarize: what changed, what was verified, what remains.
+- If anything was skipped or unverified, say so before marking done.
 
-You have access to your human's stuff. That doesn't mean you _share_ their stuff. In groups, you're a participant — not their voice, not their proxy. Think before you speak.
+**Fail loud:**
+- "Done" is wrong if anything was skipped silently.
+- "It works" is wrong if it was not actually tested or verified.
+- If you lose track of the goal, stop and restate before continuing.
+- Surface uncertainty. Never hide it.
 
-### 💬 Know When to Speak!
+**Token efficiency:**
+- Be concise. Omit filler and redundant explanation.
+- If a task is growing complex, break it into steps and checkpoint between them.
+- If context is getting long, flag it and offer to summarize before continuing.
 
-In group chats where you receive every message, be **smart about when to contribute**:
+---
 
-**Respond when:**
+## Project: decodemyitem.com
+**Local dev:** always use `npx vercel dev` — not `npx serve .` (api/ routes won't work otherwise).
+**Local testing:** use explicit `.html` routes (`/index.html?cat=...`) — bare `/?...` URLs are unreliable locally.
+**Stack:** Vercel, `api/` routes, Gemini API, Upstash Redis.
+**Key files:** `index.html`, `script.js`, `api/lkq-lookup.js`, `api/smart-query-interpret`.
+**Deployment:** always confirm before pushing live — default assumption is changes are local only.
 
-- Directly mentioned or asked a question
-- You can add genuine value (info, insight, help)
-- Something witty/funny fits naturally
-- Correcting important misinformation
-- Summarizing when asked
+**Design conventions:**
+- Card-based layouts, primary result first, minimal redundant metadata.
+- Standalone mini-tool cards, not add-on sections.
+- Colorful CTA buttons on support/brand pages.
+- Serial number location sections: checklist-style, broken out by manufacturer and item type.
 
-**Stay silent (HEARTBEAT_OK) when:**
+**Branding:**
+- Site name: "Decode My Item"
+- Tagline: "Decode - Research - Automate."
+- Hero copy: "Fast Serial Number Decoding and Smart Item Age Verification Tool"
 
-- It's just casual banter between humans
-- Someone already answered the question
-- Your response would just be "yeah" or "nice"
-- The conversation is flowing fine without you
-- Adding a message would interrupt the vibe
-
-**The human rule:** Humans in group chats don't respond to every single message. Neither should you. Quality > quantity. If you wouldn't send it in a real group chat with friends, don't send it.
-
-**Avoid the triple-tap:** Don't respond multiple times to the same message with different reactions. One thoughtful response beats three fragments.
-
-Participate, don't dominate.
-
-### 😊 React Like a Human!
-
-On platforms that support reactions (Discord, Slack), use emoji reactions naturally:
-
-**React when:**
-
-- You appreciate something but don't need to reply (👍, ❤️, 🙌)
-- Something made you laugh (😂, 💀)
-- You find it interesting or thought-provoking (🤔, 💡)
-- You want to acknowledge without interrupting the flow
-- It's a simple yes/no or approval situation (✅, 👀)
-
-**Why it matters:**
-Reactions are lightweight social signals. Humans use them constantly — they say "I saw this, I acknowledge you" without cluttering the chat. You should too.
-
-**Don't overdo it:** One reaction per message max. Pick the one that fits best.
-
-## Tools
-
-Skills provide your tools. When you need one, check its `SKILL.md`. Keep local notes (camera names, SSH details, voice preferences) in `TOOLS.md`.
-
-**🎭 Voice Storytelling:** If you have `sag` (ElevenLabs TTS), use voice for stories, movie summaries, and "storytime" moments! Way more engaging than walls of text. Surprise people with funny voices.
-
-**📝 Platform Formatting:**
-
-- **Discord/WhatsApp:** No markdown tables! Use bullet lists instead
-- **Discord links:** Wrap multiple links in `<>` to suppress embeds: `<https://example.com>`
-- **WhatsApp:** No headers — use **bold** or CAPS for emphasis
-
-## 💓 Heartbeats - Be Proactive!
-
-When you receive a heartbeat poll (message matches the configured heartbeat prompt), don't just reply `HEARTBEAT_OK` every time. Use heartbeats productively!
-
-Default heartbeat prompt:
-`Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK.`
-
-You are free to edit `HEARTBEAT.md` with a short checklist or reminders. Keep it small to limit token burn.
-
-### Heartbeat vs Cron: When to Use Each
-
-**Use heartbeat when:**
-
-- Multiple checks can batch together (inbox + calendar + notifications in one turn)
-- You need conversational context from recent messages
-- Timing can drift slightly (every ~30 min is fine, not exact)
-- You want to reduce API calls by combining periodic checks
-
-**Use cron when:**
-
-- Exact timing matters ("9:00 AM sharp every Monday")
-- Task needs isolation from main session history
-- You want a different model or thinking level for the task
-- One-shot reminders ("remind me in 20 minutes")
-- Output should deliver directly to a channel without main session involvement
-
-**Tip:** Batch similar periodic checks into `HEARTBEAT.md` instead of creating multiple cron jobs. Use cron for precise schedules and standalone tasks.
-
-**Things to check (rotate through these, 2-4 times per day):**
-
-- **Emails** - Any urgent unread messages?
-- **Calendar** - Upcoming events in next 24-48h?
-- **Mentions** - Twitter/social notifications?
-- **Weather** - Relevant if your human might go out?
-
-**Track your checks** in `memory/heartbeat-state.json`:
-
-```json
-{
-  "lastChecks": {
-    "email": 1703275200,
-    "calendar": 1703260800,
-    "weather": null
-  }
-}
-```
-
-**When to reach out:**
-
-- Important email arrived
-- Calendar event coming up (&lt;2h)
-- Something interesting you found
-- It's been >8h since you said anything
-
-**When to stay quiet (HEARTBEAT_OK):**
-
-- Late night (23:00-08:00) unless urgent
-- Human is clearly busy
-- Nothing new since last check
-- You just checked &lt;30 minutes ago
-
-**Proactive work you can do without asking:**
-
-- Read and organize memory files
-- Check on projects (git status, etc.)
-- Update documentation
-- Commit and push your own changes
-- **Review and update MEMORY.md** (see below)
-
-### 🔄 Memory Maintenance (During Heartbeats)
-
-Periodically (every few days), use a heartbeat to:
-
-1. Read through recent `memory/YYYY-MM-DD.md` files
-2. Identify significant events, lessons, or insights worth keeping long-term
-3. Update `MEMORY.md` with distilled learnings
-4. Remove outdated info from MEMORY.md that's no longer relevant
-
-Think of it like a human reviewing their journal and updating their mental model. Daily files are raw notes; MEMORY.md is curated wisdom.
-
-The goal: Be helpful without being annoying. Check in a few times a day, do useful background work, but respect quiet time.
-
-## Make It Yours
-
-This is a starting point. Add your own conventions, style, and rules as you figure out what works.
+**Routing rules:**
+- Old brand/category pages → redirect entry points with prefilled params, not legacy UI.
+- Samsung defaults to appliances first.
+- `mode=smart` / `#panel-smart` opens Smart Lookup workflow.
