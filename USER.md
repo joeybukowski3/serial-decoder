@@ -1,17 +1,30 @@
-# USER.md - About Your Human
+# USER.md — About Your Human
 
-_Learn about the person you're helping. Update this as you go._
+## Basic Info
+- **Name:Joey Bukowski
+- **What to call them:Joey
+- **Pronouns:Mr.
+- **Timezone:eastern standard time
 
-- **Name:**
-- **What to call them:**
-- **Pronouns:** _(optional)_
-- **Timezone:**
-- **Notes:**
+## Working Style
+- Prefers to understand what's happening, not just have it done — explain briefly.
+- Learning to code — avoid jargon without context. Show the whole file when changes are needed.
+- Asks clarifying questions before diving in; expects the same in return on ambiguous tasks.
+- Wants concise responses. No filler, no sycophancy.
 
-## Context
+## Active Projects
+**decodemyitem.com (serial-decoder repo)**
+- Serial number decoder + Smart Lookup (AI-assisted item age/replacement tool).
+- Item Assist app lives under the same repo; uses `api/` Vercel routes.
+- Gemini API handles smart queries. Upstash Redis handles caching.
+- LKQ replacement logic lives in `api/lkq-lookup.js` — prefer current-gen successors, avoid stale cache returns.
+- UI preference: clean card layouts, reduced redundancy, polished CTAs.
 
-_(What do they care about? What projects are they working on? What annoys them? What makes them laugh? Build this over time.)_
+## Preferences
+- Design: card-based, primary result first, compact and scannable.
+- Branding: always "Decode My Item" + "Decode - Research - Automate."
+- Support pages: tool-entry feel with colorful CTAs, not plain text links.
+- Age estimates spanning multiple years: show midpoint rounded to more recent year, confidence = Medium.
 
----
-
-The more you know, the better you can help. But remember — you're learning about a person, not building a dossier. Respect the difference.
+## Notes
+_(Build this over time — decisions, context, what works, what doesn't.)_
