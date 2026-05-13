@@ -565,6 +565,35 @@ export default async function handler(req, res) {
     console.error('[Smart Lookup] Local model age DB lookup failed, continuing to fallback path.', err.message);
   }
 
+  // ── Decoder-verified lookup — check user-contributed model database ──
+  try {
+    const queryWords = sanitizedQuery.toUpperCase().replace(/[^A-Z0-9\s]/g, '').split(/\s+/).filter(Boolean);
+    const brands = ['whirlpool','ge','samsung','lg','carrier','goodman','rheem','trane',
+      'frigidaire','maytag','kenmore','bosch','lennox','york','ruud','amana',
+      'apple','sony','vizio','panasonic','hp','asus'];
+
+    let detectedBrand = null;
+    const lowerQuery = sanitizedQuery.toLowerCase();
+    for (const b of brands) {
+      if (lowerQuery.includes(b)) { detectedBrand = b.replace(/[^a-z0-9]/g,''); break; }
+    }
+
+    if (detectedBrand && queryWords.length > 0) {
+      for (const word of queryWords) {
+        if (word.length < 4) continue;
+        const verifiedKey = `decoder-verified:${detectedBrand}:${word}`;
+        const verifiedResult = await redis.get(verifiedKey);
+        if (verifiedResult && verifiedResult.estimatedYear) {
+          return res.status(200).json({
+            ...verifiedResult,
+            _source: 'decoder-verified',
+            _fallbackUsed: false
+          });
+        }
+      }
+    }
+  } catch (_) {}
+
   // ── Query-level cache (14-day TTL) ────────────────────────────────────────
   try {
     const cached = await redis.get(queryCacheKey);

@@ -4161,6 +4161,36 @@ function decodeSerial() {
 
     renderSerialSummaryLayer();
 
+    // Record decode result to model database (fire and forget)
+    (function() {
+      try {
+        var yearEl = document.getElementById('resultYear');
+        var monthEl = document.getElementById('resultMonth');
+        var brandEl = document.getElementById('resultBrand');
+        var modelEl = document.getElementById('modelNumber');
+        var decodedYear = yearEl ? yearEl.textContent.trim() : '';
+        var decodedMonth = monthEl ? monthEl.textContent.trim() : '';
+        var decodedBrand = brandEl ? brandEl.textContent.trim() : '';
+        var modelNumber = modelEl ? modelEl.value.trim() : '';
+
+        // Only record if we have brand + model + a clean single year
+        if (!decodedBrand || !modelNumber || !decodedYear) return;
+        if (!/^\d{4}$/.test(decodedYear)) return; // skip ambiguous years like "2003 or 2023"
+
+        fetch('/api/record-decode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            brand: decodedBrand,
+            model: modelNumber,
+            year: decodedYear,
+            month: decodedMonth,
+            category: currentCategory || 'appliances'
+          })
+        }).catch(function() {}); // fail silently
+      } catch (_) {}
+    })();
+
     setLoadingSuccess(function() {
       document.getElementById('serialResults').classList.remove('hidden');
       document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
