@@ -81,8 +81,21 @@ function scriptJson(obj) {
   return `<script type="application/ld+json">${JSON.stringify(obj)}</script>`;
 }
 
-function pageTitle(title) {
-  return title.includes('Item Assist') ? title : `${title} | Item Assist`;
+function isBrandSerialLookupPage(page) {
+  return /-serial-number-lookup$/.test(page.slug);
+}
+
+function pageSiteLabel(page) {
+  return isBrandSerialLookupPage(page) ? 'Decode My Item' : 'Item Assist';
+}
+
+function pageHtmlTitle(page) {
+  const siteLabel = pageSiteLabel(page);
+  return page.title.includes('Item Assist') ? page.title.replace('Item Assist', siteLabel) : `${page.title} | ${siteLabel}`;
+}
+
+function pageSocialTitle(page) {
+  return page.title.includes('Item Assist') ? page.title : `${page.title} | Item Assist`;
 }
 
 function breadcrumbItems(items) {
@@ -596,19 +609,19 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5946778263750869" crossorigin="anonymous"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${pageTitle(page.title)}</title>
+  <title>${pageHtmlTitle(page)}</title>
   <meta name="description" content="${page.description}">
   <link rel="canonical" href="${url}">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
-  <meta property="og:site_name" content="Item Assist">
-  <meta property="og:title" content="${pageTitle(page.title)}">
+  <meta property="og:site_name" content="${pageSiteLabel(page)}">
+  <meta property="og:title" content="${pageSocialTitle(page)}">
   <meta property="og:description" content="${page.description}">
   <meta property="og:url" content="${url}">
   <meta property="og:image" content="${siteUrl}/assets/item-assist-banner.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${pageTitle(page.title)}">
+  <meta name="twitter:title" content="${pageSocialTitle(page)}">
   <meta name="twitter:description" content="${page.description}">
   <meta name="twitter:image" content="${siteUrl}/assets/item-assist-banner.png">
   <link rel="stylesheet" href="shared.css">
@@ -826,17 +839,17 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
       if (hamburger) hamburger.classList.remove('active');
     });
   </script>
-  <script src="decoder-data.js"></script>
-  <script src="lkq-engine.js"></script>
-  <script src="analytics.js"></script>
-  <script src="smart-lookup-extras.js"></script>
-  <script src="smart-lookup-normalizer.js"></script>
-  <script src="smart-lookup-summary-render.js"></script>
-  <script src="script.js"></script>
-  <script src="smart-lookup.js"></script>
-  <script src="smart-lookup-upgrade-patch.js"></script>
-  <script src="smart-lookup-pricetier.js"></script>
-  <script src="shared.js"></script>
+  <script defer src="decoder-data.js"></script>
+  <script defer src="lkq-engine.js"></script>
+  <script defer src="analytics.js"></script>
+  <script defer src="smart-lookup-extras.js"></script>
+  <script defer src="smart-lookup-normalizer.js"></script>
+  <script defer src="smart-lookup-summary-render.js"></script>
+  <script defer src="script.js"></script>
+  <script defer src="smart-lookup.js"></script>
+  <script defer src="smart-lookup-upgrade-patch.js"></script>
+  <script defer src="smart-lookup-pricetier.js"></script>
+  <script defer src="shared.js"></script>
   ${schema.map(scriptJson).join('\n  ')}
 </body>
 </html>`;
@@ -884,19 +897,19 @@ function renderPage(page) {
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5946778263750869" crossorigin="anonymous"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${pageTitle(page.title)}</title>
+  <title>${pageHtmlTitle(page)}</title>
   <meta name="description" content="${page.description}">
   <link rel="canonical" href="${url}">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
-  <meta property="og:site_name" content="Item Assist">
-  <meta property="og:title" content="${pageTitle(page.title)}">
+  <meta property="og:site_name" content="${pageSiteLabel(page)}">
+  <meta property="og:title" content="${pageSocialTitle(page)}">
   <meta property="og:description" content="${page.description}">
   <meta property="og:url" content="${url}">
   <meta property="og:image" content="${siteUrl}/assets/item-assist-banner.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${pageTitle(page.title)}">
+  <meta name="twitter:title" content="${pageSocialTitle(page)}">
   <meta name="twitter:description" content="${page.description}">
   <meta name="twitter:image" content="${siteUrl}/assets/item-assist-banner.png">
   <link rel="stylesheet" href="shared.css">
@@ -1203,17 +1216,17 @@ function renderPage(page) {
       if (hamburger) hamburger.classList.remove('active');
     });
   </script>
-  <script src="decoder-data.js"></script>
-  <script src="lkq-engine.js"></script>
-  <script src="analytics.js"></script>
-  <script src="smart-lookup-extras.js"></script>
-  <script src="smart-lookup-normalizer.js"></script>
-  <script src="smart-lookup-summary-render.js"></script>
-  <script src="script.js"></script>
-  <script src="smart-lookup.js"></script>
-  <script src="smart-lookup-upgrade-patch.js"></script>
-  <script src="smart-lookup-pricetier.js"></script>
-  <script src="shared.js"></script>
+  <script defer src="decoder-data.js"></script>
+  <script defer src="lkq-engine.js"></script>
+  <script defer src="analytics.js"></script>
+  <script defer src="smart-lookup-extras.js"></script>
+  <script defer src="smart-lookup-normalizer.js"></script>
+  <script defer src="smart-lookup-summary-render.js"></script>
+  <script defer src="script.js"></script>
+  <script defer src="smart-lookup.js"></script>
+  <script defer src="smart-lookup-upgrade-patch.js"></script>
+  <script defer src="smart-lookup-pricetier.js"></script>
+  <script defer src="shared.js"></script>
   ${schema.map(scriptJson).join('\n  ')}
 </body>
 </html>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta name="robots" content="noindex, nofollow">
   <!-- Google tag (gtag.js) -->
   <script async src=https://www.googletagmanager.com/gtag/js?id=G-C3TXQS1DYP></script>
   <script>
@@ -72,8 +73,9 @@
     </div>
   </section>
 </div>
-<script src="analytics.js"></script>
+<script defer src="analytics.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
 (function () {
   function row(item) {
     if (!item) return '<div class="mini-row"><span>—</span><strong>0</strong></div>';
@@ -109,6 +111,7 @@
   if (window.ItemAssistAnalytics) window.ItemAssistAnalytics.subscribe(render);
   render();
 }());
+});
 </script>
 </body>
 </html>

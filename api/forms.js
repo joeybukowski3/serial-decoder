@@ -1,4 +1,19 @@
+import { Redis } from '@upstash/redis';
+import { Ratelimit } from '@upstash/ratelimit';
+
 const HEALTH_VERSION = 'contact-form-fix-e55e2e0';
+
+// Initialise once per cold start — not inside the handler
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, '1 m'),
+  analytics: false,
+});
 
 function setJsonHeaders(res) {
   if (typeof res.setHeader === 'function') {
@@ -9,6 +24,12 @@ function setJsonHeaders(res) {
 function sendJson(res, statusCode, payload) {
   setJsonHeaders(res);
   return res.status(statusCode).json(payload);
+}
+
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return req.socket?.remoteAddress || 'unknown';
 }
 
 async function readRawBody(req) {
@@ -317,6 +338,17 @@ async function handleFeatureRequest(body, res) {
 }
 
 export default async function handler(req, res) {
+  try {
+    const ip = getClientIp(req);
+    const { success, reset } = await ratelimit.limit(ip);
+    if (!success) {
+      res.setHeader('Retry-After', Math.max(0, Math.ceil((reset - Date.now()) / 1000)));
+      return sendJson(res, 429, { ok: false, error: 'Too many requests. Please try again later.' });
+    }
+  } catch (_) {
+    // Redis unavailable — allow request rather than blocking legitimate users
+  }
+
   if (req.method === 'GET') {
     return sendJson(res, 200, {
       ok: true,

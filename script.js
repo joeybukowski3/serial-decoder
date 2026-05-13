@@ -5057,7 +5057,7 @@ async function runGeneralSmartLookup(query) {
   try {
     var generalData = await fetchSmartLookupGeneral(query);
     var elapsed = Date.now() - loadStart;
-    var remaining = Math.max(0, 1000 - elapsed);
+    var remaining = Math.max(0, 300 - elapsed);
     setTimeout(function () {
       setLoadingSuccess(function () {
         showGeneralSmartLookupResults(query, generalData);

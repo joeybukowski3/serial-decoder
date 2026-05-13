@@ -107,7 +107,7 @@
         </div>
         <div class="sidebar-section">
             <div class="sidebar-title">Resources</div>
-            <a class="sidebar-link" href="/index.html?mode=smart#panel-smart">Smart Lookup</a>
+            <a class="sidebar-link" href="/?mode=smart#panel-smart">Smart Lookup</a>
             <a class="sidebar-link" href="/find-model-serial-number">Find Model &amp; Serial Number</a>
             <a class="sidebar-link" href="/methodology">Methodology</a>
             <a class="sidebar-link" href="/disclaimer">Disclaimer</a>
@@ -468,8 +468,8 @@
     </div><!-- /app-container -->
     </div><!-- /page-shell -->
 
-    <script src="script.js"></script>
-    <script src="smart-lookup.js"></script>
+    <script defer src="script.js"></script>
+    <script defer src="smart-lookup.js"></script>
     <script>
         function switchPolicyTab(tabId, btn) {
             document.querySelectorAll('.policy-tab-panel').forEach(function(p) { p.classList.remove('active'); });
