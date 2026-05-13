@@ -835,29 +835,25 @@ function ensureDecoderDataLoaded(callback) {
   if (typeof callback === 'function') {
     decoderDataLoadCallbacks.push(callback);
   }
-
   if (hasDecoderData()) {
     syncDecoderDataRef();
     flushDecoderDataCallbacks(null);
     return;
   }
-
-  var existing = document.getElementById(DECODER_DATA_SCRIPT_ID);
-  if (existing) return;
-
-  var script = document.createElement('script');
-  script.id = DECODER_DATA_SCRIPT_ID;
-  script.src = '/decoder-data.js';
-  script.async = true;
-  script.onload = function() {
+  if (document.getElementById('decoder-data-script')) {
+    return; // already loading
+  }
+  var s = document.createElement('script');
+  s.id = 'decoder-data-script';
+  s.src = '/decoder-data.js';
+  s.onload = function() {
     syncDecoderDataRef();
     flushDecoderDataCallbacks(null);
   };
-  script.onerror = function() {
-    console.error('[Decoder] Failed to load decoder-data.js');
-    flushDecoderDataCallbacks(new Error('decoder-data-load-failed'));
+  s.onerror = function() {
+    flushDecoderDataCallbacks(new Error('decoder-data.js failed to load'));
   };
-  document.head.appendChild(script);
+  document.head.appendChild(s);
 }
 
 function initializeDecoderUiWhenReady() {
