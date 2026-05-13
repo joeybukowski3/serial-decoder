@@ -474,6 +474,8 @@ async function callGroq(prompt) {
 
   const model = process.env.GROQ_MODEL || 'llama-3.1-70b-versatile';
 
+  const groqController = new AbortController();
+  const groqTimeout = setTimeout(() => groqController.abort(), 12000);
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -491,8 +493,10 @@ async function callGroq(prompt) {
       ],
       temperature: 0.2,
       response_format: { type: 'json_object' }
-    })
+    }),
+    signal: groqController.signal
   });
+  clearTimeout(groqTimeout);
 
   if (!response.ok) {
     const errText = await response.text().catch(() => '(unreadable)');
@@ -665,6 +669,8 @@ Rules for exampleModelNumber and suggestedModelNumbers:
   try {
     if (!apiKey) throw new Error('Gemini API key missing');
 
+    const geminiController = new AbortController();
+    const geminiTimeout = setTimeout(() => geminiController.abort(), 12000);
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
@@ -676,9 +682,11 @@ Rules for exampleModelNumber and suggestedModelNumbers:
             responseMimeType: 'application/json',
             temperature: 0.2
           }
-        })
+        }),
+        signal: geminiController.signal
       }
     );
+    clearTimeout(geminiTimeout);
 
     if (!response.ok) {
       const errBody = await response.text().catch(() => '(unreadable)');
