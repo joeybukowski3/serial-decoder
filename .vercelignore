@@ -11,8 +11,6 @@ memory/
 docs/
 monitoring/
 tests/
-scripts/
-data/
 *.csv
 *.csv.new
 ItemAssistTransparent.png
