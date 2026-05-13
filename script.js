@@ -4324,6 +4324,26 @@ function useSmartLookup() {
     if (altSection && !altSection.classList.contains('open')) {
       altSection.classList.add('open');
     }
+
+    var brandEl = document.getElementById('brand');
+    var serialEl = document.getElementById('serial');
+    var modelEl = document.getElementById('modelNumber');
+
+    var brandName = (brandEl && brandEl.selectedIndex >= 0)
+      ? brandEl.options[brandEl.selectedIndex].text.trim()
+      : '';
+    var serialVal = (serialEl ? serialEl.value.trim() : '');
+    var modelVal = (modelEl ? modelEl.value.trim() : '');
+
+    var query = '';
+    if (brandName && brandName !== 'Select Brand' && serialVal) {
+      query = brandName + (modelVal ? ' ' + modelVal : '') + ' serial ' + serialVal;
+    }
+
+    if (query) {
+      altQuery.value = query;
+      setTimeout(function() { runLKQLookup(); }, 50);
+    }
   }
   scrollHomeSearchToTop();
 }
