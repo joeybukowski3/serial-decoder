@@ -18,6 +18,34 @@ function getClientIp(req) {
   return req.socket?.remoteAddress || 'unknown';
 }
 
+async function callGroqInterpret(prompt) {
+  const groqKey = process.env.GROQ_API_KEY;
+  if (!groqKey) throw new Error('Groq API key missing');
+  const model = process.env.GROQ_MODEL || 'llama-3.1-70b-versatile';
+  const groqController = new AbortController();
+  const groqTimeout = setTimeout(() => groqController.abort(), 12000);
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: 'You are a query interpretation layer. Return VALID JSON ONLY. Follow the requested schema exactly.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.1,
+      response_format: { type: 'json_object' }
+    }),
+    signal: groqController.signal
+  });
+  clearTimeout(groqTimeout);
+  if (!response.ok) throw new Error(`Groq error: ${response.status}`);
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error('Groq returned empty content');
+  return JSON.parse(content);
+}
+
 function normalizeQuery(query) {
   return String(query || '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -119,6 +147,7 @@ Return ONLY valid JSON in this format:
   ]
 }`;
 
+  let parsed = null;
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
@@ -135,49 +164,62 @@ Return ONLY valid JSON in this format:
       }
     );
 
-    if (!response.ok) {
-      return res.status(502).json({ error: 'AI service error' });
-    }
+    if (!response.ok) throw new Error(`Gemini status ${response.status}`);
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      return res.status(502).json({ error: 'No response from AI service' });
-    }
+    if (!text) throw new Error('Gemini returned empty parts');
 
-    const parsed = JSON.parse(text);
-    const payload = {
-      action: ['bypass', 'suggest', 'no_results', 'out_of_scope'].includes(parsed?.action) ? parsed.action : 'suggest',
-      queryKind: ['general', 'specific'].includes(parsed?.queryKind) ? parsed.queryKind : 'specific',
-      confidence: ['high', 'medium', 'low'].includes(parsed?.confidence) ? parsed.confidence : 'medium',
-      scopeValid: parsed?.scopeValid !== false,
-      message: typeof parsed?.message === 'string' && parsed.message.trim() ? parsed.message.trim() : null,
-      suggestions: Array.isArray(parsed?.suggestions)
-        ? parsed.suggestions.map((s) => normalizeQuery(s)).filter(Boolean).slice(0, 5)
-        : [],
-    };
-
-    if (payload.action === 'suggest' && payload.suggestions.length === 0) {
-      payload.action = 'no_results';
-    }
-    if (payload.action === 'bypass' && payload.suggestions.length === 0) {
-      payload.suggestions = [sanitizedQuery];
-    }
-    if (payload.action === 'no_results' && !payload.message) {
-      payload.message = "We couldn't identify an item from your search. Try entering a brand name, model number, or item description such as 'LG refrigerator' or 'Carrier AC unit'.";
-      payload.scopeValid = false;
-    }
-    if (payload.action === 'out_of_scope' && !payload.message) {
-      payload.message = 'Item Assist is designed for property and equipment research. Please enter an appliance, electronic, HVAC, electrical, or household item.';
-      payload.scopeValid = false;
-    }
-
+    parsed = JSON.parse(text);
+  } catch (geminiErr) {
+    console.error('[Interpret] Gemini failed, attempting Groq fallback...', geminiErr.message);
     try {
-      await redis.set(cacheKey, payload, { ex: 7 * 24 * 60 * 60 });
-    } catch (_) {}
-
-    return res.status(200).json(payload);
-  } catch (_) {
-    return res.status(502).json({ error: 'Interpretation service unavailable' });
+      parsed = await callGroqInterpret(prompt);
+    } catch (groqErr) {
+      console.error('[Interpret] Groq fallback failed also', groqErr.message);
+    }
   }
+
+  if (!parsed) {
+    return res.status(200).json({
+      action: 'bypass',
+      queryKind: 'specific',
+      confidence: 'low',
+      scopeValid: true,
+      message: null,
+      suggestions: [sanitizedQuery]
+    });
+  }
+
+  const payload = {
+    action: ['bypass', 'suggest', 'no_results', 'out_of_scope'].includes(parsed?.action) ? parsed.action : 'suggest',
+    queryKind: ['general', 'specific'].includes(parsed?.queryKind) ? parsed.queryKind : 'specific',
+    confidence: ['high', 'medium', 'low'].includes(parsed?.confidence) ? parsed.confidence : 'medium',
+    scopeValid: parsed?.scopeValid !== false,
+    message: typeof parsed?.message === 'string' && parsed.message.trim() ? parsed.message.trim() : null,
+    suggestions: Array.isArray(parsed?.suggestions)
+      ? parsed.suggestions.map((s) => normalizeQuery(s)).filter(Boolean).slice(0, 5)
+      : [],
+  };
+
+  if (payload.action === 'suggest' && payload.suggestions.length === 0) {
+    payload.action = 'no_results';
+  }
+  if (payload.action === 'bypass' && payload.suggestions.length === 0) {
+    payload.suggestions = [sanitizedQuery];
+  }
+  if (payload.action === 'no_results' && !payload.message) {
+    payload.message = "We couldn't identify an item from your search. Try entering a brand name, model number, or item description such as 'LG refrigerator' or 'Carrier AC unit'.";
+    payload.scopeValid = false;
+  }
+  if (payload.action === 'out_of_scope' && !payload.message) {
+    payload.message = 'Item Assist is designed for property and equipment research. Please enter an appliance, electronic, HVAC, electrical, or household item.';
+    payload.scopeValid = false;
+  }
+
+  try {
+    await redis.set(cacheKey, payload, { ex: 7 * 24 * 60 * 60 });
+  } catch (_) {}
+
+  return res.status(200).json(payload);
 }

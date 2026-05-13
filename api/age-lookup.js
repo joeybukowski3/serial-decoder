@@ -165,6 +165,12 @@ function normalizeKnownItemQuery(query) {
     return `${text} by Whisker`;
   }
 
+  // Strip "serial XXXXXXX" suffix added by auto-populate
+  const strippedSerial = text.replace(/\s+serial\s+\S+$/i, '').trim();
+  if (strippedSerial && strippedSerial !== text) {
+    return strippedSerial;
+  }
+
   return text;
 }
 

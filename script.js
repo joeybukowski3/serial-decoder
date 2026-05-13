@@ -4614,7 +4614,15 @@ function looksLikeSpecificSmartLookupQuery(query) {
   hasLongDigitRun = /\b\d{5,}\b/.test(value);
 
   if (hasMixedToken) return true;
-  if (compact.length >= 8 && /[A-Za-z]/.test(compact) && /\d/.test(compact)) return true;
+  if (compact.length >= 8 && /[A-Za-z]/.test(compact) && /\d/.test(compact)) {
+    // Require at least one token that mixes letters and digits,
+    // OR a single compact token (no spaces in original value)
+    var hasNoSpaces = value.indexOf(' ') === -1;
+    var hasMixedInSingleToken = tokens.some(function(t) {
+      return /[A-Za-z]/.test(t) && /\d/.test(t);
+    });
+    if (hasNoSpaces || hasMixedInSingleToken) return true;
+  }
   if (tokens.length >= 3 && hasLongDigitRun) return true;
   return false;
 }
