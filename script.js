@@ -1237,12 +1237,12 @@ function getSupplementalModelConfig(category, brandId) {
   }
 
   return {
-    visible: false,
+    visible: true,
     required: false,
     useModelAsPrimaryInput: false,
-    label: 'Model Number',
-    placeholder: 'Enter model number',
-    note: ''
+    label: 'Model Number (optional)',
+    placeholder: 'Enter model number (optional — improves accuracy)',
+    note: 'Adding your model number helps resolve ambiguous serial date ranges.'
   };
 }
 
