@@ -842,14 +842,8 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
   <script defer src="decoder-data.js"></script>
   <script defer src="lkq-engine.js"></script>
   <script defer src="analytics.js"></script>
-  <script defer src="smart-lookup-extras.js"></script>
-  <script defer src="smart-lookup-normalizer.js"></script>
-  <script defer src="smart-lookup-summary-render.js"></script>
+  <script defer src="smart-lookup-bundle.js"></script>
   <script defer src="script.js"></script>
-  <script defer src="smart-lookup.js"></script>
-  <script defer src="smart-lookup-upgrade-patch.js"></script>
-  <script defer src="smart-lookup-pricetier.js"></script>
-  <script defer src="shared.js"></script>
   ${schema.map(scriptJson).join('\n  ')}
 </body>
 </html>`;
@@ -1219,14 +1213,8 @@ function renderPage(page) {
   <script defer src="decoder-data.js"></script>
   <script defer src="lkq-engine.js"></script>
   <script defer src="analytics.js"></script>
-  <script defer src="smart-lookup-extras.js"></script>
-  <script defer src="smart-lookup-normalizer.js"></script>
-  <script defer src="smart-lookup-summary-render.js"></script>
+  <script defer src="smart-lookup-bundle.js"></script>
   <script defer src="script.js"></script>
-  <script defer src="smart-lookup.js"></script>
-  <script defer src="smart-lookup-upgrade-patch.js"></script>
-  <script defer src="smart-lookup-pricetier.js"></script>
-  <script defer src="shared.js"></script>
   ${schema.map(scriptJson).join('\n  ')}
 </body>
 </html>
