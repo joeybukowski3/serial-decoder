@@ -62,7 +62,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Service unavailable' });
   }
 
-  const prompt = `You are a query interpretation layer for an insurance property claims research tool called Item Assist.
+  const prompt = `You are a query interpretation layer for a serial number decoder and item research tool called Decode My Item.
 
 Input query: "${sanitizedQuery}"
 
@@ -173,7 +173,7 @@ Return ONLY valid JSON in this format:
     }
 
     try {
-      await redis.set(cacheKey, payload, { ex: 60 * 60 * 24 });
+      await redis.set(cacheKey, payload, { ex: 7 * 24 * 60 * 60 });
     } catch (_) {}
 
     return res.status(200).json(payload);

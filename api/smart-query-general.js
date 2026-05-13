@@ -161,7 +161,7 @@ Return ONLY valid JSON in this format:
     }
 
     try {
-      await redis.set(cacheKey, payload, { ex: 60 * 60 * 24 });
+      await redis.set(cacheKey, payload, { ex: 7 * 24 * 60 * 60 });
     } catch (_) {}
 
     return res.status(200).json(payload);
