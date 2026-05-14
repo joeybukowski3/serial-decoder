@@ -3,7 +3,10 @@
     "allow": [
       "Bash(git:*)",
       "WebFetch(domain:ai.google.dev)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(cmd *)",
+      "Bash(node *)",
+      "Bash(npm run *)"
     ]
   }
 }
