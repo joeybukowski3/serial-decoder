@@ -3103,6 +3103,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (typeof window.initSmartLookupPage === 'function') {
     window.initSmartLookupPage();
   }
+  ensureModelField();
 });
 
 window.addEventListener('pageshow', function() {
@@ -3719,10 +3720,10 @@ function ensureModelField() {
     : null;
   var isInlineLayout = !!(serialGroup && serialGroup.classList && serialGroup.classList.contains('home-tool-row'));
   var group = document.createElement('div');
-  group.className = (isInlineLayout ? 'model-group hidden' : 'form-group model-group hidden');
+  group.className = (isInlineLayout ? 'model-group' : 'form-group model-group');
   group.innerHTML = '' +
-    '<label class="' + (isInlineLayout ? 'sr-only' : 'step-label') + '" id="modelFieldLabel" for="modelNumber">Model Number</label>' +
-    '<input type="text" id="modelNumber" class="' + (isInlineLayout ? 'search-input' : 'form-input') + '" placeholder="Enter model number">' +
+    '<label class="' + (isInlineLayout ? 'sr-only' : 'step-label') + '" id="modelFieldLabel" for="modelNumber">Model Number (optional)</label>' +
+    '<input type="text" id="modelNumber" class="' + (isInlineLayout ? 'search-input' : 'form-input') + '" placeholder="Enter model number (optional — improves accuracy)">' +
     '<div class="' + (isInlineLayout ? 'search-hint' : 'helper-text') + ' model-note" id="modelFieldHint"></div>' +
     '<div class="' + (isInlineLayout ? 'search-hint' : 'helper-text') + ' model-error hidden" id="modelFieldError" style="color:#fca5a5;"></div>';
   if (serialGroup && serialGroup.parentNode) {
@@ -3760,7 +3761,18 @@ function updateModelFieldVisibility(brandId) {
   var hintEl = document.getElementById('modelFieldHint');
   var value = getStoredSupplementalModel(category);
 
-  if (!config.visible) {
+  if (!config.visible && !config.useModelAsPrimaryInput) {
+    // Still show the field but reset to default optional appearance
+    group.classList.remove('hidden');
+    if (labelEl) labelEl.textContent = 'Model Number (optional)';
+    modelInput.placeholder = 'Enter model number (optional — improves accuracy)';
+    modelInput.value = '';
+    clearSupplementalModelError();
+    if (hintEl) hintEl.textContent = 'Adding your model number helps resolve ambiguous serial date ranges.';
+    return;
+  }
+
+  if (config.useModelAsPrimaryInput) {
     group.classList.add('hidden');
     modelInput.value = '';
     clearSupplementalModelError();
