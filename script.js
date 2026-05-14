@@ -4753,6 +4753,13 @@ function showAgeLookupResults(displayQuery, data) {
     ageResultsEl.classList.remove('hidden');
     ageResultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
+  // Fallback scroll for standalone smart-lookup page
+  if (!ageResultsEl) {
+    var standaloneResults = document.getElementById('smart-lookup-results');
+    if (standaloneResults) {
+      standaloneResults.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
 }
 
 function buildProgressiveAgeLookupMarkup(displayQuery, data) {
@@ -5368,7 +5375,11 @@ async function runLKQLookup() {
   inputEl.value = query;
   if (!query) return;
   resolvedQuery = expandKnownSmartLookupQuery(query);
-  inputEl.value = '';
+  if (!document.getElementById('ageResults')) {
+    // On standalone smart-lookup page, keep the query visible in the input
+  } else {
+    inputEl.value = '';
+  }
   includeComparisons = shouldIncludeSmartLookupComparisons();
   trackSmartLookupEvent('search_started', { query: query, includeComparisons: includeComparisons });
   if (typeof window.recordRecentSmartLookup === 'function') window.recordRecentSmartLookup(query);
