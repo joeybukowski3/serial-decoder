@@ -671,6 +671,16 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
       </div>
     </section>
 
+    ${page.featuredCallout ? `
+    <section class="section">
+      <div class="seo-copy-wrap">
+        <div class="cta-note">
+          <h2>${page.featuredCallout.title}</h2>
+          <p><a href="${page.featuredCallout.href}">${page.featuredCallout.linkLabel}</a></p>
+        </div>
+      </div>
+    </section>` : ''}
+
     <section class="section" id="location-cards">
       <div class="seo-copy-wrap">
         <h2>Appliance, HVAC, and electronics serial number locations</h2>
@@ -1331,6 +1341,11 @@ const pages = [
       { href: '#label-examples', label: 'Label Examples', meta: 'Brand, model, serial, MFD', icon: 'LB' },
       { href: '#missing-label', label: 'Missing Label?', meta: 'Fallback checks and Smart Lookup', icon: 'ML' }
     ],
+    featuredCallout: {
+      title: 'Need the broader location guide?',
+      href: '/serial-number-location-guide',
+      linkLabel: 'Looking for the full location guide with HVAC, electronics, and brand-specific details? &rarr; Read the Complete Serial Number Location Guide'
+    },
     locationCards: [
       {
         id: 'refrigerators',
@@ -2588,6 +2603,7 @@ const sitemapEntries = [
   ['/find-model-serial-number', 'monthly', '0.8'],
   ['/how-old-is-my-appliance', 'monthly', '0.9'],
   ['/where-is-my-serial-number', 'monthly', '0.8'],
+  ['/serial-number-location-guide', 'monthly', '0.8'],
   ['/appliance-age-for-insurance-and-replacement', 'monthly', '0.8'],
   ['/how-to-find-hvac-age', 'monthly', '0.8'],
   ['/how-to-read-serial-number', 'monthly', '0.8'],

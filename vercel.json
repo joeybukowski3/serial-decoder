@@ -193,6 +193,7 @@
     { "source": "/samsung-tv-serial-number-decoder", "destination": "/samsung-tv-serial-number-decoder.html" },
     { "source": "/how-old-is-my-appliance", "destination": "/how-old-is-my-appliance.html" },
     { "source": "/where-is-my-serial-number", "destination": "/where-is-my-serial-number.html" },
+    { "source": "/serial-number-location-guide", "destination": "/serial-number-location-guide.html" },
     { "source": "/appliance-age-for-insurance-and-replacement", "destination": "/appliance-age-for-insurance-and-replacement.html" },
     { "source": "/refrigerator-serial-number", "destination": "/refrigerator-serial-number.html" },
     { "source": "/washer-serial-number", "destination": "/washer-serial-number.html" },
