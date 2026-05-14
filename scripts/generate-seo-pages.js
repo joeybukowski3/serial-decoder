@@ -812,15 +812,76 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
     </div>
   </div>
 
-  <footer>
-    <div>&copy; 2026 Item Assist</div>
-    <div class="footer-links">
-      <a href="/methodology">Methodology</a>
+  <footer class="footer-sitemap">
+  <div class="footer-sitemap-grid">
+
+    <div class="footer-col">
+      <p class="footer-col-heading">Tools</p>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+        <li><a href="/smart-lookup">Smart Lookup</a></li>
+        <li><a href="/assistant">AI Assistant</a></li>
+        <li><a href="/brands">All Brands</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">By Appliance</p>
+      <ul>
+        <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
+        <li><a href="/washer-serial-number">Washing Machines</a></li>
+        <li><a href="/dryer-serial-number">Dryers</a></li>
+        <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
+        <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
+        <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
+        <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">By Brand</p>
+      <ul>
+        <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
+        <li><a href="/ge-serial-number-lookup">GE</a></li>
+        <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
+        <li><a href="/lg-serial-number-lookup">LG</a></li>
+        <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
+        <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
+        <li><a href="/trane-serial-number-lookup">Trane</a></li>
+        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+        <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
+        <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
+        <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">Resources</p>
+      <ul>
+        <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
+        <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
+        <li><a href="/where-is-my-serial-number">Where Is My Serial Number?</a></li>
+        <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
+        <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
+        <li><a href="/methodology">Methodology</a></li>
+        <li><a href="/about">About</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <span class="footer-bottom-copy">
+      &copy; 2026 Decode My Item &middot; Database verified February 2026
+    </span>
+    <div class="footer-bottom-links">
       <a href="/contact">Contact</a>
-      <a href="/security">Security &amp; Data Notice</a>
+      <a href="/security">Security &amp; Data</a>
       <a href="/privacy-policy">Privacy Policy</a>
     </div>
-  </footer>
+  </div>
+</footer>
 
   <script>
     function selectCatAndShowDecoder(cat, btn) {
@@ -1183,15 +1244,76 @@ function renderPage(page) {
     </div>
   </div>
 
-  <footer>
-    <div>&copy; 2026 Item Assist</div>
-    <div class="footer-links">
-      <a href="/methodology">Methodology</a>
+  <footer class="footer-sitemap">
+  <div class="footer-sitemap-grid">
+
+    <div class="footer-col">
+      <p class="footer-col-heading">Tools</p>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+        <li><a href="/smart-lookup">Smart Lookup</a></li>
+        <li><a href="/assistant">AI Assistant</a></li>
+        <li><a href="/brands">All Brands</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">By Appliance</p>
+      <ul>
+        <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
+        <li><a href="/washer-serial-number">Washing Machines</a></li>
+        <li><a href="/dryer-serial-number">Dryers</a></li>
+        <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
+        <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
+        <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
+        <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">By Brand</p>
+      <ul>
+        <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
+        <li><a href="/ge-serial-number-lookup">GE</a></li>
+        <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
+        <li><a href="/lg-serial-number-lookup">LG</a></li>
+        <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
+        <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
+        <li><a href="/trane-serial-number-lookup">Trane</a></li>
+        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+        <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
+        <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
+        <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">Resources</p>
+      <ul>
+        <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
+        <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
+        <li><a href="/where-is-my-serial-number">Where Is My Serial Number?</a></li>
+        <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
+        <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
+        <li><a href="/methodology">Methodology</a></li>
+        <li><a href="/about">About</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <span class="footer-bottom-copy">
+      &copy; 2026 Decode My Item &middot; Database verified February 2026
+    </span>
+    <div class="footer-bottom-links">
       <a href="/contact">Contact</a>
-      <a href="/security">Security &amp; Data Notice</a>
+      <a href="/security">Security &amp; Data</a>
       <a href="/privacy-policy">Privacy Policy</a>
     </div>
-  </footer>
+  </div>
+</footer>
 
   <script>
     function selectCatAndShowDecoder(cat, btn) {

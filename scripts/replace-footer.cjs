@@ -1,24 +1,7 @@
-<!DOCTYPE html><html lang="en"><head>
-  <!-- Google tag (gtag.js) -->
-  <script async src=https://www.googletagmanager.com/gtag/js?id=G-C3TXQS1DYP></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+const fs = require('fs');
+const path = require('path');
 
-    gtag('config', 'G-C3TXQS1DYP');
-  </script>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Appliance Age Estimator | Item Assist</title><meta name="description" content="Estimate appliance age using serial numbers, model clues, and Smart Lookup guidance. Helpful for refrigerators, washers, dryers, ranges, dishwashers, and more.">
-        <link rel="canonical" href="https://www.decodemyitem.com/appliance-age-estimator"><link rel="stylesheet" href="shared.css"></head><body data-page-kind="landing"><nav><a href="/" class="logo"><div class="logo-icon"></div><div><div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Decode - Research - Automate</div></div></a><ul>
-  <li><a href="/">Home</a></li>
-  <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-  <li><a href="/smart-lookup">Smart Lookup</a></li>
-  <li><a href="/assistant">AI Assistant</a></li>
-  <li><a href="/methodology">Methodology</a></li>
-  <li><a href="/contact">Contact</a></li>
-  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
-  <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
-</ul></nav><section class="page-hero"><span class="hero-badge"><span class="badge-dot"></span> Appliance age estimator</span><h1>Estimate appliance age from serial or model context</h1><p>Item Assist supports fast serial decoding first, then model-based Smart Lookup when the label is missing, worn, or incomplete.</p></section><section class="section"><div class="prose"><h2>Start with the serial number when possible</h2><p>The most accurate path is still the serial decoder because many manufacturers encode month and year directly into the plate.</p><h2>When Smart Lookup helps</h2><p>If the serial label is unreadable, Smart Lookup can still estimate the age window using model family timelines, release patterns, and general product context.</p><h2>Good use cases</h2><ul><li>Refrigerator age estimate</li><li>Washer or dryer age estimate</li><li>Dishwasher manufacture window</li><li>Range or oven age estimate</li></ul><div class="cta-block"><h2>Choose your path</h2><p>Have the serial number? Use the decoder. Only have the model or description? Use Smart Lookup.</p><div class="tool-cta-row"><a class="tool-cta-btn primary" href="/index.html">Open serial decoder</a><a class="tool-cta-btn secondary" href="/?mode=smart#panel-smart">Open Smart Lookup</a></div></div></section><footer class="footer-sitemap">
+const NEW_FOOTER = `<footer class="footer-sitemap">
   <div class="footer-sitemap-grid">
 
     <div class="footer-col">
@@ -87,4 +70,23 @@
       <a href="/privacy-policy">Privacy Policy</a>
     </div>
   </div>
-</footer><script defer src="analytics.js"></script></body></html>
+</footer>`;
+
+const htmlFiles = fs.readdirSync(path.join(__dirname, '..')).filter(f => f.endsWith('.html'));
+let updated = 0;
+let skipped = 0;
+
+for (const file of htmlFiles) {
+  const fullPath = path.join(__dirname, '..', file);
+  const original = fs.readFileSync(fullPath, 'utf8');
+  const replaced = original.replace(/<footer[\s\S]*?<\/footer>/g, NEW_FOOTER);
+  if (replaced !== original) {
+    fs.writeFileSync(fullPath, replaced, 'utf8');
+    updated++;
+    console.log(`  updated: ${file}`);
+  } else {
+    skipped++;
+  }
+}
+
+console.log(`\nDone. Updated: ${updated}, Skipped (no footer): ${skipped}`);

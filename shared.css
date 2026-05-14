@@ -2325,3 +2325,18 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
+
+/* ── Sitemap Footer ── */
+.footer-sitemap { background: #0a1628; border-top: 1px solid #1e3a55; padding: 3rem 1.5rem 1.5rem; }
+.footer-sitemap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; max-width: 1100px; margin: 0 auto 2.5rem; }
+.footer-col-heading { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #00d4a8; margin: 0 0 0.85rem; }
+.footer-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+.footer-col ul li a { color: #64748b; font-size: 0.82rem; text-decoration: none; transition: color 0.15s; }
+.footer-col ul li a:hover { color: #f1f5f9; }
+.footer-bottom { max-width: 1100px; margin: 0 auto; padding-top: 1.25rem; border-top: 1px solid #1e3a55; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
+.footer-bottom-copy { color: #475569; font-size: 0.78rem; }
+.footer-bottom-links { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+.footer-bottom-links a { color: #475569; font-size: 0.78rem; text-decoration: none; transition: color 0.15s; }
+.footer-bottom-links a:hover { color: #94a3b8; }
+@media (max-width: 900px) { .footer-sitemap-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { .footer-sitemap-grid { grid-template-columns: 1fr; gap: 1.5rem; } .footer-bottom { flex-direction: column; align-items: flex-start; } }
