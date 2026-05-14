@@ -29,6 +29,32 @@
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="seo-landing.css">
   <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+  .slg-search-wrap { max-width: 720px; margin: 0 auto 1.5rem; padding: 0 1rem; }
+  .slg-search { width: 100%; padding: 0.85rem 1rem 0.85rem 2.75rem; background: #1a2d45; border: 1px solid #1e3a55; border-radius: 10px; color: #f1f5f9; font-size: 1rem; outline: none; box-sizing: border-box; }
+  .slg-search::placeholder { color: #64748b; }
+  .slg-search:focus { border-color: #00d4a8; }
+  .slg-search-wrap-inner { position: relative; }
+  .slg-search-icon { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 1rem; pointer-events: none; }
+  .slg-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 0 auto 2rem; padding: 0 1rem; max-width: 900px; }
+  .slg-tab { padding: 0.45rem 1rem; border-radius: 999px; border: 1px solid #1e3a55; background: #0d1a2e; color: #94a3b8; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .slg-tab:hover { border-color: #00d4a8; color: #00d4a8; }
+  .slg-tab.active { background: #00d4a8; border-color: #00d4a8; color: #0d1a2e; font-weight: 600; }
+  .slg-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; max-width: 1100px; margin: 0 auto 3rem; padding: 0 1rem; }
+  .slg-card { background: #112236; border: 1px solid #1e3a55; border-radius: 12px; padding: 1.25rem 1rem 1rem; cursor: pointer; transition: all 0.18s; text-decoration: none; display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .slg-card:hover { border-color: #00d4a8; transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,212,168,0.08); }
+  .slg-card-icon { font-size: 2rem; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; background: #0d1a2e; border-radius: 10px; border: 1px solid #1e3a55; margin-bottom: 0.25rem; }
+  .slg-card-name { font-weight: 600; color: #f1f5f9; font-size: 0.95rem; line-height: 1.3; }
+  .slg-card-cat { font-size: 0.72rem; background: rgba(0,212,168,0.12); color: #00d4a8; border-radius: 999px; padding: 0.15rem 0.6rem; font-weight: 500; }
+  .slg-card-hint { font-size: 0.8rem; color: #64748b; line-height: 1.4; margin-top: 0.15rem; }
+  .slg-none { display: none; }
+  .slg-empty { text-align: center; color: #64748b; padding: 3rem 1rem; font-size: 0.95rem; grid-column: 1/-1; }
+  .slg-divider { max-width: 1100px; margin: 0 auto 2.5rem; padding: 0 1rem; }
+  .slg-divider-line { border: none; border-top: 1px solid #1e3a55; margin-bottom: 2rem; }
+  .slg-divider p { color: #64748b; font-style: italic; font-size: 0.9rem; text-align: center; margin: 0; }
+  @media (max-width: 900px) { .slg-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .slg-grid { grid-template-columns: 1fr; } .slg-tabs { gap: 0.35rem; } .slg-tab { font-size: 0.78rem; padding: 0.35rem 0.75rem; } }
+  </style>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Where to Find Serial Numbers and Data Plates on Appliances, HVAC, and Electronics","description":"A complete guide to locating serial number labels and data plates on major home appliances, HVAC systems, electronics, and water heaters.","author":{"@type":"Organization","name":"Decode My Item"},"publisher":{"@type":"Organization","name":"Decode My Item","url":"https://www.decodemyitem.com"},"mainEntityOfPage":"https://www.decodemyitem.com/serial-number-location-guide"}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Where is the serial number on a refrigerator?","acceptedAnswer":{"@type":"Answer","text":"On most refrigerators the serial number label is inside the fresh food compartment — check the upper-left or upper-right interior wall, just behind the door seal. If it's not there, look behind the vegetable crisper drawers or on the door frame itself."}},{"@type":"Question","name":"Where is the serial number on a washing machine?","acceptedAnswer":{"@type":"Answer","text":"Front-load washers have the label on the door frame or inner door rim. Top-load washers have it under the lid on the tub rim or lid frame. Some Samsung models place the label on the rear of the machine."}},{"@type":"Question","name":"Where is the serial number on an HVAC unit?","acceptedAnswer":{"@type":"Answer","text":"On outdoor condensers, look for a data plate on the side panel near the refrigerant lines or electrical disconnect. On furnaces and air handlers, the label is usually on the inside of the access panel or on the side of the cabinet."}},{"@type":"Question","name":"Where is the serial number on a TV?","acceptedAnswer":{"@type":"Answer","text":"The serial number on a flat-screen TV is on a sticker on the back of the unit. It may also be accessible through the TV's settings menu under About or System Information."}},{"@type":"Question","name":"Why do I need to find my serial number?","acceptedAnswer":{"@type":"Answer","text":"Serial numbers are used to determine the manufacture date and age of an item, verify warranty status, order correct replacement parts, document items for insurance claims, and register products with the manufacturer."}}]}</script>
 </head>
@@ -81,19 +107,243 @@
       </div>
     </section>
 
-    <section class="section">
-      <div class="seo-copy-wrap">
-        <h2>Table of Contents</h2>
-        <div class="related-brands">
-          <a href="#major-kitchen-appliances">Major Kitchen Appliances</a>
-          <a href="#laundry-appliances">Laundry Appliances</a>
-          <a href="#hvac-systems">HVAC Systems</a>
-          <a href="#water-heaters">Water Heaters</a>
-          <a href="#electronics-devices">Electronics &amp; Devices</a>
-          <a href="#brand-specific-notes">Brand-Specific Notes</a>
-          <a href="#tips-for-hard-to-read-labels">Tips for Hard-to-Read Labels</a>
-          <a href="#once-you-have-the-number">Once You Have the Number</a>
+    <section class="section" style="padding-top:0;">
+      <div class="slg-search-wrap">
+        <div class="slg-search-wrap-inner">
+          <span class="slg-search-icon"></span>
+          <input class="slg-search" id="slgSearch" type="text" placeholder="Search appliance or device type..." autocomplete="off" />
         </div>
+      </div>
+
+      <div class="slg-tabs" id="slgTabs">
+        <button class="slg-tab active" data-cat="all">All Items</button>
+        <button class="slg-tab" data-cat="kitchen">Kitchen Appliances</button>
+        <button class="slg-tab" data-cat="laundry">Laundry</button>
+        <button class="slg-tab" data-cat="hvac">HVAC</button>
+        <button class="slg-tab" data-cat="water">Water Heaters</button>
+        <button class="slg-tab" data-cat="electronics">Electronics</button>
+        <button class="slg-tab" data-cat="brands">Brands</button>
+      </div>
+
+      <div class="slg-grid" id="slgGrid">
+        <a class="slg-card" data-cat="kitchen" data-name="refrigerator" href="#refrigerators">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Refrigerator</div>
+          <span class="slg-card-cat">Kitchen Appliances</span>
+          <div class="slg-card-hint">Upper interior wall, fresh food compartment</div>
+        </a>
+
+        <a class="slg-card" data-cat="kitchen" data-name="range oven stove" href="#ranges-ovens-stoves">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Range / Oven / Stove</div>
+          <span class="slg-card-cat">Kitchen Appliances</span>
+          <div class="slg-card-hint">Inside the storage drawer at the bottom</div>
+        </a>
+
+        <a class="slg-card" data-cat="kitchen" data-name="dishwasher" href="#dishwashers">
+          <div class="slg-card-icon">️</div>
+          <div class="slg-card-name">Dishwasher</div>
+          <span class="slg-card-cat">Kitchen Appliances</span>
+          <div class="slg-card-hint">Inside door, left or right interior edge</div>
+        </a>
+
+        <a class="slg-card" data-cat="kitchen" data-name="microwave" href="#microwaves">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Microwave</div>
+          <span class="slg-card-cat">Kitchen Appliances</span>
+          <div class="slg-card-hint">Door frame or back/side exterior panel</div>
+        </a>
+
+        <a class="slg-card" data-cat="kitchen" data-name="freezer chest upright" href="#freezers">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Freezer</div>
+          <span class="slg-card-cat">Kitchen Appliances</span>
+          <div class="slg-card-hint">Interior side trim or lid rim (chest type)</div>
+        </a>
+
+        <a class="slg-card" data-cat="laundry" data-name="washing machine washer top load" href="#washing-machines-top-load">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Washer — Top Load</div>
+          <span class="slg-card-cat">Laundry</span>
+          <div class="slg-card-hint">Under the lid on the tub rim or lid frame</div>
+        </a>
+
+        <a class="slg-card" data-cat="laundry" data-name="washing machine washer front load" href="#washing-machines-front-load">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Washer — Front Load</div>
+          <span class="slg-card-cat">Laundry</span>
+          <div class="slg-card-hint">Fixed inner rim of the door opening</div>
+        </a>
+
+        <a class="slg-card" data-cat="laundry" data-name="dryer gas electric" href="#dryers">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Dryer</div>
+          <span class="slg-card-cat">Laundry</span>
+          <div class="slg-card-hint">Inside door opening or door frame</div>
+        </a>
+
+        <a class="slg-card" data-cat="hvac" data-name="central air conditioner outdoor condenser ac" href="#central-air-conditioner-outdoor-condenser-unit">
+          <div class="slg-card-icon">❄️</div>
+          <div class="slg-card-name">Central AC — Outdoor Unit</div>
+          <span class="slg-card-cat">HVAC</span>
+          <div class="slg-card-hint">Side panel near the refrigerant lines</div>
+        </a>
+
+        <a class="slg-card" data-cat="hvac" data-name="furnace air handler indoor" href="#furnaces-indoor-air-handlers">
+          <div class="slg-card-icon">️</div>
+          <div class="slg-card-name">Furnace / Air Handler</div>
+          <span class="slg-card-cat">HVAC</span>
+          <div class="slg-card-hint">Inside front access panel, interior cabinet wall</div>
+        </a>
+
+        <a class="slg-card" data-cat="hvac" data-name="heat pump outdoor indoor" href="#heat-pumps">
+          <div class="slg-card-icon">♻️</div>
+          <div class="slg-card-name">Heat Pump</div>
+          <span class="slg-card-cat">HVAC</span>
+          <div class="slg-card-hint">Side panel near refrigerant lines (outdoor unit)</div>
+        </a>
+
+        <a class="slg-card" data-cat="hvac" data-name="mini split ductless" href="#mini-split-systems">
+          <div class="slg-card-icon">️</div>
+          <div class="slg-card-name">Mini-Split System</div>
+          <span class="slg-card-cat">HVAC</span>
+          <div class="slg-card-hint">Inside front filter cover (indoor unit)</div>
+        </a>
+
+        <a class="slg-card" data-cat="hvac" data-name="window portable air conditioner ac" href="#window-portable-air-conditioners">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Window / Portable AC</div>
+          <span class="slg-card-cat">HVAC</span>
+          <div class="slg-card-hint">Behind front grille or back/side exterior</div>
+        </a>
+
+        <a class="slg-card" data-cat="water" data-name="tank water heater gas electric" href="#water-heaters">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Tank Water Heater</div>
+          <span class="slg-card-cat">Water Heaters</span>
+          <div class="slg-card-hint">Upper tank body label, just below the top cap</div>
+        </a>
+
+        <a class="slg-card" data-cat="water" data-name="tankless water heater" href="#water-heaters">
+          <div class="slg-card-icon">⚡</div>
+          <div class="slg-card-name">Tankless Water Heater</div>
+          <span class="slg-card-cat">Water Heaters</span>
+          <div class="slg-card-hint">Front face label, sometimes inside front cover</div>
+        </a>
+
+        <a class="slg-card" data-cat="electronics" data-name="tv television flat screen lcd oled" href="#televisions-flat-screen">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Flat-Screen TV</div>
+          <span class="slg-card-cat">Electronics</span>
+          <div class="slg-card-hint">Back panel sticker or Settings → About</div>
+        </a>
+
+        <a class="slg-card" data-cat="electronics" data-name="laptop notebook computer" href="#laptops-notebook-computers">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Laptop / Notebook</div>
+          <span class="slg-card-cat">Electronics</span>
+          <div class="slg-card-hint">Bottom case sticker or battery compartment</div>
+        </a>
+
+        <a class="slg-card" data-cat="electronics" data-name="desktop computer tower all in one" href="#desktop-computers">
+          <div class="slg-card-icon">️</div>
+          <div class="slg-card-name">Desktop Computer</div>
+          <span class="slg-card-cat">Electronics</span>
+          <div class="slg-card-hint">Back or side panel, or system settings</div>
+        </a>
+
+        <a class="slg-card" data-cat="electronics" data-name="smartphone phone iphone android tablet ipad" href="#smartphones-tablets">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Smartphone / Tablet</div>
+          <span class="slg-card-cat">Electronics</span>
+          <div class="slg-card-hint">Settings → About, SIM tray, or back label</div>
+        </a>
+
+        <a class="slg-card" data-cat="electronics" data-name="gaming console playstation xbox nintendo switch" href="#gaming-consoles">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Gaming Console</div>
+          <span class="slg-card-cat">Electronics</span>
+          <div class="slg-card-hint">Back panel near ports or system settings menu</div>
+        </a>
+
+        <a class="slg-card" data-cat="electronics" data-name="printer inkjet laser" href="#printers">
+          <div class="slg-card-icon">️</div>
+          <div class="slg-card-name">Printer</div>
+          <span class="slg-card-cat">Electronics</span>
+          <div class="slg-card-hint">Back/underside panel or cartridge access area</div>
+        </a>
+
+        <a class="slg-card" data-cat="brands" data-name="whirlpool maytag kitchenaid amana" href="#whirlpool-maytag-kitchenaid-amana">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Whirlpool / Maytag / KitchenAid</div>
+          <span class="slg-card-cat">Brand Notes</span>
+          <div class="slg-card-hint">White sticker, shared label format across family</div>
+        </a>
+
+        <a class="slg-card" data-cat="brands" data-name="ge general electric hotpoint profile" href="#ge-hotpoint-ge-profile">
+          <div class="slg-card-icon">⚡</div>
+          <div class="slg-card-name">GE / Hotpoint / GE Profile</div>
+          <span class="slg-card-cat">Brand Notes</span>
+          <div class="slg-card-hint">Two-letter date code at start of serial</div>
+        </a>
+
+        <a class="slg-card" data-cat="brands" data-name="samsung appliance tv phone" href="#samsung">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Samsung</div>
+          <span class="slg-card-cat">Brand Notes</span>
+          <div class="slg-card-hint">Often rear-mounted label with QR code</div>
+        </a>
+
+        <a class="slg-card" data-cat="brands" data-name="lg appliance tv" href="#lg">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">LG</div>
+          <span class="slg-card-cat">Brand Notes</span>
+          <div class="slg-card-hint">Right-side door frame (laundry) or right interior (fridge)</div>
+        </a>
+
+        <a class="slg-card" data-cat="brands" data-name="carrier bryant hvac ac" href="#carrier-bryant">
+          <div class="slg-card-icon">❄️</div>
+          <div class="slg-card-name">Carrier / Bryant</div>
+          <span class="slg-card-cat">Brand Notes</span>
+          <div class="slg-card-hint">Metal data plate, side panel outdoor or furnace door</div>
+        </a>
+
+        <a class="slg-card" data-cat="brands" data-name="goodman amana hvac" href="#goodman-amana-hvac">
+          <div class="slg-card-icon">️</div>
+          <div class="slg-card-name">Goodman / Amana HVAC</div>
+          <span class="slg-card-cat">Brand Notes</span>
+          <div class="slg-card-hint">Year + week encoded in first four serial digits</div>
+        </a>
+
+        <a class="slg-card" data-cat="brands" data-name="trane american standard hvac" href="#trane-american-standard">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Trane / American Standard</div>
+          <span class="slg-card-cat">Brand Notes</span>
+          <div class="slg-card-hint">Side panel (outdoor) or access panel (indoor)</div>
+        </a>
+
+        <a class="slg-card" data-cat="brands" data-name="rheem ruud water heater hvac" href="#rheem-ruud">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Rheem / Ruud</div>
+          <span class="slg-card-cat">Brand Notes</span>
+          <div class="slg-card-hint">Upper tank body (water heater) or side panel (HVAC)</div>
+        </a>
+
+        <a class="slg-card" data-cat="brands" data-name="apple iphone ipad mac macbook" href="#apple">
+          <div class="slg-card-icon"></div>
+          <div class="slg-card-name">Apple</div>
+          <span class="slg-card-cat">Brand Notes</span>
+          <div class="slg-card-hint">Settings → About or engraved on device bottom</div>
+        </a>
+
+        <div class="slg-empty" id="slgEmpty" style="display:none;">
+          No items match your search. Try a different term.
+        </div>
+      </div>
+
+      <div class="slg-divider">
+        <hr class="slg-divider-line">
+        <p>Select any item above to jump to the full location guide, or scroll down to browse all sections.</p>
       </div>
     </section>
 
@@ -102,19 +352,19 @@
         <h2>Major Kitchen Appliances</h2>
         <p>Kitchen appliances tend to hide serial labels where they stay protected from grease, spills, and repeated cleaning, which usually means just inside a door opening, behind a drawer, or on a frame edge you only notice once the appliance is open.</p>
 
-        <h3>Refrigerators</h3>
+        <h3 id="refrigerators">Refrigerators</h3>
         <p>On most refrigerators, the first place to check is the upper interior wall of the fresh food compartment. Depending on the brand, that label may be on the left or right side, and it often sits just high enough that it is easy to miss until the door is fully open and the shelves are out of the way. French-door and side-by-side models most often place the label inside the right-hand fresh food section near the top, while top-freezer models frequently use the left interior wall. Bottom-freezer units can be less consistent, so it is worth checking both the main fresh food interior and the area behind the lower crisper drawers where the liner is still visible. If nothing appears inside, inspect the cabinet opening near the door seal and, as a last resort, the rear service panel. Older refrigerators often use a stamped metal plate, while newer models usually rely on a white or silver adhesive label.</p>
 
-        <h3>Ranges, Ovens &amp; Stoves</h3>
+        <h3 id="ranges-ovens-stoves">Ranges, Ovens &amp; Stoves</h3>
         <p>Ranges and ovens are one of the few categories where the label is often hidden in plain sight. The most common location is inside the storage drawer at the bottom, either on the drawer frame or along the interior edge of the opening. Electric ranges sometimes move that label to the oven door frame so it becomes visible only when the door is open. Gas ranges occasionally place it on the side of the burner box, accessible from the front once the drawer or lower panel is open. On many double-oven GE and Whirlpool-family models, a flip-up metal tag on the rear of the control panel provides the quickest path and can often be reached without pulling the unit away from the wall. Wall ovens usually keep the plate inside the oven door frame or on the left interior side panel.</p>
 
-        <h3>Dishwashers</h3>
+        <h3 id="dishwashers">Dishwashers</h3>
         <p>Dishwashers are among the most consistent categories. Open the door fully and inspect both interior edges of the door, especially the side that faces the tub when the door is closed. Some brands shift the label slightly inward onto the tub side wall, so the tag is only visible when the door is open all the way. If it is not on the door edge, look on the left or right interior side of the tub itself. A few older or service-oriented models place the plate behind the kick panel under the door, but that usually requires removing screws.</p>
 
-        <h3>Microwaves</h3>
+        <h3 id="microwaves">Microwaves</h3>
         <p>Countertop microwaves most often place the label on the door frame just inside the opening, though the back panel or one of the side panels is also common. Over-the-range units frequently use the door frame too, but some place the label on the upper interior cavity near the hinge side where it is hidden until the door swings wide. Built-in and drawer microwaves usually keep the plate inside the frame or on the left interior wall of the cavity. If you still cannot find it, the label may be on a rear surface that requires sliding the unit forward slightly.</p>
 
-        <h3>Freezers</h3>
+        <h3 id="freezers">Freezers</h3>
         <p>Upright freezers typically place the serial label on the interior side trim where it is visible once the door is open. Chest freezers are more likely to use the exterior left wall above the access panel or the inside rim of the lid. Because cold environments are hard on paper adhesives, many freezers use a metal plate rather than a thin sticker.</p>
       </div>
     </section>
@@ -124,13 +374,13 @@
         <h2>Laundry Appliances</h2>
         <p>Laundry products are built around openings, lids, and removable panels, so the label is usually attached to whichever edge stays protected during use but still remains reachable for service.</p>
 
-        <h3>Washing Machines (Top Load)</h3>
+        <h3 id="washing-machines-top-load">Washing Machines (Top Load)</h3>
         <p>For top-load washers, start under the lid. The label is commonly attached to the rear portion of the lid itself or to the tub rim just inside the lid opening where it stays dry and out of direct abrasion. Some brands, especially Samsung and LG, place the label on the rear of the machine instead, which means the washer may need to be moved away from the wall far enough to photograph the tag safely. If the machine still contains water, do not tip or drag it just to reach the label. It is better to drain it first or use another angle with a phone camera.</p>
 
-        <h3>Washing Machines (Front Load)</h3>
+        <h3 id="washing-machines-front-load">Washing Machines (Front Load)</h3>
         <p>Front-load washers usually place the data label on the fixed door frame rather than on the moving door itself. Look closely at the inner rim of the opening after the door swings open. Some units also place a second label on the rear panel or inside the detergent dispenser area. LG front-loaders commonly use the right-hand side of the door frame, which is easy to miss if you only glance at the hinge side.</p>
 
-        <h3>Dryers</h3>
+        <h3 id="dryers">Dryers</h3>
         <p>Both gas and electric dryers usually keep the serial label inside the main door opening, either on the door itself or on the cabinet rim behind it. Another worthwhile check is the lint-trap slot, since some models attach a small label there where owners rarely look. Older dryers may shift the label to the rear panel, and Whirlpool-family units often use the front panel just behind the circular door opening ring.</p>
       </div>
     </section>
@@ -140,19 +390,19 @@
         <h2>HVAC Systems</h2>
         <p>HVAC data plates are usually different from the stickers found on household appliances. Instead of a small product label, you are often dealing with a metal or heavy-duty nameplate that includes far more technical information: electrical ratings, refrigerant type, capacity, and safety listings in addition to the model and serial number. That makes the HVAC plate especially important when you are verifying age, preparing insurance documentation, comparing replacement options, or confirming exactly what type of equipment is installed.</p>
 
-        <h3>Central Air Conditioner &mdash; Outdoor Condenser Unit</h3>
+        <h3 id="central-air-conditioner-outdoor-condenser-unit">Central Air Conditioner &mdash; Outdoor Condenser Unit</h3>
         <p>On an outdoor condenser, the data plate is usually mounted on an exterior side panel, most often on the same side as the refrigerant line connections. Older units often place it lower on that side panel above the line set, while many newer units move it to an upper corner where it stays cleaner and easier to see. If the exterior plate is missing or damaged, inspect the electrical access panel on the side of the unit because some manufacturers duplicate part of the information there. The plate normally shows the model number, serial number, refrigerant type, electrical specifications, and the unit capacity or tonnage. Because sun and weather can fade outdoor labels badly, it is smart to photograph the plate as soon as you find it.</p>
 
-        <h3>Furnaces &amp; Indoor Air Handlers</h3>
+        <h3 id="furnaces-indoor-air-handlers">Furnaces &amp; Indoor Air Handlers</h3>
         <p>Gas furnaces usually hide the plate behind the front access panel, especially the lower removable door. Once that panel is open, check the interior cabinet wall for a label that stays protected from heat and cleaning. Air handlers, including indoor sections paired with heat pumps, commonly use the inside of the main access panel or the side wall of the cabinet near the blower compartment. High-efficiency furnaces with sealed combustion may also place the label on the exterior side near the flue connection because that side remains visible during service. On older furnaces, the plate may be attached directly to the burner access cover or blower door.</p>
 
-        <h3>Heat Pumps</h3>
+        <h3 id="heat-pumps">Heat Pumps</h3>
         <p>Outdoor heat pumps generally use the same label location as a standard air conditioner condenser: the side panel near the refrigerant lines. The difference is in the information on the plate, which should identify the unit as a heat pump rather than a straight-cool air conditioner. The matching indoor air handler usually carries its own label inside the main access panel.</p>
 
-        <h3>Mini-Split Systems</h3>
+        <h3 id="mini-split-systems">Mini-Split Systems</h3>
         <p>With mini-splits, open the front filter cover on the indoor wall unit and inspect the interior housing for the label. Some brands instead mount it on the side of the indoor cabinet where it is only visible from an angle. The outdoor mini-split unit uses the familiar side-panel label found on central AC condensers. On multi-zone systems, each indoor head has its own serial number, so do not assume the outdoor unit serial applies to every room unit.</p>
 
-        <h3>Window &amp; Portable Air Conditioners</h3>
+        <h3 id="window-portable-air-conditioners">Window &amp; Portable Air Conditioners</h3>
         <p>Window air conditioners often place the plate behind the front grille or decorative cover, which may need to be removed before the label becomes visible. Others use the back or side exterior panel. Older window units commonly used a durable metal plate behind the front cover, while portable air conditioners usually rely on a rear sticker or a label on the underside of the unit. It is also worth checking the portion of the cabinet that faces the room, since some manufacturers hide the plate there instead of on the outdoor-facing side.</p>
       </div>
     </section>
@@ -169,22 +419,22 @@
         <h2>Electronics &amp; Devices</h2>
         <p>Electronics labels are usually smaller than appliance labels and almost always adhesive rather than metal. Many include a QR code or barcode next to the serial number, and modern devices often store the same information in software so you can retrieve it even when the back of the device is inaccessible.</p>
 
-        <h3>Televisions (Flat Screen &mdash; LCD, LED, OLED, QLED)</h3>
+        <h3 id="televisions-flat-screen">Televisions (Flat Screen &mdash; LCD, LED, OLED, QLED)</h3>
         <p>Most flat-screen TVs place the serial label on the back panel in the lower-right or lower-left area, often close to the power-input section. That sticker usually includes the model number, serial number, and electrical specifications. Samsung, LG, Sony, and other major brands also mirror the serial number in the settings menu under an About, Support, or System Information path. Older plasma sets use the same basic back-panel approach. If the TV is wall-mounted and the rear sticker is difficult to reach, the settings menu is usually the fastest solution.</p>
 
-        <h3>Laptops &amp; Notebook Computers</h3>
+        <h3 id="laptops-notebook-computers">Laptops &amp; Notebook Computers</h3>
         <p>On most laptops, the first place to look is the bottom case. Older removable-battery models sometimes hide part or all of the serial label inside the battery compartment, so removing the battery can reveal what the underside sticker does not show. Microsoft Surface devices, MacBooks, and many ultrabooks may have the serial engraved or printed directly onto the bottom case instead of using a paper sticker. The same number is often available through system information on both Windows and macOS. Some HP and Dell models also place an identifier inside the battery bay.</p>
 
-        <h3>Desktop Computers</h3>
+        <h3 id="desktop-computers">Desktop Computers</h3>
         <p>Tower and mid-tower desktops usually place the serial number on the back panel, a side panel, or the underside of the case. All-in-one computers often move the label to the rear of the display housing instead. Windows systems can also expose the serial in system settings or system information tools, which is helpful when the case is tucked into a desk enclosure. Servers and workstations often attach the label near the power-supply area or top rear of the chassis.</p>
 
-        <h3>Smartphones &amp; Tablets</h3>
+        <h3 id="smartphones-tablets">Smartphones &amp; Tablets</h3>
         <p>On iPhones, the most reliable path is Settings, then General, then About, where the serial number appears alongside other device identifiers. Some models also print it on the SIM tray, and older pre-iPhone X units sometimes show it on the back near the bottom. Android devices usually place it under About Phone, while older removable-battery phones may still keep a sticker underneath the battery. iPads often print the serial on the back near the lower edge and also show it in Settings. Samsung tablets typically offer both a rear label and a software About screen. Keep in mind that the IMEI is not the same as the serial number.</p>
 
-        <h3>Gaming Consoles</h3>
+        <h3 id="gaming-consoles">Gaming Consoles</h3>
         <p>PlayStation 5 units place the label on the back near the power connection, while PlayStation 4 systems usually keep it on the underside. Xbox Series X and Series S consoles both use rear labels near the port area. Nintendo Switch devices carry the serial on the back of the handheld unit, and the dock has its own separate serial. Most major consoles also display the serial number in their settings menus, which is useful when the hardware is mounted or cabled tightly.</p>
 
-        <h3>Printers</h3>
+        <h3 id="printers">Printers</h3>
         <p>Printers often put the label on the back panel or the underside, but inkjet models sometimes hide it inside the cartridge-access area where the user would not normally look. Laser printers tend to keep the plate near the rear power connection. Many HP printers also expose the serial number through the touchscreen menu under a printer-information or tools path.</p>
       </div>
     </section>
@@ -195,39 +445,39 @@
         <p>Brands often follow their own label habits, and once you know those habits you can usually shorten the search dramatically.</p>
         <div class="link-group-grid">
           <article class="link-group-card">
-            <h3>Whirlpool / Maytag / KitchenAid / Amana</h3>
+            <h3 id="whirlpool-maytag-kitchenaid-amana">Whirlpool / Maytag / KitchenAid / Amana</h3>
             <p>These Whirlpool-family brands usually share the same label structure and often use a white sticker with Whirlpool branding at the top. The serial number typically appears directly below the model number, which makes the plate easy to recognize once you have found it. For laundry products, the label is usually inside the door opening or under the lid. Refrigerators often keep it on the upper interior left wall, while ranges frequently use the storage drawer frame.</p>
           </article>
           <article class="link-group-card">
-            <h3>GE / Hotpoint / GE Profile</h3>
+            <h3 id="ge-hotpoint-ge-profile">GE / Hotpoint / GE Profile</h3>
             <p>GE-family labels are usually white and clearly branded, and the serial number often begins with two letters that carry date significance. In many GE serials, the first letter represents the month and the second letter represents the year in a repeating 12-year cycle. Refrigerators commonly use the right interior wall, ranges use either the door frame or storage drawer area, and dishwashers usually place the label on the inside left door edge.</p>
           </article>
           <article class="link-group-card">
-            <h3>Samsung</h3>
+            <h3 id="samsung">Samsung</h3>
             <p>Samsung is less consistent than many older appliance brands, and its labels often include a QR code beside the model and serial fields. Many Samsung washers and some refrigerators place the main label on the rear of the unit, which surprises owners who expect it inside the opening. On electronics, Samsung usually uses a rear-panel sticker, and TVs also expose the same information through the support or about menu.</p>
           </article>
           <article class="link-group-card">
-            <h3>LG</h3>
+            <h3 id="lg">LG</h3>
             <p>LG labels are usually cleanly formatted and often place the most important identifiers close together. On appliances, front-load washers and dryers commonly use the right-side portion of the door frame, while refrigerators often use the right interior wall. Ranges may place the tag on the left door frame or around the drawer opening. LG televisions keep the label on the back panel and usually mirror it in the on-screen settings menu.</p>
           </article>
           <article class="link-group-card">
-            <h3>Carrier / Bryant</h3>
+            <h3 id="carrier-bryant">Carrier / Bryant</h3>
             <p>Carrier and Bryant HVAC equipment typically use metal data plates rather than paper stickers, and those plates are meant to survive outdoor exposure. The serial number commonly encodes the week and year of manufacture in digits three through six. On condensers, start on the side panel. On furnaces, open the access door and inspect the interior cabinet wall.</p>
           </article>
           <article class="link-group-card">
-            <h3>Goodman / Amana HVAC</h3>
+            <h3 id="goodman-amana-hvac">Goodman / Amana HVAC</h3>
             <p>Goodman outdoor units and furnaces usually rely on a metal data plate attached to a side panel or cabinet interior. The serial number often begins with two digits for the year and two digits for the week of manufacture, which makes it especially useful once the plate is found. Outdoor units usually show it plainly on the side panel, while furnaces keep it inside the cabinet.</p>
           </article>
           <article class="link-group-card">
-            <h3>Trane / American Standard</h3>
+            <h3 id="trane-american-standard">Trane / American Standard</h3>
             <p>Trane-family outdoor units usually place the plate on the side panel near the refrigerant lines, and indoor units keep it inside the main access panel. The serial number often begins with a factory letter followed by a two-digit year and a two-digit week. Because the format can be hard to read on weathered units, photographing the plate is usually the safest approach.</p>
           </article>
           <article class="link-group-card">
-            <h3>Rheem / Ruud</h3>
+            <h3 id="rheem-ruud">Rheem / Ruud</h3>
             <p>Rheem and Ruud water heaters typically place the main label on the front of the upper tank body, while their HVAC products follow the usual outdoor side-panel and furnace-access-panel pattern. Their serial numbers commonly encode the week first and then the year, which is one reason the exact label matters so much. If the front-facing water-heater label wraps around the tank, inspect the side too.</p>
           </article>
           <article class="link-group-card">
-            <h3>Apple</h3>
+            <h3 id="apple">Apple</h3>
             <p>Apple devices are among the easiest to verify in software because nearly every product exposes the serial number through system settings. Mac laptops and iPads often also have the serial engraved or printed on the bottom case, while iPhones may use the SIM tray or a small exterior print depending on the generation. Older Apple hardware can still hide identifiers inside battery compartments, but software is usually the fastest path.</p>
           </article>
         </div>
@@ -282,7 +532,7 @@
   </main>
 
   <footer>
-    <div>&copy; 2026 Item Assist</div>
+    <div>&copy; 2026 Decode My Item</div>
     <div class="footer-links">
       <a href="/methodology">Methodology</a>
       <a href="/contact">Contact</a>
@@ -300,6 +550,42 @@
       if (navList) navList.classList.remove('open');
       if (hamburger) hamburger.classList.remove('active');
     });
+  </script>
+  <script>
+  (function() {
+    var search = document.getElementById('slgSearch');
+    var tabs = document.querySelectorAll('.slg-tab');
+    var cards = document.querySelectorAll('.slg-card');
+    var empty = document.getElementById('slgEmpty');
+    var activeCat = 'all';
+
+    function filterCards() {
+      var q = search.value.toLowerCase().trim();
+      var visible = 0;
+      cards.forEach(function(card) {
+        var cat = card.getAttribute('data-cat');
+        var name = card.getAttribute('data-name') || '';
+        var cardName = card.querySelector('.slg-card-name').textContent.toLowerCase();
+        var hint = card.querySelector('.slg-card-hint').textContent.toLowerCase();
+        var matchCat = activeCat === 'all' || cat === activeCat;
+        var matchQ = !q || name.includes(q) || cardName.includes(q) || hint.includes(q);
+        if (matchCat && matchQ) { card.style.display = ''; visible++; }
+        else { card.style.display = 'none'; }
+      });
+      empty.style.display = visible === 0 ? 'block' : 'none';
+    }
+
+    tabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        tabs.forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        activeCat = tab.getAttribute('data-cat');
+        filterCards();
+      });
+    });
+
+    search.addEventListener('input', filterCards);
+  })();
   </script>
   <script defer src="analytics.js"></script>
   <script defer src="script.js"></script>
