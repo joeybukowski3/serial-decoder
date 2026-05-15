@@ -31,9 +31,11 @@
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body data-page-kind="brand-page">
+
+  <!-- ═══ NAV ═══ -->
   <nav>
-    <a href="/" class="logo" aria-label="Item Assist home">
-    <span class="material-symbols-outlined" style="color:#44e5c2;font-size:26px;flex-shrink:0;line-height:1;">qr_code_scanner</span>
+    <a href="/" class="logo" aria-label="Decode My Item home">
+      <span class="material-symbols-outlined logo-icon">qr_code_scanner</span>
       <div>
         <div class="logo-text">Decode My <span>Item</span></div>
         <div class="logo-sub">Decode - Research - Automate</div>
@@ -54,31 +56,55 @@
   </nav>
 
   <main>
-    <section class="page-hero seo-hero">
-      <div class="seo-copy-wrap">
+
+    <!-- ═══ HERO ═══ -->
+    <section class="bp-hero">
+      <div class="bp-hero-inner">
         <nav class="breadcrumb-nav" aria-label="Breadcrumb">
           <a href="/">Home</a><span class="breadcrumb-sep">/</span><span aria-current="page">Maytag Serial Number Decoder</span>
         </nav>
-      </div>
-      <div class="tool-hero">
-        <div class="tool-badge">Brand decoder</div>
-        <h1>Maytag Serial Number Decoder</h1>
-        <p>Use this Maytag serial number decoder when you already know the brand and need the fastest supported age path across older and newer Maytag appliances.</p>
-        <ol class="how-steps how-steps-list">
-            <li><span class="how-list-index">1</span><span>Choose the matching category and brand.</span></li>
-            <li><span class="how-list-index">2</span><span>Enter the full serial number exactly as printed on the label.</span></li>
-            <li><span class="how-list-index">3</span><span>Review the date estimate, notes, and fallback links if the serial does not decode.</span></li>
+
+        <div class="bp-hero-icon-wrap" style="background:#44e5c218;border-color:#44e5c230;">
+          <span class="material-symbols-outlined bp-hero-icon" style="color:#44e5c2;">kitchen</span>
+        </div>
+
+        <span class="bp-badge" style="color:#44e5c2;border-color:#44e5c230;background:#44e5c210;">
+          Appliance Decoder
+        </span>
+
+        <h1 class="bp-hero-title">Maytag Serial Number Decoder</h1>
+        <p class="bp-hero-sub">Use this Maytag serial number decoder when you already know the brand and need the fastest supported age path across older and newer Maytag appliances.</p>
+
+        <ol class="bp-steps">
+          
+          <li class="bp-step">
+            <span class="bp-step-num" style="background:#44e5c220;color:#44e5c2;">1</span>
+            <span>Choose the matching category and brand.</span>
+          </li>
+          <li class="bp-step">
+            <span class="bp-step-num" style="background:#44e5c220;color:#44e5c2;">2</span>
+            <span>Enter the full serial number exactly as printed on the label.</span>
+          </li>
+          <li class="bp-step">
+            <span class="bp-step-num" style="background:#44e5c220;color:#44e5c2;">3</span>
+            <span>Review the date estimate, notes, and fallback links if the serial does not decode.</span>
+          </li>
         </ol>
+
+        <a href="#decoder-tool" class="bp-cta-btn" style="background:#44e5c2;color:#00382d;">
+          <span class="material-symbols-outlined" style="font-size:18px;">bolt</span>
+          Decode Serial Number
+        </a>
       </div>
     </section>
 
-    <section class="section seo-copy-section">
-      <div class="seo-copy-wrap">
-        <p>Maytag can follow more than one serial family. The current decoder handles Whirlpool-era Maytag logic and legacy pre-2006 logic, then flags the result when an era choice is still needed.</p>
-      </div>
-    </section>
+    <!-- ═══ SUPPORTING INTRO ═══ -->
+    <div class="bp-intro-strip">
+      <p>Maytag can follow more than one serial family. The current decoder handles Whirlpool-era Maytag logic and legacy pre-2006 logic, then flags the result when an era choice is still needed.</p>
+    </div>
 
-    <section class="section" id="decoder-tool" style="padding-top:0;padding-bottom:16px;">
+    <!-- ═══ DECODER TOOL ═══ -->
+    <section class="bp-tool-section" id="decoder-tool">
       <div class="tool-focus-wrap">
         <div class="seo-tool-shell">
           <div class="home-tools-wrap">
@@ -91,18 +117,13 @@
                     <button class="search-tab cat-tab" data-cat="hvac" onclick="selectCatAndShowDecoder('hvac', this)">HVAC</button>
                     <button class="search-tab cat-tab" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
                   </div>
-
                   <div class="search-panel" id="panel-decoder">
                     <div class="home-tool-row">
                       <label class="sr-only" for="brand">Select Brand</label>
-                      <select id="brand" class="search-select">
-                        <option value="">-- Select Brand --</option>
-                      </select>
-
+                      <select id="brand" class="search-select"><option value="">-- Select Brand --</option></select>
                       <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
                       <input type="text" id="serial" class="search-input" placeholder="Enter Maytag serial number">
                     </div>
-
                     <div class="era-group hidden" id="eraGroup">
                       <label class="sr-only" for="eraSelect">Manufacture Era</label>
                       <select id="eraSelect" class="search-select" style="margin-top:8px;">
@@ -112,7 +133,6 @@
                       </select>
                       <p class="era-note">Some brands reuse serial layouts across decades. Select the era when prompted to improve accuracy.</p>
                     </div>
-
                     <p class="search-hint serial-helper-text">Maytag is preselected. Enter the full serial number exactly as printed on the label.</p>
                     <div class="tool-panel-action">
                       <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">Decode Serial Number</button>
@@ -123,13 +143,13 @@
             </div>
           </div>
         </div>
-
         <div class="utility-strip">
           <span>Built for fast serial/model research.</span><span>Useful for appliance age estimates, replacement research, and claim documentation.</span><span>Results may vary by brand, model family, and available serial data.</span>
         </div>
       </div>
     </section>
 
+    <!-- ═══ RESULTS ═══ -->
     <div class="results-wrapper">
       <div id="ageLoading" class="results-card hidden">
         <div class="loading-inner">
@@ -137,7 +157,6 @@
           <div class="loading-text" id="loadingText">Researching product information...</div>
         </div>
       </div>
-
       <div id="serialResults" class="results-card hidden">
         <div class="results-header">
           <h3>Decoded Results</h3>
@@ -162,14 +181,8 @@
               <span class="result-label">Estimated Age</span>
               <span class="result-value" id="resultEstimatedAge">&mdash;</span>
             </div>
-            <div class="info-block method">
-              <h4>Decoding Method</h4>
-              <p id="resultMethod"></p>
-            </div>
-            <div class="info-block notes">
-              <h4>Important Notes</h4>
-              <p id="resultNotes"></p>
-            </div>
+            <div class="info-block method"><h4>Decoding Method</h4><p id="resultMethod"></p></div>
+            <div class="info-block notes"><h4>Important Notes</h4><p id="resultNotes"></p></div>
             <details class="determination-details">
               <summary>How this was determined</summary>
               <div class="determination-body" id="serialDeterminationBody">
@@ -189,136 +202,233 @@
 
     
 
-    <section class="section seo-section-grid">
-      <div class="seo-card">
-        <h2>How to decode a Maytag serial number</h2>
-        <p>Modern Whirlpool-era Maytag products often follow a year-code-plus-week pattern similar to Whirlpool-family serials. Older Maytag products may instead use the last two characters for year and month, which is why the era selector can matter.</p>
-      </div>
-      <div class="seo-card">
-        <h2>What the model number can tell you</h2>
-        <p>The model number helps separate older legacy Maytag products from Whirlpool-era Maytag platforms. That context matters when the serial format repeats or when the decoder asks you to choose an era.</p>
-      </div>
-      <div class="seo-card seo-card-wide">
-        <h2>Common Maytag serial number formats</h2>
-        <div class="table-wrap">
-          <table class="format-table">
-            <thead>
-              <tr>
-                <th>Pattern</th>
-                <th>Common Format</th>
-                <th>What It May Indicate</th>
-                <th>Confidence</th>
-              </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td>Post-2006 Maytag</td>
-              <td>Whirlpool-style year code + week digits</td>
-              <td>Many modern Maytag products follow Whirlpool-family year/week logic.</td>
-              <td>Estimated decade. Era can still matter.</td>
-            </tr>
-            <tr>
-              <td>Pre-2006 Maytag</td>
-              <td>Second-to-last character for year, last character for month</td>
-              <td>Legacy Maytag products often store year and month at the end of the serial.</td>
-              <td>Estimated until era is confirmed.</td>
-            </tr>
-            <tr>
-              <td>Maytag product-family overlap</td>
-              <td>Laundry and kitchen products can appear in either path</td>
-              <td>The current decoder asks for an era when the serial structure alone is not enough to pick the right family.</td>
-              <td>Estimated until the right era is chosen.</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="seo-card seo-card-wide">
-        <h2>Maytag serial number examples</h2>
-        <div class="example-grid">
-          <article class="example-card">
-            <div class="example-eyebrow">Post-2006 style reminder</div>
-            <code>...year code + week...</code>
-            <p>Many newer Maytag appliances route into Whirlpool-family year/week logic after the era is confirmed.</p>
-          </article>
-          <article class="example-card">
-            <div class="example-eyebrow">Legacy style reminder</div>
-            <code>...XY</code>
-            <p>Some older Maytag products use the ending characters for year and month rather than the opening positions.</p>
-          </article>
-          <article class="example-card">
-            <div class="example-eyebrow">Era selector reminder</div>
-            <code>Context matters</code>
-            <p>If the page asks for era, use the product age range, styling, or install date to choose the right Maytag decode path.</p>
-          </article>
-        </div>
-      </div>
-      <div class="seo-card seo-card-wide">
-        <h2>Where to find the model and serial number</h2>
-        <div class="mini-card-grid">
-          <article class="mini-card">
-            <h3>Laundry products</h3>
-            <ul class="bullet-list"><li>Washer lid underside or door opening</li><li>Dryer door rim or rear cabinet panel</li></ul>
-          </article>
-          <article class="mini-card">
-            <h3>Refrigerators</h3>
-            <ul class="bullet-list"><li>Fresh-food compartment wall</li><li>Behind produce drawers or upper interior trim</li></ul>
-          </article>
-          <article class="mini-card">
-            <h3>Dishwashers and cooking products</h3>
-            <ul class="bullet-list"><li>Dishwasher inner frame or tub lip</li><li>Range or oven frame behind the door or drawer opening</li></ul>
-          </article>
-        </div>
-      </div>
-      <div class="seo-card">
-        <h2>If the serial number does not decode</h2>
-        <ul class="bullet-list"><li>Use the era selector when it appears because Maytag uses more than one supported serial family.</li><li>Bring the model number when the serial alone does not show whether the appliance is legacy or Whirlpool-era.</li><li>Try Smart Lookup if the ending characters on an older serial are worn or unreadable.</li><li>Do not assume all Maytag products use the same opening year code structure.</li><li>Capture the full serial even when the main date clue may be near the end.</li>
-        </ul>
-      </div>
-      <div class="seo-card faq-card">
-        <h2>FAQ</h2>
-        <div class="faq-list">
-          <details class="faq-item" open>
-            <summary>How old is my Maytag appliance?</summary>
-            <div class="faq-answer"><p>Use the serial number from the label. The current decoder supports both Whirlpool-era Maytag logic and older legacy logic when the era is known.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Can the Maytag model number tell me the age?</summary>
-            <div class="faq-answer"><p>It is more useful for confirming the platform and era than for direct date decoding.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Why does the Maytag page ask for era?</summary>
-            <div class="faq-answer"><p>Some Maytag serial layouts repeat or change by production era, so the correct path sometimes depends on whether the appliance is pre-2006 or post-2006.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Where is the Maytag serial number label located?</summary>
-            <div class="faq-answer"><p>Maytag usually places it on the interior opening, cabinet wall, or product frame depending on category.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Can this support claim documentation?</summary>
-            <div class="faq-answer"><p>Yes. It is useful for age support, but any era-based assumption should be documented when the serial family overlaps.</p></div>
-          </details>
-        </div>
-      </div>
-    </section>
+    <!-- ═══ CONTENT SECTIONS ═══ -->
+    <div class="bp-content-wrap">
 
-    
-
-    <section class="section related-section">
-      <div class="seo-copy-wrap">
-        <h2>Related Decoder Pages</h2>
-        <div class="related-brands"><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a><a href="/washer-serial-number">Washer Serial Number Lookup</a><a href="/dryer-serial-number">Dryer Serial Number Lookup</a><a href="/whirlpool-serial-number-lookup">Whirlpool</a><a href="/kenmore-serial-number-lookup">Kenmore</a><a href="/ge-serial-number-lookup">GE</a>
+      <!-- How to decode + model context (2-col) -->
+      <div class="bp-two-col">
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">manage_search</span>
+            <h2>How to decode a Maytag serial number</h2>
+          </div>
+          <p>Modern Whirlpool-era Maytag products often follow a year-code-plus-week pattern similar to Whirlpool-family serials. Older Maytag products may instead use the last two characters for year and month, which is why the era selector can matter.</p>
+        </div>
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">category</span>
+            <h2>What the model number can tell you</h2>
+          </div>
+          <p>The model number helps separate older legacy Maytag products from Whirlpool-era Maytag platforms. That context matters when the serial format repeats or when the decoder asks you to choose an era.</p>
         </div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="seo-copy-wrap">
-        <h2>Research Paths</h2>
+      <!-- Serial format cards -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">barcode_scanner</span>
+          <h2>Common Maytag serial number formats</h2>
+        </div>
+        <div class="fmt-cards-grid">
+          
+      <div class="fmt-card">
+        <div class="fmt-card-top">
+          <span class="fmt-label">Post-2006 Maytag</span>
+          <span class="conf-pill conf-estimated">~ Estimated decade. Era can still matter.</span>
+        </div>
+        <code class="fmt-serial">Whirlpool-style year code + week digits</code>
+        <p class="fmt-meaning">Many modern Maytag products follow Whirlpool-family year/week logic.</p>
+      </div>
+      <div class="fmt-card">
+        <div class="fmt-card-top">
+          <span class="fmt-label">Pre-2006 Maytag</span>
+          <span class="conf-pill conf-high">✓ Estimated until era is confirmed.</span>
+        </div>
+        <code class="fmt-serial">Second-to-last character for year, last character for month</code>
+        <p class="fmt-meaning">Legacy Maytag products often store year and month at the end of the serial.</p>
+      </div>
+      <div class="fmt-card">
+        <div class="fmt-card-top">
+          <span class="fmt-label">Maytag product-family overlap</span>
+          <span class="conf-pill conf-med">~ Estimated until the right era is chosen.</span>
+        </div>
+        <code class="fmt-serial">Laundry and kitchen products can appear in either path</code>
+        <p class="fmt-meaning">The current decoder asks for an era when the serial structure alone is not enough to pick the right family.</p>
+      </div>
+        </div>
+      </div>
+
+      <!-- Examples -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">terminal</span>
+          <h2>Maytag serial number examples</h2>
+        </div>
+        <div class="ex-terminals-grid">
+          
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Post-2006 style reminder</span>
+        </div>
+        <code class="ex-serial">...year code + week...</code>
+        <p class="ex-note">Many newer Maytag appliances route into Whirlpool-family year/week logic after the era is confirmed.</p>
+      </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Legacy style reminder</span>
+        </div>
+        <code class="ex-serial">...XY</code>
+        <p class="ex-note">Some older Maytag products use the ending characters for year and month rather than the opening positions.</p>
+      </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Era selector reminder</span>
+        </div>
+        <code class="ex-serial">Context matters</code>
+        <p class="ex-note">If the page asks for era, use the product age range, styling, or install date to choose the right Maytag decode path.</p>
+      </div>
+        </div>
+      </div>
+
+      <!-- Location guide -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">pin_drop</span>
+          <h2>Where to find the model and serial number</h2>
+        </div>
+        <div class="loc-cards-grid">
+          
+      <div class="loc-card">
+        <div class="loc-card-head">
+          <span class="material-symbols-outlined loc-icon">local_laundry_service</span>
+          <h3 class="loc-card-title">Laundry products</h3>
+        </div>
+        <ul class="loc-list"><li>Washer lid underside or door opening</li><li>Dryer door rim or rear cabinet panel</li></ul>
+      </div>
+      <div class="loc-card">
+        <div class="loc-card-head">
+          <span class="material-symbols-outlined loc-icon">kitchen</span>
+          <h3 class="loc-card-title">Refrigerators</h3>
+        </div>
+        <ul class="loc-list"><li>Fresh-food compartment wall</li><li>Behind produce drawers or upper interior trim</li></ul>
+      </div>
+      <div class="loc-card">
+        <div class="loc-card-head">
+          <span class="material-symbols-outlined loc-icon">local_laundry_service</span>
+          <h3 class="loc-card-title">Dishwashers and cooking products</h3>
+        </div>
+        <ul class="loc-list"><li>Dishwasher inner frame or tub lip</li><li>Range or oven frame behind the door or drawer opening</li></ul>
+      </div>
+        </div>
+      </div>
+
+      <!-- Troubleshooting + FAQ (2-col) -->
+      <div class="bp-two-col">
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">troubleshoot</span>
+            <h2>If the serial number does not decode</h2>
+          </div>
+          <ul class="bp-check-list">
+            
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Use the era selector when it appears because Maytag uses more than one supported serial family.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Bring the model number when the serial alone does not show whether the appliance is legacy or Whirlpool-era.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Try Smart Lookup if the ending characters on an older serial are worn or unreadable.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Do not assume all Maytag products use the same opening year code structure.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Capture the full serial even when the main date clue may be near the end.</span>
+      </li>
+          </ul>
+        </div>
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">help</span>
+            <h2>FAQ</h2>
+          </div>
+          <div class="bp-faq-list">
+            
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>How old is my Maytag appliance?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Use the serial number from the label. The current decoder supports both Whirlpool-era Maytag logic and older legacy logic when the era is known.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Can the Maytag model number tell me the age?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>It is more useful for confirming the platform and era than for direct date decoding.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Why does the Maytag page ask for era?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Some Maytag serial layouts repeat or change by production era, so the correct path sometimes depends on whether the appliance is pre-2006 or post-2006.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Where is the Maytag serial number label located?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Maytag usually places it on the interior opening, cabinet wall, or product frame depending on category.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Can this support claim documentation?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Yes. It is useful for age support, but any era-based assumption should be documented when the serial family overlaps.</p></div>
+      </details>
+          </div>
+        </div>
+      </div>
+
+      <!-- Related links -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">link</span>
+          <h2>Related Decoder Pages</h2>
+        </div>
+        <div class="bp-pills-wrap">
+          <a href="/how-old-is-my-appliance" class="bp-pill">How Old Is My Appliance?</a><a href="/washer-serial-number" class="bp-pill">Washer Serial Number Lookup</a><a href="/dryer-serial-number" class="bp-pill">Dryer Serial Number Lookup</a><a href="/whirlpool-serial-number-lookup" class="bp-pill">Whirlpool</a><a href="/kenmore-serial-number-lookup" class="bp-pill">Kenmore</a><a href="/ge-serial-number-lookup" class="bp-pill">GE</a>
+        </div>
+      </div>
+
+      <!-- Research paths -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">explore</span>
+          <h2>Research Paths</h2>
+        </div>
         <div class="link-group-grid">
         <article class="link-group-card">
           <h3>Appliance Age Lookup</h3>
-          <div class="link-pill-grid"><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a><a href="/serial-number-location-guide">Where Is My Serial Number?</a><a href="/appliance-age-for-insurance-and-replacement">Insurance, Repair & Replacement</a><a href="/find-model-serial-number">Find Model & Serial Labels</a></div>
+          <div class="link-pill-grid"><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a><a href="/where-is-my-serial-number">Where Is My Serial Number?</a><a href="/appliance-age-for-insurance-and-replacement">Insurance, Repair & Replacement</a><a href="/find-model-serial-number">Find Model & Serial Labels</a></div>
         </article>
         <article class="link-group-card">
           <h3>Popular Appliance Brands</h3>
@@ -326,7 +436,7 @@
         </article>
         <article class="link-group-card">
           <h3>Appliance Type Lookups</h3>
-          <div class="link-pill-grid"><a href="/serial-number-location-guide">Where Is My Serial Number?</a><a href="/appliance-age-for-insurance-and-replacement">Insurance, Repair & Replacement</a><a href="/refrigerator-serial-number">Refrigerator Serial Number Lookup</a><a href="/washer-serial-number">Washer Serial Number Lookup</a><a href="/dryer-serial-number">Dryer Serial Number Lookup</a></div>
+          <div class="link-pill-grid"><a href="/appliance-age-for-insurance-and-replacement">Insurance, Repair & Replacement</a><a href="/refrigerator-serial-number">Refrigerator Serial Number Lookup</a><a href="/washer-serial-number">Washer Serial Number Lookup</a><a href="/dryer-serial-number">Dryer Serial Number Lookup</a><a href="/dishwasher-serial-number">Dishwasher Serial Number Lookup</a></div>
         </article>
         <article class="link-group-card">
           <h3>HVAC Age Lookup</h3>
@@ -335,21 +445,31 @@
         <article class="link-group-card">
           <h3>Electronics Serial & Model Lookup</h3>
           <div class="link-pill-grid"><a href="/asus-serial-number-decoder">ASUS Serial Number Lookup</a><a href="/samsung-tv-serial-number-decoder">Samsung TV Serial Number Decoder</a><a href="/apple">Apple</a><a href="/hp">HP</a><a href="/sony">Sony</a><a href="/find-model-serial-number">Find Device Labels</a></div>
-        </article>
-        </div>
+        </article></div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="seo-copy-wrap">
-        <div class="cta-note">
-          <h2>Need a claim-ready replacement summary?</h2>
-          <p>Use the decoder above to start.</p>
+      <!-- Bottom CTA -->
+      <div class="bp-cta-card">
+        <span class="material-symbols-outlined" style="font-size:40px;color:#44e5c2;margin-bottom:12px;">description</span>
+        <h2>Need a claim-ready replacement summary?</h2>
+        <p>Use the decoder above to start, or try Smart Lookup if the serial label is worn or missing.</p>
+        <div class="bp-cta-row">
+          <a href="#decoder-tool" class="bp-cta-btn" style="background:#44e5c2;color:#00382d;">
+            <span class="material-symbols-outlined" style="font-size:16px;">bolt</span> Decode a Serial
+          </a>
+          <a href="/smart-lookup" class="bp-cta-btn-outline" style="border-color:#44e5c240;color:#44e5c2;">
+            Try Smart Lookup →
+          </a>
         </div>
       </div>
-    </section>
+
+    </div>
+
+    
+
   </main>
 
+  <!-- ═══ FEEDBACK MODAL ═══ -->
   <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
     <div class="modal-card">
       <div class="modal-header">
@@ -357,14 +477,8 @@
         <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
       </div>
       <div class="modal-body">
-        <div class="modal-field">
-          <label class="sr-only" for="fbBrand">Brand</label>
-          <input type="text" id="fbBrand" class="form-input" readonly>
-        </div>
-        <div class="modal-field">
-          <label class="sr-only" for="fbSerial">Serial Number / Search Query</label>
-          <input type="text" id="fbSerial" class="form-input" readonly>
-        </div>
+        <div class="modal-field"><label class="sr-only" for="fbBrand">Brand</label><input type="text" id="fbBrand" class="form-input" readonly></div>
+        <div class="modal-field"><label class="sr-only" for="fbSerial">Serial Number</label><input type="text" id="fbSerial" class="form-input" readonly></div>
         <div class="modal-field">
           <label class="sr-only" for="fbType">Issue Type</label>
           <select id="fbType" class="form-select">
@@ -376,10 +490,7 @@
             <option value="other">Other</option>
           </select>
         </div>
-        <div class="modal-field">
-          <label class="sr-only" for="fbDetails">Details</label>
-          <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong?"></textarea>
-        </div>
+        <div class="modal-field"><label class="sr-only" for="fbDetails">Details</label><textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong?"></textarea></div>
         <div id="fbThanks" class="fb-thanks hidden">Thank you. Your feedback helps improve the decoder.</div>
         <div id="fbActions" class="modal-actions">
           <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
@@ -389,84 +500,76 @@
     </div>
   </div>
 
+  <!-- ═══ FOOTER ═══ -->
   <footer class="footer-sitemap">
-  <div class="footer-sitemap-grid">
-
-    <div class="footer-col">
-      <p class="footer-col-heading">Tools</p>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-        <li><a href="/smart-lookup">Smart Lookup</a></li>
-        <li><a href="/assistant">AI Assistant</a></li>
-        <li><a href="/brands">All Brands</a></li>
-      </ul>
+    <div class="footer-sitemap-grid">
+      <div class="footer-col">
+        <p class="footer-col-heading">Tools</p>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+          <li><a href="/smart-lookup">Smart Lookup</a></li>
+          <li><a href="/assistant">AI Assistant</a></li>
+          <li><a href="/brands">All Brands</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">By Appliance</p>
+        <ul>
+          <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
+          <li><a href="/washer-serial-number">Washing Machines</a></li>
+          <li><a href="/dryer-serial-number">Dryers</a></li>
+          <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
+          <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
+          <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
+          <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">By Brand</p>
+        <ul>
+          <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
+          <li><a href="/ge-serial-number-lookup">GE</a></li>
+          <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
+          <li><a href="/lg-serial-number-lookup">LG</a></li>
+          <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
+          <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
+          <li><a href="/trane-serial-number-lookup">Trane</a></li>
+          <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+          <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
+          <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
+          <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">Resources</p>
+        <ul>
+          <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
+          <li><a href="/how-old-is-my-hvac">How Old Is My HVAC?</a></li>
+          <li><a href="/how-old-is-my-plumbing">How Old Is My Water Heater?</a></li>
+          <li><a href="/how-old-is-my-electronics">How Old Is My Electronics?</a></li>
+          <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
+          <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
+          <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
+          <li><a href="/methodology">Methodology</a></li>
+          <li><a href="/about">About</a></li>
+        </ul>
+      </div>
     </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">By Appliance</p>
-      <ul>
-        <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
-        <li><a href="/washer-serial-number">Washing Machines</a></li>
-        <li><a href="/dryer-serial-number">Dryers</a></li>
-        <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
-        <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
-        <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
-        <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
-      </ul>
+    <div class="footer-bottom">
+      <span class="footer-bottom-copy">&copy; 2026 Decode My Item &middot; Database verified February 2026</span>
+      <div class="footer-bottom-links">
+        <a href="/contact">Contact</a>
+        <a href="/security">Security &amp; Data</a>
+        <a href="/privacy-policy">Privacy Policy</a>
+      </div>
     </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">By Brand</p>
-      <ul>
-        <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
-        <li><a href="/ge-serial-number-lookup">GE</a></li>
-        <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
-        <li><a href="/lg-serial-number-lookup">LG</a></li>
-        <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
-        <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
-        <li><a href="/trane-serial-number-lookup">Trane</a></li>
-        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
-        <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
-        <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
-        <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">Resources</p>
-      <ul>
-        <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
-        <li><a href="/how-old-is-my-hvac">How Old Is My HVAC?</a></li>
-        <li><a href="/how-old-is-my-plumbing">How Old Is My Water Heater?</a></li>
-        <li><a href="/how-old-is-my-electronics">How Old Is My Electronics?</a></li>
-        <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
-        <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
-        <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
-        <li><a href="/methodology">Methodology</a></li>
-        <li><a href="/about">About</a></li>
-      </ul>
-    </div>
-
-  </div>
-
-  <div class="footer-bottom">
-    <span class="footer-bottom-copy">
-      &copy; 2026 Decode My Item &middot; Database verified February 2026
-    </span>
-    <div class="footer-bottom-links">
-      <a href="/contact">Contact</a>
-      <a href="/security">Security &amp; Data</a>
-      <a href="/privacy-policy">Privacy Policy</a>
-    </div>
-  </div>
-</footer>
+  </footer>
 
   <script>
     function selectCatAndShowDecoder(cat, btn) {
       if (typeof selectCategory === 'function') selectCategory(cat, btn);
     }
-
     function applySeoBrandSelection(attempt) {
       var brandSelect = document.getElementById('brand');
       if (!brandSelect) return;
@@ -477,24 +580,25 @@
       brandSelect.value = 'maytag';
       brandSelect.dispatchEvent(new Event('change'));
     }
-
     window.addEventListener('DOMContentLoaded', function() {
       var activeTab = document.querySelector('[data-cat="appliances"]');
       if (activeTab) selectCatAndShowDecoder('appliances', activeTab);
       applySeoBrandSelection(0);
     });
-
     window.addEventListener('pageshow', function () {
       var feedbackModal = document.getElementById('feedbackModal');
       var navList = document.querySelector('nav ul');
       var hamburger = document.getElementById('hamburgerBtn');
-
-      if (!feedbackModal || feedbackModal.classList.contains('hidden')) {
-        document.body.style.overflow = '';
-      }
+      if (!feedbackModal || feedbackModal.classList.contains('hidden')) { document.body.style.overflow = ''; }
       document.body.classList.remove('nav-menu-open');
       if (navList) navList.classList.remove('open');
       if (hamburger) hamburger.classList.remove('active');
+    });
+    // FAQ accordion icon rotation
+    document.querySelectorAll('.bp-faq-item').forEach(el => {
+      el.addEventListener('toggle', () => {
+        el.querySelector('.bp-faq-icon').style.transform = el.open ? 'rotate(180deg)' : '';
+      });
     });
   </script>
   <script defer src="decoder-data.js"></script>

@@ -948,6 +948,131 @@ function renderPage(page) {
     return renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, preselectScript);
   }
 
+  // ── Category icon + color ──────────────────────────────────────────────
+  const catMeta = {
+    appliances:   { icon: 'kitchen',    color: '#44e5c2', label: 'Appliance Decoder' },
+    hvac:         { icon: 'ac_unit',    color: '#9fcaff', label: 'HVAC Decoder'       },
+    electronics:  { icon: 'devices',    color: '#c084fc', label: 'Electronics Decoder' },
+    waterHeaters: { icon: 'water_drop', color: '#44e5c2', label: 'Water Heater Decoder' }
+  };
+  const cat = catMeta[page.category] || catMeta.appliances;
+
+  // ── Location card icon mapping ─────────────────────────────────────────
+  function locationIcon(title) {
+    const t = title.toLowerCase();
+    if (t.includes('refrigerator') || t.includes('fridge')) return 'kitchen';
+    if (t.includes('washer') || t.includes('washing') || t.includes('laundry')) return 'local_laundry_service';
+    if (t.includes('dryer')) return 'local_laundry_service';
+    if (t.includes('dishwasher')) return 'dishwasher';
+    if (t.includes('range') || t.includes('oven') || t.includes('stove') || t.includes('cooking')) return 'oven_gen';
+    if (t.includes('furnace') || t.includes('hvac') || t.includes('air handler')) return 'heat_pump';
+    if (t.includes('condenser') || t.includes('outdoor') || t.includes('ac ')) return 'ac_unit';
+    if (t.includes('water heater')) return 'water_drop';
+    if (t.includes('laptop') || t.includes('notebook')) return 'laptop';
+    if (t.includes('tv') || t.includes('television')) return 'tv';
+    if (t.includes('phone') || t.includes('tablet')) return 'smartphone';
+    if (t.includes('console') || t.includes('gaming')) return 'sports_esports';
+    return 'label';
+  }
+
+  // ── Confidence pill styling ────────────────────────────────────────────
+  function confidencePill(text) {
+    const t = (text || '').toLowerCase();
+    if (t.includes('higher') || t.includes('confirmed') || t.includes('reliable')) {
+      return `<span class="conf-pill conf-high">✓ ${text}</span>`;
+    }
+    if (t.includes('estimated decade') || t.includes('repeat') || t.includes('cycle')) {
+      return `<span class="conf-pill conf-estimated">~ ${text}</span>`;
+    }
+    return `<span class="conf-pill conf-med">~ ${text}</span>`;
+  }
+
+  // ── Format cards (replaces table) ─────────────────────────────────────
+  function renderFormatCards(rows) {
+    if (!rows || !rows.length) return '';
+    return rows.map(r => `
+      <div class="fmt-card">
+        <div class="fmt-card-top">
+          <span class="fmt-label">${r.label}</span>
+          ${confidencePill(r.confidence)}
+        </div>
+        <code class="fmt-serial">${r.pattern}</code>
+        <p class="fmt-meaning">${r.meaning}</p>
+      </div>`).join('');
+  }
+
+  // ── Example terminals ──────────────────────────────────────────────────
+  function renderExampleTerminals(rows) {
+    if (!rows || !rows.length) return '';
+    return rows.map(r => `
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">${r.label}</span>
+        </div>
+        <code class="ex-serial">${r.serial}</code>
+        <p class="ex-note">${r.note}</p>
+      </div>`).join('');
+  }
+
+  // ── Location icon cards ────────────────────────────────────────────────
+  function renderLocationIconCards(blocks) {
+    if (!blocks || !blocks.length) return '';
+    return blocks.map(b => `
+      <div class="loc-card">
+        <div class="loc-card-head">
+          <span class="material-symbols-outlined loc-icon">${locationIcon(b.title)}</span>
+          <h3 class="loc-card-title">${b.title}</h3>
+        </div>
+        <ul class="loc-list">${b.items.map(i => `<li>${i}</li>`).join('')}</ul>
+      </div>`).join('');
+  }
+
+  // ── FAQ accordion ──────────────────────────────────────────────────────
+  function renderFaqAccordion(faqs) {
+    if (!faqs || !faqs.length) return '';
+    return faqs.map(([q, a]) => `
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>${q}</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>${a}</p></div>
+      </details>`).join('');
+  }
+
+  // ── Checklist ──────────────────────────────────────────────────────────
+  function renderBulletChecklist(items) {
+    if (!items || !items.length) return '';
+    return items.map(i => `
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>${i}</span>
+      </li>`).join('');
+  }
+
+  // ── Related brand pills ────────────────────────────────────────────────
+  function renderRelatedPills(links) {
+    if (!links || !links.length) return '';
+    return links.map(([slug, label]) =>
+      `<a href="/${slug}" class="bp-pill">${label}</a>`).join('');
+  }
+
+  // ── Footer resource links (updated) ───────────────────────────────────
+  const footerResources = [
+    ['/how-old-is-my-appliance', 'How Old Is My Appliance?'],
+    ['/how-old-is-my-hvac', 'How Old Is My HVAC?'],
+    ['/how-old-is-my-plumbing', 'How Old Is My Water Heater?'],
+    ['/how-old-is-my-electronics', 'How Old Is My Electronics?'],
+    ['/serial-number-location-guide', 'Serial Number Location Guide'],
+    ['/appliance-age-for-insurance-and-replacement', 'Appliance Age for Insurance'],
+    ['/how-to-read-serial-number', 'How to Read a Serial Number'],
+    ['/methodology', 'Methodology'],
+    ['/about', 'About'],
+  ];
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -981,8 +1106,11 @@ function renderPage(page) {
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body data-page-kind="brand-page">
+
+  <!-- ═══ NAV ═══ -->
   <nav>
-    <a href="/" class="logo" aria-label="Item Assist home">
+    <a href="/" class="logo" aria-label="Decode My Item home">
+      <span class="material-symbols-outlined logo-icon">qr_code_scanner</span>
       <div>
         <div class="logo-text">Decode My <span>Item</span></div>
         <div class="logo-sub">Decode - Research - Automate</div>
@@ -994,30 +1122,50 @@ function renderPage(page) {
   </nav>
 
   <main>
-    <section class="page-hero seo-hero">
-      <div class="seo-copy-wrap">
+
+    <!-- ═══ HERO ═══ -->
+    <section class="bp-hero">
+      <div class="bp-hero-inner">
         <nav class="breadcrumb-nav" aria-label="Breadcrumb">
-          ${breadcrumbs.map((item, index) => index === breadcrumbs.length - 1
+          ${breadcrumbs.map((item, i) => i === breadcrumbs.length - 1
             ? `<span aria-current="page">${item.name}</span>`
-            : `<a href="${item.url.replace(siteUrl, '') || '/'}">${item.name}</a>`).join('<span class="breadcrumb-sep">/</span>')}
+            : `<a href="${item.url.replace(siteUrl,'') || '/'}">${item.name}</a>`
+          ).join('<span class="breadcrumb-sep">/</span>')}
         </nav>
-      </div>
-      <div class="tool-hero">
-        <div class="tool-badge">${page.badge}</div>
-        <h1>${page.h1}</h1>
-        <p>${page.intro}</p>
-        <ol class="how-steps how-steps-list">${renderHowToHtml(page.howToSteps || defaultHowToSteps)}
+
+        <div class="bp-hero-icon-wrap" style="background:${cat.color}18;border-color:${cat.color}30;">
+          <span class="material-symbols-outlined bp-hero-icon" style="color:${cat.color};">${cat.icon}</span>
+        </div>
+
+        <span class="bp-badge" style="color:${cat.color};border-color:${cat.color}30;background:${cat.color}10;">
+          ${cat.label}
+        </span>
+
+        <h1 class="bp-hero-title">${page.h1}</h1>
+        <p class="bp-hero-sub">${page.intro}</p>
+
+        <ol class="bp-steps">
+          ${(page.howToSteps || defaultHowToSteps).map((step, i) => `
+          <li class="bp-step">
+            <span class="bp-step-num" style="background:${cat.color}20;color:${cat.color};">${i + 1}</span>
+            <span>${step}</span>
+          </li>`).join('')}
         </ol>
+
+        <a href="#decoder-tool" class="bp-cta-btn" style="background:${cat.color};color:#00382d;">
+          <span class="material-symbols-outlined" style="font-size:18px;">bolt</span>
+          Decode Serial Number
+        </a>
       </div>
     </section>
 
-    <section class="section seo-copy-section">
-      <div class="seo-copy-wrap">
-        <p>${page.supportingIntro}</p>
-      </div>
-    </section>
+    <!-- ═══ SUPPORTING INTRO ═══ -->
+    <div class="bp-intro-strip">
+      <p>${page.supportingIntro}</p>
+    </div>
 
-    <section class="section" id="decoder-tool" style="padding-top:0;padding-bottom:16px;">
+    <!-- ═══ DECODER TOOL ═══ -->
+    <section class="bp-tool-section" id="decoder-tool">
       <div class="tool-focus-wrap">
         <div class="seo-tool-shell">
           <div class="home-tools-wrap">
@@ -1030,18 +1178,13 @@ function renderPage(page) {
                     <button class="search-tab cat-tab${page.category === 'hvac' ? ' active' : ''}" data-cat="hvac" onclick="selectCatAndShowDecoder('hvac', this)">HVAC</button>
                     <button class="search-tab cat-tab${page.category === 'electronics' ? ' active' : ''}" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
                   </div>
-
                   <div class="search-panel" id="panel-decoder">
                     <div class="home-tool-row">
                       <label class="sr-only" for="brand">Select Brand</label>
-                      <select id="brand" class="search-select">
-                        <option value="">-- Select Brand --</option>
-                      </select>
-
+                      <select id="brand" class="search-select"><option value="">-- Select Brand --</option></select>
                       <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
                       <input type="text" id="serial" class="search-input" placeholder="${page.decoderPlaceholder || 'Enter serial number exactly as shown'}">
                     </div>
-
                     <div class="era-group hidden" id="eraGroup">
                       <label class="sr-only" for="eraSelect">Manufacture Era</label>
                       <select id="eraSelect" class="search-select" style="margin-top:8px;">
@@ -1051,7 +1194,6 @@ function renderPage(page) {
                       </select>
                       <p class="era-note">Some brands reuse serial layouts across decades. Select the era when prompted to improve accuracy.</p>
                     </div>
-
                     <p class="search-hint serial-helper-text">${page.decoderIntro}</p>
                     <div class="tool-panel-action">
                       <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">Decode Serial Number</button>
@@ -1062,13 +1204,13 @@ function renderPage(page) {
             </div>
           </div>
         </div>
-
         <div class="utility-strip">
-          ${trustBullets.map((item) => `<span>${item}</span>`).join('')}
+          ${trustBullets.map(item => `<span>${item}</span>`).join('')}
         </div>
       </div>
     </section>
 
+    <!-- ═══ RESULTS ═══ -->
     <div class="results-wrapper">
       <div id="ageLoading" class="results-card hidden">
         <div class="loading-inner">
@@ -1076,7 +1218,6 @@ function renderPage(page) {
           <div class="loading-text" id="loadingText">Researching product information...</div>
         </div>
       </div>
-
       <div id="serialResults" class="results-card hidden">
         <div class="results-header">
           <h3>Decoded Results</h3>
@@ -1101,14 +1242,8 @@ function renderPage(page) {
               <span class="result-label">Estimated Age</span>
               <span class="result-value" id="resultEstimatedAge">&mdash;</span>
             </div>
-            <div class="info-block method">
-              <h4>Decoding Method</h4>
-              <p id="resultMethod"></p>
-            </div>
-            <div class="info-block notes">
-              <h4>Important Notes</h4>
-              <p id="resultNotes"></p>
-            </div>
+            <div class="info-block method"><h4>Decoding Method</h4><p id="resultMethod"></p></div>
+            <div class="info-block notes"><h4>Important Notes</h4><p id="resultNotes"></p></div>
             <details class="determination-details">
               <summary>How this was determined</summary>
               <div class="determination-body" id="serialDeterminationBody">
@@ -1128,82 +1263,124 @@ function renderPage(page) {
 
     ${renderExtraSections(page.preGridSections)}
 
-    <section class="section seo-section-grid">
-      <div class="seo-card"${page.decodeSectionId ? ` id="${page.decodeSectionId}"` : ''}>
-        <h2>${page.decodeSectionTitle}</h2>
-        <p>${page.decodeSectionBody}</p>
-      </div>
-      <div class="seo-card"${page.modelSectionId ? ` id="${page.modelSectionId}"` : ''}>
-        <h2>${page.modelSectionTitle}</h2>
-        <p>${page.modelSectionBody}</p>
-      </div>
-      <div class="seo-card seo-card-wide"${page.formatSectionId ? ` id="${page.formatSectionId}"` : ''}>
-        <h2>${page.formatSectionTitle}</h2>
-        <div class="table-wrap">
-          <table class="format-table">
-            <thead>
-              <tr>
-                <th>Pattern</th>
-                <th>Common Format</th>
-                <th>What It May Indicate</th>
-                <th>Confidence</th>
-              </tr>
-            </thead>
-            <tbody>${renderFormatTable(page.formats)}
-            </tbody>
-          </table>
+    <!-- ═══ CONTENT SECTIONS ═══ -->
+    <div class="bp-content-wrap">
+
+      <!-- How to decode + model context (2-col) -->
+      <div class="bp-two-col">
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:${cat.color};">manage_search</span>
+            <h2>${page.decodeSectionTitle}</h2>
+          </div>
+          <p>${page.decodeSectionBody}</p>
+        </div>
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:${cat.color};">category</span>
+            <h2>${page.modelSectionTitle}</h2>
+          </div>
+          <p>${page.modelSectionBody}</p>
         </div>
       </div>
-      <div class="seo-card seo-card-wide"${page.exampleSectionId ? ` id="${page.exampleSectionId}"` : ''}>
-        <h2>${page.exampleSectionTitle}</h2>
-        <div class="example-grid">${renderExampleCards(page.examples)}
+
+      <!-- Serial format cards -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:${cat.color};">barcode_scanner</span>
+          <h2>${page.formatSectionTitle}</h2>
+        </div>
+        <div class="fmt-cards-grid">
+          ${renderFormatCards(page.formats)}
         </div>
       </div>
-      <div class="seo-card seo-card-wide"${page.locationSectionId ? ` id="${page.locationSectionId}"` : ''}>
-        <h2>${page.locationSectionTitle}</h2>
-        <div class="mini-card-grid">${renderLocationBlocks(page.locations)}
+
+      <!-- Examples -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:${cat.color};">terminal</span>
+          <h2>${page.exampleSectionTitle}</h2>
+        </div>
+        <div class="ex-terminals-grid">
+          ${renderExampleTerminals(page.examples)}
         </div>
       </div>
-      <div class="seo-card"${page.problemSectionId ? ` id="${page.problemSectionId}"` : ''}>
-        <h2>${page.problemSectionTitle}</h2>
-        <ul class="bullet-list">${renderChecklist(page.problems)}
-        </ul>
-      </div>
-      <div class="seo-card faq-card">
-        <h2>FAQ</h2>
-        <div class="faq-list">${renderFaqHtml(page.faqs)}
+
+      <!-- Location guide -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:${cat.color};">pin_drop</span>
+          <h2>${page.locationSectionTitle}</h2>
+        </div>
+        <div class="loc-cards-grid">
+          ${renderLocationIconCards(page.locations)}
         </div>
       </div>
-    </section>
+
+      <!-- Troubleshooting + FAQ (2-col) -->
+      <div class="bp-two-col">
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:${cat.color};">troubleshoot</span>
+            <h2>${page.problemSectionTitle}</h2>
+          </div>
+          <ul class="bp-check-list">
+            ${renderBulletChecklist(page.problems)}
+          </ul>
+        </div>
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:${cat.color};">help</span>
+            <h2>FAQ</h2>
+          </div>
+          <div class="bp-faq-list">
+            ${renderFaqAccordion(page.faqs)}
+          </div>
+        </div>
+      </div>
+
+      <!-- Related links -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:${cat.color};">link</span>
+          <h2>Related Decoder Pages</h2>
+        </div>
+        <div class="bp-pills-wrap">
+          ${renderRelatedPills(page.relatedLinks)}
+        </div>
+      </div>
+
+      <!-- Research paths -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:${cat.color};">explore</span>
+          <h2>Research Paths</h2>
+        </div>
+        <div class="link-group-grid">${renderLinkGroupCards(page.linkGroups)}</div>
+      </div>
+
+      <!-- Bottom CTA -->
+      <div class="bp-cta-card">
+        <span class="material-symbols-outlined" style="font-size:40px;color:${cat.color};margin-bottom:12px;">description</span>
+        <h2>Need a claim-ready replacement summary?</h2>
+        <p>Use the decoder above to start, or try Smart Lookup if the serial label is worn or missing.</p>
+        <div class="bp-cta-row">
+          <a href="#decoder-tool" class="bp-cta-btn" style="background:${cat.color};color:#00382d;">
+            <span class="material-symbols-outlined" style="font-size:16px;">bolt</span> Decode a Serial
+          </a>
+          <a href="/smart-lookup" class="bp-cta-btn-outline" style="border-color:${cat.color}40;color:${cat.color};">
+            Try Smart Lookup →
+          </a>
+        </div>
+      </div>
+
+    </div>
 
     ${renderExtraSections(page.postGridSections)}
 
-    <section class="section related-section">
-      <div class="seo-copy-wrap">
-        <h2>Related Decoder Pages</h2>
-        <div class="related-brands">${renderLinks(page.relatedLinks)}
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="seo-copy-wrap">
-        <h2>Research Paths</h2>
-        <div class="link-group-grid">${renderLinkGroupCards(page.linkGroups)}
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="seo-copy-wrap">
-        <div class="cta-note">
-          <h2>Need a claim-ready replacement summary?</h2>
-          <p>Use the decoder above to start.</p>
-        </div>
-      </div>
-    </section>
   </main>
 
+  <!-- ═══ FEEDBACK MODAL ═══ -->
   <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
     <div class="modal-card">
       <div class="modal-header">
@@ -1211,14 +1388,8 @@ function renderPage(page) {
         <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
       </div>
       <div class="modal-body">
-        <div class="modal-field">
-          <label class="sr-only" for="fbBrand">Brand</label>
-          <input type="text" id="fbBrand" class="form-input" readonly>
-        </div>
-        <div class="modal-field">
-          <label class="sr-only" for="fbSerial">Serial Number / Search Query</label>
-          <input type="text" id="fbSerial" class="form-input" readonly>
-        </div>
+        <div class="modal-field"><label class="sr-only" for="fbBrand">Brand</label><input type="text" id="fbBrand" class="form-input" readonly></div>
+        <div class="modal-field"><label class="sr-only" for="fbSerial">Serial Number</label><input type="text" id="fbSerial" class="form-input" readonly></div>
         <div class="modal-field">
           <label class="sr-only" for="fbType">Issue Type</label>
           <select id="fbType" class="form-select">
@@ -1230,10 +1401,7 @@ function renderPage(page) {
             <option value="other">Other</option>
           </select>
         </div>
-        <div class="modal-field">
-          <label class="sr-only" for="fbDetails">Details</label>
-          <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong?"></textarea>
-        </div>
+        <div class="modal-field"><label class="sr-only" for="fbDetails">Details</label><textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong?"></textarea></div>
         <div id="fbThanks" class="fb-thanks hidden">Thank you. Your feedback helps improve the decoder.</div>
         <div id="fbActions" class="modal-actions">
           <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
@@ -1243,102 +1411,89 @@ function renderPage(page) {
     </div>
   </div>
 
+  <!-- ═══ FOOTER ═══ -->
   <footer class="footer-sitemap">
-  <div class="footer-sitemap-grid">
-
-    <div class="footer-col">
-      <p class="footer-col-heading">Tools</p>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-        <li><a href="/smart-lookup">Smart Lookup</a></li>
-        <li><a href="/assistant">AI Assistant</a></li>
-        <li><a href="/brands">All Brands</a></li>
-      </ul>
+    <div class="footer-sitemap-grid">
+      <div class="footer-col">
+        <p class="footer-col-heading">Tools</p>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+          <li><a href="/smart-lookup">Smart Lookup</a></li>
+          <li><a href="/assistant">AI Assistant</a></li>
+          <li><a href="/brands">All Brands</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">By Appliance</p>
+        <ul>
+          <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
+          <li><a href="/washer-serial-number">Washing Machines</a></li>
+          <li><a href="/dryer-serial-number">Dryers</a></li>
+          <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
+          <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
+          <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
+          <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">By Brand</p>
+        <ul>
+          <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
+          <li><a href="/ge-serial-number-lookup">GE</a></li>
+          <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
+          <li><a href="/lg-serial-number-lookup">LG</a></li>
+          <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
+          <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
+          <li><a href="/trane-serial-number-lookup">Trane</a></li>
+          <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+          <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
+          <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
+          <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">Resources</p>
+        <ul>
+          ${footerResources.map(([href, label]) => `<li><a href="${href}">${label}</a></li>`).join('\n          ')}
+        </ul>
+      </div>
     </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">By Appliance</p>
-      <ul>
-        <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
-        <li><a href="/washer-serial-number">Washing Machines</a></li>
-        <li><a href="/dryer-serial-number">Dryers</a></li>
-        <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
-        <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
-        <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
-        <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
-      </ul>
+    <div class="footer-bottom">
+      <span class="footer-bottom-copy">&copy; 2026 Decode My Item &middot; Database verified February 2026</span>
+      <div class="footer-bottom-links">
+        <a href="/contact">Contact</a>
+        <a href="/security">Security &amp; Data</a>
+        <a href="/privacy-policy">Privacy Policy</a>
+      </div>
     </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">By Brand</p>
-      <ul>
-        <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
-        <li><a href="/ge-serial-number-lookup">GE</a></li>
-        <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
-        <li><a href="/lg-serial-number-lookup">LG</a></li>
-        <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
-        <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
-        <li><a href="/trane-serial-number-lookup">Trane</a></li>
-        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
-        <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
-        <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
-        <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">Resources</p>
-      <ul>
-        <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
-        <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
-        <li><a href="/where-is-my-serial-number">Where Is My Serial Number?</a></li>
-        <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
-        <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
-        <li><a href="/methodology">Methodology</a></li>
-        <li><a href="/about">About</a></li>
-      </ul>
-    </div>
-
-  </div>
-
-  <div class="footer-bottom">
-    <span class="footer-bottom-copy">
-      &copy; 2026 Decode My Item &middot; Database verified February 2026
-    </span>
-    <div class="footer-bottom-links">
-      <a href="/contact">Contact</a>
-      <a href="/security">Security &amp; Data</a>
-      <a href="/privacy-policy">Privacy Policy</a>
-    </div>
-  </div>
-</footer>
+  </footer>
 
   <script>
     function selectCatAndShowDecoder(cat, btn) {
       if (typeof selectCategory === 'function') selectCategory(cat, btn);
     }
-
     function applySeoBrandSelection(attempt) {${preselectScript}
     }
-
     window.addEventListener('DOMContentLoaded', function() {
       var activeTab = document.querySelector('[data-cat="${page.category}"]');
       if (activeTab) selectCatAndShowDecoder('${page.category}', activeTab);
       applySeoBrandSelection(0);
     });
-
     window.addEventListener('pageshow', function () {
       var feedbackModal = document.getElementById('feedbackModal');
       var navList = document.querySelector('nav ul');
       var hamburger = document.getElementById('hamburgerBtn');
-
-      if (!feedbackModal || feedbackModal.classList.contains('hidden')) {
-        document.body.style.overflow = '';
-      }
+      if (!feedbackModal || feedbackModal.classList.contains('hidden')) { document.body.style.overflow = ''; }
       document.body.classList.remove('nav-menu-open');
       if (navList) navList.classList.remove('open');
       if (hamburger) hamburger.classList.remove('active');
+    });
+    // FAQ accordion icon rotation
+    document.querySelectorAll('.bp-faq-item').forEach(el => {
+      el.addEventListener('toggle', () => {
+        el.querySelector('.bp-faq-icon').style.transform = el.open ? 'rotate(180deg)' : '';
+      });
     });
   </script>
   <script defer src="decoder-data.js"></script>
@@ -1351,6 +1506,8 @@ function renderPage(page) {
 </html>
 `;
 }
+
+
 
 function baseLinkGroups() {
   return [
