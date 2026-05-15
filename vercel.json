@@ -19,11 +19,6 @@
       "permanent": true
     },
     {
-      "source": "/:path*.html",
-      "destination": "/:path*",
-      "permanent": true
-    },
-    {
       "source": "/carrier",
       "destination": "/carrier-serial-number-lookup",
       "permanent": true
@@ -424,5 +419,6 @@
       "path": "/api/alerts",
       "schedule": "0 9 * * *"
     }
-  ]
+  ],
+  "cleanUrls": true
 }
