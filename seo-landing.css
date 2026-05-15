@@ -1568,3 +1568,95 @@ textarea.form-input {
   .fmt-cards-grid, .ex-terminals-grid, .loc-cards-grid { grid-template-columns: 1fr; }
   .bp-cta-card { padding: 28px 20px; }
 }
+
+/* ── Kenmore prefix lookup ──────────────────────────────────── */
+.kenmore-prefix-section { border-left: 3px solid #44e5c2; }
+
+.kp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.kp-group {
+  background: #0D1A2E;
+  border: 1px solid #3c4a45;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.kp-group-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid;
+}
+
+.kp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid #3c4a45;
+  font-size: 12px;
+  color: #bacac3;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'JetBrains Mono', monospace;
+  user-select: none;
+}
+.kp-chip strong { color: #dae2fd; }
+.kp-chip:hover { border-color: #44e5c2; color: #44e5c2; background: rgba(68,229,194,0.08); }
+.kp-chip:hover strong { color: #44e5c2; }
+.kp-chip-active {
+  border-color: #44e5c2 !important;
+  background: rgba(68,229,194,0.15) !important;
+  color: #44e5c2 !important;
+}
+.kp-chip-active strong { color: #44e5c2 !important; }
+
+.kp-hint {
+  font-size: 12px;
+  color: #64748B;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.kp-inline-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: rgba(68,229,194,0.08);
+  color: #44e5c2;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(68,229,194,0.15);
+}
+
+/* Kenmore prefix select dropdown styling */
+.kenmore-prefix-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2344e5c2' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px !important;
+  cursor: pointer;
+}
+.kenmore-prefix-select:focus { border-color: #44e5c2 !important; outline: none; }
