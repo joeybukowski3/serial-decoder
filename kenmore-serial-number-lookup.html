@@ -201,6 +201,77 @@
     </div>
 
     
+<div class="bp-content-wrap" style="padding-bottom:0;padding-top:4px;">
+  <div class="bp-section-card bp-full-width kenmore-prefix-section">
+    <div class="bp-section-card-head">
+      <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">table_view</span>
+      <h2>Kenmore Model Prefix → OEM Manufacturer</h2>
+    </div>
+    <p style="color:#bacac3;font-size:14px;margin-bottom:20px;line-height:1.7;">
+      Kenmore appliances are built by other manufacturers. Find your model prefix below to identify the right decoder path.
+      The prefix is the <strong style="color:#dae2fd;">first 3 digits</strong> of your model number (e.g., model <code class="kp-inline-code">110.12345678</code> → prefix <code class="kp-inline-code">110</code>).
+    </p>
+    <div class="kp-grid">
+      <div class="kp-group">
+        <div class="kp-group-head" style="color:#44e5c2;border-color:#44e5c240;">
+          <span class="material-symbols-outlined" style="font-size:18px;">kitchen</span>
+          Whirlpool-built
+        </div>
+        <div class="kp-chips">
+          <span class="kp-chip" data-prefix="106" data-oem="whirlpool"><strong>106</strong> · Fridge</span>
+          <span class="kp-chip" data-prefix="110" data-oem="whirlpool"><strong>110</strong> · Laundry</span>
+          <span class="kp-chip" data-prefix="198" data-oem="whirlpool"><strong>198</strong> · Various</span>
+          <span class="kp-chip" data-prefix="562" data-oem="whirlpool"><strong>562</strong> · Various</span>
+          <span class="kp-chip" data-prefix="665" data-oem="whirlpool"><strong>665</strong> · Dishwasher</span>
+        </div>
+      </div>
+      <div class="kp-group">
+        <div class="kp-group-head" style="color:#ffc278;border-color:#ffc27840;">
+          <span class="material-symbols-outlined" style="font-size:18px;">bolt</span>
+          GE-built
+        </div>
+        <div class="kp-chips">
+          <span class="kp-chip" data-prefix="362" data-oem="ge"><strong>362</strong> · Range</span>
+          <span class="kp-chip" data-prefix="363" data-oem="ge"><strong>363</strong> · Fridge</span>
+        </div>
+      </div>
+      <div class="kp-group">
+        <div class="kp-group-head" style="color:#9fcaff;border-color:#9fcaff40;">
+          <span class="material-symbols-outlined" style="font-size:18px;">ac_unit</span>
+          LG-built
+        </div>
+        <div class="kp-chips">
+          <span class="kp-chip" data-prefix="795" data-oem="lg"><strong>795</strong> · Fridge</span>
+        </div>
+      </div>
+      <div class="kp-group">
+        <div class="kp-group-head" style="color:#bacac3;border-color:#bacac340;">
+          <span class="material-symbols-outlined" style="font-size:18px;">category</span>
+          Other Manufacturers
+        </div>
+        <div class="kp-chips">
+          <span class="kp-chip" data-prefix="596" data-oem="amana"><strong>596</strong> · Amana</span>
+          <span class="kp-chip" data-prefix="253" data-oem="gibson"><strong>253</strong> · Gibson</span>
+          <span class="kp-chip" data-prefix="417" data-oem="kelvinator"><strong>417</strong> · Kelvinator</span>
+          <span class="kp-chip" data-prefix="628" data-oem="kelvinator"><strong>628</strong> · Kelvinator</span>
+          <span class="kp-chip" data-prefix="662" data-oem="kelvinator"><strong>662</strong> · Kelvinator</span>
+          <span class="kp-chip" data-prefix="103" data-oem="roper"><strong>103</strong> · Roper</span>
+          <span class="kp-chip" data-prefix="155" data-oem="roper"><strong>155</strong> · Roper</span>
+          <span class="kp-chip" data-prefix="278" data-oem="roper"><strong>278</strong> · Roper</span>
+          <span class="kp-chip" data-prefix="647" data-oem="roper"><strong>647</strong> · Roper</span>
+          <span class="kp-chip" data-prefix="174" data-oem="caloric"><strong>174</strong> · Caloric</span>
+          <span class="kp-chip" data-prefix="629" data-oem="jenn-air"><strong>629</strong> · Jenn-Air</span>
+          <span class="kp-chip" data-prefix="651" data-oem="speed-queen"><strong>651</strong> · Speed Queen</span>
+          <span class="kp-chip" data-prefix="791" data-oem="tappan"><strong>791</strong> · Tappan</span>
+        </div>
+      </div>
+    </div>
+    <p class="kp-hint">
+      <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;color:#44e5c2;">info</span>
+      Select a prefix chip above to auto-fill the decoder, or use the dropdown that appears when Kenmore is selected in the decoder tool below.
+    </p>
+  </div>
+</div>
 
     <!-- ═══ CONTENT SECTIONS ═══ -->
     <div class="bp-content-wrap">
@@ -606,6 +677,115 @@
   <script defer src="analytics.js"></script>
   <script defer src="smart-lookup-bundle.js"></script>
   <script defer src="script.js"></script>
+  <script>
+      // ── Kenmore prefix chip click handler ──────────────────────────
+      document.querySelectorAll('.kp-chip').forEach(function(chip) {
+        chip.addEventListener('click', function() {
+          var prefix = this.dataset.prefix;
+          document.querySelectorAll('.kp-chip').forEach(function(c) { c.classList.remove('kp-chip-active'); });
+          this.classList.add('kp-chip-active');
+          // Fill the model prefix field (text input or select)
+          var prefixField = document.getElementById('kenmoreModelPrefix');
+          if (prefixField) {
+            prefixField.value = prefix;
+            prefixField.dispatchEvent(new Event('input', { bubbles: true }));
+            prefixField.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          // Scroll to decoder
+          var tool = document.getElementById('decoder-tool');
+          if (tool) tool.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+
+      // ── Convert kenmoreModelPrefix text input → styled select ──────
+      var KENMORE_PREFIXES = [
+        { value: '',    label: '— Select model prefix —', group: '' },
+        { value: '106', label: '106 · Whirlpool (Refrigerator)',    group: 'Whirlpool-built' },
+        { value: '110', label: '110 · Whirlpool (Laundry)',         group: 'Whirlpool-built' },
+        { value: '198', label: '198 · Whirlpool (Various)',         group: 'Whirlpool-built' },
+        { value: '562', label: '562 · Whirlpool (Various)',         group: 'Whirlpool-built' },
+        { value: '665', label: '665 · Whirlpool (Dishwasher)',      group: 'Whirlpool-built' },
+        { value: '362', label: '362 · General Electric (Range)',    group: 'GE-built' },
+        { value: '363', label: '363 · General Electric (Fridge)',   group: 'GE-built' },
+        { value: '795', label: '795 · LG (Refrigerator)',           group: 'LG-built' },
+        { value: '596', label: '596 · Amana',                       group: 'Other' },
+        { value: '253', label: '253 · Gibson',                      group: 'Other' },
+        { value: '417', label: '417 · Kelvinator',                  group: 'Other' },
+        { value: '628', label: '628 · Kelvinator',                  group: 'Other' },
+        { value: '662', label: '662 · Kelvinator',                  group: 'Other' },
+        { value: '103', label: '103 · Roper',                       group: 'Other' },
+        { value: '155', label: '155 · Roper',                       group: 'Other' },
+        { value: '278', label: '278 · Roper',                       group: 'Other' },
+        { value: '647', label: '647 · Roper',                       group: 'Other' },
+        { value: '174', label: '174 · Caloric',                     group: 'Other' },
+        { value: '629', label: '629 · Jenn-Air',                    group: 'Other' },
+        { value: '651', label: '651 · Speed Queen',                  group: 'Other' },
+        { value: '791', label: '791 · Tappan',                      group: 'Other' },
+      ];
+
+      function buildPrefixSelect(originalInput) {
+        var groups = {};
+        KENMORE_PREFIXES.forEach(function(p) {
+          if (!groups[p.group]) groups[p.group] = [];
+          groups[p.group].push(p);
+        });
+
+        var sel = document.createElement('select');
+        sel.id = originalInput.id;   // keep same ID so script.js finds it
+        sel.className = originalInput.className + ' kenmore-prefix-select';
+        sel.setAttribute('aria-label', 'Kenmore model prefix');
+
+        // blank option
+        var blank = document.createElement('option');
+        blank.value = '';
+        blank.textContent = '— Select model prefix —';
+        sel.appendChild(blank);
+
+        var groupOrder = ['Whirlpool-built', 'GE-built', 'LG-built', 'Other'];
+        groupOrder.forEach(function(gName) {
+          if (!groups[gName] || !groups[gName].length) return;
+          var og = document.createElement('optgroup');
+          og.label = gName;
+          groups[gName].forEach(function(p) {
+            var opt = document.createElement('option');
+            opt.value = p.value;
+            opt.textContent = p.label;
+            og.appendChild(opt);
+          });
+          sel.appendChild(og);
+        });
+
+        // keep existing value if any
+        sel.value = originalInput.value || '';
+
+        sel.addEventListener('change', function() {
+          originalInput.dispatchEvent(new Event('change', { bubbles: true }));
+          // sync chip highlight
+          document.querySelectorAll('.kp-chip').forEach(function(c) {
+            c.classList.toggle('kp-chip-active', c.dataset.prefix === sel.value);
+          });
+          if (typeof updateDecodeBtn === 'function') updateDecodeBtn();
+        });
+
+        return sel;
+      }
+
+      function upgradeKenmoreInput() {
+        var el = document.getElementById('kenmoreModelPrefix');
+        if (!el || el.tagName === 'SELECT') return;
+        var parent = el.parentNode;
+        var sel = buildPrefixSelect(el);
+        parent.replaceChild(sel, el);
+      }
+
+      // Watch for the field to appear (it's injected dynamically when brand = kenmore)
+      var kenmoreObserver = new MutationObserver(function() {
+        upgradeKenmoreInput();
+      });
+      kenmoreObserver.observe(document.body, { childList: true, subtree: true });
+      // Also try immediately in case it's already there
+      upgradeKenmoreInput();
+    </script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/kenmore-serial-number-lookup#webpage","name":"Kenmore Serial Number Decoder","description":"Decode Kenmore serial numbers, estimate appliance age, and use the supported OEM-routing logic that depends on the Kenmore model prefix.","url":"https://www.decodemyitem.com/kenmore-serial-number-lookup","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Item Assist","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"Kenmore Serial Number Decoder"}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","@id":"https://www.decodemyitem.com/kenmore-serial-number-lookup#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.decodemyitem.com"},{"@type":"ListItem","position":2,"name":"Kenmore Serial Number Decoder","item":"https://www.decodemyitem.com/kenmore-serial-number-lookup"}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://www.decodemyitem.com/kenmore-serial-number-lookup#app","name":"Item Assist Serial Number Decoder","url":"https://www.decodemyitem.com/kenmore-serial-number-lookup","description":"Kenmore is preselected. Use the full serial and keep the model prefix nearby if possible.","applicationCategory":"UtilityApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
