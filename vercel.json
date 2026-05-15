@@ -19,11 +19,6 @@
       "permanent": true
     },
     {
-      "source": "/:path*.html",
-      "destination": "/:path*",
-      "permanent": true
-    },
-    {
       "source": "/carrier",
       "destination": "/carrier-serial-number-lookup",
       "permanent": true
@@ -142,78 +137,288 @@
     }
   ],
   "rewrites": [
-    { "source": "/decoder-tool", "destination": "/decoder-tool.html" },
-    { "source": "/smart-lookup", "destination": "/smart-lookup.html" },
-    { "source": "/assistant", "destination": "/assistant.html" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/about", "destination": "/about.html" },
-    { "source": "/find-model-serial-number", "destination": "/find-model-serial-number.html" },
-    { "source": "/brands", "destination": "/brands.html" },
-    { "source": "/sony", "destination": "/sony.html" },
-    { "source": "/bosch", "destination": "/bosch.html" },
-    { "source": "/apple", "destination": "/apple.html" },
-    { "source": "/hp", "destination": "/hp.html" },
-    { "source": "/asus", "destination": "/asus.html" },
-    { "source": "/google-pixel", "destination": "/google-pixel.html" },
-    { "source": "/vizio", "destination": "/vizio.html" },
-    { "source": "/panasonic", "destination": "/panasonic.html" },
-    { "source": "/hvac", "destination": "/hvac.html" },
-    { "source": "/appliances", "destination": "/appliances.html" },
-    { "source": "/electronics", "destination": "/electronics.html" },
-    { "source": "/water-heaters", "destination": "/water-heaters.html" },
-    { "source": "/serial-number-decoding", "destination": "/index.html" },
-    { "source": "/serial-number-decoding.html", "destination": "/index.html" },
-    { "source": "/universal-decoder", "destination": "/universal-decoder.html" },
-    { "source": "/methodology", "destination": "/methodology.html" },
-    { "source": "/disclaimer", "destination": "/disclaimer.html" },
-    { "source": "/contact", "destination": "/contact.html" },
-    { "source": "/feedback", "destination": "/feedback.html" },
-    { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
-    { "source": "/security", "destination": "/security.html" },
-    { "source": "/replacement-lookup", "destination": "/replacement-lookup.html" },
-    { "source": "/appliance-age-estimator", "destination": "/appliance-age-estimator.html" },
-    { "source": "/hvac-replacement-guide", "destination": "/hvac-replacement-guide.html" },
-    { "source": "/tv-replacement-guide", "destination": "/tv-replacement-guide.html" },
-    { "source": "/goodman-serial-number-lookup", "destination": "/goodman-serial-number-lookup.html" },
-    { "source": "/goodman-model-number-lookup", "destination": "/goodman-model-number-lookup.html" },
-    { "source": "/whirlpool-serial-number-lookup", "destination": "/whirlpool-serial-number-lookup.html" },
-    { "source": "/whirlpool-model-number-lookup", "destination": "/whirlpool-model-number-lookup.html" },
-    { "source": "/whirlpool-refrigerator-serial-number-lookup", "destination": "/whirlpool-refrigerator-serial-number-lookup.html" },
-    { "source": "/whirlpool-dishwasher-serial-number-lookup", "destination": "/whirlpool-dishwasher-serial-number-lookup.html" },
-    { "source": "/carrier-serial-number-lookup", "destination": "/carrier-serial-number-lookup.html" },
-    { "source": "/kenmore-serial-number-lookup", "destination": "/kenmore-serial-number-lookup.html" },
-    { "source": "/ge-serial-number-lookup", "destination": "/ge-serial-number-lookup.html" },
-    { "source": "/lg-serial-number-lookup", "destination": "/lg-serial-number-lookup.html" },
-    { "source": "/frigidaire-serial-number-lookup", "destination": "/frigidaire-serial-number-lookup.html" },
-    { "source": "/maytag-serial-number-lookup", "destination": "/maytag-serial-number-lookup.html" },
-    { "source": "/rheem-serial-number-lookup", "destination": "/rheem-serial-number-lookup.html" },
-    { "source": "/trane-serial-number-lookup", "destination": "/trane-serial-number-lookup.html" },
-    { "source": "/samsung-serial-number-lookup", "destination": "/samsung-serial-number-lookup.html" },
-    { "source": "/asus-serial-number-decoder", "destination": "/asus-serial-number-decoder.html" },
-    { "source": "/samsung-tv-serial-number-decoder", "destination": "/samsung-tv-serial-number-decoder.html" },
-    { "source": "/how-old-is-my-appliance", "destination": "/how-old-is-my-appliance.html" },
-    { "source": "/where-is-my-serial-number", "destination": "/where-is-my-serial-number.html" },
-    { "source": "/serial-number-location-guide", "destination": "/serial-number-location-guide.html" },
-    { "source": "/appliance-age-for-insurance-and-replacement", "destination": "/appliance-age-for-insurance-and-replacement.html" },
-    { "source": "/refrigerator-serial-number", "destination": "/refrigerator-serial-number.html" },
-    { "source": "/washer-serial-number", "destination": "/washer-serial-number.html" },
-    { "source": "/dryer-serial-number", "destination": "/dryer-serial-number.html" },
-    { "source": "/dishwasher-serial-number", "destination": "/dishwasher-serial-number.html" },
-    { "source": "/range-oven-serial-number", "destination": "/range-oven-serial-number.html" },
-    { "source": "/refrigerator-serial-number-lookup", "destination": "/refrigerator-serial-number-lookup.html" },
-    { "source": "/washer-serial-number-lookup", "destination": "/washer-serial-number-lookup.html" },
-    { "source": "/dryer-serial-number-lookup", "destination": "/dryer-serial-number-lookup.html" },
-    { "source": "/dishwasher-serial-number-lookup", "destination": "/dishwasher-serial-number-lookup.html" },
-    { "source": "/oven-serial-number-lookup", "destination": "/oven-serial-number-lookup.html" },
-    { "source": "/how-to-find-hvac-age", "destination": "/how-to-find-hvac-age.html" },
-    { "source": "/how-to-read-serial-number", "destination": "/how-to-read-serial-number.html" },
-    { "source": "/appliance-age-by-serial-number", "destination": "/appliance-age-by-serial-number.html" },
-    { "source": "/hvac-age-by-serial-number", "destination": "/hvac-age-by-serial-number.html" }
+    {
+      "source": "/decoder-tool",
+      "destination": "/decoder-tool.html"
+    },
+    {
+      "source": "/smart-lookup",
+      "destination": "/smart-lookup.html"
+    },
+    {
+      "source": "/assistant",
+      "destination": "/assistant.html"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/about",
+      "destination": "/about.html"
+    },
+    {
+      "source": "/find-model-serial-number",
+      "destination": "/find-model-serial-number.html"
+    },
+    {
+      "source": "/brands",
+      "destination": "/brands.html"
+    },
+    {
+      "source": "/sony",
+      "destination": "/sony.html"
+    },
+    {
+      "source": "/bosch",
+      "destination": "/bosch.html"
+    },
+    {
+      "source": "/apple",
+      "destination": "/apple.html"
+    },
+    {
+      "source": "/hp",
+      "destination": "/hp.html"
+    },
+    {
+      "source": "/asus",
+      "destination": "/asus.html"
+    },
+    {
+      "source": "/google-pixel",
+      "destination": "/google-pixel.html"
+    },
+    {
+      "source": "/vizio",
+      "destination": "/vizio.html"
+    },
+    {
+      "source": "/panasonic",
+      "destination": "/panasonic.html"
+    },
+    {
+      "source": "/hvac",
+      "destination": "/hvac.html"
+    },
+    {
+      "source": "/appliances",
+      "destination": "/appliances.html"
+    },
+    {
+      "source": "/electronics",
+      "destination": "/electronics.html"
+    },
+    {
+      "source": "/water-heaters",
+      "destination": "/water-heaters.html"
+    },
+    {
+      "source": "/serial-number-decoding",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/serial-number-decoding.html",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/universal-decoder",
+      "destination": "/universal-decoder.html"
+    },
+    {
+      "source": "/methodology",
+      "destination": "/methodology.html"
+    },
+    {
+      "source": "/disclaimer",
+      "destination": "/disclaimer.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/contact.html"
+    },
+    {
+      "source": "/feedback",
+      "destination": "/feedback.html"
+    },
+    {
+      "source": "/privacy-policy",
+      "destination": "/privacy-policy.html"
+    },
+    {
+      "source": "/security",
+      "destination": "/security.html"
+    },
+    {
+      "source": "/replacement-lookup",
+      "destination": "/replacement-lookup.html"
+    },
+    {
+      "source": "/appliance-age-estimator",
+      "destination": "/appliance-age-estimator.html"
+    },
+    {
+      "source": "/hvac-replacement-guide",
+      "destination": "/hvac-replacement-guide.html"
+    },
+    {
+      "source": "/tv-replacement-guide",
+      "destination": "/tv-replacement-guide.html"
+    },
+    {
+      "source": "/goodman-serial-number-lookup",
+      "destination": "/goodman-serial-number-lookup.html"
+    },
+    {
+      "source": "/goodman-model-number-lookup",
+      "destination": "/goodman-model-number-lookup.html"
+    },
+    {
+      "source": "/whirlpool-serial-number-lookup",
+      "destination": "/whirlpool-serial-number-lookup.html"
+    },
+    {
+      "source": "/whirlpool-model-number-lookup",
+      "destination": "/whirlpool-model-number-lookup.html"
+    },
+    {
+      "source": "/whirlpool-refrigerator-serial-number-lookup",
+      "destination": "/whirlpool-refrigerator-serial-number-lookup.html"
+    },
+    {
+      "source": "/whirlpool-dishwasher-serial-number-lookup",
+      "destination": "/whirlpool-dishwasher-serial-number-lookup.html"
+    },
+    {
+      "source": "/carrier-serial-number-lookup",
+      "destination": "/carrier-serial-number-lookup.html"
+    },
+    {
+      "source": "/kenmore-serial-number-lookup",
+      "destination": "/kenmore-serial-number-lookup.html"
+    },
+    {
+      "source": "/ge-serial-number-lookup",
+      "destination": "/ge-serial-number-lookup.html"
+    },
+    {
+      "source": "/lg-serial-number-lookup",
+      "destination": "/lg-serial-number-lookup.html"
+    },
+    {
+      "source": "/frigidaire-serial-number-lookup",
+      "destination": "/frigidaire-serial-number-lookup.html"
+    },
+    {
+      "source": "/maytag-serial-number-lookup",
+      "destination": "/maytag-serial-number-lookup.html"
+    },
+    {
+      "source": "/rheem-serial-number-lookup",
+      "destination": "/rheem-serial-number-lookup.html"
+    },
+    {
+      "source": "/trane-serial-number-lookup",
+      "destination": "/trane-serial-number-lookup.html"
+    },
+    {
+      "source": "/samsung-serial-number-lookup",
+      "destination": "/samsung-serial-number-lookup.html"
+    },
+    {
+      "source": "/asus-serial-number-decoder",
+      "destination": "/asus-serial-number-decoder.html"
+    },
+    {
+      "source": "/samsung-tv-serial-number-decoder",
+      "destination": "/samsung-tv-serial-number-decoder.html"
+    },
+    {
+      "source": "/how-old-is-my-hvac",
+      "destination": "/how-old-is-my-hvac.html"
+    },
+    {
+      "source": "/how-old-is-my-plumbing",
+      "destination": "/how-old-is-my-plumbing.html"
+    },
+    {
+      "source": "/how-old-is-my-electronics",
+      "destination": "/how-old-is-my-electronics.html"
+    },
+    {
+      "source": "/how-old-is-my-appliance",
+      "destination": "/how-old-is-my-appliance.html"
+    },
+    {
+      "source": "/serial-number-location-guide",
+      "destination": "/serial-number-location-guide.html"
+    },
+    {
+      "source": "/appliance-age-for-insurance-and-replacement",
+      "destination": "/appliance-age-for-insurance-and-replacement.html"
+    },
+    {
+      "source": "/refrigerator-serial-number",
+      "destination": "/refrigerator-serial-number.html"
+    },
+    {
+      "source": "/washer-serial-number",
+      "destination": "/washer-serial-number.html"
+    },
+    {
+      "source": "/dryer-serial-number",
+      "destination": "/dryer-serial-number.html"
+    },
+    {
+      "source": "/dishwasher-serial-number",
+      "destination": "/dishwasher-serial-number.html"
+    },
+    {
+      "source": "/range-oven-serial-number",
+      "destination": "/range-oven-serial-number.html"
+    },
+    {
+      "source": "/refrigerator-serial-number-lookup",
+      "destination": "/refrigerator-serial-number-lookup.html"
+    },
+    {
+      "source": "/washer-serial-number-lookup",
+      "destination": "/washer-serial-number-lookup.html"
+    },
+    {
+      "source": "/dryer-serial-number-lookup",
+      "destination": "/dryer-serial-number-lookup.html"
+    },
+    {
+      "source": "/dishwasher-serial-number-lookup",
+      "destination": "/dishwasher-serial-number-lookup.html"
+    },
+    {
+      "source": "/oven-serial-number-lookup",
+      "destination": "/oven-serial-number-lookup.html"
+    },
+    {
+      "source": "/how-to-find-hvac-age",
+      "destination": "/how-to-find-hvac-age.html"
+    },
+    {
+      "source": "/how-to-read-serial-number",
+      "destination": "/how-to-read-serial-number.html"
+    },
+    {
+      "source": "/appliance-age-by-serial-number",
+      "destination": "/appliance-age-by-serial-number.html"
+    },
+    {
+      "source": "/hvac-age-by-serial-number",
+      "destination": "/hvac-age-by-serial-number.html"
+    }
   ],
   "crons": [
     {
       "path": "/api/alerts",
       "schedule": "0 9 * * *"
     }
-  ]
+  ],
+  "cleanUrls": true
 }

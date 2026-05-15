@@ -1,530 +1,1248 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-C3TXQS1DYP"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-C3TXQS1DYP');
-  </script>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5946778263750869" crossorigin="anonymous"></script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>How Old Is My Appliance? Serial Number Age Lookup | Item Assist</title>
-  <meta name="description" content="Decode appliance serial numbers, estimate appliance age, and find where to locate model and serial labels by brand and product type.">
-  <link rel="canonical" href="https://www.decodemyitem.com/how-old-is-my-appliance">
-  <meta name="robots" content="index, follow, max-image-preview:large">
-  <meta property="og:locale" content="en_US">
-  <meta property="og:type" content="article">
-  <meta property="og:site_name" content="Item Assist">
-  <meta property="og:title" content="How Old Is My Appliance? Serial Number Age Lookup | Item Assist">
-  <meta property="og:description" content="Decode appliance serial numbers, estimate appliance age, and find where to locate model and serial labels by brand and product type.">
-  <meta property="og:url" content="https://www.decodemyitem.com/how-old-is-my-appliance">
-  <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="How Old Is My Appliance? Serial Number Age Lookup | Item Assist">
-  <meta name="twitter:description" content="Decode appliance serial numbers, estimate appliance age, and find where to locate model and serial labels by brand and product type.">
-  <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
-  <link rel="stylesheet" href="shared.css">
-  <link rel="stylesheet" href="seo-landing.css">
-  <link rel="icon" type="image/png" href="favicon.png">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>How Old is My Appliance | Decode My Item</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+/* ── Reset ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+/* ── Design Tokens ──────────────────────────────────── */
+:root {
+  --primary:        #44e5c2;
+  --primary-dim:    #38debb;
+  --primary-dark:   #00c9a7;
+  --on-primary:     #00382d;
+  --secondary:      #9fcaff;
+  --sec-container:  #006bb5;
+  --tertiary:       #ffc278;
+  --bg:             #0b1326;
+  --surface-deep:   #0D1A2E;
+  --surface-card:   #112236;
+  --surface-low:    #131b2e;
+  --surface-con:    #171f33;
+  --surface-high:   #222a3d;
+  --surface-highest:#2d3449;
+  --surface-lowest: #060e20;
+  --on-surface:     #dae2fd;
+  --on-surface-var: #bacac3;
+  --ghost-white:    #F1F5F9;
+  --outline:        #85948e;
+  --outline-var:    #3c4a45;
+  --text-muted:     #64748B;
+  --radius-sm:      4px;
+  --radius:         8px;
+  --radius-lg:      12px;
+  --radius-xl:      16px;
+  --radius-full:    9999px;
+}
+
+/* ── Base ───────────────────────────────────────────── */
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--bg);
+  color: var(--on-surface);
+  overflow-x: hidden;
+  font-size: 16px;
+  line-height: 1.6;
+}
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+img { display: block; max-width: 100%; }
+
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+/* ── Layout ─────────────────────────────────────────── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+@media (max-width: 768px) {
+  .container { padding-left: 16px; padding-right: 16px; }
+}
+
+/* ── Navigation ─────────────────────────────────────── */
+header {
+  background: var(--bg);
+  border-bottom: 1px solid var(--outline-var);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ghost-white);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.nav-logo .material-symbols-outlined { color: var(--primary); font-size: 22px; }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: nowrap;
+}
+.nav-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-var);
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--primary); }
+.nav-links a.active {
+  color: var(--primary);
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: 2px;
+}
+
+.mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--on-surface-var);
+  padding: 4px;
+}
+.mobile-toggle:hover { color: var(--primary); }
+.mobile-toggle .material-symbols-outlined { font-size: 26px; }
+
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  background: var(--bg);
+  border-top: 1px solid var(--outline-var);
+  padding: 16px 24px;
+  gap: 4px;
+}
+.mobile-menu.open { display: flex; }
+.mobile-menu a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-var);
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: color 0.2s;
+}
+.mobile-menu a:hover { color: var(--primary); }
+.mobile-menu a.active { color: var(--primary); }
+
+@media (max-width: 1024px) {
+  .nav-links { display: none; }
+  .mobile-toggle { display: block; }
+  .nav-inner { padding: 0 20px; }
+}
+
+/* ── Hero ───────────────────────────────────────────── */
+.hero {
+  position: relative;
+  padding: 80px 16px;
+  overflow: hidden;
+  text-align: center;
+}
+.hero-orbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+}
+.orb-1 {
+  top: 0; left: 25%;
+  width: 384px; height: 384px;
+  background: var(--primary);
+  opacity: 0.08;
+  animation: pulse-orb 6s ease-in-out infinite;
+}
+.orb-2 {
+  bottom: 0; right: 25%;
+  width: 384px; height: 384px;
+  background: var(--sec-container);
+  opacity: 0.08;
+  animation: pulse-orb 6s ease-in-out infinite 3s;
+}
+@keyframes pulse-orb {
+  0%,100% { opacity: 0.08; transform: scale(1); }
+  50% { opacity: 0.14; transform: scale(1.05); }
+}
+.hero-content { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; }
+
+.badge {
+  display: inline-block;
+  padding: 4px 16px;
+  margin-bottom: 16px;
+  border-radius: var(--radius-full);
+  background: rgba(0,201,167,0.08);
+  color: var(--primary);
+  border: 1px solid rgba(68,229,194,0.2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  font-size: clamp(28px, 5vw, 40px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--on-surface);
+  max-width: 760px;
+  margin: 0 auto 24px;
+}
+.hero h1 span { color: var(--primary); }
+
+.hero-sub {
+  font-size: 18px;
+  color: var(--on-surface-var);
+  max-width: 620px;
+  margin: 0 auto 40px;
+  line-height: 1.6;
+}
+
+/* Search */
+.search-wrap { max-width: 560px; margin: 0 auto 48px; }
+.search-box {
+  position: relative;
+}
+.search-box .search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 22px;
+  pointer-events: none;
+  transition: color 0.2s;
+}
+.search-box:focus-within .search-icon { color: var(--primary); }
+.search-box input {
+  width: 100%;
+  background: var(--surface-card);
+  border: 1px solid var(--outline-var);
+  border-radius: var(--radius);
+  padding: 16px 60px 16px 48px;
+  color: var(--on-surface);
+  font-family: 'Sora', sans-serif;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-box input::placeholder { color: var(--text-muted); }
+.search-box input:focus { border-color: var(--primary); }
+.search-kbd {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--surface-highest);
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: var(--radius-sm);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  align-items: center;
+}
+.chips-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.chip {
+  background: var(--surface-con);
+  color: var(--primary);
+  border: 1px solid rgba(68,229,194,0.2);
+  border-radius: var(--radius-full);
+  padding: 4px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.chip:hover { background: var(--surface-high); }
+.chip:active { transform: scale(0.95); }
+
+/* ── Quick Nav ──────────────────────────────────────── */
+.quick-nav { padding-bottom: 80px; padding-left: 16px; padding-right: 16px; }
+.quick-nav-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+}
+@media (max-width: 1024px) {
+  .quick-nav-grid { grid-template-columns: repeat(4, 1fr); }
+  .quick-nav-grid .nav-card:last-child { grid-column: span 2; }
+}
+@media (max-width: 640px) {
+  .quick-nav-grid { grid-template-columns: repeat(2, 1fr); }
+  .quick-nav-grid .nav-card:last-child { grid-column: span 2; }
+}
+
+.nav-card {
+  background: var(--surface-card);
+  border: 1px solid var(--outline-var);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  height: 160px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+  color: inherit;
+}
+.nav-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 1px rgba(68,229,194,0.3), 0 4px 24px rgba(68,229,194,0.06);
+}
+.nav-card .material-symbols-outlined {
+  color: var(--primary);
+  font-size: 32px;
+  transition: transform 0.2s;
+}
+.nav-card:hover .material-symbols-outlined { transform: scale(1.1); }
+.nav-card-title { font-size: 17px; font-weight: 600; color: var(--on-surface); }
+.nav-card-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+@media (max-width: 640px) {
+  .nav-card { height: auto; aspect-ratio: 1; padding: 18px; }
+}
+
+/* ── Main Content ───────────────────────────────────── */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+@media (max-width: 768px) { main { padding: 0 16px 80px; } }
+
+.section { margin-bottom: 96px; scroll-margin-top: 80px; }
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.section-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--on-surface);
+  white-space: nowrap;
+}
+.section-divider {
+  flex-grow: 1;
+  height: 1px;
+  background: var(--outline-var);
+}
+
+/* ── Kitchen Cards Grid ─────────────────────────────── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+@media (max-width: 900px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .cards-grid { grid-template-columns: 1fr; } }
+
+/* ── Appliance Card ─────────────────────────────────── */
+.appl-card {
+  background: var(--surface-card);
+  border: 1px solid var(--outline-var);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.appl-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px rgba(68,229,194,0.3), 0 4px 24px rgba(68,229,194,0.06);
+}
+
+.appl-card-img {
+  height: 192px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(60,74,69,0.3);
+}
+.appl-card-img .tech-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(68,229,194,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(68,229,194,0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.appl-card-img svg {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.5s ease;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+}
+.appl-card:hover .appl-card-img svg { transform: scale(1.05); }
+
+.label-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(13,26,46,0.85);
+  backdrop-filter: blur(8px);
+  color: var(--primary);
+  border: 1px solid rgba(68,229,194,0.2);
+  border-radius: var(--radius-sm);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 4px 8px;
+  z-index: 2;
+}
+
+.card-glow {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 112px;
+  height: 48px;
+  border-radius: 50%;
+  filter: blur(24px);
+  opacity: 0.15;
+  transition: opacity 0.3s;
+  z-index: 0;
+}
+.appl-card:hover .card-glow { opacity: 0.28; }
+
+.appl-card-body { padding: 24px; }
+.appl-card-body h3 { font-size: 20px; font-weight: 600; color: var(--on-surface); margin-bottom: 12px; }
+
+.spot-block {
+  background: var(--surface-lowest);
+  border-left: 4px solid var(--tertiary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+.spot-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.spot-text { font-size: 14px; color: var(--on-surface-var); font-style: italic; }
+.appl-card-desc { font-size: 14px; color: var(--text-muted); line-height: 1.65; }
+
+/* ── HVAC Cards ─────────────────────────────────────── */
+.hvac-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+@media (max-width: 860px) { .hvac-grid { grid-template-columns: 1fr; } }
+
+.glass-card {
+  background: rgba(17,34,54,0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(133,148,142,0.2);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+@media (max-width: 600px) { .glass-card { flex-direction: column; } }
+
+.hvac-icon-box {
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+  background: var(--surface-low);
+  border: 1px solid var(--outline-var);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.hvac-icon-box .material-symbols-outlined {
+  color: var(--primary);
+  font-size: 64px;
+  transition: transform 0.7s;
+}
+.hvac-icon-box:hover .material-symbols-outlined { transform: rotate(45deg) scale(1.1); }
+@media (max-width: 600px) { .hvac-icon-box { width: 100%; height: 120px; } }
+
+.hvac-body { flex: 1; }
+.hvac-body h3 { font-size: 20px; font-weight: 600; color: var(--on-surface); margin-bottom: 8px; }
+.hvac-body p { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.65; }
+
+.loc-block {
+  background: var(--surface-deep);
+  border: 1px solid rgba(60,74,69,0.3);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+.loc-label {
+  color: var(--primary);
+  display: block;
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+}
+.loc-block ul { padding-left: 18px; list-style: disc; }
+.loc-block li { color: var(--on-surface-var); margin-bottom: 6px; }
+
+/* ── Brand Section ──────────────────────────────────── */
+.brand-section {
+  background: var(--surface-low);
+  border: 1px solid var(--outline-var);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  margin-bottom: 96px;
+}
+.brand-section h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--on-surface);
+  text-align: center;
+  margin-bottom: 32px;
+}
+.brand-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+@media (max-width: 900px) { .brand-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 560px) { .brand-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.brand-card {
+  padding: 16px;
+  background: var(--surface-card);
+  border: 1px solid rgba(60,74,69,0.2);
+  border-radius: var(--radius);
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.brand-card:hover { border-color: var(--primary); }
+.brand-card-name { font-size: 15px; font-weight: 600; color: var(--on-surface); margin-bottom: 6px; }
+.brand-card-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+/* ── FAQ ────────────────────────────────────────────── */
+.faq-section { max-width: 800px; margin: 0 auto 96px; }
+.faq-section h2 {
+  font-size: 24px; font-weight: 600; color: var(--on-surface);
+  text-align: center; margin-bottom: 40px;
+}
+.faq-list { display: flex; flex-direction: column; gap: 16px; }
+
+details {
+  background: var(--surface-card);
+  border: 1px solid var(--outline-var);
+  border-radius: var(--radius);
+}
+summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+summary::-webkit-details-marker { display: none; }
+summary h3 { font-size: 17px; font-weight: 600; color: var(--on-surface); }
+summary .acc-icon {
+  color: var(--primary);
+  font-size: 24px;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+details[open] summary .acc-icon { transform: rotate(180deg); }
+.faq-body {
+  padding: 0 24px 20px;
+  color: var(--on-surface-var);
+  font-size: 14px;
+  line-height: 1.7;
+  border-top: 1px solid rgba(60,74,69,0.1);
+  padding-top: 16px;
+  margin-top: 0;
+}
+
+/* ── Footer ─────────────────────────────────────────── */
+footer {
+  background: var(--surface-lowest);
+  border-top: 1px solid var(--outline-var);
+  padding: 64px 0 32px;
+}
+.footer-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1.2fr 1fr 1.2fr;
+  gap: 32px;
+  margin-bottom: 48px;
+}
+@media (max-width: 900px) { .footer-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .footer-grid { grid-template-columns: 1fr; } }
+
+.footer-brand-name { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 12px; }
+.footer-brand-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; }
+.footer-mail {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--surface-con);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-surface-var);
+  transition: color 0.2s;
+}
+.footer-mail:hover { color: var(--primary); }
+.footer-mail .material-symbols-outlined { font-size: 18px; }
+
+.footer-col h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 20px;
+}
+.footer-col ul li { margin-bottom: 12px; }
+.footer-col ul li a {
+  font-size: 14px;
+  color: var(--on-surface-var);
+  transition: color 0.2s;
+}
+.footer-col ul li a:hover { color: var(--primary); }
+
+.footer-bottom {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 24px 0;
+  border-top: 1px solid var(--outline-var);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.footer-copy {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.footer-links {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.footer-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--primary); }
+.live-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.live-dot::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+@keyframes live-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+/* ── FAB ────────────────────────────────────────────── */
+.fab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 56px; height: 56px;
+  background: var(--primary);
+  color: var(--on-primary);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  transition: transform 0.2s;
+  z-index: 200;
+}
+.fab:hover { transform: scale(1.1); }
+.fab:active { transform: scale(0.95); }
+.fab .material-symbols-outlined { font-size: 26px; }
+.fab-tip {
+  position: absolute;
+  right: 68px;
+  background: var(--surface-card);
+  border: 1px solid var(--outline-var);
+  color: var(--on-surface);
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.fab:hover .fab-tip { opacity: 1; }
+</style>
 </head>
-<body data-page-kind="brand-page">
-  <nav>
-    <a href="/" class="logo" aria-label="Item Assist home">
-    <span class="material-symbols-outlined" style="color:#44e5c2;font-size:26px;flex-shrink:0;line-height:1;">qr_code_scanner</span>
-      <div>
-        <div class="logo-text">Decode My <span>Item</span></div>
-        <div class="logo-sub">Decode - Research - Automate</div>
-      </div>
+<body>
+
+<!-- ═══ HEADER ═══════════════════════════════════════════════ -->
+<header>
+  <div class="nav-inner">
+    <a href="https://www.decodemyitem.com/" class="nav-logo">
+      <span class="material-symbols-outlined">qr_code_scanner</span>
+      Decode My Item
     </a>
-    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span><span></span><span></span><span></span></button>
-    <ul>
-  <li><a href="/">Home</a></li>
-  <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-  <li><a href="/smart-lookup">Smart Lookup</a></li>
-  <li><a href="/assistant">AI Assistant</a></li>
-  <li><a href="/methodology">Methodology</a></li>
-  <li><a href="/contact">Contact</a></li>
-  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
-  <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
-
-    </ul>
+    <nav class="nav-links">
+      <a href="https://www.decodemyitem.com/">Home</a>
+      <a href="https://www.decodemyitem.com/decoder-tool" class="active">Serial Number Decoder</a>
+      <a href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a>
+      <a href="https://www.decodemyitem.com/assistant">AI Assistant</a>
+      <a href="https://www.decodemyitem.com/methodology">Methodology</a>
+      <a href="https://www.decodemyitem.com/contact">Contact</a>
+      <a href="https://www.decodemyitem.com/feedback">Feedback &amp; Bugs</a>
+      <a href="https://www.decodemyitem.com/security">Security &amp; Data</a>
+    </nav>
+    <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle menu">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+  </div>
+  <nav class="mobile-menu" id="mobile-menu">
+    <a href="https://www.decodemyitem.com/">Home</a>
+    <a href="https://www.decodemyitem.com/decoder-tool" class="active">Serial Number Decoder</a>
+    <a href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a>
+    <a href="https://www.decodemyitem.com/assistant">AI Assistant</a>
+    <a href="https://www.decodemyitem.com/methodology">Methodology</a>
+    <a href="https://www.decodemyitem.com/contact">Contact</a>
+    <a href="https://www.decodemyitem.com/feedback">Feedback &amp; Bugs</a>
+    <a href="https://www.decodemyitem.com/security">Security &amp; Data</a>
   </nav>
+</header>
 
-  <main>
-    <section class="page-hero seo-hero">
-      <div class="seo-copy-wrap">
-        <nav class="breadcrumb-nav" aria-label="Breadcrumb">
-          <a href="/">Home</a><span class="breadcrumb-sep">/</span><span aria-current="page">How Old Is My Appliance? Serial Number Age Lookup</span>
-        </nav>
-      </div>
-      <div class="tool-hero">
-        <div class="tool-badge">Appliance age hub</div>
-        <h1>How Old Is My Appliance? Serial Number Age Lookup</h1>
-        <p>Use the decoder below to estimate appliance age fast, then use the brand shortcuts and format notes to narrow the right serial-number path.</p>
-        <ol class="how-steps how-steps-list">
-            <li><span class="how-list-index">1</span><span>Choose the appliance brand.</span></li>
-            <li><span class="how-list-index">2</span><span>Enter the serial number exactly as shown on the product label.</span></li>
-            <li><span class="how-list-index">3</span><span>Review the age estimate and follow the brand or appliance-type links if you need more detail.</span></li>
-        </ol>
-      </div>
-    </section>
+<!-- ═══ HERO ══════════════════════════════════════════════════ -->
 
-    <section class="section seo-copy-section">
-      <div class="seo-copy-wrap">
-        <p>This page is the main appliance-age hub for refrigerators, washers, dryers, dishwashers, ranges, ovens, and other major appliances where the serial number usually carries the strongest date clue.</p>
-      </div>
-    </section>
+<header>
+  <div class="nav-inner">
+    <a href="https://www.decodemyitem.com/" class="nav-logo">
+      <span class="material-symbols-outlined">qr_code_scanner</span>
+      Decode My Item
+    </a>
+    <nav class="nav-links">
+      <a href="https://www.decodemyitem.com/">Home</a>
+      <a href="https://www.decodemyitem.com/decoder-tool">Serial Number Decoder</a>
+      <a href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a>
+      <a href="https://www.decodemyitem.com/assistant">AI Assistant</a>
+      <a href="https://www.decodemyitem.com/methodology">Methodology</a>
+      <a href="https://www.decodemyitem.com/contact">Contact</a>
+      <a href="https://www.decodemyitem.com/feedback">Feedback &amp; Bugs</a>
+      <a href="https://www.decodemyitem.com/security">Security &amp; Data</a>
+    </nav>
+    <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle menu">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+  </div>
+  <nav class="mobile-menu" id="mobile-menu">
+    <a href="https://www.decodemyitem.com/">Home</a>
+    <a href="https://www.decodemyitem.com/decoder-tool">Serial Number Decoder</a>
+    <a href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a>
+    <a href="https://www.decodemyitem.com/assistant">AI Assistant</a>
+    <a href="https://www.decodemyitem.com/methodology">Methodology</a>
+    <a href="https://www.decodemyitem.com/contact">Contact</a>
+    <a href="https://www.decodemyitem.com/feedback">Feedback &amp; Bugs</a>
+    <a href="https://www.decodemyitem.com/security">Security &amp; Data</a>
+  </nav>
+</header>
+<section class="hero">
+  <div class="hero-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+  <div class="hero-content">
+    <span class="badge">Appliance Age Guide</span>
+    <h1>How Old is My <span>Appliance?</span></h1>
+    <p class="hero-sub">Find the serial number label on your kitchen or laundry appliance, then decode it to get the exact manufacture date and age.</p>
+  </div>
+</section>
 
-    <section class="section" id="decoder-tool" style="padding-top:0;padding-bottom:16px;">
-      <div class="tool-focus-wrap">
-        <div class="seo-tool-shell">
-          <div class="home-tools-wrap">
-            <div class="home-tools-grid">
-              <div class="decoder-card-shell">
-                <div class="search-box">
-                  <div class="search-tabs">
-                    <button class="search-tab cat-tab active" data-cat="appliances" onclick="selectCatAndShowDecoder('appliances', this)">Appliances</button>
-                    <button class="search-tab cat-tab" data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">Water Heaters</button>
-                    <button class="search-tab cat-tab" data-cat="hvac" onclick="selectCatAndShowDecoder('hvac', this)">HVAC</button>
-                    <button class="search-tab cat-tab" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
-                  </div>
-
-                  <div class="search-panel" id="panel-decoder">
-                    <div class="home-tool-row">
-                      <label class="sr-only" for="brand">Select Brand</label>
-                      <select id="brand" class="search-select">
-                        <option value="">-- Select Brand --</option>
-                      </select>
-
-                      <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
-                      <input type="text" id="serial" class="search-input" placeholder="Enter appliance serial number">
-                    </div>
-
-                    <div class="era-group hidden" id="eraGroup">
-                      <label class="sr-only" for="eraSelect">Manufacture Era</label>
-                      <select id="eraSelect" class="search-select" style="margin-top:8px;">
-                        <option value="">-- Select Era --</option>
-                        <option value="post">Post-2006</option>
-                        <option value="pre">Pre-2006</option>
-                      </select>
-                      <p class="era-note">Some brands reuse serial layouts across decades. Select the era when prompted to improve accuracy.</p>
-                    </div>
-
-                    <p class="search-hint serial-helper-text">Select the appliance brand, then enter the full serial number exactly as printed on the label.</p>
-                    <div class="tool-panel-action">
-                      <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">Decode Serial Number</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="utility-strip">
-          <span>Built for fast serial/model research.</span><span>Useful for appliance age estimates, replacement research, and claim documentation.</span><span>Results may vary by brand, model family, and available serial data.</span>
-        </div>
-      </div>
-    </section>
-
-    <div class="results-wrapper">
-      <div id="ageLoading" class="results-card hidden">
-        <div class="loading-inner">
-          <span class="loading-emoji lightning" id="loadingEmoji">&#127785;&#65039;</span>
-          <div class="loading-text" id="loadingText">Researching product information...</div>
-        </div>
-      </div>
-
-      <div id="serialResults" class="results-card hidden">
-        <div class="results-header">
-          <h3>Decoded Results</h3>
-          <div class="brand-logo-wrap" id="serialBrandLogo"></div>
-        </div>
-        <div class="results-body">
-          <div id="serialSummaryLayer" class="sl-top-summary-layer serial-summary-layer hidden"></div>
-          <div class="serial-legacy-fields" hidden aria-hidden="true">
-            <div class="result-row result-row--primary">
-              <span class="result-label">Manufacture Date</span>
-              <span class="result-value" id="resultYear"></span>
-            </div>
-            <div class="result-row" id="resultMonthRow">
-              <span class="result-label">Month / Period</span>
-              <span class="result-value" id="resultMonth"></span>
-            </div>
-            <div class="result-row">
-              <span class="result-label">Brand</span>
-              <span class="result-value" id="resultBrand"></span>
-            </div>
-            <div class="result-row">
-              <span class="result-label">Estimated Age</span>
-              <span class="result-value" id="resultEstimatedAge">&mdash;</span>
-            </div>
-            <div class="info-block method">
-              <h4>Decoding Method</h4>
-              <p id="resultMethod"></p>
-            </div>
-            <div class="info-block notes">
-              <h4>Important Notes</h4>
-              <p id="resultNotes"></p>
-            </div>
-            <details class="determination-details">
-              <summary>How this was determined</summary>
-              <div class="determination-body" id="serialDeterminationBody">
-                We use the brand-specific serial rules already supported in Item Assist. When a brand repeats codes across decades, the result stays estimated until model era or installation context confirms the right cycle.
-              </div>
-            </details>
-          </div>
-        </div>
-        <div class="results-footer">
-          <button class="copy-btn" onclick="copyClaimFile()">Copy Information</button>
-          <button class="decode-again-btn btn-amber" onclick="decodeAnotherItem()">Decode Another Item</button>
-          <button class="decode-again-btn btn-teal" onclick="window.location.href='/smart-lookup'">Use Smart Lookup</button>
-          <button class="error-btn" onclick="openFeedbackModal()">Possible Error?</button>
-        </div>
-      </div>
+<div style="max-width:1200px;margin:0 auto;padding:20px 24px 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);">
+  <a href="/serial-number-location-guide" style="color:var(--primary);text-decoration:none;">Serial Number Location Guide</a>
+  <span style="margin:0 8px;opacity:0.5;">→</span>
+  <span>How Old is My Appliance?</span>
+</div>
+<main>
+  <!-- Kitchen -->
+  <div class="section" id="kitchen">
+    <div class="section-header">
+      <h2>Major Kitchen Appliances</h2>
+      <div class="section-divider"></div>
     </div>
+    <div class="cards-grid">
 
-    
+      <!-- Refrigerator -->
+      <div class="appl-card">
+        <div class="appl-card-img" style="background:linear-gradient(135deg,#0d1f35,#0f2540,#091e2e);">
+          <div class="tech-grid"></div>
+          <svg viewBox="0 0 100 148" width="80" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="2" width="84" height="144" rx="7" fill="#0c1e30" stroke="#44e5c2" stroke-width="1.5"/>
+            <rect x="8" y="2" width="84" height="50" rx="7" fill="#091828" stroke="#44e5c2" stroke-width="1.5"/>
+            <line x1="8" y1="52" x2="92" y2="52" stroke="#44e5c2" stroke-width="1" opacity="0.5" stroke-dasharray="5 3"/>
+            <rect x="68" y="14" width="5" height="26" rx="2.5" fill="#44e5c2" opacity="0.85"/>
+            <rect x="68" y="64" width="5" height="46" rx="2.5" fill="#44e5c2" opacity="0.85"/>
+            <rect x="14" y="62" width="46" height="12" rx="2.5" fill="#ffc278" fill-opacity="0.12" stroke="#ffc278" stroke-width="0.9"/>
+            <text x="17" y="71" font-family="JetBrains Mono,monospace" font-size="6.5" fill="#ffc278" opacity="0.95">S/N LABEL</text>
+            <line x1="14" y1="90" x2="64" y2="90" stroke="#1e3045" stroke-width="1.5"/>
+            <line x1="14" y1="108" x2="64" y2="108" stroke="#1e3045" stroke-width="1.5"/>
+            <rect x="14" y="118" width="50" height="16" rx="2" fill="#0d1e2d" stroke="#2d3449" stroke-width="1"/>
+            <line x1="39" y1="118" x2="39" y2="134" stroke="#2d3449" stroke-width="1"/>
+          </svg>
+          <span class="label-badge">Label Location</span>
+          <div class="card-glow" style="background:var(--primary);"></div>
+        </div>
+        <div class="appl-card-body">
+          <h3>Refrigerator</h3>
+          <div class="spot-block">
+            <div class="spot-label">Common Spot:</div>
+            <div class="spot-text">Upper interior wall, fresh food compartment.</div>
+          </div>
+          <p class="appl-card-desc">Check the interior sidewalls (left or right) or the ceiling. In some models, the sticker is behind the kickplate at the bottom or on the rear exterior panel.</p>
+        </div>
+      </div>
 
-    <section class="section seo-section-grid">
-      <div class="seo-card">
-        <h2>How appliance age is usually determined</h2>
-        <p>Most major appliance brands hide the production date in the serial number instead of the model number. The site decoder applies the supported brand logic first, then leaves the result marked as estimated when the manufacturer reuses year codes across decades or product families.</p>
-      </div>
-      <div class="seo-card">
-        <h2>What you need before decoding</h2>
-        <p>Bring the brand, model number, serial number, and product category when possible. The serial number is usually the critical input, but the model family helps when decade cycles repeat, when the label is worn, or when the brand is a private-label OEM platform such as Kenmore.</p>
-      </div>
-      <div class="seo-card seo-card-wide">
-        <h2>Common appliance serial number formats</h2>
-        <div class="table-wrap">
-          <table class="format-table">
-            <thead>
-              <tr>
-                <th>Pattern</th>
-                <th>Common Format</th>
-                <th>What It May Indicate</th>
-                <th>Confidence</th>
-              </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td>Whirlpool family</td>
-              <td>9 or 10 characters; year code then production week</td>
-              <td>Character 2 or 3 often maps the year and the next two digits often map the production week.</td>
-              <td>Estimated decade. Whirlpool cycles repeat.</td>
-            </tr>
-            <tr>
-              <td>GE family</td>
-              <td>Opening letters for month and year</td>
-              <td>Character 1 commonly maps month and character 2 commonly maps year.</td>
-              <td>Estimated decade. GE year letters repeat.</td>
-            </tr>
-            <tr>
-              <td>Samsung appliances</td>
-              <td>11-char or 15-char serial with year/month positions</td>
-              <td>11-character serials commonly use characters 4-5. 15-character serials commonly use characters 8-9.</td>
-              <td>Estimated when year letters repeat.</td>
-            </tr>
-            <tr>
-              <td>LG appliances</td>
-              <td>Year digit + 2-digit month</td>
-              <td>Character 1 commonly stores the year digit and characters 2-3 commonly store the month.</td>
-              <td>Estimated decade. LG uses a repeating year digit.</td>
-            </tr>
-            <tr>
-              <td>Frigidaire / Electrolux</td>
-              <td>Two factory letters, then a year digit and week digits</td>
-              <td>The first numeric character after the opening factory code often points to year, with week digits after it.</td>
-              <td>Estimated decade. Product line matters.</td>
-            </tr>
-            <tr>
-              <td>Bosch / Thermador / Gaggenau</td>
-              <td>FD code</td>
-              <td>The first two numeric FD digits point to year and the next two digits point to month.</td>
-              <td>Higher confidence when the FD code is present.</td>
-            </tr>
-            <tr>
-              <td>Kenmore</td>
-              <td>OEM-dependent by model prefix</td>
-              <td>The model prefix routes the serial to Whirlpool, GE, LG, Frigidaire, or another supported OEM path.</td>
-              <td>Estimated until the OEM is confirmed.</td>
-            </tr>
-            </tbody>
-          </table>
+      <!-- Range & Oven -->
+      <div class="appl-card">
+        <div class="appl-card-img" style="background:linear-gradient(135deg,#1a1208,#211609,#1a1008);">
+          <div class="tech-grid"></div>
+          <svg viewBox="0 0 130 120" width="120" height="110" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="8" width="122" height="108" rx="6" fill="#141008" stroke="#44e5c2" stroke-width="1.5"/>
+            <rect x="4" y="8" width="122" height="34" rx="6" fill="#0d0a04" stroke="#44e5c2" stroke-width="1.5"/>
+            <circle cx="35" cy="25" r="9" stroke="#ffc278" stroke-width="1.3" stroke-dasharray="3 2" opacity="0.75"/>
+            <circle cx="35" cy="25" r="4.5" stroke="#ffc278" stroke-width="1" opacity="0.5"/>
+            <circle cx="65" cy="25" r="9" stroke="#44e5c2" stroke-width="1.3" stroke-dasharray="3 2" opacity="0.6"/>
+            <circle cx="65" cy="25" r="4.5" stroke="#44e5c2" stroke-width="1" opacity="0.4"/>
+            <circle cx="95" cy="25" r="9" stroke="#ffc278" stroke-width="1.3" stroke-dasharray="3 2" opacity="0.75"/>
+            <circle cx="95" cy="25" r="4.5" stroke="#ffc278" stroke-width="1" opacity="0.5"/>
+            <circle cx="15" cy="42" r="4" fill="#1e1a10" stroke="#44e5c2" stroke-width="0.9"/>
+            <circle cx="27" cy="42" r="4" fill="#1e1a10" stroke="#44e5c2" stroke-width="0.9"/>
+            <circle cx="103" cy="42" r="4" fill="#1e1a10" stroke="#44e5c2" stroke-width="0.9"/>
+            <circle cx="115" cy="42" r="4" fill="#1e1a10" stroke="#44e5c2" stroke-width="0.9"/>
+            <rect x="12" y="48" width="106" height="55" rx="4" fill="#0a0804" stroke="#44e5c2" stroke-width="1.2"/>
+            <rect x="19" y="54" width="92" height="40" rx="3" fill="#060504" stroke="#2d3449" stroke-width="1"/>
+            <rect x="28" y="105" width="74" height="5" rx="2.5" fill="#44e5c2" opacity="0.85"/>
+            <rect x="4" y="112" width="122" height="8" rx="0" fill="#0a0804" stroke="#44e5c2" stroke-width="0.9" opacity="0.8"/>
+            <rect x="12" y="113" width="42" height="5" rx="2" fill="#ffc278" fill-opacity="0.18" stroke="#ffc278" stroke-width="0.8"/>
+            <text x="15" y="117.5" font-family="JetBrains Mono,monospace" font-size="4" fill="#ffc278" opacity="0.9">S/N LABEL</text>
+          </svg>
+          <span class="label-badge">Label Location</span>
+          <div class="card-glow" style="background:var(--tertiary);"></div>
+        </div>
+        <div class="appl-card-body">
+          <h3>Range &amp; Oven</h3>
+          <div class="spot-block">
+            <div class="spot-label">Common Spot:</div>
+            <div class="spot-text">Inside the storage drawer at the bottom.</div>
+          </div>
+          <p class="appl-card-desc">Look on the frame behind the door, or under the cooktop (lift-up style). Some double ovens have them on the inner side of the door frame.</p>
         </div>
       </div>
-      <div class="seo-card seo-card-wide">
-        <h2>Real-world decoding examples</h2>
-        <div class="example-grid">
-          <article class="example-card">
-            <div class="example-eyebrow">Supported Whirlpool example</div>
-            <code>CB2501800</code>
-            <p>Supported Whirlpool-family example from the current decoder data. The year code and production week are both used, but the decade still needs context because Whirlpool cycles repeat.</p>
-          </article>
-          <article class="example-card">
-            <div class="example-eyebrow">Supported Bosch example</div>
-            <code>FD911100449</code>
-            <p>Supported Bosch FD example. The FD digits resolve the manufacturing year and month more directly than most appliance serial systems.</p>
-          </article>
-          <article class="example-card">
-            <div class="example-eyebrow">Illustrative Samsung pattern</div>
-            <code>XXXXXXXABXXXXXX</code>
-            <p>Illustrative 15-character Samsung appliance pattern. The current decoder checks the year in position 8 and month in position 9, but the exact decade can still vary by code cycle.</p>
-          </article>
-          <article class="example-card">
-            <div class="example-eyebrow">Illustrative GE pattern</div>
-            <code>AZ123456</code>
-            <p>Illustrative GE-family format. The opening letters are typically the useful date positions, while the rest of the serial is production sequence.</p>
-          </article>
-        </div>
-      </div>
-      <div class="seo-card seo-card-wide">
-        <h2>Find serial numbers by appliance type</h2>
-        <div class="mini-card-grid">
-          <article class="mini-card">
-            <h3>Refrigerators</h3>
-            <ul class="bullet-list"><li>Inside the fresh-food section side wall</li><li>Behind the crisper drawers on some models</li><li>See the refrigerator guide for brand-specific shortcuts</li></ul>
-          </article>
-          <article class="mini-card">
-            <h3>Washers and dryers</h3>
-            <ul class="bullet-list"><li>Under the lid or around the door opening</li><li>Rear cabinet label on some units</li><li>Use the washer or dryer lookup page for more location notes</li></ul>
-          </article>
-          <article class="mini-card">
-            <h3>Dishwashers and cooking products</h3>
-            <ul class="bullet-list"><li>Inner door frame or tub lip for dishwashers</li><li>Oven frame, lower drawer opening, or trim edge for ranges and ovens</li><li>Use the dedicated category pages below if the label is hard to spot</li></ul>
-          </article>
-        </div>
-      </div>
-      <div class="seo-card">
-        <h2>What if the serial number does not decode?</h2>
-        <ul class="bullet-list"><li>Try the full serial without spaces or punctuation if the label mixes letters and numbers.</li><li>Bring the model number into Smart Lookup when the serial label is worn, partial, or missing.</li><li>Check for private-label brands such as Kenmore where the OEM manufacturer changes the decoding rule.</li><li>Use the product category to avoid mixing appliance logic with electronics logic on brands that span both.</li><li>If the decoder returns an estimated result, compare it with installation date, condition, or model-family age.</li>
-        </ul>
-      </div>
-      <div class="seo-card faq-card">
-        <h2>FAQ</h2>
-        <div class="faq-list">
-          <details class="faq-item" open>
-            <summary>Can I tell appliance age from the serial number?</summary>
-            <div class="faq-answer"><p>Usually yes. The serial number is the strongest date source for most appliance brands supported by Item Assist, but some brands repeat codes across decades and need model-era context.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Is the model number the same as the serial number?</summary>
-            <div class="faq-answer"><p>No. The model number identifies the product family, while the serial number identifies the specific unit and is more likely to contain manufacture timing.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Why does my serial number not decode?</summary>
-            <div class="faq-answer"><p>The most common reasons are a worn label, a missing OEM context, a private-label brand, a partial serial, or a product line that uses a less common format.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Where is the serial number label located?</summary>
-            <div class="faq-answer"><p>Refrigerators usually place it inside the cabinet, dishwashers usually place it on the inner door frame, laundry appliances place it around the opening, and ranges or ovens place it on the frame or behind the drawer.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Can this be used for insurance claims?</summary>
-            <div class="faq-answer"><p>It is useful for age estimates, replacement research, and claim documentation, but claim files should still note when a result is estimated or when the manufacturer reuses codes across decades.</p></div>
-          </details>
-        </div>
-      </div>
-    </section>
 
-    
+      <!-- Dishwasher -->
+      <div class="appl-card">
+        <div class="appl-card-img" style="background:linear-gradient(135deg,#091818,#0d2020,#091a1c);">
+          <div class="tech-grid"></div>
+          <svg viewBox="0 0 100 138" width="78" height="120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="5" y="4" width="90" height="130" rx="7" fill="#091818" stroke="#44e5c2" stroke-width="1.5"/>
+            <rect x="5" y="4" width="90" height="18" rx="7" fill="#0c2020" stroke="#44e5c2" stroke-width="1.5"/>
+            <circle cx="22" cy="13" r="2.5" fill="#44e5c2" opacity="0.85"/>
+            <circle cx="31" cy="13" r="2.5" fill="#2d3449" stroke="#44e5c2" stroke-width="0.7"/>
+            <circle cx="40" cy="13" r="2.5" fill="#2d3449" stroke="#44e5c2" stroke-width="0.7"/>
+            <rect x="52" y="8" width="36" height="9" rx="2" fill="#050f0f" stroke="#44e5c2" stroke-width="0.8"/>
+            <text x="55" y="15" font-family="JetBrains Mono,monospace" font-size="5.5" fill="#44e5c2" opacity="0.75">CYCLE</text>
+            <rect x="5" y="22" width="90" height="92" rx="0" fill="#0b1c1c" stroke="#3c4a45" stroke-width="0.9"/>
+            <rect x="5" y="34" width="7" height="26" rx="0" fill="#ffc278" fill-opacity="0.18" stroke="#ffc278" stroke-width="0.9"/>
+            <line x1="14" y1="56" x2="86" y2="56" stroke="#162828" stroke-width="2"/>
+            <line x1="14" y1="74" x2="86" y2="74" stroke="#162828" stroke-width="2"/>
+            <line x1="14" y1="92" x2="86" y2="92" stroke="#162828" stroke-width="2"/>
+            <line x1="16" y1="65" x2="84" y2="65" stroke="#233535" stroke-width="2"/>
+            <circle cx="50" cy="65" r="4" fill="#233535" stroke="#44e5c2" stroke-width="0.9"/>
+            <rect x="22" y="114" width="56" height="5" rx="2.5" fill="#44e5c2" opacity="0.85"/>
+            <rect x="5" y="119" width="90" height="15" rx="0" fill="#081414" stroke="#44e5c2" stroke-width="0.8"/>
+            <rect x="12" y="122" width="36" height="8" rx="2" fill="#ffc278" fill-opacity="0.12" stroke="#ffc278" stroke-width="0.8"/>
+            <text x="15" y="128" font-family="JetBrains Mono,monospace" font-size="4" fill="#ffc278" opacity="0.9">S/N LABEL</text>
+          </svg>
+          <span class="label-badge">Label Location</span>
+          <div class="card-glow" style="background:var(--primary);"></div>
+        </div>
+        <div class="appl-card-body">
+          <h3>Dishwasher</h3>
+          <div class="spot-block">
+            <div class="spot-label">Common Spot:</div>
+            <div class="spot-text">Inside door, left or right interior edge.</div>
+          </div>
+          <p class="appl-card-desc">Open the door and inspect the top or side of the inner door panel. If not there, look at the base behind the kickplate.</p>
+        </div>
+      </div>
 
-    <section class="section related-section">
-      <div class="seo-copy-wrap">
-        <h2>Related Decoder Pages</h2>
-        <div class="related-brands"><a href="/refrigerator-serial-number">Refrigerator Serial Number Lookup</a><a href="/washer-serial-number">Washer Serial Number Lookup</a><a href="/dryer-serial-number">Dryer Serial Number Lookup</a><a href="/dishwasher-serial-number">Dishwasher Serial Number Lookup</a><a href="/range-oven-serial-number">Range & Oven Serial Number Lookup</a><a href="/where-is-my-serial-number">Where Is My Serial Number?</a><a href="/appliance-age-for-insurance-and-replacement">Insurance, Repair & Replacement</a><a href="/find-model-serial-number">Find Model & Serial Labels</a>
+      <!-- Cooktop -->
+      <div class="appl-card">
+        <div class="appl-card-img" style="background:linear-gradient(135deg,#0e1210,#141a10,#0e1410);">
+          <div class="tech-grid"></div>
+          <svg viewBox="0 0 140 100" width="128" height="92" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="10" width="128" height="80" rx="6" fill="#0d120a" stroke="#44e5c2" stroke-width="1.5"/>
+            <rect x="12" y="16" width="116" height="68" rx="3" fill="#090e07" stroke="#1e2a1a" stroke-width="0.8"/>
+            <circle cx="38" cy="38" r="16" stroke="#44e5c2" stroke-width="1.2" opacity="0.5"/>
+            <circle cx="38" cy="38" r="10" stroke="#44e5c2" stroke-width="1" stroke-dasharray="4 2" opacity="0.6"/>
+            <circle cx="38" cy="38" r="4" fill="#44e5c2" opacity="0.15" stroke="#44e5c2" stroke-width="0.8"/>
+            <circle cx="102" cy="38" r="16" stroke="#ffc278" stroke-width="1.2" opacity="0.55"/>
+            <circle cx="102" cy="38" r="10" stroke="#ffc278" stroke-width="1" stroke-dasharray="4 2" opacity="0.6"/>
+            <circle cx="102" cy="38" r="4" fill="#ffc278" opacity="0.12" stroke="#ffc278" stroke-width="0.8"/>
+            <circle cx="38" cy="72" r="11" stroke="#44e5c2" stroke-width="1.2" opacity="0.45"/>
+            <circle cx="38" cy="72" r="6" stroke="#44e5c2" stroke-width="1" stroke-dasharray="3 2" opacity="0.5"/>
+            <circle cx="38" cy="72" r="2.5" fill="#44e5c2" opacity="0.12" stroke="#44e5c2" stroke-width="0.7"/>
+            <circle cx="102" cy="72" r="11" stroke="#ffc278" stroke-width="1.2" opacity="0.45"/>
+            <circle cx="102" cy="72" r="6" stroke="#ffc278" stroke-width="1" stroke-dasharray="3 2" opacity="0.5"/>
+            <circle cx="102" cy="72" r="2.5" fill="#ffc278" opacity="0.12" stroke="#ffc278" stroke-width="0.7"/>
+            <rect x="54" y="58" width="32" height="10" rx="2.5" fill="#ffc278" fill-opacity="0.14" stroke="#ffc278" stroke-width="0.9"/>
+            <text x="57" y="65.5" font-family="JetBrains Mono,monospace" font-size="4.5" fill="#ffc278" opacity="0.9">LABEL</text>
+            <line x1="70" y1="68" x2="70" y2="78" stroke="#ffc278" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.6"/>
+            <polygon points="67,77 70,83 73,77" fill="#ffc278" opacity="0.6"/>
+          </svg>
+          <span class="label-badge">Label Location</span>
+          <div class="card-glow" style="background:var(--primary);"></div>
+        </div>
+        <div class="appl-card-body">
+          <h3>Cooktop</h3>
+          <div class="spot-block">
+            <div class="spot-label">Common Spot:</div>
+            <div class="spot-text">Underside of the unit or side trim panel.</div>
+          </div>
+          <p class="appl-card-desc">For drop-in and slide-in cooktops, tilt the unit or look on the underside near the edge. Some induction models place the label on the side trim or beneath a removable panel along the front lip.</p>
         </div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="seo-copy-wrap">
-        <h2>Research Paths</h2>
-        <div class="link-group-grid">
-        <article class="link-group-card">
-          <h3>Appliance Age Lookup</h3>
-          <div class="link-pill-grid"><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a><a href="/where-is-my-serial-number">Where Is My Serial Number?</a><a href="/appliance-age-for-insurance-and-replacement">Insurance, Repair & Replacement</a><a href="/find-model-serial-number">Find Model & Serial Labels</a></div>
-        </article>
-        <article class="link-group-card">
-          <h3>Popular Appliance Brands</h3>
-          <div class="link-pill-grid"><a href="/whirlpool-serial-number-lookup">Whirlpool</a><a href="/ge-serial-number-lookup">GE</a><a href="/samsung-serial-number-lookup">Samsung</a><a href="/lg-serial-number-lookup">LG</a><a href="/frigidaire-serial-number-lookup">Frigidaire</a><a href="/maytag-serial-number-lookup">Maytag</a><a href="/kenmore-serial-number-lookup">Kenmore</a><a href="/bosch">Bosch</a></div>
-        </article>
-        <article class="link-group-card">
-          <h3>Appliance Type Lookups</h3>
-          <div class="link-pill-grid"><a href="/where-is-my-serial-number">Where Is My Serial Number?</a><a href="/appliance-age-for-insurance-and-replacement">Insurance, Repair & Replacement</a><a href="/refrigerator-serial-number">Refrigerator Serial Number Lookup</a><a href="/washer-serial-number">Washer Serial Number Lookup</a><a href="/dryer-serial-number">Dryer Serial Number Lookup</a></div>
-        </article>
-        <article class="link-group-card">
-          <h3>HVAC Age Lookup</h3>
-          <div class="link-pill-grid"><a href="/hvac-age-by-serial-number">HVAC Age by Serial Number</a><a href="/how-to-find-hvac-age">How to Find HVAC Age</a><a href="/carrier-serial-number-lookup">Carrier</a><a href="/trane-serial-number-lookup">Trane</a><a href="/rheem-serial-number-lookup">Rheem</a><a href="/goodman-serial-number-lookup">Goodman</a></div>
-        </article>
-        <article class="link-group-card">
-          <h3>Electronics Serial & Model Lookup</h3>
-          <div class="link-pill-grid"><a href="/asus-serial-number-decoder">ASUS Serial Number Lookup</a><a href="/samsung-tv-serial-number-decoder">Samsung TV Serial Number Decoder</a><a href="/apple">Apple</a><a href="/hp">HP</a><a href="/sony">Sony</a><a href="/find-model-serial-number">Find Device Labels</a></div>
-        </article>
+      <!-- Microwave -->
+      <div class="appl-card">
+        <div class="appl-card-img" style="background:linear-gradient(135deg,#111118,#141420,#0e0e18);">
+          <div class="tech-grid"></div>
+          <svg viewBox="0 0 150 110" width="132" height="96" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="8" width="142" height="94" rx="7" fill="#0d0d16" stroke="#44e5c2" stroke-width="1.5"/>
+            <rect x="10" y="14" width="96" height="82" rx="5" fill="#090910" stroke="#44e5c2" stroke-width="1.2"/>
+            <rect x="16" y="20" width="84" height="70" rx="4" fill="#050508" stroke="#2d3449" stroke-width="1"/>
+            <circle cx="58" cy="55" r="22" stroke="#1e2030" stroke-width="1.5"/>
+            <circle cx="58" cy="55" r="14" stroke="#1e2030" stroke-width="1" stroke-dasharray="3 2"/>
+            <rect x="12" y="48" width="5" height="18" rx="2.5" fill="#44e5c2" opacity="0.8"/>
+            <rect x="108" y="14" width="30" height="82" rx="3" fill="#0c0c18" stroke="#2d3449" stroke-width="0.8"/>
+            <rect x="112" y="20" width="22" height="14" rx="2" fill="#050510" stroke="#44e5c2" stroke-width="0.8"/>
+            <text x="114" y="29" font-family="JetBrains Mono,monospace" font-size="7" fill="#44e5c2" opacity="0.8">0:00</text>
+            <rect x="112" y="40" width="22" height="5" rx="1.5" fill="#171728" stroke="#3c4a45" stroke-width="0.6"/>
+            <rect x="112" y="48" width="22" height="5" rx="1.5" fill="#171728" stroke="#3c4a45" stroke-width="0.6"/>
+            <rect x="112" y="56" width="22" height="5" rx="1.5" fill="#171728" stroke="#3c4a45" stroke-width="0.6"/>
+            <rect x="112" y="64" width="22" height="5" rx="1.5" fill="#171728" stroke="#3c4a45" stroke-width="0.6"/>
+            <circle cx="123" cy="82" r="7" fill="#171728" stroke="#44e5c2" stroke-width="0.9"/>
+            <line x1="123" y1="76" x2="123" y2="79" stroke="#44e5c2" stroke-width="1" opacity="0.8"/>
+            <rect x="100" y="26" width="8" height="20" rx="2" fill="#ffc278" fill-opacity="0.16" stroke="#ffc278" stroke-width="0.9"/>
+          </svg>
+          <span class="label-badge">Label Location</span>
+          <div class="card-glow" style="background:var(--secondary);"></div>
+        </div>
+        <div class="appl-card-body">
+          <h3>Microwave</h3>
+          <div class="spot-block">
+            <div class="spot-label">Common Spot:</div>
+            <div class="spot-text">Door frame or back/side exterior panel.</div>
+          </div>
+          <p class="appl-card-desc">Countertop models usually place the label on the back panel or one side exterior. Over-the-range units often use the door frame near the hinge. Built-in drawer microwaves keep the plate on the left interior wall of the cavity.</p>
         </div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="seo-copy-wrap">
-        <div class="cta-note">
-          <h2>Need a claim-ready replacement summary?</h2>
-          <p>Use the decoder above to start.</p>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3>Report an Issue</h3>
-        <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-field">
-          <label class="sr-only" for="fbBrand">Brand</label>
-          <input type="text" id="fbBrand" class="form-input" readonly>
-        </div>
-        <div class="modal-field">
-          <label class="sr-only" for="fbSerial">Serial Number / Search Query</label>
-          <input type="text" id="fbSerial" class="form-input" readonly>
-        </div>
-        <div class="modal-field">
-          <label class="sr-only" for="fbType">Issue Type</label>
-          <select id="fbType" class="form-select">
-            <option value="">-- Select issue type --</option>
-            <option value="wrong_year">Wrong year / date</option>
-            <option value="wrong_month">Wrong month</option>
-            <option value="wrong_brand">Wrong brand identified</option>
-            <option value="format_error">Format / decode error</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div class="modal-field">
-          <label class="sr-only" for="fbDetails">Details</label>
-          <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong?"></textarea>
-        </div>
-        <div id="fbThanks" class="fb-thanks hidden">Thank you. Your feedback helps improve the decoder.</div>
-        <div id="fbActions" class="modal-actions">
-          <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
-          <button class="cancel-btn" onclick="closeFeedbackModal()">Cancel</button>
-        </div>
-      </div>
     </div>
   </div>
-
-  <footer class="footer-sitemap">
-  <div class="footer-sitemap-grid">
-
-    <div class="footer-col">
-      <p class="footer-col-heading">Tools</p>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-        <li><a href="/smart-lookup">Smart Lookup</a></li>
-        <li><a href="/assistant">AI Assistant</a></li>
-        <li><a href="/brands">All Brands</a></li>
-      </ul>
+  <!-- Laundry -->
+  <div class="section" id="laundry">
+    <div class="section-header">
+      <h2>Laundry Appliances</h2>
+      <div class="section-divider"></div>
     </div>
+    <div class="cards-grid">
 
-    <div class="footer-col">
-      <p class="footer-col-heading">By Appliance</p>
-      <ul>
-        <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
-        <li><a href="/washer-serial-number">Washing Machines</a></li>
-        <li><a href="/dryer-serial-number">Dryers</a></li>
-        <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
-        <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
-        <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
-        <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
-      </ul>
+      <!-- Washer -->
+      <div class="appl-card">
+        <div class="appl-card-img" style="background:linear-gradient(135deg,#0e1820,#101e28,#0c1820);">
+          <div class="tech-grid"></div>
+          <svg viewBox="0 0 110 140" width="88" height="112" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="5" y="4" width="100" height="132" rx="7" fill="#0c1820" stroke="#44e5c2" stroke-width="1.5"/>
+            <rect x="5" y="4" width="100" height="22" rx="7" fill="#0e2030" stroke="#44e5c2" stroke-width="1.5"/>
+            <circle cx="22" cy="15" r="6" fill="#112236" stroke="#44e5c2" stroke-width="0.9"/>
+            <line x1="22" y1="10" x2="22" y2="13" stroke="#44e5c2" stroke-width="1" opacity="0.8"/>
+            <rect x="38" y="9" width="34" height="12" rx="2.5" fill="#060e20" stroke="#44e5c2" stroke-width="0.8"/>
+            <text x="41" y="18" font-family="JetBrains Mono,monospace" font-size="6" fill="#44e5c2" opacity="0.8">40°C</text>
+            <circle cx="88" cy="15" r="6" fill="#112236" stroke="#44e5c2" stroke-width="0.9"/>
+            <line x1="88" y1="10" x2="88" y2="13" stroke="#44e5c2" stroke-width="1" opacity="0.8"/>
+            <circle cx="55" cy="82" r="42" fill="#091420" stroke="#44e5c2" stroke-width="1.5"/>
+            <circle cx="55" cy="82" r="36" fill="#060e18" stroke="#2d3449" stroke-width="2"/>
+            <circle cx="55" cy="82" r="28" fill="#040c14" stroke="#44e5c2" stroke-width="1"/>
+            <circle cx="55" cy="82" r="18" stroke="#1e3045" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <circle cx="55" cy="82" r="9" stroke="#1e3045" stroke-width="1"/>
+            <rect x="88" y="74" width="6" height="16" rx="3" fill="#44e5c2" opacity="0.8"/>
+            <rect x="10" y="62" width="8" height="28" rx="2" fill="#ffc278" fill-opacity="0.16" stroke="#ffc278" stroke-width="0.9"/>
+            <circle cx="22" cy="126" r="2" fill="#44e5c2" opacity="0.6"/>
+            <circle cx="30" cy="126" r="2" fill="#44e5c2" opacity="0.3"/>
+          </svg>
+          <span class="label-badge">Label Location</span>
+          <div class="card-glow" style="background:var(--primary);"></div>
+        </div>
+        <div class="appl-card-body">
+          <h3>Washer</h3>
+          <div class="spot-block">
+            <div class="spot-label">Common Spot:</div>
+            <div class="spot-text">Fixed inner rim of the door opening.</div>
+          </div>
+          <p class="appl-card-desc">Open the door and inspect the inner rim of the door frame — not the moving door itself. Top-load washers typically place the label under the lid on the tub rim. Some Samsung and LG models put it on the rear panel.</p>
+        </div>
+      </div>
+
+      <!-- Dryer -->
+      <div class="appl-card">
+        <div class="appl-card-img" style="background:linear-gradient(135deg,#181010,#201414,#180e0e);">
+          <div class="tech-grid"></div>
+          <svg viewBox="0 0 110 140" width="88" height="112" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="5" y="4" width="100" height="132" rx="7" fill="#181010" stroke="#44e5c2" stroke-width="1.5"/>
+            <rect x="5" y="4" width="100" height="22" rx="7" fill="#201414" stroke="#44e5c2" stroke-width="1.5"/>
+            <circle cx="22" cy="15" r="6" fill="#140c0c" stroke="#ffc278" stroke-width="0.9"/>
+            <line x1="22" y1="10" x2="22" y2="13" stroke="#ffc278" stroke-width="1" opacity="0.8"/>
+            <circle cx="40" cy="13" r="2" fill="#ffc278" opacity="0.8"/>
+            <circle cx="47" cy="13" r="2" fill="#ffc278" opacity="0.4"/>
+            <circle cx="54" cy="13" r="2" fill="#2d3449" stroke="#ffc278" stroke-width="0.5"/>
+            <circle cx="88" cy="15" r="6" fill="#140c0c" stroke="#44e5c2" stroke-width="0.9"/>
+            <line x1="88" y1="10" x2="88" y2="13" stroke="#44e5c2" stroke-width="1" opacity="0.8"/>
+            <circle cx="55" cy="82" r="42" fill="#100a0a" stroke="#44e5c2" stroke-width="1.5"/>
+            <circle cx="55" cy="82" r="34" fill="#080606" stroke="#44e5c2" stroke-width="1"/>
+            <line x1="55" y1="48" x2="55" y2="116" stroke="#1e1414" stroke-width="2"/>
+            <line x1="21" y1="65" x2="89" y2="99" stroke="#1e1414" stroke-width="2"/>
+            <line x1="21" y1="99" x2="89" y2="65" stroke="#1e1414" stroke-width="2"/>
+            <circle cx="55" cy="82" r="6" fill="#1e1414" stroke="#44e5c2" stroke-width="0.8"/>
+            <rect x="88" y="74" width="6" height="16" rx="3" fill="#44e5c2" opacity="0.8"/>
+            <rect x="46" y="26" width="18" height="5" rx="2" fill="#2d2020" stroke="#44e5c2" stroke-width="0.7"/>
+            <rect x="10" y="64" width="8" height="24" rx="2" fill="#ffc278" fill-opacity="0.16" stroke="#ffc278" stroke-width="0.9"/>
+          </svg>
+          <span class="label-badge">Label Location</span>
+          <div class="card-glow" style="background:var(--tertiary);"></div>
+        </div>
+        <div class="appl-card-body">
+          <h3>Dryer</h3>
+          <div class="spot-block">
+            <div class="spot-label">Common Spot:</div>
+            <div class="spot-text">Inside door opening or door frame.</div>
+          </div>
+          <p class="appl-card-desc">Check the door rim or the cabinet edge just behind the door opening. Some models place a secondary label inside the lint-trap slot. Older dryers and Whirlpool-family units may use the rear panel.</p>
+        </div>
+      </div>
+
     </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">By Brand</p>
-      <ul>
-        <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
-        <li><a href="/ge-serial-number-lookup">GE</a></li>
-        <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
-        <li><a href="/lg-serial-number-lookup">LG</a></li>
-        <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
-        <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
-        <li><a href="/trane-serial-number-lookup">Trane</a></li>
-        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
-        <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
-        <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
-        <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">Resources</p>
-      <ul>
-        <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
-        <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
-        <li><a href="/where-is-my-serial-number">Where Is My Serial Number?</a></li>
-        <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
-        <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
-        <li><a href="/methodology">Methodology</a></li>
-        <li><a href="/about">About</a></li>
-      </ul>
-    </div>
-
   </div>
+</main>
+<div style="max-width:1200px;margin:0 auto 48px;padding:0 24px;">
+  <div style="background:var(--surface-low);border:1px solid var(--outline-var);border-radius:16px;padding:32px;text-align:center;">
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;">Once you've found the label, decode it to get the manufacture date and age.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="https://www.decodemyitem.com/decoder-tool" style="background:var(--primary);color:var(--on-primary);padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">Decode a Serial Number →</a>
+      <a href="https://www.decodemyitem.com/smart-lookup" style="background:transparent;color:var(--secondary);border:1px solid var(--secondary);padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">Try Smart Lookup →</a>
+    </div>
+  </div>
+</div>
+<div class="brand-section" style="max-width:1200px;margin:0 auto 96px;padding:32px 24px;">
+  <h2 style="font-size:24px;font-weight:600;color:var(--on-surface);text-align:center;margin-bottom:32px;">Brand-Specific Nuances</h2>
+  <div class="brand-grid">
+    <div class="brand-card"><div class="brand-card-name">Samsung</div><div class="brand-card-desc">QR codes &amp; barcodes on lower right-side exterior.</div></div>
+    <div class="brand-card"><div class="brand-card-name">LG</div><div class="brand-card-desc">High-gloss silver labels on side frames.</div></div>
+    <div class="brand-card"><div class="brand-card-name">Carrier</div><div class="brand-card-desc">Year is often encoded in the first 4 serial digits.</div></div>
+    <div class="brand-card"><div class="brand-card-name">Kenmore</div><div class="brand-card-desc">Model prefix (e.g. 110.) indicates actual maker.</div></div>
+    <div class="brand-card"><div class="brand-card-name">Whirlpool</div><div class="brand-card-desc">Uses large white labels inside doors or lid bases.</div></div>
+    <div class="brand-card"><div class="brand-card-name">Apple</div><div class="brand-card-desc">Laser-etched in tiny print on the bottom case.</div></div>
+  </div>
+</div>
 
+<!-- FAQ -->
+<div class="faq-section" style="max-width:800px;margin:0 auto;padding:0 24px 96px;">
+  <h2 style="font-size:24px;font-weight:600;color:var(--on-surface);text-align:center;margin-bottom:40px;">Tips for Hard-to-Read Labels</h2>
+  <div class="faq-list">
+    <details>
+      <summary>
+        <h3>The label is faded or dirty. What now?</h3>
+        <span class="material-symbols-outlined acc-icon">expand_more</span>
+      </summary>
+      <div class="faq-body">Try using a bright flashlight from a side angle to create shadows in the embossed text. You can also carefully rub a graphite pencil over embossed lettering to make it stand out. For dirty labels, use a damp cloth but avoid harsh cleaners that might dissolve the ink.</div>
+    </details>
+    <details>
+      <summary>
+        <h3>Can I find the serial number in the software?</h3>
+        <span class="material-symbols-outlined acc-icon">expand_more</span>
+      </summary>
+      <div class="faq-body">Yes, for modern "smart" appliances and electronics. Check the settings menu under "About," "System Information," or "Network Status." On many smart fridges, it's also located in the 'Info' section of the external touchscreen display.</div>
+    </details>
+    <details>
+      <summary>
+        <h3>Why do I need the serial number vs just the model?</h3>
+        <span class="material-symbols-outlined acc-icon">expand_more</span>
+      </summary>
+      <div class="faq-body">Manufacturers often change internal parts midway through a production year. The serial number identifies the specific "run" or date your unit was made, ensuring you order the exact replacement part that fits your specific build version.</div>
+    </details>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand-name">Decode My Item</div>
+      <p class="footer-brand-desc">Expert technical data extraction for appliances, electronics, and industrial equipment.</p>
+      <a href="https://www.decodemyitem.com/contact" class="footer-mail">
+        <span class="material-symbols-outlined">mail</span>
+      </a>
+    </div>
+    <div class="footer-col">
+      <h4>Tools</h4>
+      <ul>
+        <li><a href="https://www.decodemyitem.com/">Home</a></li>
+        <li><a href="https://www.decodemyitem.com/decoder-tool">Serial Number Decoder</a></li>
+        <li><a href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a></li>
+        <li><a href="https://www.decodemyitem.com/assistant">AI Assistant</a></li>
+        <li><a href="https://www.decodemyitem.com/brands">All Brands</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>By Appliance</h4>
+      <ul>
+        <li><a href="https://www.decodemyitem.com/refrigerator-serial-number">Refrigerators</a></li>
+        <li><a href="https://www.decodemyitem.com/washer-serial-number">Washing Machines</a></li>
+        <li><a href="https://www.decodemyitem.com/dryer-serial-number">Dryers</a></li>
+        <li><a href="https://www.decodemyitem.com/dishwasher-serial-number">Dishwashers</a></li>
+        <li><a href="https://www.decodemyitem.com/range-oven-serial-number">Ranges &amp; Ovens</a></li>
+        <li><a href="https://www.decodemyitem.com/hvac-age-by-serial-number">HVAC Systems</a></li>
+        <li><a href="https://www.decodemyitem.com/how-to-find-hvac-age">Finding HVAC Age</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>By Brand</h4>
+      <ul>
+        <li><a href="https://www.decodemyitem.com/whirlpool-serial-number-lookup">Whirlpool</a></li>
+        <li><a href="https://www.decodemyitem.com/ge-serial-number-lookup">GE</a></li>
+        <li><a href="https://www.decodemyitem.com/samsung-serial-number-lookup">Samsung</a></li>
+        <li><a href="https://www.decodemyitem.com/lg-serial-number-lookup">LG</a></li>
+        <li><a href="https://www.decodemyitem.com/carrier-serial-number-lookup">Carrier</a></li>
+        <li><a href="https://www.decodemyitem.com/goodman-serial-number-lookup">Goodman</a></li>
+        <li><a href="https://www.decodemyitem.com/trane-serial-number-lookup">Trane</a></li>
+        <li><a href="https://www.decodemyitem.com/rheem-serial-number-lookup">Rheem</a></li>
+        <li><a href="https://www.decodemyitem.com/frigidaire-serial-number-lookup">Frigidaire</a></li>
+        <li><a href="https://www.decodemyitem.com/maytag-serial-number-lookup">Maytag</a></li>
+        <li><a href="https://www.decodemyitem.com/kenmore-serial-number-lookup">Kenmore</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <ul>
+        <li><a href="https://www.decodemyitem.com/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
+        <li><a href="https://www.decodemyitem.com/how-old-is-my-hvac">How Old Is My HVAC?</a></li>
+        <li><a href="https://www.decodemyitem.com/how-old-is-my-plumbing">How Old Is My Water Heater?</a></li>
+        <li><a href="https://www.decodemyitem.com/how-old-is-my-electronics">How Old Is My Electronics?</a></li>
+        <li><a href="https://www.decodemyitem.com/serial-number-location-guide">Serial Number Location Guide</a></li>
+        <li><a href="https://www.decodemyitem.com/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
+        <li><a href="https://www.decodemyitem.com/how-to-read-serial-number">How to Read a Serial Number</a></li>
+        <li><a href="https://www.decodemyitem.com/methodology">Methodology</a></li>
+        <li><a href="https://www.decodemyitem.com/about">About</a></li>
+      </ul>
+    </div>
+  </div>
   <div class="footer-bottom">
-    <span class="footer-bottom-copy">
-      &copy; 2026 Decode My Item &middot; Database verified February 2026
-    </span>
-    <div class="footer-bottom-links">
-      <a href="/contact">Contact</a>
-      <a href="/security">Security &amp; Data</a>
-      <a href="/privacy-policy">Privacy Policy</a>
+    <span class="footer-copy">© 2026 Decode My Item · Database verified February 2026</span>
+    <div class="footer-links">
+      <a href="https://www.decodemyitem.com/contact">Contact</a>
+      <a href="https://www.decodemyitem.com/security">Security &amp; Data</a>
+      <a href="https://www.decodemyitem.com/privacy-policy">Privacy Policy</a>
+      <span class="live-dot">System Live</span>
     </div>
   </div>
 </footer>
 
-  <script>
-    function selectCatAndShowDecoder(cat, btn) {
-      if (typeof selectCategory === 'function') selectCategory(cat, btn);
-    }
+<!-- FAB -->
+<button class="fab" aria-label="Ask AI Assistant">
+  <span class="material-symbols-outlined">smart_toy</span>
+  <span class="fab-tip">Ask AI Assistant</span>
+</button>
 
-    function applySeoBrandSelection(attempt) {
-    }
 
-    window.addEventListener('DOMContentLoaded', function() {
-      var activeTab = document.querySelector('[data-cat="appliances"]');
-      if (activeTab) selectCatAndShowDecoder('appliances', activeTab);
-      applySeoBrandSelection(0);
-    });
-
-    window.addEventListener('pageshow', function () {
-      var feedbackModal = document.getElementById('feedbackModal');
-      var navList = document.querySelector('nav ul');
-      var hamburger = document.getElementById('hamburgerBtn');
-
-      if (!feedbackModal || feedbackModal.classList.contains('hidden')) {
-        document.body.style.overflow = '';
-      }
-      document.body.classList.remove('nav-menu-open');
-      if (navList) navList.classList.remove('open');
-      if (hamburger) hamburger.classList.remove('active');
-    });
-  </script>
-  <script defer src="decoder-data.js"></script>
-  <script defer src="lkq-engine.js"></script>
-  <script defer src="analytics.js"></script>
-  <script defer src="smart-lookup-bundle.js"></script>
-  <script defer src="script.js"></script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/how-old-is-my-appliance#webpage","name":"How Old Is My Appliance? Serial Number Age Lookup","description":"Decode appliance serial numbers, estimate appliance age, and find where to locate model and serial labels by brand and product type.","url":"https://www.decodemyitem.com/how-old-is-my-appliance","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Item Assist","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"How Old Is My Appliance? Serial Number Age Lookup"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","@id":"https://www.decodemyitem.com/how-old-is-my-appliance#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.decodemyitem.com"},{"@type":"ListItem","position":2,"name":"How Old Is My Appliance? Serial Number Age Lookup","item":"https://www.decodemyitem.com/how-old-is-my-appliance"}]}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://www.decodemyitem.com/how-old-is-my-appliance#app","name":"Item Assist Serial Number Decoder","url":"https://www.decodemyitem.com/how-old-is-my-appliance","description":"Select the appliance brand, then enter the full serial number exactly as printed on the label.","applicationCategory":"UtilityApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/how-old-is-my-appliance#faq","mainEntity":[{"@type":"Question","name":"Can I tell appliance age from the serial number?","acceptedAnswer":{"@type":"Answer","text":"Usually yes. The serial number is the strongest date source for most appliance brands supported by Item Assist, but some brands repeat codes across decades and need model-era context."}},{"@type":"Question","name":"Is the model number the same as the serial number?","acceptedAnswer":{"@type":"Answer","text":"No. The model number identifies the product family, while the serial number identifies the specific unit and is more likely to contain manufacture timing."}},{"@type":"Question","name":"Why does my serial number not decode?","acceptedAnswer":{"@type":"Answer","text":"The most common reasons are a worn label, a missing OEM context, a private-label brand, a partial serial, or a product line that uses a less common format."}},{"@type":"Question","name":"Where is the serial number label located?","acceptedAnswer":{"@type":"Answer","text":"Refrigerators usually place it inside the cabinet, dishwashers usually place it on the inner door frame, laundry appliances place it around the opening, and ranges or ovens place it on the frame or behind the drawer."}},{"@type":"Question","name":"Can this be used for insurance claims?","acceptedAnswer":{"@type":"Answer","text":"It is useful for age estimates, replacement research, and claim documentation, but claim files should still note when a result is estimated or when the manufacturer reuses codes across decades."}}]}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","@id":"https://www.decodemyitem.com/how-old-is-my-appliance#howto","name":"How Old Is My Appliance? Serial Number Age Lookup","description":"Choose the appliance brand. Enter the serial number exactly as shown on the product label. Review the age estimate and follow the brand or appliance-type links if you need more detail.","step":[{"@type":"HowToStep","position":1,"name":"Step 1","text":"Choose the appliance brand."},{"@type":"HowToStep","position":2,"name":"Step 2","text":"Enter the serial number exactly as shown on the product label."},{"@type":"HowToStep","position":3,"name":"Step 3","text":"Review the age estimate and follow the brand or appliance-type links if you need more detail."}]}</script>
 </body>
 </html>
+
+<button class="fab" aria-label="Ask AI Assistant">
+  <span class="material-symbols-outlined">smart_toy</span>
+  <span class="fab-tip">Ask AI Assistant</span>
+</button>
+<script>
+  const toggle = document.getElementById('mobile-toggle');
+  const menu = document.getElementById('mobile-menu');
+  toggle.addEventListener('click', () => menu.classList.toggle('open'));
+</script>

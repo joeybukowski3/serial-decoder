@@ -31,9 +31,11 @@
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body data-page-kind="brand-page">
+
+  <!-- ═══ NAV ═══ -->
   <nav>
-    <a href="/" class="logo" aria-label="Item Assist home">
-    <span class="material-symbols-outlined" style="color:#44e5c2;font-size:26px;flex-shrink:0;line-height:1;">qr_code_scanner</span>
+    <a href="/" class="logo" aria-label="Decode My Item home">
+      <span class="material-symbols-outlined logo-icon">qr_code_scanner</span>
       <div>
         <div class="logo-text">Decode My <span>Item</span></div>
         <div class="logo-sub">Decode - Research - Automate</div>
@@ -54,31 +56,55 @@
   </nav>
 
   <main>
-    <section class="page-hero seo-hero">
-      <div class="seo-copy-wrap">
+
+    <!-- ═══ HERO ═══ -->
+    <section class="bp-hero">
+      <div class="bp-hero-inner">
         <nav class="breadcrumb-nav" aria-label="Breadcrumb">
           <a href="/">Home</a><span class="breadcrumb-sep">/</span><span aria-current="page">Trane Serial Number Decoder</span>
         </nav>
-      </div>
-      <div class="tool-hero">
-        <div class="tool-badge">HVAC brand decoder</div>
-        <h1>Trane Serial Number Decoder</h1>
-        <p>Use this Trane serial number decoder when you already know the brand and want the fastest supported HVAC age path from the rating plate.</p>
-        <ol class="how-steps how-steps-list">
-            <li><span class="how-list-index">1</span><span>Choose the matching category and brand.</span></li>
-            <li><span class="how-list-index">2</span><span>Enter the full serial number exactly as printed on the label.</span></li>
-            <li><span class="how-list-index">3</span><span>Review the date estimate, notes, and fallback links if the serial does not decode.</span></li>
+
+        <div class="bp-hero-icon-wrap" style="background:#9fcaff18;border-color:#9fcaff30;">
+          <span class="material-symbols-outlined bp-hero-icon" style="color:#9fcaff;">ac_unit</span>
+        </div>
+
+        <span class="bp-badge" style="color:#9fcaff;border-color:#9fcaff30;background:#9fcaff10;">
+          HVAC Decoder
+        </span>
+
+        <h1 class="bp-hero-title">Trane Serial Number Decoder</h1>
+        <p class="bp-hero-sub">Use this Trane serial number decoder when you already know the brand and want the fastest supported HVAC age path from the rating plate.</p>
+
+        <ol class="bp-steps">
+          
+          <li class="bp-step">
+            <span class="bp-step-num" style="background:#9fcaff20;color:#9fcaff;">1</span>
+            <span>Choose the matching category and brand.</span>
+          </li>
+          <li class="bp-step">
+            <span class="bp-step-num" style="background:#9fcaff20;color:#9fcaff;">2</span>
+            <span>Enter the full serial number exactly as printed on the label.</span>
+          </li>
+          <li class="bp-step">
+            <span class="bp-step-num" style="background:#9fcaff20;color:#9fcaff;">3</span>
+            <span>Review the date estimate, notes, and fallback links if the serial does not decode.</span>
+          </li>
         </ol>
+
+        <a href="#decoder-tool" class="bp-cta-btn" style="background:#9fcaff;color:#00382d;">
+          <span class="material-symbols-outlined" style="font-size:18px;">bolt</span>
+          Decode Serial Number
+        </a>
       </div>
     </section>
 
-    <section class="section seo-copy-section">
-      <div class="seo-copy-wrap">
-        <p>Trane serial numbers are equipment-specific HVAC paths. The current decoder supports the common Trane year-position logic and keeps the result focused on rating-plate serial research instead of generic product guessing.</p>
-      </div>
-    </section>
+    <!-- ═══ SUPPORTING INTRO ═══ -->
+    <div class="bp-intro-strip">
+      <p>Trane serial numbers are equipment-specific HVAC paths. The current decoder supports the common Trane year-position logic and keeps the result focused on rating-plate serial research instead of generic product guessing.</p>
+    </div>
 
-    <section class="section" id="decoder-tool" style="padding-top:0;padding-bottom:16px;">
+    <!-- ═══ DECODER TOOL ═══ -->
+    <section class="bp-tool-section" id="decoder-tool">
       <div class="tool-focus-wrap">
         <div class="seo-tool-shell">
           <div class="home-tools-wrap">
@@ -91,18 +117,13 @@
                     <button class="search-tab cat-tab active" data-cat="hvac" onclick="selectCatAndShowDecoder('hvac', this)">HVAC</button>
                     <button class="search-tab cat-tab" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
                   </div>
-
                   <div class="search-panel" id="panel-decoder">
                     <div class="home-tool-row">
                       <label class="sr-only" for="brand">Select Brand</label>
-                      <select id="brand" class="search-select">
-                        <option value="">-- Select Brand --</option>
-                      </select>
-
+                      <select id="brand" class="search-select"><option value="">-- Select Brand --</option></select>
                       <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
                       <input type="text" id="serial" class="search-input" placeholder="Enter Trane serial number">
                     </div>
-
                     <div class="era-group hidden" id="eraGroup">
                       <label class="sr-only" for="eraSelect">Manufacture Era</label>
                       <select id="eraSelect" class="search-select" style="margin-top:8px;">
@@ -112,7 +133,6 @@
                       </select>
                       <p class="era-note">Some brands reuse serial layouts across decades. Select the era when prompted to improve accuracy.</p>
                     </div>
-
                     <p class="search-hint serial-helper-text">Trane is preselected. Enter the full HVAC serial number exactly as printed on the rating plate.</p>
                     <div class="tool-panel-action">
                       <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">Decode Serial Number</button>
@@ -123,13 +143,13 @@
             </div>
           </div>
         </div>
-
         <div class="utility-strip">
           <span>Built for fast serial/model research.</span><span>Useful for appliance age estimates, replacement research, and claim documentation.</span><span>Results may vary by brand, model family, and available serial data.</span>
         </div>
       </div>
     </section>
 
+    <!-- ═══ RESULTS ═══ -->
     <div class="results-wrapper">
       <div id="ageLoading" class="results-card hidden">
         <div class="loading-inner">
@@ -137,7 +157,6 @@
           <div class="loading-text" id="loadingText">Researching product information...</div>
         </div>
       </div>
-
       <div id="serialResults" class="results-card hidden">
         <div class="results-header">
           <h3>Decoded Results</h3>
@@ -162,14 +181,8 @@
               <span class="result-label">Estimated Age</span>
               <span class="result-value" id="resultEstimatedAge">&mdash;</span>
             </div>
-            <div class="info-block method">
-              <h4>Decoding Method</h4>
-              <p id="resultMethod"></p>
-            </div>
-            <div class="info-block notes">
-              <h4>Important Notes</h4>
-              <p id="resultNotes"></p>
-            </div>
+            <div class="info-block method"><h4>Decoding Method</h4><p id="resultMethod"></p></div>
+            <div class="info-block notes"><h4>Important Notes</h4><p id="resultNotes"></p></div>
             <details class="determination-details">
               <summary>How this was determined</summary>
               <div class="determination-body" id="serialDeterminationBody">
@@ -189,132 +202,229 @@
 
     
 
-    <section class="section seo-section-grid">
-      <div class="seo-card">
-        <h2>How to decode a Trane serial number</h2>
-        <p>Supported Trane serial decoding commonly uses digits 3-4 as the production year. The surrounding characters usually act as plant and sequence identifiers rather than a direct month code.</p>
-      </div>
-      <div class="seo-card">
-        <h2>What the model number can tell you</h2>
-        <p>The Trane model number helps confirm equipment family, tonnage, and generation. That supports a stronger replacement workflow once the serial estimate identifies the likely year.</p>
-      </div>
-      <div class="seo-card seo-card-wide">
-        <h2>Common Trane serial number formats</h2>
-        <div class="table-wrap">
-          <table class="format-table">
-            <thead>
-              <tr>
-                <th>Pattern</th>
-                <th>Common Format</th>
-                <th>What It May Indicate</th>
-                <th>Confidence</th>
-              </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td>Trane condensers and heat pumps</td>
-              <td>Digits 3-4 commonly map the year</td>
-              <td>The current decoder uses the supported Trane year position instead of a generic month-year guess.</td>
-              <td>Moderate to high confidence when the label matches the supported path.</td>
-            </tr>
-            <tr>
-              <td>Trane furnaces</td>
-              <td>Digits 3-4 commonly map the year</td>
-              <td>Furnaces often follow the same supported Trane year placement.</td>
-              <td>Moderate to high confidence.</td>
-            </tr>
-            <tr>
-              <td>Trane indoor units</td>
-              <td>Same supported year position</td>
-              <td>Air handlers and indoor units often use the same year-position logic.</td>
-              <td>Moderate to high confidence.</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="seo-card seo-card-wide">
-        <h2>Trane serial number examples</h2>
-        <div class="example-grid">
-          <article class="example-card">
-            <div class="example-eyebrow">Illustrative Trane pattern</div>
-            <code>XX19XXXXX</code>
-            <p>Illustrative Trane-family pattern. The supported path focuses on digits 3-4 for the production year.</p>
-          </article>
-          <article class="example-card">
-            <div class="example-eyebrow">Rating-plate reminder</div>
-            <code>Full serial required</code>
-            <p>Capture the whole serial because the surrounding characters help confirm you are using the right Trane path.</p>
-          </article>
-          <article class="example-card">
-            <div class="example-eyebrow">Model-family reminder</div>
-            <code>Model still matters</code>
-            <p>The Trane model number is useful for verifying the family and building a stronger replacement summary after the year is estimated.</p>
-          </article>
-        </div>
-      </div>
-      <div class="seo-card seo-card-wide">
-        <h2>Where to find the model and serial number</h2>
-        <div class="mini-card-grid">
-          <article class="mini-card">
-            <h3>Outdoor condensers and heat pumps</h3>
-            <ul class="bullet-list"><li>Side cabinet rating plate near service valves</li><li>Exterior panel near refrigerant line connections</li></ul>
-          </article>
-          <article class="mini-card">
-            <h3>Furnaces</h3>
-            <ul class="bullet-list"><li>Inside the front service door</li><li>Side cabinet plate near burner or blower area</li></ul>
-          </article>
-          <article class="mini-card">
-            <h3>Air handlers and indoor units</h3>
-            <ul class="bullet-list"><li>Access panel or blower compartment label</li><li>Exterior cabinet sticker near electrical specs</li></ul>
-          </article>
-        </div>
-      </div>
-      <div class="seo-card">
-        <h2>If the serial number does not decode</h2>
-        <ul class="bullet-list"><li>Use the full rating-plate serial rather than a partial copied string.</li><li>Confirm that the product is Trane-family equipment before assuming the supported year position.</li><li>Use the model number to confirm the family after the year is estimated.</li><li>Try Smart Lookup if the label is damaged or if the serial does not match the supported Trane structure.</li><li>Do not apply appliance-style month/year rules to HVAC serials.</li>
-        </ul>
-      </div>
-      <div class="seo-card faq-card">
-        <h2>FAQ</h2>
-        <div class="faq-list">
-          <details class="faq-item" open>
-            <summary>How old is my Trane unit?</summary>
-            <div class="faq-answer"><p>Use the serial number from the rating plate. The supported Trane path commonly reads digits 3-4 as the production year.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Can the Trane model number tell me the age?</summary>
-            <div class="faq-answer"><p>Not as directly as the serial number. It is better for identifying the equipment family and supporting replacement research.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Why does my Trane serial number not decode?</summary>
-            <div class="faq-answer"><p>The label may be partial, the product may fall outside the supported family, or the serial may not match the main Trane pattern.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Where is the Trane serial number plate located?</summary>
-            <div class="faq-answer"><p>Most Trane equipment places it on the outdoor cabinet, indoor access panel, or furnace service area depending on product type.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Can this support claim documentation?</summary>
-            <div class="faq-answer"><p>Yes. Serial-based age support is useful for HVAC claims, especially when the rating-plate photo is preserved.</p></div>
-          </details>
-        </div>
-      </div>
-    </section>
+    <!-- ═══ CONTENT SECTIONS ═══ -->
+    <div class="bp-content-wrap">
 
-    
-
-    <section class="section related-section">
-      <div class="seo-copy-wrap">
-        <h2>Related Decoder Pages</h2>
-        <div class="related-brands"><a href="/how-to-find-hvac-age">How to Find HVAC Age</a><a href="/hvac-age-by-serial-number">HVAC Age by Serial Number</a><a href="/carrier-serial-number-lookup">Carrier</a><a href="/rheem-serial-number-lookup">Rheem</a><a href="/goodman-serial-number-lookup">Goodman</a><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a>
+      <!-- How to decode + model context (2-col) -->
+      <div class="bp-two-col">
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:#9fcaff;">manage_search</span>
+            <h2>How to decode a Trane serial number</h2>
+          </div>
+          <p>Supported Trane serial decoding commonly uses digits 3-4 as the production year. The surrounding characters usually act as plant and sequence identifiers rather than a direct month code.</p>
+        </div>
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:#9fcaff;">category</span>
+            <h2>What the model number can tell you</h2>
+          </div>
+          <p>The Trane model number helps confirm equipment family, tonnage, and generation. That supports a stronger replacement workflow once the serial estimate identifies the likely year.</p>
         </div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="seo-copy-wrap">
-        <h2>Research Paths</h2>
+      <!-- Serial format cards -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#9fcaff;">barcode_scanner</span>
+          <h2>Common Trane serial number formats</h2>
+        </div>
+        <div class="fmt-cards-grid">
+          
+      <div class="fmt-card">
+        <div class="fmt-card-top">
+          <span class="fmt-label">Trane condensers and heat pumps</span>
+          <span class="conf-pill conf-med">~ Moderate to high confidence when the label matches the supported path.</span>
+        </div>
+        <code class="fmt-serial">Digits 3-4 commonly map the year</code>
+        <p class="fmt-meaning">The current decoder uses the supported Trane year position instead of a generic month-year guess.</p>
+      </div>
+      <div class="fmt-card">
+        <div class="fmt-card-top">
+          <span class="fmt-label">Trane furnaces</span>
+          <span class="conf-pill conf-med">~ Moderate to high confidence.</span>
+        </div>
+        <code class="fmt-serial">Digits 3-4 commonly map the year</code>
+        <p class="fmt-meaning">Furnaces often follow the same supported Trane year placement.</p>
+      </div>
+      <div class="fmt-card">
+        <div class="fmt-card-top">
+          <span class="fmt-label">Trane indoor units</span>
+          <span class="conf-pill conf-med">~ Moderate to high confidence.</span>
+        </div>
+        <code class="fmt-serial">Same supported year position</code>
+        <p class="fmt-meaning">Air handlers and indoor units often use the same year-position logic.</p>
+      </div>
+        </div>
+      </div>
+
+      <!-- Examples -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#9fcaff;">terminal</span>
+          <h2>Trane serial number examples</h2>
+        </div>
+        <div class="ex-terminals-grid">
+          
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Illustrative Trane pattern</span>
+        </div>
+        <code class="ex-serial">XX19XXXXX</code>
+        <p class="ex-note">Illustrative Trane-family pattern. The supported path focuses on digits 3-4 for the production year.</p>
+      </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Rating-plate reminder</span>
+        </div>
+        <code class="ex-serial">Full serial required</code>
+        <p class="ex-note">Capture the whole serial because the surrounding characters help confirm you are using the right Trane path.</p>
+      </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Model-family reminder</span>
+        </div>
+        <code class="ex-serial">Model still matters</code>
+        <p class="ex-note">The Trane model number is useful for verifying the family and building a stronger replacement summary after the year is estimated.</p>
+      </div>
+        </div>
+      </div>
+
+      <!-- Location guide -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#9fcaff;">pin_drop</span>
+          <h2>Where to find the model and serial number</h2>
+        </div>
+        <div class="loc-cards-grid">
+          
+      <div class="loc-card">
+        <div class="loc-card-head">
+          <span class="material-symbols-outlined loc-icon">ac_unit</span>
+          <h3 class="loc-card-title">Outdoor condensers and heat pumps</h3>
+        </div>
+        <ul class="loc-list"><li>Side cabinet rating plate near service valves</li><li>Exterior panel near refrigerant line connections</li></ul>
+      </div>
+      <div class="loc-card">
+        <div class="loc-card-head">
+          <span class="material-symbols-outlined loc-icon">heat_pump</span>
+          <h3 class="loc-card-title">Furnaces</h3>
+        </div>
+        <ul class="loc-list"><li>Inside the front service door</li><li>Side cabinet plate near burner or blower area</li></ul>
+      </div>
+      <div class="loc-card">
+        <div class="loc-card-head">
+          <span class="material-symbols-outlined loc-icon">heat_pump</span>
+          <h3 class="loc-card-title">Air handlers and indoor units</h3>
+        </div>
+        <ul class="loc-list"><li>Access panel or blower compartment label</li><li>Exterior cabinet sticker near electrical specs</li></ul>
+      </div>
+        </div>
+      </div>
+
+      <!-- Troubleshooting + FAQ (2-col) -->
+      <div class="bp-two-col">
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:#9fcaff;">troubleshoot</span>
+            <h2>If the serial number does not decode</h2>
+          </div>
+          <ul class="bp-check-list">
+            
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Use the full rating-plate serial rather than a partial copied string.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Confirm that the product is Trane-family equipment before assuming the supported year position.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Use the model number to confirm the family after the year is estimated.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Try Smart Lookup if the label is damaged or if the serial does not match the supported Trane structure.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Do not apply appliance-style month/year rules to HVAC serials.</span>
+      </li>
+          </ul>
+        </div>
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:#9fcaff;">help</span>
+            <h2>FAQ</h2>
+          </div>
+          <div class="bp-faq-list">
+            
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>How old is my Trane unit?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Use the serial number from the rating plate. The supported Trane path commonly reads digits 3-4 as the production year.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Can the Trane model number tell me the age?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Not as directly as the serial number. It is better for identifying the equipment family and supporting replacement research.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Why does my Trane serial number not decode?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>The label may be partial, the product may fall outside the supported family, or the serial may not match the main Trane pattern.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Where is the Trane serial number plate located?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Most Trane equipment places it on the outdoor cabinet, indoor access panel, or furnace service area depending on product type.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Can this support claim documentation?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Yes. Serial-based age support is useful for HVAC claims, especially when the rating-plate photo is preserved.</p></div>
+      </details>
+          </div>
+        </div>
+      </div>
+
+      <!-- Related links -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#9fcaff;">link</span>
+          <h2>Related Decoder Pages</h2>
+        </div>
+        <div class="bp-pills-wrap">
+          <a href="/how-to-find-hvac-age" class="bp-pill">How to Find HVAC Age</a><a href="/hvac-age-by-serial-number" class="bp-pill">HVAC Age by Serial Number</a><a href="/carrier-serial-number-lookup" class="bp-pill">Carrier</a><a href="/rheem-serial-number-lookup" class="bp-pill">Rheem</a><a href="/goodman-serial-number-lookup" class="bp-pill">Goodman</a><a href="/how-old-is-my-appliance" class="bp-pill">How Old Is My Appliance?</a>
+        </div>
+      </div>
+
+      <!-- Research paths -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#9fcaff;">explore</span>
+          <h2>Research Paths</h2>
+        </div>
         <div class="link-group-grid">
         <article class="link-group-card">
           <h3>Appliance Age Lookup</h3>
@@ -326,7 +436,7 @@
         </article>
         <article class="link-group-card">
           <h3>Appliance Type Lookups</h3>
-          <div class="link-pill-grid"><a href="/where-is-my-serial-number">Where Is My Serial Number?</a><a href="/appliance-age-for-insurance-and-replacement">Insurance, Repair & Replacement</a><a href="/refrigerator-serial-number">Refrigerator Serial Number Lookup</a><a href="/washer-serial-number">Washer Serial Number Lookup</a><a href="/dryer-serial-number">Dryer Serial Number Lookup</a></div>
+          <div class="link-pill-grid"><a href="/appliance-age-for-insurance-and-replacement">Insurance, Repair & Replacement</a><a href="/refrigerator-serial-number">Refrigerator Serial Number Lookup</a><a href="/washer-serial-number">Washer Serial Number Lookup</a><a href="/dryer-serial-number">Dryer Serial Number Lookup</a><a href="/dishwasher-serial-number">Dishwasher Serial Number Lookup</a></div>
         </article>
         <article class="link-group-card">
           <h3>HVAC Age Lookup</h3>
@@ -335,21 +445,31 @@
         <article class="link-group-card">
           <h3>Electronics Serial & Model Lookup</h3>
           <div class="link-pill-grid"><a href="/asus-serial-number-decoder">ASUS Serial Number Lookup</a><a href="/samsung-tv-serial-number-decoder">Samsung TV Serial Number Decoder</a><a href="/apple">Apple</a><a href="/hp">HP</a><a href="/sony">Sony</a><a href="/find-model-serial-number">Find Device Labels</a></div>
-        </article>
-        </div>
+        </article></div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="seo-copy-wrap">
-        <div class="cta-note">
-          <h2>Need a claim-ready replacement summary?</h2>
-          <p>Use the decoder above to start.</p>
+      <!-- Bottom CTA -->
+      <div class="bp-cta-card">
+        <span class="material-symbols-outlined" style="font-size:40px;color:#9fcaff;margin-bottom:12px;">description</span>
+        <h2>Need a claim-ready replacement summary?</h2>
+        <p>Use the decoder above to start, or try Smart Lookup if the serial label is worn or missing.</p>
+        <div class="bp-cta-row">
+          <a href="#decoder-tool" class="bp-cta-btn" style="background:#9fcaff;color:#00382d;">
+            <span class="material-symbols-outlined" style="font-size:16px;">bolt</span> Decode a Serial
+          </a>
+          <a href="/smart-lookup" class="bp-cta-btn-outline" style="border-color:#9fcaff40;color:#9fcaff;">
+            Try Smart Lookup →
+          </a>
         </div>
       </div>
-    </section>
+
+    </div>
+
+    
+
   </main>
 
+  <!-- ═══ FEEDBACK MODAL ═══ -->
   <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
     <div class="modal-card">
       <div class="modal-header">
@@ -357,14 +477,8 @@
         <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
       </div>
       <div class="modal-body">
-        <div class="modal-field">
-          <label class="sr-only" for="fbBrand">Brand</label>
-          <input type="text" id="fbBrand" class="form-input" readonly>
-        </div>
-        <div class="modal-field">
-          <label class="sr-only" for="fbSerial">Serial Number / Search Query</label>
-          <input type="text" id="fbSerial" class="form-input" readonly>
-        </div>
+        <div class="modal-field"><label class="sr-only" for="fbBrand">Brand</label><input type="text" id="fbBrand" class="form-input" readonly></div>
+        <div class="modal-field"><label class="sr-only" for="fbSerial">Serial Number</label><input type="text" id="fbSerial" class="form-input" readonly></div>
         <div class="modal-field">
           <label class="sr-only" for="fbType">Issue Type</label>
           <select id="fbType" class="form-select">
@@ -376,10 +490,7 @@
             <option value="other">Other</option>
           </select>
         </div>
-        <div class="modal-field">
-          <label class="sr-only" for="fbDetails">Details</label>
-          <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong?"></textarea>
-        </div>
+        <div class="modal-field"><label class="sr-only" for="fbDetails">Details</label><textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong?"></textarea></div>
         <div id="fbThanks" class="fb-thanks hidden">Thank you. Your feedback helps improve the decoder.</div>
         <div id="fbActions" class="modal-actions">
           <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
@@ -389,82 +500,76 @@
     </div>
   </div>
 
+  <!-- ═══ FOOTER ═══ -->
   <footer class="footer-sitemap">
-  <div class="footer-sitemap-grid">
-
-    <div class="footer-col">
-      <p class="footer-col-heading">Tools</p>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-        <li><a href="/smart-lookup">Smart Lookup</a></li>
-        <li><a href="/assistant">AI Assistant</a></li>
-        <li><a href="/brands">All Brands</a></li>
-      </ul>
+    <div class="footer-sitemap-grid">
+      <div class="footer-col">
+        <p class="footer-col-heading">Tools</p>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+          <li><a href="/smart-lookup">Smart Lookup</a></li>
+          <li><a href="/assistant">AI Assistant</a></li>
+          <li><a href="/brands">All Brands</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">By Appliance</p>
+        <ul>
+          <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
+          <li><a href="/washer-serial-number">Washing Machines</a></li>
+          <li><a href="/dryer-serial-number">Dryers</a></li>
+          <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
+          <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
+          <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
+          <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">By Brand</p>
+        <ul>
+          <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
+          <li><a href="/ge-serial-number-lookup">GE</a></li>
+          <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
+          <li><a href="/lg-serial-number-lookup">LG</a></li>
+          <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
+          <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
+          <li><a href="/trane-serial-number-lookup">Trane</a></li>
+          <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+          <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
+          <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
+          <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">Resources</p>
+        <ul>
+          <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
+          <li><a href="/how-old-is-my-hvac">How Old Is My HVAC?</a></li>
+          <li><a href="/how-old-is-my-plumbing">How Old Is My Water Heater?</a></li>
+          <li><a href="/how-old-is-my-electronics">How Old Is My Electronics?</a></li>
+          <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
+          <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
+          <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
+          <li><a href="/methodology">Methodology</a></li>
+          <li><a href="/about">About</a></li>
+        </ul>
+      </div>
     </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">By Appliance</p>
-      <ul>
-        <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
-        <li><a href="/washer-serial-number">Washing Machines</a></li>
-        <li><a href="/dryer-serial-number">Dryers</a></li>
-        <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
-        <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
-        <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
-        <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
-      </ul>
+    <div class="footer-bottom">
+      <span class="footer-bottom-copy">&copy; 2026 Decode My Item &middot; Database verified February 2026</span>
+      <div class="footer-bottom-links">
+        <a href="/contact">Contact</a>
+        <a href="/security">Security &amp; Data</a>
+        <a href="/privacy-policy">Privacy Policy</a>
+      </div>
     </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">By Brand</p>
-      <ul>
-        <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
-        <li><a href="/ge-serial-number-lookup">GE</a></li>
-        <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
-        <li><a href="/lg-serial-number-lookup">LG</a></li>
-        <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
-        <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
-        <li><a href="/trane-serial-number-lookup">Trane</a></li>
-        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
-        <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
-        <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
-        <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">Resources</p>
-      <ul>
-        <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
-        <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
-        <li><a href="/where-is-my-serial-number">Where Is My Serial Number?</a></li>
-        <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
-        <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
-        <li><a href="/methodology">Methodology</a></li>
-        <li><a href="/about">About</a></li>
-      </ul>
-    </div>
-
-  </div>
-
-  <div class="footer-bottom">
-    <span class="footer-bottom-copy">
-      &copy; 2026 Decode My Item &middot; Database verified February 2026
-    </span>
-    <div class="footer-bottom-links">
-      <a href="/contact">Contact</a>
-      <a href="/security">Security &amp; Data</a>
-      <a href="/privacy-policy">Privacy Policy</a>
-    </div>
-  </div>
-</footer>
+  </footer>
 
   <script>
     function selectCatAndShowDecoder(cat, btn) {
       if (typeof selectCategory === 'function') selectCategory(cat, btn);
     }
-
     function applySeoBrandSelection(attempt) {
       var brandSelect = document.getElementById('brand');
       if (!brandSelect) return;
@@ -475,24 +580,25 @@
       brandSelect.value = 'trane';
       brandSelect.dispatchEvent(new Event('change'));
     }
-
     window.addEventListener('DOMContentLoaded', function() {
       var activeTab = document.querySelector('[data-cat="hvac"]');
       if (activeTab) selectCatAndShowDecoder('hvac', activeTab);
       applySeoBrandSelection(0);
     });
-
     window.addEventListener('pageshow', function () {
       var feedbackModal = document.getElementById('feedbackModal');
       var navList = document.querySelector('nav ul');
       var hamburger = document.getElementById('hamburgerBtn');
-
-      if (!feedbackModal || feedbackModal.classList.contains('hidden')) {
-        document.body.style.overflow = '';
-      }
+      if (!feedbackModal || feedbackModal.classList.contains('hidden')) { document.body.style.overflow = ''; }
       document.body.classList.remove('nav-menu-open');
       if (navList) navList.classList.remove('open');
       if (hamburger) hamburger.classList.remove('active');
+    });
+    // FAQ accordion icon rotation
+    document.querySelectorAll('.bp-faq-item').forEach(el => {
+      el.addEventListener('toggle', () => {
+        el.querySelector('.bp-faq-icon').style.transform = el.open ? 'rotate(180deg)' : '';
+      });
     });
   </script>
   <script defer src="decoder-data.js"></script>

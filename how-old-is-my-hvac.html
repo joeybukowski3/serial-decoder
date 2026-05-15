@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Serial Number Location Guide | Decode My Item</title>
+<title>How Old is My HVAC | Decode My Item</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <style>
@@ -787,56 +787,106 @@ footer {
 </header>
 
 <!-- ═══ HERO ══════════════════════════════════════════════════ -->
-<section class="hero">
-  <div class="hero-orbs">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
+
+<header>
+  <div class="nav-inner">
+    <a href="https://www.decodemyitem.com/" class="nav-logo">
+      <span class="material-symbols-outlined">qr_code_scanner</span>
+      Decode My Item
+    </a>
+    <nav class="nav-links">
+      <a href="https://www.decodemyitem.com/">Home</a>
+      <a href="https://www.decodemyitem.com/decoder-tool">Serial Number Decoder</a>
+      <a href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a>
+      <a href="https://www.decodemyitem.com/assistant">AI Assistant</a>
+      <a href="https://www.decodemyitem.com/methodology">Methodology</a>
+      <a href="https://www.decodemyitem.com/contact">Contact</a>
+      <a href="https://www.decodemyitem.com/feedback">Feedback &amp; Bugs</a>
+      <a href="https://www.decodemyitem.com/security">Security &amp; Data</a>
+    </nav>
+    <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle menu">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
   </div>
+  <nav class="mobile-menu" id="mobile-menu">
+    <a href="https://www.decodemyitem.com/">Home</a>
+    <a href="https://www.decodemyitem.com/decoder-tool">Serial Number Decoder</a>
+    <a href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a>
+    <a href="https://www.decodemyitem.com/assistant">AI Assistant</a>
+    <a href="https://www.decodemyitem.com/methodology">Methodology</a>
+    <a href="https://www.decodemyitem.com/contact">Contact</a>
+    <a href="https://www.decodemyitem.com/feedback">Feedback &amp; Bugs</a>
+    <a href="https://www.decodemyitem.com/security">Security &amp; Data</a>
+  </nav>
+</header>
+<section class="hero">
+  <div class="hero-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
   <div class="hero-content">
-    <span class="badge">Visual Identification Hub</span>
-    <h1>Where to Find the Serial Number on <span>Any Appliance</span></h1>
-    <p class="hero-sub">A complete diagnostic guide to locating data plates and model labels before you call a technician or run a decoder.</p>
-    <div class="search-wrap">
-      <div class="search-box">
-        <span class="material-symbols-outlined search-icon">search</span>
-        <input type="text" placeholder="Enter your appliance or device model..."/>
-        <span class="search-kbd mono">⌘K</span>
+    <span class="badge">HVAC Age Guide</span>
+    <h1>How Old is My <span>HVAC System?</span></h1>
+    <p class="hero-sub">Locate the data plate on your air conditioner, furnace, or heat pump, then decode the serial number to find the manufacture date and equipment age.</p>
+  </div>
+</section>
+
+<div style="max-width:1200px;margin:0 auto;padding:20px 24px 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);">
+  <a href="/serial-number-location-guide" style="color:var(--primary);text-decoration:none;">Serial Number Location Guide</a>
+  <span style="margin:0 8px;opacity:0.5;">→</span>
+  <span>How Old is My HVAC?</span>
+</div>
+<main>
+  <!-- HVAC -->
+  <div class="section" id="hvac">
+    <div class="section-header">
+      <h2>HVAC Systems</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="hvac-grid">
+      <div class="glass-card">
+        <div class="hvac-icon-box">
+          <span class="material-symbols-outlined">mode_fan</span>
+        </div>
+        <div class="hvac-body">
+          <h3>Central Air - Outdoor Unit</h3>
+          <p>Labels on outdoor units face the elements and can fade. Use high-contrast lighting to read embossed text.</p>
+          <div class="loc-block">
+            <span class="loc-label">LOCATIONS:</span>
+            <ul>
+              <li>Right-side panel near the refrigerant lines.</li>
+              <li>Access panel for the electrical connections.</li>
+              <li>Back panel near the coils (less common).</li>
+            </ul>
+          </div>
+        </div>
       </div>
-      <div class="chips">
-        <span class="chips-label mono">Popular:</span>
-        <button class="chip">Whirlpool Washer</button>
-        <button class="chip">Samsung Fridge</button>
-        <button class="chip">Carrier HVAC</button>
+      <div class="glass-card">
+        <div class="hvac-icon-box">
+          <span class="material-symbols-outlined">heat_pump</span>
+        </div>
+        <div class="hvac-body">
+          <h3>Furnace &amp; Air Handler</h3>
+          <p>Usually found behind the front access panel to protect the label from internal heat components.</p>
+          <div class="loc-block">
+            <span class="loc-label">LOCATIONS:</span>
+            <ul>
+              <li>Inside the front door (service panel).</li>
+              <li>Inside side wall of the cabinet (requires door removal).</li>
+              <li>On the blower motor housing itself.</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</section>
-
-<!-- ═══ QUICK NAV ══════════════════════════════════════════════ -->
-<section class="quick-nav">
-  <div class="quick-nav-grid" style="grid-template-columns:repeat(4,1fr);">
-    <a class="nav-card" href="/how-old-is-my-appliance">
-      <span class="material-symbols-outlined">kitchen</span>
-      <div><div class="nav-card-title">Appliances</div><div class="nav-card-sub">Kitchen &amp; Laundry</div></div>
-    </a>
-    <a class="nav-card" href="/how-old-is-my-hvac">
-      <span class="material-symbols-outlined">ac_unit</span>
-      <div><div class="nav-card-title">HVAC</div><div class="nav-card-sub">AC, Furnaces, Heat Pumps</div></div>
-    </a>
-    <a class="nav-card" href="/how-old-is-my-plumbing">
-      <span class="material-symbols-outlined">water_drop</span>
-      <div><div class="nav-card-title">Plumbing</div><div class="nav-card-sub">Water Heaters, Tankless</div></div>
-    </a>
-    <a class="nav-card" href="/how-old-is-my-electronics">
-      <span class="material-symbols-outlined">devices</span>
-      <div><div class="nav-card-title">Electronics</div><div class="nav-card-sub">TVs, Laptops, Consoles</div></div>
-    </a>
+</main>
+<div style="max-width:1200px;margin:0 auto 48px;padding:0 24px;">
+  <div style="background:var(--surface-low);border:1px solid var(--outline-var);border-radius:16px;padding:32px;text-align:center;">
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;">Once you've found the label, decode it to get the manufacture date and age.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="https://www.decodemyitem.com/decoder-tool" style="background:var(--primary);color:var(--on-primary);padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">Decode HVAC Serial Number →</a>
+      <a href="https://www.decodemyitem.com/smart-lookup" style="background:transparent;color:var(--secondary);border:1px solid var(--secondary);padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">Try Smart Lookup →</a>
+    </div>
   </div>
-</section>
-
-
-
-<!-- Brand Nuances -->
+</div>
 <div class="brand-section" style="max-width:1200px;margin:0 auto 96px;padding:32px 24px;">
   <h2 style="font-size:24px;font-weight:600;color:var(--on-surface);text-align:center;margin-bottom:32px;">Brand-Specific Nuances</h2>
   <div class="brand-grid">
@@ -950,6 +1000,12 @@ footer {
     </div>
   </div>
 </footer>
+
+<!-- FAB -->
+<button class="fab" aria-label="Ask AI Assistant">
+  <span class="material-symbols-outlined">smart_toy</span>
+  <span class="fab-tip">Ask AI Assistant</span>
+</button>
 
 <!-- FAB -->
 <button class="fab" aria-label="Ask AI Assistant">

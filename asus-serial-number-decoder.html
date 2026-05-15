@@ -31,9 +31,11 @@
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body data-page-kind="brand-page">
+
+  <!-- ═══ NAV ═══ -->
   <nav>
-    <a href="/" class="logo" aria-label="Item Assist home">
-    <span class="material-symbols-outlined" style="color:#44e5c2;font-size:26px;flex-shrink:0;line-height:1;">qr_code_scanner</span>
+    <a href="/" class="logo" aria-label="Decode My Item home">
+      <span class="material-symbols-outlined logo-icon">qr_code_scanner</span>
       <div>
         <div class="logo-text">Decode My <span>Item</span></div>
         <div class="logo-sub">Decode - Research - Automate</div>
@@ -54,31 +56,55 @@
   </nav>
 
   <main>
-    <section class="page-hero seo-hero">
-      <div class="seo-copy-wrap">
+
+    <!-- ═══ HERO ═══ -->
+    <section class="bp-hero">
+      <div class="bp-hero-inner">
         <nav class="breadcrumb-nav" aria-label="Breadcrumb">
           <a href="/">Home</a><span class="breadcrumb-sep">/</span><span aria-current="page">ASUS Serial Number Lookup & Model Number Help</span>
         </nav>
-      </div>
-      <div class="tool-hero">
-        <div class="tool-badge">Electronics brand decoder</div>
-        <h1>ASUS Serial Number Lookup & Model Number Help</h1>
-        <p>Use this ASUS serial number lookup page when you need to find the label, estimate manufacture date, or move from an ASUS model number into the supported electronics decoder path.</p>
-        <ol class="how-steps how-steps-list">
-            <li><span class="how-list-index">1</span><span>Use the electronics tab with ASUS selected.</span></li>
-            <li><span class="how-list-index">2</span><span>Enter the full serial number from the laptop, motherboard, desktop, or monitor label.</span></li>
-            <li><span class="how-list-index">3</span><span>Use the model number when you need device-family or warranty-style identification context.</span></li>
+
+        <div class="bp-hero-icon-wrap" style="background:#c084fc18;border-color:#c084fc30;">
+          <span class="material-symbols-outlined bp-hero-icon" style="color:#c084fc;">devices</span>
+        </div>
+
+        <span class="bp-badge" style="color:#c084fc;border-color:#c084fc30;background:#c084fc10;">
+          Electronics Decoder
+        </span>
+
+        <h1 class="bp-hero-title">ASUS Serial Number Lookup & Model Number Help</h1>
+        <p class="bp-hero-sub">Use this ASUS serial number lookup page when you need to find the label, estimate manufacture date, or move from an ASUS model number into the supported electronics decoder path.</p>
+
+        <ol class="bp-steps">
+          
+          <li class="bp-step">
+            <span class="bp-step-num" style="background:#c084fc20;color:#c084fc;">1</span>
+            <span>Use the electronics tab with ASUS selected.</span>
+          </li>
+          <li class="bp-step">
+            <span class="bp-step-num" style="background:#c084fc20;color:#c084fc;">2</span>
+            <span>Enter the full serial number from the laptop, motherboard, desktop, or monitor label.</span>
+          </li>
+          <li class="bp-step">
+            <span class="bp-step-num" style="background:#c084fc20;color:#c084fc;">3</span>
+            <span>Use the model number when you need device-family or warranty-style identification context.</span>
+          </li>
         </ol>
+
+        <a href="#decoder-tool" class="bp-cta-btn" style="background:#c084fc;color:#00382d;">
+          <span class="material-symbols-outlined" style="font-size:18px;">bolt</span>
+          Decode Serial Number
+        </a>
       </div>
     </section>
 
-    <section class="section seo-copy-section">
-      <div class="seo-copy-wrap">
-        <p>This page targets ASUS electronics intent, not appliance intent. The supported ASUS serial logic uses the first character for year code and the second character for month, while the model number helps narrow device family, generation, and warranty-style identification workflows.</p>
-      </div>
-    </section>
+    <!-- ═══ SUPPORTING INTRO ═══ -->
+    <div class="bp-intro-strip">
+      <p>This page targets ASUS electronics intent, not appliance intent. The supported ASUS serial logic uses the first character for year code and the second character for month, while the model number helps narrow device family, generation, and warranty-style identification workflows.</p>
+    </div>
 
-    <section class="section" id="decoder-tool" style="padding-top:0;padding-bottom:16px;">
+    <!-- ═══ DECODER TOOL ═══ -->
+    <section class="bp-tool-section" id="decoder-tool">
       <div class="tool-focus-wrap">
         <div class="seo-tool-shell">
           <div class="home-tools-wrap">
@@ -91,18 +117,13 @@
                     <button class="search-tab cat-tab" data-cat="hvac" onclick="selectCatAndShowDecoder('hvac', this)">HVAC</button>
                     <button class="search-tab cat-tab active" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
                   </div>
-
                   <div class="search-panel" id="panel-decoder">
                     <div class="home-tool-row">
                       <label class="sr-only" for="brand">Select Brand</label>
-                      <select id="brand" class="search-select">
-                        <option value="">-- Select Brand --</option>
-                      </select>
-
+                      <select id="brand" class="search-select"><option value="">-- Select Brand --</option></select>
                       <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
                       <input type="text" id="serial" class="search-input" placeholder="Enter ASUS serial number">
                     </div>
-
                     <div class="era-group hidden" id="eraGroup">
                       <label class="sr-only" for="eraSelect">Manufacture Era</label>
                       <select id="eraSelect" class="search-select" style="margin-top:8px;">
@@ -112,7 +133,6 @@
                       </select>
                       <p class="era-note">Some brands reuse serial layouts across decades. Select the era when prompted to improve accuracy.</p>
                     </div>
-
                     <p class="search-hint serial-helper-text">ASUS is preselected. Enter the full ASUS serial number exactly as shown on the device label.</p>
                     <div class="tool-panel-action">
                       <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">Decode Serial Number</button>
@@ -123,13 +143,13 @@
             </div>
           </div>
         </div>
-
         <div class="utility-strip">
           <span>Built for fast serial/model research.</span><span>Useful for appliance age estimates, replacement research, and claim documentation.</span><span>Results may vary by brand, model family, and available serial data.</span>
         </div>
       </div>
     </section>
 
+    <!-- ═══ RESULTS ═══ -->
     <div class="results-wrapper">
       <div id="ageLoading" class="results-card hidden">
         <div class="loading-inner">
@@ -137,7 +157,6 @@
           <div class="loading-text" id="loadingText">Researching product information...</div>
         </div>
       </div>
-
       <div id="serialResults" class="results-card hidden">
         <div class="results-header">
           <h3>Decoded Results</h3>
@@ -162,14 +181,8 @@
               <span class="result-label">Estimated Age</span>
               <span class="result-value" id="resultEstimatedAge">&mdash;</span>
             </div>
-            <div class="info-block method">
-              <h4>Decoding Method</h4>
-              <p id="resultMethod"></p>
-            </div>
-            <div class="info-block notes">
-              <h4>Important Notes</h4>
-              <p id="resultNotes"></p>
-            </div>
+            <div class="info-block method"><h4>Decoding Method</h4><p id="resultMethod"></p></div>
+            <div class="info-block notes"><h4>Important Notes</h4><p id="resultNotes"></p></div>
             <details class="determination-details">
               <summary>How this was determined</summary>
               <div class="determination-body" id="serialDeterminationBody">
@@ -189,132 +202,229 @@
 
     
 
-    <section class="section seo-section-grid">
-      <div class="seo-card">
-        <h2>How to decode an ASUS serial number</h2>
-        <p>The supported ASUS serial path uses character 1 for the year code and character 2 for the month code. Month values usually run 1-9 for January through September, then A, B, and C for October through December.</p>
-      </div>
-      <div class="seo-card">
-        <h2>What the model number can tell you</h2>
-        <p>The ASUS model number is useful for product-family identification, laptop series lookup, motherboard platform research, and warranty/support-style device matching when the serial result alone is not enough for a final conclusion.</p>
-      </div>
-      <div class="seo-card seo-card-wide">
-        <h2>Common ASUS serial number formats</h2>
-        <div class="table-wrap">
-          <table class="format-table">
-            <thead>
-              <tr>
-                <th>Pattern</th>
-                <th>Common Format</th>
-                <th>What It May Indicate</th>
-                <th>Confidence</th>
-              </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td>ASUS laptop serials</td>
-              <td>Year code in character 1; month code in character 2</td>
-              <td>The supported path reads the opening year and month code directly from the serial.</td>
-              <td>Moderate confidence. Use model family to confirm full year.</td>
-            </tr>
-            <tr>
-              <td>ASUS motherboard serials</td>
-              <td>Same opening year/month code logic</td>
-              <td>Motherboards often rely on the same supported ASUS opening-code structure.</td>
-              <td>Moderate confidence.</td>
-            </tr>
-            <tr>
-              <td>ASUS desktops and displays</td>
-              <td>Same opening year/month code logic</td>
-              <td>The model number is still useful for product-family identification and warranty-style lookup after the serial age estimate.</td>
-              <td>Moderate confidence.</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="seo-card seo-card-wide">
-        <h2>ASUS serial number examples</h2>
-        <div class="example-grid">
-          <article class="example-card">
-            <div class="example-eyebrow">Illustrative ASUS pattern</div>
-            <code>NBN1234567</code>
-            <p>Illustrative ASUS serial pattern. The supported path reads character 1 as year code and character 2 as month code, with A/B/C representing October through December.</p>
-          </article>
-          <article class="example-card">
-            <div class="example-eyebrow">Model-number reminder</div>
-            <code>UX3402 / ROG / PRIME families</code>
-            <p>The ASUS model number helps narrow the device family and generation after the serial age estimate is returned.</p>
-          </article>
-          <article class="example-card">
-            <div class="example-eyebrow">Warranty-style lookup reminder</div>
-            <code>Serial + model works best</code>
-            <p>For support or warranty-style identification, keep both the ASUS serial number and the ASUS model number together.</p>
-          </article>
-        </div>
-      </div>
-      <div class="seo-card seo-card-wide">
-        <h2>Where to find the model and serial number</h2>
-        <div class="mini-card-grid">
-          <article class="mini-card">
-            <h3>ASUS laptops</h3>
-            <ul class="bullet-list"><li>Bottom case label on most notebooks</li><li>System information, BIOS, or the original box when the underside label is worn</li></ul>
-          </article>
-          <article class="mini-card">
-            <h3>ASUS motherboards</h3>
-            <ul class="bullet-list"><li>Board sticker near the edge or slots</li><li>Retail box barcode label if the board is already installed</li></ul>
-          </article>
-          <article class="mini-card">
-            <h3>ASUS desktops and displays</h3>
-            <ul class="bullet-list"><li>Rear or side chassis label</li><li>Underside or stand-mount label on some monitors and all-in-ones</li></ul>
-          </article>
-        </div>
-      </div>
-      <div class="seo-card">
-        <h2>If the serial number does not decode</h2>
-        <ul class="bullet-list"><li>Use the ASUS model number alongside the serial when the full year still needs product-era context.</li><li>Do not route ASUS hardware through appliance pages or appliance serial logic.</li><li>Try Smart Lookup if the serial label is worn, missing, or blocked by a mounted display or installed motherboard.</li><li>Capture the full serial because the opening year and month codes depend on the first two characters.</li><li>Keep warranty/support-style lookup separate from manufacture-date estimation when documentation requires both.</li>
-        </ul>
-      </div>
-      <div class="seo-card faq-card">
-        <h2>FAQ</h2>
-        <div class="faq-list">
-          <details class="faq-item" open>
-            <summary>How do I find an ASUS laptop serial number?</summary>
-            <div class="faq-answer"><p>Check the bottom case, the original box, BIOS, or system information. Older units may also place it under the battery or on an underside label.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Can the ASUS model number help if the serial is missing?</summary>
-            <div class="faq-answer"><p>Yes. The model number is useful for device-family identification, generation research, and Smart Lookup when the serial label is not readable.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Does this work for ASUS motherboards?</summary>
-            <div class="faq-answer"><p>Yes. The supported ASUS serial logic can be used when the motherboard serial label is available, and the model number helps narrow the platform.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Can this page help with ASUS warranty or identification intent?</summary>
-            <div class="faq-answer"><p>Yes. The best workflow is to keep both the serial and model number together, especially for support, resale, or documentation needs.</p></div>
-          </details>
-          <details class="faq-item" open>
-            <summary>Does this page target appliances?</summary>
-            <div class="faq-answer"><p>No. This page is intentionally ASUS electronics-focused and does not target appliance age keywords.</p></div>
-          </details>
-        </div>
-      </div>
-    </section>
+    <!-- ═══ CONTENT SECTIONS ═══ -->
+    <div class="bp-content-wrap">
 
-    
-
-    <section class="section related-section">
-      <div class="seo-copy-wrap">
-        <h2>Related Decoder Pages</h2>
-        <div class="related-brands"><a href="/find-model-serial-number">Find Model & Serial Labels</a><a href="/samsung-tv-serial-number-decoder">Samsung TV Serial Number Decoder</a><a href="/hp">HP</a><a href="/apple">Apple</a><a href="/electronics">Electronics Hub</a><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a>
+      <!-- How to decode + model context (2-col) -->
+      <div class="bp-two-col">
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:#c084fc;">manage_search</span>
+            <h2>How to decode an ASUS serial number</h2>
+          </div>
+          <p>The supported ASUS serial path uses character 1 for the year code and character 2 for the month code. Month values usually run 1-9 for January through September, then A, B, and C for October through December.</p>
+        </div>
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:#c084fc;">category</span>
+            <h2>What the model number can tell you</h2>
+          </div>
+          <p>The ASUS model number is useful for product-family identification, laptop series lookup, motherboard platform research, and warranty/support-style device matching when the serial result alone is not enough for a final conclusion.</p>
         </div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="seo-copy-wrap">
-        <h2>Research Paths</h2>
+      <!-- Serial format cards -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#c084fc;">barcode_scanner</span>
+          <h2>Common ASUS serial number formats</h2>
+        </div>
+        <div class="fmt-cards-grid">
+          
+      <div class="fmt-card">
+        <div class="fmt-card-top">
+          <span class="fmt-label">ASUS laptop serials</span>
+          <span class="conf-pill conf-med">~ Moderate confidence. Use model family to confirm full year.</span>
+        </div>
+        <code class="fmt-serial">Year code in character 1; month code in character 2</code>
+        <p class="fmt-meaning">The supported path reads the opening year and month code directly from the serial.</p>
+      </div>
+      <div class="fmt-card">
+        <div class="fmt-card-top">
+          <span class="fmt-label">ASUS motherboard serials</span>
+          <span class="conf-pill conf-med">~ Moderate confidence.</span>
+        </div>
+        <code class="fmt-serial">Same opening year/month code logic</code>
+        <p class="fmt-meaning">Motherboards often rely on the same supported ASUS opening-code structure.</p>
+      </div>
+      <div class="fmt-card">
+        <div class="fmt-card-top">
+          <span class="fmt-label">ASUS desktops and displays</span>
+          <span class="conf-pill conf-med">~ Moderate confidence.</span>
+        </div>
+        <code class="fmt-serial">Same opening year/month code logic</code>
+        <p class="fmt-meaning">The model number is still useful for product-family identification and warranty-style lookup after the serial age estimate.</p>
+      </div>
+        </div>
+      </div>
+
+      <!-- Examples -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#c084fc;">terminal</span>
+          <h2>ASUS serial number examples</h2>
+        </div>
+        <div class="ex-terminals-grid">
+          
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Illustrative ASUS pattern</span>
+        </div>
+        <code class="ex-serial">NBN1234567</code>
+        <p class="ex-note">Illustrative ASUS serial pattern. The supported path reads character 1 as year code and character 2 as month code, with A/B/C representing October through December.</p>
+      </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Model-number reminder</span>
+        </div>
+        <code class="ex-serial">UX3402 / ROG / PRIME families</code>
+        <p class="ex-note">The ASUS model number helps narrow the device family and generation after the serial age estimate is returned.</p>
+      </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Warranty-style lookup reminder</span>
+        </div>
+        <code class="ex-serial">Serial + model works best</code>
+        <p class="ex-note">For support or warranty-style identification, keep both the ASUS serial number and the ASUS model number together.</p>
+      </div>
+        </div>
+      </div>
+
+      <!-- Location guide -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#c084fc;">pin_drop</span>
+          <h2>Where to find the model and serial number</h2>
+        </div>
+        <div class="loc-cards-grid">
+          
+      <div class="loc-card">
+        <div class="loc-card-head">
+          <span class="material-symbols-outlined loc-icon">laptop</span>
+          <h3 class="loc-card-title">ASUS laptops</h3>
+        </div>
+        <ul class="loc-list"><li>Bottom case label on most notebooks</li><li>System information, BIOS, or the original box when the underside label is worn</li></ul>
+      </div>
+      <div class="loc-card">
+        <div class="loc-card-head">
+          <span class="material-symbols-outlined loc-icon">label</span>
+          <h3 class="loc-card-title">ASUS motherboards</h3>
+        </div>
+        <ul class="loc-list"><li>Board sticker near the edge or slots</li><li>Retail box barcode label if the board is already installed</li></ul>
+      </div>
+      <div class="loc-card">
+        <div class="loc-card-head">
+          <span class="material-symbols-outlined loc-icon">label</span>
+          <h3 class="loc-card-title">ASUS desktops and displays</h3>
+        </div>
+        <ul class="loc-list"><li>Rear or side chassis label</li><li>Underside or stand-mount label on some monitors and all-in-ones</li></ul>
+      </div>
+        </div>
+      </div>
+
+      <!-- Troubleshooting + FAQ (2-col) -->
+      <div class="bp-two-col">
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:#c084fc;">troubleshoot</span>
+            <h2>If the serial number does not decode</h2>
+          </div>
+          <ul class="bp-check-list">
+            
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Use the ASUS model number alongside the serial when the full year still needs product-era context.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Do not route ASUS hardware through appliance pages or appliance serial logic.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Try Smart Lookup if the serial label is worn, missing, or blocked by a mounted display or installed motherboard.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Capture the full serial because the opening year and month codes depend on the first two characters.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Keep warranty/support-style lookup separate from manufacture-date estimation when documentation requires both.</span>
+      </li>
+          </ul>
+        </div>
+        <div class="bp-section-card">
+          <div class="bp-section-card-head">
+            <span class="material-symbols-outlined bp-section-icon" style="color:#c084fc;">help</span>
+            <h2>FAQ</h2>
+          </div>
+          <div class="bp-faq-list">
+            
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>How do I find an ASUS laptop serial number?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Check the bottom case, the original box, BIOS, or system information. Older units may also place it under the battery or on an underside label.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Can the ASUS model number help if the serial is missing?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Yes. The model number is useful for device-family identification, generation research, and Smart Lookup when the serial label is not readable.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Does this work for ASUS motherboards?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Yes. The supported ASUS serial logic can be used when the motherboard serial label is available, and the model number helps narrow the platform.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Can this page help with ASUS warranty or identification intent?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Yes. The best workflow is to keep both the serial and model number together, especially for support, resale, or documentation needs.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Does this page target appliances?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>No. This page is intentionally ASUS electronics-focused and does not target appliance age keywords.</p></div>
+      </details>
+          </div>
+        </div>
+      </div>
+
+      <!-- Related links -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#c084fc;">link</span>
+          <h2>Related Decoder Pages</h2>
+        </div>
+        <div class="bp-pills-wrap">
+          <a href="/find-model-serial-number" class="bp-pill">Find Model & Serial Labels</a><a href="/samsung-tv-serial-number-decoder" class="bp-pill">Samsung TV Serial Number Decoder</a><a href="/hp" class="bp-pill">HP</a><a href="/apple" class="bp-pill">Apple</a><a href="/electronics" class="bp-pill">Electronics Hub</a><a href="/how-old-is-my-appliance" class="bp-pill">How Old Is My Appliance?</a>
+        </div>
+      </div>
+
+      <!-- Research paths -->
+      <div class="bp-section-card bp-full-width">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#c084fc;">explore</span>
+          <h2>Research Paths</h2>
+        </div>
         <div class="link-group-grid">
         <article class="link-group-card">
           <h3>Appliance Age Lookup</h3>
@@ -326,7 +436,7 @@
         </article>
         <article class="link-group-card">
           <h3>Appliance Type Lookups</h3>
-          <div class="link-pill-grid"><a href="/where-is-my-serial-number">Where Is My Serial Number?</a><a href="/appliance-age-for-insurance-and-replacement">Insurance, Repair & Replacement</a><a href="/refrigerator-serial-number">Refrigerator Serial Number Lookup</a><a href="/washer-serial-number">Washer Serial Number Lookup</a><a href="/dryer-serial-number">Dryer Serial Number Lookup</a></div>
+          <div class="link-pill-grid"><a href="/appliance-age-for-insurance-and-replacement">Insurance, Repair & Replacement</a><a href="/refrigerator-serial-number">Refrigerator Serial Number Lookup</a><a href="/washer-serial-number">Washer Serial Number Lookup</a><a href="/dryer-serial-number">Dryer Serial Number Lookup</a><a href="/dishwasher-serial-number">Dishwasher Serial Number Lookup</a></div>
         </article>
         <article class="link-group-card">
           <h3>HVAC Age Lookup</h3>
@@ -335,21 +445,31 @@
         <article class="link-group-card">
           <h3>Electronics Serial & Model Lookup</h3>
           <div class="link-pill-grid"><a href="/asus-serial-number-decoder">ASUS Serial Number Lookup</a><a href="/samsung-tv-serial-number-decoder">Samsung TV Serial Number Decoder</a><a href="/apple">Apple</a><a href="/hp">HP</a><a href="/sony">Sony</a><a href="/find-model-serial-number">Find Device Labels</a></div>
-        </article>
-        </div>
+        </article></div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="seo-copy-wrap">
-        <div class="cta-note">
-          <h2>Need a claim-ready replacement summary?</h2>
-          <p>Use the decoder above to start.</p>
+      <!-- Bottom CTA -->
+      <div class="bp-cta-card">
+        <span class="material-symbols-outlined" style="font-size:40px;color:#c084fc;margin-bottom:12px;">description</span>
+        <h2>Need a claim-ready replacement summary?</h2>
+        <p>Use the decoder above to start, or try Smart Lookup if the serial label is worn or missing.</p>
+        <div class="bp-cta-row">
+          <a href="#decoder-tool" class="bp-cta-btn" style="background:#c084fc;color:#00382d;">
+            <span class="material-symbols-outlined" style="font-size:16px;">bolt</span> Decode a Serial
+          </a>
+          <a href="/smart-lookup" class="bp-cta-btn-outline" style="border-color:#c084fc40;color:#c084fc;">
+            Try Smart Lookup →
+          </a>
         </div>
       </div>
-    </section>
+
+    </div>
+
+    
+
   </main>
 
+  <!-- ═══ FEEDBACK MODAL ═══ -->
   <div id="feedbackModal" class="modal-overlay hidden" onclick="if(event.target===this)closeFeedbackModal()">
     <div class="modal-card">
       <div class="modal-header">
@@ -357,14 +477,8 @@
         <button class="modal-close" onclick="closeFeedbackModal()">&#x2715;</button>
       </div>
       <div class="modal-body">
-        <div class="modal-field">
-          <label class="sr-only" for="fbBrand">Brand</label>
-          <input type="text" id="fbBrand" class="form-input" readonly>
-        </div>
-        <div class="modal-field">
-          <label class="sr-only" for="fbSerial">Serial Number / Search Query</label>
-          <input type="text" id="fbSerial" class="form-input" readonly>
-        </div>
+        <div class="modal-field"><label class="sr-only" for="fbBrand">Brand</label><input type="text" id="fbBrand" class="form-input" readonly></div>
+        <div class="modal-field"><label class="sr-only" for="fbSerial">Serial Number</label><input type="text" id="fbSerial" class="form-input" readonly></div>
         <div class="modal-field">
           <label class="sr-only" for="fbType">Issue Type</label>
           <select id="fbType" class="form-select">
@@ -376,10 +490,7 @@
             <option value="other">Other</option>
           </select>
         </div>
-        <div class="modal-field">
-          <label class="sr-only" for="fbDetails">Details</label>
-          <textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong?"></textarea>
-        </div>
+        <div class="modal-field"><label class="sr-only" for="fbDetails">Details</label><textarea id="fbDetails" class="form-input" rows="3" placeholder="What seems wrong?"></textarea></div>
         <div id="fbThanks" class="fb-thanks hidden">Thank you. Your feedback helps improve the decoder.</div>
         <div id="fbActions" class="modal-actions">
           <button class="decode-btn" onclick="submitFeedback()">Submit Feedback</button>
@@ -389,82 +500,76 @@
     </div>
   </div>
 
+  <!-- ═══ FOOTER ═══ -->
   <footer class="footer-sitemap">
-  <div class="footer-sitemap-grid">
-
-    <div class="footer-col">
-      <p class="footer-col-heading">Tools</p>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-        <li><a href="/smart-lookup">Smart Lookup</a></li>
-        <li><a href="/assistant">AI Assistant</a></li>
-        <li><a href="/brands">All Brands</a></li>
-      </ul>
+    <div class="footer-sitemap-grid">
+      <div class="footer-col">
+        <p class="footer-col-heading">Tools</p>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+          <li><a href="/smart-lookup">Smart Lookup</a></li>
+          <li><a href="/assistant">AI Assistant</a></li>
+          <li><a href="/brands">All Brands</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">By Appliance</p>
+        <ul>
+          <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
+          <li><a href="/washer-serial-number">Washing Machines</a></li>
+          <li><a href="/dryer-serial-number">Dryers</a></li>
+          <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
+          <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
+          <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
+          <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">By Brand</p>
+        <ul>
+          <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
+          <li><a href="/ge-serial-number-lookup">GE</a></li>
+          <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
+          <li><a href="/lg-serial-number-lookup">LG</a></li>
+          <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
+          <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
+          <li><a href="/trane-serial-number-lookup">Trane</a></li>
+          <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+          <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
+          <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
+          <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">Resources</p>
+        <ul>
+          <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
+          <li><a href="/how-old-is-my-hvac">How Old Is My HVAC?</a></li>
+          <li><a href="/how-old-is-my-plumbing">How Old Is My Water Heater?</a></li>
+          <li><a href="/how-old-is-my-electronics">How Old Is My Electronics?</a></li>
+          <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
+          <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
+          <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
+          <li><a href="/methodology">Methodology</a></li>
+          <li><a href="/about">About</a></li>
+        </ul>
+      </div>
     </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">By Appliance</p>
-      <ul>
-        <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
-        <li><a href="/washer-serial-number">Washing Machines</a></li>
-        <li><a href="/dryer-serial-number">Dryers</a></li>
-        <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
-        <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
-        <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
-        <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
-      </ul>
+    <div class="footer-bottom">
+      <span class="footer-bottom-copy">&copy; 2026 Decode My Item &middot; Database verified February 2026</span>
+      <div class="footer-bottom-links">
+        <a href="/contact">Contact</a>
+        <a href="/security">Security &amp; Data</a>
+        <a href="/privacy-policy">Privacy Policy</a>
+      </div>
     </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">By Brand</p>
-      <ul>
-        <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
-        <li><a href="/ge-serial-number-lookup">GE</a></li>
-        <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
-        <li><a href="/lg-serial-number-lookup">LG</a></li>
-        <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
-        <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
-        <li><a href="/trane-serial-number-lookup">Trane</a></li>
-        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
-        <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
-        <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
-        <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">Resources</p>
-      <ul>
-        <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
-        <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
-        <li><a href="/where-is-my-serial-number">Where Is My Serial Number?</a></li>
-        <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
-        <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
-        <li><a href="/methodology">Methodology</a></li>
-        <li><a href="/about">About</a></li>
-      </ul>
-    </div>
-
-  </div>
-
-  <div class="footer-bottom">
-    <span class="footer-bottom-copy">
-      &copy; 2026 Decode My Item &middot; Database verified February 2026
-    </span>
-    <div class="footer-bottom-links">
-      <a href="/contact">Contact</a>
-      <a href="/security">Security &amp; Data</a>
-      <a href="/privacy-policy">Privacy Policy</a>
-    </div>
-  </div>
-</footer>
+  </footer>
 
   <script>
     function selectCatAndShowDecoder(cat, btn) {
       if (typeof selectCategory === 'function') selectCategory(cat, btn);
     }
-
     function applySeoBrandSelection(attempt) {
       var brandSelect = document.getElementById('brand');
       if (!brandSelect) return;
@@ -475,24 +580,25 @@
       brandSelect.value = 'asus';
       brandSelect.dispatchEvent(new Event('change'));
     }
-
     window.addEventListener('DOMContentLoaded', function() {
       var activeTab = document.querySelector('[data-cat="electronics"]');
       if (activeTab) selectCatAndShowDecoder('electronics', activeTab);
       applySeoBrandSelection(0);
     });
-
     window.addEventListener('pageshow', function () {
       var feedbackModal = document.getElementById('feedbackModal');
       var navList = document.querySelector('nav ul');
       var hamburger = document.getElementById('hamburgerBtn');
-
-      if (!feedbackModal || feedbackModal.classList.contains('hidden')) {
-        document.body.style.overflow = '';
-      }
+      if (!feedbackModal || feedbackModal.classList.contains('hidden')) { document.body.style.overflow = ''; }
       document.body.classList.remove('nav-menu-open');
       if (navList) navList.classList.remove('open');
       if (hamburger) hamburger.classList.remove('active');
+    });
+    // FAQ accordion icon rotation
+    document.querySelectorAll('.bp-faq-item').forEach(el => {
+      el.addEventListener('toggle', () => {
+        el.querySelector('.bp-faq-icon').style.transform = el.open ? 'rotate(180deg)' : '';
+      });
     });
   </script>
   <script defer src="decoder-data.js"></script>
