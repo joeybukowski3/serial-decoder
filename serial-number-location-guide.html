@@ -1,486 +1,1050 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Serial Number Location Guide | Decode My Item</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-  tailwind.config = {
-    darkMode: "class",
-    theme: {
-      extend: {
-        colors: {
-          "tertiary-fixed-dim": "#ffb95f",
-          "secondary-fixed-dim": "#9fcaff",
-          "primary-fixed": "#5ffbd6",
-          "surface-tint": "#38debb",
-          "surface-container-highest": "#2d3449",
-          "on-secondary": "#003259",
-          "error": "#ffb4ab",
-          "primary": "#44e5c2",
-          "on-tertiary-fixed": "#2a1700",
-          "surface-container-low": "#131b2e",
-          "tertiary": "#ffc278",
-          "tertiary-container": "#f69f0d",
-          "on-tertiary-fixed-variant": "#653e00",
-          "on-primary-fixed-variant": "#005142",
-          "on-surface": "#dae2fd",
-          "ghost-white": "#F1F5F9",
-          "on-primary-fixed": "#002019",
-          "primary-container": "#00c9a7",
-          "on-primary": "#00382d",
-          "inverse-primary": "#006b58",
-          "inverse-surface": "#dae2fd",
-          "on-secondary-container": "#dbe9ff",
-          "secondary-fixed": "#d2e4ff",
-          "secondary-container": "#006bb5",
-          "on-tertiary-container": "#623c00",
-          "on-background": "#dae2fd",
-          "surface-variant": "#2d3449",
-          "on-error": "#690005",
-          "outline": "#85948e",
-          "on-secondary-fixed": "#001d37",
-          "surface-card": "#112236",
-          "surface-container": "#171f33",
-          "text-muted": "#64748B",
-          "surface-container-lowest": "#060e20",
-          "on-primary-container": "#004e40",
-          "primary-fixed-dim": "#38debb",
-          "on-error-container": "#ffdad6",
-          "surface-dim": "#0b1326",
-          "on-secondary-fixed-variant": "#00497e",
-          "on-surface-variant": "#bacac3",
-          "surface-deep": "#0D1A2E",
-          "inverse-on-surface": "#283044",
-          "on-tertiary": "#472a00",
-          "surface": "#0b1326",
-          "secondary": "#9fcaff",
-          "error-container": "#93000a",
-          "background": "#0b1326",
-          "surface-bright": "#31394d",
-          "outline-variant": "#3c4a45",
-          "surface-container-high": "#222a3d",
-          "tertiary-fixed": "#ffddb8"
-        },
-        borderRadius: {
-          "DEFAULT": "0.25rem",
-          "lg": "0.5rem",
-          "xl": "0.75rem",
-          "2xl": "1rem",
-          "full": "9999px"
-        },
-        maxWidth: { "container-max": "1200px" }
-      }
-    }
-  }
-</script>
 <style>
-  * { font-family: 'Sora', sans-serif; }
-  body { background-color: #0b1326; color: #dae2fd; }
-  .font-mono-data { font-family: 'JetBrains Mono', monospace; }
-  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-  .glass-card { background: rgba(17,34,54,0.6); backdrop-filter: blur(12px); border: 1px solid rgba(133,148,142,0.2); }
-  html { scroll-behavior: smooth; }
-  article:hover, .nav-card:hover { box-shadow: 0 0 0 1px rgba(68,229,194,0.3), 0 4px 24px rgba(68,229,194,0.06); }
-  @keyframes pulse-orb { 0%,100%{opacity:.08;transform:scale(1)} 50%{opacity:.14;transform:scale(1.05)} }
-  .orb { animation: pulse-orb 6s ease-in-out infinite; }
-  .orb-2 { animation-delay: 3s; }
-  details[open] .accordion-icon { transform: rotate(180deg); }
-  .accordion-icon { transition: transform 0.2s ease; }
-  .fab-tooltip { opacity:0; pointer-events:none; transition: opacity 0.2s ease; }
-  .fab-btn:hover .fab-tooltip { opacity:1; }
-  @keyframes live-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .live-dot { animation: live-pulse 2s ease-in-out infinite; }
-  .mobile-menu { display:none; }
-  .mobile-menu.open { display:flex; }
-  .icon-bg-fridge { background: linear-gradient(135deg,#0d1f35 0%,#0f2540 50%,#091e2e 100%); }
-  .icon-bg-oven   { background: linear-gradient(135deg,#1a1208 0%,#211609 50%,#1a1008 100%); }
-  .icon-bg-dw     { background: linear-gradient(135deg,#091a1a 0%,#0d2020 50%,#091a1c 100%); }
-  .tech-grid {
-    background-image: linear-gradient(rgba(68,229,194,0.04) 1px,transparent 1px),
-                      linear-gradient(90deg,rgba(68,229,194,0.04) 1px,transparent 1px);
-    background-size: 28px 28px;
-  }
+/* ── Reset ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+/* ── Design Tokens ──────────────────────────────────── */
+:root {
+  --primary:        #44e5c2;
+  --primary-dim:    #38debb;
+  --primary-dark:   #00c9a7;
+  --on-primary:     #00382d;
+  --secondary:      #9fcaff;
+  --sec-container:  #006bb5;
+  --tertiary:       #ffc278;
+  --bg:             #0b1326;
+  --surface-deep:   #0D1A2E;
+  --surface-card:   #112236;
+  --surface-low:    #131b2e;
+  --surface-con:    #171f33;
+  --surface-high:   #222a3d;
+  --surface-highest:#2d3449;
+  --surface-lowest: #060e20;
+  --on-surface:     #dae2fd;
+  --on-surface-var: #bacac3;
+  --ghost-white:    #F1F5F9;
+  --outline:        #85948e;
+  --outline-var:    #3c4a45;
+  --text-muted:     #64748B;
+  --radius-sm:      4px;
+  --radius:         8px;
+  --radius-lg:      12px;
+  --radius-xl:      16px;
+  --radius-full:    9999px;
+}
+
+/* ── Base ───────────────────────────────────────────── */
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--bg);
+  color: var(--on-surface);
+  overflow-x: hidden;
+  font-size: 16px;
+  line-height: 1.6;
+}
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+img { display: block; max-width: 100%; }
+
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+/* ── Layout ─────────────────────────────────────────── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+@media (max-width: 768px) {
+  .container { padding-left: 16px; padding-right: 16px; }
+}
+
+/* ── Navigation ─────────────────────────────────────── */
+header {
+  background: var(--bg);
+  border-bottom: 1px solid var(--outline-var);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ghost-white);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.nav-logo .material-symbols-outlined { color: var(--primary); font-size: 22px; }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: nowrap;
+}
+.nav-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-var);
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--primary); }
+.nav-links a.active {
+  color: var(--primary);
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: 2px;
+}
+
+.mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--on-surface-var);
+  padding: 4px;
+}
+.mobile-toggle:hover { color: var(--primary); }
+.mobile-toggle .material-symbols-outlined { font-size: 26px; }
+
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  background: var(--bg);
+  border-top: 1px solid var(--outline-var);
+  padding: 16px 24px;
+  gap: 4px;
+}
+.mobile-menu.open { display: flex; }
+.mobile-menu a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-var);
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: color 0.2s;
+}
+.mobile-menu a:hover { color: var(--primary); }
+.mobile-menu a.active { color: var(--primary); }
+
+@media (max-width: 1024px) {
+  .nav-links { display: none; }
+  .mobile-toggle { display: block; }
+  .nav-inner { padding: 0 20px; }
+}
+
+/* ── Hero ───────────────────────────────────────────── */
+.hero {
+  position: relative;
+  padding: 80px 16px;
+  overflow: hidden;
+  text-align: center;
+}
+.hero-orbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+}
+.orb-1 {
+  top: 0; left: 25%;
+  width: 384px; height: 384px;
+  background: var(--primary);
+  opacity: 0.08;
+  animation: pulse-orb 6s ease-in-out infinite;
+}
+.orb-2 {
+  bottom: 0; right: 25%;
+  width: 384px; height: 384px;
+  background: var(--sec-container);
+  opacity: 0.08;
+  animation: pulse-orb 6s ease-in-out infinite 3s;
+}
+@keyframes pulse-orb {
+  0%,100% { opacity: 0.08; transform: scale(1); }
+  50% { opacity: 0.14; transform: scale(1.05); }
+}
+.hero-content { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; }
+
+.badge {
+  display: inline-block;
+  padding: 4px 16px;
+  margin-bottom: 16px;
+  border-radius: var(--radius-full);
+  background: rgba(0,201,167,0.08);
+  color: var(--primary);
+  border: 1px solid rgba(68,229,194,0.2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  font-size: clamp(28px, 5vw, 40px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--on-surface);
+  max-width: 760px;
+  margin: 0 auto 24px;
+}
+.hero h1 span { color: var(--primary); }
+
+.hero-sub {
+  font-size: 18px;
+  color: var(--on-surface-var);
+  max-width: 620px;
+  margin: 0 auto 40px;
+  line-height: 1.6;
+}
+
+/* Search */
+.search-wrap { max-width: 560px; margin: 0 auto 48px; }
+.search-box {
+  position: relative;
+}
+.search-box .search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 22px;
+  pointer-events: none;
+  transition: color 0.2s;
+}
+.search-box:focus-within .search-icon { color: var(--primary); }
+.search-box input {
+  width: 100%;
+  background: var(--surface-card);
+  border: 1px solid var(--outline-var);
+  border-radius: var(--radius);
+  padding: 16px 60px 16px 48px;
+  color: var(--on-surface);
+  font-family: 'Sora', sans-serif;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-box input::placeholder { color: var(--text-muted); }
+.search-box input:focus { border-color: var(--primary); }
+.search-kbd {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--surface-highest);
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: var(--radius-sm);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  align-items: center;
+}
+.chips-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.chip {
+  background: var(--surface-con);
+  color: var(--primary);
+  border: 1px solid rgba(68,229,194,0.2);
+  border-radius: var(--radius-full);
+  padding: 4px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.chip:hover { background: var(--surface-high); }
+.chip:active { transform: scale(0.95); }
+
+/* ── Quick Nav ──────────────────────────────────────── */
+.quick-nav { padding-bottom: 80px; padding-left: 16px; padding-right: 16px; }
+.quick-nav-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+}
+@media (max-width: 1024px) {
+  .quick-nav-grid { grid-template-columns: repeat(4, 1fr); }
+  .quick-nav-grid .nav-card:last-child { grid-column: span 2; }
+}
+@media (max-width: 640px) {
+  .quick-nav-grid { grid-template-columns: repeat(2, 1fr); }
+  .quick-nav-grid .nav-card:last-child { grid-column: span 2; }
+}
+
+.nav-card {
+  background: var(--surface-card);
+  border: 1px solid var(--outline-var);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  height: 160px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+  color: inherit;
+}
+.nav-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 1px rgba(68,229,194,0.3), 0 4px 24px rgba(68,229,194,0.06);
+}
+.nav-card .material-symbols-outlined {
+  color: var(--primary);
+  font-size: 32px;
+  transition: transform 0.2s;
+}
+.nav-card:hover .material-symbols-outlined { transform: scale(1.1); }
+.nav-card-title { font-size: 17px; font-weight: 600; color: var(--on-surface); }
+.nav-card-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+@media (max-width: 640px) {
+  .nav-card { height: auto; aspect-ratio: 1; padding: 18px; }
+}
+
+/* ── Main Content ───────────────────────────────────── */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+@media (max-width: 768px) { main { padding: 0 16px 80px; } }
+
+.section { margin-bottom: 96px; scroll-margin-top: 80px; }
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.section-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--on-surface);
+  white-space: nowrap;
+}
+.section-divider {
+  flex-grow: 1;
+  height: 1px;
+  background: var(--outline-var);
+}
+
+/* ── Kitchen Cards Grid ─────────────────────────────── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+@media (max-width: 900px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .cards-grid { grid-template-columns: 1fr; } }
+
+/* ── Appliance Card ─────────────────────────────────── */
+.appl-card {
+  background: var(--surface-card);
+  border: 1px solid var(--outline-var);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.appl-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px rgba(68,229,194,0.3), 0 4px 24px rgba(68,229,194,0.06);
+}
+
+.appl-card-img {
+  height: 192px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(60,74,69,0.3);
+}
+.appl-card-img .tech-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(68,229,194,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(68,229,194,0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.appl-card-img svg {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.5s ease;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+}
+.appl-card:hover .appl-card-img svg { transform: scale(1.05); }
+
+.label-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(13,26,46,0.85);
+  backdrop-filter: blur(8px);
+  color: var(--primary);
+  border: 1px solid rgba(68,229,194,0.2);
+  border-radius: var(--radius-sm);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 4px 8px;
+  z-index: 2;
+}
+
+.card-glow {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 112px;
+  height: 48px;
+  border-radius: 50%;
+  filter: blur(24px);
+  opacity: 0.15;
+  transition: opacity 0.3s;
+  z-index: 0;
+}
+.appl-card:hover .card-glow { opacity: 0.28; }
+
+.appl-card-body { padding: 24px; }
+.appl-card-body h3 { font-size: 20px; font-weight: 600; color: var(--on-surface); margin-bottom: 12px; }
+
+.spot-block {
+  background: var(--surface-lowest);
+  border-left: 4px solid var(--tertiary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+.spot-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.spot-text { font-size: 14px; color: var(--on-surface-var); font-style: italic; }
+.appl-card-desc { font-size: 14px; color: var(--text-muted); line-height: 1.65; }
+
+/* ── HVAC Cards ─────────────────────────────────────── */
+.hvac-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+@media (max-width: 860px) { .hvac-grid { grid-template-columns: 1fr; } }
+
+.glass-card {
+  background: rgba(17,34,54,0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(133,148,142,0.2);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+@media (max-width: 600px) { .glass-card { flex-direction: column; } }
+
+.hvac-icon-box {
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+  background: var(--surface-low);
+  border: 1px solid var(--outline-var);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.hvac-icon-box .material-symbols-outlined {
+  color: var(--primary);
+  font-size: 64px;
+  transition: transform 0.7s;
+}
+.hvac-icon-box:hover .material-symbols-outlined { transform: rotate(45deg) scale(1.1); }
+@media (max-width: 600px) { .hvac-icon-box { width: 100%; height: 120px; } }
+
+.hvac-body { flex: 1; }
+.hvac-body h3 { font-size: 20px; font-weight: 600; color: var(--on-surface); margin-bottom: 8px; }
+.hvac-body p { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.65; }
+
+.loc-block {
+  background: var(--surface-deep);
+  border: 1px solid rgba(60,74,69,0.3);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+.loc-label {
+  color: var(--primary);
+  display: block;
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+}
+.loc-block ul { padding-left: 18px; list-style: disc; }
+.loc-block li { color: var(--on-surface-var); margin-bottom: 6px; }
+
+/* ── Brand Section ──────────────────────────────────── */
+.brand-section {
+  background: var(--surface-low);
+  border: 1px solid var(--outline-var);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  margin-bottom: 96px;
+}
+.brand-section h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--on-surface);
+  text-align: center;
+  margin-bottom: 32px;
+}
+.brand-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+@media (max-width: 900px) { .brand-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 560px) { .brand-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.brand-card {
+  padding: 16px;
+  background: var(--surface-card);
+  border: 1px solid rgba(60,74,69,0.2);
+  border-radius: var(--radius);
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.brand-card:hover { border-color: var(--primary); }
+.brand-card-name { font-size: 15px; font-weight: 600; color: var(--on-surface); margin-bottom: 6px; }
+.brand-card-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+/* ── FAQ ────────────────────────────────────────────── */
+.faq-section { max-width: 800px; margin: 0 auto 96px; }
+.faq-section h2 {
+  font-size: 24px; font-weight: 600; color: var(--on-surface);
+  text-align: center; margin-bottom: 40px;
+}
+.faq-list { display: flex; flex-direction: column; gap: 16px; }
+
+details {
+  background: var(--surface-card);
+  border: 1px solid var(--outline-var);
+  border-radius: var(--radius);
+}
+summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+summary::-webkit-details-marker { display: none; }
+summary h3 { font-size: 17px; font-weight: 600; color: var(--on-surface); }
+summary .acc-icon {
+  color: var(--primary);
+  font-size: 24px;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+details[open] summary .acc-icon { transform: rotate(180deg); }
+.faq-body {
+  padding: 0 24px 20px;
+  color: var(--on-surface-var);
+  font-size: 14px;
+  line-height: 1.7;
+  border-top: 1px solid rgba(60,74,69,0.1);
+  padding-top: 16px;
+  margin-top: 0;
+}
+
+/* ── Footer ─────────────────────────────────────────── */
+footer {
+  background: var(--surface-lowest);
+  border-top: 1px solid var(--outline-var);
+  padding: 64px 0 32px;
+}
+.footer-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1.2fr 1fr 1.2fr;
+  gap: 32px;
+  margin-bottom: 48px;
+}
+@media (max-width: 900px) { .footer-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .footer-grid { grid-template-columns: 1fr; } }
+
+.footer-brand-name { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 12px; }
+.footer-brand-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; }
+.footer-mail {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--surface-con);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-surface-var);
+  transition: color 0.2s;
+}
+.footer-mail:hover { color: var(--primary); }
+.footer-mail .material-symbols-outlined { font-size: 18px; }
+
+.footer-col h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 20px;
+}
+.footer-col ul li { margin-bottom: 12px; }
+.footer-col ul li a {
+  font-size: 14px;
+  color: var(--on-surface-var);
+  transition: color 0.2s;
+}
+.footer-col ul li a:hover { color: var(--primary); }
+
+.footer-bottom {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 24px 0;
+  border-top: 1px solid var(--outline-var);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.footer-copy {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.footer-links {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.footer-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--primary); }
+.live-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.live-dot::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+@keyframes live-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+/* ── FAB ────────────────────────────────────────────── */
+.fab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 56px; height: 56px;
+  background: var(--primary);
+  color: var(--on-primary);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  transition: transform 0.2s;
+  z-index: 200;
+}
+.fab:hover { transform: scale(1.1); }
+.fab:active { transform: scale(0.95); }
+.fab .material-symbols-outlined { font-size: 26px; }
+.fab-tip {
+  position: absolute;
+  right: 68px;
+  background: var(--surface-card);
+  border: 1px solid var(--outline-var);
+  color: var(--on-surface);
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.fab:hover .fab-tip { opacity: 1; }
 </style>
 </head>
-<body class="overflow-x-hidden">
+<body>
 
-<!-- NAV -->
-<header class="bg-background border-b border-outline-variant sticky top-0 z-50">
-  <div class="flex justify-between items-center px-6 lg:px-8 h-16 w-full max-w-container-max mx-auto">
-    <a href="https://www.decodemyitem.com/" class="text-base font-bold text-ghost-white flex items-center gap-2 shrink-0">
-      <span class="material-symbols-outlined text-primary text-xl">qr_code_scanner</span>
+<!-- ═══ HEADER ═══════════════════════════════════════════════ -->
+<header>
+  <div class="nav-inner">
+    <a href="https://www.decodemyitem.com/" class="nav-logo">
+      <span class="material-symbols-outlined">qr_code_scanner</span>
       Decode My Item
     </a>
-    <nav class="hidden lg:flex items-center gap-5 xl:gap-6">
-      <a class="text-on-surface-variant hover:text-primary transition-colors font-mono-data text-xs tracking-wider" href="https://www.decodemyitem.com/">Home</a>
-      <a class="text-primary border-b-2 border-primary pb-1 font-mono-data text-xs tracking-wider" href="https://www.decodemyitem.com/decoder-tool">Serial Number Decoder</a>
-      <a class="text-on-surface-variant hover:text-primary transition-colors font-mono-data text-xs tracking-wider" href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a>
-      <a class="text-on-surface-variant hover:text-primary transition-colors font-mono-data text-xs tracking-wider" href="https://www.decodemyitem.com/assistant">AI Assistant</a>
-      <a class="text-on-surface-variant hover:text-primary transition-colors font-mono-data text-xs tracking-wider" href="https://www.decodemyitem.com/methodology">Methodology</a>
-      <a class="text-on-surface-variant hover:text-primary transition-colors font-mono-data text-xs tracking-wider" href="https://www.decodemyitem.com/contact">Contact</a>
-      <a class="text-on-surface-variant hover:text-primary transition-colors font-mono-data text-xs tracking-wider" href="https://www.decodemyitem.com/feedback">Feedback &amp; Bugs</a>
-      <a class="text-on-surface-variant hover:text-primary transition-colors font-mono-data text-xs tracking-wider" href="https://www.decodemyitem.com/security">Security &amp; Data</a>
+    <nav class="nav-links">
+      <a href="https://www.decodemyitem.com/">Home</a>
+      <a href="https://www.decodemyitem.com/decoder-tool" class="active">Serial Number Decoder</a>
+      <a href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a>
+      <a href="https://www.decodemyitem.com/assistant">AI Assistant</a>
+      <a href="https://www.decodemyitem.com/methodology">Methodology</a>
+      <a href="https://www.decodemyitem.com/contact">Contact</a>
+      <a href="https://www.decodemyitem.com/feedback">Feedback &amp; Bugs</a>
+      <a href="https://www.decodemyitem.com/security">Security &amp; Data</a>
     </nav>
-    <button id="mobile-toggle" class="lg:hidden text-on-surface-variant hover:text-primary transition-colors" aria-label="Toggle menu">
+    <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle menu">
       <span class="material-symbols-outlined">menu</span>
     </button>
   </div>
-  <div id="mobile-menu" class="mobile-menu lg:hidden flex-col border-t border-outline-variant bg-background px-6 py-4 space-y-3">
-    <a class="block text-on-surface-variant hover:text-primary font-mono-data text-xs tracking-wider py-1" href="https://www.decodemyitem.com/">Home</a>
-    <a class="block text-primary font-mono-data text-xs tracking-wider py-1" href="https://www.decodemyitem.com/decoder-tool">Serial Number Decoder</a>
-    <a class="block text-on-surface-variant hover:text-primary font-mono-data text-xs tracking-wider py-1" href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a>
-    <a class="block text-on-surface-variant hover:text-primary font-mono-data text-xs tracking-wider py-1" href="https://www.decodemyitem.com/assistant">AI Assistant</a>
-    <a class="block text-on-surface-variant hover:text-primary font-mono-data text-xs tracking-wider py-1" href="https://www.decodemyitem.com/methodology">Methodology</a>
-    <a class="block text-on-surface-variant hover:text-primary font-mono-data text-xs tracking-wider py-1" href="https://www.decodemyitem.com/contact">Contact</a>
-    <a class="block text-on-surface-variant hover:text-primary font-mono-data text-xs tracking-wider py-1" href="https://www.decodemyitem.com/feedback">Feedback &amp; Bugs</a>
-    <a class="block text-on-surface-variant hover:text-primary font-mono-data text-xs tracking-wider py-1" href="https://www.decodemyitem.com/security">Security &amp; Data</a>
-  </div>
+  <nav class="mobile-menu" id="mobile-menu">
+    <a href="https://www.decodemyitem.com/">Home</a>
+    <a href="https://www.decodemyitem.com/decoder-tool" class="active">Serial Number Decoder</a>
+    <a href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a>
+    <a href="https://www.decodemyitem.com/assistant">AI Assistant</a>
+    <a href="https://www.decodemyitem.com/methodology">Methodology</a>
+    <a href="https://www.decodemyitem.com/contact">Contact</a>
+    <a href="https://www.decodemyitem.com/feedback">Feedback &amp; Bugs</a>
+    <a href="https://www.decodemyitem.com/security">Security &amp; Data</a>
+  </nav>
 </header>
 
-<!-- HERO -->
-<section class="relative py-20 px-4 overflow-hidden">
-  <div class="absolute inset-0 z-0 pointer-events-none">
-    <div class="orb absolute top-0 left-1/4 w-96 h-96 bg-primary rounded-full blur-[120px]"></div>
-    <div class="orb orb-2 absolute bottom-0 right-1/4 w-96 h-96 bg-secondary-container rounded-full blur-[120px]"></div>
+<!-- ═══ HERO ══════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
   </div>
-  <div class="max-w-container-max mx-auto text-center relative z-10">
-    <span class="inline-block py-1 px-4 mb-4 rounded-full bg-primary-container/10 text-primary border border-primary/20 font-mono-data text-xs uppercase tracking-widest">Visual Identification Hub</span>
-    <h1 class="font-bold text-on-surface mb-6 max-w-3xl mx-auto" style="font-size:clamp(32px,5vw,40px);line-height:1.2;letter-spacing:-0.02em;">
-      Where to Find the Serial Number on <span class="text-primary">Any Appliance</span>
-    </h1>
-    <p class="text-on-surface-variant text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
-      A complete diagnostic guide to locating data plates and model labels before you call a technician or run a decoder.
-    </p>
-    <div class="max-w-xl mx-auto mb-12">
-      <div class="relative group">
-        <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none text-text-muted group-focus-within:text-primary transition-colors">
-          <span class="material-symbols-outlined text-xl">search</span>
-        </div>
-        <input class="w-full bg-surface-card border border-outline-variant focus:border-primary focus:ring-0 rounded-lg py-4 pl-12 pr-16 text-on-surface transition-all shadow-lg outline-none placeholder:text-text-muted" placeholder="Enter your appliance or device model..." type="text"/>
-        <div class="absolute inset-y-0 right-3 flex items-center">
-          <kbd class="bg-surface-container-highest px-2 py-1 rounded text-xs text-text-muted font-mono-data">⌘K</kbd>
-        </div>
+  <div class="hero-content">
+    <span class="badge">Visual Identification Hub</span>
+    <h1>Where to Find the Serial Number on <span>Any Appliance</span></h1>
+    <p class="hero-sub">A complete diagnostic guide to locating data plates and model labels before you call a technician or run a decoder.</p>
+    <div class="search-wrap">
+      <div class="search-box">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" placeholder="Enter your appliance or device model..."/>
+        <span class="search-kbd mono">⌘K</span>
       </div>
-      <div class="mt-4 flex flex-wrap justify-center gap-2">
-        <span class="text-xs text-text-muted self-center font-mono-data">Popular:</span>
-        <button class="bg-surface-container hover:bg-surface-container-high text-primary border border-primary/20 px-3 py-1 rounded-full text-xs font-mono-data transition-colors active:scale-95">Whirlpool Washer</button>
-        <button class="bg-surface-container hover:bg-surface-container-high text-primary border border-primary/20 px-3 py-1 rounded-full text-xs font-mono-data transition-colors active:scale-95">Samsung Fridge</button>
-        <button class="bg-surface-container hover:bg-surface-container-high text-primary border border-primary/20 px-3 py-1 rounded-full text-xs font-mono-data transition-colors active:scale-95">Carrier HVAC</button>
+      <div class="chips">
+        <span class="chips-label mono">Popular:</span>
+        <button class="chip">Whirlpool Washer</button>
+        <button class="chip">Samsung Fridge</button>
+        <button class="chip">Carrier HVAC</button>
       </div>
     </div>
   </div>
 </section>
 
-<!-- QUICK NAV -->
-<section class="pb-20 px-4">
-  <div class="max-w-container-max mx-auto">
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-      <a class="nav-card group aspect-square md:aspect-auto md:h-40 bg-surface-card border border-outline-variant hover:border-primary rounded-xl p-6 flex flex-col justify-between transition-all hover:-translate-y-1" href="#kitchen">
-        <span class="material-symbols-outlined text-primary text-3xl group-hover:scale-110 transition-transform">kitchen</span>
-        <div><p class="font-semibold text-lg text-on-surface">Kitchen</p><p class="text-xs text-text-muted">Fridges, Ovens, Dishwashers</p></div>
-      </a>
-      <a class="nav-card group aspect-square md:aspect-auto md:h-40 bg-surface-card border border-outline-variant hover:border-primary rounded-xl p-6 flex flex-col justify-between transition-all hover:-translate-y-1" href="#laundry">
-        <span class="material-symbols-outlined text-primary text-3xl group-hover:scale-110 transition-transform">local_laundry_service</span>
-        <div><p class="font-semibold text-lg text-on-surface">Laundry</p><p class="text-xs text-text-muted">Washers &amp; Dryers</p></div>
-      </a>
-      <a class="nav-card group aspect-square md:aspect-auto md:h-40 bg-surface-card border border-outline-variant hover:border-primary rounded-xl p-6 flex flex-col justify-between transition-all hover:-translate-y-1" href="#hvac">
-        <span class="material-symbols-outlined text-primary text-3xl group-hover:scale-110 transition-transform">ac_unit</span>
-        <div><p class="font-semibold text-lg text-on-surface">HVAC</p><p class="text-xs text-text-muted">AC, Furnaces, Heat Pumps</p></div>
-      </a>
-      <a class="nav-card group aspect-square md:aspect-auto md:h-40 bg-surface-card border border-outline-variant hover:border-primary rounded-xl p-6 flex flex-col justify-between transition-all hover:-translate-y-1" href="#water-heaters">
-        <span class="material-symbols-outlined text-primary text-3xl group-hover:scale-110 transition-transform">water_drop</span>
-        <div><p class="font-semibold text-lg text-on-surface">Plumbing</p><p class="text-xs text-text-muted">Water Heaters, Tankless</p></div>
-      </a>
-      <a class="nav-card group aspect-square md:aspect-auto md:h-40 bg-surface-card border border-outline-variant hover:border-primary rounded-xl p-6 flex flex-col justify-between transition-all hover:-translate-y-1 md:col-span-2 lg:col-span-1" href="#electronics">
-        <span class="material-symbols-outlined text-primary text-3xl group-hover:scale-110 transition-transform">devices</span>
-        <div><p class="font-semibold text-lg text-on-surface">Electronics</p><p class="text-xs text-text-muted">TVs, Laptops, Consoles</p></div>
-      </a>
-    </div>
+<!-- ═══ QUICK NAV ══════════════════════════════════════════════ -->
+<section class="quick-nav">
+  <div class="quick-nav-grid">
+    <a class="nav-card" href="#kitchen">
+      <span class="material-symbols-outlined">kitchen</span>
+      <div><div class="nav-card-title">Kitchen</div><div class="nav-card-sub">Fridges, Ovens, Dishwashers</div></div>
+    </a>
+    <a class="nav-card" href="#laundry">
+      <span class="material-symbols-outlined">local_laundry_service</span>
+      <div><div class="nav-card-title">Laundry</div><div class="nav-card-sub">Washers &amp; Dryers</div></div>
+    </a>
+    <a class="nav-card" href="#hvac">
+      <span class="material-symbols-outlined">ac_unit</span>
+      <div><div class="nav-card-title">HVAC</div><div class="nav-card-sub">AC, Furnaces, Heat Pumps</div></div>
+    </a>
+    <a class="nav-card" href="#water-heaters">
+      <span class="material-symbols-outlined">water_drop</span>
+      <div><div class="nav-card-title">Plumbing</div><div class="nav-card-sub">Water Heaters, Tankless</div></div>
+    </a>
+    <a class="nav-card" href="#electronics">
+      <span class="material-symbols-outlined">devices</span>
+      <div><div class="nav-card-title">Electronics</div><div class="nav-card-sub">TVs, Laptops, Consoles</div></div>
+    </a>
   </div>
 </section>
 
-<!-- MAIN -->
-<main class="max-w-container-max mx-auto px-4 space-y-24 pb-20">
+<!-- ═══ MAIN ═══════════════════════════════════════════════════ -->
+<main>
 
   <!-- Kitchen -->
-  <section class="scroll-mt-24" id="kitchen">
-    <div class="flex items-center gap-4 mb-10">
-      <h2 class="font-semibold text-2xl text-on-surface whitespace-nowrap">Major Kitchen Appliances</h2>
-      <div class="flex-grow h-px bg-outline-variant"></div>
+  <div class="section" id="kitchen">
+    <div class="section-header">
+      <h2>Major Kitchen Appliances</h2>
+      <div class="section-divider"></div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="cards-grid">
 
-      <!-- Refrigerator card -->
-      <article class="bg-surface-card border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all group">
-        <div class="h-48 icon-bg-fridge tech-grid relative flex items-center justify-center border-b border-outline-variant/30 overflow-hidden">
-          <svg viewBox="0 0 100 148" width="80" height="128" fill="none" xmlns="http://www.w3.org/2000/svg" class="relative z-10 group-hover:scale-105 transition-transform duration-500 drop-shadow-lg">
-            <!-- Body -->
+      <!-- Refrigerator -->
+      <div class="appl-card">
+        <div class="appl-card-img" style="background:linear-gradient(135deg,#0d1f35,#0f2540,#091e2e);">
+          <div class="tech-grid"></div>
+          <svg viewBox="0 0 100 148" width="80" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="8" y="2" width="84" height="144" rx="7" fill="#0c1e30" stroke="#44e5c2" stroke-width="1.5"/>
-            <!-- Freezer top -->
             <rect x="8" y="2" width="84" height="50" rx="7" fill="#091828" stroke="#44e5c2" stroke-width="1.5"/>
-            <!-- Divider -->
             <line x1="8" y1="52" x2="92" y2="52" stroke="#44e5c2" stroke-width="1" opacity="0.5" stroke-dasharray="5 3"/>
-            <!-- Freezer handle -->
             <rect x="68" y="14" width="5" height="26" rx="2.5" fill="#44e5c2" opacity="0.85"/>
-            <!-- Fridge handle -->
             <rect x="68" y="64" width="5" height="46" rx="2.5" fill="#44e5c2" opacity="0.85"/>
-            <!-- Label callout (amber) inside fridge -->
             <rect x="14" y="62" width="46" height="12" rx="2.5" fill="#ffc278" fill-opacity="0.12" stroke="#ffc278" stroke-width="0.9"/>
             <text x="17" y="71" font-family="JetBrains Mono,monospace" font-size="6.5" fill="#ffc278" opacity="0.95">S/N LABEL</text>
-            <!-- Shelves -->
             <line x1="14" y1="90" x2="64" y2="90" stroke="#1e3045" stroke-width="1.5"/>
             <line x1="14" y1="108" x2="64" y2="108" stroke="#1e3045" stroke-width="1.5"/>
-            <!-- Crisper drawers -->
             <rect x="14" y="118" width="50" height="16" rx="2" fill="#0d1e2d" stroke="#2d3449" stroke-width="1"/>
             <line x1="39" y1="118" x2="39" y2="134" stroke="#2d3449" stroke-width="1"/>
-            <!-- Teal accent dots bottom -->
-            <circle cx="20" cy="141" r="2" fill="#44e5c2" opacity="0.5"/>
-            <circle cx="27" cy="141" r="2" fill="#44e5c2" opacity="0.3"/>
           </svg>
-          <div class="absolute top-4 left-4">
-            <span class="bg-surface-deep/80 backdrop-blur-md text-primary px-2 py-1 rounded text-xs font-mono-data border border-primary/20">Label Location</span>
-          </div>
-          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-12 bg-primary rounded-full blur-2xl opacity-15 group-hover:opacity-25 transition-opacity"></div>
+          <span class="label-badge">Label Location</span>
+          <div class="card-glow" style="background:var(--primary);"></div>
         </div>
-        <div class="p-6">
-          <h3 class="font-semibold text-xl text-on-surface mb-3">Refrigerator</h3>
-          <div class="bg-surface-container-lowest border-l-4 border-tertiary p-3 mb-4 rounded-r">
-            <p class="font-mono-data text-xs text-tertiary uppercase tracking-wider mb-1">Common Spot:</p>
-            <p class="text-on-surface-variant italic text-sm">Upper interior wall, fresh food compartment.</p>
+        <div class="appl-card-body">
+          <h3>Refrigerator</h3>
+          <div class="spot-block">
+            <div class="spot-label">Common Spot:</div>
+            <div class="spot-text">Upper interior wall, fresh food compartment.</div>
           </div>
-          <p class="text-text-muted text-sm leading-relaxed">Check the interior sidewalls (left or right) or the ceiling. In some models, the sticker is behind the kickplate at the bottom or on the rear exterior panel.</p>
+          <p class="appl-card-desc">Check the interior sidewalls (left or right) or the ceiling. In some models, the sticker is behind the kickplate at the bottom or on the rear exterior panel.</p>
         </div>
-      </article>
+      </div>
 
-      <!-- Range / Oven card -->
-      <article class="bg-surface-card border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all group">
-        <div class="h-48 icon-bg-oven tech-grid relative flex items-center justify-center border-b border-outline-variant/30 overflow-hidden">
-          <svg viewBox="0 0 130 120" width="120" height="110" fill="none" xmlns="http://www.w3.org/2000/svg" class="relative z-10 group-hover:scale-105 transition-transform duration-500 drop-shadow-lg">
-            <!-- Main body -->
+      <!-- Range & Oven -->
+      <div class="appl-card">
+        <div class="appl-card-img" style="background:linear-gradient(135deg,#1a1208,#211609,#1a1008);">
+          <div class="tech-grid"></div>
+          <svg viewBox="0 0 130 120" width="120" height="110" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="4" y="8" width="122" height="108" rx="6" fill="#141008" stroke="#44e5c2" stroke-width="1.5"/>
-            <!-- Cooktop -->
             <rect x="4" y="8" width="122" height="34" rx="6" fill="#0d0a04" stroke="#44e5c2" stroke-width="1.5"/>
-            <!-- Burners -->
             <circle cx="35" cy="25" r="9" stroke="#ffc278" stroke-width="1.3" stroke-dasharray="3 2" opacity="0.75"/>
             <circle cx="35" cy="25" r="4.5" stroke="#ffc278" stroke-width="1" opacity="0.5"/>
             <circle cx="65" cy="25" r="9" stroke="#44e5c2" stroke-width="1.3" stroke-dasharray="3 2" opacity="0.6"/>
             <circle cx="65" cy="25" r="4.5" stroke="#44e5c2" stroke-width="1" opacity="0.4"/>
             <circle cx="95" cy="25" r="9" stroke="#ffc278" stroke-width="1.3" stroke-dasharray="3 2" opacity="0.75"/>
             <circle cx="95" cy="25" r="4.5" stroke="#ffc278" stroke-width="1" opacity="0.5"/>
-            <!-- Knob row -->
             <circle cx="15" cy="42" r="4" fill="#1e1a10" stroke="#44e5c2" stroke-width="0.9"/>
             <circle cx="27" cy="42" r="4" fill="#1e1a10" stroke="#44e5c2" stroke-width="0.9"/>
             <circle cx="103" cy="42" r="4" fill="#1e1a10" stroke="#44e5c2" stroke-width="0.9"/>
             <circle cx="115" cy="42" r="4" fill="#1e1a10" stroke="#44e5c2" stroke-width="0.9"/>
-            <!-- Oven door -->
             <rect x="12" y="48" width="106" height="55" rx="4" fill="#0a0804" stroke="#44e5c2" stroke-width="1.2"/>
-            <!-- Oven window -->
             <rect x="19" y="54" width="92" height="40" rx="3" fill="#060504" stroke="#2d3449" stroke-width="1"/>
-            <rect x="19" y="54" width="92" height="40" rx="3" fill="#ffc278" fill-opacity="0.02"/>
-            <!-- Oven handle -->
             <rect x="28" y="105" width="74" height="5" rx="2.5" fill="#44e5c2" opacity="0.85"/>
-            <!-- Storage drawer -->
             <rect x="4" y="112" width="122" height="8" rx="0" fill="#0a0804" stroke="#44e5c2" stroke-width="0.9" opacity="0.8"/>
-            <!-- Label in drawer (amber) -->
             <rect x="12" y="113" width="42" height="5" rx="2" fill="#ffc278" fill-opacity="0.18" stroke="#ffc278" stroke-width="0.8"/>
             <text x="15" y="117.5" font-family="JetBrains Mono,monospace" font-size="4" fill="#ffc278" opacity="0.9">S/N LABEL</text>
           </svg>
-          <div class="absolute top-4 left-4">
-            <span class="bg-surface-deep/80 backdrop-blur-md text-primary px-2 py-1 rounded text-xs font-mono-data border border-primary/20">Label Location</span>
-          </div>
-          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-12 bg-tertiary rounded-full blur-2xl opacity-15 group-hover:opacity-25 transition-opacity"></div>
+          <span class="label-badge">Label Location</span>
+          <div class="card-glow" style="background:var(--tertiary);"></div>
         </div>
-        <div class="p-6">
-          <h3 class="font-semibold text-xl text-on-surface mb-3">Range &amp; Oven</h3>
-          <div class="bg-surface-container-lowest border-l-4 border-tertiary p-3 mb-4 rounded-r">
-            <p class="font-mono-data text-xs text-tertiary uppercase tracking-wider mb-1">Common Spot:</p>
-            <p class="text-on-surface-variant italic text-sm">Inside the storage drawer at the bottom.</p>
+        <div class="appl-card-body">
+          <h3>Range &amp; Oven</h3>
+          <div class="spot-block">
+            <div class="spot-label">Common Spot:</div>
+            <div class="spot-text">Inside the storage drawer at the bottom.</div>
           </div>
-          <p class="text-text-muted text-sm leading-relaxed">Look on the frame behind the door, or under the cooktop (lift-up style). Some double ovens have them on the inner side of the door frame.</p>
+          <p class="appl-card-desc">Look on the frame behind the door, or under the cooktop (lift-up style). Some double ovens have them on the inner side of the door frame.</p>
         </div>
-      </article>
+      </div>
 
-      <!-- Dishwasher card -->
-      <article class="bg-surface-card border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all group">
-        <div class="h-48 icon-bg-dw tech-grid relative flex items-center justify-center border-b border-outline-variant/30 overflow-hidden">
-          <svg viewBox="0 0 100 138" width="78" height="120" fill="none" xmlns="http://www.w3.org/2000/svg" class="relative z-10 group-hover:scale-105 transition-transform duration-500 drop-shadow-lg">
-            <!-- Body -->
+      <!-- Dishwasher -->
+      <div class="appl-card">
+        <div class="appl-card-img" style="background:linear-gradient(135deg,#091818,#0d2020,#091a1c);">
+          <div class="tech-grid"></div>
+          <svg viewBox="0 0 100 138" width="78" height="120" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="5" y="4" width="90" height="130" rx="7" fill="#091818" stroke="#44e5c2" stroke-width="1.5"/>
-            <!-- Control panel -->
             <rect x="5" y="4" width="90" height="18" rx="7" fill="#0c2020" stroke="#44e5c2" stroke-width="1.5"/>
-            <!-- Control lights -->
             <circle cx="22" cy="13" r="2.5" fill="#44e5c2" opacity="0.85"/>
             <circle cx="31" cy="13" r="2.5" fill="#2d3449" stroke="#44e5c2" stroke-width="0.7"/>
             <circle cx="40" cy="13" r="2.5" fill="#2d3449" stroke="#44e5c2" stroke-width="0.7"/>
-            <!-- Display -->
             <rect x="52" y="8" width="36" height="9" rx="2" fill="#050f0f" stroke="#44e5c2" stroke-width="0.8"/>
             <text x="55" y="15" font-family="JetBrains Mono,monospace" font-size="5.5" fill="#44e5c2" opacity="0.75">CYCLE</text>
-            <!-- Door face -->
             <rect x="5" y="22" width="90" height="92" rx="0" fill="#0b1c1c" stroke="#3c4a45" stroke-width="0.9"/>
-            <!-- Left edge label highlight -->
             <rect x="5" y="34" width="7" height="26" rx="0" fill="#ffc278" fill-opacity="0.18" stroke="#ffc278" stroke-width="0.9"/>
-            <!-- Vertical label text -->
-            <text x="8.5" y="56" font-family="JetBrains Mono,monospace" font-size="4" fill="#ffc278" opacity="0.9" transform="rotate(-90,8.5,56)">LABEL</text>
-            <!-- Rack lines -->
             <line x1="14" y1="56" x2="86" y2="56" stroke="#162828" stroke-width="2"/>
             <line x1="14" y1="74" x2="86" y2="74" stroke="#162828" stroke-width="2"/>
             <line x1="14" y1="92" x2="86" y2="92" stroke="#162828" stroke-width="2"/>
-            <!-- Spray arm -->
             <line x1="16" y1="65" x2="84" y2="65" stroke="#233535" stroke-width="2"/>
             <circle cx="50" cy="65" r="4" fill="#233535" stroke="#44e5c2" stroke-width="0.9"/>
-            <!-- Handle -->
             <rect x="22" y="114" width="56" height="5" rx="2.5" fill="#44e5c2" opacity="0.85"/>
-            <!-- Kickplate -->
-            <rect x="5" y="119" width="90" height="15" rx="0" fill="#081414" stroke="#44e5c2" stroke-width="0.8" opacity="0.9"/>
-            <!-- Kickplate label -->
+            <rect x="5" y="119" width="90" height="15" rx="0" fill="#081414" stroke="#44e5c2" stroke-width="0.8"/>
             <rect x="12" y="122" width="36" height="8" rx="2" fill="#ffc278" fill-opacity="0.12" stroke="#ffc278" stroke-width="0.8"/>
             <text x="15" y="128" font-family="JetBrains Mono,monospace" font-size="4" fill="#ffc278" opacity="0.9">S/N LABEL</text>
           </svg>
-          <div class="absolute top-4 left-4">
-            <span class="bg-surface-deep/80 backdrop-blur-md text-primary px-2 py-1 rounded text-xs font-mono-data border border-primary/20">Label Location</span>
-          </div>
-          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-12 bg-primary rounded-full blur-2xl opacity-15 group-hover:opacity-25 transition-opacity"></div>
+          <span class="label-badge">Label Location</span>
+          <div class="card-glow" style="background:var(--primary);"></div>
         </div>
-        <div class="p-6">
-          <h3 class="font-semibold text-xl text-on-surface mb-3">Dishwasher</h3>
-          <div class="bg-surface-container-lowest border-l-4 border-tertiary p-3 mb-4 rounded-r">
-            <p class="font-mono-data text-xs text-tertiary uppercase tracking-wider mb-1">Common Spot:</p>
-            <p class="text-on-surface-variant italic text-sm">Inside door, left or right interior edge.</p>
+        <div class="appl-card-body">
+          <h3>Dishwasher</h3>
+          <div class="spot-block">
+            <div class="spot-label">Common Spot:</div>
+            <div class="spot-text">Inside door, left or right interior edge.</div>
           </div>
-          <p class="text-text-muted text-sm leading-relaxed">Open the door and inspect the top or side of the inner door panel. If not there, look at the base behind the kickplate.</p>
+          <p class="appl-card-desc">Open the door and inspect the top or side of the inner door panel. If not there, look at the base behind the kickplate.</p>
         </div>
-      </article>
+      </div>
 
-
-      <!-- Cooktop card -->
-      <article class="bg-surface-card border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all group">
-        <div class="h-48 relative flex items-center justify-center border-b border-outline-variant/30 overflow-hidden" style="background:linear-gradient(135deg,#0e1210 0%,#141a10 50%,#0e1410 100%);">
-          <div class="absolute inset-0 tech-grid"></div>
-          <svg viewBox="0 0 140 100" width="128" height="92" fill="none" xmlns="http://www.w3.org/2000/svg" class="relative z-10 group-hover:scale-105 transition-transform duration-500 drop-shadow-lg">
-            <!-- Cooktop surface -->
+      <!-- Cooktop -->
+      <div class="appl-card">
+        <div class="appl-card-img" style="background:linear-gradient(135deg,#0e1210,#141a10,#0e1410);">
+          <div class="tech-grid"></div>
+          <svg viewBox="0 0 140 100" width="128" height="92" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="6" y="10" width="128" height="80" rx="6" fill="#0d120a" stroke="#44e5c2" stroke-width="1.5"/>
-            <!-- Surface texture grid -->
             <rect x="12" y="16" width="116" height="68" rx="3" fill="#090e07" stroke="#1e2a1a" stroke-width="0.8"/>
-            <!-- Burner 1 (top-left) -->
             <circle cx="38" cy="38" r="16" stroke="#44e5c2" stroke-width="1.2" opacity="0.5"/>
             <circle cx="38" cy="38" r="10" stroke="#44e5c2" stroke-width="1" stroke-dasharray="4 2" opacity="0.6"/>
             <circle cx="38" cy="38" r="4" fill="#44e5c2" opacity="0.15" stroke="#44e5c2" stroke-width="0.8"/>
-            <!-- Burner 2 (top-right) -->
             <circle cx="102" cy="38" r="16" stroke="#ffc278" stroke-width="1.2" opacity="0.55"/>
             <circle cx="102" cy="38" r="10" stroke="#ffc278" stroke-width="1" stroke-dasharray="4 2" opacity="0.6"/>
             <circle cx="102" cy="38" r="4" fill="#ffc278" opacity="0.12" stroke="#ffc278" stroke-width="0.8"/>
-            <!-- Burner 3 (bottom-left, smaller) -->
             <circle cx="38" cy="72" r="11" stroke="#44e5c2" stroke-width="1.2" opacity="0.45"/>
             <circle cx="38" cy="72" r="6" stroke="#44e5c2" stroke-width="1" stroke-dasharray="3 2" opacity="0.5"/>
             <circle cx="38" cy="72" r="2.5" fill="#44e5c2" opacity="0.12" stroke="#44e5c2" stroke-width="0.7"/>
-            <!-- Burner 4 (bottom-right, smaller) -->
             <circle cx="102" cy="72" r="11" stroke="#ffc278" stroke-width="1.2" opacity="0.45"/>
             <circle cx="102" cy="72" r="6" stroke="#ffc278" stroke-width="1" stroke-dasharray="3 2" opacity="0.5"/>
             <circle cx="102" cy="72" r="2.5" fill="#ffc278" opacity="0.12" stroke="#ffc278" stroke-width="0.7"/>
-            <!-- Label underside callout (amber) -->
             <rect x="54" y="58" width="32" height="10" rx="2.5" fill="#ffc278" fill-opacity="0.14" stroke="#ffc278" stroke-width="0.9"/>
             <text x="57" y="65.5" font-family="JetBrains Mono,monospace" font-size="4.5" fill="#ffc278" opacity="0.9">LABEL</text>
-            <!-- Arrow pointing down to underside -->
-            <line x1="70" y1="68" x2="70" y2="80" stroke="#ffc278" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.6"/>
-            <polygon points="67,78 70,84 73,78" fill="#ffc278" opacity="0.6"/>
-            <!-- Center bridge control indicator -->
-            <rect x="60" y="14" width="20" height="6" rx="2" fill="#1e2a1a" stroke="#44e5c2" stroke-width="0.7"/>
+            <line x1="70" y1="68" x2="70" y2="78" stroke="#ffc278" stroke-width="0.8" stroke-dasharray="2 2" opacity="0.6"/>
+            <polygon points="67,77 70,83 73,77" fill="#ffc278" opacity="0.6"/>
           </svg>
-          <div class="absolute top-4 left-4">
-            <span class="bg-surface-deep/80 backdrop-blur-md text-primary px-2 py-1 rounded text-xs font-mono-data border border-primary/20">Label Location</span>
-          </div>
-          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-12 bg-primary rounded-full blur-2xl opacity-15 group-hover:opacity-25 transition-opacity"></div>
+          <span class="label-badge">Label Location</span>
+          <div class="card-glow" style="background:var(--primary);"></div>
         </div>
-        <div class="p-6">
-          <h3 class="font-semibold text-xl text-on-surface mb-3">Cooktop</h3>
-          <div class="bg-surface-container-lowest border-l-4 border-tertiary p-3 mb-4 rounded-r">
-            <p class="font-mono-data text-xs text-tertiary uppercase tracking-wider mb-1">Common Spot:</p>
-            <p class="text-on-surface-variant italic text-sm">Underside of the unit or side trim panel.</p>
+        <div class="appl-card-body">
+          <h3>Cooktop</h3>
+          <div class="spot-block">
+            <div class="spot-label">Common Spot:</div>
+            <div class="spot-text">Underside of the unit or side trim panel.</div>
           </div>
-          <p class="text-text-muted text-sm leading-relaxed">
-            For drop-in and slide-in cooktops, tilt the unit or look on the underside near the edge. Some induction models place the label on the side trim or beneath a removable panel along the front lip.
-          </p>
+          <p class="appl-card-desc">For drop-in and slide-in cooktops, tilt the unit or look on the underside near the edge. Some induction models place the label on the side trim or beneath a removable panel along the front lip.</p>
         </div>
-      </article>
+      </div>
 
-      <!-- Microwave card -->
-      <article class="bg-surface-card border border-outline-variant rounded-xl overflow-hidden hover:border-primary transition-all group">
-        <div class="h-48 relative flex items-center justify-center border-b border-outline-variant/30 overflow-hidden" style="background:linear-gradient(135deg,#111118 0%,#141420 50%,#0e0e18 100%);">
-          <div class="absolute inset-0 tech-grid"></div>
-          <svg viewBox="0 0 150 110" width="132" height="96" fill="none" xmlns="http://www.w3.org/2000/svg" class="relative z-10 group-hover:scale-105 transition-transform duration-500 drop-shadow-lg">
-            <!-- Body -->
+      <!-- Microwave -->
+      <div class="appl-card">
+        <div class="appl-card-img" style="background:linear-gradient(135deg,#111118,#141420,#0e0e18);">
+          <div class="tech-grid"></div>
+          <svg viewBox="0 0 150 110" width="132" height="96" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="4" y="8" width="142" height="94" rx="7" fill="#0d0d16" stroke="#44e5c2" stroke-width="1.5"/>
-            <!-- Door section (left ~70%) -->
             <rect x="10" y="14" width="96" height="82" rx="5" fill="#090910" stroke="#44e5c2" stroke-width="1.2"/>
-            <!-- Door window -->
             <rect x="16" y="20" width="84" height="70" rx="4" fill="#050508" stroke="#2d3449" stroke-width="1"/>
-            <!-- Window mesh pattern -->
-            <rect x="16" y="20" width="84" height="70" rx="4" fill="none" stroke="#44e5c2" stroke-width="0" opacity="0.1"/>
-            <!-- Cavity glow (subtle) -->
-            <rect x="20" y="24" width="76" height="62" rx="3" fill="#44e5c2" fill-opacity="0.02"/>
-            <!-- Turntable ring -->
             <circle cx="58" cy="55" r="22" stroke="#1e2030" stroke-width="1.5"/>
             <circle cx="58" cy="55" r="14" stroke="#1e2030" stroke-width="1" stroke-dasharray="3 2"/>
-            <!-- Door handle -->
             <rect x="12" y="48" width="5" height="18" rx="2.5" fill="#44e5c2" opacity="0.8"/>
-            <!-- Control panel (right) -->
             <rect x="108" y="14" width="30" height="82" rx="3" fill="#0c0c18" stroke="#2d3449" stroke-width="0.8"/>
-            <!-- Display -->
             <rect x="112" y="20" width="22" height="14" rx="2" fill="#050510" stroke="#44e5c2" stroke-width="0.8"/>
             <text x="114" y="29" font-family="JetBrains Mono,monospace" font-size="7" fill="#44e5c2" opacity="0.8">0:00</text>
-            <!-- Control buttons -->
             <rect x="112" y="40" width="22" height="5" rx="1.5" fill="#171728" stroke="#3c4a45" stroke-width="0.6"/>
             <rect x="112" y="48" width="22" height="5" rx="1.5" fill="#171728" stroke="#3c4a45" stroke-width="0.6"/>
             <rect x="112" y="56" width="22" height="5" rx="1.5" fill="#171728" stroke="#3c4a45" stroke-width="0.6"/>
             <rect x="112" y="64" width="22" height="5" rx="1.5" fill="#171728" stroke="#3c4a45" stroke-width="0.6"/>
-            <!-- Dial -->
             <circle cx="123" cy="82" r="7" fill="#171728" stroke="#44e5c2" stroke-width="0.9"/>
             <line x1="123" y1="76" x2="123" y2="79" stroke="#44e5c2" stroke-width="1" opacity="0.8"/>
-            <!-- Door frame label callout (amber) -->
             <rect x="100" y="26" width="8" height="20" rx="2" fill="#ffc278" fill-opacity="0.16" stroke="#ffc278" stroke-width="0.9"/>
-            <text x="101.5" y="42" font-family="JetBrains Mono,monospace" font-size="3.5" fill="#ffc278" opacity="0.9" transform="rotate(90,101.5,42) translate(-16,0)">LABEL</text>
           </svg>
-          <div class="absolute top-4 left-4">
-            <span class="bg-surface-deep/80 backdrop-blur-md text-primary px-2 py-1 rounded text-xs font-mono-data border border-primary/20">Label Location</span>
-          </div>
-          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-12 bg-secondary-container rounded-full blur-2xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
+          <span class="label-badge">Label Location</span>
+          <div class="card-glow" style="background:var(--secondary);"></div>
         </div>
-        <div class="p-6">
-          <h3 class="font-semibold text-xl text-on-surface mb-3">Microwave</h3>
-          <div class="bg-surface-container-lowest border-l-4 border-tertiary p-3 mb-4 rounded-r">
-            <p class="font-mono-data text-xs text-tertiary uppercase tracking-wider mb-1">Common Spot:</p>
-            <p class="text-on-surface-variant italic text-sm">Door frame or back/side exterior panel.</p>
+        <div class="appl-card-body">
+          <h3>Microwave</h3>
+          <div class="spot-block">
+            <div class="spot-label">Common Spot:</div>
+            <div class="spot-text">Door frame or back/side exterior panel.</div>
           </div>
-          <p class="text-text-muted text-sm leading-relaxed">
-            Countertop models usually place the label on the back panel or one side exterior. Over-the-range units often use the door frame near the hinge. Built-in drawer microwaves keep the plate on the left interior wall of the cavity.
-          </p>
+          <p class="appl-card-desc">Countertop models usually place the label on the back panel or one side exterior. Over-the-range units often use the door frame near the hinge. Built-in drawer microwaves keep the plate on the left interior wall of the cavity.</p>
         </div>
-      </article>
+      </div>
 
     </div>
-  </section>
+  </div>
 
   <!-- HVAC -->
-  <section class="scroll-mt-24" id="hvac">
-    <div class="flex items-center gap-4 mb-10">
-      <h2 class="font-semibold text-2xl text-on-surface whitespace-nowrap">HVAC Systems</h2>
-      <div class="flex-grow h-px bg-outline-variant"></div>
+  <div class="section" id="hvac">
+    <div class="section-header">
+      <h2>HVAC Systems</h2>
+      <div class="section-divider"></div>
     </div>
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="glass-card rounded-xl p-6 flex flex-col md:flex-row gap-6 items-start">
-        <div class="w-full md:w-48 flex-shrink-0 aspect-square bg-surface-container-low rounded-lg flex items-center justify-center border border-outline-variant group overflow-hidden">
-          <span class="material-symbols-outlined text-primary text-6xl group-hover:rotate-45 transition-transform duration-700">mode_fan</span>
+    <div class="hvac-grid">
+      <div class="glass-card">
+        <div class="hvac-icon-box">
+          <span class="material-symbols-outlined">mode_fan</span>
         </div>
-        <div class="flex-1">
-          <h3 class="font-semibold text-xl text-on-surface mb-2">Central Air - Outdoor Unit</h3>
-          <p class="text-text-muted text-sm mb-4 leading-relaxed">Labels on outdoor units face the elements and can fade. Use high-contrast lighting to read embossed text.</p>
-          <div class="bg-surface-deep border border-outline-variant/30 rounded p-4 font-mono-data text-sm">
-            <span class="text-primary block mb-2 tracking-wider">LOCATIONS:</span>
-            <ul class="space-y-2 text-on-surface-variant list-disc list-inside">
+        <div class="hvac-body">
+          <h3>Central Air - Outdoor Unit</h3>
+          <p>Labels on outdoor units face the elements and can fade. Use high-contrast lighting to read embossed text.</p>
+          <div class="loc-block">
+            <span class="loc-label">LOCATIONS:</span>
+            <ul>
               <li>Right-side panel near the refrigerant lines.</li>
               <li>Access panel for the electrical connections.</li>
               <li>Back panel near the coils (less common).</li>
@@ -488,16 +1052,16 @@
           </div>
         </div>
       </div>
-      <div class="glass-card rounded-xl p-6 flex flex-col md:flex-row gap-6 items-start">
-        <div class="w-full md:w-48 flex-shrink-0 aspect-square bg-surface-container-low rounded-lg flex items-center justify-center border border-outline-variant group overflow-hidden">
-          <span class="material-symbols-outlined text-primary text-6xl group-hover:scale-110 transition-transform">heat_pump</span>
+      <div class="glass-card">
+        <div class="hvac-icon-box">
+          <span class="material-symbols-outlined">heat_pump</span>
         </div>
-        <div class="flex-1">
-          <h3 class="font-semibold text-xl text-on-surface mb-2">Furnace &amp; Air Handler</h3>
-          <p class="text-text-muted text-sm mb-4 leading-relaxed">Usually found behind the front access panel to protect the label from internal heat components.</p>
-          <div class="bg-surface-deep border border-outline-variant/30 rounded p-4 font-mono-data text-sm">
-            <span class="text-primary block mb-2 tracking-wider">LOCATIONS:</span>
-            <ul class="space-y-2 text-on-surface-variant list-disc list-inside">
+        <div class="hvac-body">
+          <h3>Furnace &amp; Air Handler</h3>
+          <p>Usually found behind the front access panel to protect the label from internal heat components.</p>
+          <div class="loc-block">
+            <span class="loc-label">LOCATIONS:</span>
+            <ul>
               <li>Inside the front door (service panel).</li>
               <li>Inside side wall of the cabinet (requires door removal).</li>
               <li>On the blower motor housing itself.</li>
@@ -506,148 +1070,127 @@
         </div>
       </div>
     </div>
-  </section>
-
-  <!-- Brand Nuances -->
-  <section class="bg-surface-container-low rounded-2xl p-8 border border-outline-variant">
-    <h2 class="font-semibold text-2xl text-on-surface mb-8 text-center">Brand-Specific Nuances</h2>
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-      <div class="p-4 bg-surface-card border border-outline-variant/20 rounded-lg text-center hover:border-primary transition-colors"><p class="font-semibold text-base text-on-surface mb-1">Samsung</p><p class="text-xs text-text-muted leading-snug">QR codes &amp; barcodes on lower right-side exterior.</p></div>
-      <div class="p-4 bg-surface-card border border-outline-variant/20 rounded-lg text-center hover:border-primary transition-colors"><p class="font-semibold text-base text-on-surface mb-1">LG</p><p class="text-xs text-text-muted leading-snug">High-gloss silver labels on side frames.</p></div>
-      <div class="p-4 bg-surface-card border border-outline-variant/20 rounded-lg text-center hover:border-primary transition-colors"><p class="font-semibold text-base text-on-surface mb-1">Carrier</p><p class="text-xs text-text-muted leading-snug">Year is often encoded in the first 4 serial digits.</p></div>
-      <div class="p-4 bg-surface-card border border-outline-variant/20 rounded-lg text-center hover:border-primary transition-colors"><p class="font-semibold text-base text-on-surface mb-1">Kenmore</p><p class="text-xs text-text-muted leading-snug">Model prefix (e.g. 110.) indicates actual maker.</p></div>
-      <div class="p-4 bg-surface-card border border-outline-variant/20 rounded-lg text-center hover:border-primary transition-colors"><p class="font-semibold text-base text-on-surface mb-1">Whirlpool</p><p class="text-xs text-text-muted leading-snug">Uses large white labels inside doors or lid bases.</p></div>
-      <div class="p-4 bg-surface-card border border-outline-variant/20 rounded-lg text-center hover:border-primary transition-colors"><p class="font-semibold text-base text-on-surface mb-1">Apple</p><p class="text-xs text-text-muted leading-snug">Laser-etched in tiny print on the bottom case.</p></div>
-    </div>
-  </section>
-
-  <!-- FAQ -->
-  <section class="max-w-4xl mx-auto">
-    <h2 class="font-semibold text-2xl text-on-surface mb-10 text-center">Tips for Hard-to-Read Labels</h2>
-    <div class="space-y-4">
-      <details class="group bg-surface-card border border-outline-variant rounded-lg">
-        <summary class="flex justify-between items-center p-6 cursor-pointer list-none">
-          <span class="font-semibold text-lg text-on-surface">The label is faded or dirty. What now?</span>
-          <span class="material-symbols-outlined text-primary accordion-icon">expand_more</span>
-        </summary>
-        <div class="px-6 pb-6 text-on-surface-variant text-sm leading-relaxed border-t border-outline-variant/10 pt-4">
-          Try using a bright flashlight from a side angle to create shadows in the embossed text. You can also carefully rub a graphite pencil over embossed lettering to make it stand out. For dirty labels, use a damp cloth but avoid harsh cleaners that might dissolve the ink.
-        </div>
-      </details>
-      <details class="group bg-surface-card border border-outline-variant rounded-lg">
-        <summary class="flex justify-between items-center p-6 cursor-pointer list-none">
-          <span class="font-semibold text-lg text-on-surface">Can I find the serial number in the software?</span>
-          <span class="material-symbols-outlined text-primary accordion-icon">expand_more</span>
-        </summary>
-        <div class="px-6 pb-6 text-on-surface-variant text-sm leading-relaxed border-t border-outline-variant/10 pt-4">
-          Yes, for modern "smart" appliances and electronics. Check the settings menu under "About," "System Information," or "Network Status." On many smart fridges, it's also located in the 'Info' section of the external touchscreen display.
-        </div>
-      </details>
-      <details class="group bg-surface-card border border-outline-variant rounded-lg">
-        <summary class="flex justify-between items-center p-6 cursor-pointer list-none">
-          <span class="font-semibold text-lg text-on-surface">Why do I need the serial number vs just the model?</span>
-          <span class="material-symbols-outlined text-primary accordion-icon">expand_more</span>
-        </summary>
-        <div class="px-6 pb-6 text-on-surface-variant text-sm leading-relaxed border-t border-outline-variant/10 pt-4">
-          Manufacturers often change internal parts midway through a production year. The serial number identifies the specific "run" or date your unit was made, ensuring you order the exact replacement part that fits your specific build version.
-        </div>
-      </details>
-    </div>
-  </section>
+  </div>
 
 </main>
 
-<!-- FOOTER -->
-<footer class="bg-surface-container-lowest border-t border-outline-variant pt-16 pb-8">
-  <div class="max-w-container-max mx-auto px-4">
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 mb-12">
+<!-- Brand Nuances -->
+<div class="brand-section" style="max-width:1200px;margin:0 auto 96px;padding:32px 24px;">
+  <h2 style="font-size:24px;font-weight:600;color:var(--on-surface);text-align:center;margin-bottom:32px;">Brand-Specific Nuances</h2>
+  <div class="brand-grid">
+    <div class="brand-card"><div class="brand-card-name">Samsung</div><div class="brand-card-desc">QR codes &amp; barcodes on lower right-side exterior.</div></div>
+    <div class="brand-card"><div class="brand-card-name">LG</div><div class="brand-card-desc">High-gloss silver labels on side frames.</div></div>
+    <div class="brand-card"><div class="brand-card-name">Carrier</div><div class="brand-card-desc">Year is often encoded in the first 4 serial digits.</div></div>
+    <div class="brand-card"><div class="brand-card-name">Kenmore</div><div class="brand-card-desc">Model prefix (e.g. 110.) indicates actual maker.</div></div>
+    <div class="brand-card"><div class="brand-card-name">Whirlpool</div><div class="brand-card-desc">Uses large white labels inside doors or lid bases.</div></div>
+    <div class="brand-card"><div class="brand-card-name">Apple</div><div class="brand-card-desc">Laser-etched in tiny print on the bottom case.</div></div>
+  </div>
+</div>
 
-      <!-- Brand -->
-      <div class="col-span-2 md:col-span-3 lg:col-span-1">
-        <div class="font-semibold text-2xl text-primary mb-3">Decode My Item</div>
-        <p class="text-xs text-text-muted mb-6 leading-relaxed">Expert technical data extraction for appliances, electronics, and industrial equipment.</p>
-        <a href="https://www.decodemyitem.com/contact" class="w-8 h-8 rounded-full bg-surface-container inline-flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
-          <span class="material-symbols-outlined text-lg">mail</span>
-        </a>
-      </div>
+<!-- FAQ -->
+<div class="faq-section" style="max-width:800px;margin:0 auto;padding:0 24px 96px;">
+  <h2 style="font-size:24px;font-weight:600;color:var(--on-surface);text-align:center;margin-bottom:40px;">Tips for Hard-to-Read Labels</h2>
+  <div class="faq-list">
+    <details>
+      <summary>
+        <h3>The label is faded or dirty. What now?</h3>
+        <span class="material-symbols-outlined acc-icon">expand_more</span>
+      </summary>
+      <div class="faq-body">Try using a bright flashlight from a side angle to create shadows in the embossed text. You can also carefully rub a graphite pencil over embossed lettering to make it stand out. For dirty labels, use a damp cloth but avoid harsh cleaners that might dissolve the ink.</div>
+    </details>
+    <details>
+      <summary>
+        <h3>Can I find the serial number in the software?</h3>
+        <span class="material-symbols-outlined acc-icon">expand_more</span>
+      </summary>
+      <div class="faq-body">Yes, for modern "smart" appliances and electronics. Check the settings menu under "About," "System Information," or "Network Status." On many smart fridges, it's also located in the 'Info' section of the external touchscreen display.</div>
+    </details>
+    <details>
+      <summary>
+        <h3>Why do I need the serial number vs just the model?</h3>
+        <span class="material-symbols-outlined acc-icon">expand_more</span>
+      </summary>
+      <div class="faq-body">Manufacturers often change internal parts midway through a production year. The serial number identifies the specific "run" or date your unit was made, ensuring you order the exact replacement part that fits your specific build version.</div>
+    </details>
+  </div>
+</div>
 
-      <!-- Tools -->
-      <div>
-        <h4 class="font-mono-data text-xs text-primary uppercase tracking-widest mb-5">Tools</h4>
-        <ul class="space-y-3 text-sm text-on-surface-variant">
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/">Home</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/decoder-tool">Serial Number Decoder</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/assistant">AI Assistant</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/brands">All Brands</a></li>
-        </ul>
-      </div>
-
-      <!-- By Appliance -->
-      <div>
-        <h4 class="font-mono-data text-xs text-primary uppercase tracking-widest mb-5">By Appliance</h4>
-        <ul class="space-y-3 text-sm text-on-surface-variant">
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/refrigerator-serial-number">Refrigerators</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/washer-serial-number">Washing Machines</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/dryer-serial-number">Dryers</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/dishwasher-serial-number">Dishwashers</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/range-oven-serial-number">Ranges &amp; Ovens</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/hvac-age-by-serial-number">HVAC Systems</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/how-to-find-hvac-age">Finding HVAC Age</a></li>
-        </ul>
-      </div>
-
-      <!-- By Brand -->
-      <div>
-        <h4 class="font-mono-data text-xs text-primary uppercase tracking-widest mb-5">By Brand</h4>
-        <ul class="space-y-3 text-sm text-on-surface-variant">
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/whirlpool-serial-number-lookup">Whirlpool</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/ge-serial-number-lookup">GE</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/samsung-serial-number-lookup">Samsung</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/lg-serial-number-lookup">LG</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/carrier-serial-number-lookup">Carrier</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/goodman-serial-number-lookup">Goodman</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/trane-serial-number-lookup">Trane</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/rheem-serial-number-lookup">Rheem</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/frigidaire-serial-number-lookup">Frigidaire</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/maytag-serial-number-lookup">Maytag</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/kenmore-serial-number-lookup">Kenmore</a></li>
-        </ul>
-      </div>
-
-      <!-- Resources -->
-      <div>
-        <h4 class="font-mono-data text-xs text-primary uppercase tracking-widest mb-5">Resources</h4>
-        <ul class="space-y-3 text-sm text-on-surface-variant">
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/serial-number-location-guide">Serial Number Location Guide</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/where-is-my-serial-number">Where Is My Serial Number?</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/how-to-read-serial-number">How to Read a Serial Number</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/methodology">Methodology</a></li>
-          <li><a class="hover:text-primary transition-colors" href="https://www.decodemyitem.com/about">About</a></li>
-        </ul>
-      </div>
-
+<!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand-name">Decode My Item</div>
+      <p class="footer-brand-desc">Expert technical data extraction for appliances, electronics, and industrial equipment.</p>
+      <a href="https://www.decodemyitem.com/contact" class="footer-mail">
+        <span class="material-symbols-outlined">mail</span>
+      </a>
     </div>
-
-    <!-- Bottom bar -->
-    <div class="pt-8 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-4">
-      <p class="font-mono-data text-xs text-text-muted">© 2026 Decode My Item · Database verified February 2026</p>
-      <div class="flex gap-6 font-mono-data text-xs text-text-muted flex-wrap justify-center">
-        <a href="https://www.decodemyitem.com/contact" class="hover:text-primary transition-colors">Contact</a>
-        <a href="https://www.decodemyitem.com/security" class="hover:text-primary transition-colors">Security &amp; Data</a>
-        <a href="https://www.decodemyitem.com/privacy-policy" class="hover:text-primary transition-colors">Privacy Policy</a>
-        <span class="flex items-center gap-1.5"><span class="live-dot w-2 h-2 rounded-full bg-primary inline-block"></span> System Live</span>
-      </div>
+    <div class="footer-col">
+      <h4>Tools</h4>
+      <ul>
+        <li><a href="https://www.decodemyitem.com/">Home</a></li>
+        <li><a href="https://www.decodemyitem.com/decoder-tool">Serial Number Decoder</a></li>
+        <li><a href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a></li>
+        <li><a href="https://www.decodemyitem.com/assistant">AI Assistant</a></li>
+        <li><a href="https://www.decodemyitem.com/brands">All Brands</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>By Appliance</h4>
+      <ul>
+        <li><a href="https://www.decodemyitem.com/refrigerator-serial-number">Refrigerators</a></li>
+        <li><a href="https://www.decodemyitem.com/washer-serial-number">Washing Machines</a></li>
+        <li><a href="https://www.decodemyitem.com/dryer-serial-number">Dryers</a></li>
+        <li><a href="https://www.decodemyitem.com/dishwasher-serial-number">Dishwashers</a></li>
+        <li><a href="https://www.decodemyitem.com/range-oven-serial-number">Ranges &amp; Ovens</a></li>
+        <li><a href="https://www.decodemyitem.com/hvac-age-by-serial-number">HVAC Systems</a></li>
+        <li><a href="https://www.decodemyitem.com/how-to-find-hvac-age">Finding HVAC Age</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>By Brand</h4>
+      <ul>
+        <li><a href="https://www.decodemyitem.com/whirlpool-serial-number-lookup">Whirlpool</a></li>
+        <li><a href="https://www.decodemyitem.com/ge-serial-number-lookup">GE</a></li>
+        <li><a href="https://www.decodemyitem.com/samsung-serial-number-lookup">Samsung</a></li>
+        <li><a href="https://www.decodemyitem.com/lg-serial-number-lookup">LG</a></li>
+        <li><a href="https://www.decodemyitem.com/carrier-serial-number-lookup">Carrier</a></li>
+        <li><a href="https://www.decodemyitem.com/goodman-serial-number-lookup">Goodman</a></li>
+        <li><a href="https://www.decodemyitem.com/trane-serial-number-lookup">Trane</a></li>
+        <li><a href="https://www.decodemyitem.com/rheem-serial-number-lookup">Rheem</a></li>
+        <li><a href="https://www.decodemyitem.com/frigidaire-serial-number-lookup">Frigidaire</a></li>
+        <li><a href="https://www.decodemyitem.com/maytag-serial-number-lookup">Maytag</a></li>
+        <li><a href="https://www.decodemyitem.com/kenmore-serial-number-lookup">Kenmore</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <ul>
+        <li><a href="https://www.decodemyitem.com/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
+        <li><a href="https://www.decodemyitem.com/serial-number-location-guide">Serial Number Location Guide</a></li>
+        <li><a href="https://www.decodemyitem.com/where-is-my-serial-number">Where Is My Serial Number?</a></li>
+        <li><a href="https://www.decodemyitem.com/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
+        <li><a href="https://www.decodemyitem.com/how-to-read-serial-number">How to Read a Serial Number</a></li>
+        <li><a href="https://www.decodemyitem.com/methodology">Methodology</a></li>
+        <li><a href="https://www.decodemyitem.com/about">About</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 Decode My Item · Database verified February 2026</span>
+    <div class="footer-links">
+      <a href="https://www.decodemyitem.com/contact">Contact</a>
+      <a href="https://www.decodemyitem.com/security">Security &amp; Data</a>
+      <a href="https://www.decodemyitem.com/privacy-policy">Privacy Policy</a>
+      <span class="live-dot">System Live</span>
     </div>
   </div>
 </footer>
 
 <!-- FAB -->
-<button class="fab-btn fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
-  <span class="material-symbols-outlined text-2xl">smart_toy</span>
-  <span class="fab-tooltip absolute right-16 bg-surface-card border border-outline-variant text-on-surface px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap shadow-xl">Ask AI Assistant</span>
+<button class="fab" aria-label="Ask AI Assistant">
+  <span class="material-symbols-outlined">smart_toy</span>
+  <span class="fab-tip">Ask AI Assistant</span>
 </button>
 
 <script>
