@@ -1,7 +1,3 @@
-// /api/decode-label.js
-// Analyzes a photo of an appliance data plate using Gemini vision
-// Returns: { brand, serial, model, confidence, note }
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -23,15 +19,17 @@ Extract the following and return ONLY a valid JSON object — no markdown, no ex
   "brand": "manufacturer brand name (e.g. Whirlpool, GE, Samsung, Carrier) or null if not clearly visible",
   "serial": "serial number digits/letters only — no label prefix like SN: or Serial No. — or null if not visible",
   "model": "model number value only — no label prefix — or null if not visible",
-  "confidence": "high if both brand and serial are clearly readable, medium if one is unclear, low if both are unclear",
-  "note": "one short sentence if something is unusual, ambiguous, or the image is not a data plate — otherwise empty string"
+  "confidence": "high if all fields are clearly readable, medium if one or more are unclear or partially visible, low if the image is blurry or at a difficult angle",
+  "candidates": ["list of other potential serial/model numbers found on the label even if you're unsure which is which"],
+  "note": "one short sentence if something is unusual, ambiguous, the photo is unclear, or the image is not a data plate — otherwise empty string"
 }
 
 Rules:
-- brand: use the consumer brand name only (Whirlpool not Whirlpool Corporation, GE not General Electric)
+- brand: use the consumer brand name only (Whirlpool not Whirlpool Corporation, GE not General Electric), or null if not visible
 - serial: strip any label prefixes (SN, S/N, Ser, Serial No., Serial Number, etc.) and return only the code itself
 - model: strip any label prefix (Model, Mod., MN, etc.)
-- If this is clearly not a data plate or serial label, return all null values with a note explaining what you see
+- candidates: include any other long alphanumeric strings visible on the label that could be a serial or model number (even if you're unsure)
+- If this is clearly not a data plate, return all fields as null with a note explaining what you see
 - Return ONLY the JSON — nothing else`;
 
   try {
@@ -49,9 +47,9 @@ Rules:
             ]
           }],
           generationConfig: {
-            temperature: 0.1,
+            temperature: 0.2,
             topP: 0.95,
-            maxOutputTokens: 300
+            maxOutputTokens: 400
           }
         })
       }
@@ -89,36 +87,50 @@ Rules:
 
     try {
       const parsed = JSON.parse(clean);
-      return res.status(200).json({
+      
+      // Ensure candidates is an array
+      const candidates = Array.isArray(parsed.candidates) ? parsed.candidates.filter(c => c && typeof c === 'string').slice(0, 5) : [];
+      
+      const result = {
         brand: parsed.brand || null,
         serial: parsed.serial || null,
         model: parsed.model || null,
         confidence: parsed.confidence || 'low',
+        candidates: candidates,
         note: parsed.note || ''
-      });
+      };
+
+      return res.status(200).json(result);
     } catch (parseErr) {
       console.error('JSON parse failed for:', clean);
-      // Try to extract values manually if JSON fails
-      const brandMatch = clean.match(/"brand"\s*:\s*"([^"]*)"/) || clean.match(/"brand"\s*:\s*null/);
-      const serialMatch = clean.match(/"serial"\s*:\s*"([^"]*)"/) || clean.match(/"serial"\s*:\s*null/);
-      const modelMatch = clean.match(/"model"\s*:\s*"([^"]*)"/) || clean.match(/"model"\s*:\s*null/);
-      const confMatch = clean.match(/"confidence"\s*:\s*"([^"]*)"/) || ['', 'low'];
-
-      if (brandMatch || serialMatch || modelMatch) {
-        return res.status(200).json({
-          brand: brandMatch && brandMatch[1] ? brandMatch[1] : null,
-          serial: serialMatch && serialMatch[1] ? serialMatch[1] : null,
-          model: modelMatch && modelMatch[1] ? modelMatch[1] : null,
-          confidence: confMatch[1] || 'low',
-          note: 'Extracted from faded or unclear label'
-        });
-      }
-
-      return res.status(502).json({ error: 'Could not parse label data from image', raw: clean.substring(0, 200) });
+      
+      // Fallback: extract potential candidates using regex if JSON parsing fails
+      const candidates = extractCandidates(rawText);
+      
+      return res.status(200).json({
+        brand: null,
+        serial: null,
+        model: null,
+        confidence: 'low',
+        candidates: candidates,
+        note: 'Could not clearly read label. Please verify the extracted values below.',
+        fallback: true
+      });
     }
 
   } catch (err) {
     console.error('decode-label error:', err);
     return res.status(500).json({ error: 'Unable to analyze image right now' });
   }
+}
+
+// ── Helper: extract potential serial/model numbers via regex ──
+function extractCandidates(text) {
+  // Find sequences of 6+ alphanumeric characters that could be serial/model
+  const pattern = /[A-Z0-9]{6,20}/g;
+  const matches = text.match(pattern) || [];
+  
+  // Deduplicate and limit to 8 candidates
+  const unique = [...new Set(matches)];
+  return unique.slice(0, 8);
 }

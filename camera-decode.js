@@ -210,6 +210,12 @@
     removeToast();
     pendingResult = result;
 
+    // If we have candidates but no clear serial/model, show selection dialog instead
+    if ((result.fallback || result.confidence === 'low') && result.candidates && result.candidates.length > 0) {
+      showCandidateSelector(result);
+      return;
+    }
+
     var confClass = 'cd-conf-' + (result.confidence || 'low');
     var confLabel = (result.confidence || 'low').charAt(0).toUpperCase() + (result.confidence || 'low').slice(1);
 
@@ -252,6 +258,77 @@
 
     // Auto-dismiss after 18 seconds
     setTimeout(removeToast, 18000);
+  }
+
+  function showCandidateSelector(result) {
+    removeToast();
+    pendingResult = result;
+
+    var opts = result.candidates.map(function(c, i) {
+      return '<option value="' + i + '">' + esc(c) + '</option>';
+    }).join('');
+
+    var html = [
+      '<div class="cd-toast-head">',
+      '  <span class="material-symbols-outlined cd-toast-icon" style="color:#ffc278;">info</span>',
+      '  <span class="cd-toast-title">Found label — please select fields</span>',
+      '  <button class="cd-toast-close" aria-label="Close">&times;</button>',
+      '</div>',
+      '<p style="font-size:12px;color:#bacac3;margin:0 0 14px;">The photo shows alphanumeric codes. Which is the serial number and which is the model?</p>',
+      '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;">',
+      '  <div>',
+      '    <label style="font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;display:block;">Serial Number:</label>',
+      '    <select id="cd-sel-serial" class="cd-candidate-select">' + opts + '</select>',
+      '  </div>',
+      '  <div>',
+      '    <label style="font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;display:block;">Model Number (optional):</label>',
+      '    <select id="cd-sel-model" class="cd-candidate-select"><option value="">-- Skip --</option>' + opts + '</select>',
+      '  </div>',
+      '</div>',
+      '<div class="cd-toast-actions">',
+      '  <button class="cd-toast-apply" id="cd-apply-selection">Use These Values →</button>',
+      '  <button class="cd-toast-retry">Try Different Photo</button>',
+      '</div>'
+    ].join('');
+
+    toastEl = document.createElement('div');
+    toastEl.className = 'cd-toast';
+    toastEl.innerHTML = html;
+    document.body.appendChild(toastEl);
+
+    var serialSel = toastEl.querySelector('#cd-sel-serial');
+    var modelSel = toastEl.querySelector('#cd-sel-model');
+
+    toastEl.querySelector('.cd-toast-close').onclick = removeToast;
+    toastEl.querySelector('#cd-apply-selection').onclick = function () {
+      var serialIdx = parseInt(serialSel.value, 10);
+      var modelIdx = parseInt(modelSel.value, 10);
+      
+      if (isNaN(serialIdx)) {
+        alert('Please select a serial number.');
+        return;
+      }
+
+      pendingResult.serial = result.candidates[serialIdx];
+      if (!isNaN(modelIdx)) {
+        pendingResult.model = result.candidates[modelIdx];
+      }
+      
+      applyToDecoder(pendingResult);
+      removeToast();
+    };
+    toastEl.querySelector('.cd-toast-retry').onclick = function () {
+      removeToast();
+      fileInput && fileInput.click();
+    };
+
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        if (toastEl) toastEl.classList.add('cd-visible');
+      });
+    });
+
+    setTimeout(removeToast, 30000); // Longer timeout for user selection
   }
 
   function showErrorToast(message) {
@@ -424,3 +501,7 @@
     init();
   }
 })();
+
+/* Add styles for candidate selector (append to STYLES var) */
+// Update: The styles are added inline in the HTML, but we need to inject CSS for the select
+// We'll add it to STYLES before injection
