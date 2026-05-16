@@ -678,13 +678,14 @@ Respond with ONLY valid JSON in this exact format:
 {
   "brand": "Brand name or Unknown",
   "model": "Model number if identifiable",
-  "estimatedYear": "Most likely manufacture year or null",
-  "yearRange": "e.g. 2015-2018 or null",
+  "estimatedYear": "Most likely manufacture year, or null if only a broad range is available",
+  "yearRange": "e.g. 2015-2018 or 2012-2026 or null",
   "specificityLevel": "generic | brand-only | specific",
+  "timeline": "For broad/generic searches: provide 2-4 key milestone years and generation names within the product line (e.g., '2012: S200E launch, 2016: Flip/Convertible (TP201), 2017: NanoEdge, 2025: AI models'). For specific complete model numbers, set to null.",
   "inventionSummary": "1-2 sentences on when this product category was first invented/introduced — required when specificityLevel is generic, null otherwise",
-  "refinementSuggestion": "Always present — suggest how user can get more accurate results (e.g. enter brand + model number)",
-  "notes": "REQUIRED — Explain WHY this date was chosen. State when the model was first released or sold, what the series or generation represents, and any key supporting context (e.g. 'The LG C3 series was introduced at CES January 2023 and began shipping in April 2023. The C3 is the third generation of LG OLED C-series TVs.'). Always include at least one full sentence of reasoning.",
-  "evidence": [{"detail": "One specific fact supporting the date (e.g. 'LG C3 OLED TV was announced at CES 2023 and released in April 2023')", "source": "Source type (e.g. 'Product launch timeline', 'Model number pattern', 'Release cycle')"}],
+  "refinementSuggestion": "Always present — suggest how user can get more accurate results (e.g. enter full brand + model number for specific year)",
+  "notes": "REQUIRED — Explain WHY this date range was chosen. For broad product families, note that the production window spans multiple decades with continuous annual refreshes and that the actual age depends on the specific model variant. State when the line was first introduced, major generation changes, and current production status. Always include at least one full sentence of reasoning.",
+  "evidence": [{"detail": "One specific fact supporting the date (e.g. 'ASUS Vivobook 15 series launched in 2012, with continuous annual refreshes through 2026')", "source": "Source type (e.g. 'Product launch timeline', 'Model number pattern', 'Release cycle')"}],
   "serialLocation": "Brief description of where to physically find the serial number on this type of product (e.g. 'Back panel, lower-left sticker' or 'Inside door frame' or 'Bottom of device')",
   "serialRule": "One-sentence general rule for how to decode the serial number for this brand and product type, if known (e.g. 'Samsung TVs: character 8 encodes the year, character 9 the month' or 'Use the Serial Decoder tab above for precise dating' if a standard format is unknown)",
   "exampleModelNumber": "One specific real model number if the query is a generic description with no model number present (e.g. 'WRF535SWHZ' for 'Whirlpool French door refrigerator'). Set to null if the query already contains a model number or if suggestedModelNumbers is populated.",
@@ -747,6 +748,19 @@ Rules for exampleModelNumber and suggestedModelNumbers:
   // ── Return final result or safe fallback if both failed ──────────────────
   if (result) {
     const finalResult = applyEraHints(result, normalizedQuery);
+    
+    // ── Calculate estimatedYear from yearRange if estimatedYear is missing ──
+    if ((!finalResult.estimatedYear || finalResult.estimatedYear === 'Unknown' || finalResult.estimatedYear === null) && finalResult.yearRange) {
+      const yearsMatch = String(finalResult.yearRange).match(/(\d{4})/g);
+      if (yearsMatch && yearsMatch.length >= 2) {
+        const start = parseInt(yearsMatch[0], 10);
+        const end = parseInt(yearsMatch[yearsMatch.length - 1], 10);
+        const midpoint = Math.round((start + end) / 2);
+        // Bias toward recent: if midpoint is .5, round up
+        finalResult.estimatedYear = String(Math.ceil((start + end) / 2));
+      }
+    }
+    
     finalResult._source = source;
     finalResult._fallbackUsed = fallbackUsed;
 
