@@ -1660,3 +1660,183 @@ textarea.form-input {
   cursor: pointer;
 }
 .kenmore-prefix-select:focus { border-color: #44e5c2 !important; outline: none; }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE OPTIMIZATION — comprehensive overhaul
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Tablet adjustments (≤768px) ───────────────────────────── */
+@media (max-width: 768px) {
+  /* Brand page hero */
+  .bp-hero { padding: 36px 20px 28px; }
+  .bp-hero-icon-wrap { width: 60px; height: 60px; border-radius: 16px; }
+  .bp-hero-icon { font-size: 30px !important; }
+  .bp-hero-title { font-size: clamp(1.5rem, 5vw, 2.2rem); }
+  .bp-hero-sub { font-size: 15px; }
+  .bp-steps { max-width: 100%; }
+  .bp-intro-strip { padding: 0 16px 16px; }
+
+  /* Content sections */
+  .bp-content-wrap { padding: 16px; gap: 14px; }
+  .bp-section-card { padding: 18px; }
+  .bp-cta-card { padding: 28px 20px; }
+  .bp-cta-row { flex-direction: column; align-items: stretch; }
+  .bp-cta-btn, .bp-cta-btn-outline { width: 100%; justify-content: center; text-align: center; }
+
+  /* Grids → 1-col */
+  .seo-section-grid { grid-template-columns: 1fr !important; gap: 12px; }
+  .seo-card-wide { grid-column: 1; }
+  .example-grid { grid-template-columns: 1fr; }
+  .mini-card-grid { grid-template-columns: 1fr; }
+  .link-group-grid { grid-template-columns: 1fr; }
+  .kp-grid { grid-template-columns: 1fr; }
+  .fmt-cards-grid { grid-template-columns: 1fr; }
+  .ex-terminals-grid { grid-template-columns: 1fr; }
+  .loc-cards-grid { grid-template-columns: 1fr; }
+
+  /* Tool sections */
+  .tool-focus-wrap { padding: 0 12px; }
+  .seo-tool-shell { padding: 0 0 20px; border-radius: 14px; }
+  .results-wrapper { padding: 0 12px 16px; }
+  .utility-strip { padding: 12px 14px; }
+
+  /* Format table → scroll container */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .format-table { min-width: 480px; }
+
+  /* Prevent iOS input zoom (must be 16px) */
+  .search-select,
+  .search-input,
+  .form-input,
+  .form-select,
+  textarea,
+  input[type="text"],
+  input[type="email"],
+  select { font-size: 16px !important; }
+
+  /* Touch targets — min 44px */
+  .bp-cta-btn, .btn-primary, .power-btn,
+  .decode-btn, .copy-btn, .decode-again-btn,
+  .error-btn { min-height: 44px; }
+
+  /* Results footer buttons — stack on narrow */
+  .results-footer { flex-wrap: wrap; gap: 8px; }
+  .results-footer button { flex: 1 1 45%; min-height: 44px; font-size: 13px; }
+
+  /* Related pills — smaller on mobile */
+  .related-brands a { font-size: 12px; padding: 7px 10px; }
+  .bp-pill { font-size: 12px; padding: 6px 12px; }
+
+  /* Kenmore prefix chips */
+  .kp-chip { font-size: 11px; padding: 5px 8px; }
+
+  /* FAQ */
+  .bp-faq-summary { font-size: 13px; padding: 11px 12px; }
+  .faq-item summary { font-size: 13px; }
+
+  /* Tool hero (old-style pages) */
+  .tool-hero { padding: 32px 16px 20px; }
+  .tool-hero h1 { font-size: clamp(1.4rem, 5vw, 2rem); }
+  .tool-hero p { font-size: 14px; }
+  .how-steps { gap: 6px; }
+  .how-steps-list li { font-size: 12px; padding: 5px 10px; }
+
+  /* Breadcrumb — hide on very small to save space */
+  .breadcrumb-nav { font-size: 11px; }
+
+  /* Section */
+  .section { padding: 36px 16px; }
+  .seo-copy-wrap { padding: 0 12px; }
+}
+
+/* ── Phone adjustments (≤480px) ────────────────────────────── */
+@media (max-width: 480px) {
+  /* Hero tighter */
+  .bp-hero { padding: 24px 16px 20px; }
+  .bp-hero-icon-wrap { width: 52px; height: 52px; border-radius: 14px; margin-bottom: 14px; }
+  .bp-hero-icon { font-size: 26px !important; }
+  .bp-badge { font-size: 9px; padding: 4px 10px; }
+  .bp-hero-title { font-size: clamp(1.35rem, 6vw, 1.8rem); letter-spacing: -0.02em; }
+  .bp-hero-sub { font-size: 13px; margin-bottom: 20px; }
+  .bp-step { font-size: 12px; padding: 8px 10px; gap: 8px; }
+  .bp-step-num { width: 20px; height: 20px; font-size: 10px; }
+  .bp-cta-btn { font-size: 13px; padding: 11px 18px; }
+
+  /* Section cards */
+  .bp-section-card { padding: 14px; border-radius: 12px; }
+  .bp-section-card-head { gap: 8px; margin-bottom: 10px; padding-bottom: 10px; }
+  .bp-section-card-head h2 { font-size: 14px; }
+  .bp-section-icon { font-size: 18px !important; }
+  .bp-section-card p { font-size: 13px; }
+
+  /* Format cards */
+  .fmt-card { padding: 12px; }
+  .fmt-label { font-size: 11px; }
+  .fmt-serial { font-size: 11px; padding: 6px 8px; }
+  .fmt-meaning { font-size: 12px; }
+
+  /* Terminals */
+  .ex-serial { font-size: 17px; letter-spacing: 0.06em; padding: 10px 12px 6px; }
+  .ex-note { font-size: 11px; padding: 0 12px 12px; }
+  .ex-eyebrow { font-size: 9px; }
+
+  /* Location cards */
+  .loc-card { padding: 12px; }
+  .loc-card-title { font-size: 13px; }
+  .loc-list li { font-size: 12px; }
+
+  /* Checklist */
+  .bp-check-item { font-size: 12px; gap: 8px; }
+  .bp-check-icon { font-size: 16px !important; }
+
+  /* FAQ */
+  .bp-faq-summary { font-size: 12px; padding: 10px 12px; }
+  .bp-faq-body p { font-size: 12px; }
+  .bp-faq-body { padding: 0 12px 10px; }
+
+  /* CTA card */
+  .bp-cta-card { padding: 20px 14px; border-radius: 12px; }
+  .bp-cta-card h2 { font-size: 17px; }
+  .bp-cta-card p { font-size: 13px; }
+
+  /* Pills */
+  .bp-pill { font-size: 11px; padding: 5px 10px; }
+  .link-pill-grid a { font-size: 10px; padding: 3px 8px; }
+  .link-group-card h3 { font-size: 11px; }
+  .link-group-card { padding: 12px; }
+
+  /* Kenmore */
+  .kp-group { padding: 10px; }
+  .kp-group-head { font-size: 10px; }
+  .kp-hint { font-size: 11px; }
+
+  /* Tool hero */
+  .tool-hero { padding: 24px 14px 16px; }
+  .tool-hero h1 { font-size: 1.35rem; letter-spacing: -0.02em; }
+  .seo-card { padding: 14px; }
+  .seo-card h2 { font-size: 1rem; }
+
+  /* Inline links */
+  .related-brands a { font-size: 11px; padding: 6px 9px; }
+  .related-brands { gap: 6px; }
+
+  /* Results buttons stack fully */
+  .results-footer { flex-direction: column; }
+  .results-footer button { flex: none; width: 100%; }
+
+  /* Section spacing */
+  .section { padding: 28px 14px; }
+}
+
+/* ── Very small phones (≤360px) ─────────────────────────────── */
+@media (max-width: 360px) {
+  .bp-hero { padding: 20px 12px 16px; }
+  .bp-hero-title { font-size: 1.3rem; }
+  .bp-content-wrap { padding: 10px; gap: 10px; }
+  .bp-section-card { padding: 12px; }
+  .ex-serial { font-size: 15px; }
+  .fmt-serial { font-size: 10px; }
+  .seo-card { padding: 12px; }
+  nav { padding: 10px 12px; }
+  .logo-text { font-size: 14px; }
+}
