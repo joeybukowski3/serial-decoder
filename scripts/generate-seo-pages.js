@@ -1505,6 +1505,7 @@ function renderPage(page) {
   <script defer src="analytics.js"></script>
   <script defer src="smart-lookup-bundle.js"></script>
   <script defer src="script.js"></script>
+  <script defer src="camera-decode.js"></script>
   ${page.pageScript ? `<script>${page.pageScript}</script>` : ''}
   ${schema.map(scriptJson).join('\n  ')}
 </body>

@@ -138,6 +138,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/decode-label",
+      "destination": "/api/decode-label.js"
+    },
+    {
       "source": "/decoder-tool",
       "destination": "/decoder-tool.html"
     },
