@@ -90,41 +90,72 @@
 
   // ── Compress image ───────────────────────────────────────────
   function compressImage(file, callback) {
+    console.log('[Camera] Compressing image:', file.name, 'Size:', Math.round(file.size / 1024), 'KB');
+    
     var reader = new FileReader();
     reader.onload = function (e) {
       var img = new Image();
       img.onload = function () {
         var w = img.width, h = img.height;
+        console.log('[Camera] Original dimensions:', w, 'x', h);
+        
         if (w > MAX_PX || h > MAX_PX) {
           var ratio = Math.min(MAX_PX / w, MAX_PX / h);
           w = Math.round(w * ratio);
           h = Math.round(h * ratio);
+          console.log('[Camera] Compressed to:', w, 'x', h);
         }
+        
         var canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         var ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
         var dataURL = canvas.toDataURL('image/jpeg', QUALITY);
         var base64 = dataURL.split(',')[1];
+        
+        console.log('[Camera] Final base64 size:', Math.round(base64.length / 1024), 'KB');
         callback(null, base64, 'image/jpeg');
       };
-      img.onerror = function () { callback(new Error('Cannot read image')); };
+      img.onerror = function () {
+        console.error('[Camera] Failed to load image');
+        callback(new Error('Cannot read image'));
+      };
       img.src = e.target.result;
     };
-    reader.onerror = function () { callback(new Error('Cannot read file')); };
+    reader.onerror = function () {
+      console.error('[Camera] Failed to read file');
+      callback(new Error('Cannot read file'));
+    };
     reader.readAsDataURL(file);
   }
 
   // ── Call the API ─────────────────────────────────────────────
   function callDecodeAPI(base64, mimeType, callback) {
+    console.log('[Camera] Calling decode API with image size:', base64.length, 'bytes');
+    
     fetch(API_PATH, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: base64, mimeType: mimeType })
     })
-      .then(function (r) { return r.json(); })
-      .then(function (data) { callback(null, data); })
-      .catch(function (err) { callback(err); });
+      .then(function (r) {
+        console.log('[Camera] API response status:', r.status);
+        if (!r.ok) {
+          return r.text().then(function(text) {
+            console.error('[Camera] API error response:', text);
+            throw new Error('HTTP ' + r.status + ': ' + text);
+          });
+        }
+        return r.json();
+      })
+      .then(function (data) {
+        console.log('[Camera] API success:', data);
+        callback(null, data);
+      })
+      .catch(function (err) {
+        console.error('[Camera] API error:', err.message);
+        callback(err);
+      });
   }
 
   // ── Match brand in the select dropdown ───────────────────────
@@ -419,9 +450,17 @@
     });
 
     fileInput.addEventListener('change', function () {
+      console.log('[Camera] File input changed');
       var file = fileInput.files && fileInput.files[0];
-      if (!file) return;
+      if (!file) {
+        console.log('[Camera] No file selected');
+        return;
+      }
+      
+      console.log('[Camera] File selected:', file.name, file.type, Math.round(file.size / 1024) + 'KB');
+      
       if (!file.type.startsWith('image/')) {
+        console.error('[Camera] Invalid file type:', file.type);
         showErrorToast('Please select an image file.');
         return;
       }
@@ -438,25 +477,31 @@
 
       compressImage(file, function (err, base64, mime) {
         if (err) {
+          console.error('[Camera] Compression error:', err);
           resetBtn(btn);
           showErrorToast('Could not read the image. Please try again.');
           return;
         }
 
         callDecodeAPI(base64, mime, function (apiErr, result) {
+          console.log('[Camera] API callback - apiErr:', apiErr, 'result:', result);
           resetBtn(btn);
           if (apiErr) {
+            console.error('[Camera] API request failed:', apiErr.message);
             showErrorToast('Network error — please check your connection and try again.');
             return;
           }
           if (result.error) {
-            showErrorToast(result.error);
+            console.error('[Camera] API returned error:', result.error);
+            showErrorToast(result.error || 'Could not analyze the image.');
             return;
           }
-          if (!result.brand && !result.serial) {
+          if (!result.brand && !result.serial && result.candidates && result.candidates.length === 0) {
+            console.warn('[Camera] No data extracted from image');
             showErrorToast('No serial number label detected. Make sure the label is in focus and well-lit.');
             return;
           }
+          console.log('[Camera] Successfully extracted data, showing toast');
           showSuccessToast(result);
         });
       });
@@ -473,15 +518,19 @@
 
   // ── Init ─────────────────────────────────────────────────────
   function init() {
+    console.log('[Camera] Initializing camera decode module');
     injectStyles();
     // The serial input may not exist until the decoder data loads
     // Poll briefly, then fall back to MutationObserver
     var attempts = 0;
     function tryBuild() {
       if (document.getElementById('serial')) {
+        console.log('[Camera] Serial input found, building camera button');
         buildCameraButton();
       } else if (attempts++ < 20) {
         setTimeout(tryBuild, 300);
+      } else {
+        console.warn('[Camera] Serial input not found after 20 attempts');
       }
     }
     tryBuild();
@@ -489,10 +538,12 @@
     // Also watch for dynamic injection
     var obs = new MutationObserver(function () {
       if (document.getElementById('serial') && !document.getElementById('cd-scan-btn')) {
+        console.log('[Camera] Serial input injected, building camera button');
         buildCameraButton();
       }
     });
     obs.observe(document.body, { childList: true, subtree: true });
+    console.log('[Camera] Initialization complete');
   }
 
   if (document.readyState === 'loading') {

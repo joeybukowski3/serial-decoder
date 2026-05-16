@@ -1,4 +1,6 @@
 export default async function handler(req, res) {
+  console.log('[API] decode-label request received, method:', req.method);
+  
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -8,8 +10,14 @@ export default async function handler(req, res) {
   const { image, mimeType } = req.body || {};
   if (!image) return res.status(400).json({ error: 'No image provided' });
 
+  console.log('[API] Image size:', Math.round(image.length / 1024), 'KB, MIME type:', mimeType);
+
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
+  if (!apiKey) {
+    console.error('[API] GEMINI_API_KEY not configured');
+    return res.status(500).json({ error: 'API key not configured' });
+  }
+  console.log('[API] Gemini API key found');
 
   const PROMPT = `You are analyzing a photo of an appliance, HVAC equipment, or electronics data plate / rating label / serial number sticker.
 
@@ -33,6 +41,7 @@ Rules:
 - Return ONLY the JSON — nothing else`;
 
   try {
+    console.log('[API] Calling Gemini API...');
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
       {
@@ -55,9 +64,11 @@ Rules:
       }
     );
 
+    console.log('[API] Gemini response status:', response.status);
+
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
-      console.error('Gemini error:', errData);
+      console.error('[API] Gemini error:', errData);
       return res.status(response.status).json({
         error: errData?.error?.message || 'Vision API request failed'
       });
@@ -66,7 +77,10 @@ Rules:
     const data = await response.json();
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
+    console.log('[API] Gemini returned', rawText.length, 'characters');
+
     if (!rawText) {
+      console.error('[API] No response text from Gemini');
       return res.status(502).json({ error: 'No response from vision API' });
     }
 
@@ -86,37 +100,58 @@ Rules:
     }
 
     try {
-      const parsed = JSON.parse(clean);
-      
-      // Ensure candidates is an array
-      const candidates = Array.isArray(parsed.candidates) ? parsed.candidates.filter(c => c && typeof c === 'string').slice(0, 5) : [];
-      
-      const result = {
-        brand: parsed.brand || null,
-        serial: parsed.serial || null,
-        model: parsed.model || null,
-        confidence: parsed.confidence || 'low',
-        candidates: candidates,
-        note: parsed.note || ''
-      };
+    const parsed = JSON.parse(clean);
+    
+    // Ensure candidates is an array
+    const candidates = Array.isArray(parsed.candidates) ? parsed.candidates.filter(c => c && typeof c === 'string').slice(0, 5) : [];
+    
+    const result = {
+      brand: parsed.brand || null,
+      serial: parsed.serial || null,
+      model: parsed.model || null,
+      confidence: parsed.confidence || 'low',
+      candidates: candidates,
+      note: parsed.note || ''
+    };
 
-      return res.status(200).json(result);
-    } catch (parseErr) {
-      console.error('JSON parse failed for:', clean);
+    return res.status(200).json(result);
+  } catch (parseErr) {
+    console.error('JSON parse failed for:', clean.substring(0, 200));
+    
+    // Fallback: try to extract JSON manually with more lenient regex
+    try {
+      const brandMatch = clean.match(/"brand"\s*:\s*"([^"]*)"/);
+      const serialMatch = clean.match(/"serial"\s*:\s*"([^"]*)"/);
+      const modelMatch = clean.match(/"model"\s*:\s*"([^"]*)"/);
+      const candMatch = clean.match(/"candidates"\s*:\s*\[(.*?)\]/);
       
-      // Fallback: extract potential candidates using regex if JSON parsing fails
-      const candidates = extractCandidates(rawText);
-      
-      return res.status(200).json({
-        brand: null,
-        serial: null,
-        model: null,
-        confidence: 'low',
-        candidates: candidates,
-        note: 'Could not clearly read label. Please verify the extracted values below.',
-        fallback: true
-      });
-    }
+      if (brandMatch || serialMatch || modelMatch || candMatch) {
+        const candidates = extractCandidates(rawText);
+        return res.status(200).json({
+          brand: brandMatch ? brandMatch[1] : null,
+          serial: serialMatch ? serialMatch[1] : null,
+          model: modelMatch ? modelMatch[1] : null,
+          confidence: 'medium',
+          candidates: candidates,
+          note: 'Partially extracted from label',
+          fallback: true
+        });
+      }
+    } catch (_) {}
+    
+    // Final fallback: extract potential candidates using regex if all else fails
+    const candidates = extractCandidates(rawText);
+    
+    return res.status(200).json({
+      brand: null,
+      serial: null,
+      model: null,
+      confidence: 'low',
+      candidates: candidates,
+      note: 'Could not clearly read label. Please verify the extracted values below.',
+      fallback: true
+    });
+  }
 
   } catch (err) {
     console.error('decode-label error:', err);
