@@ -704,8 +704,8 @@ footer {
     background: rgba(255,255,255,0.04);
   }
   nav ul li a:hover { background: rgba(255,255,255,0.05); }
-  .hero, .page-hero { padding: 36px 20px 48px; }
-  .section { padding: 48px 20px; }
+  .hero, .page-hero { padding: 28px 16px 36px; }
+  .section { padding: 32px 16px; }
   .trust-bar { gap: 20px; padding: 16px 20px; }
   footer { padding: 20px; flex-direction: column; text-align: center; }
   .final-cta { padding: 60px 20px; }
@@ -714,6 +714,19 @@ footer {
   .comparison-header, .comp-row { grid-template-columns: 1fr; }
   .comp-col:first-child, .comp-cell:first-child { border-right: none; border-bottom: 1px solid var(--border); }
   .search-tabs:has(.cat-tab) { display: none; }
+
+  /* iOS input zoom prevention */
+  input[type="text"], input[type="email"], input[type="search"],
+  select, textarea { font-size: 16px !important; }
+
+  /* Touch target sizes */
+  .btn-primary, .nav-cta, button[type="submit"] { min-height: 44px; }
+  nav ul li a { min-height: 48px; display: flex; align-items: center; }
+
+  /* Footer sitemap spacing */
+  .footer-sitemap { padding: 40px 16px 24px; }
+  .footer-col ul li { margin-bottom: 10px; }
+  .footer-col ul li a { font-size: 14px; padding: 2px 0; display: inline-block; min-height: 32px; }
 }
 
 /* --- Internal version timestamp badge --- */
@@ -2351,3 +2364,34 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
 .footer-bottom-links a:hover { color: var(--teal); }
 @media (max-width: 900px) { .footer-sitemap-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 500px) { .footer-sitemap-grid { grid-template-columns: 1fr; gap: 1.5rem; } .footer-bottom { flex-direction: column; align-items: flex-start; } }
+
+/* ── 480px phone breakpoint ─────────────────────────────────── */
+@media (max-width: 480px) {
+  nav { padding: 10px 14px; }
+  .logo-text { font-size: 14px; }
+  .logo-sub { display: none; }
+  .hero, .page-hero { padding: 24px 14px 28px; }
+  .section { padding: 24px 14px; }
+  h1 { font-size: clamp(1.4rem, 7vw, 2rem); }
+  .page-hero h1 { font-size: clamp(1.4rem, 7vw, 2rem); }
+  .btn-primary { padding: 10px 18px; font-size: 13px; }
+  .card { padding: 14px; border-radius: 12px; }
+  .card-grid { grid-template-columns: 1fr; gap: 12px; }
+  .trust-bar { gap: 12px; padding: 12px 14px; flex-wrap: wrap; justify-content: flex-start; }
+  .trust-item { font-size: 12px; }
+  .audience-strip { padding: 24px 14px; }
+  .footer-sitemap { padding: 32px 14px 20px; }
+  .footer-sitemap-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 1.25rem; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .footer-bottom-copy { font-size: 10px; }
+  .footer-bottom-links a { font-size: 11px; }
+}
+
+/* ── Very small phones (≤360px) ─────────────────────────────── */
+@media (max-width: 360px) {
+  nav { padding: 8px 12px; }
+  .section { padding: 20px 12px; }
+  .hero, .page-hero { padding: 20px 12px 24px; }
+  .footer-sitemap-grid { grid-template-columns: 1fr !important; }
+}
+
