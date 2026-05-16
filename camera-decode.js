@@ -153,11 +153,15 @@
     return false;
   }
 
-  // ── Auto-fill decoder fields ──────────────────────────────────
+  // ── Apply to decoder fields ──────────────────────────────────
   function applyToDecoder(result) {
     var serialEl = document.getElementById('serial');
     var brandEl  = document.getElementById('brand');
     var modelEl  = document.getElementById('modelNumber');
+
+    // Set a flag to prevent clearing when brand changes
+    if (serialEl) serialEl.setAttribute('data-camera-filled', '1');
+    if (modelEl) modelEl.setAttribute('data-camera-filled', '1');
 
     if (result.serial && serialEl) {
       serialEl.value = result.serial.trim();
@@ -165,7 +169,13 @@
     }
 
     if (result.brand && brandEl) {
-      matchBrandInSelect(result.brand, brandEl);
+      var matched = matchBrandInSelect(result.brand, brandEl);
+      if (matched) {
+        // Call the underlying onBrandChange, NOT the change event (which clears fields)
+        if (typeof onBrandChange === 'function') {
+          onBrandChange();
+        }
+      }
     }
 
     if (result.model && modelEl) {
@@ -338,6 +348,12 @@
         showErrorToast('Please select an image file.');
         return;
       }
+
+      // Clear the camera-filled flags so new results can overwrite
+      var serialEl = document.getElementById('serial');
+      var modelEl = document.getElementById('modelNumber');
+      if (serialEl) serialEl.removeAttribute('data-camera-filled');
+      if (modelEl) modelEl.removeAttribute('data-camera-filled');
 
       // Loading state
       btn.disabled = true;

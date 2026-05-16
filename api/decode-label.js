@@ -68,12 +68,24 @@ Rules:
     const data = await response.json();
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-    // Strip any markdown fences Gemini might add
-    const clean = rawText
-      .replace(/^```json\s*/i, '')
-      .replace(/^```\s*/i, '')
-      .replace(/\s*```$/i, '')
+    if (!rawText) {
+      return res.status(502).json({ error: 'No response from vision API' });
+    }
+
+    // Strip any markdown fences and clean up
+    let clean = rawText
+      .replace(/^```json\s*\n?/i, '')
+      .replace(/^```\s*\n?/i, '')
+      .replace(/\n?```\s*$/i, '')
+      .replace(/\n?```json\s*$/i, '')
       .trim();
+
+    // Handle case where Gemini returns text before/after JSON
+    // Look for JSON object pattern
+    const jsonMatch = clean.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      clean = jsonMatch[0];
+    }
 
     try {
       const parsed = JSON.parse(clean);
@@ -85,8 +97,24 @@ Rules:
         note: parsed.note || ''
       });
     } catch (parseErr) {
-      console.error('JSON parse failed:', clean);
-      return res.status(502).json({ error: 'Could not parse label data from image', raw: clean });
+      console.error('JSON parse failed for:', clean);
+      // Try to extract values manually if JSON fails
+      const brandMatch = clean.match(/"brand"\s*:\s*"([^"]*)"/) || clean.match(/"brand"\s*:\s*null/);
+      const serialMatch = clean.match(/"serial"\s*:\s*"([^"]*)"/) || clean.match(/"serial"\s*:\s*null/);
+      const modelMatch = clean.match(/"model"\s*:\s*"([^"]*)"/) || clean.match(/"model"\s*:\s*null/);
+      const confMatch = clean.match(/"confidence"\s*:\s*"([^"]*)"/) || ['', 'low'];
+
+      if (brandMatch || serialMatch || modelMatch) {
+        return res.status(200).json({
+          brand: brandMatch && brandMatch[1] ? brandMatch[1] : null,
+          serial: serialMatch && serialMatch[1] ? serialMatch[1] : null,
+          model: modelMatch && modelMatch[1] ? modelMatch[1] : null,
+          confidence: confMatch[1] || 'low',
+          note: 'Extracted from faded or unclear label'
+        });
+      }
+
+      return res.status(502).json({ error: 'Could not parse label data from image', raw: clean.substring(0, 200) });
     }
 
   } catch (err) {

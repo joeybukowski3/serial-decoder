@@ -713,7 +713,17 @@ footer {
   .aud-card { width: 100%; max-width: 340px; }
   .comparison-header, .comp-row { grid-template-columns: 1fr; }
   .comp-col:first-child, .comp-cell:first-child { border-right: none; border-bottom: 1px solid var(--border); }
-  .search-tabs:has(.cat-tab) { display: none; }
+  /* Category tabs visible on mobile, but responsive */
+  .search-tabs { display: flex !important; flex-wrap: wrap; gap: 6px; padding: 12px 0; }
+  .search-tabs .cat-tab { 
+    font-size: 11px; 
+    padding: 8px 10px; 
+    border-radius: 6px; 
+    flex: 1 1 auto; 
+    min-width: 60px;
+    white-space: nowrap;
+  }
+
 
   /* iOS input zoom prevention */
   input[type="text"], input[type="email"], input[type="search"],
