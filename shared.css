@@ -2230,15 +2230,40 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 600px) {
+  /* Keep hero-paths side-by-side even on mobile */
   .hero-paths {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 36px 1fr;
+    max-width: 100%;
+    padding: 0 12px;
+    margin: 1.5rem 12px 1.25rem;
+  }
+  .hero-path {
+    padding: 0.9rem 0.8rem;
+  }
+  .hero-path-title {
+    font-size: 13px;
+  }
+  .hero-path-desc {
+    font-size: 12px;
+    margin-bottom: 0.5rem;
+  }
+  .hero-path-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  .hero-path-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    margin-bottom: 0.5rem;
   }
   .hero-path-divider {
-    border-left: none;
-    border-right: none;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding: 6px;
+    font-size: 10px;
+    border-left: 1px solid rgba(255,255,255,0.1);
+    border-right: 1px solid rgba(255,255,255,0.1);
+    border-top: none;
+    border-bottom: none;
+    padding: 0;
   }
   .hero-stats {
     grid-template-columns: repeat(2, 1fr);

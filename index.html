@@ -621,40 +621,19 @@
       }
     }
     
-    @media (max-width: 500px) {
+    /* Keep 2-column layout on tablets and above */
+    @media (max-width: 1200px) {
       .home-tools-grid {
-        gap: 12px;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
       }
-      .search-panel {
-        padding: 16px 16px 14px !important;
-      }
-      .search-hint {
-        font-size: 12px;
-        line-height: 1.5;
-      }
-      .search-tabs {
-        gap: 6px;
-      }
-      .search-tab {
-        font-size: 12px;
-        padding: 8px 10px;
-      }
-      #panel-decoder .home-tool-row .search-select {
-        flex: 0 0 40%;
-        width: 40%;
-      }
-      #panel-decoder .home-tool-row .search-input {
-        flex: 1 1 60%;
-        width: 60%;
-      }
-      .btn-primary, .power-btn {
-        padding: 10px 16px;
-        font-size: 12px;
+      .home-tool-row {
+        gap: 8px;
       }
     }
     
-    /* Stack only on very small phones (under 375px) */
-    @media (max-width: 374px) {
+    /* Stack on mobile */
+    @media (max-width: 600px) {
       .home-tools-grid {
         grid-template-columns: 1fr;
         gap: 14px;
