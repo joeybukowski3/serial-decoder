@@ -1,7 +1,14 @@
 export default async function handler(req, res) {
   console.log('[API] decode-label request received, method:', req.method);
   
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Restrict CORS to our domain only
+  const allowedOrigins = ['https://www.decodemyitem.com', 'https://decodemyitem.com'];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  // Don't set CORS header if origin not allowed
+  
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
