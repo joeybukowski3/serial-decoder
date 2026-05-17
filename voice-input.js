@@ -387,3 +387,4 @@
   }
   
   console.log('[Voice] Script initialization complete');
+})();
