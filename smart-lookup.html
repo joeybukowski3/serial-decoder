@@ -27,6 +27,14 @@
     .tip-icon { font-size: 22px; margin-bottom: 8px; }
     .tip-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
     .tip-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    
+    .hidden { display: none !important; }
+    
+    @keyframes loading {
+      0% { width: 0%; }
+      50% { width: 100%; }
+      100% { width: 0%; }
+    }
   </style>
 </head>
 <body>
@@ -77,6 +85,22 @@
     <textarea id="lookup-notes" placeholder="Any other details &mdash; color, size, features, where it was installed..."></textarea>
 
     <button id="smartLookupBtn" class="btn-amber" style="width:100%;">&#10024; Run Smart Lookup</button>
+    
+    <!-- Loading state -->
+    <div id="ageLoading" class="hidden" style="margin-top:20px;">
+      <div style="text-align:center;padding:20px;">
+        <div style="font-size:14px;color:#64748B;margin-bottom:12px;">🔍 Analyzing your search...</div>
+        <div style="width:200px;height:3px;background:rgba(68,229,194,0.2);border-radius:2px;margin:0 auto;overflow:hidden;">
+          <div style="height:100%;background:#44e5c2;animation:loading 1.5s ease-in-out infinite;width:40%;"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Results container -->
+    <div id="ageResults" class="hidden" style="margin-top:20px;">
+      <div id="smart-lookup-results"></div>
+    </div>
+    
     <div id="smart-lookup-results"></div>
     <p class="search-link" style="margin-top:12px;">Have a serial number? <a href="decoder-tool">Use the Serial Decoder &rarr;</a></p>
   </div>
