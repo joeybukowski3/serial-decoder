@@ -145,6 +145,29 @@
     @media (max-width: 600px) {
       .tool-hero { padding: 32px 16px 24px; }
       .how-steps { gap: 6px; }
+      
+      .results-wrapper { padding: 0 12px 24px; }
+      .results-card { padding: 16px !important; border-radius: 12px; }
+      .results-header { padding: 0 0 16px 0; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+      .results-header h3 { font-size: 16px !important; margin: 0 0 8px 0; }
+      .results-body { padding: 0; }
+      
+      .result-row { 
+        padding: 12px 0; 
+        font-size: 13px;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .result-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+      .result-value { font-size: 14px; font-weight: 700; }
+      
+      .info-block { padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.05); }
+      .info-block h4 { font-size: 13px !important; margin: 0 0 8px 0; }
+      .info-block p { font-size: 12px; line-height: 1.5; margin: 0; }
+      
+      .determination-details { padding: 12px 0; }
+      .determination-details summary { font-size: 13px; cursor: pointer; font-weight: 600; padding: 10px 0; }
+      .determination-body { font-size: 12px; line-height: 1.5; padding-top: 10px; }
     }
   </style>
 </head>
@@ -248,7 +271,7 @@
 </section>
 
 <!-- RESULTS -->
-<div class="results-wrapper" style="padding:0 48px 32px;">
+<div class="results-wrapper" style="padding:0 16px 32px;">
   <div id="ageLoading" class="results-card hidden">
     <div class="loading-inner">
       <span class="loading-emoji lightning" id="loadingEmoji">&#127785;&#65039;</span>

@@ -2420,6 +2420,21 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
   .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
   .footer-bottom-copy { font-size: 10px; }
   .footer-bottom-links a { font-size: 11px; }
+  
+  /* Results optimization for small screens */
+  .result-row { padding: 10px 0; font-size: 12px; flex-direction: column; gap: 4px; }
+  .result-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+  .result-value { font-size: 13px; }
+  .info-block { padding: 12px 0; }
+  .info-block h4 { font-size: 12px; margin: 0 0 6px 0; }
+  .info-block p { font-size: 11px; line-height: 1.45; }
+  .determination-details summary { font-size: 12px; padding: 8px 0; }
+  .determination-body { font-size: 11px; line-height: 1.45; }
+  
+  .smart-age-grid { gap: 8px; }
+  .smart-age-row { padding-bottom: 8px; gap: 2px; }
+  .smart-age-label { font-size: 10px; }
+  .smart-age-value { font-size: 13px; }
 }
 
 /* ── Very small phones (≤360px) ─────────────────────────────── */
@@ -2428,5 +2443,16 @@ body.brand-tool-layout-active .brand-tool-section .panel-action-slot .power-btn 
   .section { padding: 20px 12px; }
   .hero, .page-hero { padding: 20px 12px 24px; }
   .footer-sitemap-grid { grid-template-columns: 1fr !important; }
+  
+  /* Ultra-compact results for tiny screens */
+  .result-row { padding: 8px 0; font-size: 11px; }
+  .result-label { font-size: 9px; }
+  .result-value { font-size: 12px; }
+  .info-block { padding: 10px 0; }
+  .info-block h4 { font-size: 11px; }
+  .info-block p { font-size: 10px; line-height: 1.4; }
+  .smart-age-row { padding-bottom: 6px; }
+  .smart-age-label { font-size: 9px; }
+  .smart-age-value { font-size: 12px; }
 }
 
