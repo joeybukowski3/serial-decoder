@@ -4052,7 +4052,7 @@ function decodeSerial() {
     serial = supplementalModel.replace(/[^A-Za-z0-9-]/g, '').trim();
   }
 
-  clearDecodeEntryFields({ categoryKey: currentCategory });
+  clearSupplementalModelError();
 
   updateSearchQueryLine();
 
