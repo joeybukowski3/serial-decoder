@@ -67,6 +67,27 @@
         50% { box-shadow: 0 0 0 8px rgba(248,113,113,0); }
       }
       .vi-mic-icon { font-size: 20px; line-height: 1; }
+      
+      /* Listening indicator dots */
+      .vi-listening-dots {
+        display: inline-flex;
+        gap: 4px;
+        margin-left: 6px;
+        align-items: center;
+      }
+      .vi-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #f87171;
+        animation: vi-dot-bounce 1.4s infinite;
+      }
+      .vi-dot:nth-child(2) { animation-delay: 0.2s; }
+      .vi-dot:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes vi-dot-bounce {
+        0%, 80%, 100% { opacity: 0.3; }
+        40% { opacity: 1; }
+      }
     `;
     document.head.appendChild(style);
   }
@@ -193,12 +214,16 @@
     const btn = document.getElementById('vi-mic-btn');
     if (!btn) return;
 
+    const dotsEl = btn.querySelector('.vi-listening-dots');
+    
     if (isListening) {
       btn.classList.add('listening');
       btn.disabled = false;
+      if (dotsEl) dotsEl.style.display = 'inline-flex';
     } else {
       btn.classList.remove('listening');
       btn.disabled = false;
+      if (dotsEl) dotsEl.style.display = 'none';
     }
   }
 
@@ -208,21 +233,36 @@
     if (!serialEl) return;
     if (document.getElementById('vi-mic-btn')) return; // Already added
 
-    // Create button - icon only
+    // Create button - icon only with listening dots
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.id = 'vi-mic-btn';
     btn.className = 'vi-mic-btn';
     btn.setAttribute('aria-label', 'Voice input for serial number');
-    btn.title = 'Speak your serial number';
-    btn.innerHTML = `<span class="material-symbols-outlined vi-mic-icon">mic</span>`;
+    btn.title = 'Tap to speak your serial number. Tap again to stop listening.';
+    btn.style.position = 'relative';
+    btn.innerHTML = `
+      <span class="material-symbols-outlined vi-mic-icon">mic</span>
+      <span class="vi-listening-dots" style="display: none;">
+        <span class="vi-dot"></span>
+        <span class="vi-dot"></span>
+        <span class="vi-dot"></span>
+      </span>
+    `;
 
-    // Find parent row
-    const row = serialEl.closest('.home-tool-row') || serialEl.parentNode;
+    // Find parent row - try multiple selectors
+    let row = serialEl.closest('.home-tool-row');
+    if (!row) {
+      row = serialEl.parentElement;
+    }
+    
     if (row) {
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.gap = '8px';
+      // Ensure row is properly set up for flex layout
+      if (!row.style.display || row.style.display === 'block') {
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '8px';
+      }
       row.appendChild(btn);
     } else {
       serialEl.insertAdjacentElement('afterend', btn);
@@ -230,6 +270,7 @@
 
     btn.addEventListener('click', function (e) {
       e.preventDefault();
+      e.stopPropagation();
       toggleListening();
     });
   }
