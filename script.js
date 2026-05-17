@@ -900,7 +900,15 @@ function initializeDecoderUiWhenReady() {
   if (brandSelect.getAttribute('data-brand-bound') !== '1') {
     brandSelect.setAttribute('data-brand-bound', '1');
     brandSelect.addEventListener('change', function() {
-      clearDecodeEntryFields({ categoryKey: getActiveDecoderCategory(), clearEra: true });
+      // Don't clear the serial input if it already has data (e.g., from voice input)
+      var serialEl = document.getElementById('serial');
+      var currentSerialValue = serialEl ? serialEl.value.trim() : '';
+      
+      // Only clear if the serial field is empty
+      if (!currentSerialValue) {
+        clearDecodeEntryFields({ categoryKey: getActiveDecoderCategory(), clearEra: true });
+      }
+      
       onBrandChange();
       var selected = brandSelect.value || '';
       if (selected) {
@@ -3122,7 +3130,14 @@ function selectCategory(cat, btn) {
   syncSidebarActiveState();
   if (isMobileView()) populateMobileBrands();
   else populateBrands(currentCategory);
-  clearDecodeEntryFields({ categoryKey: currentCategory, clearEra: true });
+  
+  // Don't clear the serial input if it already has data (e.g., from voice input)
+  var serialEl = document.getElementById('serial');
+  var currentSerialValue = serialEl ? serialEl.value.trim() : '';
+  if (!currentSerialValue) {
+    clearDecodeEntryFields({ categoryKey: currentCategory, clearEra: true });
+  }
+  
   document.getElementById('serialResults').classList.add('hidden');
   var _ageResultsCat = document.getElementById('ageResults');
   if (_ageResultsCat) _ageResultsCat.classList.add('hidden');
