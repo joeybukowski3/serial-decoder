@@ -1,6 +1,6 @@
 /**
  * voice-input.js
- * Voice-to-text feature for serial number decoder
+ * Voice-to-text feature for serial number decoder (mobile only)
  * Uses Web Speech API (Chrome, Edge, Safari)
  */
 (function () {
@@ -14,6 +14,16 @@
   if (!SpeechRecognition) {
     console.log('[Voice] Web Speech API not supported');
     return; // Silently exit if not supported
+  }
+
+  // Check if mobile
+  function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+
+  // Only show on mobile
+  if (!isMobile()) {
+    return;
   }
 
   let recognition = null;
@@ -30,18 +40,17 @@
         color: #00382d;
         border: none;
         border-radius: 8px;
-        padding: 10px 14px;
+        padding: 8px 10px;
+        width: 40px;
         height: 40px;
         min-width: 40px;
-        font-size: 16px;
+        font-size: 20px;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
         transition: all 0.2s;
         font-family: 'Sora', sans-serif;
-        font-weight: 700;
         margin-left: 8px;
         flex-shrink: 0;
       }
@@ -57,26 +66,7 @@
         0%, 100% { box-shadow: 0 0 0 0 rgba(248,113,113,0.7); }
         50% { box-shadow: 0 0 0 8px rgba(248,113,113,0); }
       }
-      .vi-mic-icon { font-size: 18px; line-height: 1; }
-      .vi-label { display: none; font-size: 12px; }
-      @media (min-width: 480px) { .vi-label { display: inline; } }
-      
-      .vi-tooltip {
-        position: absolute;
-        bottom: 100%;
-        left: 50%;
-        transform: translateX(-50%) translateY(-8px);
-        background: rgba(0,0,0,0.8);
-        color: white;
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-size: 11px;
-        white-space: nowrap;
-        pointer-events: none;
-        opacity: 0;
-        transition: opacity 0.2s;
-      }
-      .vi-mic-btn:hover .vi-tooltip { opacity: 1; }
+      .vi-mic-icon { font-size: 20px; line-height: 1; }
     `;
     document.head.appendChild(style);
   }
@@ -112,7 +102,7 @@
       console.error('[Voice] Recognition error:', event.error);
       isListening = false;
       updateMicButton();
-      showVoiceMessage('Could not understand. Try again.', 'error');
+      showVoiceMessage('Could not understand', 'error');
     };
 
     recognition.onend = function () {
@@ -129,9 +119,9 @@
     // Clean up the transcript: remove spaces, uppercase
     const cleaned = transcript.toUpperCase().replace(/\s+/g, '');
     
-    // Only accept if it looks like a serial (at least 4 chars, mix of letters/numbers)
+    // Only accept if it looks like a serial (at least 4 chars)
     if (cleaned.length < 4) {
-      showVoiceMessage('Serial too short. Try again.', 'error');
+      showVoiceMessage('Too short', 'error');
       return;
     }
 
@@ -144,7 +134,7 @@
       setTimeout(() => tool.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
     }
     
-    showVoiceMessage('Serial: ' + cleaned.substring(0, 20), 'success');
+    showVoiceMessage('✓', 'success');
     
     // Trigger decode button update
     if (typeof updateDecodeBtn === 'function') updateDecodeBtn();
@@ -165,12 +155,12 @@
       position: absolute;
       bottom: 100%;
       left: 50%;
-      transform: translateX(-50%) translateY(-12px);
+      transform: translateX(-50%) translateY(-8px);
       background: ${type === 'error' ? '#f87171' : '#44e5c2'};
       color: ${type === 'error' ? '#fff' : '#00382d'};
-      padding: 6px 10px;
+      padding: 4px 8px;
       border-radius: 4px;
-      font-size: 11px;
+      font-size: 10px;
       white-space: nowrap;
       z-index: 1000;
       font-weight: 600;
@@ -178,7 +168,7 @@
     msgEl.textContent = msg;
     btn.appendChild(msgEl);
 
-    setTimeout(() => msgEl.remove(), 3000);
+    setTimeout(() => msgEl.remove(), 2000);
   }
 
   // ── Toggle listening ────────────────────────────────────────
@@ -218,18 +208,14 @@
     if (!serialEl) return;
     if (document.getElementById('vi-mic-btn')) return; // Already added
 
-    // Create button
+    // Create button - icon only
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.id = 'vi-mic-btn';
     btn.className = 'vi-mic-btn';
     btn.setAttribute('aria-label', 'Voice input for serial number');
-    btn.title = 'Speak your serial number (tap to start/stop)';
-    btn.innerHTML = `
-      <span class="material-symbols-outlined vi-mic-icon">mic</span>
-      <span class="vi-label">Speak</span>
-      <div class="vi-tooltip">Speak your serial number</div>
-    `;
+    btn.title = 'Speak your serial number';
+    btn.innerHTML = `<span class="material-symbols-outlined vi-mic-icon">mic</span>`;
 
     // Find parent row
     const row = serialEl.closest('.home-tool-row') || serialEl.parentNode;
