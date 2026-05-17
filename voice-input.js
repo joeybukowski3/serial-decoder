@@ -21,13 +21,18 @@
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   }
 
+  console.log('[Voice] Script loaded. User Agent:', navigator.userAgent);
+  console.log('[Voice] Is mobile:', isMobile());
+
   // Only show on mobile
   if (!isMobile()) {
+    console.log('[Voice] Not a mobile device, exiting');
     return;
   }
 
   let recognition = null;
   let isListening = false;
+  let hasInitialized = false;
 
   // ── Inject styles ────────────────────────────────────────────
   function injectStyles() {
@@ -98,7 +103,13 @@
 
   // ── Initialize recognition ───────────────────────────────────
   function initRecognition() {
-    if (recognition) return;
+    if (hasInitialized) {
+      console.log('[Voice] Already initialized');
+      return;
+    }
+    
+    hasInitialized = true;
+    console.log('[Voice] Initializing SpeechRecognition');
     
     recognition = new SpeechRecognition();
     recognition.continuous = false;
@@ -107,11 +118,13 @@
     recognition.maxAlternatives = 1;
 
     recognition.onstart = function () {
+      console.log('[Voice] Recognition started');
       isListening = true;
       updateMicButton();
     };
 
     recognition.onresult = function (event) {
+      console.log('[Voice] onresult event, isFinal:', event.results[event.results.length - 1].isFinal);
       let transcript = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         transcript += event.results[i][0].transcript;
@@ -214,31 +227,40 @@
 
   // ── Toggle listening ────────────────────────────────────────
   function toggleListening() {
-    if (!recognition) initRecognition();
+    console.log('[Voice] toggleListening called, isListening:', isListening);
+    
+    if (!recognition) {
+      console.log('[Voice] Recognition not initialized, initializing...');
+      initRecognition();
+      if (!recognition) {
+        console.error('[Voice] Failed to initialize recognition');
+        showVoiceMessage('Mic not available', 'error');
+        return;
+      }
+    }
 
     if (isListening) {
       console.log('[Voice] Stopping recognition');
-      recognition.stop();
+      try {
+        recognition.stop();
+      } catch (e) {
+        console.error('[Voice] Error stopping:', e);
+      }
     } else {
       console.log('[Voice] Starting recognition');
       try {
         recognition.start();
       } catch (e) {
-        console.log('[Voice] Start failed, retrying:', e.message);
-        // Recognition might already be running
+        console.error('[Voice] Error starting:', e.message);
+        
+        // On iOS, sometimes we get "already started" errors
+        // In that case, just mark as listening
         if (e.message && e.message.includes('already started')) {
+          console.log('[Voice] Already started, marking as listening');
           isListening = true;
           updateMicButton();
         } else {
-          try {
-            recognition.abort();
-            setTimeout(() => {
-              recognition.start();
-            }, 100);
-          } catch (e2) {
-            console.error('[Voice] Failed to restart:', e2.message);
-            showVoiceMessage('Error starting mic', 'error');
-          }
+          showVoiceMessage('Mic error: ' + e.message, 'error');
         }
       }
     }
@@ -265,9 +287,19 @@
   // ── Build button and inject ────────────────────────────────
   function buildVoiceButton() {
     const serialEl = document.getElementById('serial');
-    if (!serialEl) return;
-    if (document.getElementById('vi-mic-btn')) return; // Already added
+    console.log('[Voice] buildVoiceButton called, serialEl:', !!serialEl);
+    
+    if (!serialEl) {
+      console.log('[Voice] Serial element not found');
+      return;
+    }
+    if (document.getElementById('vi-mic-btn')) {
+      console.log('[Voice] Button already exists');
+      return; // Already added
+    }
 
+    console.log('[Voice] Creating button...');
+    
     // Create button - icon with listening dots
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -290,6 +322,8 @@
       row = serialEl.parentElement;
     }
     
+    console.log('[Voice] Found row:', !!row);
+    
     if (row) {
       // Ensure row is properly set up for flex layout
       if (!row.style.display || row.style.display === 'block') {
@@ -298,28 +332,37 @@
         row.style.gap = '8px';
       }
       row.appendChild(btn);
+      console.log('[Voice] Button appended to row');
     } else {
       serialEl.insertAdjacentElement('afterend', btn);
+      console.log('[Voice] Button inserted after serial element');
     }
 
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
+      console.log('[Voice] Button clicked');
       toggleListening();
     });
+    
+    console.log('[Voice] Button created and event listener attached');
   }
 
   // ── Init ───────────────────────────────────────────────────
   function init() {
+    console.log('[Voice] Init starting, readyState:', document.readyState);
     injectStyles();
     
     // Poll for serial input
     let attempts = 0;
     function tryBuild() {
       if (document.getElementById('serial')) {
+        console.log('[Voice] Serial element found on attempt', attempts);
         buildVoiceButton();
       } else if (attempts++ < 20) {
         setTimeout(tryBuild, 300);
+      } else {
+        console.log('[Voice] Gave up after 20 attempts');
       }
     }
     tryBuild();
@@ -327,15 +370,20 @@
     // Watch for dynamic injection
     const obs = new MutationObserver(function () {
       if (document.getElementById('serial') && !document.getElementById('vi-mic-btn')) {
+        console.log('[Voice] Serial element detected via MutationObserver');
         buildVoiceButton();
       }
     });
     obs.observe(document.body, { childList: true, subtree: true });
+    console.log('[Voice] MutationObserver attached');
   }
 
   if (document.readyState === 'loading') {
+    console.log('[Voice] DOM still loading, waiting for DOMContentLoaded');
     document.addEventListener('DOMContentLoaded', init);
   } else {
+    console.log('[Voice] DOM already loaded, initializing');
     init();
   }
-})();
+  
+  console.log('[Voice] Script initialization complete');
