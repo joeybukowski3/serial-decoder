@@ -1,38 +1,22 @@
 /**
  * voice-input.js
- * Voice-to-text feature for serial number decoder (mobile only)
+ * Voice-to-text feature for serial number decoder
  * Uses Web Speech API (Chrome, Edge, Safari)
  */
 (function () {
   'use strict';
 
   const API_LANG = 'en-US';
-  const RECOGNITION_TIMEOUT = 30000; // 30 seconds
 
   // Detect browser support
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
     console.log('[Voice] Web Speech API not supported');
-    return; // Silently exit if not supported
-  }
-
-  // Check if mobile
-  function isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  }
-
-  console.log('[Voice] Script loaded. User Agent:', navigator.userAgent);
-  console.log('[Voice] Is mobile:', isMobile());
-
-  // Only show on mobile
-  if (!isMobile()) {
-    console.log('[Voice] Not a mobile device, exiting');
     return;
   }
 
   let recognition = null;
   let isListening = false;
-  let hasInitialized = false;
 
   // ── Inject styles ────────────────────────────────────────────
   function injectStyles() {
@@ -74,12 +58,10 @@
       }
       .vi-mic-icon { font-size: 20px; line-height: 1; }
       
-      /* Listening indicator dots */
       .vi-listening-dots {
         display: none;
         align-items: center;
         gap: 3px;
-        margin-left: 0;
       }
       .vi-listening-dots.active {
         display: inline-flex;
@@ -103,14 +85,9 @@
 
   // ── Initialize recognition ───────────────────────────────────
   function initRecognition() {
-    if (hasInitialized) {
-      console.log('[Voice] Already initialized');
-      return;
-    }
+    if (recognition) return;
     
-    hasInitialized = true;
     console.log('[Voice] Initializing SpeechRecognition');
-    
     recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;
@@ -118,36 +95,38 @@
     recognition.maxAlternatives = 1;
 
     recognition.onstart = function () {
-      console.log('[Voice] Recognition started');
+      console.log('[Voice] Started listening');
       isListening = true;
       updateMicButton();
     };
 
     recognition.onresult = function (event) {
-      console.log('[Voice] onresult event, isFinal:', event.results[event.results.length - 1].isFinal);
+      console.log('[Voice] onresult fired, results length:', event.results.length);
       let transcript = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
+        const result = event.results[i];
+        console.log('[Voice] Result', i, ':', result[0].transcript, 'confidence:', result[0].confidence, 'isFinal:', result.isFinal);
+        transcript += result[0].transcript;
       }
       
       const isFinal = event.results[event.results.length - 1].isFinal;
+      console.log('[Voice] isFinal:', isFinal, 'transcript:', transcript);
+      
       if (isFinal && transcript) {
-        console.log('[Voice] Final result:', transcript);
+        console.log('[Voice] Final transcript:', transcript);
         applyVoiceInput(transcript);
-      } else if (transcript) {
-        console.log('[Voice] Interim result:', transcript);
       }
     };
 
     recognition.onerror = function (event) {
-      console.error('[Voice] Recognition error:', event.error);
+      console.error('[Voice] Error event:', event.error);
       isListening = false;
       updateMicButton();
-      showVoiceMessage('Error: ' + (event.error || 'unknown'), 'error');
+      showVoiceMessage('Error: ' + event.error, 'error');
     };
 
     recognition.onend = function () {
-      console.log('[Voice] Recognition ended');
+      console.log('[Voice] Stopped listening');
       isListening = false;
       updateMicButton();
     };
@@ -158,17 +137,13 @@
     const serialEl = document.getElementById('serial');
     if (!serialEl) {
       console.log('[Voice] Serial element not found');
-      showVoiceMessage('Error: No input field', 'error');
       return;
     }
 
-    // Clean up the transcript: remove spaces, uppercase
     const cleaned = transcript.toUpperCase().replace(/\s+/g, '');
-    console.log('[Voice] Cleaned transcript:', cleaned);
+    console.log('[Voice] Cleaned:', cleaned);
     
-    // Only accept if it looks like a serial (at least 4 chars)
     if (cleaned.length < 4) {
-      console.log('[Voice] Cleaned input too short:', cleaned.length);
       showVoiceMessage('Too short', 'error');
       return;
     }
@@ -177,20 +152,19 @@
     serialEl.dispatchEvent(new Event('input', { bubbles: true }));
     serialEl.dispatchEvent(new Event('change', { bubbles: true }));
     
-    console.log('[Voice] Serial filled:', cleaned);
-    
-    // Scroll to decoder and show success
-    const tool = document.getElementById('decoder-tool') || document.getElementById('panel-decoder');
-    if (tool) {
-      setTimeout(() => tool.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
-    }
+    console.log('[Voice] Filled serial:', cleaned);
     
     showVoiceMessage('✓', 'success');
     
-    // Trigger decode button update
-    if (typeof updateDecodeBtn === 'function') {
-      console.log('[Voice] Calling updateDecodeBtn');
-      updateDecodeBtn();
+    // Wait for updateDecodeBtn to be available
+    if (typeof window.updateDecodeBtn === 'function') {
+      try {
+        window.updateDecodeBtn();
+      } catch (e) {
+        console.error('[Voice] updateDecodeBtn error:', e);
+      }
+    } else {
+      console.log('[Voice] updateDecodeBtn not available yet');
     }
   }
 
@@ -199,12 +173,11 @@
     const btn = document.getElementById('vi-mic-btn');
     if (!btn) return;
 
-    // Remove old message
     const old = btn.querySelector('.vi-message');
     if (old) old.remove();
 
     const msgEl = document.createElement('div');
-    msgEl.className = `vi-message`;
+    msgEl.className = 'vi-message';
     msgEl.style.cssText = `
       position: absolute;
       bottom: 100%;
@@ -227,40 +200,24 @@
 
   // ── Toggle listening ────────────────────────────────────────
   function toggleListening() {
-    console.log('[Voice] toggleListening called, isListening:', isListening);
+    console.log('[Voice] Toggle, isListening:', isListening);
     
     if (!recognition) {
-      console.log('[Voice] Recognition not initialized, initializing...');
       initRecognition();
-      if (!recognition) {
-        console.error('[Voice] Failed to initialize recognition');
-        showVoiceMessage('Mic not available', 'error');
-        return;
-      }
     }
 
     if (isListening) {
-      console.log('[Voice] Stopping recognition');
-      try {
-        recognition.stop();
-      } catch (e) {
-        console.error('[Voice] Error stopping:', e);
-      }
+      console.log('[Voice] Stopping');
+      recognition.stop();
     } else {
-      console.log('[Voice] Starting recognition');
+      console.log('[Voice] Starting');
       try {
         recognition.start();
       } catch (e) {
-        console.error('[Voice] Error starting:', e.message);
-        
-        // On iOS, sometimes we get "already started" errors
-        // In that case, just mark as listening
-        if (e.message && e.message.includes('already started')) {
-          console.log('[Voice] Already started, marking as listening');
+        console.error('[Voice] Start error:', e.message);
+        if (e.message.includes('already started')) {
           isListening = true;
           updateMicButton();
-        } else {
-          showVoiceMessage('Mic error: ' + e.message, 'error');
         }
       }
     }
@@ -275,11 +232,9 @@
     
     if (isListening) {
       btn.classList.add('listening');
-      btn.disabled = false;
       if (dotsEl) dotsEl.classList.add('active');
     } else {
       btn.classList.remove('listening');
-      btn.disabled = false;
       if (dotsEl) dotsEl.classList.remove('active');
     }
   }
@@ -287,26 +242,20 @@
   // ── Build button and inject ────────────────────────────────
   function buildVoiceButton() {
     const serialEl = document.getElementById('serial');
-    console.log('[Voice] buildVoiceButton called, serialEl:', !!serialEl);
-    
     if (!serialEl) {
-      console.log('[Voice] Serial element not found');
+      console.log('[Voice] Serial not found');
       return;
     }
-    if (document.getElementById('vi-mic-btn')) {
-      console.log('[Voice] Button already exists');
-      return; // Already added
-    }
+    if (document.getElementById('vi-mic-btn')) return;
 
-    console.log('[Voice] Creating button...');
-    
-    // Create button - icon with listening dots
+    console.log('[Voice] Building button');
+
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.id = 'vi-mic-btn';
     btn.className = 'vi-mic-btn';
     btn.setAttribute('aria-label', 'Voice input for serial number');
-    btn.title = 'Tap to speak your serial number. Tap again to stop.';
+    btn.title = 'Tap to speak. Tap again to stop.';
     btn.innerHTML = `
       <span class="material-symbols-outlined vi-mic-icon">mic</span>
       <span class="vi-listening-dots">
@@ -316,75 +265,52 @@
       </span>
     `;
 
-    // Find parent row - try multiple selectors
     let row = serialEl.closest('.home-tool-row');
-    if (!row) {
-      row = serialEl.parentElement;
-    }
-    
-    console.log('[Voice] Found row:', !!row);
+    if (!row) row = serialEl.parentElement;
     
     if (row) {
-      // Ensure row is properly set up for flex layout
-      if (!row.style.display || row.style.display === 'block') {
-        row.style.display = 'flex';
-        row.style.alignItems = 'center';
-        row.style.gap = '8px';
-      }
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '8px';
       row.appendChild(btn);
-      console.log('[Voice] Button appended to row');
     } else {
       serialEl.insertAdjacentElement('afterend', btn);
-      console.log('[Voice] Button inserted after serial element');
     }
 
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      console.log('[Voice] Button clicked');
       toggleListening();
     });
     
-    console.log('[Voice] Button created and event listener attached');
+    console.log('[Voice] Button created');
   }
 
   // ── Init ───────────────────────────────────────────────────
   function init() {
-    console.log('[Voice] Init starting, readyState:', document.readyState);
+    console.log('[Voice] Init');
     injectStyles();
     
-    // Poll for serial input
     let attempts = 0;
-    function tryBuild() {
+    const tryBuild = () => {
       if (document.getElementById('serial')) {
-        console.log('[Voice] Serial element found on attempt', attempts);
         buildVoiceButton();
       } else if (attempts++ < 20) {
         setTimeout(tryBuild, 300);
-      } else {
-        console.log('[Voice] Gave up after 20 attempts');
       }
-    }
+    };
     tryBuild();
 
-    // Watch for dynamic injection
-    const obs = new MutationObserver(function () {
+    new MutationObserver(() => {
       if (document.getElementById('serial') && !document.getElementById('vi-mic-btn')) {
-        console.log('[Voice] Serial element detected via MutationObserver');
         buildVoiceButton();
       }
-    });
-    obs.observe(document.body, { childList: true, subtree: true });
-    console.log('[Voice] MutationObserver attached');
+    }).observe(document.body, { childList: true, subtree: true });
   }
 
   if (document.readyState === 'loading') {
-    console.log('[Voice] DOM still loading, waiting for DOMContentLoaded');
     document.addEventListener('DOMContentLoaded', init);
   } else {
-    console.log('[Voice] DOM already loaded, initializing');
     init();
   }
-  
-  console.log('[Voice] Script initialization complete');
 })();
