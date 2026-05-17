@@ -41,7 +41,7 @@
         border: none;
         border-radius: 8px;
         padding: 8px 10px;
-        width: 40px;
+        width: auto;
         height: 40px;
         min-width: 40px;
         font-size: 20px;
@@ -49,6 +49,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 6px;
         transition: all 0.2s;
         font-family: 'Sora', sans-serif;
         margin-left: 8px;
@@ -70,16 +71,19 @@
       
       /* Listening indicator dots */
       .vi-listening-dots {
-        display: inline-flex;
-        gap: 4px;
-        margin-left: 6px;
+        display: none;
         align-items: center;
+        gap: 3px;
+        margin-left: 0;
+      }
+      .vi-listening-dots.active {
+        display: inline-flex;
       }
       .vi-dot {
-        width: 6px;
-        height: 6px;
+        width: 5px;
+        height: 5px;
         border-radius: 50%;
-        background: #f87171;
+        background: currentColor;
         animation: vi-dot-bounce 1.4s infinite;
       }
       .vi-dot:nth-child(2) { animation-delay: 0.2s; }
@@ -115,7 +119,10 @@
       
       const isFinal = event.results[event.results.length - 1].isFinal;
       if (isFinal && transcript) {
+        console.log('[Voice] Final result:', transcript);
         applyVoiceInput(transcript);
+      } else if (transcript) {
+        console.log('[Voice] Interim result:', transcript);
       }
     };
 
@@ -123,10 +130,11 @@
       console.error('[Voice] Recognition error:', event.error);
       isListening = false;
       updateMicButton();
-      showVoiceMessage('Could not understand', 'error');
+      showVoiceMessage('Error: ' + (event.error || 'unknown'), 'error');
     };
 
     recognition.onend = function () {
+      console.log('[Voice] Recognition ended');
       isListening = false;
       updateMicButton();
     };
@@ -135,19 +143,28 @@
   // ── Apply voice input to serial field ────────────────────────
   function applyVoiceInput(transcript) {
     const serialEl = document.getElementById('serial');
-    if (!serialEl) return;
+    if (!serialEl) {
+      console.log('[Voice] Serial element not found');
+      showVoiceMessage('Error: No input field', 'error');
+      return;
+    }
 
     // Clean up the transcript: remove spaces, uppercase
     const cleaned = transcript.toUpperCase().replace(/\s+/g, '');
+    console.log('[Voice] Cleaned transcript:', cleaned);
     
     // Only accept if it looks like a serial (at least 4 chars)
     if (cleaned.length < 4) {
+      console.log('[Voice] Cleaned input too short:', cleaned.length);
       showVoiceMessage('Too short', 'error');
       return;
     }
 
     serialEl.value = cleaned;
     serialEl.dispatchEvent(new Event('input', { bubbles: true }));
+    serialEl.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    console.log('[Voice] Serial filled:', cleaned);
     
     // Scroll to decoder and show success
     const tool = document.getElementById('decoder-tool') || document.getElementById('panel-decoder');
@@ -158,7 +175,10 @@
     showVoiceMessage('✓', 'success');
     
     // Trigger decode button update
-    if (typeof updateDecodeBtn === 'function') updateDecodeBtn();
+    if (typeof updateDecodeBtn === 'function') {
+      console.log('[Voice] Calling updateDecodeBtn');
+      updateDecodeBtn();
+    }
   }
 
   // ── Show message tooltip ─────────────────────────────────────
@@ -197,14 +217,29 @@
     if (!recognition) initRecognition();
 
     if (isListening) {
+      console.log('[Voice] Stopping recognition');
       recognition.stop();
     } else {
+      console.log('[Voice] Starting recognition');
       try {
         recognition.start();
       } catch (e) {
-        // Already listening
-        recognition.stop();
-        setTimeout(() => recognition.start(), 100);
+        console.log('[Voice] Start failed, retrying:', e.message);
+        // Recognition might already be running
+        if (e.message && e.message.includes('already started')) {
+          isListening = true;
+          updateMicButton();
+        } else {
+          try {
+            recognition.abort();
+            setTimeout(() => {
+              recognition.start();
+            }, 100);
+          } catch (e2) {
+            console.error('[Voice] Failed to restart:', e2.message);
+            showVoiceMessage('Error starting mic', 'error');
+          }
+        }
       }
     }
   }
@@ -219,11 +254,11 @@
     if (isListening) {
       btn.classList.add('listening');
       btn.disabled = false;
-      if (dotsEl) dotsEl.style.display = 'inline-flex';
+      if (dotsEl) dotsEl.classList.add('active');
     } else {
       btn.classList.remove('listening');
       btn.disabled = false;
-      if (dotsEl) dotsEl.style.display = 'none';
+      if (dotsEl) dotsEl.classList.remove('active');
     }
   }
 
@@ -233,17 +268,16 @@
     if (!serialEl) return;
     if (document.getElementById('vi-mic-btn')) return; // Already added
 
-    // Create button - icon only with listening dots
+    // Create button - icon with listening dots
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.id = 'vi-mic-btn';
     btn.className = 'vi-mic-btn';
     btn.setAttribute('aria-label', 'Voice input for serial number');
-    btn.title = 'Tap to speak your serial number. Tap again to stop listening.';
-    btn.style.position = 'relative';
+    btn.title = 'Tap to speak your serial number. Tap again to stop.';
     btn.innerHTML = `
       <span class="material-symbols-outlined vi-mic-icon">mic</span>
-      <span class="vi-listening-dots" style="display: none;">
+      <span class="vi-listening-dots">
         <span class="vi-dot"></span>
         <span class="vi-dot"></span>
         <span class="vi-dot"></span>
