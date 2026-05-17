@@ -5753,22 +5753,3 @@ function showCustomAlert(message) {
 
 
 
-// ── Camera Decode — load on all decoder pages ─────────────────
-(function () {
-  if (!document.getElementById('serial') && !document.querySelector('[id="serial"]')) {
-    // Try after a short delay in case decoder inits async
-    setTimeout(function () {
-      if (!document.getElementById('serial')) return;
-      loadCameraDecode();
-    }, 800);
-  } else {
-    loadCameraDecode();
-  }
-  function loadCameraDecode() {
-    if (document.getElementById('cd-styles')) return;
-    var s = document.createElement('script');
-    s.src = '/camera-decode.js';
-    s.async = true;
-    document.head.appendChild(s);
-  }
-})();
