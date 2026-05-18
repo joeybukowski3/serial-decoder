@@ -26,13 +26,8 @@
       --error: #f87171;
     }
 
-    body {
-      background: var(--navy-darkest, #0b1326);
-      color: var(--on-surface, #dae2fd);
-    }
-
     .lld-container {
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
       padding: 32px 16px;
     }
@@ -45,57 +40,85 @@
     .lld-hero h1 {
       font-size: clamp(1.8rem, 5vw, 2.8rem);
       margin-bottom: 12px;
-      color: var(--on-surface, #dae2fd);
+      color: var(--on-surface);
     }
 
     .lld-hero p {
       font-size: 15px;
-      color: var(--text-muted, #9fcaff);
+      color: var(--text-muted);
       max-width: 600px;
       margin: 0 auto 24px;
       line-height: 1.6;
     }
 
-    /* Category Tabs */
-    .lld-tabs {
+    .lld-controls {
       display: flex;
-      gap: 8px;
-      justify-content: center;
-      margin-bottom: 32px;
+      gap: 12px;
+      margin-bottom: 24px;
       flex-wrap: wrap;
+      justify-content: center;
     }
 
-    .lld-tab {
+    .lld-btn {
       padding: 10px 20px;
-      border: 1px solid rgba(68, 229, 194, 0.3);
-      background: rgba(68, 229, 194, 0.08);
-      color: var(--on-surface, #dae2fd);
+      border: none;
       border-radius: 8px;
-      cursor: pointer;
       font-weight: 600;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: 14px;
+      cursor: pointer;
       transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .lld-tab:hover {
-      background: rgba(68, 229, 194, 0.15);
-      border-color: rgba(68, 229, 194, 0.5);
+    .lld-btn-primary {
+      background: var(--primary);
+      color: var(--on-primary);
     }
 
-    .lld-tab.active {
-      background: var(--primary, #44e5c2);
-      color: var(--on-primary, #00382d);
-      border-color: var(--primary, #44e5c2);
+    .lld-btn-primary:hover:not(:disabled) {
+      background: var(--primary-light);
+      transform: translateY(-2px);
     }
 
-    /* Table Wrapper */
+    .lld-btn-secondary {
+      background: rgba(68, 229, 194, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(68, 229, 194, 0.3);
+    }
+
+    .lld-btn-secondary:hover:not(:disabled) {
+      background: rgba(68, 229, 194, 0.2);
+    }
+
+    .lld-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .lld-status {
+      padding: 12px 16px;
+      background: rgba(68, 229, 194, 0.08);
+      border: 1px solid rgba(68, 229, 194, 0.2);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--on-surface);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .lld-status.hidden {
+      display: none;
+    }
+
     .lld-table-wrapper {
       background: rgba(13, 26, 46, 0.8);
       border: 1px solid rgba(68, 229, 194, 0.2);
       border-radius: 12px;
-      overflow: hidden;
+      overflow-x: auto;
       margin-bottom: 32px;
     }
 
@@ -103,55 +126,59 @@
       width: 100%;
       border-collapse: collapse;
       font-family: 'Sora', sans-serif;
+      min-width: 1000px;
     }
 
     .lld-table th {
       background: rgba(68, 229, 194, 0.1);
       border-bottom: 2px solid rgba(68, 229, 194, 0.3);
-      padding: 14px;
+      padding: 16px;
       text-align: left;
       font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: var(--text-muted, #9fcaff);
+      color: var(--text-muted);
+      white-space: nowrap;
     }
 
     .lld-table td {
-      padding: 12px 14px;
+      padding: 14px 16px;
       border-bottom: 1px solid rgba(68, 229, 194, 0.1);
       font-size: 14px;
-      color: var(--on-surface, #dae2fd);
+      color: var(--on-surface);
+      vertical-align: middle;
     }
 
     .lld-table tr:hover {
       background: rgba(68, 229, 194, 0.04);
     }
 
-    /* Input Cell */
-    .lld-input {
+    .lld-input,
+    .lld-select {
       width: 100%;
-      padding: 8px 12px;
+      padding: 12px 14px;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(68, 229, 194, 0.2);
       border-radius: 6px;
-      color: var(--on-surface, #dae2fd);
+      color: var(--on-surface);
       font-family: 'Sora', sans-serif;
       font-size: 14px;
       transition: all 0.2s;
     }
 
-    .lld-input:focus {
+    .lld-input:focus,
+    .lld-select:focus {
       outline: none;
       background: rgba(255, 255, 255, 0.06);
       border-color: rgba(68, 229, 194, 0.6);
       box-shadow: 0 0 0 3px rgba(68, 229, 194, 0.1);
     }
 
-    /* Result Cells */
     .lld-result {
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
+      min-width: 100px;
     }
 
     .result-status {
@@ -177,12 +204,12 @@
 
     .result-status.success {
       background: rgba(68, 229, 194, 0.2);
-      color: var(--primary, #44e5c2);
+      color: var(--primary);
     }
 
     .result-status.error {
       background: rgba(248, 113, 113, 0.2);
-      color: var(--error, #f87171);
+      color: var(--error);
     }
 
     @keyframes pulse {
@@ -190,13 +217,12 @@
       50% { opacity: 0.6; }
     }
 
-    /* Action Buttons */
     .lld-action-btn {
       padding: 6px 10px;
       font-size: 12px;
       border: 1px solid rgba(68, 229, 194, 0.3);
       background: rgba(68, 229, 194, 0.1);
-      color: var(--primary, #44e5c2);
+      color: var(--primary);
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.2s;
@@ -213,16 +239,18 @@
       cursor: not-allowed;
     }
 
-    /* Expansion Row */
-    .lld-expansion {
+    .lld-expansion-row {
       display: none;
+    }
+
+    .lld-expansion-row.open {
+      display: table-row;
+    }
+
+    .lld-expansion {
       background: rgba(68, 229, 194, 0.05);
       border-top: 1px solid rgba(68, 229, 194, 0.15);
       padding: 20px;
-    }
-
-    .lld-expansion.open {
-      display: block;
     }
 
     .lld-expansion-content {
@@ -241,95 +269,31 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: var(--text-muted, #9fcaff);
+      color: var(--text-muted);
       margin-bottom: 6px;
     }
 
     .expansion-field-value {
       font-size: 14px;
-      color: var(--on-surface, #dae2fd);
+      color: var(--on-surface);
       line-height: 1.5;
       word-break: break-word;
     }
 
-    /* Control Bar */
-    .lld-controls {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-    }
-
-    .lld-btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .lld-btn-primary {
-      background: var(--primary, #44e5c2);
-      color: var(--on-primary, #00382d);
-    }
-
-    .lld-btn-primary:hover:not(:disabled) {
-      background: var(--primary-light, #38debb);
-      transform: translateY(-2px);
-    }
-
-    .lld-btn-secondary {
-      background: rgba(68, 229, 194, 0.1);
-      color: var(--primary, #44e5c2);
-      border: 1px solid rgba(68, 229, 194, 0.3);
-    }
-
-    .lld-btn-secondary:hover:not(:disabled) {
-      background: rgba(68, 229, 194, 0.2);
-    }
-
-    .lld-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    /* Status Info */
-    .lld-status {
-      padding: 12px 16px;
-      background: rgba(68, 229, 194, 0.08);
-      border: 1px solid rgba(68, 229, 194, 0.2);
-      border-radius: 8px;
-      font-size: 13px;
-      color: var(--on-surface, #dae2fd);
-      margin-bottom: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .lld-status.hidden {
-      display: none;
-    }
-
-    /* Row Number */
     .row-num {
       font-weight: 600;
-      color: var(--text-muted, #9fcaff);
+      color: var(--text-muted);
       font-size: 12px;
+      text-align: center;
+      min-width: 30px;
     }
 
-    /* Spinner */
     .spinner {
       display: inline-block;
       width: 12px;
       height: 12px;
       border: 2px solid rgba(68, 229, 194, 0.3);
-      border-top-color: var(--primary, #44e5c2);
+      border-top-color: var(--primary);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
@@ -338,61 +302,115 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Mobile Responsive */
-    @media (max-width: 900px) {
-      .lld-table {
-        font-size: 12px;
-      }
-
-      .lld-table th,
-      .lld-table td {
-        padding: 10px;
-      }
-
+    /* Desktop - Larger inputs */
+    @media (min-width: 1024px) {
       .lld-input,
-      .lld-action-btn {
-        font-size: 12px;
+      .lld-select {
+        padding: 14px 16px;
+        font-size: 15px;
+        min-height: 46px;
+      }
+
+      .lld-table td {
+        padding: 16px;
       }
     }
 
-    @media (max-width: 600px) {
+    /* Tablet */
+    @media (max-width: 1024px) {
+      .lld-table th,
+      .lld-table td {
+        padding: 12px;
+        font-size: 13px;
+      }
+
+      .lld-input,
+      .lld-select {
+        padding: 10px 12px;
+        font-size: 13px;
+        min-height: 42px;
+      }
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
       .lld-container {
-        padding: 24px 12px;
+        padding: 16px 12px;
       }
 
       .lld-hero h1 {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
       }
 
       .lld-table {
-        font-size: 11px;
+        min-width: auto;
+        font-size: 12px;
       }
 
-      .lld-table th,
+      .lld-table th {
+        padding: 10px;
+        font-size: 10px;
+      }
+
       .lld-table td {
-        padding: 8px;
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      .lld-input,
+      .lld-select {
+        padding: 10px;
+        font-size: 14px;
+        min-height: 40px;
       }
 
       .lld-expansion-content {
         grid-template-columns: 1fr;
       }
+    }
 
-      .lld-controls {
-        gap: 8px;
+    /* Small Mobile */
+    @media (max-width: 480px) {
+      .lld-container {
+        padding: 12px 8px;
       }
 
-      .lld-btn {
-        padding: 8px 12px;
-        font-size: 12px;
+      .lld-hero h1 {
+        font-size: 1.4rem;
+      }
+
+      .lld-table {
+        min-width: auto;
+        font-size: 11px;
+      }
+
+      .lld-table th {
+        padding: 8px 6px;
+        font-size: 9px;
+      }
+
+      .lld-table td {
+        padding: 6px;
+        font-size: 11px;
+      }
+
+      .lld-input,
+      .lld-select {
+        padding: 8px;
+        font-size: 13px;
+        min-height: 36px;
+      }
+
+      .row-num {
+        font-size: 10px;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Navigation -->
-  <nav class="navbar">
-    <a href="/" class="logo">
-      <span class="logo-icon">🔍</span>
+  <nav>
+    <a href="/" class="logo" aria-label="Decode My Item home">
+      <span class="material-symbols-outlined" style="color:#44e5c2;font-size:26px;flex-shrink:0;line-height:1;">qr_code_scanner</span>
       <div>
         <div class="logo-text">Decode My <span>Item</span></div>
         <div class="logo-sub">Decode - Research - Automate</div>
@@ -414,50 +432,51 @@
     </ul>
   </nav>
 
-  <!-- Hero Section -->
   <section class="lld-container">
     <div class="lld-hero">
       <h1>Large Loss Decoder</h1>
       <p>Decode multiple serial numbers at once for insurance claims, replacements, and bulk research. Process entire asset lists row-by-row with detailed age and model information.</p>
     </div>
 
-    <!-- Category Tabs -->
-    <div class="lld-tabs">
-      <button class="lld-tab active" data-category="appliances">Appliances</button>
-      <button class="lld-tab" data-category="waterHeaters">Water Heaters</button>
-      <button class="lld-tab" data-category="hvac">HVAC</button>
-      <button class="lld-tab" data-category="electronics">Electronics</button>
-    </div>
-
-    <!-- Control Bar -->
     <div class="lld-controls">
-      <button class="lld-btn lld-btn-primary" id="decodeAllBtn" onclick="decodeAllRows()">
+      <button class="lld-btn lld-btn-primary" id="decodeAllBtn" onclick="LLD.decodeAllRows()">
         <span class="material-symbols-outlined" style="font-size: 18px;">play_arrow</span>
         Decode All
       </button>
-      <button class="lld-btn lld-btn-secondary" onclick="addRow()">
+      <button class="lld-btn lld-btn-secondary" onclick="LLD.addRow()">
         <span class="material-symbols-outlined" style="font-size: 18px;">add</span>
         Add Row
       </button>
-      <button class="lld-btn lld-btn-secondary" onclick="clearTable()">
+      <button class="lld-btn lld-btn-secondary" onclick="LLD.clearTable()">
         <span class="material-symbols-outlined" style="font-size: 18px;">refresh</span>
         Clear All
       </button>
     </div>
 
-    <!-- Status Bar -->
     <div class="lld-status hidden" id="statusBar">
       <span id="statusText">Processing...</span>
       <span id="statusProgress">0/0</span>
     </div>
 
-    <!-- Tables Container -->
-    <div id="tablesContainer">
-      <!-- Tables will be generated by JavaScript -->
+    <div class="lld-table-wrapper">
+      <table class="lld-table">
+        <thead>
+          <tr>
+            <th style="width: 40px;">#</th>
+            <th style="width: 110px;">Category</th>
+            <th style="width: 130px;">Brand</th>
+            <th style="width: 150px;">Serial Number</th>
+            <th style="width: 140px;">Model (Opt)</th>
+            <th style="width: 100px;">Age/Year</th>
+            <th style="width: 90px;">Status</th>
+            <th style="width: 80px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
     </div>
   </section>
 
-  <!-- Footer -->
   <footer style="background: var(--navy-darkest, #020616); border-top: 1px solid rgba(68,229,194,0.1); margin-top: 80px; padding: 48px 24px 32px;">
     <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px;">
       <div>
@@ -467,17 +486,17 @@
       <div>
         <h4 style="color: var(--on-surface, #dae2fd); font-size: 14px; font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Resources</h4>
         <ul style="list-style: none; padding: 0; margin: 0;">
-          <li><a href="/smart-lookup" style="color: var(--text-muted, #9fcaff); text-decoration: none; font-size: 13px; line-height: 1.8; transition: color 0.2s;">Smart Lookup</a></li>
-          <li><a href="/find-model-serial-number" style="color: var(--text-muted, #9fcaff); text-decoration: none; font-size: 13px; line-height: 1.8; transition: color 0.2s;">Find Serial Number</a></li>
-          <li><a href="/methodology" style="color: var(--text-muted, #9fcaff); text-decoration: none; font-size: 13px; line-height: 1.8; transition: color 0.2s;">Methodology</a></li>
+          <li><a href="/smart-lookup" style="color: var(--text-muted, #9fcaff); text-decoration: none; font-size: 13px; line-height: 1.8;">Smart Lookup</a></li>
+          <li><a href="/find-model-serial-number" style="color: var(--text-muted, #9fcaff); text-decoration: none; font-size: 13px; line-height: 1.8;">Find Serial Number</a></li>
+          <li><a href="/methodology" style="color: var(--text-muted, #9fcaff); text-decoration: none; font-size: 13px; line-height: 1.8;">Methodology</a></li>
         </ul>
       </div>
       <div>
         <h4 style="color: var(--on-surface, #dae2fd); font-size: 14px; font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Legal</h4>
         <ul style="list-style: none; padding: 0; margin: 0;">
-          <li><a href="/privacy-policy" style="color: var(--text-muted, #9fcaff); text-decoration: none; font-size: 13px; line-height: 1.8; transition: color 0.2s;">Privacy</a></li>
-          <li><a href="/disclaimer" style="color: var(--text-muted, #9fcaff); text-decoration: none; font-size: 13px; line-height: 1.8; transition: color 0.2s;">Disclaimer</a></li>
-          <li><a href="/security" style="color: var(--text-muted, #9fcaff); text-decoration: none; font-size: 13px; line-height: 1.8; transition: color 0.2s;">Security &amp; Data</a></li>
+          <li><a href="/privacy-policy" style="color: var(--text-muted, #9fcaff); text-decoration: none; font-size: 13px; line-height: 1.8;">Privacy</a></li>
+          <li><a href="/disclaimer" style="color: var(--text-muted, #9fcaff); text-decoration: none; font-size: 13px; line-height: 1.8;">Disclaimer</a></li>
+          <li><a href="/security" style="color: var(--text-muted, #9fcaff); text-decoration: none; font-size: 13px; line-height: 1.8;">Security &amp; Data</a></li>
         </ul>
       </div>
     </div>
@@ -486,91 +505,41 @@
     </div>
   </footer>
 
-  <!-- Scripts -->
   <script defer src="voice-input.js"></script>
   <script defer src="script.js"></script>
   <script>
-    // Large Loss Decoder Logic
     const LLD = {
-      currentCategory: 'appliances',
-      rowCounter: { appliances: 0, waterHeaters: 0, hvac: 0, electronics: 0 },
-      rowData: { appliances: [], waterHeaters: [], hvac: [], electronics: [] },
+      rowCounter: 0,
+      rows: [],
       decoding: false,
+      
+      categories: [
+        { value: 'appliances', label: 'Appliances' },
+        { value: 'waterHeaters', label: 'Water Heaters' },
+        { value: 'hvac', label: 'HVAC' },
+        { value: 'electronics', label: 'Electronics' }
+      ],
+
+      brandsByCategory: {
+        appliances: ['Samsung', 'LG', 'Whirlpool', 'GE', 'Kenmore', 'Maytag', 'Frigidaire', 'Bosch'],
+        waterHeaters: ['Rheem', 'Trane', 'Goodman', 'American Water Heater', 'State', 'Bradford White'],
+        hvac: ['Carrier', 'Trane', 'Goodman', 'Rheem', 'Lennox', 'York'],
+        electronics: ['Apple', 'ASUS', 'HP', 'Sony', 'Panasonic', 'Google Pixel']
+      },
 
       init() {
-        this.createTables();
-        this.bindEvents();
-        // Add initial 5 rows to first category
         for (let i = 0; i < 5; i++) {
-          this.addRow('appliances');
+          this.addRow();
         }
       },
 
-      createTables() {
-        const container = document.getElementById('tablesContainer');
-        const categories = ['appliances', 'waterHeaters', 'hvac', 'electronics'];
-        const categoryNames = {
-          appliances: 'Appliances',
-          waterHeaters: 'Water Heaters',
-          hvac: 'HVAC',
-          electronics: 'Electronics'
-        };
-
-        container.innerHTML = categories.map(cat => `
-          <div class="lld-table-wrapper" data-category="${cat}" style="display: ${cat === 'appliances' ? 'block' : 'none'};">
-            <table class="lld-table">
-              <thead>
-                <tr>
-                  <th style="width: 40px;">#</th>
-                  <th style="width: 120px;">Brand</th>
-                  <th style="width: 140px;">Serial Number</th>
-                  <th style="width: 120px;">Model (Optional)</th>
-                  <th style="width: 140px;">Age/Year</th>
-                  <th style="width: 100px;">Status</th>
-                  <th style="width: 100px;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-${cat}"></tbody>
-            </table>
-          </div>
-        `).join('');
-      },
-
-      bindEvents() {
-        document.querySelectorAll('.lld-tab').forEach(btn => {
-          btn.addEventListener('click', (e) => this.switchCategory(e.target.dataset.category));
-        });
-      },
-
-      switchCategory(cat) {
-        this.currentCategory = cat;
-        
-        // Update tab active state
-        document.querySelectorAll('.lld-tab').forEach(t => t.classList.remove('active'));
-        document.querySelector(`[data-category="${cat}"]`).parentElement.querySelector('.lld-tab[data-category="' + cat + '"]').classList.add('active');
-
-        // Show/hide tables
-        document.querySelectorAll('.lld-table-wrapper').forEach(t => {
-          t.style.display = t.dataset.category === cat ? 'block' : 'none';
-        });
-
-        // Ensure we have at least 5 rows
-        if (this.rowData[cat].length === 0) {
-          for (let i = 0; i < 5; i++) {
-            this.addRow(cat);
-          }
-        }
-      },
-
-      addRow(category = null) {
-        category = category || this.currentCategory;
-        const rowNum = ++this.rowCounter[category];
-        const rowId = `${category}-row-${rowNum}`;
-
+      addRow() {
+        const rowNum = ++this.rowCounter;
+        const rowId = `row-${rowNum}`;
         const rowData = {
           id: rowId,
-          category,
           rowNum,
+          category: 'appliances',
           brand: '',
           serial: '',
           model: '',
@@ -578,76 +547,67 @@
           result: null,
           expanded: false
         };
-
-        this.rowData[category].push(rowData);
-        this.renderRow(category, rowData);
+        this.rows.push(rowData);
+        this.renderRow(rowData);
       },
 
-      renderRow(category, rowData) {
-        const tbody = document.getElementById(`tbody-${category}`);
+      renderRow(rowData) {
+        const tbody = document.getElementById('tableBody');
         const tr = document.createElement('tr');
         tr.id = rowData.id;
-        tr.dataset.rowId = rowData.id;
 
         const statusClass = `result-status ${rowData.status}`;
         const statusText = {
           pending: 'Pending',
-          loading: 'Loading...',
-          success: 'Decoded',
-          error: 'Error'
+          loading: '<span class="spinner"></span> Loading',
+          success: '✓ Decoded',
+          error: '✗ Error'
         }[rowData.status];
 
         tr.innerHTML = `
           <td><span class="row-num">${rowData.rowNum}</span></td>
           <td>
-            <select class="lld-input" data-field="brand" onchange="LLD.updateField('${rowData.id}', 'brand', this.value)">
+            <select class="lld-select" onchange="LLD.updateField('${rowData.id}', 'category', this.value); LLD.updateBrandDropdown('${rowData.id}')">
+              ${this.categories.map(c => `<option value="${c.value}" ${c.value === rowData.category ? 'selected' : ''}>${c.label}</option>`).join('')}
+            </select>
+          </td>
+          <td>
+            <select class="lld-select" data-field="brand" onchange="LLD.updateField('${rowData.id}', 'brand', this.value)">
               <option value="">-- Select Brand --</option>
             </select>
           </td>
           <td>
-            <input type="text" class="lld-input" data-field="serial" placeholder="Enter serial..." 
+            <input type="text" class="lld-input" placeholder="Enter serial..." 
                    onchange="LLD.updateField('${rowData.id}', 'serial', this.value)"
                    oninput="LLD.updateField('${rowData.id}', 'serial', this.value)">
           </td>
           <td>
-            <input type="text" class="lld-input" data-field="model" placeholder="Optional" 
+            <input type="text" class="lld-input" placeholder="Optional" 
                    onchange="LLD.updateField('${rowData.id}', 'model', this.value)"
                    oninput="LLD.updateField('${rowData.id}', 'model', this.value)">
           </td>
-          <td class="lld-result" data-field="age">-</td>
+          <td class="lld-result">-</td>
           <td><span class="${statusClass}">${statusText}</span></td>
           <td>
-            <button class="lld-action-btn" onclick="LLD.toggleExpansion('${rowData.id}')" 
-                    ${rowData.status === 'pending' ? 'disabled' : ''}>
-              Explain
-            </button>
+            <button class="lld-action-btn" onclick="LLD.toggleExpansion('${rowData.id}')" ${rowData.status === 'pending' ? 'disabled' : ''}>Explain</button>
           </td>
         `;
 
         tbody.appendChild(tr);
+        this.updateBrandDropdown(rowData.id);
 
-        // Populate brand dropdown
-        this.populateBrandDropdown(category, tr.querySelector('[data-field="brand"]'));
-
-        // Add expansion row
-        const expansionTr = document.createElement('tr');
-        expansionTr.id = `expansion-${rowData.id}`;
-        expansionTr.innerHTML = `
-          <td colspan="7">
-            <div class="lld-expansion" id="exp-content-${rowData.id}">
-              <div class="lld-expansion-content" id="exp-fields-${rowData.id}">
-                <!-- Fields will be populated when expanded -->
-              </div>
-            </div>
-          </td>
-        `;
-        tbody.appendChild(expansionTr);
+        const expTr = document.createElement('tr');
+        expTr.id = `expansion-${rowData.id}`;
+        expTr.className = 'lld-expansion-row';
+        expTr.innerHTML = `<td colspan="8"><div class="lld-expansion"><div class="lld-expansion-content" id="exp-fields-${rowData.id}"></div></div></td>`;
+        tbody.appendChild(expTr);
       },
 
-      populateBrandDropdown(category, selectEl) {
-        // Get brands from global script.js brands array
-        // This will be populated based on the active category
-        const brands = this.getBrandsForCategory(category);
+      updateBrandDropdown(rowId) {
+        const row = this.rows.find(r => r.id === rowId);
+        if (!row) return;
+        const selectEl = document.querySelector(`#${rowId} [data-field="brand"]`);
+        const brands = this.brandsByCategory[row.category] || [];
         selectEl.innerHTML = '<option value="">-- Select Brand --</option>';
         brands.forEach(brand => {
           const opt = document.createElement('option');
@@ -657,77 +617,44 @@
         });
       },
 
-      getBrandsForCategory(category) {
-        // Map to global categories
-        const categoryMap = {
-          appliances: 'appliances',
-          waterHeaters: 'waterHeaters',
-          hvac: 'hvac',
-          electronics: 'electronics'
-        };
-        
-        // These will be populated from script.js decoders
-        const brandSets = {
-          appliances: ['Samsung', 'LG', 'Whirlpool', 'GE', 'Kenmore', 'Maytag', 'Frigidaire', 'Bosch'],
-          waterHeaters: ['Rheem', 'Trane', 'Goodman', 'American Water Heater', 'State', 'Bradford White'],
-          hvac: ['Carrier', 'Trane', 'Goodman', 'Rheem', 'Lennox', 'York'],
-          electronics: ['Apple', 'ASUS', 'HP', 'Sony', 'Panasonic', 'Google Pixel']
-        };
-
-        return brandSets[category] || [];
-      },
-
       updateField(rowId, field, value) {
-        const row = this.rowData.appliances.concat(
-          this.rowData.waterHeaters,
-          this.rowData.hvac,
-          this.rowData.electronics
-        ).find(r => r.id === rowId);
-
+        const row = this.rows.find(r => r.id === rowId);
         if (row) {
           row[field] = value;
+          if (field === 'category') {
+            row.brand = '';
+            this.updateBrandDropdown(rowId);
+          }
         }
       },
 
       async decodeAllRows() {
         if (this.decoding) return;
         this.decoding = true;
-
-        const rows = this.rowData[this.currentCategory].filter(r => r.serial.trim());
-        if (rows.length === 0) {
+        const rowsToProcess = this.rows.filter(r => r.serial.trim());
+        if (rowsToProcess.length === 0) {
           alert('Please enter at least one serial number');
           this.decoding = false;
           return;
         }
-
-        // Show status bar
         const statusBar = document.getElementById('statusBar');
         statusBar.classList.remove('hidden');
         document.getElementById('decodeAllBtn').disabled = true;
-
         let completed = 0;
-
-        for (const row of rows) {
-          // Update status to loading
+        for (const row of rowsToProcess) {
           this.updateRowStatus(row.id, 'loading');
-
           try {
-            // Decode the serial
             const result = await this.decodeSerial(row);
             row.result = result;
             this.updateRowStatus(row.id, 'success');
             this.displayResult(row);
           } catch (err) {
-            console.error('Decode error:', err);
             row.result = { error: err.message || 'Decoding failed' };
             this.updateRowStatus(row.id, 'error');
           }
-
           completed++;
-          document.getElementById('statusProgress').textContent = `${completed}/${rows.length}`;
+          document.getElementById('statusProgress').textContent = `${completed}/${rowsToProcess.length}`;
         }
-
-        // Hide status bar
         setTimeout(() => {
           statusBar.classList.add('hidden');
           document.getElementById('decodeAllBtn').disabled = false;
@@ -738,7 +665,6 @@
       updateRowStatus(rowId, status) {
         const row = document.getElementById(rowId);
         if (!row) return;
-
         const statusSpan = row.querySelector('.result-status');
         const statusTexts = {
           pending: 'Pending',
@@ -746,35 +672,26 @@
           success: '✓ Decoded',
           error: '✗ Error'
         };
-
         statusSpan.className = `result-status ${status}`;
         statusSpan.innerHTML = statusTexts[status];
       },
 
       async decodeSerial(rowData) {
-        // Use the same decoder logic as the main decoder
-        // This calls the brand decoders directly on the client
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           try {
-            // Get the decoder function for this brand/category
-            const decoderKey = `${rowData.category}-${rowData.brand}`;
             const decoderFunc = window.decoders?.[rowData.brand];
-
             if (!decoderFunc) {
               resolve({ error: 'Brand decoder not found' });
               return;
             }
-
-            // Call the decoder
             const result = decoderFunc(rowData.serial, rowData.model || '');
-            
             if (result.error) {
               resolve({ error: result.error });
             } else {
               resolve({
                 ...result,
                 estimatedYear: result.year,
-                yearCode: result.yearCode || result.year,
+                yearCode: result.year,
                 month: result.month,
                 decodingMethod: result.method || 'Serial Format',
                 confidence: 0.95
@@ -788,43 +705,29 @@
 
       displayResult(rowData) {
         if (!rowData.result) return;
-
         const row = document.getElementById(rowData.id);
-        const ageCell = row.querySelector('[data-field="age"]');
-
+        const ageCell = row.querySelector('.lld-result');
         if (rowData.result.error) {
           ageCell.textContent = 'Error';
           ageCell.style.color = '#f87171';
         } else {
-          // Display estimated year or age
-          const year = rowData.result.estimatedYear || rowData.result.year || 'Unknown';
-          ageCell.textContent = year;
+          ageCell.textContent = rowData.result.estimatedYear || rowData.result.year || 'Unknown';
         }
-
-        // Enable explain button
         const explainBtn = row.querySelector('.lld-action-btn');
         explainBtn.disabled = false;
       },
 
       toggleExpansion(rowId) {
-        const row = this.rowData.appliances.concat(
-          this.rowData.waterHeaters,
-          this.rowData.hvac,
-          this.rowData.electronics
-        ).find(r => r.id === rowId);
-
+        const row = this.rows.find(r => r.id === rowId);
         if (!row || !row.result) return;
-
         row.expanded = !row.expanded;
-        const expContent = document.getElementById(`exp-content-${rowId}`);
+        const expRow = document.getElementById(`expansion-${rowId}`);
         const expFields = document.getElementById(`exp-fields-${rowId}`);
-
         if (row.expanded) {
-          // Populate expansion fields
           this.populateExpansionFields(row, expFields);
-          expContent.classList.add('open');
+          expRow.classList.add('open');
         } else {
-          expContent.classList.remove('open');
+          expRow.classList.remove('open');
         }
       },
 
@@ -834,7 +737,6 @@
           container.innerHTML = `<p style="grid-column: 1/-1; color: #f87171;">${result?.error || 'No result'}</p>`;
           return;
         }
-
         const fields = [
           { label: 'Estimated Age', value: result.estimatedYear || 'Unknown' },
           { label: 'Year Code', value: result.yearCode || 'Unknown' },
@@ -845,11 +747,7 @@
           { label: 'Decoding Method', value: result.decodingMethod || 'Unknown' },
           { label: 'Confidence', value: result.confidence ? (result.confidence * 100).toFixed(0) + '%' : 'N/A' }
         ];
-
-        if (result.notes) {
-          fields.push({ label: 'Notes', value: result.notes });
-        }
-
+        if (result.notes) fields.push({ label: 'Notes', value: result.notes });
         container.innerHTML = fields.map(field => `
           <div class="expansion-field">
             <div class="expansion-field-label">${field.label}</div>
@@ -860,30 +758,21 @@
 
       clearTable() {
         if (!confirm('Clear all rows? This cannot be undone.')) return;
-
-        const tbody = document.getElementById(`tbody-${this.currentCategory}`);
+        const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
-        this.rowData[this.currentCategory] = [];
-        this.rowCounter[this.currentCategory] = 0;
-
-        // Add 5 new rows
+        this.rows = [];
+        this.rowCounter = 0;
         for (let i = 0; i < 5; i++) {
-          this.addRow(this.currentCategory);
+          this.addRow();
         }
       }
     };
 
-    // Initialize when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => LLD.init());
     } else {
       LLD.init();
     }
-
-    // Export functions to global scope
-    function addRow() { LLD.addRow(); }
-    function clearTable() { LLD.clearTable(); }
-    function decodeAllRows() { LLD.decodeAllRows(); }
   </script>
 </body>
 </html>
