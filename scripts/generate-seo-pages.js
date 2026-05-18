@@ -376,19 +376,24 @@ function renderDecoderModule(page, opts = {}) {
                   </div>
 
                   <div class="search-panel" id="panel-decoder">
-                    <div class="home-tool-row">
-                      <label class="sr-only" for="brand">Select Brand</label>
+                    <!-- Brand Row -->
+                    <div class="tool-input-group brand-row">
+                      <label for="brand">Select Brand</label>
                       <select id="brand" class="search-select">
                         <option value="">-- Select Brand --</option>
                       </select>
+                    </div>
 
-                      <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
+                    <!-- Serial Row -->
+                    <div class="tool-input-group serial-row">
+                      <label class="serial-label" for="serial">Enter Serial Number</label>
                       <input type="text" id="serial" class="search-input" placeholder="${page.decoderPlaceholder || 'Enter serial number exactly as shown'}">
                     </div>
 
-                    <div class="era-group hidden" id="eraGroup">
-                      <label class="sr-only" for="eraSelect">Manufacture Era</label>
-                      <select id="eraSelect" class="search-select" style="margin-top:8px;">
+                    <!-- Era Group -->
+                    <div class="era-group hidden" id="eraGroup" style="margin-top: 16px;">
+                      <label for="eraSelect">Manufacture Era</label>
+                      <select id="eraSelect" class="search-select" style="margin-top: 8px;">
                         <option value="">-- Select Era --</option>
                         <option value="post">Post-2006</option>
                         <option value="pre">Pre-2006</option>
@@ -396,8 +401,11 @@ function renderDecoderModule(page, opts = {}) {
                       <p class="era-note">Some brands reuse serial layouts across decades. Select the era when prompted to improve accuracy.</p>
                     </div>
 
-                    <p class="search-hint serial-helper-text">${page.decoderIntro}</p>
-                    <div class="tool-panel-action">
+                    <!-- Helper Text -->
+                    <p class="search-hint serial-helper-text" style="margin-top: 16px;">${page.decoderIntro}</p>
+
+                    <!-- Action Button -->
+                    <div class="tool-panel-action" style="margin-top: 24px;">
                       <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">Decode Serial Number</button>
                     </div>
                   </div>
@@ -1191,23 +1199,34 @@ function renderPage(page) {
                     <button class="search-tab cat-tab${page.category === 'electronics' ? ' active' : ''}" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
                   </div>
                   <div class="search-panel" id="panel-decoder">
-                    <div class="home-tool-row">
-                      <label class="sr-only" for="brand">Select Brand</label>
+                    <!-- Brand Row -->
+                    <div class="tool-input-group brand-row">
+                      <label for="brand">Select Brand</label>
                       <select id="brand" class="search-select"><option value="">-- Select Brand --</option></select>
-                      <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
+                    </div>
+
+                    <!-- Serial Row -->
+                    <div class="tool-input-group serial-row">
+                      <label class="serial-label" for="serial">Enter Serial Number</label>
                       <input type="text" id="serial" class="search-input" placeholder="${page.decoderPlaceholder || 'Enter serial number exactly as shown'}">
                     </div>
-                    <div class="era-group hidden" id="eraGroup">
-                      <label class="sr-only" for="eraSelect">Manufacture Era</label>
-                      <select id="eraSelect" class="search-select" style="margin-top:8px;">
+
+                    <!-- Era Group -->
+                    <div class="era-group hidden" id="eraGroup" style="margin-top: 16px;">
+                      <label for="eraSelect">Manufacture Era</label>
+                      <select id="eraSelect" class="search-select" style="margin-top: 8px;">
                         <option value="">-- Select Era --</option>
                         <option value="post">Post-2006</option>
                         <option value="pre">Pre-2006</option>
                       </select>
                       <p class="era-note">Some brands reuse serial layouts across decades. Select the era when prompted to improve accuracy.</p>
                     </div>
-                    <p class="search-hint serial-helper-text">${page.decoderIntro}</p>
-                    <div class="tool-panel-action">
+
+                    <!-- Helper Text -->
+                    <p class="search-hint serial-helper-text" style="margin-top: 16px;">${page.decoderIntro}</p>
+
+                    <!-- Action Button -->
+                    <div class="tool-panel-action" style="margin-top: 24px;">
                       <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">Decode Serial Number</button>
                     </div>
                   </div>

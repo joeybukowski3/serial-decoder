@@ -232,22 +232,27 @@
               </div>
 
               <div class="search-panel" id="panel-decoder">
-                <div class="home-tool-row">
-                  <label class="sr-only" for="brand">Select Brand</label>
+                <!-- Brand Row -->
+                <div class="tool-input-group brand-row">
+                  <label for="brand">Select Brand</label>
                   <select id="brand" class="search-select">
                     <option value="">-- Select Brand --</option>
                   </select>
+                </div>
 
-                  <label class="sr-only serial-label" for="serial">Enter Serial Number</label>
+                <!-- Serial Row -->
+                <div class="tool-input-group serial-row">
+                  <label class="serial-label" for="serial">Enter Serial Number</label>
                   <input type="text" id="serial" class="search-input" placeholder="Enter serial number (e.g., CB2501800)">
                 </div>
 
-                <div class="era-group hidden" id="eraGroup">
-                  <label class="sr-only" for="eraSelect">
+                <!-- Era Group (hidden by default, shown when needed) -->
+                <div class="era-group hidden" id="eraGroup" style="margin-top: 16px;">
+                  <label for="eraSelect">
                     Manufacture Era
                     <span title="Manufacturer serial formats often repeat every 20 years; selecting the era ensures accuracy.">&#9432;</span>
                   </label>
-                  <select id="eraSelect" class="search-select" style="margin-top:8px;">
+                  <select id="eraSelect" class="search-select" style="margin-top: 8px;">
                     <option value="">-- Select Era --</option>
                     <option value="post">Post-2006 (manufactured after 2006)</option>
                     <option value="pre">Pre-2006 (manufactured before 2006)</option>
@@ -255,9 +260,12 @@
                   <p class="era-note">Manufacturers often recycle serial formats every 20 years. Selecting the era ensures the decoding logic matches your specific unit.</p>
                 </div>
 
-                <p class="search-hint serial-helper-text">Enter the serial number exactly as shown on the product label</p>
-                <p class="search-link" style="margin-top:10px;">No serial number? Use the smart lookup panel.</p>
-                <div class="tool-panel-action">
+                <!-- Helper Text -->
+                <p class="search-hint serial-helper-text" style="margin-top: 16px;">Enter the serial number exactly as shown on the product label</p>
+                <p class="search-link" style="margin-top: 10px;">No serial number? Use the smart lookup panel.</p>
+
+                <!-- Action Button -->
+                <div class="tool-panel-action" style="margin-top: 24px;">
                   <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">&#128269; Decode Serial Number</button>
                 </div>
               </div>
