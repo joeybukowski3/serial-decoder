@@ -16,6 +16,21 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;600&display=swap">
   <link rel="stylesheet" href="shared.css">
   <style>
+    :root {
+      --navy-darkest: #020616;
+      --primary: #44e5c2;
+      --primary-light: #38debb;
+      --on-surface: #dae2fd;
+      --text-muted: #9fcaff;
+      --on-primary: #00382d;
+      --error: #f87171;
+    }
+
+    body {
+      background: var(--navy-darkest, #0b1326);
+      color: var(--on-surface, #dae2fd);
+    }
+
     .lld-container {
       max-width: 1400px;
       margin: 0 auto;
@@ -70,9 +85,9 @@
     }
 
     .lld-tab.active {
-      background: #44e5c2;
-      color: #00382d;
-      border-color: #44e5c2;
+      background: var(--primary, #44e5c2);
+      color: var(--on-primary, #00382d);
+      border-color: var(--primary, #44e5c2);
     }
 
     /* Table Wrapper */
@@ -162,12 +177,12 @@
 
     .result-status.success {
       background: rgba(68, 229, 194, 0.2);
-      color: #44e5c2;
+      color: var(--primary, #44e5c2);
     }
 
     .result-status.error {
       background: rgba(248, 113, 113, 0.2);
-      color: #f87171;
+      color: var(--error, #f87171);
     }
 
     @keyframes pulse {
@@ -181,7 +196,7 @@
       font-size: 12px;
       border: 1px solid rgba(68, 229, 194, 0.3);
       background: rgba(68, 229, 194, 0.1);
-      color: #44e5c2;
+      color: var(--primary, #44e5c2);
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.2s;
@@ -259,18 +274,18 @@
     }
 
     .lld-btn-primary {
-      background: #44e5c2;
-      color: #00382d;
+      background: var(--primary, #44e5c2);
+      color: var(--on-primary, #00382d);
     }
 
     .lld-btn-primary:hover:not(:disabled) {
-      background: #38debb;
+      background: var(--primary-light, #38debb);
       transform: translateY(-2px);
     }
 
     .lld-btn-secondary {
       background: rgba(68, 229, 194, 0.1);
-      color: #44e5c2;
+      color: var(--primary, #44e5c2);
       border: 1px solid rgba(68, 229, 194, 0.3);
     }
 
@@ -314,7 +329,7 @@
       width: 12px;
       height: 12px;
       border: 2px solid rgba(68, 229, 194, 0.3);
-      border-top-color: #44e5c2;
+      border-top-color: var(--primary, #44e5c2);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
