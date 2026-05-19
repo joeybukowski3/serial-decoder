@@ -1710,16 +1710,23 @@ var decoderData = {
 
       var style2 = decodeWeekYearDigits(s.substring(1, 3), s.substring(3, 5), 'Style 2');
       var style3 = decodeWeekYearDigits(s.substring(2, 4), s.substring(4, 6), 'Style 3');
-      var monthStr = s.substring(0, 2);
-      var yearDigits = s.substring(2, 4);
-      var fullYear = parseInt(yearDigits) >= 84 ? '19' + yearDigits : '20' + yearDigits;
-      var m = this.monthMap[monthStr];
-      var style1 = { year: fullYear, month: m || 'Month ' + monthStr, yearCode: yearDigits, monthCode: monthStr, decodeStyle: 'Style 1' };
+      var embeddedWeekYear = null;
+      var embeddedMatch = s.match(/[A-Z](\d{2})(\d{2})/);
+      if (embeddedMatch) embeddedWeekYear = decodeWeekYearDigits(embeddedMatch[1], embeddedMatch[2], 'Embedded WWYY');
+
+      var style1 = null;
+      if (/^\d{4}/.test(s)) {
+        var monthStr = s.substring(0, 2);
+        var yearDigits = s.substring(2, 4);
+        var fullYear = parseInt(yearDigits, 10) >= 84 ? '19' + yearDigits : '20' + yearDigits;
+        var m = this.monthMap[monthStr];
+        style1 = { year: fullYear, month: m || 'Month ' + monthStr, yearCode: yearDigits, monthCode: monthStr, decodeStyle: 'Style 1' };
+      }
 
       // Some later all-numeric Rheem tank labels fit the documented week/year layouts
       // better than the legacy MMYY pattern. Prefer Style 2 when it points to a clearly
       // modern year and the MMYY interpretation lands far earlier, especially on RH9x models.
-      if (style2) {
+      if (style1 && style2) {
         var style1Year = parseInt(style1.year, 10);
         var style2Year = parseInt(style2.year, 10);
         var modelSuggestsModernRh = /RH9\d/.test(normalizedModel);
@@ -1727,12 +1734,16 @@ var decoderData = {
         if (/^\d{10}$/.test(s) && style1Year <= 2010 && style2Year >= 2015) return style2;
       }
 
-      if (style1.month.indexOf('Month ') === 0) {
+      if (style1 && style1.month.indexOf('Month ') === 0) {
         if (style2) return style2;
         if (style3) return style3;
       }
 
-      return style1;
+      if (style1) return style1;
+      if (embeddedWeekYear) return embeddedWeekYear;
+      if (style2) return style2;
+      if (style3) return style3;
+      return null;
     }
     },
     'ruud': {
