@@ -4647,12 +4647,7 @@ function clearSmartLookupAssist() {
 function showSmartLookupAssistLoading() {
   var el = ensureSmartLookupAssistEl();
   if (!el) return;
-  el.classList.remove('hidden');
-  el.innerHTML =
-    '<div class="smart-lookup-assist-card">' +
-      '<div class="smart-lookup-assist-title">Checking Your Search</div>' +
-      '<p class="smart-lookup-assist-note">Classifying your search before any LKQ results are generated.</p>' +
-    '</div>';
+  el.classList.add('hidden');
 }
 
 function looksLikeSpecificSmartLookupQuery(query) {
