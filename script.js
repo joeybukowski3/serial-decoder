@@ -829,6 +829,14 @@ function flushDecoderDataCallbacks(error) {
       cb(error || null);
     } catch (_) {}
   });
+  
+  // If no callbacks were registered (data loaded after initial page load),
+  // ensure the UI is initialized
+  if (!error && callbacks.length === 0 && hasDecoderData()) {
+    try {
+      initializeDecoderUiWhenReady();
+    } catch (_) {}
+  }
 }
 
 function ensureDecoderDataLoaded(callback) {
@@ -2990,7 +2998,16 @@ function initPage() {
   var dom = getDecodeDom();
   var altQuery    = getSmartLookupInputEl();
   bindDecoderDataLoadTriggers();
-  if (hasDecoderData()) initializeDecoderUiWhenReady();
+  if (hasDecoderData()) {
+    initializeDecoderUiWhenReady();
+  } else {
+    // If decoder data not loaded yet, populate brands with a small delay to allow async data to load
+    setTimeout(function() {
+      if (hasDecoderData() && dom.brandEl) {
+        initializeDecoderUiWhenReady();
+      }
+    }, 100);
+  }
 
   try {
     var modeParams = new URLSearchParams(window.location.search || '');
