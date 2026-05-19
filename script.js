@@ -3813,13 +3813,7 @@ function updateModelFieldVisibility(brandId) {
     return;
   }
 
-  if (config.useModelAsPrimaryInput) {
-    group.classList.add('hidden');
-    modelInput.value = '';
-    clearSupplementalModelError();
-    return;
-  }
-
+  // Always show the model field - don't hide it even if useModelAsPrimaryInput is true
   group.classList.remove('hidden');
   if (labelEl) labelEl.textContent = config.label;
   modelInput.placeholder = config.placeholder || 'Enter model number';
