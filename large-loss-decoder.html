@@ -332,33 +332,6 @@
       }
     }
 
-    .lld-voice-btn {
-      display: inline-block !important;
-      flex-shrink: 0;
-      width: 36px;
-      height: 36px;
-      padding: 0;
-      border: 1px solid rgba(68, 229, 194, 0.3);
-      background: rgba(68, 229, 194, 0.1);
-      color: var(--primary);
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .lld-voice-btn:hover {
-      background: rgba(68, 229, 194, 0.2);
-      border-color: rgba(68, 229, 194, 0.6);
-    }
-
-    .lld-voice-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
     @media (max-width: 768px) {
       .lld-container {
         padding: 16px 12px;
@@ -401,11 +374,6 @@
 
       .lld-expansion-content {
         grid-template-columns: 1fr;
-      }
-
-      /* Show voice buttons on mobile */
-      .lld-voice-btn {
-        display: inline-block !important;
       }
     }
 
@@ -671,29 +639,15 @@
               <option value="">-- Select Brand --</option>
             </select>
           </td>
-          <td style="position: relative;">
-            <div style="display: flex; gap: 4px; align-items: center; width: 100%;">
-              <input type="text" class="lld-input" id="serial-${rowData.id}" placeholder="Enter serial..." 
-                     onchange="LLD.updateField('${rowData.id}', 'serial', this.value)"
-                     oninput="LLD.updateField('${rowData.id}', 'serial', this.value)"
-                     style="flex: 1; min-width: 0;">
-              <button class="lld-voice-btn" id="voice-serial-${rowData.id}" onclick="LLD.startVoiceInput('${rowData.id}', 'serial')" 
-                      style="padding: 8px; flex-shrink: 0; width: 36px; height: 36px; border: 1px solid rgba(68, 229, 194, 0.3); background: rgba(68, 229, 194, 0.1); color: #44e5c2; border-radius: 4px; cursor: pointer; font-size: 16px; transition: all 0.2s; display: none; align-items: center; justify-content: center;">
-                🎤
-              </button>
-            </div>
+          <td>
+            <input type="text" class="lld-input" id="serial-${rowData.id}" placeholder="Enter serial..." 
+                   onchange="LLD.updateField('${rowData.id}', 'serial', this.value)"
+                   oninput="LLD.updateField('${rowData.id}', 'serial', this.value)">
           </td>
-          <td style="position: relative;">
-            <div style="display: flex; gap: 4px; align-items: center; width: 100%;">
-              <input type="text" class="lld-input" id="model-${rowData.id}" placeholder="Optional" 
-                     onchange="LLD.updateField('${rowData.id}', 'model', this.value)"
-                     oninput="LLD.updateField('${rowData.id}', 'model', this.value)"
-                     style="flex: 1; min-width: 0;">
-              <button class="lld-voice-btn" id="voice-model-${rowData.id}" onclick="LLD.startVoiceInput('${rowData.id}', 'model')" 
-                      style="padding: 8px; flex-shrink: 0; width: 36px; height: 36px; border: 1px solid rgba(68, 229, 194, 0.3); background: rgba(68, 229, 194, 0.1); color: #44e5c2; border-radius: 4px; cursor: pointer; font-size: 16px; transition: all 0.2s; display: none; align-items: center; justify-content: center;">
-                🎤
-              </button>
-            </div>
+          <td>
+            <input type="text" class="lld-input" id="model-${rowData.id}" placeholder="Optional" 
+                   onchange="LLD.updateField('${rowData.id}', 'model', this.value)"
+                   oninput="LLD.updateField('${rowData.id}', 'model', this.value)">
           </td>
           <td class="lld-result">-</td>
           <td><span class="${statusClass}">${statusText}</span></td>
@@ -710,66 +664,6 @@
         expTr.className = 'lld-expansion-row';
         expTr.innerHTML = `<td colspan="8"><div class="lld-expansion"><div class="lld-expansion-content" id="exp-fields-${rowData.id}"></div></div></td>`;
         tbody.appendChild(expTr);
-      },
-
-      startVoiceInput(rowId, fieldType) {
-        // Initialize speech recognition
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-          alert('Speech recognition not supported in this browser');
-          return;
-        }
-
-        const recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = true;
-        recognition.language = 'en-US';
-
-        const inputId = `${fieldType}-${rowId}`;
-        const btnId = `voice-${fieldType}-${rowId}`;
-        const inputEl = document.getElementById(inputId);
-        const btnEl = document.getElementById(btnId);
-
-        // Visual feedback
-        btnEl.style.background = 'rgba(248, 113, 113, 0.2)';
-        btnEl.style.color = '#f87171';
-
-        let finalTranscript = '';
-
-        recognition.onstart = () => {
-          console.log('[Voice] Started listening for ' + fieldType);
-        };
-
-        recognition.onresult = (event) => {
-          let interimTranscript = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-              finalTranscript += transcript + ' ';
-            } else {
-              interimTranscript += transcript;
-            }
-          }
-        };
-
-        recognition.onend = () => {
-          const cleaned = finalTranscript.trim().toUpperCase().replace(/\s+/g, ' ');
-          if (cleaned.length > 0) {
-            inputEl.value = cleaned;
-            LLD.updateField(rowId, fieldType, cleaned);
-            console.log('[Voice] Input for ' + fieldType + ': ' + cleaned);
-          }
-          btnEl.style.background = 'rgba(68, 229, 194, 0.1)';
-          btnEl.style.color = '#44e5c2';
-        };
-
-        recognition.onerror = (event) => {
-          console.error('[Voice] Error:', event.error);
-          btnEl.style.background = 'rgba(68, 229, 194, 0.1)';
-          btnEl.style.color = '#44e5c2';
-        };
-
-        recognition.start();
       },
 
       updateBrandDropdown(rowId) {
