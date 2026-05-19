@@ -332,7 +332,33 @@
       }
     }
 
-    /* Mobile */
+    .lld-voice-btn {
+      display: inline-block !important;
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border: 1px solid rgba(68, 229, 194, 0.3);
+      background: rgba(68, 229, 194, 0.1);
+      color: var(--primary);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lld-voice-btn:hover {
+      background: rgba(68, 229, 194, 0.2);
+      border-color: rgba(68, 229, 194, 0.6);
+    }
+
+    .lld-voice-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
     @media (max-width: 768px) {
       .lld-container {
         padding: 16px 12px;
@@ -646,25 +672,25 @@
             </select>
           </td>
           <td style="position: relative;">
-            <div style="display: flex; gap: 4px; align-items: center;">
+            <div style="display: flex; gap: 4px; align-items: center; width: 100%;">
               <input type="text" class="lld-input" id="serial-${rowData.id}" placeholder="Enter serial..." 
                      onchange="LLD.updateField('${rowData.id}', 'serial', this.value)"
                      oninput="LLD.updateField('${rowData.id}', 'serial', this.value)"
-                     style="flex: 1;">
+                     style="flex: 1; min-width: 0;">
               <button class="lld-voice-btn" id="voice-serial-${rowData.id}" onclick="LLD.startVoiceInput('${rowData.id}', 'serial')" 
-                      style="padding: 8px; min-width: 36px; border: 1px solid rgba(68, 229, 194, 0.3); background: rgba(68, 229, 194, 0.1); color: #44e5c2; border-radius: 4px; cursor: pointer; font-size: 16px; transition: all 0.2s; display: none;">
+                      style="padding: 8px; flex-shrink: 0; width: 36px; height: 36px; border: 1px solid rgba(68, 229, 194, 0.3); background: rgba(68, 229, 194, 0.1); color: #44e5c2; border-radius: 4px; cursor: pointer; font-size: 16px; transition: all 0.2s; display: none; align-items: center; justify-content: center;">
                 🎤
               </button>
             </div>
           </td>
           <td style="position: relative;">
-            <div style="display: flex; gap: 4px; align-items: center;">
+            <div style="display: flex; gap: 4px; align-items: center; width: 100%;">
               <input type="text" class="lld-input" id="model-${rowData.id}" placeholder="Optional" 
                      onchange="LLD.updateField('${rowData.id}', 'model', this.value)"
                      oninput="LLD.updateField('${rowData.id}', 'model', this.value)"
-                     style="flex: 1;">
+                     style="flex: 1; min-width: 0;">
               <button class="lld-voice-btn" id="voice-model-${rowData.id}" onclick="LLD.startVoiceInput('${rowData.id}', 'model')" 
-                      style="padding: 8px; min-width: 36px; border: 1px solid rgba(68, 229, 194, 0.3); background: rgba(68, 229, 194, 0.1); color: #44e5c2; border-radius: 4px; cursor: pointer; font-size: 16px; transition: all 0.2s; display: none;">
+                      style="padding: 8px; flex-shrink: 0; width: 36px; height: 36px; border: 1px solid rgba(68, 229, 194, 0.3); background: rgba(68, 229, 194, 0.1); color: #44e5c2; border-radius: 4px; cursor: pointer; font-size: 16px; transition: all 0.2s; display: none; align-items: center; justify-content: center;">
                 🎤
               </button>
             </div>
