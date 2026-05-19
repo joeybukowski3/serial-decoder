@@ -3158,3 +3158,5 @@ var decoderData = {
 
 
 
+
+window.decoderData = decoderData;
