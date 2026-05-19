@@ -35,6 +35,11 @@
       50% { width: 100%; }
       100% { width: 0%; }
     }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
   </style>
 </head>
 <body>
@@ -88,8 +93,8 @@
     
     <!-- Loading state -->
     <div id="ageLoading" class="hidden" style="margin-top:20px;">
-      <div style="text-align:center;padding:20px;">
-        <div style="font-size:14px;color:#64748B;margin-bottom:12px;">🔍 Analyzing your search...</div>
+      <div style="text-align:center;padding:40px 20px;">
+        <div style="font-size:48px;margin-bottom:20px;animation:float 2s ease-in-out infinite;">☁️ ☀️</div>
         <div style="width:200px;height:3px;background:rgba(68,229,194,0.2);border-radius:2px;margin:0 auto;overflow:hidden;">
           <div style="height:100%;background:#44e5c2;animation:loading 1.5s ease-in-out infinite;width:40%;"></div>
         </div>
@@ -200,9 +205,9 @@
   </div>
 </footer>
 
-<script defer src="lkq-engine.js"></script>
-<script defer src="analytics.js"></script>
-<script defer src="smart-lookup-bundle.js"></script>
+<script async src="lkq-engine.js"></script>
+<script async src="analytics.js"></script>
+<script async src="smart-lookup-bundle.js"></script>
 <script defer src="script.js"></script>
 </body>
 </html>
