@@ -2971,6 +2971,9 @@ function initMobileBrandGridToggle() {
 }
 
 function initPage() {
+  console.log('[DMI] initPage() called');
+  console.log('[DMI] hasDecoderData():', hasDecoderData());
+  console.log('[DMI] window.decoderData type:', typeof window.decoderData);
 
   ensureSmartLookupDom();
   enhanceHeaderBranding();
@@ -3119,6 +3122,7 @@ try {
 } catch (_) {}
 
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('[DMI] DOMContentLoaded fired');
   scrollPageToTop(true);
   setTimeout(function() { scrollPageToTop(true); }, 0);
   setTimeout(function() { scrollPageToTop(true); }, 120);
@@ -3164,8 +3168,13 @@ function selectCategory(cat, btn) {
 
 // ===== BRAND DROPDOWN =====
 function populateBrands(category) {
+  console.log('[DMI] populateBrands() called with category:', category);
   var sel = document.getElementById('brand');
-  if (!sel || !hasDecoderData()) return;
+  console.log('[DMI] Brand select element:', sel ? 'EXISTS' : 'MISSING');
+  if (!sel || !hasDecoderData()) {
+    console.log('[DMI] Exiting populateBrands: sel=' + (sel ? 'yes' : 'no') + ', hasDecoderData=' + hasDecoderData());
+    return;
+  }
   var selectedBrand = getSelectedBrandForCategory(category);
   var consolidated = getCategoryDropdownBrands(category);
 

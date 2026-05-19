@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Decode My Item - Diagnostic</title>
+  <style>
+    body { font-family: monospace; background: #1a1a1a; color: #00ff00; padding: 20px; }
+    .test { margin: 10px 0; padding: 10px; border: 1px solid #00ff00; }
+    .pass { background: #001a00; }
+    .fail { background: #330000; color: #ff6666; }
+    .info { background: #000033; }
+    h1 { color: #00ccff; }
+    pre { background: #0a0a0a; padding: 10px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>🔧 Decode My Item - Diagnostic Report</h1>
+  <div id="results"></div>
+
+  <script defer src="decoder-data.js"></script>
+  <script defer src="script.js"></script>
+  
+  <script>
+    // Wait for scripts to load
+    setTimeout(function() {
+      var results = document.getElementById('results');
+      var html = '';
+      
+      function test(name, condition, details) {
+        var status = condition ? 'pass' : 'fail';
+        html += '<div class="test ' + status + '">' +
+                '<strong>' + (condition ? '✓' : '✗') + ' ' + name + '</strong>';
+        if (details) html += '<pre>' + details + '</pre>';
+        html += '</div>';
+      }
+      
+      // Test 1: decoder-data.js loaded
+      test('decoder-data.js loaded', typeof window.decoderData === 'object',
+        'window.decoderData type: ' + typeof window.decoderData);
+      
+      // Test 2: Check categories in decoder data
+      if (typeof window.decoderData === 'object') {
+        var cats = Object.keys(window.decoderData || {});
+        test('Categories found', cats.length > 0,
+          'Categories: ' + cats.join(', '));
+        
+        // Test 3: Check brands in appliances category
+        if (window.decoderData.appliances && window.decoderData.appliances.brands) {
+          test('Appliances brands exist', window.decoderData.appliances.brands.length > 0,
+            'Total brands: ' + window.decoderData.appliances.brands.length + '\n' +
+            'First 5: ' + window.decoderData.appliances.brands.slice(0,5).map(b => b.name).join(', '));
+        }
+      }
+      
+      // Test 4: Check if hasDecoderData() function exists
+      test('hasDecoderData() function exists', typeof hasDecoderData === 'function');
+      
+      // Test 5: Check if hasDecoderData returns true
+      if (typeof hasDecoderData === 'function') {
+        test('hasDecoderData() returns true', hasDecoderData(),
+          'Result: ' + hasDecoderData());
+      }
+      
+      // Test 6: Check if populateBrands exists
+      test('populateBrands() function exists', typeof populateBrands === 'function');
+      
+      // Test 7: Check if selectCategory exists  
+      test('selectCategory() function exists', typeof selectCategory === 'function');
+      
+      // Test 8: Check if DOM elements exist
+      test('Brand dropdown exists', document.getElementById('brand') !== null);
+      test('Category tabs exist', document.querySelectorAll('.cat-tab').length === 4,
+        'Found ' + document.querySelectorAll('.cat-tab').length + ' tabs');
+      test('Serial input exists', document.getElementById('serial') !== null);
+      test('Decode button exists', document.getElementById('decodeBtn') !== null);
+      
+      // Test 9: Try to populate brands manually
+      if (typeof populateBrands === 'function' && typeof hasDecoderData === 'function') {
+        try {
+          populateBrands('appliances');
+          var brandDropdown = document.getElementById('brand');
+          var optionCount = brandDropdown ? brandDropdown.querySelectorAll('option').length : 0;
+          test('Brand dropdown populated', optionCount > 1,
+            'Options in dropdown: ' + optionCount);
+        } catch(e) {
+          test('Manual populateBrands call', false,
+            'Error: ' + e.message);
+        }
+      }
+      
+      // Test 10: Check script.js loaded
+      test('script.js loaded', typeof initPage === 'function',
+        'initPage function available: ' + (typeof initPage === 'function'));
+      
+      results.innerHTML = html;
+    }, 500);
+  </script>
+</body>
+</html>
