@@ -5396,6 +5396,10 @@ async function runLKQLookup() {
   query = normalizeSmartLookupQuery(inputEl.value || '');
   inputEl.value = query;
   if (!query) return;
+  
+  // Show loading screen immediately
+  setLoadingActive();
+  
   resolvedQuery = expandKnownSmartLookupQuery(query);
   if (!document.getElementById('ageResults')) {
     // On standalone smart-lookup page, keep the query visible in the input
@@ -5406,7 +5410,6 @@ async function runLKQLookup() {
   trackSmartLookupEvent('search_started', { query: query, includeComparisons: includeComparisons });
   if (typeof window.recordRecentSmartLookup === 'function') window.recordRecentSmartLookup(query);
   canBypassInterpret = looksLikeSpecificSmartLookupQuery(resolvedQuery);
-  clearSmartLookupAssist();
 
   try {
     if (canBypassInterpret) {
@@ -5431,7 +5434,6 @@ async function runLKQLookup() {
       return;
     }
 
-    showSmartLookupAssistLoading();
     // Keep interpretation sequential here: it determines whether the query should
     // route to general lookup, age-only lookup, or the specific-model path.
     interpreted = await fetchSmartLookupInterpretation(resolvedQuery);
