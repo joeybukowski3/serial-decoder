@@ -4582,7 +4582,68 @@ function estimateAge() {
   runLKQLookup();
 }
 
-function escapeSmartLookupHtml(value) {
+function getYearLabel(estimatedYear, yearRange) {
+  if (!yearRange || yearRange === 'Unknown') return 'Estimated Year';
+  
+  // Parse the year range to extract years
+  var years = [];
+  var yearStr = String(yearRange || '');
+  var matches = yearStr.match(/\b(19|20)\d{2}\b/g) || [];
+  
+  if (matches.length >= 2) {
+    years = matches.map(function(y) { return parseInt(y, 10); });
+    years.sort(function(a, b) { return a - b; });
+    
+    var minYear = years[0];
+    var maxYear = years[years.length - 1];
+    var range = maxYear - minYear;
+    
+    // If range is 5 years or more, use "Median Year"
+    if (range >= 5) {
+      return 'Median Year';
+    }
+  }
+  
+  return 'Estimated Year';
+}
+
+function getYearValue(estimatedYear, yearRange) {
+  if (!yearRange || yearRange === 'Unknown') return estimatedYear || 'Unknown';
+  
+  // Parse the year range to extract years
+  var years = [];
+  var yearStr = String(yearRange || '');
+  var matches = yearStr.match(/\b(19|20)\d{2}\b/g) || [];
+  
+  if (matches.length >= 2) {
+    years = matches.map(function(y) { return parseInt(y, 10); });
+    years.sort(function(a, b) { return a - b; });
+    
+    var minYear = years[0];
+    var maxYear = years[years.length - 1];
+    var range = maxYear - minYear;
+    
+    // If range is 5 years or more, calculate and return median
+    if (range >= 5) {
+      var count = years.length;
+      var median;
+      
+      if (count % 2 === 1) {
+        // Odd number: return middle value
+        median = years[Math.floor(count / 2)];
+      } else {
+        // Even number: return the more recent (higher) of the two middle values
+        median = years[count / 2];
+      }
+      
+      return median;
+    }
+  }
+  
+  return estimatedYear || 'Unknown';
+}
+
+
   return String(value || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -4736,7 +4797,7 @@ function showAgeLookupResults(displayQuery, data) {
     { label: 'Brand', value: data.brand || 'Unknown' },
     { label: 'Model', value: data.model || 'Unknown' },
     { label: 'Specificity', value: data.specificityLevel || 'Unknown' },
-    { label: 'Estimated Year', value: data.estimatedYear || 'Unknown' },
+    { label: getYearLabel(data.estimatedYear, data.yearRange), value: getYearValue(data.estimatedYear, data.yearRange) },
     { label: 'Production Range', value: data.yearRange || 'Unknown' }
   ];
 
@@ -4790,7 +4851,7 @@ function buildProgressiveAgeLookupMarkup(displayQuery, data) {
     { label: 'Brand', value: data.brand || 'Unknown' },
     { label: 'Model', value: data.model || 'Unknown' },
     { label: 'Specificity', value: data.specificityLevel || 'Unknown' },
-    { label: 'Estimated Year', value: data.estimatedYear || 'Unknown' },
+    { label: getYearLabel(data.estimatedYear, data.yearRange), value: getYearValue(data.estimatedYear, data.yearRange) },
     { label: 'Production Range', value: data.yearRange || 'Unknown' }
   ];
   var details = [];
