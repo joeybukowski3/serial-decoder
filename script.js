@@ -4660,7 +4660,7 @@ function getYearValue(estimatedYear, yearRange) {
   return estimatedYear || 'Unknown';
 }
 
-
+function escapeSmartLookupHtml(value) {
   return String(value || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
