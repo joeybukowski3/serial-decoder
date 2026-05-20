@@ -213,6 +213,17 @@ test('Rheem water heater accepts generic MMYY serial starts without extra prefix
   assert.equal(out.monthCode, '04');
 });
 
+test('Rheem HVAC-like serial does not fall through to bogus MMYY text decode', () => {
+  const rheem = api.decoderData.waterHeaters.decoders.rheem;
+  const out = rheem.decode('RHLNQ15143648');
+
+  assert.ok(out);
+  assert.equal(out.year, '2014');
+  assert.equal(out.month, 'Week 15');
+  assert.equal(out.weekDigits, '15');
+  assert.equal(out.decodeStyle, 'Embedded WWYY');
+});
+
 test('Rheem numeric serial 0302118742 resolves to 2021 using the documented Style 2 layout', () => {
   const rheem = api.decoderData.waterHeaters.decoders.rheem;
   const out = rheem.decode('0302118742', 'E40 2 RH95');
