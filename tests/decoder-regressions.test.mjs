@@ -56,7 +56,10 @@ function loadDecoderContext() {
       decoderData: __decoderData,
       parseCandidateYears,
       computeEstimatedAge,
+      hasSingleResolvedYear,
+      buildAmbiguousYearMessage,
       chooseCandidateFromLookup,
+      resolveSerialYearFromModel,
       KENMORE_PREFIX_TO_DECODER,
       expandKnownSmartLookupQuery,
       getSupplementalModelConfig,
@@ -66,10 +69,10 @@ function loadDecoderContext() {
     };
   `, ctx);
 
-  return ctx.__api;
+  return { api: ctx.__api, ctx };
 }
 
-const api = loadDecoderContext();
+const { api, ctx } = loadDecoderContext();
 
 test('GE serial-only decode for GM028928Q remains unchanged', () => {
   const ge = api.decoderData.appliances.decoders.ge;
@@ -94,12 +97,13 @@ test('GE Narrow Date refinement selects the closest serial-valid candidate to lo
   assert.equal(selected.chosenYear, 2007);
 });
 
-test('Estimated age uses the most recent valid manufacturer year when multiple years are returned', () => {
+test('Estimated age stays hidden when multiple valid manufacturer years are returned', () => {
   const ge = api.decoderData.appliances.decoders.ge;
   const result = ge.decode('GM028928Q');
 
   assert.equal(result.year, '1983/1995/2007/2019');
-  assert.equal(api.computeEstimatedAge(result.year), '7 years');
+  assert.equal(api.computeEstimatedAge(result.year), '—');
+  assert.equal(api.hasSingleResolvedYear(result.year), false);
 });
 
 test('Narrow Date still allows legitimate strong-evidence adjustment', () => {
@@ -193,6 +197,68 @@ test('Sub-Zero legacy letter-based decode remains unchanged', () => {
   assert.ok(out);
   assert.equal(out.year, '1992/2022');
   assert.equal(out.yearCode, 'B');
+});
+
+test('LG ambiguous serial years prompt for model instead of assuming the newest year', () => {
+  const lg = api.decoderData.appliances.decoders.lg;
+  const out = lg.decode('412TATG1H105');
+
+  assert.ok(out);
+  assert.equal(out.year, '2004/2014/2024');
+  assert.equal(api.computeEstimatedAge(out.year), '—');
+  assert.equal(
+    api.buildAmbiguousYearMessage(api.parseCandidateYears(out.year), { modelAttempted: false }),
+    'Possible manufacture years: 2004, 2014, or 2024. Add a model number to narrow the date.'
+  );
+});
+
+test('LG ambiguous serial can narrow to 2014 from upfront model evidence', async () => {
+  ctx.fetch = async () => ({
+    ok: true,
+    headers: { get: () => 'application/json' },
+    json: async () => ({
+      brand: 'LG',
+      model: 'WM3470HWA',
+      estimatedYear: '2014',
+      yearRange: '2013-2016'
+    })
+  });
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: [2004, 2014, 2024],
+    brand: 'LG',
+    model: 'WM3470HWA',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, 2014);
+  assert.equal(resolved.confidence, 'Medium');
+});
+
+test('LG ambiguous serial keeps all candidates when model evidence is unknown', async () => {
+  ctx.fetch = async () => ({
+    ok: true,
+    headers: { get: () => 'application/json' },
+    json: async () => ({
+      brand: 'LG',
+      model: 'UNKNOWNMODEL',
+      estimatedYear: null,
+      yearRange: null
+    })
+  });
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: [2004, 2014, 2024],
+    brand: 'LG',
+    model: 'UNKNOWNMODEL',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, null);
+  assert.equal(
+    resolved.summary,
+    'Possible manufacture years: 2004, 2014, or 2024. The model number could not confidently resolve the repeating cycle.'
+  );
 });
 
 test('Rheem water heater MMYY format decodes month/year correctly', () => {

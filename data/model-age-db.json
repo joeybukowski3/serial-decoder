@@ -22,6 +22,24 @@
       ]
     },
     {
+      "brand": "LG",
+      "model": "WM3470HWA",
+      "normalizedBrand": "lg",
+      "normalizedModel": "wm3470hwa",
+      "category": "washer",
+      "yearStart": 2013,
+      "yearEnd": 2016,
+      "estimatedYear": 2014,
+      "productionRange": "2013-2016",
+      "source": "LG front-load washer retail/manual publication window",
+      "notes": "WM3470HWA aligns with LG front-load washer listings and manuals from the mid-2010s.",
+      "aliases": [
+        "WM3470",
+        "LG WM3470HWA",
+        "LG WM3470"
+      ]
+    },
+    {
       "brand": "Samsung",
       "model": "QN65S90DAFXZA",
       "normalizedBrand": "samsung",
