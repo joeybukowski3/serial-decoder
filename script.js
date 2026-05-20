@@ -127,7 +127,7 @@ var BRAND_DIRECTORY_CATEGORY_PRIORITY = ['appliances', 'electronics', 'hvac', 'w
 var BRAND_DIRECTORY_CACHE = null;
 var SERIAL_MODEL_LOOKUP_CACHE = {};
 var SERIAL_MODEL_LOOKUP_INFLIGHT = {};
-var SERIAL_MODEL_LOOKUP_TIMEOUT_MS = 2500;
+var SERIAL_MODEL_LOOKUP_TIMEOUT_MS = 9000; // Gemini p50 latency ~4s; give 9s before giving up
 var lastSerialResolutionState = null;
 var CLIENT_MODEL_EVIDENCE = [
   {
@@ -3761,7 +3761,11 @@ async function resolveSerialYearFromModel(options) {
     };
   }
 
-  var lookup = await fetchModelLookupEvidence(brand, model, context, candidates);
+  // Include the candidate years in the query so the AI response is targeted
+  var candidatesCtx = candidates.length > 1
+    ? 'narrowing candidates ' + candidates.join(' ')
+    : '';
+  var lookup = await fetchModelLookupEvidence(brand, model, candidatesCtx, candidates);
   var selected = lookup && lookup.data
     ? chooseCandidateFromLookup(candidates, lookup.data, model, context)
     : null;
@@ -4071,7 +4075,81 @@ function requiresModelForBrand(brandId) {
   return !!getSupplementalModelConfig(getActiveDecoderCategory(), brandId).required;
 }
 
+// Model-prefix → approximate midpoint year for major repeating-cycle brands.
+// Used by deterministicRefinement when the AI call is unavailable or hasn't resolved yet.
+var MODEL_PREFIX_ERA_MAP = [
+  // ── Frigidaire / Electrolux ──────────────────────────────────────────────
+  { prefix: /^FEFL/,       year: 2004, note: 'Frigidaire FEFL freestanding electric range (1998-2010 era)' },
+  { prefix: /^FEF[0-9]/,   year: 2000, note: 'Frigidaire FEF electric range (1994-2006 era)' },
+  { prefix: /^FFEF/,       year: 2010, note: 'Frigidaire Gallery FFEF electric range (2005-2015 era)' },
+  { prefix: /^FGHB/,       year: 2012, note: 'Frigidaire Gallery French door (2008-2016 era)' },
+  { prefix: /^FFTR/,       year: 2014, note: 'Frigidaire FFTR top-mount refrigerator (2008-2020 era)' },
+  { prefix: /^FFSS/,       year: 2012, note: 'Frigidaire FFSS side-by-side (2008-2016 era)' },
+  { prefix: /^FGID/,       year: 2013, note: 'Frigidaire Gallery FGID dishwasher (2009-2018 era)' },
+  { prefix: /^FFBD/,       year: 2012, note: 'Frigidaire FFBD built-in dishwasher (2008-2016 era)' },
+  { prefix: /^FGMV/,       year: 2014, note: 'Frigidaire Gallery microwave (2010-2018 era)' },
+  { prefix: /^FRT/,        year: 1995, note: 'Frigidaire FRT refrigerator legacy (1985-2005 era)' },
+  { prefix: /^ELFW/,       year: 2015, note: 'Electrolux ELFW front-load washer (2010-present era)' },
+  { prefix: /^ELTF/,       year: 2015, note: 'Electrolux ELTF dryer (2010-present era)' },
+  // ── Whirlpool ────────────────────────────────────────────────────────────
+  { prefix: /^WRF[0-9]/,   year: 2014, note: 'Whirlpool WRF French door refrigerator (2010-present era)' },
+  { prefix: /^WRS[0-9]/,   year: 2012, note: 'Whirlpool WRS side-by-side (2008-2016 era)' },
+  { prefix: /^WTW[0-9]/,   year: 2011, note: 'Whirlpool WTW top-load washer (2006-present era)' },
+  { prefix: /^WFW[0-9]/,   year: 2013, note: 'Whirlpool WFW front-load washer (2008-present era)' },
+  { prefix: /^WDF[0-9]/,   year: 2012, note: 'Whirlpool WDF dishwasher (2008-present era)' },
+  { prefix: /^WGD[0-9]/,   year: 2012, note: 'Whirlpool WGD gas dryer (2006-present era)' },
+  { prefix: /^WED[0-9]/,   year: 2012, note: 'Whirlpool WED electric dryer (2006-present era)' },
+  { prefix: /^WFG[0-9]/,   year: 2012, note: 'Whirlpool WFG gas range (2008-present era)' },
+  { prefix: /^WFE[0-9]/,   year: 2012, note: 'Whirlpool WFE electric range (2008-present era)' },
+  { prefix: /^WOS[0-9]/,   year: 2014, note: 'Whirlpool WOS built-in oven (2010-present era)' },
+  { prefix: /^LA[0-9]/,    year: 1990, note: 'Whirlpool/Kenmore LA direct-drive top-load washer (1982-2000 era)' },
+  { prefix: /^LSQ[0-9]/,   year: 1998, note: 'Whirlpool LSQ direct-drive washer (1990-2004 era)' },
+  // ── GE ───────────────────────────────────────────────────────────────────
+  { prefix: /^PFE[0-9]/,   year: 2015, note: 'GE Profile PFE French door (2012-present era)' },
+  { prefix: /^PYE[0-9]/,   year: 2016, note: 'GE Profile PYE French door with freezer-drawer (2013-present era)' },
+  { prefix: /^GSS[0-9]/,   year: 2008, note: 'GE GSS side-by-side (2000-2015 era)' },
+  { prefix: /^GTS[0-9]/,   year: 2010, note: 'GE GTS top-mount refrigerator (2005-present era)' },
+  { prefix: /^GTW[0-9]/,   year: 2013, note: 'GE GTW top-load washer (2009-present era)' },
+  { prefix: /^GFW[0-9]/,   year: 2014, note: 'GE GFW front-load washer (2010-present era)' },
+  { prefix: /^GDF[0-9]/,   year: 2014, note: 'GE GDF dishwasher (2010-present era)' },
+  { prefix: /^GDT[0-9]/,   year: 2015, note: 'GE GDT dishwasher (2012-present era)' },
+  { prefix: /^JB[0-9]/,    year: 2008, note: 'GE JB electric range (2000-present era)' },
+  { prefix: /^JGB[0-9]/,   year: 2008, note: 'GE JGB gas range (2000-present era)' },
+  // ── Maytag ───────────────────────────────────────────────────────────────
+  { prefix: /^MFI[0-9]/,   year: 2014, note: 'Maytag MFI French door refrigerator (2010-present era)' },
+  { prefix: /^MBF[0-9]/,   year: 2010, note: 'Maytag MBF bottom-freezer (2006-2016 era)' },
+  { prefix: /^MVW[0-9]/,   year: 2012, note: 'Maytag MVW top-load washer (2010-present era)' },
+  { prefix: /^MHW[0-9]/,   year: 2012, note: 'Maytag MHW front-load washer (2008-present era)' },
+  { prefix: /^MDB[0-9]/,   year: 2010, note: 'Maytag MDB dishwasher (2005-present era)' },
+  // ── Samsung ──────────────────────────────────────────────────────────────
+  { prefix: /^RF[0-9]{2}[A-Z]{2}/, year: 2016, note: 'Samsung RF-series French door (2012-present era)' },
+  { prefix: /^RS[0-9]{2}[A-Z]{2}/, year: 2010, note: 'Samsung RS-series side-by-side (2006-2018 era)' },
+  { prefix: /^WF[0-9]{2}[A-Z]{2}/, year: 2014, note: 'Samsung WF front-load washer (2010-present era)' },
+  { prefix: /^DW[0-9]{2}[A-Z]{2}/, year: 2015, note: 'Samsung DW dishwasher (2012-present era)' },
+  // ── LG ───────────────────────────────────────────────────────────────────
+  { prefix: /^LRMVS/,      year: 2017, note: 'LG LRMVS French door refrigerator (2014-present era)' },
+  { prefix: /^LFXS/,       year: 2013, note: 'LG LFXS French door (2010-2020 era)' },
+  { prefix: /^WM[0-9]/,    year: 2014, note: 'LG WM front-load washer (2008-present era)' },
+  { prefix: /^WT[0-9]{4}/,  year: 2013, note: 'LG WT top-load washer (2009-present era)' },
+  { prefix: /^LDF[0-9]/,   year: 2012, note: 'LG LDF dishwasher (2008-present era)' },
+  { prefix: /^LRE[0-9]/,   year: 2013, note: 'LG LRE electric range (2008-present era)' },
+  { prefix: /^LRG[0-9]/,   year: 2013, note: 'LG LRG gas range (2008-present era)' },
+];
+
+function resolveModelPrefixEraYear(model) {
+  if (!model) return null;
+  var m = String(model).toUpperCase().replace(/\s/g, '');
+  for (var i = 0; i < MODEL_PREFIX_ERA_MAP.length; i++) {
+    var entry = MODEL_PREFIX_ERA_MAP[i];
+    if (entry.prefix.test(m)) {
+      return { year: entry.year, note: entry.note };
+    }
+  }
+  return null;
+}
+
 function deterministicRefinement(candidates, model, context) {
+  // 1. Explicit year embedded in model or context string
   var combined = (model + ' ' + context).trim();
   var yearsMentioned = parseCandidateYears(combined);
   if (yearsMentioned.length) {
@@ -4085,6 +4163,21 @@ function deterministicRefinement(candidates, model, context) {
       confidence: 'Heuristic'
     };
   }
+
+  // 2. Model-prefix era table — covers common repeating-cycle brands without AI
+  var prefixMatch = resolveModelPrefixEraYear(model);
+  if (prefixMatch) {
+    var eraTarget = prefixMatch.year;
+    var bestCandidate = candidates.reduce(function(prev, cur) {
+      return Math.abs(cur - eraTarget) < Math.abs(prev - eraTarget) ? cur : prev;
+    }, candidates[0]);
+    return {
+      chosenYear: bestCandidate,
+      summary: prefixMatch.note + '. Nearest serial-valid candidate year: ' + bestCandidate + '.',
+      confidence: 'Heuristic'
+    };
+  }
+
   return {
     chosenYear: null,
     summary: 'Not enough model/context detail to confidently narrow the date. Keep current candidates and add more specifics.',

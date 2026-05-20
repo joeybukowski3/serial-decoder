@@ -86,6 +86,18 @@ const HVAC_ERA_DATA = {
 };
 
 const APPLIANCE_ERA_DATA = {
+  frigidaire: {
+    defaultNote: 'Frigidaire model-prefix heuristic: TF-prefix lines indicate pre-1985 production; FRT/FEF lines span 1985-2005; FEFL lines span 1998-2010; FFEF/FFTR/FFSS lines indicate 2005-present.',
+    rules: [
+      { key: 'fefl', yearRange: '1998-2010', note: 'Frigidaire FEFL freestanding electric range models are generally associated with 1998-2010 production.' },
+      { key: 'ffef', yearRange: '2005-2015', note: 'Frigidaire Gallery FFEF electric range models are generally associated with 2005-2015 production.' },
+      { key: 'fef',  yearRange: '1994-2006', note: 'Frigidaire FEF electric range models are generally associated with 1994-2006 production.' },
+      { key: 'frt',  yearRange: '1985-2005', note: 'Frigidaire FRT refrigerator models are generally associated with 1985-2005 production.' },
+      { key: 'fghb', yearRange: '2008-2018', note: 'Frigidaire Gallery FGHB French door models are generally associated with 2008-2018 production.' },
+      { key: 'fftr', yearRange: '2008-2022', note: 'Frigidaire FFTR top-mount refrigerator models are generally associated with 2008-2022 production.' },
+      { key: 'ffss', yearRange: '2006-2018', note: 'Frigidaire FFSS side-by-side models are generally associated with 2006-2018 production.' },
+    ]
+  },
   whirlpool: {
     defaultNote: 'Whirlpool washer-era heuristic: Direct Drive platforms are generally older; Vertical Modular platforms are newer.',
     rules: [
@@ -287,7 +299,8 @@ function applyApplianceEraHints(base, normalizedQuery) {
   const out = { ...base };
   const brandKey = normalizeBrandKey(out.brand);
   const categoryKey = normalizeCategoryKey(out.itemCategory || out.category);
-  if (categoryKey && !/(washer|laundry)/.test(categoryKey)) return out;
+  // Guard: only skip if category is explicitly non-appliance (e.g. HVAC, electronics)
+  if (categoryKey && /(hvac|airconditioner|furnace|heatpump|television|computer|laptop|phone|tablet)/.test(categoryKey)) return out;
   const era = APPLIANCE_ERA_DATA[brandKey];
   if (!era) return out;
 
