@@ -76,6 +76,24 @@
       ]
     },
     {
+      "brand": "Whirlpool",
+      "model": "WMH31017HS12",
+      "normalizedBrand": "whirlpool",
+      "normalizedModel": "wmh31017hs12",
+      "category": "microwave",
+      "yearStart": 2023,
+      "yearEnd": 2025,
+      "estimatedYear": 2024,
+      "productionRange": "2023-2025",
+      "source": "Whirlpool WMH31017HS12 manual and retail publication window",
+      "notes": "WMH31017HS12 is a current-generation Whirlpool over-the-range microwave sold in the mid-2020s, which rules out the older repeating 1994 serial cycle.",
+      "aliases": [
+        "WMH31017HS",
+        "Whirlpool WMH31017HS12",
+        "Whirlpool WMH31017HS"
+      ]
+    },
+    {
       "brand": "GE",
       "model": "PFE28KYNFS",
       "normalizedBrand": "ge",

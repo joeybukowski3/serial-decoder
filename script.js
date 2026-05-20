@@ -143,6 +143,13 @@ var CLIENT_MODEL_EVIDENCE = [
     yearRange: '2003-2005',
     model: 'FEFL79DBB',
     aliases: ['FEFL79', 'Frigidaire FEFL79DBB', 'Frigidaire FEFL79']
+  },
+  {
+    brand: 'whirlpool',
+    estimatedYear: '2024',
+    yearRange: '2023-2025',
+    model: 'WMH31017HS12',
+    aliases: ['WMH31017HS', 'Whirlpool WMH31017HS12', 'Whirlpool WMH31017HS']
   }
 ];
 
@@ -3606,7 +3613,7 @@ function buildAmbiguousYearMessage(candidates, options) {
   var opts = options || {};
   var base = 'Possible manufacture years: ' + formatPossibleYearsList(candidates) + '.';
   if (opts.modelAttempted) {
-    return base + ' The model number could not confidently resolve the repeating cycle.';
+    return base + ' Model number could not confidently narrow this repeating serial cycle.';
   }
   return base + ' Add a model number to narrow the date.';
 }
@@ -4185,20 +4192,108 @@ function deterministicRefinement(candidates, model, context) {
   };
 }
 
+function parseModelEvidenceYearBounds(value) {
+  var text = String(value || '').trim();
+  if (!text) return null;
+
+  var normalized = text.toLowerCase();
+  var decadeMatch = normalized.match(/\b((?:19|20)\d{2})s\b/);
+  if (decadeMatch) {
+    var decadeStart = parseInt(decadeMatch[1], 10);
+    if (!isNaN(decadeStart)) {
+      return { min: decadeStart, max: decadeStart + 9 };
+    }
+  }
+
+  var rangeMatch = normalized.match(/\b((?:19|20)\d{2})\s*-\s*((?:19|20)\d{2}|present)\b/i);
+  if (rangeMatch) {
+    var minYear = parseInt(rangeMatch[1], 10);
+    var maxToken = String(rangeMatch[2] || '').toLowerCase();
+    var maxYear = maxToken === 'present' ? CURRENT_YEAR : parseInt(maxToken, 10);
+    if (!isNaN(minYear) && !isNaN(maxYear)) {
+      return { min: minYear, max: maxYear };
+    }
+  }
+
+  var preMatch = normalized.match(/\bpre[-\s]*((?:19|20)\d{2})\b/);
+  if (preMatch) {
+    var preYear = parseInt(preMatch[1], 10);
+    if (!isNaN(preYear)) {
+      return { min: null, max: preYear - 1 };
+    }
+  }
+
+  var postMatch = normalized.match(/\bpost[-\s]*((?:19|20)\d{2})\b/);
+  if (postMatch) {
+    var postYear = parseInt(postMatch[1], 10);
+    if (!isNaN(postYear)) {
+      return { min: postYear + 1, max: null };
+    }
+  }
+
+  return null;
+}
+
+function mergeModelEvidenceYearBounds(boundsList) {
+  var minYear = null;
+  var maxYear = null;
+  for (var i = 0; i < boundsList.length; i++) {
+    var bounds = boundsList[i];
+    if (!bounds) continue;
+    if (typeof bounds.min === 'number') {
+      minYear = (minYear === null) ? bounds.min : Math.max(minYear, bounds.min);
+    }
+    if (typeof bounds.max === 'number') {
+      maxYear = (maxYear === null) ? bounds.max : Math.min(maxYear, bounds.max);
+    }
+  }
+  if (minYear === null && maxYear === null) return null;
+  if (minYear !== null && maxYear !== null && minYear > maxYear) return null;
+  return { min: minYear, max: maxYear };
+}
+
+function filterCandidateYearsByModelEvidence(candidates, lookupData) {
+  if (!lookupData || !Array.isArray(candidates) || !candidates.length) return [];
+  var bounds = mergeModelEvidenceYearBounds([
+    parseModelEvidenceYearBounds(lookupData.yearRange),
+    parseModelEvidenceYearBounds(lookupData.notes)
+  ]);
+  if (!bounds) return [];
+  return candidates.filter(function(year) {
+    if (typeof bounds.min === 'number' && year < bounds.min) return false;
+    if (typeof bounds.max === 'number' && year > bounds.max) return false;
+    return true;
+  });
+}
+
 function chooseCandidateFromLookup(candidates, lookupData, model, context) {
   if (!lookupData) return null;
-  var targetYears = [];
-  if (lookupData.estimatedYear) {
-    targetYears = targetYears.concat(parseCandidateYears(String(lookupData.estimatedYear)));
+  var estimatedYearTargets = lookupData.estimatedYear
+    ? parseCandidateYears(String(lookupData.estimatedYear))
+    : [];
+  var rangeTargets = lookupData.yearRange
+    ? parseCandidateYears(String(lookupData.yearRange))
+    : [];
+  if ((!estimatedYearTargets.length && !rangeTargets.length) || !candidates.length) {
+    var boundedCandidates = filterCandidateYearsByModelEvidence(candidates, lookupData);
+    if (boundedCandidates.length === 1) {
+      return {
+        chosenYear: boundedCandidates[0],
+        summary: 'Model-era evidence rules out the other repeating-cycle years and leaves ' + boundedCandidates[0] + '.',
+        confidence: 'Medium'
+      };
+    }
+    return null;
   }
-  if (lookupData.yearRange) {
-    targetYears = targetYears.concat(parseCandidateYears(String(lookupData.yearRange)));
-  }
-  if (!targetYears.length || !candidates.length) return null;
+  var targetYears = estimatedYearTargets.length ? estimatedYearTargets : rangeTargets;
+  var candidatePool = estimatedYearTargets.length
+    ? candidates.slice()
+    : filterCandidateYearsByModelEvidence(candidates, lookupData);
+  if (!candidatePool.length) candidatePool = candidates.slice();
   var target = targetYears[0];
-  var best = candidates.reduce(function(prev, cur) {
+  var best = candidatePool.reduce(function(prev, cur) {
     return Math.abs(cur - target) < Math.abs(prev - target) ? cur : prev;
-  }, candidates[0]);
+  }, candidatePool[0]);
   return {
     chosenYear: best,
     summary: 'Model evidence suggests around ' + target + '; closest serial-valid candidate is ' + best + '.',
@@ -4471,6 +4566,7 @@ function decodeSerial() {
 
   // Hold the cloud for at least 1400ms so the sun transition reaches ~2 s total
   setTimeout(async function() {
+    try {
     // Reset row/block visibility from any previous fallback state
     (function() {
       var _yr = document.getElementById('resultYear');
@@ -4532,12 +4628,24 @@ function decodeSerial() {
 
     var resultYearText = capYear(result.year);
     var resultCandidates = parseCandidateYears(resultYearText);
-    var initialResolution = await resolveSerialYearFromModel({
-      candidates: resultCandidates,
-      brand: getSelectedBrandLabel(metaBrandId) || decoder.name,
-      model: supplementalModel,
-      context: ''
-    });
+    var initialResolution = null;
+    try {
+      initialResolution = await resolveSerialYearFromModel({
+        candidates: resultCandidates,
+        brand: getSelectedBrandLabel(metaBrandId) || decoder.name,
+        model: supplementalModel,
+        context: ''
+      });
+    } catch (modelError) {
+      console.warn('[Serial Decode] Model narrowing failed; keeping serial-only result.', modelError);
+      initialResolution = {
+        chosenYear: null,
+        summary: buildAmbiguousYearMessage(resultCandidates, { modelAttempted: !!supplementalModel }),
+        confidence: '',
+        source: 'narrowing-error',
+        lookupData: null
+      };
+    }
     var resolvedYearText = initialResolution && initialResolution.chosenYear
       ? String(initialResolution.chosenYear)
       : resultYearText;
@@ -4657,6 +4765,10 @@ function decodeSerial() {
       document.getElementById('serialResults').classList.remove('hidden');
       document.getElementById('serialResults').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
+    } catch (decodeError) {
+      console.error('[Serial Decode] Failed to complete decode flow.', decodeError);
+      showDecodeFallback(decoder, serial, metaBrandId, decodeError && decodeError.message ? decodeError.message : 'Unexpected decode flow error');
+    }
   }, 1400);
 }
 

@@ -334,8 +334,57 @@ test('LG ambiguous serial keeps all candidates when model evidence is unknown', 
   assert.equal(resolved.chosenYear, null);
   assert.equal(
     resolved.summary,
-    'Possible manufacture years: 2004, 2014, or 2024. The model number could not confidently resolve the repeating cycle.'
+    'Possible manufacture years: 2004, 2014, or 2024. Model number could not confidently narrow this repeating serial cycle.'
   );
+});
+
+test('Whirlpool serial-only ambiguous result does not collapse to a single year', () => {
+  const whirlpool = api.decoderData.appliances.decoders.whirlpool;
+  const out = whirlpool.decode('TRD3481274');
+
+  assert.ok(out);
+  assert.equal(out.year, '1994/2024');
+  assert.equal(api.computeEstimatedAge(out.year), '—');
+  assert.equal(api.hasSingleResolvedYear(out.year), false);
+});
+
+test('Whirlpool ambiguous serial can narrow to 2024 from upfront model evidence', async () => {
+  ctx.fetch = async () => ({
+    ok: true,
+    headers: { get: () => 'application/json' },
+    json: async () => ({
+      brand: 'Whirlpool',
+      model: 'WMH31017HS12',
+      estimatedYear: '2024',
+      yearRange: '2023-2025'
+    })
+  });
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: [1994, 2024],
+    brand: 'Whirlpool',
+    model: 'WMH31017HS12',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, 2024);
+  assert.equal(resolved.confidence, 'Medium');
+});
+
+test('Whirlpool ambiguous serial still narrows from built-in model evidence when lookup fails', async () => {
+  ctx.fetch = async () => {
+    throw new Error('lookup offline');
+  };
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: [1994, 2024],
+    brand: 'Whirlpool',
+    model: 'WMH31017HS12',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, 2024);
+  assert.equal(resolved.source, 'client-evidence');
 });
 
 test('Refinement notes use narrowed model-era evidence when a single year is resolved', () => {
