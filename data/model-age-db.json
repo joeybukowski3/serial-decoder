@@ -202,6 +202,24 @@
       ]
     },
     {
+      "brand": "Frigidaire",
+      "model": "FEFL79DBB",
+      "normalizedBrand": "frigidaire",
+      "normalizedModel": "fefl79dbb",
+      "category": "range",
+      "yearStart": 2003,
+      "yearEnd": 2005,
+      "estimatedYear": 2004,
+      "productionRange": "2003-2005",
+      "source": "Frigidaire FEFL79DBB use and care manual / factory parts catalog publication window",
+      "notes": "FEFL79DBB appears in early-2000s Frigidaire electric range manuals and parts literature, which aligns the model family to the 2004 production cycle rather than the later repeating serial decades.",
+      "aliases": [
+        "FEFL79",
+        "Frigidaire FEFL79DBB",
+        "Frigidaire FEFL79"
+      ]
+    },
+    {
       "brand": "Goodman",
       "model": "GSX140361",
       "normalizedBrand": "goodman",

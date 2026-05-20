@@ -3790,10 +3790,8 @@ function buildSearchQueryText() {
   if (serialText) parts.push('Serial=' + serialText);
   if (modelText) parts.push('Model=' + modelText);
   if (narrowModel || narrowContext) {
-    var narrowParts = [];
-    if (narrowModel) narrowParts.push('Model=' + narrowModel);
-    if (narrowContext) narrowParts.push('Context=' + narrowContext);
-    parts.push('Narrow Date=' + narrowParts.join(', '));
+    if (narrowModel) parts.push('Refinement Model=' + narrowModel);
+    if (narrowContext) parts.push('Refinement Context=' + narrowContext);
   }
   return 'Search Query: ' + parts.join(' | ');
 }
@@ -4047,6 +4045,19 @@ function chooseCandidateFromLookup(candidates, lookupData, model, context) {
   };
 }
 
+function updateSerialResultNotes(baseNotes, resolutionSummary, candidates, modelAttempted, resolved) {
+  var message = '';
+  if (resolved && resolutionSummary) {
+    message = resolutionSummary;
+  } else if (candidates && candidates.length > 1) {
+    message = buildAmbiguousYearMessage(candidates, { modelAttempted: !!modelAttempted });
+  }
+  if (!message) return baseNotes || 'N/A';
+  if (!baseNotes || baseNotes === 'N/A') return message;
+  if (baseNotes.indexOf(message) !== -1) return baseNotes;
+  return message + ' ' + baseNotes;
+}
+
 function renderSerialSummaryLayer() {
   var layer = document.getElementById('serialSummaryLayer');
   var serialEl = document.getElementById('serial');
@@ -4181,13 +4192,35 @@ async function refineAmbiguousResult() {
     yearEl.textContent = candidates.join('/');
     setEstimatedAgeVisibility(false, '');
   }
+  var currentNotesEl = document.getElementById('resultNotes');
+  if (currentNotesEl) {
+    currentNotesEl.textContent = sanitizeAlertText(
+      updateSerialResultNotes(
+        lastSerialResolutionState && lastSerialResolutionState.baseNotes ? lastSerialResolutionState.baseNotes : currentNotesEl.textContent,
+        resolved.summary,
+        candidates,
+        !!model,
+        !!(resolved && resolved.chosenYear)
+      )
+    );
+  }
   if (lastSerialResolutionState) {
     lastSerialResolutionState.model = model || lastSerialResolutionState.model || '';
     lastSerialResolutionState.chosenYear = resolved ? resolved.chosenYear : null;
     lastSerialResolutionState.summary = resolved ? resolved.summary : '';
+    lastSerialResolutionState.refinementModel = model;
+    lastSerialResolutionState.refinementContext = context;
   }
   updateSearchQueryLine();
   updateResultWarning({ year: yearEl.textContent, month: monthEl ? monthEl.textContent : '' }, (getDecodeDom().brandEl ? getDecodeDom().brandEl.value : ''));
+  var refinePanel = ensureRefinementPanel();
+  if (refinePanel) {
+    if (resolved && resolved.chosenYear) {
+      refinePanel.classList.add('hidden');
+    } else {
+      refinePanel.classList.remove('hidden');
+    }
+  }
   renderSerialSummaryLayer();
 }
 
@@ -4371,11 +4404,13 @@ function decodeSerial() {
 
     var notesText = decoder.notes || decoder.decodeNotes || 'N/A';
     if (resultCandidates.length > 1) {
-      var ambiguityMessage = initialResolution && initialResolution.chosenYear
-        ? initialResolution.summary
-        : buildAmbiguousYearMessage(resultCandidates, { modelAttempted: !!supplementalModel });
-      if (notesText === 'N/A') notesText = ambiguityMessage;
-      else if (notesText.indexOf(ambiguityMessage) === -1) notesText = ambiguityMessage + ' ' + notesText;
+      notesText = updateSerialResultNotes(
+        notesText,
+        initialResolution ? initialResolution.summary : '',
+        resultCandidates,
+        !!supplementalModel,
+        !!(initialResolution && initialResolution.chosenYear)
+      );
     }
     if (isKenmore && kenmoreResolution && kenmoreResolution.note) {
       notesText = kenmoreResolution.note + (notesText ? ' ' + notesText : '');
@@ -4400,7 +4435,10 @@ function decodeSerial() {
       rawResult: result,
       candidates: resultCandidates.slice(),
       chosenYear: initialResolution ? initialResolution.chosenYear : null,
-      summary: initialResolution ? initialResolution.summary : ''
+      summary: initialResolution ? initialResolution.summary : '',
+      baseNotes: decoder.notes || decoder.decodeNotes || 'N/A',
+      refinementModel: '',
+      refinementContext: ''
     };
 
     var refinePanel = ensureRefinementPanel();

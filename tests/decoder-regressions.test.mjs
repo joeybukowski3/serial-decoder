@@ -58,6 +58,7 @@ function loadDecoderContext() {
       computeEstimatedAge,
       hasSingleResolvedYear,
       buildAmbiguousYearMessage,
+      updateSerialResultNotes,
       chooseCandidateFromLookup,
       resolveSerialYearFromModel,
       getCurrentSupplementalModelValue,
@@ -256,6 +257,29 @@ test('LG ambiguous serial can narrow to 2014 from upfront model evidence', async
   assert.equal(resolved.confidence, 'Medium');
 });
 
+test('Frigidaire ambiguous serial can narrow to 2004 from model evidence', async () => {
+  ctx.fetch = async () => ({
+    ok: true,
+    headers: { get: () => 'application/json' },
+    json: async () => ({
+      brand: 'Frigidaire',
+      model: 'FEFL79DBB',
+      estimatedYear: '2004',
+      yearRange: '2003-2005'
+    })
+  });
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: [1994, 2004, 2014, 2024],
+    brand: 'Frigidaire',
+    model: 'FEFL79DBB',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, 2004);
+  assert.equal(resolved.confidence, 'Medium');
+});
+
 test('LG ambiguous serial keeps all candidates when model evidence is unknown', async () => {
   ctx.fetch = async () => ({
     ok: true,
@@ -280,6 +304,19 @@ test('LG ambiguous serial keeps all candidates when model evidence is unknown', 
     resolved.summary,
     'Possible manufacture years: 2004, 2014, or 2024. The model number could not confidently resolve the repeating cycle.'
   );
+});
+
+test('Refinement notes use narrowed model-era evidence when a single year is resolved', () => {
+  const notes = api.updateSerialResultNotes(
+    'Frigidaire serial year digit repeats by decade.',
+    'Model evidence suggests around 2004; closest serial-valid candidate is 2004.',
+    [1994, 2004, 2014, 2024],
+    true,
+    true
+  );
+
+  assert.match(notes, /closest serial-valid candidate is 2004/i);
+  assert.doesNotMatch(notes, /could not confidently resolve/i);
 });
 
 test('Rheem water heater MMYY format decodes month/year correctly', () => {
