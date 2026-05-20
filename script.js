@@ -4067,6 +4067,18 @@ function renderSerialSummaryLayer() {
     heroRows.push('<div class="serial-hero-row"><span class="serial-hero-row-label">Estimated Age</span><span class="serial-hero-row-value">' + esc(age) + '</span></div>');
   }
 
+  // Generate Item History Guide suggestions with category context
+  var guideCard = '';
+  var decoderCategory = '';
+  if (typeof window.ItemHistoryGuideMatcher !== 'undefined') {
+    // Try to detect category from active tab
+    var activeTab = document.querySelector('.search-tab.active');
+    if (activeTab && activeTab.getAttribute('data-cat')) {
+      decoderCategory = activeTab.getAttribute('data-cat');
+    }
+    guideCard = window.ItemHistoryGuideMatcher.generateGuidesCard(queryText, decoderCategory);
+  }
+
   layer.innerHTML = '' +
     '<div class="serial-query-chip">' + esc(queryText || 'Search Query: —') + '</div>' +
     '<div class="serial-top-grid">' +
@@ -4085,6 +4097,7 @@ function renderSerialSummaryLayer() {
       '<div id="serialRefinementMount"></div>' +
       '<div id="serialLkqMount"></div>' +
     '</div>' +
+    (guideCard ? '<div class="serial-guide-section">' + guideCard + '</div>' : '') +
     '<div class="serial-bottom-grid">' +
       '<div class="sl-summary-card">' +
         '<h4>Important Notes</h4>' +
