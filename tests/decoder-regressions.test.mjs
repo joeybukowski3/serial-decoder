@@ -60,6 +60,8 @@ function loadDecoderContext() {
       buildAmbiguousYearMessage,
       chooseCandidateFromLookup,
       resolveSerialYearFromModel,
+      getCurrentSupplementalModelValue,
+      setStoredSupplementalModel,
       KENMORE_PREFIX_TO_DECODER,
       expandKnownSmartLookupQuery,
       getSupplementalModelConfig,
@@ -178,6 +180,25 @@ test('Kenmore 795 refrigerator serial routes to LG decoding without missing-pref
   assert.equal(resolved.note, '');
   assert.equal(out.year, '2004/2014/2024');
   assert.equal(out.month, 'October');
+});
+
+test('Current model field value overrides stale stored model state', () => {
+  const originalGetById = ctx.document.getElementById;
+  const input = {
+    value: 'WM3470HWA',
+    setAttribute() {},
+    removeAttribute() {},
+    getAttribute() { return null; }
+  };
+
+  api.setStoredSupplementalModel('appliances', 'OLDVALUE');
+  ctx.document.getElementById = (id) => id === 'modelNumber' ? input : originalGetById(id);
+
+  const value = api.getCurrentSupplementalModelValue('appliances', 'lg');
+
+  assert.equal(value, 'WM3470HWA');
+  assert.equal(api.getCurrentSupplementalModelValue('appliances', 'lg'), 'WM3470HWA');
+  ctx.document.getElementById = originalGetById;
 });
 
 test('Sub-Zero accepts alphanumeric serials where the second character is the year code', () => {

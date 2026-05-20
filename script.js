@@ -1141,6 +1141,32 @@ function setStoredSupplementalModel(catKey, value) {
   getDecoderCategoryState(catKey).model = value || '';
 }
 
+function bindModelFieldInput(input) {
+  if (!input || input.getAttribute('data-model-bound') === '1') return input;
+  input.setAttribute('data-model-bound', '1');
+  input.addEventListener('input', function() {
+    var category = getActiveDecoderCategory();
+    var config = getSupplementalModelConfig(category, getSelectedBrandForCategory(category));
+    var nextValue = typeof config.sanitize === 'function' ? config.sanitize(input.value) : input.value;
+    if (input.value !== nextValue) input.value = nextValue;
+    setStoredSupplementalModel(category, nextValue);
+    if (nextValue.trim()) clearSupplementalModelError();
+    updateDecodeBtn();
+  });
+  return input;
+}
+
+function getCurrentSupplementalModelValue(category, brandId) {
+  var catKey = normalizeDecoderCategory(category);
+  var config = getSupplementalModelConfig(catKey, brandId);
+  var modelEl = document.getElementById('modelNumber');
+  var rawValue = modelEl ? String(modelEl.value || '') : getStoredSupplementalModel(catKey);
+  var normalizedValue = typeof config.sanitize === 'function' ? config.sanitize(rawValue) : rawValue;
+  if (modelEl && modelEl.value !== normalizedValue) modelEl.value = normalizedValue;
+  setStoredSupplementalModel(catKey, normalizedValue);
+  return String(normalizedValue || '').trim();
+}
+
 function clearDecodeEntryFields(options) {
   options = options || {};
   var category = options.categoryKey || getActiveDecoderCategory();
@@ -3395,7 +3421,7 @@ function updateDecodeBtn() {
   var brand  = getSelectedBrandForCategory(currentCategory) || brandEl.value;
   var serial = serialEl.value.trim();
   var modelConfig = getSupplementalModelConfig(currentCategory, brand);
-  var modelValue = getStoredSupplementalModel(currentCategory).trim();
+  var modelValue = getCurrentSupplementalModelValue(currentCategory, brand);
   var decoderId = brand ? resolveDecoderId(brand) : null;
   var primaryInput = modelConfig.useModelAsPrimaryInput ? modelValue : serial;
   var hasRequiredModel = modelConfig.required ? !!modelValue : true;
@@ -3911,7 +3937,8 @@ function resolveKenmoreDecoderFromPrefix(prefixValue) {
 }
 
 function ensureModelField() {
-  if (document.getElementById('modelNumber')) return document.getElementById('modelNumber');
+  var existing = document.getElementById('modelNumber');
+  if (existing) return bindModelFieldInput(existing);
   var serialInput = document.getElementById('serial');
   if (!serialInput) return null;
   var serialGroup = serialInput
@@ -3934,19 +3961,7 @@ function ensureModelField() {
     group.style.marginTop = '8px';
   }
   var input = document.getElementById('modelNumber');
-  if (input && input.getAttribute('data-model-bound') !== '1') {
-    input.setAttribute('data-model-bound', '1');
-    input.addEventListener('input', function() {
-      var category = getActiveDecoderCategory();
-      var config = getSupplementalModelConfig(category, getSelectedBrandForCategory(category));
-      var nextValue = typeof config.sanitize === 'function' ? config.sanitize(input.value) : input.value;
-      if (input.value !== nextValue) input.value = nextValue;
-      setStoredSupplementalModel(category, nextValue);
-      if (nextValue.trim()) clearSupplementalModelError();
-      updateDecodeBtn();
-    });
-  }
-  return input;
+  return bindModelFieldInput(input);
 }
 
 function updateModelFieldVisibility(brandId) {
@@ -4141,6 +4156,7 @@ async function refineAmbiguousResult() {
     ? lastSerialResolutionState.candidates.slice()
     : parseCandidateYears(yearEl.textContent);
   if (!candidates.length) return;
+  setStoredSupplementalModel(getActiveDecoderCategory(), model);
 
   output.innerHTML = '<p>Refining...</p>';
   var resolved = await resolveSerialYearFromModel({
@@ -4194,7 +4210,7 @@ function decodeSerial() {
   currentCategory = getActiveDecoderCategory();
   var metaBrandId = getSelectedBrandForCategory(currentCategory) || dom.brandEl.value;
   var modelConfig = getSupplementalModelConfig(currentCategory, metaBrandId);
-  var supplementalModel = getStoredSupplementalModel(currentCategory).trim();
+  var supplementalModel = getCurrentSupplementalModelValue(currentCategory, metaBrandId);
   var serialInput = dom.serialEl.value.trim();
   clearSupplementalModelError();
   if (!metaBrandId) return;
