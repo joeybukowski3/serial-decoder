@@ -280,6 +280,38 @@ test('Frigidaire ambiguous serial can narrow to 2004 from model evidence', async
   assert.equal(resolved.confidence, 'Medium');
 });
 
+test('Frigidaire ambiguous serial still narrows from built-in model evidence when lookup fails', async () => {
+  ctx.fetch = async () => {
+    throw new Error('lookup offline');
+  };
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: [1994, 2004, 2014, 2024],
+    brand: 'Frigidaire',
+    model: 'FEFL79DBB',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, 2004);
+  assert.equal(resolved.source, 'client-evidence');
+});
+
+test('LG ambiguous serial still narrows from built-in model evidence when lookup fails', async () => {
+  ctx.fetch = async () => {
+    throw new Error('lookup offline');
+  };
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: [2004, 2014, 2024],
+    brand: 'LG',
+    model: 'WM3470HWA',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, 2014);
+  assert.equal(resolved.source, 'client-evidence');
+});
+
 test('LG ambiguous serial keeps all candidates when model evidence is unknown', async () => {
   ctx.fetch = async () => ({
     ok: true,

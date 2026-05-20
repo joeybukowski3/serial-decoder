@@ -129,6 +129,22 @@ var SERIAL_MODEL_LOOKUP_CACHE = {};
 var SERIAL_MODEL_LOOKUP_INFLIGHT = {};
 var SERIAL_MODEL_LOOKUP_TIMEOUT_MS = 2500;
 var lastSerialResolutionState = null;
+var CLIENT_MODEL_EVIDENCE = [
+  {
+    brand: 'lg',
+    estimatedYear: '2014',
+    yearRange: '2013-2016',
+    model: 'WM3470HWA',
+    aliases: ['WM3470', 'LG WM3470HWA', 'LG WM3470']
+  },
+  {
+    brand: 'frigidaire',
+    estimatedYear: '2004',
+    yearRange: '2003-2005',
+    model: 'FEFL79DBB',
+    aliases: ['FEFL79', 'Frigidaire FEFL79DBB', 'Frigidaire FEFL79']
+  }
+];
 
 var BRAND_NORMALIZER_PRESERVE_IDS = {
   whirlpool_water_heaters: true
@@ -3612,6 +3628,37 @@ function buildModelLookupQuery(brand, model, context) {
     .join(' ');
 }
 
+function normalizeClientModelLookupValue(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '');
+}
+
+function findClientModelEvidence(brand, model) {
+  var normalizedBrand = normalizeBrandId(brand).toLowerCase();
+  var normalizedModel = normalizeClientModelLookupValue(model);
+  if (!normalizedBrand || !normalizedModel) return null;
+
+  for (var i = 0; i < CLIENT_MODEL_EVIDENCE.length; i++) {
+    var entry = CLIENT_MODEL_EVIDENCE[i];
+    var aliases = [entry.model].concat(entry.aliases || []);
+    if (normalizeBrandId(entry.brand).toLowerCase() !== normalizedBrand) continue;
+    for (var j = 0; j < aliases.length; j++) {
+      if (normalizeClientModelLookupValue(aliases[j]) === normalizedModel) {
+        return {
+          brand: entry.brand,
+          model: entry.model,
+          estimatedYear: entry.estimatedYear,
+          yearRange: entry.yearRange,
+          source: 'Client model evidence'
+        };
+      }
+    }
+  }
+  return null;
+}
+
 function buildSerialLookupCacheKey(brand, model, context, candidates) {
   return [
     String(brand || '').trim().toLowerCase(),
@@ -3700,6 +3747,20 @@ async function resolveSerialYearFromModel(options) {
     };
   }
 
+  var localEvidence = findClientModelEvidence(brand, model);
+  var localSelected = localEvidence
+    ? chooseCandidateFromLookup(candidates, localEvidence, model, context)
+    : null;
+  if (localSelected && localSelected.chosenYear) {
+    return {
+      chosenYear: localSelected.chosenYear,
+      summary: localSelected.summary,
+      confidence: localSelected.confidence,
+      source: 'client-evidence',
+      lookupData: localEvidence
+    };
+  }
+
   var lookup = await fetchModelLookupEvidence(brand, model, context, candidates);
   var selected = lookup && lookup.data
     ? chooseCandidateFromLookup(candidates, lookup.data, model, context)
@@ -3777,14 +3838,21 @@ function buildSearchQueryText() {
   var modelEl = document.getElementById('modelNumber');
   var narrowModelEl = document.getElementById('narrowModelInput');
   var narrowContextEl = document.getElementById('narrowContextInput');
+  var activeCategory = getActiveDecoderCategory();
   var brandText = '';
   if (brandEl && brandEl.selectedIndex >= 0) {
     brandText = brandEl.options[brandEl.selectedIndex].textContent || brandEl.value || '';
   }
   var serialText = serialEl ? serialEl.value.trim() : '';
-  var modelText = modelEl ? modelEl.value.trim() : '';
-  var narrowModel = narrowModelEl ? narrowModelEl.value.trim() : '';
-  var narrowContext = narrowContextEl ? narrowContextEl.value.trim() : '';
+  var modelText = modelEl && modelEl.value.trim()
+    ? modelEl.value.trim()
+    : getStoredSupplementalModel(activeCategory).trim();
+  var narrowModel = narrowModelEl && narrowModelEl.value.trim()
+    ? narrowModelEl.value.trim()
+    : (lastSerialResolutionState && lastSerialResolutionState.refinementModel ? lastSerialResolutionState.refinementModel : '');
+  var narrowContext = narrowContextEl && narrowContextEl.value.trim()
+    ? narrowContextEl.value.trim()
+    : (lastSerialResolutionState && lastSerialResolutionState.refinementContext ? lastSerialResolutionState.refinementContext : '');
   var parts = [];
   if (brandText) parts.push('Brand=' + brandText);
   if (serialText) parts.push('Serial=' + serialText);
