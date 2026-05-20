@@ -125,6 +125,10 @@ var BRAND_DIRECTORY_PRIMARY_CATEGORY_OVERRIDES = {
 
 var BRAND_DIRECTORY_CATEGORY_PRIORITY = ['appliances', 'electronics', 'hvac', 'waterHeaters'];
 var BRAND_DIRECTORY_CACHE = null;
+var SERIAL_MODEL_LOOKUP_CACHE = {};
+var SERIAL_MODEL_LOOKUP_INFLIGHT = {};
+var SERIAL_MODEL_LOOKUP_TIMEOUT_MS = 2500;
+var lastSerialResolutionState = null;
 
 var BRAND_NORMALIZER_PRESERVE_IDS = {
   whirlpool_water_heaters: true
@@ -1532,7 +1536,7 @@ function resetHomePageSearch() {
   } catch (_) {}
 
   scrollPageToTop(true);
-  setTimeout(function() {
+  setTimeout(async function() {
     var dom3 = getDecodeDom();
     var si = dom3.serialEl;
     if (prefillBrand && si && si.focus) {
@@ -3428,10 +3432,12 @@ function computeEstimatedAge(displayedYear) {
   var candidateYears = parseCandidateYears(s).filter(function(year) {
     return year >= 1980 && year <= CURRENT_YEAR;
   });
-  if (candidateYears.length) {
-    var newestYear = Math.max.apply(null, candidateYears);
-    var newestAge = CURRENT_YEAR - newestYear;
-    return newestAge >= 0 ? newestAge + ' year' + (newestAge !== 1 ? 's' : '') : '—';
+  if (candidateYears.length > 1) {
+    return '—';
+  }
+  if (candidateYears.length === 1) {
+    var resolvedAge = CURRENT_YEAR - candidateYears[0];
+    return resolvedAge >= 0 ? resolvedAge + ' year' + (resolvedAge !== 1 ? 's' : '') : '—';
   }
   // Single year
   if (/^\d{4}$/.test(s)) {
@@ -3539,6 +3545,158 @@ function parseCandidateYears(yearText) {
 function isAmbiguousResultYear(yearText) {
   var years = parseCandidateYears(yearText);
   return years.length > 1 || String(yearText || '').indexOf('/') !== -1 || /\bor\b/i.test(String(yearText || ''));
+}
+
+function hasSingleResolvedYear(yearText) {
+  var years = parseCandidateYears(yearText);
+  return years.length === 1 && /^\d{4}$/.test(String(yearText || '').trim());
+}
+
+function formatPossibleYearsList(candidates) {
+  var years = (candidates || []).map(function(year) { return String(year); });
+  if (!years.length) return '';
+  if (years.length === 1) return years[0];
+  if (years.length === 2) return years[0] + ' or ' + years[1];
+  return years.slice(0, -1).join(', ') + ', or ' + years[years.length - 1];
+}
+
+function buildAmbiguousYearMessage(candidates, options) {
+  var opts = options || {};
+  var base = 'Possible manufacture years: ' + formatPossibleYearsList(candidates) + '.';
+  if (opts.modelAttempted) {
+    return base + ' The model number could not confidently resolve the repeating cycle.';
+  }
+  return base + ' Add a model number to narrow the date.';
+}
+
+function setEstimatedAgeVisibility(visible, value) {
+  var ageEl = document.getElementById('resultEstimatedAge');
+  if (!ageEl) return;
+  ageEl.textContent = visible ? (value || '—') : '';
+  if (ageEl.closest) {
+    var ageRow = ageEl.closest('.result-row');
+    if (ageRow) ageRow.style.display = visible ? '' : 'none';
+  }
+}
+
+function buildModelLookupQuery(brand, model, context) {
+  return [brand, model, context]
+    .map(function(part) { return String(part || '').trim(); })
+    .filter(Boolean)
+    .join(' ');
+}
+
+function buildSerialLookupCacheKey(brand, model, context, candidates) {
+  return [
+    String(brand || '').trim().toLowerCase(),
+    String(model || '').trim().toLowerCase(),
+    String(context || '').trim().toLowerCase(),
+    (candidates || []).join(',')
+  ].join('|');
+}
+
+async function fetchModelLookupEvidence(brand, model, context, candidates) {
+  var query = buildModelLookupQuery(brand, model, context);
+  if (!query) return { data: null, summary: '', fromCache: false };
+
+  var cacheKey = buildSerialLookupCacheKey(brand, model, context, candidates);
+  if (SERIAL_MODEL_LOOKUP_CACHE[cacheKey]) {
+    return { data: SERIAL_MODEL_LOOKUP_CACHE[cacheKey], summary: '', fromCache: true };
+  }
+  if (SERIAL_MODEL_LOOKUP_INFLIGHT[cacheKey]) {
+    return SERIAL_MODEL_LOOKUP_INFLIGHT[cacheKey];
+  }
+
+  SERIAL_MODEL_LOOKUP_INFLIGHT[cacheKey] = (async function() {
+    var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timeoutId = null;
+    if (controller) {
+      timeoutId = setTimeout(function() {
+        try { controller.abort(); } catch (_) {}
+      }, SERIAL_MODEL_LOOKUP_TIMEOUT_MS);
+    }
+
+    try {
+      var res = await fetch('/api/age-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query }),
+        signal: controller ? controller.signal : undefined
+      });
+      var data = await parseJsonResponseSafe(res, 'serial-model-refine');
+      if (!res.ok || !data || data.error) {
+        return { data: null, summary: '', fromCache: false };
+      }
+      SERIAL_MODEL_LOOKUP_CACHE[cacheKey] = data;
+      return { data: data, summary: '', fromCache: false };
+    } catch (error) {
+      var timedOut = !!(error && (error.name === 'AbortError' || /abort/i.test(String(error.message || ''))));
+      return {
+        data: null,
+        summary: timedOut
+          ? 'Model-number refinement timed out. Keeping the possible serial years.'
+          : '',
+        fromCache: false
+      };
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+      delete SERIAL_MODEL_LOOKUP_INFLIGHT[cacheKey];
+    }
+  })();
+
+  return SERIAL_MODEL_LOOKUP_INFLIGHT[cacheKey];
+}
+
+async function resolveSerialYearFromModel(options) {
+  var opts = options || {};
+  var candidates = Array.isArray(opts.candidates) ? opts.candidates.slice() : [];
+  var model = String(opts.model || '').trim();
+  var context = String(opts.context || '').trim();
+  var brand = String(opts.brand || '').trim();
+
+  if (candidates.length <= 1) {
+    return {
+      chosenYear: candidates.length === 1 ? candidates[0] : null,
+      summary: '',
+      confidence: '',
+      source: 'not-needed',
+      lookupData: null
+    };
+  }
+
+  if (!model && !context) {
+    return {
+      chosenYear: null,
+      summary: buildAmbiguousYearMessage(candidates, { modelAttempted: false }),
+      confidence: '',
+      source: 'none',
+      lookupData: null
+    };
+  }
+
+  var lookup = await fetchModelLookupEvidence(brand, model, context, candidates);
+  var selected = lookup && lookup.data
+    ? chooseCandidateFromLookup(candidates, lookup.data, model, context)
+    : null;
+
+  if (!selected) selected = deterministicRefinement(candidates, model, context);
+  if (selected && selected.chosenYear) {
+    return {
+      chosenYear: selected.chosenYear,
+      summary: selected.summary,
+      confidence: selected.confidence,
+      source: (lookup && lookup.data) ? 'lookup' : 'deterministic',
+      lookupData: lookup ? lookup.data : null
+    };
+  }
+
+  return {
+    chosenYear: null,
+    summary: (lookup && lookup.summary) || buildAmbiguousYearMessage(candidates, { modelAttempted: true }),
+    confidence: (selected && selected.confidence) || '',
+    source: (lookup && lookup.data) ? 'lookup-unresolved' : 'unresolved',
+    lookupData: lookup ? lookup.data : null
+  };
 }
 
 function ensureRefinementPanel() {
@@ -3853,7 +4011,7 @@ function deterministicRefinement(candidates, model, context) {
   };
 }
 
-function chooseCandidateFromLookup(candidates, lookupData) {
+function chooseCandidateFromLookup(candidates, lookupData, model, context) {
   if (!lookupData) return null;
   var targetYears = [];
   if (lookupData.estimatedYear) {
@@ -3869,7 +4027,7 @@ function chooseCandidateFromLookup(candidates, lookupData) {
   }, candidates[0]);
   return {
     chosenYear: best,
-    summary: 'Smart Lookup suggests around ' + target + '; closest serial-valid candidate is ' + best + '.',
+    summary: 'Model evidence suggests around ' + target + '; closest serial-valid candidate is ' + best + '.',
     confidence: 'Medium'
   };
 }
@@ -3905,7 +4063,9 @@ function renderSerialSummaryLayer() {
 
   if (monthVisible && month) heroRows.push('<div class="serial-hero-row"><span class="serial-hero-row-label">Month / Period</span><span class="serial-hero-row-value">' + esc(month) + '</span></div>');
   heroRows.push('<div class="serial-hero-row"><span class="serial-hero-row-label">Brand</span><span class="serial-hero-row-value">' + esc(brand || 'N/A') + '</span></div>');
-  heroRows.push('<div class="serial-hero-row"><span class="serial-hero-row-label">Estimated Age</span><span class="serial-hero-row-value">' + esc((age && age !== '—') ? age : 'N/A') + '</span></div>');
+  if (age && age !== '—') {
+    heroRows.push('<div class="serial-hero-row"><span class="serial-hero-row-label">Estimated Age</span><span class="serial-hero-row-value">' + esc(age) + '</span></div>');
+  }
 
   layer.innerHTML = '' +
     '<div class="serial-query-chip">' + esc(queryText || 'Search Query: —') + '</div>' +
@@ -3959,52 +4119,47 @@ async function refineAmbiguousResult() {
   var contextEl = document.getElementById('narrowContextInput');
   var yearEl = document.getElementById('resultYear');
   var brandEl = document.getElementById('resultBrand');
+  var monthEl = document.getElementById('resultMonth');
   if (!output || !yearEl) return;
 
   var model = modelEl ? modelEl.value.trim() : '';
   var context = contextEl ? contextEl.value.trim() : '';
-  var candidates = parseCandidateYears(yearEl.textContent);
+  var candidates = (lastSerialResolutionState && Array.isArray(lastSerialResolutionState.candidates) && lastSerialResolutionState.candidates.length)
+    ? lastSerialResolutionState.candidates.slice()
+    : parseCandidateYears(yearEl.textContent);
   if (!candidates.length) return;
 
   output.innerHTML = '<p>Refining...</p>';
-  var query = (brandEl ? brandEl.textContent : '') + ' ' + model + ' ' + context + ' candidate years: ' + candidates.join(', ');
-  var selected = null;
+  var resolved = await resolveSerialYearFromModel({
+    candidates: candidates,
+    brand: (lastSerialResolutionState && lastSerialResolutionState.decoderName) || (brandEl ? brandEl.textContent : ''),
+    model: model,
+    context: context
+  });
 
-  try {
-    var res = await fetch('/api/age-lookup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: query.trim() })
-    });
-    var data = await parseJsonResponseSafe(res, 'refine-ambiguous');
-    selected = chooseCandidateFromLookup(candidates, data);
-    if (!selected) selected = deterministicRefinement(candidates, model, context);
-    output.innerHTML =
-      '<div class="info-block refinement">' +
-        '<h4>How we decided</h4>' +
-        '<p>' + esc(selected.summary) + '</p>' +
-        '<p><strong>Confidence:</strong> ' + esc(selected.confidence) + '</p>' +
-        (selected.chosenYear ? '<p><strong>Recommended date:</strong> ' + esc(String(selected.chosenYear)) + '</p>' : '') +
-      '</div>';
-  } catch (e) {
-    console.error('[Refinement] Failed to refine candidates:', e);
-    selected = deterministicRefinement(candidates, model, context);
-    output.innerHTML =
-      '<div class="info-block refinement">' +
-        '<h4>How we decided</h4>' +
-        '<p>' + esc(selected.summary) + '</p>' +
-        '<p><strong>Confidence:</strong> ' + esc(selected.confidence) + '</p>' +
-      '</div>';
+  output.innerHTML =
+    '<div class="info-block refinement">' +
+      '<h4>How we decided</h4>' +
+      '<p>' + esc(resolved.summary || buildAmbiguousYearMessage(candidates, { modelAttempted: !!(model || context) })) + '</p>' +
+      (resolved.confidence ? '<p><strong>Confidence:</strong> ' + esc(resolved.confidence) + '</p>' : '') +
+      (resolved.chosenYear ? '<p><strong>Recommended date:</strong> ' + esc(String(resolved.chosenYear)) + '</p>' : '') +
+    '</div>';
+
+  if (resolved && resolved.chosenYear) {
+    yearEl.textContent = String(resolved.chosenYear);
+    setEstimatedAgeVisibility(true, computeEstimatedAge(String(resolved.chosenYear)));
+  } else {
+    yearEl.textContent = candidates.join('/');
+    setEstimatedAgeVisibility(false, '');
   }
-
-  if (selected && selected.chosenYear) {
-    yearEl.textContent = String(selected.chosenYear);
-    var ageEl = document.getElementById('resultEstimatedAge');
-    if (ageEl) ageEl.textContent = computeEstimatedAge(String(selected.chosenYear));
+  if (lastSerialResolutionState) {
+    lastSerialResolutionState.model = model || lastSerialResolutionState.model || '';
+    lastSerialResolutionState.chosenYear = resolved ? resolved.chosenYear : null;
+    lastSerialResolutionState.summary = resolved ? resolved.summary : '';
   }
   updateSearchQueryLine();
-  var monthEl = document.getElementById('resultMonth');
   updateResultWarning({ year: yearEl.textContent, month: monthEl ? monthEl.textContent : '' }, (getDecodeDom().brandEl ? getDecodeDom().brandEl.value : ''));
+  renderSerialSummaryLayer();
 }
 
 // ===== SERIAL DECODE =====
@@ -4092,7 +4247,7 @@ function decodeSerial() {
   setLoadingActive();
 
   // Hold the cloud for at least 1400ms so the sun transition reaches ~2 s total
-  setTimeout(function() {
+  setTimeout(async function() {
     // Reset row/block visibility from any previous fallback state
     (function() {
       var _yr = document.getElementById('resultYear');
@@ -4152,7 +4307,19 @@ function decodeSerial() {
       result = Object.assign({}, result, { year: _filteredYear });
     }
 
-    document.getElementById('resultYear').textContent    = capYear(result.year);
+    var resultYearText = capYear(result.year);
+    var resultCandidates = parseCandidateYears(resultYearText);
+    var initialResolution = await resolveSerialYearFromModel({
+      candidates: resultCandidates,
+      brand: getSelectedBrandLabel(metaBrandId) || decoder.name,
+      model: supplementalModel,
+      context: ''
+    });
+    var resolvedYearText = initialResolution && initialResolution.chosenYear
+      ? String(initialResolution.chosenYear)
+      : resultYearText;
+
+    document.getElementById('resultYear').textContent    = resolvedYearText;
     document.getElementById('resultMonth').textContent   = result.month;
     document.getElementById('resultBrand').textContent = getResultBrandDisplayName(metaBrandId, decoder.name, kenmoreResolution);
     document.getElementById('resultMethod').textContent  = decoder.method || decoder.serialLengthNote || 'N/A';
@@ -4162,7 +4329,7 @@ function decodeSerial() {
       var parts = [];
       parts.push('Serial length: ' + serial.length);
       if (result.yearCharacterPosition !== undefined) parts.push('Year character position: ' + result.yearCharacterPosition);
-      if (result.yearCode !== undefined) parts.push('Year code: ' + result.yearCode + ' \u2192 ' + capYear(result.year));
+      if (result.yearCode !== undefined) parts.push('Year code: ' + result.yearCode + ' \u2192 ' + resultYearText);
       if (result.weekDigits !== undefined) parts.push('Week: ' + result.weekDigits);
       if (result.monthCode !== undefined) parts.push('Month code: ' + result.monthCode + ' \u2192 ' + result.month);
       if (parts.length > 0) {
@@ -4174,10 +4341,12 @@ function decodeSerial() {
     })();
 
     var notesText = decoder.notes || decoder.decodeNotes || 'N/A';
-    if (parseCandidateYears(result.year).length > 1) {
-      var verificationNote = 'Multiple manufacturer dates match this serial format. Estimated age uses the most recent valid date. Search the model number for full verification.';
-      if (notesText === 'N/A') notesText = verificationNote;
-      else if (notesText.indexOf(verificationNote) === -1) notesText += ' ' + verificationNote;
+    if (resultCandidates.length > 1) {
+      var ambiguityMessage = initialResolution && initialResolution.chosenYear
+        ? initialResolution.summary
+        : buildAmbiguousYearMessage(resultCandidates, { modelAttempted: !!supplementalModel });
+      if (notesText === 'N/A') notesText = ambiguityMessage;
+      else if (notesText.indexOf(ambiguityMessage) === -1) notesText = ambiguityMessage + ' ' + notesText;
     }
     if (isKenmore && kenmoreResolution && kenmoreResolution.note) {
       notesText = kenmoreResolution.note + (notesText ? ' ' + notesText : '');
@@ -4187,18 +4356,36 @@ function decodeSerial() {
 
     // Compute derived display fields from output shape (no decode rules exposed)
     var _displayedYear = document.getElementById('resultYear').textContent;
-    document.getElementById('resultEstimatedAge').textContent = computeEstimatedAge(_displayedYear);
+    setEstimatedAgeVisibility(hasSingleResolvedYear(_displayedYear), computeEstimatedAge(_displayedYear));
 
     showBrandLogo('serialBrandLogo', metaBrandId, decoder.name);
     currentFeedbackContext = {
       brand: isKenmore ? ('Kenmore (OEM: ' + (kenmoreResolution ? kenmoreResolution.manufacturer : decoder.name) + ')') : decoder.name,
       serial: serial
     };
+    lastSerialResolutionState = {
+      brandId: metaBrandId,
+      decoderName: decoder.name,
+      serial: serial,
+      model: supplementalModel,
+      rawResult: result,
+      candidates: resultCandidates.slice(),
+      chosenYear: initialResolution ? initialResolution.chosenYear : null,
+      summary: initialResolution ? initialResolution.summary : ''
+    };
 
     var refinePanel = ensureRefinementPanel();
     if (refinePanel) {
-      if (isAmbiguousResultYear(_displayedYear)) {
+      if (resultCandidates.length > 1 && !initialResolution.chosenYear) {
         refinePanel.classList.remove('hidden');
+        var narrowModelInput = document.getElementById('narrowModelInput');
+        var narrowOutput = document.getElementById('narrowDateOutput');
+        if (narrowModelInput && supplementalModel && !narrowModelInput.value.trim()) narrowModelInput.value = supplementalModel;
+        if (narrowOutput) {
+          narrowOutput.innerHTML = initialResolution && initialResolution.summary
+            ? '<div class="info-block refinement"><h4>How we decided</h4><p>' + esc(initialResolution.summary) + '</p></div>'
+            : '';
+        }
       } else {
         refinePanel.classList.add('hidden');
         var refineOut = document.getElementById('narrowDateOutput');
