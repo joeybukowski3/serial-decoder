@@ -90,6 +90,45 @@ function setTab(el, tab) {
   });
 })();
 
+/* ─── RESOURCES DROPDOWN ─── */
+(function () {
+  function closeAllDropdowns() {
+    document.querySelectorAll('.nav-dropdown-toggle').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', 'false');
+    });
+    document.querySelectorAll('.nav-dropdown-panel').forEach(function (panel) {
+      panel.classList.remove('open');
+    });
+  }
+
+  document.querySelectorAll('.nav-dropdown-toggle').forEach(function (toggle) {
+    var panel = toggle.nextElementSibling;
+    if (!panel || !panel.classList.contains('nav-dropdown-panel')) return;
+
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var isOpen = panel.classList.contains('open');
+      closeAllDropdowns();
+      if (!isOpen) {
+        panel.classList.add('open');
+        toggle.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  // Close when clicking outside
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.nav-dropdown-item')) {
+      closeAllDropdowns();
+    }
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAllDropdowns();
+  });
+})();
+
 /* --- Internal version timestamp badge (obfuscated) --- */
 (function () {
   function pad2(n) { return String(n).padStart(2, '0'); }

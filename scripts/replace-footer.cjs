@@ -10,6 +10,7 @@ const NEW_FOOTER = `<footer class="footer-sitemap">
         <li><a href="/">Home</a></li>
         <li><a href="/decoder-tool">Serial Number Decoder</a></li>
         <li><a href="/smart-lookup">Smart Lookup</a></li>
+        <li><a href="/large-loss-decoder">Large Loss Decoder</a></li>
         <li><a href="/assistant">AI Assistant</a></li>
         <li><a href="/brands">All Brands</a></li>
       </ul>
@@ -46,11 +47,27 @@ const NEW_FOOTER = `<footer class="footer-sitemap">
     </div>
 
     <div class="footer-col">
+      <p class="footer-col-heading">Item History Guides</p>
+      <ul>
+        <li><a href="/item-history-guides">All History Guides</a></li>
+        <li><a href="/electrical-service-panel-history">Electrical Panels</a></li>
+        <li><a href="/electrical-wiring-history">Electrical Wiring</a></li>
+        <li><a href="/hvac-system-history">HVAC Systems</a></li>
+        <li><a href="/water-heater-history">Water Heaters</a></li>
+        <li><a href="/major-appliances-history">Major Appliances</a></li>
+        <li><a href="/tv-history">TVs</a></li>
+        <li><a href="/computer-history">Computers</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
       <p class="footer-col-heading">Resources</p>
       <ul>
         <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
+        <li><a href="/how-old-is-my-hvac">How Old Is My HVAC?</a></li>
+        <li><a href="/how-old-is-my-plumbing">How Old Is My Water Heater?</a></li>
+        <li><a href="/how-old-is-my-electronics">How Old Is My Electronics?</a></li>
         <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
-        <li><a href="/where-is-my-serial-number">Where Is My Serial Number?</a></li>
         <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
         <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
         <li><a href="/methodology">Methodology</a></li>
@@ -73,8 +90,7 @@ const NEW_FOOTER = `<footer class="footer-sitemap">
 </footer>`;
 
 const htmlFiles = fs.readdirSync(path.join(__dirname, '..')).filter(f => f.endsWith('.html'));
-let updated = 0;
-let skipped = 0;
+let updated = 0, skipped = 0;
 
 for (const file of htmlFiles) {
   const fullPath = path.join(__dirname, '..', file);
@@ -83,10 +99,9 @@ for (const file of htmlFiles) {
   if (replaced !== original) {
     fs.writeFileSync(fullPath, replaced, 'utf8');
     updated++;
-    console.log(`  updated: ${file}`);
   } else {
     skipped++;
   }
 }
 
-console.log(`\nDone. Updated: ${updated}, Skipped (no footer): ${skipped}`);
+console.log(`Footer update complete. Updated: ${updated}, Skipped (no footer): ${skipped}`);
