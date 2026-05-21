@@ -5190,6 +5190,27 @@ function getYearValue(estimatedYear, yearRange) {
   return estimatedYear || 'Unknown';
 }
 
+function buildSmartLookupResultFields(displayQuery, data) {
+  var fields = [
+    { label: 'Search', value: displayQuery || '—' },
+    { label: 'Brand', value: data.brand || 'Unknown' },
+    { label: 'Model', value: data.model || 'Unknown' },
+    { label: 'Specificity', value: data.specificityLevel || 'Unknown' }
+  ];
+
+  if (data.yearRange && data.yearRange !== 'Unknown') {
+    fields.push({ label: 'Production Range', value: data.yearRange });
+    return fields;
+  }
+
+  fields.push({
+    label: getYearLabel(data.estimatedYear, data.yearRange),
+    value: getYearValue(data.estimatedYear, data.yearRange)
+  });
+
+  return fields;
+}
+
 function escapeSmartLookupHtml(value) {
   return String(value || '')
     .replace(/&/g, '&amp;')
@@ -5339,14 +5360,7 @@ function showAgeLookupResults(displayQuery, data) {
   var details;
   if (!resultsEl) return;
 
-  fields = [
-    { label: 'Search', value: displayQuery || '—' },
-    { label: 'Brand', value: data.brand || 'Unknown' },
-    { label: 'Model', value: data.model || 'Unknown' },
-    { label: 'Specificity', value: data.specificityLevel || 'Unknown' },
-    { label: getYearLabel(data.estimatedYear, data.yearRange), value: getYearValue(data.estimatedYear, data.yearRange) },
-    { label: 'Production Range', value: data.yearRange || 'Unknown' }
-  ];
+  fields = buildSmartLookupResultFields(displayQuery, data);
 
   details = [];
   if (data.inventionSummary) details.push('<p>' + escapeSmartLookupHtml(data.inventionSummary) + '</p>');
@@ -5393,14 +5407,7 @@ function showAgeLookupResults(displayQuery, data) {
 }
 
 function buildProgressiveAgeLookupMarkup(displayQuery, data) {
-  var fields = [
-    { label: 'Search', value: displayQuery || 'â€”' },
-    { label: 'Brand', value: data.brand || 'Unknown' },
-    { label: 'Model', value: data.model || 'Unknown' },
-    { label: 'Specificity', value: data.specificityLevel || 'Unknown' },
-    { label: getYearLabel(data.estimatedYear, data.yearRange), value: getYearValue(data.estimatedYear, data.yearRange) },
-    { label: 'Production Range', value: data.yearRange || 'Unknown' }
-  ];
+  var fields = buildSmartLookupResultFields(displayQuery || 'â€”', data);
   var details = [];
 
   if (data.inventionSummary) details.push('<p>' + escapeSmartLookupHtml(data.inventionSummary) + '</p>');
