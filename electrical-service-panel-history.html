@@ -46,207 +46,598 @@
   </script>
   <link rel="stylesheet" href="shared.css">
   <style>
-    .guide-container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .guide-hero {
-      background: linear-gradient(135deg, #0f172a 0%, #1a2a4a 100%);
-      color: #dae2fd;
-      padding: 40px 20px;
-      text-align: center;
-      margin: -20px -20px 40px -20px;
-      border-bottom: 1px solid rgba(68, 229, 194, 0.1);
-    }
-    .guide-hero h1 {
-      font-size: 2rem;
-      margin: 0 0 12px 0;
-      color: #ffffff;
-    }
-    .safety-disclaimer {
-      background: #fef3c7;
-      border-left: 4px solid #f59e0b;
-      padding: 16px;
-      border-radius: 6px;
-      margin-bottom: 32px;
-      color: #92400e;
-    }
-    .safety-disclaimer strong {
-      color: #78350f;
-    }
-    .timeline {
+    /* ── HERO ─────────────────────────────────────────────────────────────── */
+    .ep-hero {
       position: relative;
-      margin-bottom: 40px;
-    }
-    .timeline-era {
-      margin-bottom: 16px;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      overflow: hidden;
-      transition: box-shadow 0.2s;
-    }
-    .timeline-era[open] {
-      box-shadow: 0 4px 12px rgba(68, 229, 194, 0.1);
-      border-color: #44e5c2;
-    }
-    .timeline-era summary {
-      background: #f8fafc;
-      padding: 16px;
-      cursor: pointer;
+      min-height: 70vh;
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-weight: 600;
-      color: #0f172a;
-      user-select: none;
+      background-color: #0b1326;
+      overflow: hidden;
     }
-    .timeline-era summary:hover {
-      background: #f1f5f9;
-    }
-    .timeline-era summary::after {
-      content: "";
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-right: 2px solid #64748b;
-      border-bottom: 2px solid #64748b;
-      margin-left: auto;
-      transform: rotate(-45deg);
-      transition: transform 0.2s;
-    }
-    .timeline-era[open] summary::after {
-      transform: rotate(45deg);
-    }
-    .era-badge {
-      display: inline-block;
-      background: #dbeafe;
-      color: #0c4a6e;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-    .timeline-content {
-      padding: 24px;
-      border-top: 1px solid #e2e8f0;
-      color: #334155;
-      line-height: 1.6;
-    }
-    .timeline-content h3 {
-      margin-top: 0;
-      color: #0f172a;
-    }
-    .timeline-content ul, .timeline-content ol {
-      margin: 16px 0;
-      padding-left: 24px;
-    }
-    .timeline-content li {
-      margin-bottom: 8px;
-    }
-    .feature-box {
-      background: #f0f9ff;
-      border-left: 4px solid #44e5c2;
-      padding: 12px 16px;
-      border-radius: 4px;
-      margin: 16px 0;
-      font-size: 0.95rem;
-    }
-    .brands-section {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin: 24px 0;
-    }
-    .brand-card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 16px;
-    }
-    .brand-card h4 {
-      margin: 0 0 8px 0;
-      color: #0f172a;
-      font-size: 0.95rem;
-    }
-    .brand-card p {
-      margin: 0;
-      font-size: 0.85rem;
-      color: #64748b;
-    }
-    .documentation-checklist {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 20px;
-      margin: 24px 0;
-    }
-    .documentation-checklist h3 {
-      margin-top: 0;
-      color: #0f172a;
-    }
-    .documentation-checklist ul {
-      margin: 12px 0;
-      padding-left: 24px;
-      list-style: none;
-    }
-    .documentation-checklist li {
-      padding-left: 24px;
-      position: relative;
-      margin-bottom: 8px;
-    }
-    .documentation-checklist li::before {
-      content: "□";
+    .ep-hero-img {
       position: absolute;
-      left: 0;
-      color: #44e5c2;
-      font-weight: bold;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.55;
     }
-    .faq-section {
-      margin-top: 40px;
+    .ep-hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, #0b1326 0%, rgba(11,19,38,0.88) 45%, rgba(11,19,38,0.35) 100%);
     }
-    .faq-item {
-      margin-bottom: 16px;
+    .ep-hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 64px 48px;
+      max-width: 1280px;
+      margin: 0 auto;
+      width: 100%;
     }
-    .faq-question {
-      background: #f8fafc;
-      padding: 12px 16px;
-      border-radius: 6px;
-      font-weight: 600;
-      color: #0f172a;
-      cursor: pointer;
-      user-select: none;
-    }
-    .faq-question:hover {
-      background: #f1f5f9;
-    }
-    .faq-answer {
-      background: #ffffff;
-      padding: 16px;
-      color: #334155;
-      border-left: 2px solid #44e5c2;
-      line-height: 1.6;
-      margin-top: 4px;
-    }
-    .breadcrumb {
-      font-size: 0.9rem;
-      color: #64748b;
+    .ep-badge {
+      display: inline-block;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      padding: 4px 12px;
       margin-bottom: 20px;
     }
-    .breadcrumb a {
-      color: #44e5c2;
-      text-decoration: none;
+    .ep-hero-h1 {
+      color: #ffffff !important;
+      font-size: clamp(2rem, 5vw, 3.4rem) !important;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px !important;
+      max-width: 680px;
+      animation: none !important;
+      -webkit-text-fill-color: #ffffff !important;
+      background: none !important;
     }
-    .breadcrumb a:hover {
-      text-decoration: underline;
+    .ep-hero-sub {
+      color: rgba(218,226,253,0.88) !important;
+      font-size: 1.05rem;
+      line-height: 1.65;
+      margin-bottom: 32px;
+      max-width: 580px;
+    }
+    .ep-disclaimer-box {
+      background: rgba(245,158,11,0.14);
+      border-left: 4px solid #f59e0b;
+      padding: 20px 24px;
+      max-width: 620px;
+      border-radius: 0 6px 6px 0;
+    }
+    .ep-disclaimer-inner {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .ep-disclaimer-icon {
+      color: #f59e0b;
+      font-size: 26px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .ep-disclaimer-title {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: #ffffff !important;
+      margin-bottom: 6px;
+    }
+    .ep-disclaimer-body {
+      color: rgba(255,255,255,0.82) !important;
+      font-size: 0.875rem;
+      margin: 0;
+      line-height: 1.55;
+    }
+
+    /* ── PAGE WRAPPER ────────────────────────────────────────────────────── */
+    .ep-page {
+      color: #dae2fd;
+    }
+    .ep-page h2 {
+      color: #ffffff;
+    }
+    .ep-page h3 {
+      color: #ffffff;
+    }
+    .ep-wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+    .ep-section {
+      padding: 64px 0;
+    }
+    .ep-section-header {
+      margin-bottom: 52px;
+    }
+    .ep-section-header h2 {
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .ep-section-header p {
+      color: #9ab0c8;
+      font-size: 1rem;
+      max-width: 540px;
+    }
+    .ep-section-header-center {
+      text-align: center;
+    }
+    .ep-section-header-center p {
+      margin: 0 auto;
+    }
+
+    /* ── BREADCRUMB WRAPPER ───────────────────────────────────────────────── */
+    .ep-bc-wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 48px 0;
+    }
+
+    /* ── EVOLUTIONARY TIMELINE ───────────────────────────────────────────── */
+    .ep-timeline {
+      position: relative;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+    .ep-timeline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: rgba(68,229,194,0.22);
+      transform: translateX(-50%);
+    }
+    .ep-tl-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 44px;
+      position: relative;
+    }
+    .ep-tl-card {
+      width: 45%;
+      background: #112236;
+      border: 1px solid rgba(68,229,194,0.2);
+      padding: 28px 32px;
+      border-radius: 4px;
+      transition: box-shadow 0.22s;
+    }
+    .ep-tl-card:hover {
+      box-shadow: 0 4px 20px rgba(68,229,194,0.1);
+    }
+    .ep-tl-card-critical {
+      border: 2px solid #ef4444;
+    }
+    .ep-tl-card-critical:hover {
+      box-shadow: 0 4px 20px rgba(239,68,68,0.15);
+    }
+    .ep-tl-spacer { width: 45%; }
+    .ep-tl-dot {
+      width: 16px;
+      height: 16px;
+      background: #44e5c2;
+      border-radius: 50%;
+      border: 3px solid #0b1326;
+      outline: 2px solid #44e5c2;
+      flex-shrink: 0;
+      z-index: 2;
+    }
+    .ep-tl-dot-danger {
+      width: 20px;
+      height: 20px;
+      background: #ef4444;
+      outline-color: #ef4444;
+    }
+    .ep-era-label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: rgba(68,229,194,0.75);
+      margin-bottom: 10px;
+    }
+    .ep-era-label-danger { color: #ef4444; }
+    .ep-tl-card h3 {
+      color: #ffffff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .ep-tl-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 18px 0;
+    }
+    .ep-tl-card ul li {
+      color: #c8d5e8;
+      font-size: 0.875rem;
+      padding: 4px 0 4px 20px;
+      position: relative;
+    }
+    .ep-tl-card ul li::before {
+      content: '•';
+      position: absolute;
+      left: 6px;
+      color: rgba(68,229,194,0.5);
+    }
+    .ep-tl-note {
+      background: rgba(68,229,194,0.05);
+      border: 1px solid rgba(68,229,194,0.18);
+      padding: 12px 14px;
+      border-radius: 3px;
+      margin-top: 8px;
+    }
+    .ep-tl-note + .ep-tl-note { margin-top: 8px; }
+    .ep-tl-note-warn {
+      border-left: 3px solid #f59e0b;
+      background: rgba(245,158,11,0.06);
+      border-color: rgba(245,158,11,0.28);
+    }
+    .ep-tl-note-safe {
+      border: 1px solid rgba(68,229,194,0.28);
+      background: rgba(68,229,194,0.05);
+    }
+    .ep-note-label {
+      display: block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 5px;
+    }
+    .ep-tl-note-warn .ep-note-label { color: #f59e0b; }
+    .ep-tl-note-safe .ep-note-label { color: rgba(68,229,194,0.75); }
+    .ep-tl-note p {
+      color: #9ab0c8;
+      font-size: 0.84rem;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .ep-tl-note-safe p {
+      color: #44e5c2;
+      font-weight: 600;
+    }
+    .ep-brand-alerts {
+      display: flex;
+      gap: 10px;
+    }
+    .ep-brand-alert-card {
+      flex: 1;
+      background: rgba(11,19,38,0.6);
+      border: 1px solid rgba(239,68,68,0.2);
+      padding: 10px 12px;
+      border-radius: 2px;
+    }
+    .ep-brand-alert-label {
+      display: block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: #ef4444;
+      margin-bottom: 4px;
+    }
+    .ep-brand-alert-card strong {
+      display: block;
+      color: #ffffff;
+      font-size: 0.78rem;
+      margin-bottom: 2px;
+    }
+    .ep-brand-alert-card p {
+      color: #9ab0c8;
+      font-size: 0.73rem;
+      margin: 0;
+    }
+
+    /* ── BRAND REFERENCE GRID ────────────────────────────────────────────── */
+    .ep-brand-section {
+      background: #0d1a2e;
+      border-top: 1px solid rgba(68,229,194,0.1);
+      border-bottom: 1px solid rgba(68,229,194,0.1);
+    }
+    .ep-brand-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+    .ep-brand-card {
+      background: #112236;
+      border: 1px solid rgba(68,229,194,0.18);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+      border-radius: 4px;
+      transition: box-shadow 0.2s;
+    }
+    .ep-brand-card:hover {
+      box-shadow: 0 4px 16px rgba(68,229,194,0.07);
+    }
+    .ep-brand-card-danger {
+      border: 2px solid #ef4444;
+      box-shadow: 0 2px 8px rgba(239,68,68,0.1);
+    }
+    .ep-brand-card-warning {
+      border: 1px solid rgba(245,158,11,0.38);
+    }
+    .ep-brand-card h4 {
+      color: #ffffff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .ep-brand-card p {
+      color: #9ab0c8;
+      font-size: 0.82rem;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .ep-brand-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+    .ep-danger-icon {
+      color: #ef4444;
+      font-size: 20px;
+    }
+    .ep-brand-status {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.63rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+    .ep-brand-status .material-symbols-outlined {
+      font-size: 13px;
+    }
+    .ep-status-safe    { color: #44e5c2; }
+    .ep-status-info    { color: #64748b; }
+    .ep-status-danger  { color: #ef4444; }
+    .ep-status-warning { color: #f59e0b; }
+
+    /* ── BENTO: TABLE + FAQ | SIDEBAR ────────────────────────────────────── */
+    .ep-bento {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 52px;
+      align-items: start;
+    }
+    .ep-bento-main {
+      display: flex;
+      flex-direction: column;
+      gap: 52px;
+    }
+    .ep-table-section h2,
+    .ep-faq-col h2 {
+      font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    /* TABLE */
+    .ep-table-wrap {
+      overflow-x: auto;
+      border: 1px solid rgba(68,229,194,0.18);
+      border-radius: 6px;
+    }
+    .ep-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 460px;
+    }
+    .ep-table thead tr {
+      background: #0f1d30;
+    }
+    .ep-table thead th {
+      padding: 13px 16px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #dae2fd;
+      text-align: left;
+      border-bottom: 1px solid rgba(68,229,194,0.18);
+    }
+    .ep-table tbody td {
+      padding: 13px 16px;
+      font-size: 0.86rem;
+      color: #c0cfe8;
+      border-bottom: 1px solid rgba(255,255,255,0.045);
+      vertical-align: top;
+    }
+    .ep-table tbody tr:last-child td { border-bottom: none; }
+    .ep-table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+    .ep-table tbody tr:hover td { background: rgba(68,229,194,0.03); }
+    .ep-table tbody td:first-child strong { color: #f0f4ff; }
+    .ep-danger-cell { color: #ef4444 !important; }
+
+    /* FAQ ACCORDION */
+    .ep-faq-col { display: flex; flex-direction: column; gap: 0; }
+    .ep-details {
+      border: 1px solid rgba(68,229,194,0.18);
+      border-radius: 4px;
+      background: #112236;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .ep-details summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 18px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: #dae2fd;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+      gap: 12px;
+    }
+    .ep-details summary::-webkit-details-marker { display: none; }
+    .ep-details summary::marker { display: none; }
+    .ep-details summary:hover { background: rgba(68,229,194,0.04); }
+    .ep-details[open] { border-color: rgba(68,229,194,0.45); }
+    .ep-details[open] summary { background: rgba(68,229,194,0.05); }
+    .ep-chevron {
+      font-size: 20px;
+      color: #64748b;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .ep-details[open] .ep-chevron { transform: rotate(180deg); }
+    .ep-details-body {
+      padding: 14px 18px 18px;
+      border-top: 1px solid rgba(68,229,194,0.1);
+    }
+    .ep-details-body p {
+      color: #9ab0c8;
+      font-size: 0.875rem;
+      margin: 0;
+      line-height: 1.62;
+    }
+
+    /* CHECKLIST SIDEBAR */
+    .ep-sidebar { position: sticky; top: 24px; }
+    .ep-checklist-card {
+      background: #131b2e;
+      border: 1px solid rgba(68,229,194,0.2);
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+    }
+    .ep-checklist-card h3 {
+      color: #ffffff;
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .ep-checklist-sub {
+      color: rgba(68,229,194,0.6) !important;
+      font-size: 0.83rem;
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+    .ep-checklist {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .ep-checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      color: #dae2fd;
+    }
+    .ep-checkbox {
+      width: 17px;
+      height: 17px;
+      border: 2px solid rgba(255,255,255,0.45);
+      flex-shrink: 0;
+      margin-top: 2px;
+      border-radius: 2px;
+    }
+    .ep-checklist li span {
+      font-size: 0.875rem;
+      line-height: 1.45;
+      color: #dae2fd;
+    }
+
+    /* ── RELATED GUIDES ─────────────────────────────────────────────────── */
+    .ep-related {
+      background: rgba(68,229,194,0.04);
+      border: 1px solid rgba(68,229,194,0.18);
+      border-radius: 8px;
+      padding: 26px 30px;
+      margin: 0 0 48px;
+    }
+    .ep-related h3 {
+      color: #44e5c2;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .ep-related ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .ep-related li {
+      color: #c8d5e8;
+      font-size: 0.875rem;
+      line-height: 1.55;
+    }
+    .ep-related a {
+      color: #44e5c2;
+      font-weight: 600;
+    }
+
+    /* ── RESPONSIVENESS ─────────────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .ep-brand-grid { grid-template-columns: repeat(2, 1fr); }
+      .ep-bento { grid-template-columns: 1fr; gap: 40px; }
+      .ep-sidebar { position: static; }
     }
     @media (max-width: 768px) {
-      .guide-hero h1 {
-        font-size: 1.5rem;
+      .ep-hero-content,
+      .ep-wrap,
+      .ep-bc-wrap { padding-left: 20px; padding-right: 20px; }
+      .ep-hero-content { padding-top: 48px; padding-bottom: 48px; }
+      .ep-hero-overlay {
+        background: linear-gradient(to bottom, rgba(11,19,38,0.75) 0%, rgba(11,19,38,0.92) 100%);
       }
-      .brands-section {
-        grid-template-columns: 1fr;
+      .ep-timeline { padding: 0 20px; }
+      .ep-timeline::before { left: 20px; transform: none; }
+      .ep-tl-row {
+        display: block;
+        padding-left: 44px;
+        margin-bottom: 28px;
+        position: relative;
       }
+      .ep-tl-card, .ep-tl-spacer { width: 100%; }
+      .ep-tl-spacer { display: none; }
+      .ep-tl-dot {
+        position: absolute;
+        left: 12px;
+        top: 18px;
+        width: 14px;
+        height: 14px;
+      }
+      .ep-tl-dot-danger { left: 10px; width: 18px; height: 18px; }
+      .ep-brand-grid { grid-template-columns: 1fr; }
+      .ep-brand-alerts { flex-direction: column; }
+      .ep-section { padding: 40px 0; }
+      .ep-bento-main { gap: 36px; }
+    }
+    @media (max-width: 375px) {
+      .ep-hero-h1 { font-size: 1.65rem !important; }
     }
   </style>
   <link rel="stylesheet" href="/guide-pages.css">
@@ -317,378 +708,426 @@
   </header>
 
   <main role="main">
-    <div class="guide-hero">
-      <h1>⚡ Electrical Service Panel History</h1>
-      <p>Fuse Boxes, Breaker Panels, Brands, and Modern Standards</p>
-    </div>
 
-    <div class="guide-container">
-      <div class="breadcrumb">
-        <a href="/">Home</a> / <a href="/item-history-guides">Item History Guides</a> / Electrical Service Panel History
+    <!-- ── HERO ──────────────────────────────────────────────────────────── -->
+    <section class="ep-hero">
+      <img
+        class="ep-hero-img"
+        src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4HieVILYC0tgz-eijXuhOuQMaWkCfNG4CBTE1Zr_ifwHhQ15EBfA8SfcV1JJYXxzMb_1-8kqNVgbu6r0RnTivXtFpI4RTwudDfjn9hZM9aQdpigyBp3kNR-Ri_osd9tb768Ddg9o4Ef0P9usNoJCrzLRnZ-TOa36fOKuB66dlD-z9v7Mn8hOIt9MERBQ6p4PBqfw-4DNFCMGZ8rXjuzwZjm9q8ad9ANvwSq1mSlvKfqQXz-G-nR5zmu8YBzkbcM5uKhIu_wx1GA"
+        alt="Electrical service panel background"
+        onerror="this.style.display='none'"
+      >
+      <div class="ep-hero-overlay"></div>
+      <div class="ep-hero-content">
+        <span class="ep-badge">Educational Reference</span>
+        <h1 class="ep-hero-h1">Electrical Service Panel History</h1>
+        <p class="ep-hero-sub">Deciphering decades of residential electrical infrastructure. From early fuse boxes to modern smart-grid ready distribution centers.</p>
+        <div class="ep-disclaimer-box">
+          <div class="ep-disclaimer-inner">
+            <span class="material-symbols-outlined ep-disclaimer-icon">report_problem</span>
+            <div>
+              <strong class="ep-disclaimer-title">Safety Disclaimer</strong>
+              <p class="ep-disclaimer-body">Electrical panels are dangerous. Never open, modify, or service without a licensed electrician. This content is for educational research purposes only.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="ep-page">
+
+      <!-- Breadcrumb -->
+      <div class="ep-bc-wrap">
+        <div class="breadcrumb">
+          <a href="/">Home</a> / <a href="/item-history-guides">Item History Guides</a> / Electrical Service Panel History
+        </div>
       </div>
 
-      <div class="safety-disclaimer">
-        <strong>⚠️ Safety Disclaimer:</strong> This page is educational only. Electrical panels are dangerous and should never be opened, modified, or serviced without a licensed electrician. Do not attempt any repairs or modifications yourself. If you have concerns about your electrical panel, contact a qualified electrician immediately.
-      </div>
+      <!-- ── EVOLUTIONARY TIMELINE ─────────────────────────────────────── -->
+      <section class="ep-section">
+        <div class="ep-wrap">
+          <div class="ep-section-header ep-section-header-center">
+            <h2>Evolutionary Timeline</h2>
+            <p>Tracing the technical shift from primitive knife switches to integrated power management.</p>
+          </div>
+        </div>
 
-      <section>
-        <h2>Introduction</h2>
-        <p>
-          Electrical service panels are the heart of a home's electrical system, distributing power to all circuits and protecting against overloads. Over the past century, panel designs have changed dramatically as homes required more electrical power, safety standards improved, and grounding and protection methods evolved. Understanding the history of electrical panels helps homeowners, property inspectors, insurance professionals, and researchers identify the age and condition of panels, recognize potential concerns, and plan for upgrades.
-        </p>
-      </section>
+        <div class="ep-timeline">
 
-      <section>
-        <h2>Timeline of Electrical Service Panels</h2>
-        <div class="timeline">
-          <details class="timeline-era">
-            <summary>
-              <span class="era-badge">Pre-1920s</span>
-              <strong>Early Electrical Distribution & Knife Switches</strong>
-            </summary>
-            <div class="timeline-content">
-              <h3>Early Electrical Distribution / Pre-1920s</h3>
+          <!-- Pre-1920s — LEFT -->
+          <div class="ep-tl-row">
+            <div class="ep-tl-card">
+              <span class="ep-era-label">Pre-1920s</span>
+              <h3>Early Distribution Era</h3>
               <ul>
-                <li>Early knife switches and porcelain fuse blocks</li>
-                <li>Primitive distribution equipment</li>
-                <li>Limited household electrical loads (lighting-focused)</li>
-                <li>Minimal standardization</li>
+                <li>Porcelain fuse blocks and knife switches</li>
+                <li>Lighting-focused electrical loads only</li>
+                <li>Zero grounding standardization</li>
                 <li>Often mounted directly on walls or inside cabinetry</li>
               </ul>
-              <div class="feature-box">
-                <strong>Era Characteristics:</strong> Houses from this period had limited electrical demands. Most systems were designed for lighting only, with minimal appliance circuits. Safety was not standardized, and grounding was non-existent.
+              <div class="ep-tl-note">
+                <span class="ep-note-label">Visual Indicator</span>
+                <p>"Often mounted directly on walls or inside cabinetry. Primitive metal cabinets."</p>
               </div>
             </div>
-          </details>
+            <div class="ep-tl-dot"></div>
+            <div class="ep-tl-spacer"></div>
+          </div>
 
-          <details class="timeline-era">
-            <summary>
-              <span class="era-badge">1920s–1940s</span>
-              <strong>Fuse Box Era Expands</strong>
-            </summary>
-            <div class="timeline-content">
-              <h3>1920s–1940s: Fuse Box Era Expands</h3>
+          <!-- 1920s–1940s — RIGHT -->
+          <div class="ep-tl-row">
+            <div class="ep-tl-spacer"></div>
+            <div class="ep-tl-dot"></div>
+            <div class="ep-tl-card">
+              <span class="ep-era-label">1920s–1940s</span>
+              <h3>The Fuse Box Era</h3>
               <ul>
-                <li>Screw-in plug fuses (Edison-style) became common</li>
-                <li>Cartridge fuses for larger circuits</li>
-                <li>Service capacities typically 30-60 amps</li>
-                <li>Early metal panel cabinets</li>
-                <li>Growth in residential electrical demand (appliances began appearing)</li>
+                <li>Edison-style screw-in plug fuses</li>
+                <li>Typical 30–60 amp service capacities</li>
+                <li>Standardized metal panel cabinets</li>
+                <li>Growth in residential demand as appliances appeared</li>
               </ul>
-              <div class="feature-box">
-                <strong>Visual Indicators:</strong> Look for round screw-in fuses, porcelain bases, round metal cabinets labeled with vintage branding. If you see colorful fuses (red, blue, clear), this era is a strong indicator.
+              <div class="ep-tl-note ep-tl-note-warn">
+                <span class="ep-note-label">Common Concern</span>
+                <p>Easily bypassed with higher-rated fuses, creating severe fire hazards. No grounding protection.</p>
               </div>
-              <p><strong>Common Concerns:</strong> Fuses can be easily bypassed with higher-rated fuses, creating a fire hazard. No grounding protection.</p>
+              <div class="ep-tl-note" style="margin-top:8px;">
+                <span class="ep-note-label">Look For</span>
+                <p>"Colorful fuses (red, blue, clear) and porcelain bases."</p>
+              </div>
             </div>
-          </details>
+          </div>
 
-          <details class="timeline-era">
-            <summary>
-              <span class="era-badge">1950s–1960s</span>
-              <strong>Transition Toward Breakers</strong>
-            </summary>
-            <div class="timeline-content">
-              <h3>1950s–1960s: Transition Toward Breakers</h3>
+          <!-- 1950s–1960s — LEFT (CRITICAL) -->
+          <div class="ep-tl-row">
+            <div class="ep-tl-card ep-tl-card-critical">
+              <span class="ep-era-label ep-era-label-danger">1950s–1960s &bull; CRITICAL ERA</span>
+              <h3>Transition to Breakers</h3>
               <ul>
-                <li>Early circuit breaker panels became more common</li>
-                <li>Split-bus panels introduced (two separate main disconnects)</li>
-                <li>Service capacities: 60 amp and 100 amp becoming more common</li>
-                <li>Grounding practices improving</li>
-                <li>Many brands active in the market, including Federal Pacific, Zinsco/Sylvania, Square D, GE, Bryant, ITE, Westinghouse, Cutler-Hammer, and Murray</li>
+                <li>Split-bus panels introduced</li>
+                <li>Rise of 60–100 amp service standards</li>
+                <li>Brand expansion: FPE &amp; Zinsco enter market</li>
+                <li>Grounding practices beginning to improve</li>
               </ul>
-              <div class="feature-box">
-                <strong>Notable Brands & Legacy Concerns:</strong> Some brands from this era, particularly Federal Pacific Electric (FPE) "Stab-Lok" panels and Zinsco/Sylvania panels, have been associated with higher failure rates and safety concerns. These panels are commonly flagged during home inspections for further evaluation by licensed electricians.
+              <div class="ep-brand-alerts">
+                <div class="ep-brand-alert-card">
+                  <span class="ep-brand-alert-label">Brand Alert</span>
+                  <strong>Federal Pacific (FPE)</strong>
+                  <p>Stab-Lok failure-to-trip risks.</p>
+                </div>
+                <div class="ep-brand-alert-card">
+                  <span class="ep-brand-alert-label">Brand Alert</span>
+                  <strong>Zinsco / Sylvania</strong>
+                  <p>Arcing &amp; fire concerns.</p>
+                </div>
               </div>
             </div>
-          </details>
+            <div class="ep-tl-dot ep-tl-dot-danger"></div>
+            <div class="ep-tl-spacer"></div>
+          </div>
 
-          <details class="timeline-era">
-            <summary>
-              <span class="era-badge">1970s–1980s</span>
-              <strong>Breaker Panels Become Standard</strong>
-            </summary>
-            <div class="timeline-content">
-              <h3>1970s–1980s: Breaker Panels Become Standard</h3>
+          <!-- 1970s–1980s — RIGHT -->
+          <div class="ep-tl-row">
+            <div class="ep-tl-spacer"></div>
+            <div class="ep-tl-dot"></div>
+            <div class="ep-tl-card">
+              <span class="ep-era-label">1970s–1980s</span>
+              <h3>Modern Breaker Standards</h3>
               <ul>
-                <li>Circuit breaker panels increasingly replace fuse boxes in new construction</li>
-                <li>100 amp and 150 amp services increasingly common</li>
-                <li>Aluminum branch circuit wiring used in some areas (cost-driven, later became concerning)</li>
-                <li>GFCI protection begins expanding in wet locations (bathrooms, kitchens)</li>
-                <li>Panel labeling and grounding/bonding becoming more standardized</li>
+                <li>Circuit breakers replace fuse boxes in new construction</li>
+                <li>100–150 amp services increasingly common</li>
+                <li>GFCI protection begins expanding in wet areas</li>
+                <li>Panel labeling and grounding becoming standardized</li>
               </ul>
-              <div class="feature-box">
-                <strong>Aluminum Wiring Concern:</strong> Homes from this era may have aluminum branch circuit wiring, which can oxidize and expand/contract differently than copper, creating potential safety issues. Cross-reference with our <a href="/electrical-wiring-history" style="color: #44e5c2;">Electrical Wiring History guide</a>.
+              <div class="ep-tl-note">
+                <span class="ep-note-label">Note</span>
+                <p>Check for aluminum branch wiring (1965–1973), which requires specialized evaluation. See our <a href="/electrical-wiring-history">Electrical Wiring History guide</a>.</p>
               </div>
             </div>
-          </details>
+          </div>
 
-          <details class="timeline-era">
-            <summary>
-              <span class="era-badge">1990s–2000s</span>
-              <strong>Modern Residential Electrical Expectations</strong>
-            </summary>
-            <div class="timeline-content">
-              <h3>1990s–2000s: Modern Residential Electrical Expectations</h3>
+          <!-- 2010s–Today — LEFT -->
+          <div class="ep-tl-row">
+            <div class="ep-tl-card">
+              <span class="ep-era-label">2010s–Today</span>
+              <h3>Smart Panels &amp; Solar</h3>
               <ul>
-                <li>200 amp service increasingly common in larger homes</li>
-                <li>More dedicated circuits for appliances and HVAC</li>
-                <li>AFCI (Arc Fault Circuit Interrupter) requirements begin expanding</li>
-                <li>GFCI protection continues expanding beyond wet locations</li>
-                <li>Better labeling, grounding, bonding, and enclosure practices</li>
-                <li>Surge protection becoming more common</li>
+                <li>200+ amp capacity as baseline for new builds</li>
+                <li>App-controlled circuit monitoring</li>
+                <li>Integrated EV charging &amp; solar hardware</li>
+                <li>Whole-home surge protection standard</li>
               </ul>
-              <div class="feature-box">
-                <strong>Modern Features:</strong> Panels from this era are more likely to have dual-pole breakers, better organization, proper grounding bars, and clear labeling of circuits.
+              <div class="ep-tl-note ep-tl-note-safe">
+                <span class="ep-note-label">Current Feature</span>
+                <p>Whole-home surge protection &amp; AFCI/GFCI standard across all circuits.</p>
               </div>
             </div>
-          </details>
+            <div class="ep-tl-dot"></div>
+            <div class="ep-tl-spacer"></div>
+          </div>
 
-          <details class="timeline-era">
-            <summary>
-              <span class="era-badge">2010s–Today</span>
-              <strong>Smart Panels & Modern Load Demands</strong>
-            </summary>
-            <div class="timeline-content">
-              <h3>2010s–Today: Smart Panels, Solar, EVs, and Modern Load Demands</h3>
-              <ul>
-                <li>Smart electrical panels with monitoring capabilities</li>
-                <li>Solar-ready equipment and specifications</li>
-                <li>Generator interlock and transfer equipment integration</li>
-                <li>EV charging circuits becoming standard in new construction</li>
-                <li>Surge protection and whole-home protection systems</li>
-                <li>Higher load demands from modern appliances, HVAC, and electronics</li>
-                <li>Continued evolution of safety codes and protection standards</li>
-              </ul>
-              <div class="feature-box">
-                <strong>Current Trends:</strong> Modern panels prioritize safety, capacity, monitoring, and distributed energy management. Many new homes are built with provisions for solar and EV charging.
-              </div>
-            </div>
-          </details>
         </div>
       </section>
 
-      <section>
-        <h2>Common Electrical Panel Brands Over Time</h2>
-        <p>
-          The electrical panel market has included many manufacturers over the decades. Here are brands commonly seen in homes across different eras:
-        </p>
-        <div class="brands-section">
-          <div class="brand-card">
-            <h4>Square D</h4>
-            <p>Long-established manufacturer; generally considered reliable. Still in use today.</p>
+      <!-- ── BRAND REFERENCE GRID ──────────────────────────────────────── -->
+      <section class="ep-section ep-brand-section">
+        <div class="ep-wrap">
+          <div class="ep-section-header">
+            <h2>Brand Reference Grid</h2>
+            <p>Rapid identification guide for legacy and modern manufacturers.</p>
           </div>
-          <div class="brand-card">
-            <h4>GE (General Electric)</h4>
-            <p>Major manufacturer with a long history. Panels vary by era and design.</p>
-          </div>
-          <div class="brand-card">
-            <h4>Siemens</h4>
-            <p>International manufacturer; increasingly common in recent decades.</p>
-          </div>
-          <div class="brand-card">
-            <h4>Eaton / Cutler-Hammer</h4>
-            <p>Major manufacturer; Cutler-Hammer acquired by Eaton. Well-regarded panels.</p>
-          </div>
-          <div class="brand-card">
-            <h4>Bryant</h4>
-            <p>Long-standing brand; panels generally considered acceptable.</p>
-          </div>
-          <div class="brand-card">
-            <h4>Murray</h4>
-            <p>Historically common, especially in certain regions.</p>
-          </div>
-          <div class="brand-card">
-            <h4>ITE (Interelectric)</h4>
-            <p>Historical manufacturer; panels from this brand vary by era.</p>
-          </div>
-          <div class="brand-card">
-            <h4>Westinghouse</h4>
-            <p>Historical manufacturer; exited electrical panel business decades ago.</p>
-          </div>
-          <div class="brand-card">
-            <h4>Federal Pacific (FPE)</h4>
-            <p>⚠️ <strong>Commonly flagged:</strong> "Stab-Lok" panels associated with higher failure rates. Often recommended for evaluation by electricians.</p>
-          </div>
-          <div class="brand-card">
-            <h4>Zinsco / Sylvania</h4>
-            <p>⚠️ <strong>Commonly flagged:</strong> Colored breakers; associated with safety concerns. Often recommended for replacement.</p>
-          </div>
-          <div class="brand-card">
-            <h4>Challenger</h4>
-            <p>Less common; panels vary by era and model.</p>
-          </div>
-          <div class="brand-card">
-            <h4>Pushmatic</h4>
-            <p>Distinctive push-button breaker design; unique visual appearance.</p>
-          </div>
-          <div class="brand-card">
-            <h4>Wadsworth</h4>
-            <p>Less common; panels generally acceptable.</p>
-          </div>
-          <div class="brand-card">
-            <h4>Bulldog</h4>
-            <p>Historical manufacturer; less common in modern systems.</p>
-          </div>
-          <div class="brand-card">
-            <h4>Crouse-Hinds</h4>
-            <p>Historical manufacturer; evolved over time.</p>
-          </div>
-        </div>
-        <p style="margin-top: 24px; font-size: 0.95rem; color: #64748b;">
-          <strong>Important Note:</strong> The presence of a particular brand does not automatically mean a panel is unsafe. However, some legacy brands and styles are commonly flagged during home inspections for further evaluation. If you're unsure about your panel, contact a licensed electrician for assessment.
-        </p>
-      </section>
+          <div class="ep-brand-grid">
 
-      <section>
-        <h2>Why Some Panel Styles Were Discontinued</h2>
-        <p>Several factors contributed to the evolution and discontinuation of older panel designs:</p>
-        <ul>
-          <li><strong>Higher Electrical Loads:</strong> Modern homes demand far more power than early panels were designed for.</li>
-          <li><strong>Safety Improvements:</strong> Code standards evolved to improve protection and reliability.</li>
-          <li><strong>Breaker Performance Concerns:</strong> Some breaker designs proved less reliable in field conditions.</li>
-          <li><strong>Better Grounding/Bonding Standards:</strong> Proper equipment grounding became mandatory.</li>
-          <li><strong>Manufacturer Changes:</strong> Mergers, acquisitions, and business decisions shifted the market.</li>
-          <li><strong>Replacement Part Availability:</strong> As manufacturers stopped making parts, older panels became harder to service.</li>
-          <li><strong>Insurance & Property Inspection Concerns:</strong> Some legacy panels became flagged in the inspection and insurance markets.</li>
-          <li><strong>Code Evolution:</strong> Building codes continuously updated to reflect new safety and performance standards.</li>
-        </ul>
-      </section>
+            <!-- Square D -->
+            <div class="ep-brand-card">
+              <div>
+                <h4>Square D</h4>
+                <p>Established reliability. Known for QO and Homeline series. Still widely used today.</p>
+              </div>
+              <span class="ep-brand-status ep-status-safe">
+                <span class="material-symbols-outlined">verified</span> High Reliability
+              </span>
+            </div>
 
-      <section>
-        <h2>Visual Clues by Era</h2>
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem;">
-            <thead>
-              <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                <th style="padding: 12px; text-align: left; color: #0f172a; font-weight: 600;">Panel/Breaker Style</th>
-                <th style="padding: 12px; text-align: left; color: #0f172a; font-weight: 600;">Common Era</th>
-                <th style="padding: 12px; text-align: left; color: #0f172a; font-weight: 600;">Visual Clues</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 12px;">Screw-in Fuses</td>
-                <td style="padding: 12px;">1920s–1960s</td>
-                <td style="padding: 12px;">Round fuses that screw in like light bulbs; often colorful (red, blue, clear)</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 12px;">Cartridge Fuses</td>
-                <td style="padding: 12px;">1930s–1970s</td>
-                <td style="padding: 12px;">Cylindrical fuses; smaller than plug fuses; often in a fuse block</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 12px;">Split-Bus Panels</td>
-                <td style="padding: 12px;">1950s–1970s</td>
-                <td style="padding: 12px;">Two main disconnect areas; can trip one without affecting the other</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 12px;">Main Breaker Panels</td>
-                <td style="padding: 12px;">1960s–Today</td>
-                <td style="padding: 12px;">Single large main breaker at the top; organized row of smaller breakers below</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 12px;">Stab-Lok (FPE)</td>
-                <td style="padding: 12px;">1950s–1990s</td>
-                <td style="padding: 12px;">Distinctive stab-style clip-in breakers; "Federal Pacific" branding</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 12px;">Zinsco-Style Breakers</td>
-                <td style="padding: 12px;">1950s–1980s</td>
-                <td style="padding: 12px;">Colored breaker handles (red, blue, green); Zinsco or Sylvania branding</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 12px;">Pushmatic Push-Button</td>
-                <td style="padding: 12px;">1950s–2000s</td>
-                <td style="padding: 12px;">Distinctive push-button instead of toggle switch design</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 12px;">Modern AFCI/GFCI Breakers</td>
-                <td style="padding: 12px;">2000s–Today</td>
-                <td style="padding: 12px;">Larger breakers with "test" and "reset" buttons; clear labeling</td>
-              </tr>
-              <tr>
-                <td style="padding: 12px;">Smart Panels</td>
-                <td style="padding: 12px;">2010s–Today</td>
-                <td style="padding: 12px;">Digital display; app-controlled; modern enclosure design</td>
-              </tr>
-            </tbody>
-          </table>
+            <!-- GE -->
+            <div class="ep-brand-card">
+              <div>
+                <h4>GE (General Electric)</h4>
+                <p>Major long-term manufacturer. Vast range of residential and industrial units.</p>
+              </div>
+              <span class="ep-brand-status ep-status-info">
+                <span class="material-symbols-outlined">info</span> Standard
+              </span>
+            </div>
+
+            <!-- Federal Pacific — DANGER -->
+            <div class="ep-brand-card ep-brand-card-danger">
+              <div>
+                <div class="ep-brand-card-head">
+                  <h4>Federal Pacific</h4>
+                  <span class="material-symbols-outlined ep-danger-icon">report_problem</span>
+                </div>
+                <p>"Stab-Lok" breakers widely associated with failure-to-trip safety concerns.</p>
+              </div>
+              <span class="ep-brand-status ep-status-danger">&#9888; Flag: Evaluation Required</span>
+            </div>
+
+            <!-- Zinsco — DANGER -->
+            <div class="ep-brand-card ep-brand-card-danger">
+              <div>
+                <div class="ep-brand-card-head">
+                  <h4>Zinsco / Sylvania</h4>
+                  <span class="material-symbols-outlined ep-danger-icon">report_problem</span>
+                </div>
+                <p>Distinctive colored breakers. Design issues linked to overheating/melting risk.</p>
+              </div>
+              <span class="ep-brand-status ep-status-danger">&#9888; Flag: Frequent Replacement</span>
+            </div>
+
+            <!-- Eaton -->
+            <div class="ep-brand-card">
+              <div>
+                <h4>Eaton / Cutler-Hammer</h4>
+                <p>Premium tier manufacturer. High regard for modern surge-integrated panels.</p>
+              </div>
+              <span class="ep-brand-status ep-status-safe">
+                <span class="material-symbols-outlined">verified</span> High Reliability
+              </span>
+            </div>
+
+            <!-- Pushmatic — WARNING -->
+            <div class="ep-brand-card ep-brand-card-warning">
+              <div>
+                <h4>Pushmatic</h4>
+                <p>Unique push-button design. Reliable but difficult to find replacement parts.</p>
+              </div>
+              <span class="ep-brand-status ep-status-warning">
+                <span class="material-symbols-outlined">build</span> Obsolete Parts
+              </span>
+            </div>
+
+            <!-- Siemens -->
+            <div class="ep-brand-card">
+              <div>
+                <h4>Siemens</h4>
+                <p>Modern international leader. Excellent AFCI/GFCI implementation and safety ratings.</p>
+              </div>
+              <span class="ep-brand-status ep-status-safe">
+                <span class="material-symbols-outlined">verified</span> High Reliability
+              </span>
+            </div>
+
+            <!-- Challenger — WARNING -->
+            <div class="ep-brand-card ep-brand-card-warning">
+              <div>
+                <h4>Challenger</h4>
+                <p>Some components recalled or cross-referenced with Zinsco. Inspect carefully.</p>
+              </div>
+              <span class="ep-brand-status ep-status-warning">
+                <span class="material-symbols-outlined">warning</span> Inspect Components
+              </span>
+            </div>
+
+          </div>
         </div>
       </section>
 
-      <section>
-        <h2>What to Look For When Documenting a Panel</h2>
-        <div class="documentation-checklist">
-          <h3>Documentation Checklist for Insurance or Property Research</h3>
+      <!-- ── VISUAL ID TABLE + FAQ | CHECKLIST SIDEBAR ─────────────────── -->
+      <section class="ep-section ep-wrap">
+        <div class="ep-bento">
+
+          <div class="ep-bento-main">
+
+            <!-- Visual Identification Table -->
+            <div class="ep-table-section">
+              <h2>Visual Identification Guide</h2>
+              <div class="ep-table-wrap">
+                <table class="ep-table">
+                  <thead>
+                    <tr>
+                      <th>Panel / Breaker Style</th>
+                      <th>Common Era</th>
+                      <th>Visual Clues</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Screw-in Fuses</strong></td>
+                      <td>1920s–1960s</td>
+                      <td><em>Round fuses, colorful glass (red, blue, clear).</em></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Cartridge Fuses</strong></td>
+                      <td>1930s–1970s</td>
+                      <td><em>Cylindrical, often in pull-out blocks.</em></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Split-Bus Panels</strong></td>
+                      <td>1950s–1970s</td>
+                      <td><em>Two main disconnect areas; one can trip independently.</em></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Main Breaker Panels</strong></td>
+                      <td>1960s–Today</td>
+                      <td><em>Single large main breaker at top; row of branch breakers below.</em></td>
+                    </tr>
+                    <tr>
+                      <td><strong class="ep-danger-cell">Stab-Lok (FPE)</strong></td>
+                      <td>1950s–1990s</td>
+                      <td><em class="ep-danger-cell">Red toggle tips, "Federal Pacific" branding.</em></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Zinsco-Style Breakers</strong></td>
+                      <td>1950s–1980s</td>
+                      <td><em>Colored handles (red, blue, green); Zinsco or Sylvania branding.</em></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Pushmatic Push-Button</strong></td>
+                      <td>1950s–2000s</td>
+                      <td><em>Square push-buttons instead of toggle-switch design.</em></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Modern AFCI/GFCI Breakers</strong></td>
+                      <td>2000s–Today</td>
+                      <td><em>Larger breakers with "test" and "reset" buttons; clear labeling.</em></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Smart Panels</strong></td>
+                      <td>2010s–Today</td>
+                      <td><em>Digital screens, LED indicators, slim modern enclosure.</em></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- FAQ Accordion -->
+            <div class="ep-faq-col">
+              <h2>Frequently Asked Questions</h2>
+
+              <details class="ep-details">
+                <summary>
+                  How can I tell how old an electrical panel is?
+                  <span class="material-symbols-outlined ep-chevron">expand_more</span>
+                </summary>
+                <div class="ep-details-body">
+                  <p>Look for the panel's brand name, breaker style (fuses vs. breakers), service amperage, and design characteristics. The type of breaker or fuse is often the strongest indicator. If you can't determine the age, a licensed electrician can evaluate it.</p>
+                </div>
+              </details>
+
+              <details class="ep-details">
+                <summary>
+                  Does an old panel always need to be replaced?
+                  <span class="material-symbols-outlined ep-chevron">expand_more</span>
+                </summary>
+                <div class="ep-details-body">
+                  <p>Not necessarily. An old panel that's functioning properly and not flagged for safety concerns may not require immediate replacement. However, flagged brands (FPE, Zinsco) or panels with signs of corrosion, damage, or insufficient capacity should be evaluated. Consult a licensed electrician.</p>
+                </div>
+              </details>
+
+              <details class="ep-details">
+                <summary>
+                  Why are some panel brands flagged during inspections?
+                  <span class="material-symbols-outlined ep-chevron">expand_more</span>
+                </summary>
+                <div class="ep-details-body">
+                  <p>Certain legacy designs proved unreliable in field testing. Federal Pacific and Zinsco are primary examples where mechanical failures led to fire hazards. Insurance carriers often mandate replacement for these specific brands, and home inspectors flag them for further evaluation by a licensed electrician.</p>
+                </div>
+              </details>
+
+            </div>
+          </div>
+
+          <!-- Documentation Checklist Sidebar -->
+          <aside class="ep-sidebar">
+            <div class="ep-checklist-card">
+              <h3>Documentation Checklist</h3>
+              <p class="ep-checklist-sub">Essential data for insurance or property research.</p>
+              <ul class="ep-checklist">
+                <li>
+                  <div class="ep-checkbox"></div>
+                  <span>Brand &amp; Manufacturer name</span>
+                </li>
+                <li>
+                  <div class="ep-checkbox"></div>
+                  <span>Service Amperage (main breaker rating)</span>
+                </li>
+                <li>
+                  <div class="ep-checkbox"></div>
+                  <span>Visible Model or Catalog number</span>
+                </li>
+                <li>
+                  <div class="ep-checkbox"></div>
+                  <span>Evidence of "Double-Tapping"</span>
+                </li>
+                <li>
+                  <div class="ep-checkbox"></div>
+                  <span>Signs of corrosion or overheating</span>
+                </li>
+                <li>
+                  <div class="ep-checkbox"></div>
+                  <span>High-res photos of the interior label</span>
+                </li>
+              </ul>
+            </div>
+          </aside>
+
+        </div>
+      </section>
+
+      <!-- ── RELATED GUIDES ────────────────────────────────────────────── -->
+      <div class="ep-wrap">
+        <div class="ep-related">
+          <h3>Related Guides &amp; Tools</h3>
           <ul>
-            <li>Brand name and manufacturer</li>
-            <li>Panel label or model identification</li>
-            <li>Service amperage (printed on main breaker or disconnect)</li>
-            <li>Main breaker or fuse rating</li>
-            <li>Type of breaker or fuse (see Visual Clues section above)</li>
-            <li>Visible model or catalog number</li>
-            <li>Approximate era indicators (style, design, condition)</li>
-            <li>Signs of corrosion, overheating, or damage</li>
-            <li>Any missing covers or open knockouts (holes in the enclosure)</li>
-            <li>Evidence of double-tapping (multiple breakers on a single position)</li>
-            <li>Whether a licensed electrician has recently inspected or evaluated it</li>
-            <li>Photos of the panel exterior, label, and main disconnect area</li>
+            <li><a href="/electrical-wiring-history">Electrical Wiring History Guide</a> — Learn about knob-and-tube, cloth wiring, aluminum wiring, and modern copper NM-B cable</li>
+            <li><a href="/item-history-guides">Item History Guides</a> — Explore timelines for plumbing, HVAC, roofing, and other property systems</li>
+            <li><a href="/decoder-tool">Serial Number Decoder</a> — Identify when appliances and electronics were manufactured</li>
           </ul>
-          <p style="margin-top: 16px; font-size: 0.9rem; color: #64748b;">
-            <strong>Tip:</strong> If you're documenting your panel for insurance or property inspection purposes, take clear photos of the label, main breaker, and a wide shot showing the overall panel condition. This information helps professionals assess the system.
-          </p>
         </div>
-      </section>
+      </div>
 
-      <section class="faq-section">
-        <h2>Frequently Asked Questions</h2>
-        <div class="faq-item">
-          <div class="faq-question">How can I tell how old an electrical panel is?</div>
-          <div class="faq-answer">
-            Look for the panel's brand name, breaker style (fuses vs. breakers), service amperage, and design characteristics. Compare these against the timeline in this guide. The type of breaker or fuse is often the strongest indicator. If you can't determine the age, a licensed electrician can evaluate it.
-          </div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question">Are fuse boxes still used?</div>
-          <div class="faq-answer">
-            Fuse boxes are rarely installed in new construction today. However, some older homes still have functioning fuse boxes. If your home has a fuse box, ensure it's properly maintained and that fuses are the correct rating (never use a higher-rated fuse than intended).
-          </div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question">Does an old panel always need to be replaced?</div>
-          <div class="faq-answer">
-            Not necessarily. An old panel that's functioning properly and not flagged for safety concerns may not require immediate replacement. However, if your panel is from a flagged brand (FPE, Zinsco), damaged, insufficient for your needs, or recommended by an electrician, replacement may be necessary. Consult a licensed electrician.
-          </div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question">Why are some panel brands flagged during inspections?</div>
-          <div class="faq-answer">
-            Certain brands like Federal Pacific (FPE Stab-Lok) and Zinsco have higher documented failure rates or performance concerns in field conditions. This doesn't mean they're unsafe, but inspectors often recommend further evaluation by a licensed electrician. Insurance companies may also have concerns about these panels.
-          </div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question">Can I identify an electrical panel by the breaker style?</div>
-          <div class="faq-answer">
-            Yes. The breaker style is one of the strongest visual indicators of panel age and brand. Screw-in fuses indicate pre-1960s panels, stab-lok clip-in breakers indicate FPE panels, push-button breakers indicate Pushmatic panels, and toggle switch breakers with "test" buttons indicate modern AFCI/GFCI breakers.
-          </div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question">Is this page a substitute for an electrician?</div>
-          <div class="faq-answer">
-            No. This page is educational only. If you have concerns about your electrical panel, suspect damage, or need to make modifications or repairs, contact a licensed electrician. Electrical panels are dangerous and should never be opened or worked on without professional expertise.
-          </div>
-        </div>
-      </section>
-
-      <section style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px; margin-top: 40px;">
-        <h3 style="margin-top: 0; color: #0c4a6e;">Related Guides & Tools</h3>
-        <ul style="margin: 12px 0; padding-left: 20px;">
-          <li><a href="/electrical-wiring-history" style="color: #44e5c2; text-decoration: none; font-weight: 600;">Electrical Wiring History Guide</a> — Learn about knob-and-tube, cloth wiring, aluminum wiring, and modern copper NM-B cable</li>
-          <li><a href="/item-history-guides" style="color: #44e5c2; text-decoration: none; font-weight: 600;">Item History Guides</a> — Explore timelines for plumbing, HVAC, roofing, and other property systems</li>
-          <li><a href="/decoder-tool" style="color: #44e5c2; text-decoration: none; font-weight: 600;">Serial Number Decoder</a> — Identify when appliances and electronics were manufactured</li>
-        </ul>
-      </section>
-    </div>
+    </div><!-- /.ep-page -->
   </main>
 
   <footer class="footer-sitemap">
