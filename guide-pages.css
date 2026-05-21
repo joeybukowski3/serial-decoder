@@ -113,10 +113,18 @@ body {
   background: #112236 !important;
   border-color: rgba(68, 229, 194, 0.2) !important;
 }
-.wiring-card h3 { color: #ffffff !important; }
+.wiring-card h3,
+.wiring-card h4 { color: #ffffff !important; }
 .wiring-card p,
 .wiring-card li { color: #c0cfe8 !important; }
 .wiring-concern { color: #f59e0b !important; }
+
+/* Era label badge inside wiring cards */
+.wiring-era {
+  background: rgba(68, 229, 194, 0.15) !important;
+  color: #44e5c2 !important;
+  border-color: transparent !important;
+}
 
 /* ── Documentation checklist ────────────────────────────────────────────── */
 .doc-checklist,
