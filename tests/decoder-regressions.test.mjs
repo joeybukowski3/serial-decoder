@@ -123,11 +123,12 @@ test('Narrow Date still allows legitimate strong-evidence adjustment', () => {
   assert.equal(selected.chosenYear, 2017);
 });
 
-test('Rare Samsung-built Kenmore serial layout decodes A00843ESC00128 as 2009', () => {
+test('Rare Samsung-built Kenmore serial layout decodes A00843ESC00128 as 2009/2029', () => {
   const samsung = api.decoderData.appliances.decoders.samsung;
   const out = samsung.decode('A00843ESC00128');
   assert.ok(out);
-  assert.equal(out.year, '2009');
+  // S is now correctly marked as 2009/2029 (20-year Samsung cycle)
+  assert.equal(out.year, '2009/2029');
   assert.equal(out.month, 'December');
 });
 
@@ -139,7 +140,8 @@ test('Normal Kenmore prefix behavior and normal Samsung decode remain unchanged'
   const samsung = api.decoderData.appliances.decoders.samsung;
   const samsungResult = samsung.decode('AAAS1BBBBBB');
   assert.ok(samsungResult);
-  assert.equal(samsungResult.year, '2009');
+  // S is 2009/2029 (20-year ambiguous code)
+  assert.equal(samsungResult.year, '2009/2029');
   assert.equal(samsungResult.month, 'January');
 });
 
@@ -476,4 +478,144 @@ test('Smart Lookup expands LR3RE-1000 to the Litter-Robot product family', () =>
   assert.match(expanded, /Litter-Robot 3 Open Air/i);
   assert.match(expanded, /Whisker/i);
   assert.doesNotMatch(expanded, /Generac/i);
+});
+
+// ── Audit: A.O. Smith off-by-one fix ─────────────────────────────────────────
+
+test('A.O. Smith letter-coded serial A1405618 decodes to October 2014', () => {
+  const aos = api.decoderData.waterHeaters.decoders.a_o_smith;
+  const out = aos.decode('A1405618');
+  assert.ok(out);
+  assert.equal(out.year, '2014');
+  assert.equal(out.month, 'October');
+  assert.equal(out.monthCode, 'A');
+  assert.equal(out.yearCode, '14');
+});
+
+test('A.O. Smith letter-coded serial H1309XXXXX decodes to May 2013', () => {
+  const aos = api.decoderData.waterHeaters.decoders.a_o_smith;
+  const out = aos.decode('H1309XXXXX');
+  assert.ok(out);
+  assert.equal(out.year, '2013');
+  assert.equal(out.month, 'May');
+  assert.equal(out.monthCode, 'H');
+});
+
+test('A.O. Smith numeric YYWW serial 1504A023527 still decodes correctly', () => {
+  const aos = api.decoderData.waterHeaters.decoders.a_o_smith;
+  const out = aos.decode('1504A023527');
+  assert.ok(out);
+  assert.equal(out.year, '2015');
+  assert.equal(out.month, 'Week 4');
+});
+
+test('A.O. Smith rejects too-short serials', () => {
+  const aos = api.decoderData.waterHeaters.decoders.a_o_smith;
+  assert.equal(aos.decode('A1'), null);
+  assert.equal(aos.decode(''), null);
+});
+
+// ── Audit: HVAC future-year threshold fix ────────────────────────────────────
+
+test('Carrier year code 27 returns 2027 not 1927', () => {
+  const carrier = api.decoderData.hvac.decoders.carrier;
+  const out = carrier.decode('XX27XXXXX');
+  assert.ok(out);
+  assert.equal(out.year, '2027');
+});
+
+test('Bryant year code 27 in WWYY position returns 2027', () => {
+  const bryant = api.decoderData.hvac.decoders.bryant;
+  const out = bryant.decode('0127XXXXX');
+  assert.ok(out);
+  assert.equal(out.year, '2027');
+});
+
+test('Trane year code 27 returns 2027 not 1927', () => {
+  const trane = api.decoderData.hvac.decoders.trane;
+  const out = trane.decode('XX27XXXXXX');
+  assert.ok(out);
+  assert.equal(out.year, '2027');
+});
+
+test('Lennox year code 27 returns 2027', () => {
+  const lennox = api.decoderData.hvac.decoders.lennox;
+  const out = lennox.decode('0127XXXXX');
+  assert.ok(out);
+  assert.equal(out.year, '2027');
+});
+
+test('Goodman 2019 August still decodes correctly after threshold fix', () => {
+  const goodman = api.decoderData.hvac.decoders.goodman;
+  const out = goodman.decode('1908123456');
+  assert.ok(out);
+  assert.equal(out.year, '2019');
+  assert.equal(out.month, 'August');
+});
+
+// ── Audit: Samsung 20-year cycle completeness ────────────────────────────────
+
+test('Samsung year code N returns 2020/2040 after ambiguous cycle fix', () => {
+  const samsung = api.decoderData.appliances.decoders.samsung;
+  // 15-char: year at position 7 (0-indexed). Position 6='0', 7='N', 8='1'=January
+  const out = samsung.decode('01H0010N1RR0Z5P');
+  assert.ok(out);
+  assert.equal(out.year, '2020/2040');
+});
+
+test('Samsung year code P returns 2007/2027 after ambiguous cycle fix', () => {
+  const samsung = api.decoderData.appliances.decoders.samsung;
+  // 15-char: P at position 7
+  const out = samsung.decode('01H0010P1RR0Z5P');
+  assert.ok(out);
+  assert.equal(out.year, '2007/2027');
+});
+
+// ── Audit: Whirlpool skipped letters note ────────────────────────────────────
+
+test('Whirlpool notes mention N as a skipped letter', () => {
+  const wp = api.decoderData.appliances.decoders.whirlpool;
+  assert.match(wp.notes, /I N O Q V are skipped/);
+});
+
+// ── Audit: GE and Frigidaire accuracy checks ─────────────────────────────────
+
+test('GE serial RG527327B decodes to August 1980/1992/2004/2016', () => {
+  const ge = api.decoderData.appliances.decoders.ge;
+  const out = ge.decode('RG527327B');
+  assert.ok(out);
+  // GE: char0=month(R=August), char1=year(G=1980/1992/2004/2016)
+  assert.equal(out.year, '1980/1992/2004/2016');
+  assert.equal(out.month, 'August');
+});
+
+test('Frigidaire serial NF11910958 decodes to 2001/2011/2021 week 19', () => {
+  const frig = api.decoderData.appliances.decoders.frigidaire;
+  const out = frig.decode('NF11910958');
+  assert.ok(out);
+  assert.match(out.year, /2001/);
+  assert.match(out.year, /2011/);
+  assert.match(out.year, /2021/);
+  assert.match(out.month, /19/);
+});
+
+// ── Audit: Bradford White water heater ──────────────────────────────────────
+
+test('Bradford White serial MC12345678 decodes to March 1995 or 2015', () => {
+  const bw = api.decoderData.waterHeaters.decoders.bradford_white;
+  const out = bw.decode('MC12345678');
+  assert.ok(out);
+  assert.match(out.year, /1995/);
+  assert.match(out.year, /2015/);
+  assert.equal(out.month, 'March');
+});
+
+// ── Audit: Bosch FD format accuracy ─────────────────────────────────────────
+
+test('Bosch FD8605123456 decodes to 2006 May', () => {
+  const bosch = api.decoderData.appliances.decoders.bosch;
+  const out = bosch.decode('FD8605123456');
+  assert.ok(out);
+  assert.equal(out.year, '2006');
+  assert.equal(out.month, 'May');
 });

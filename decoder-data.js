@@ -96,12 +96,12 @@ var decoderData = {
       yearCodePosition: 'Second character (nine-character serial number) or third character (ten-character serial number)',
       monthCodePosition: 'N/A',
       outputType: 'Year + Week of Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Count only letters and numbers in the serial number. If the serial number has nine alphanumeric characters, the second character is the year and the third and fourth characters are the week. If the serial number has ten alphanumeric characters, the third character is the year and the fourth and fifth characters are the week.',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       patterns: [
         { name: '9-char alphanumeric', length: 9, mask: '**##*****', notes: 'Week digits are characters 3-4.' },
@@ -115,8 +115,8 @@ var decoderData = {
     },
     'norcold': {
       name: 'Norcold',
-      parentManufacturer: 'Whirlpool Corporation',
-      groupId: '1A',
+      parentManufacturer: 'Thetford Corporation (Norcold Division)',
+      groupId: 'UNVERIFIED',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
       serialLengthNote: 'Second alpha character = year code (letters only).',
@@ -124,13 +124,13 @@ var decoderData = {
       yearCodePosition: 'Second alpha character',
       monthCodePosition: 'N/A',
       outputType: 'Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Second alpha character = year code',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
-      source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
+      notes: 'WARNING: Norcold is manufactured by Thetford Corporation, not Whirlpool. The Whirlpool serial decode method applied here is UNVERIFIED for Norcold RV refrigerators. Results should be treated as estimates only. Verify using Norcold service documentation.',
+      source: 'UNVERIFIED -- Norcold (Thetford Corp) serial format documentation needed',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
@@ -144,7 +144,7 @@ var decoderData = {
     },
     'sub_zero': {
       name: 'Sub-Zero',
-      parentManufacturer: 'Whirlpool Corporation',
+      parentManufacturer: 'Sub-Zero Group, Inc. (independent)',
       groupId: '1A',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
@@ -153,12 +153,12 @@ var decoderData = {
       yearCodePosition: 'Second character (fallback: second alpha character)',
       monthCodePosition: 'N/A',
       outputType: 'Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped. Some valid Sub-Zero serials use the second character overall as the year code even when it is numeric.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped. Some valid Sub-Zero serials use the second character overall as the year code even when it is numeric.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Second character = year code (fallback: second alpha character)',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped. Some valid Sub-Zero serials use the second character overall as the year code even when it is numeric.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped. Some valid Sub-Zero serials use the second character overall as the year code even when it is numeric.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -178,8 +178,8 @@ var decoderData = {
     },
     'hampton_bay': {
       name: 'Hampton Bay',
-      parentManufacturer: 'Whirlpool Corporation',
-      groupId: '1A',
+      parentManufacturer: 'Home Depot (private label -- fans/lighting, NOT major appliances)',
+      groupId: 'UNVERIFIED',
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
       serialLengthNote: 'Second alpha character = year code (letters only).',
@@ -187,13 +187,13 @@ var decoderData = {
       yearCodePosition: 'Second alpha character',
       monthCodePosition: 'N/A',
       outputType: 'Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Second alpha character = year code',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
-      source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
+      notes: 'WARNING: Hampton Bay is a Home Depot private-label brand for fans and lighting, NOT a major appliance brand under Whirlpool. Applying Whirlpool serial decoding to Hampton Bay products is UNVERIFIED. Results should be treated as estimates only.',
+      source: 'UNVERIFIED -- Hampton Bay is a fan/lighting brand; no appliance serial documentation found',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
       decode: function(serial) {
@@ -216,12 +216,12 @@ var decoderData = {
       yearCodePosition: 'Second alpha character',
       monthCodePosition: 'N/A',
       outputType: 'Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Second alpha character = year code',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -245,12 +245,12 @@ var decoderData = {
       yearCodePosition: 'Second alpha character',
       monthCodePosition: 'N/A',
       outputType: 'Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Second alpha character = year code',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -274,12 +274,12 @@ var decoderData = {
       yearCodePosition: 'Second alpha character',
       monthCodePosition: 'N/A',
       outputType: 'Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Second alpha character = year code',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -303,12 +303,12 @@ var decoderData = {
       yearCodePosition: 'Second alpha character',
       monthCodePosition: 'N/A',
       outputType: 'Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Second alpha character = year code',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -332,12 +332,12 @@ var decoderData = {
       yearCodePosition: 'Second alpha character',
       monthCodePosition: 'N/A',
       outputType: 'Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Second alpha character = year code',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -361,12 +361,12 @@ var decoderData = {
       yearCodePosition: 'Second alpha character',
       monthCodePosition: 'N/A',
       outputType: 'Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Second alpha character = year code',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -390,12 +390,12 @@ var decoderData = {
       yearCodePosition: 'Second character (nine-character serial number) or third character (ten-character serial number)',
       monthCodePosition: 'N/A',
       outputType: 'Year + Week of Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Count only letters and numbers in the serial number. If the serial number has nine alphanumeric characters, the second character is the year and the third and fourth characters are the week. If the serial number has ten alphanumeric characters, the third character is the year and the fourth and fifth characters are the week.',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -414,12 +414,12 @@ var decoderData = {
       yearCodePosition: 'Second character (nine-character serial number) or third character (ten-character serial number)',
       monthCodePosition: 'N/A',
       outputType: 'Year + Week of Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Count only letters and numbers in the serial number. If the serial number has nine alphanumeric characters, the second character is the year and the third and fourth characters are the week. If the serial number has ten alphanumeric characters, the third character is the year and the fourth and fifth characters are the week.',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -438,12 +438,12 @@ var decoderData = {
       yearCodePosition: 'Second character (nine-character serial number) or third character (ten-character serial number)',
       monthCodePosition: 'N/A',
       outputType: 'Year + Week of Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Count only letters and numbers in the serial number. If the serial number has nine alphanumeric characters, the second character is the year and the third and fourth characters are the week. If the serial number has ten alphanumeric characters, the third character is the year and the fourth and fifth characters are the week.',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -462,12 +462,12 @@ var decoderData = {
       yearCodePosition: 'Second character (nine-character serial number) or third character (ten-character serial number)',
       monthCodePosition: 'N/A',
       outputType: 'Year + Week of Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Count only letters and numbers in the serial number. If the serial number has nine alphanumeric characters, the second character is the year and the third and fourth characters are the week. If the serial number has ten alphanumeric characters, the third character is the year and the fourth and fifth characters are the week.',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -486,12 +486,12 @@ var decoderData = {
       yearCodePosition: 'Second character (nine-character serial number) or third character (ten-character serial number)',
       monthCodePosition: 'N/A',
       outputType: 'Year + Week of Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Count only letters and numbers in the serial number. If the serial number has nine alphanumeric characters, the second character is the year and the third and fourth characters are the week. If the serial number has ten alphanumeric characters, the third character is the year and the fourth and fifth characters are the week.',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -510,12 +510,12 @@ var decoderData = {
       yearCodePosition: 'Second character (nine-character serial number) or third character (ten-character serial number)',
       monthCodePosition: 'N/A',
       outputType: 'Year + Week of Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022, Week 25',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Count only letters and numbers in the serial number. If the serial number has nine alphanumeric characters, the second character is the year and the third and fourth characters are the week. If the serial number has ten alphanumeric characters, the third character is the year and the fourth and fifth characters are the week.',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -534,12 +534,12 @@ var decoderData = {
       yearCodePosition: 'Second character (nine-character serial number) or third character (ten-character serial number)',
       monthCodePosition: 'N/A',
       outputType: 'Year + Week of Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022, Week 25',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Count only letters and numbers in the serial number. If the serial number has nine alphanumeric characters, the second character is the year and the third and fourth characters are the week. If the serial number has ten alphanumeric characters, the third character is the year and the fourth and fifth characters are the week.',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -558,12 +558,12 @@ var decoderData = {
       yearCodePosition: 'Second character (nine-character serial number) or third character (ten-character serial number)',
       monthCodePosition: 'N/A',
       outputType: 'Year + Week of Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022, Week 25',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Count only letters and numbers in the serial number. If the serial number has nine alphanumeric characters, the second character is the year and the third and fourth characters are the week. If the serial number has ten alphanumeric characters, the third character is the year and the fourth and fifth characters are the week.',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -582,12 +582,12 @@ var decoderData = {
       yearCodePosition: 'Second character (nine-character serial number) or third character (ten-character serial number)',
       monthCodePosition: 'N/A',
       outputType: 'Year + Week of Year',
-      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      decodeNotes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       exampleSerial: 'CB2501800',
       exampleResult: 'B=1992/2022, Week 25',
       sources: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       method: 'Count only letters and numbers in the serial number. If the serial number has nine alphanumeric characters, the second character is the year and the third and fourth characters are the week. If the serial number has ten alphanumeric characters, the third character is the year and the fourth and fifth characters are the week.',
-      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I O Q V are skipped.',
+      notes: '30-year repeating cycle. Use appliance condition and features to resolve decade. Letters I N O Q V are skipped.',
       source: 'electrical-forensics.com; homespy.io; partsdr.com; fixya.com',
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {  },
@@ -1430,7 +1430,7 @@ var decoderData = {
         { name: '11-char serial', length: 11, mask: '***A*******', notes: 'Year code is at position 4.' },
         { name: '15-char serial', length: 15, mask: '*******A*******', notes: 'Year code is at position 8.' }
       ],
-      yearMap: { 'R': '2001/2021', 'T': '2002/2022', 'W': '2003/2023', 'X': '2004/2024', 'Y': '2005/2025', 'A': '2006/2026', 'P': '2007', 'Q': '2008', 'S': '2009', 'Z': '2010', 'B': '2011', 'C': '2012', 'D': '2013', 'F': '2014', 'G': '2015', 'H': '2016', 'J': '2017', 'K': '2018', 'M': '2019', 'N': '2020' },
+      yearMap: { 'R': '2001/2021', 'T': '2002/2022', 'W': '2003/2023', 'X': '2004/2024', 'Y': '2005/2025', 'A': '2006/2026', 'P': '2007/2027', 'Q': '2008/2028', 'S': '2009/2029', 'Z': '2010/2030', 'B': '2011/2031', 'C': '2012/2032', 'D': '2013/2033', 'F': '2014/2034', 'G': '2015/2035', 'H': '2016/2036', 'J': '2017/2037', 'K': '2018/2038', 'M': '2019/2039', 'N': '2020/2040' },
       monthMap: { '1': 'January', '2': 'February', '3': 'March', '4': 'April', '5': 'May', '6': 'June', '7': 'July', '8': 'August', '9': 'September', 'A': 'October', 'B': 'November', 'C': 'December' },
             decode: function(serial) {
       if (!serial) return null;
@@ -2028,13 +2028,13 @@ var decoderData = {
       yearMap: { 'YY (e.g. 06 = 2006)': 'Prefix with 19XX or 20XX based on context', 'YYYY (e.g. 2018)': 'Read directly (e.g. 2018)' },
       monthMap: { 'A': 'October', 'B': 'November', 'C': 'December', 'D': 'January', 'E': 'February', 'F': 'March', 'G': 'April', 'H': 'May', 'I': 'June', 'K': 'July', 'L': 'August', 'M': 'September', '10': 'October', '11': 'November', '12': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
       decode: function(serial) {
-      if (!serial || serial.length < 4) return null;
+      if (!serial || serial.length < 3) return null;
       var YEAR_NOW = new Date().getFullYear();
       // Pre-2008 format: starts with a letter â€” [Factory][Month code][2-digit year][...]
+      // A.O. Smith format: [Month code][2-digit year][sequence] -- NO factory prefix
       if (/^[A-Za-z]/.test(serial)) {
-        if (serial.length < 4) return null;
-        var monthChar = serial[1].toUpperCase();
-        var yearDigits = serial.substring(2, 4);
+        var monthChar = serial[0].toUpperCase();
+        var yearDigits = serial.substring(1, 3);
         if (!/^\d{2}$/.test(yearDigits)) return null;
         var yr = parseInt(yearDigits);
         var fullYear = yr >= 84 ? '19' + yearDigits : '20' + yearDigits;
@@ -2487,8 +2487,8 @@ var decoderData = {
       decodeNotes: 'First two digits represent the year and the next two digits represent the month.',
       exampleSerial: '1506XXXX',
       exampleResult: '15=2015 and 06=June -> June 2015',
-      sources: 'Manufacturer Technical Specifications',
-      method: 'First two digits represent the year and the next two digits represent the month. Source: Manufacturer Technical Specifications.',
+      sources: 'goodmanmfg.com technical documentation; hvac-talk.com; acwholesalers.com',
+      method: 'First two digits represent the year and the next two digits represent the month.',
       notes: 'Use the first four digits of the serial number to determine the manufacture date.',
       source: 'Manufacturer Technical Specifications',
       yearMap: {  },
@@ -2519,8 +2519,8 @@ var decoderData = {
       decodeNotes: 'First two digits represent the year and the next two digits represent the month.',
       exampleSerial: '1506XXXX',
       exampleResult: '15=2015 and 06=June -> June 2015',
-      sources: 'Manufacturer Technical Specifications',
-      method: 'First two digits represent the year and the next two digits represent the month. Source: Manufacturer Technical Specifications.',
+      sources: 'goodmanmfg.com technical documentation; hvac-talk.com; acwholesalers.com',
+      method: 'First two digits represent the year and the next two digits represent the month.',
       notes: 'Use the first four digits of the serial number to determine the manufacture date.',
       source: 'Manufacturer Technical Specifications',
       yearMap: {  },
@@ -2544,14 +2544,14 @@ var decoderData = {
       products: 'Air Conditioner; Heat Pump; Furnace; Air Handler',
       serialEra: 'N/A',
       serialLengthNote: 'Use digits 3-4 for year.',
-      decodeMethod: 'Digits 3-4 (year). Source: Manufacturer Technical Specifications.',
+      decodeMethod: 'Digits 3-4 (year). Source: Carrier service documentation.',
       yearCodePosition: 'Digits 3-4',
       monthCodePosition: 'N/A',
       outputType: 'Year',
       decodeNotes: 'Digits 3-4 represent the year.',
       exampleSerial: 'XX19XXXX',
       exampleResult: '19=2019',
-      sources: 'Manufacturer Technical Specifications',
+      sources: 'hvac.com/carrier-age; homeinspectioninsider.com; carrier.com service guides',
       method: 'Digits 3-4 represent the year. Source: Manufacturer Technical Specifications.',
       notes: 'Use digits 3-4 of the serial number to determine the year.',
       source: 'Manufacturer Technical Specifications',
@@ -2562,8 +2562,8 @@ var decoderData = {
       var yy = serial.substring(2, 4);
       if (!/^\d{2}$/.test(yy)) return null;
       var yearNum = parseInt(yy, 10);
-      var currentTwo = new Date().getFullYear() % 100;
-      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      // Fixed threshold: no modern HVAC serial refers to years before 1950
+      var fullYear = (yearNum <= 50 ? 2000 : 1900) + yearNum;
       return { year: String(fullYear), month: 'Year only', yearCode: yy };
     }
     },
@@ -2581,8 +2581,8 @@ var decoderData = {
       decodeNotes: 'First two digits represent production week; next two digits represent the year.',
       exampleSerial: '4519XXXX',
       exampleResult: '45=Week 45 and 19=2019 -> Week 45, 2019',
-      sources: 'Manufacturer Technical Specifications',
-      method: 'First two digits represent the production week; next two digits represent the year. Source: Manufacturer Technical Specifications.',
+      sources: 'hvac.com age-lookup; homeinspectioninsider.com; manufacturer service guides',
+      method: 'First two digits represent the production week; next two digits represent the year.',
       notes: 'Use the first four digits of the serial number to determine production week and year.',
       source: 'Manufacturer Technical Specifications',
       yearMap: {  },
@@ -2595,8 +2595,8 @@ var decoderData = {
       var week = parseInt(ww, 10);
       if (week < 1 || week > 53) return null;
       var yearNum = parseInt(yy, 10);
-      var currentTwo = new Date().getFullYear() % 100;
-      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      // Fixed threshold: no modern HVAC serial refers to years before 1950
+      var fullYear = (yearNum <= 50 ? 2000 : 1900) + yearNum;
       return { year: String(fullYear), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
     }
     },
@@ -2614,8 +2614,8 @@ var decoderData = {
       decodeNotes: 'First two digits represent production week; next two digits represent the year.',
       exampleSerial: '4519XXXX',
       exampleResult: '45=Week 45 and 19=2019 -> Week 45, 2019',
-      sources: 'Manufacturer Technical Specifications',
-      method: 'First two digits represent the production week; next two digits represent the year. Source: Manufacturer Technical Specifications.',
+      sources: 'hvac.com age-lookup; homeinspectioninsider.com; manufacturer service guides',
+      method: 'First two digits represent the production week; next two digits represent the year.',
       notes: 'Use the first four digits of the serial number to determine production week and year.',
       source: 'Manufacturer Technical Specifications',
       yearMap: {  },
@@ -2628,8 +2628,8 @@ var decoderData = {
       var week = parseInt(ww, 10);
       if (week < 1 || week > 53) return null;
       var yearNum = parseInt(yy, 10);
-      var currentTwo = new Date().getFullYear() % 100;
-      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      // Fixed threshold: no modern HVAC serial refers to years before 1950
+      var fullYear = (yearNum <= 50 ? 2000 : 1900) + yearNum;
       return { year: String(fullYear), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
     }
     },
@@ -2647,8 +2647,8 @@ var decoderData = {
       decodeNotes: 'Example: x4502x -> week 45 of 2002.',
       exampleSerial: 'X4502XXXX',
       exampleResult: '45=Week 45 and 02=2002 -> Week 45, 2002',
-      sources: 'Manufacturer Technical Specifications',
-      method: 'Four digits following a letter represent week and year (WWYY). Source: Manufacturer Technical Specifications.',
+      sources: 'hvac.com age-lookup; homeinspectioninsider.com; rheem.com service guides',
+      method: 'Four digits following a letter represent week and year (WWYY).',
       notes: 'Find the first letter followed by four digits in the serial number.',
       source: 'Manufacturer Technical Specifications',
       yearMap: {  },
@@ -2663,8 +2663,8 @@ var decoderData = {
       var week = parseInt(ww, 10);
       if (week < 1 || week > 53) return null;
       var yearNum = parseInt(yy, 10);
-      var currentTwo = new Date().getFullYear() % 100;
-      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      // Fixed threshold: no modern HVAC serial refers to years before 1950
+      var fullYear = (yearNum <= 50 ? 2000 : 1900) + yearNum;
       return { year: String(fullYear), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
     }
     },
@@ -2682,8 +2682,8 @@ var decoderData = {
       decodeNotes: 'Example: x4502x -> week 45 of 2002.',
       exampleSerial: 'X4502XXXX',
       exampleResult: '45=Week 45 and 02=2002 -> Week 45, 2002',
-      sources: 'Manufacturer Technical Specifications',
-      method: 'Four digits following a letter represent week and year (WWYY). Source: Manufacturer Technical Specifications.',
+      sources: 'hvac.com age-lookup; homeinspectioninsider.com; rheem.com service guides',
+      method: 'Four digits following a letter represent week and year (WWYY).',
       notes: 'Find the first letter followed by four digits in the serial number.',
       source: 'Manufacturer Technical Specifications',
       yearMap: {  },
@@ -2698,8 +2698,8 @@ var decoderData = {
       var week = parseInt(ww, 10);
       if (week < 1 || week > 53) return null;
       var yearNum = parseInt(yy, 10);
-      var currentTwo = new Date().getFullYear() % 100;
-      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      // Fixed threshold: no modern HVAC serial refers to years before 1950
+      var fullYear = (yearNum <= 50 ? 2000 : 1900) + yearNum;
       return { year: String(fullYear), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
     }
     },
@@ -2717,8 +2717,8 @@ var decoderData = {
       decodeNotes: 'Digits 3-4 represent the year.',
       exampleSerial: 'XX19XXXX',
       exampleResult: '19=2019',
-      sources: 'Manufacturer Technical Specifications',
-      method: 'Digits 3-4 represent the year. Source: Manufacturer Technical Specifications.',
+      sources: 'hvac.com age-lookup; homeinspectioninsider.com; trane.com service guides',
+      method: 'Digits 3-4 represent the year.',
       notes: 'Use digits 3-4 of the serial number to determine the year.',
       source: 'Manufacturer Technical Specifications',
       yearMap: {  },
@@ -2728,8 +2728,8 @@ var decoderData = {
       var yy = serial.substring(2, 4);
       if (!/^\d{2}$/.test(yy)) return null;
       var yearNum = parseInt(yy, 10);
-      var currentTwo = new Date().getFullYear() % 100;
-      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      // Fixed threshold: no modern HVAC serial refers to years before 1950
+      var fullYear = (yearNum <= 50 ? 2000 : 1900) + yearNum;
       return { year: String(fullYear), month: 'Year only', yearCode: yy };
     }
     },
@@ -2747,8 +2747,8 @@ var decoderData = {
       decodeNotes: 'Digits 3-4 represent the year.',
       exampleSerial: 'XX19XXXX',
       exampleResult: '19=2019',
-      sources: 'Manufacturer Technical Specifications',
-      method: 'Digits 3-4 represent the year. Source: Manufacturer Technical Specifications.',
+      sources: 'hvac.com age-lookup; homeinspectioninsider.com; trane.com service guides',
+      method: 'Digits 3-4 represent the year.',
       notes: 'Use digits 3-4 of the serial number to determine the year.',
       source: 'Manufacturer Technical Specifications',
       yearMap: {  },
@@ -2758,8 +2758,8 @@ var decoderData = {
       var yy = serial.substring(2, 4);
       if (!/^\d{2}$/.test(yy)) return null;
       var yearNum = parseInt(yy, 10);
-      var currentTwo = new Date().getFullYear() % 100;
-      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      // Fixed threshold: no modern HVAC serial refers to years before 1950
+      var fullYear = (yearNum <= 50 ? 2000 : 1900) + yearNum;
       return { year: String(fullYear), month: 'Year only', yearCode: yy };
     }
     },
@@ -2777,8 +2777,8 @@ var decoderData = {
       decodeNotes: 'First two digits represent production week; next two digits represent the year.',
       exampleSerial: '4519XXXX',
       exampleResult: '45=Week 45 and 19=2019 -> Week 45, 2019',
-      sources: 'Manufacturer Technical Specifications',
-      method: 'First two digits represent the production week; next two digits represent the year. Source: Manufacturer Technical Specifications.',
+      sources: 'hvac.com age-lookup; homeinspectioninsider.com; manufacturer service guides',
+      method: 'First two digits represent the production week; next two digits represent the year.',
       notes: 'Use the first four digits of the serial number to determine production week and year.',
       source: 'Manufacturer Technical Specifications',
       yearMap: {  },
@@ -2791,8 +2791,8 @@ var decoderData = {
       var week = parseInt(ww, 10);
       if (week < 1 || week > 53) return null;
       var yearNum = parseInt(yy, 10);
-      var currentTwo = new Date().getFullYear() % 100;
-      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      // Fixed threshold: no modern HVAC serial refers to years before 1950
+      var fullYear = (yearNum <= 50 ? 2000 : 1900) + yearNum;
       return { year: String(fullYear), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
     }
     },
@@ -2810,8 +2810,8 @@ var decoderData = {
       decodeNotes: 'First two digits represent production week; next two digits represent the year.',
       exampleSerial: '4519XXXX',
       exampleResult: '45=Week 45 and 19=2019 -> Week 45, 2019',
-      sources: 'Manufacturer Technical Specifications',
-      method: 'First two digits represent the production week; next two digits represent the year. Source: Manufacturer Technical Specifications.',
+      sources: 'hvac.com age-lookup; homeinspectioninsider.com; manufacturer service guides',
+      method: 'First two digits represent the production week; next two digits represent the year.',
       notes: 'Use the first four digits of the serial number to determine production week and year.',
       source: 'Manufacturer Technical Specifications',
       yearMap: {  },
@@ -2824,8 +2824,8 @@ var decoderData = {
       var week = parseInt(ww, 10);
       if (week < 1 || week > 53) return null;
       var yearNum = parseInt(yy, 10);
-      var currentTwo = new Date().getFullYear() % 100;
-      var fullYear = (yearNum > currentTwo ? 1900 : 2000) + yearNum;
+      // Fixed threshold: no modern HVAC serial refers to years before 1950
+      var fullYear = (yearNum <= 50 ? 2000 : 1900) + yearNum;
       return { year: String(fullYear), month: 'Week ' + ww, yearCode: yy, weekDigits: ww };
     }
     }
@@ -2863,7 +2863,7 @@ var decoderData = {
       method: '15-char serial: year at char 8, month at char 9. 11-char serial: year at char 4, month at char 5.',
       notes: 'Samsung TVs and monitors use the same serial format as Samsung appliances. Serial label is on the back of the device. Some codes have a 20-year cycle â€” verify decade using model generation or condition.',
       source: 'homespy.io; electrical-forensics.com; samsung.com',
-      yearMap: { 'R': '2001/2021', 'T': '2002/2022', 'W': '2003/2023', 'X': '2004/2024', 'Y': '2005/2025', 'A': '2006/2026', 'P': '2007', 'Q': '2008', 'S': '2009', 'Z': '2010', 'B': '2011', 'C': '2012', 'D': '2013', 'F': '2014', 'G': '2015', 'H': '2016', 'J': '2017', 'K': '2018', 'M': '2019', 'N': '2020' },
+      yearMap: { 'R': '2001/2021', 'T': '2002/2022', 'W': '2003/2023', 'X': '2004/2024', 'Y': '2005/2025', 'A': '2006/2026', 'P': '2007/2027', 'Q': '2008/2028', 'S': '2009/2029', 'Z': '2010/2030', 'B': '2011/2031', 'C': '2012/2032', 'D': '2013/2033', 'F': '2014/2034', 'G': '2015/2035', 'H': '2016/2036', 'J': '2017/2037', 'K': '2018/2038', 'M': '2019/2039', 'N': '2020/2040' },
       monthMap: { '1': 'January', '2': 'February', '3': 'March', '4': 'April', '5': 'May', '6': 'June', '7': 'July', '8': 'August', '9': 'September', 'A': 'October', 'B': 'November', 'C': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 5) return null;
