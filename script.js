@@ -4884,7 +4884,6 @@ function decodeAnotherItem() {
   var kenmorePrefix = document.getElementById('kenmoreModelPrefix');
   if (kenmorePrefix) kenmorePrefix.value = '';
   if (altQuery) altQuery.value = '';
-  if (document.getElementById('eraGroup')) hideEraGroup();
   var refinePanel = document.querySelector('.narrow-date-panel');
   if (refinePanel) refinePanel.classList.add('hidden');
   var refineOut = document.getElementById('narrowDateOutput');
