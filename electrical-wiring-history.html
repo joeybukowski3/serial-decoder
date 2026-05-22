@@ -73,25 +73,27 @@
     }
     .ew-breadcrumb {
       font-size: 0.875rem;
-      color: #64748b;
+      color: #6B7280;
       margin-bottom: 16px;
     }
     .ew-breadcrumb a {
-      color: #0369a1;
+      color: #0369a1 !important;
       text-decoration: none;
     }
     .ew-breadcrumb a:hover { text-decoration: underline; }
     .ew-hero-h1 {
       font-size: clamp(1.9rem, 4vw, 2.9rem);
       font-weight: 800;
-      color: #0f172a;
+      color: #0f172a !important;
+      -webkit-text-fill-color: #0f172a !important;
+      background: none !important;
       letter-spacing: -1px;
       margin: 0 0 14px 0;
       line-height: 1.18;
     }
     .ew-hero-sub {
       font-size: 1.05rem;
-      color: #334155;
+      color: #374151 !important;
       line-height: 1.65;
       margin: 0 0 28px 0;
       max-width: 520px;
@@ -675,23 +677,15 @@
   <link rel="stylesheet" href="/guide-pages.css">
 </head>
 <body>
-  <header class="header-main">
-    <div class="header-branding">
-      <a href="/" class="logo" style="text-decoration:none;color:inherit;">
-        <svg width="28" height="28" viewBox="0 0 64 64" style="display:inline;margin-right:8px;vertical-align:middle;">
-          <rect x="8" y="8" width="16" height="16" fill="#44e5c2" rx="2"/>
-          <rect x="28" y="8" width="16" height="16" fill="#44e5c2" rx="2"/>
-          <rect x="48" y="8" width="8" height="16" fill="#9fcaff" rx="1"/>
-          <rect x="8" y="28" width="8" height="16" fill="#9fcaff" rx="1"/>
-          <rect x="28" y="28" width="16" height="16" fill="#ffc278" rx="2"/>
-          <rect x="48" y="28" width="8" height="16" fill="#44e5c2" rx="1"/>
-          <rect x="8" y="48" width="48" height="8" fill="#e0e7ff" rx="1"/>
-        </svg>
-        <span class="logo-text">Decode My Item</span>
-      </a>
+<nav>
+  <a href="/" class="logo" aria-label="Decode My Item home">
+    <span class="material-symbols-outlined" style="color:#44e5c2;font-size:26px;flex-shrink:0;line-height:1;">qr_code_scanner</span>
+    <div>
+      <div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Decode - Research - Automate</div>
     </div>
-        <nav class="header-nav">
-      <ul>
+  </a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+  <ul>
   <li><a href="/">Home</a></li>
   <li><a href="/decoder-tool">Serial Number Decoder</a></li>
   <li><a href="/smart-lookup">Smart Lookup</a></li>
@@ -733,11 +727,7 @@
   <li><a href="/contact">Contact</a></li>
   <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
 </ul>
-    </nav>
-    <button id="hamburgerBtn" class="hamburger" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
-  </header>
+</nav>
 
   <main role="main">
 
