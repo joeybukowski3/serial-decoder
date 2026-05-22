@@ -915,9 +915,9 @@ function initializeDecoderUiWhenReady() {
     if (resetHomeSearch) initialCategory = 'appliances';
     else if (initCat) initialCategory = categoryNameToKey(initCat);
     else if (window.DEFAULT_CATEGORY) initialCategory = categoryNameToKey(window.DEFAULT_CATEGORY);
-    else initialCategory = getSavedCategoryKey() || 'appliances';
+    else initialCategory = 'appliances';
   } catch (_) {
-    initialCategory = getSavedCategoryKey() || 'appliances';
+    initialCategory = 'appliances';
   }
 
   currentCategory = normalizeDecoderCategory(initialCategory);
