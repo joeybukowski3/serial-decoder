@@ -46,230 +46,630 @@
   </script>
   <link rel="stylesheet" href="shared.css">
   <style>
-    .guide-container {
-      max-width: 900px;
+    /* ── HERO (LIGHT TWO-COLUMN) ─────────────────────────────────────────── */
+    .ew-hero {
+      background: #f8fafc;
+      padding: 64px 48px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .ew-hero-inner {
+      max-width: 1280px;
       margin: 0 auto;
-      padding: 20px;
-    }
-    .guide-hero {
-      background: linear-gradient(135deg, #0f172a 0%, #1a2a4a 100%);
-      color: #dae2fd;
-      padding: 40px 20px;
-      text-align: center;
-      margin: -20px -20px 40px -20px;
-      border-bottom: 1px solid rgba(68, 229, 194, 0.1);
-    }
-    .guide-hero h1 {
-      font-size: 2rem;
-      margin: 0 0 12px 0;
-      color: #ffffff;
-    }
-    .safety-disclaimer {
-      background: #fef3c7;
-      border-left: 4px solid #f59e0b;
-      padding: 16px;
-      border-radius: 6px;
-      margin-bottom: 32px;
-      color: #92400e;
-    }
-    .safety-disclaimer strong {
-      color: #78350f;
-    }
-    .timeline {
-      position: relative;
-      margin-bottom: 40px;
-    }
-    .timeline-era {
-      margin-bottom: 16px;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      overflow: hidden;
-      transition: box-shadow 0.2s;
-    }
-    .timeline-era[open] {
-      box-shadow: 0 4px 12px rgba(68, 229, 194, 0.1);
-      border-color: #44e5c2;
-    }
-    .timeline-era summary {
-      background: #f8fafc;
-      padding: 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 600;
-      color: #0f172a;
-      user-select: none;
-    }
-    .timeline-era summary:hover {
-      background: #f1f5f9;
-    }
-    .timeline-era summary::after {
-      content: "";
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-right: 2px solid #64748b;
-      border-bottom: 2px solid #64748b;
-      margin-left: auto;
-      transform: rotate(-45deg);
-      transition: transform 0.2s;
-    }
-    .timeline-era[open] summary::after {
-      transform: rotate(45deg);
-    }
-    .era-badge {
-      display: inline-block;
-      background: #dbeafe;
-      color: #0c4a6e;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-    .timeline-content {
-      padding: 24px;
-      border-top: 1px solid #e2e8f0;
-      color: #334155;
-      line-height: 1.6;
-    }
-    .timeline-content h3 {
-      margin-top: 0;
-      color: #0f172a;
-    }
-    .timeline-content ul, .timeline-content ol {
-      margin: 16px 0;
-      padding-left: 24px;
-    }
-    .timeline-content li {
-      margin-bottom: 8px;
-    }
-    .feature-box {
-      background: #f0f9ff;
-      border-left: 4px solid #44e5c2;
-      padding: 12px 16px;
-      border-radius: 4px;
-      margin: 16px 0;
-      font-size: 0.95rem;
-    }
-    .wiring-comparison {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 16px;
-      margin: 24px 0;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
     }
-    .wiring-card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 16px;
-      transition: all 0.2s;
-    }
-    .wiring-card:hover {
-      border-color: #44e5c2;
-      box-shadow: 0 2px 8px rgba(68, 229, 194, 0.1);
-    }
-    .wiring-card h4 {
-      margin: 0 0 12px 0;
-      color: #0f172a;
-      font-size: 0.95rem;
-    }
-    .wiring-card p {
-      margin: 8px 0;
-      font-size: 0.9rem;
-      color: #64748b;
-    }
-    .wiring-era {
+    .ew-badge {
       display: inline-block;
-      background: #dbeafe;
-      color: #0c4a6e;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-    .wiring-concern {
-      background: #fee2e2;
-      border-left: 3px solid #ef4444;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 0.9rem;
-      margin-top: 8px;
-    }
-    .documentation-checklist {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 20px;
-      margin: 24px 0;
-    }
-    .documentation-checklist h3 {
-      margin-top: 0;
-      color: #0f172a;
-    }
-    .documentation-checklist ul {
-      margin: 12px 0;
-      padding-left: 24px;
-      list-style: none;
-    }
-    .documentation-checklist li {
-      padding-left: 24px;
-      position: relative;
-      margin-bottom: 8px;
-    }
-    .documentation-checklist li::before {
-      content: "□";
-      position: absolute;
-      left: 0;
+      background: #0f172a;
       color: #44e5c2;
-      font-weight: bold;
-    }
-    .faq-section {
-      margin-top: 40px;
-    }
-    .faq-item {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      padding: 4px 12px;
       margin-bottom: 16px;
     }
-    .faq-question {
-      background: #f8fafc;
-      padding: 12px 16px;
-      border-radius: 6px;
-      font-weight: 600;
-      color: #0f172a;
-      cursor: pointer;
-      user-select: none;
-    }
-    .faq-question:hover {
-      background: #f1f5f9;
-    }
-    .faq-answer {
-      background: #ffffff;
-      padding: 16px;
-      color: #334155;
-      border-left: 2px solid #44e5c2;
-      line-height: 1.6;
-      margin-top: 4px;
-    }
-    .breadcrumb {
-      font-size: 0.9rem;
+    .ew-breadcrumb {
+      font-size: 0.875rem;
       color: #64748b;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
-    .breadcrumb a {
-      color: #44e5c2;
+    .ew-breadcrumb a {
+      color: #0369a1;
       text-decoration: none;
     }
-    .breadcrumb a:hover {
-      text-decoration: underline;
+    .ew-breadcrumb a:hover { text-decoration: underline; }
+    .ew-hero-h1 {
+      font-size: clamp(1.9rem, 4vw, 2.9rem);
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -1px;
+      margin: 0 0 14px 0;
+      line-height: 1.18;
+    }
+    .ew-hero-sub {
+      font-size: 1.05rem;
+      color: #334155;
+      line-height: 1.65;
+      margin: 0 0 28px 0;
+      max-width: 520px;
+    }
+    .ew-disclaimer {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 16px 20px;
+      border-radius: 0 6px 6px 0;
+      max-width: 560px;
+    }
+    .ew-disclaimer-inner {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .ew-disclaimer-icon {
+      color: #d97706;
+      font-size: 22px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .ew-disclaimer-title {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #78350f;
+      margin-bottom: 4px;
+    }
+    .ew-disclaimer-body {
+      color: #92400e;
+      font-size: 0.855rem;
+      margin: 0;
+      line-height: 1.55;
+    }
+    .ew-hero-img-col {
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      aspect-ratio: 4/3;
+      background: #0b1326;
+    }
+    .ew-hero-img-col img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ── PAGE WRAPPER (DARK) ────────────────────────────────────────────── */
+    .ew-page { background: #0b1326; color: #dae2fd; }
+    .ew-page h2 { color: #ffffff; }
+    .ew-page h3 { color: #ffffff; }
+    .ew-wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+    .ew-section { padding: 64px 0; }
+    .ew-section-header {
+      margin-bottom: 52px;
+      text-align: center;
+    }
+    .ew-section-header h2 {
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .ew-section-header p {
+      color: #9ab0c8;
+      font-size: 1rem;
+      max-width: 540px;
+      margin: 0 auto;
+    }
+
+    /* ── EVOLUTIONARY TIMELINE ──────────────────────────────────────────── */
+    .ew-timeline {
+      position: relative;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+    .ew-timeline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: rgba(68,229,194,0.22);
+      transform: translateX(-50%);
+    }
+    .ew-tl-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 44px;
+      position: relative;
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .ew-tl-row.ew-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .ew-tl-card {
+      width: 45%;
+      background: #112236;
+      border: 1px solid rgba(68,229,194,0.2);
+      padding: 28px 32px;
+      border-radius: 4px;
+      transition: box-shadow 0.22s;
+    }
+    .ew-tl-card:hover { box-shadow: 0 4px 20px rgba(68,229,194,0.1); }
+    .ew-tl-card-warn {
+      border-top: 1px solid rgba(68,229,194,0.2);
+      border-right: 1px solid rgba(68,229,194,0.2);
+      border-bottom: 1px solid rgba(68,229,194,0.2);
+      border-left: 3px solid #f59e0b;
+    }
+    .ew-tl-card-danger { border: 2px solid rgba(239,68,68,0.55); }
+    .ew-tl-card-safe {
+      border-left: 3px solid #44e5c2;
+      background: rgba(68,229,194,0.04);
+    }
+    .ew-tl-spacer { width: 45%; }
+    .ew-tl-dot {
+      width: 16px;
+      height: 16px;
+      background: #44e5c2;
+      border-radius: 50%;
+      border: 3px solid #0b1326;
+      outline: 2px solid #44e5c2;
+      flex-shrink: 0;
+      z-index: 2;
+    }
+    .ew-tl-dot-warn { background: #f59e0b; outline-color: #f59e0b; }
+    .ew-tl-dot-danger {
+      width: 20px;
+      height: 20px;
+      background: #ef4444;
+      outline-color: #ef4444;
+    }
+    .ew-era-label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: rgba(68,229,194,0.75);
+      margin-bottom: 10px;
+    }
+    .ew-era-label-warn { color: #f59e0b; }
+    .ew-era-label-danger { color: #ef4444; }
+    .ew-era-label-safe { color: #44e5c2; }
+    .ew-tl-card h3 {
+      color: #ffffff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .ew-tl-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 18px 0;
+    }
+    .ew-tl-card ul li {
+      color: #c8d5e8;
+      font-size: 0.875rem;
+      padding: 4px 0 4px 20px;
+      position: relative;
+    }
+    .ew-tl-card ul li::before {
+      content: '•';
+      position: absolute;
+      left: 6px;
+      color: rgba(68,229,194,0.5);
+    }
+    .ew-tl-note {
+      background: rgba(68,229,194,0.05);
+      border: 1px solid rgba(68,229,194,0.18);
+      padding: 12px 14px;
+      border-radius: 3px;
+      margin-top: 8px;
+    }
+    .ew-tl-note-warn {
+      border-left: 3px solid #f59e0b;
+      background: rgba(245,158,11,0.06);
+      border-color: rgba(245,158,11,0.28);
+    }
+    .ew-tl-note-danger {
+      border-left: 3px solid #ef4444;
+      background: rgba(239,68,68,0.06);
+      border-color: rgba(239,68,68,0.25);
+    }
+    .ew-tl-note-safe {
+      border: 1px solid rgba(68,229,194,0.28);
+      background: rgba(68,229,194,0.05);
+    }
+    .ew-note-label {
+      display: block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 5px;
+    }
+    .ew-tl-note-warn .ew-note-label { color: #f59e0b; }
+    .ew-tl-note-danger .ew-note-label { color: #ef4444; }
+    .ew-tl-note-safe .ew-note-label { color: rgba(68,229,194,0.75); }
+    .ew-tl-note p {
+      color: #9ab0c8;
+      font-size: 0.84rem;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .ew-tl-note-safe p { color: #44e5c2; font-weight: 600; }
+    .ew-warn-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.35);
+      color: #f59e0b;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+      margin-top: 12px;
+    }
+    .ew-verified-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(68,229,194,0.1);
+      border: 1px solid rgba(68,229,194,0.35);
+      color: #44e5c2;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 3px;
+      margin-top: 12px;
+    }
+    .ew-warn-tag .material-symbols-outlined,
+    .ew-verified-tag .material-symbols-outlined { font-size: 14px; }
+
+    /* ── WIRING TYPE REFERENCE GRID ─────────────────────────────────────── */
+    .ew-grid-section {
+      background: #0d1a2e;
+      border-top: 1px solid rgba(68,229,194,0.1);
+      border-bottom: 1px solid rgba(68,229,194,0.1);
+    }
+    .ew-wiring-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .ew-wiring-card {
+      background: #112236;
+      border: 1px solid rgba(68,229,194,0.18);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.22s;
+    }
+    .ew-wiring-card:hover { box-shadow: 0 4px 20px rgba(68,229,194,0.1); }
+    .ew-wiring-card-danger { border: 2px solid rgba(239,68,68,0.55); }
+    .ew-wiring-card-maintenance { border: 1px solid rgba(245,158,11,0.38); }
+    .ew-wiring-card-safe { border: 1px solid rgba(68,229,194,0.38); }
+    .ew-card-img-wrap {
+      position: relative;
+      aspect-ratio: 16/9;
+      background: #1a2a4a;
+      overflow: hidden;
+    }
+    .ew-card-img-wrap img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .ew-card-img-fallback {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a2a4a;
+      color: #64748b;
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 8px;
+    }
+    .ew-card-body {
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 10px;
+    }
+    .ew-card-era {
+      display: inline-block;
+      background: #1e2d42;
+      color: #9fcaff;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      align-self: flex-start;
+    }
+    .ew-card-body h4 {
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    .ew-card-body p {
+      color: #9ab0c8;
+      font-size: 0.855rem;
+      margin: 0;
+      line-height: 1.55;
+      flex: 1;
+    }
+    .ew-card-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.63rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .ew-card-status .material-symbols-outlined { font-size: 14px; }
+    .ew-status-safe { color: #44e5c2; }
+    .ew-status-danger { color: #ef4444; }
+    .ew-status-maintenance { color: #f59e0b; }
+
+    /* ── BENTO: TABLE + CHECKLIST ───────────────────────────────────────── */
+    .ew-bento {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 52px;
+      align-items: start;
+    }
+    .ew-table-section h2 {
+      font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .ew-table-wrap {
+      overflow-x: auto;
+      border: 1px solid rgba(68,229,194,0.18);
+      border-radius: 6px;
+    }
+    .ew-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 440px;
+    }
+    .ew-table thead tr { background: #0f1d30; }
+    .ew-table thead th {
+      padding: 13px 16px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #dae2fd;
+      text-align: left;
+      border-bottom: 1px solid rgba(68,229,194,0.18);
+    }
+    .ew-table tbody td {
+      padding: 13px 16px;
+      font-size: 0.86rem;
+      color: #c0cfe8;
+      border-bottom: 1px solid rgba(255,255,255,0.045);
+      vertical-align: top;
+    }
+    .ew-table tbody tr:last-child td { border-bottom: none; }
+    .ew-table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+    .ew-table tbody tr:hover td { background: rgba(68,229,194,0.03); }
+    .ew-table tbody td:first-child strong { color: #f0f4ff; }
+    .ew-danger-cell { color: #ef4444 !important; }
+    .ew-warn-cell { color: #f59e0b !important; }
+    .ew-safe-cell { color: #44e5c2 !important; }
+
+    /* Checklist sidebar */
+    .ew-sidebar { position: sticky; top: 24px; }
+    .ew-checklist-card {
+      background: #131b2e;
+      border: 1px solid rgba(68,229,194,0.2);
+      border-radius: 8px;
+      padding: 28px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+    }
+    .ew-checklist-card h3 {
+      color: #ffffff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .ew-checklist-sub {
+      color: rgba(68,229,194,0.6);
+      font-size: 0.83rem;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .ew-checklist {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .ew-checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+    }
+    .ew-checkbox {
+      width: 17px;
+      height: 17px;
+      border: 2px solid rgba(255,255,255,0.45);
+      flex-shrink: 0;
+      margin-top: 2px;
+      border-radius: 2px;
+    }
+    .ew-checklist li span {
+      font-size: 0.875rem;
+      line-height: 1.45;
+      color: #dae2fd;
+    }
+    .ew-export-btn {
+      width: 100%;
+      background: #44e5c2;
+      color: #0b1326;
+      border: none;
+      padding: 11px 16px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: background 0.18s;
+      font-family: inherit;
+    }
+    .ew-export-btn:hover { background: #2dd4af; }
+
+    /* ── FAQ ─────────────────────────────────────────────────────────────── */
+    .ew-faq-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .ew-faq-wrap h2 {
+      font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+      font-weight: 700;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .ew-faq-item {
+      border: 1px solid rgba(68,229,194,0.18);
+      border-radius: 4px;
+      background: #112236;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .ew-faq-btn {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: #dae2fd;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      gap: 12px;
+      font-family: inherit;
+    }
+    .ew-faq-btn:hover { background: rgba(68,229,194,0.04); }
+    .ew-faq-arrow {
+      font-size: 20px;
+      color: #64748b;
+      flex-shrink: 0;
+      transition: transform 0.22s;
+    }
+    .ew-faq-answer {
+      border-top: 1px solid rgba(68,229,194,0.1);
+      padding: 14px 20px 18px;
+    }
+    .ew-faq-answer p {
+      color: #9ab0c8;
+      font-size: 0.875rem;
+      margin: 0;
+      line-height: 1.62;
+    }
+
+    /* ── RELATED GUIDES ─────────────────────────────────────────────────── */
+    .ew-related {
+      background: rgba(68,229,194,0.04);
+      border: 1px solid rgba(68,229,194,0.18);
+      border-radius: 8px;
+      padding: 26px 30px;
+      margin: 0 0 48px;
+    }
+    .ew-related h3 {
+      color: #44e5c2;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .ew-related ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .ew-related li {
+      color: #c8d5e8;
+      font-size: 0.875rem;
+      line-height: 1.55;
+    }
+    .ew-related a { color: #44e5c2; font-weight: 600; }
+
+    /* ── RESPONSIVE ──────────────────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .ew-wiring-grid { grid-template-columns: repeat(2, 1fr); }
+      .ew-bento { grid-template-columns: 1fr; gap: 40px; }
+      .ew-sidebar { position: static; }
     }
     @media (max-width: 768px) {
-      .guide-hero h1 {
-        font-size: 1.5rem;
+      .ew-hero { padding: 40px 20px; }
+      .ew-hero-inner { grid-template-columns: 1fr; gap: 32px; }
+      .ew-hero-img-col { aspect-ratio: 16/9; }
+      .ew-hero-sub { max-width: 100%; }
+      .ew-wrap { padding: 0 20px; }
+      .ew-timeline { padding: 0 20px; }
+      .ew-timeline::before { left: 20px; transform: none; }
+      .ew-tl-row {
+        display: block;
+        padding-left: 44px;
+        margin-bottom: 28px;
+        position: relative;
       }
-      .wiring-comparison {
-        grid-template-columns: 1fr;
+      .ew-tl-card, .ew-tl-spacer { width: 100%; }
+      .ew-tl-spacer { display: none; }
+      .ew-tl-dot {
+        position: absolute;
+        left: 12px;
+        top: 18px;
+        width: 14px;
+        height: 14px;
       }
+      .ew-tl-dot-warn { left: 12px; }
+      .ew-tl-dot-danger { left: 10px; width: 18px; height: 18px; }
+      .ew-wiring-grid { grid-template-columns: 1fr; }
+      .ew-section { padding: 40px 0; }
+    }
+    @media (max-width: 375px) {
+      .ew-hero-h1 { font-size: 1.65rem; }
     }
   </style>
   <link rel="stylesheet" href="/guide-pages.css">
@@ -340,320 +740,397 @@
   </header>
 
   <main role="main">
-    <div class="guide-hero">
-      <h1>🔌 Electrical Wiring History</h1>
-      <p>Knob-and-Tube, Cloth, Aluminum, Copper NM Cable, and Modern Systems</p>
-    </div>
 
-    <div class="guide-container">
-      <div class="breadcrumb">
-        <a href="/">Home</a> / <a href="/item-history-guides">Item History Guides</a> / Electrical Wiring History
+    <!-- ── HERO ──────────────────────────────────────────────────────────── -->
+    <section class="ew-hero">
+      <div class="ew-hero-inner">
+
+        <!-- Left: text -->
+        <div>
+          <nav class="ew-breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Home</a> / <a href="/item-history-guides">Item History Guides</a> / Electrical Wiring History
+          </nav>
+          <span class="ew-badge">Educational Reference</span>
+          <h1 class="ew-hero-h1">Electrical Wiring History</h1>
+          <p class="ew-hero-sub">From knob-and-tube to modern NM-B cable: a technical guide to residential wiring evolution.</p>
+          <div class="ew-disclaimer">
+            <div class="ew-disclaimer-inner">
+              <span class="material-symbols-outlined ew-disclaimer-icon">report_problem</span>
+              <div>
+                <strong class="ew-disclaimer-title">Safety Disclaimer</strong>
+                <p class="ew-disclaimer-body">This page is educational only. Electrical wiring should never be installed, modified, or repaired without a licensed electrician. If you have concerns about your home's wiring, contact a qualified electrician immediately. Wiring work must comply with local codes and permits.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: image -->
+        <div class="ew-hero-img-col">
+          <img
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAH_9lIQfjrbULqRX5TTc1CQ5MDnE-32rmRqu-akZfezJzTfJGlr5T86DNn8eoQYF6uWqi9HKQ-BOk2karDhjkp7voriZYhDogH7pOd_XnutCzZZErRTwdtwxIRMR32mgLYBIz43DT1oUKfOw_p66K5EQLJ0pusI8BK4dKGtnWGslOVXYzt5sQ7furDys10_nE-V7UPLB4Jcnw2n_eiBAxeJsyRd-N-94sNEptyjropMt8T7vPKuSuB2754D9Peohooa2OMB5nVQ"
+            alt="Residential electrical wiring"
+            onerror="this.style.display='none'"
+          >
+        </div>
+
       </div>
+    </section>
 
-      <div class="safety-disclaimer">
-        <strong>⚠️ Safety Disclaimer:</strong> This page is educational only. Electrical wiring should never be installed, modified, or repaired without a licensed electrician. If you have concerns about your home's wiring, contact a qualified electrician immediately. Wiring work must comply with local electrical codes and permits.
-      </div>
+    <div class="ew-page">
 
-      <section>
-        <h2>Introduction</h2>
-        <p>
-          Electrical wiring systems have changed dramatically over the past century as homes required more power, electrical codes evolved, insulation materials improved, and safety standards advanced. Understanding the history of electrical wiring helps homeowners, property inspectors, insurance professionals, and researchers identify wiring types, recognize common concerns, and understand the context of older homes' electrical systems. This guide explains the evolution from early knob-and-tube wiring to modern NM-B cable systems.
-        </p>
-      </section>
+      <!-- ── EVOLUTIONARY TIMELINE ─────────────────────────────────────── -->
+      <section class="ew-section">
+        <div class="ew-wrap">
+          <div class="ew-section-header">
+            <h2>Evolutionary Timeline</h2>
+            <p>Six eras of residential wiring technology — from open conductors to modern arc-fault-protected circuits.</p>
+          </div>
+        </div>
 
-      <section>
-        <h2>Timeline of Electrical Wiring Systems</h2>
-        <div class="timeline">
-          <details class="timeline-era">
-            <summary>
-              <span class="era-badge">Late 1800s–1930s</span>
-              <strong>Early Wiring and Knob-and-Tube Era</strong>
-            </summary>
-            <div class="timeline-content">
-              <h3>Late 1800s–1930s: Early Wiring and Knob-and-Tube</h3>
+        <div class="ew-timeline">
+
+          <!-- Era 1: KNT — LEFT -->
+          <div class="ew-tl-row">
+            <div class="ew-tl-card">
+              <span class="ew-era-label">Late 1800s–1930s</span>
+              <h3>Knob-and-Tube (KNT)</h3>
               <ul>
-                <li>Knob-and-tube wiring (KNT) standard in early homes</li>
-                <li>Individual conductors supported by ceramic knobs and tubes</li>
-                <li>Cloth/rubber insulation on copper wires</li>
-                <li>No equipment grounding conductor (bare ground wire)</li>
+                <li>Individual conductors on ceramic knobs and tubes</li>
+                <li>Cloth and rubber insulation on copper wires</li>
+                <li>No equipment grounding conductor</li>
                 <li>Two-wire systems (hot and neutral only)</li>
                 <li>Air spacing between conductors for cooling</li>
-                <li>Common in homes built 1880s–1930s, still present in older homes</li>
+                <li>Designed for low-amperage, lighting-focused loads</li>
               </ul>
-              <div class="feature-box">
-                <strong>Visual Indicators:</strong> Look for ceramic knobs and tubes on wires, cloth-wrapped insulation, open wiring in attics/basements, distinct separation between conductors, porcelain bases and tubes.
-              </div>
-              <div class="wiring-concern">
-                <strong>⚠️ Historical Note:</strong> Knob-and-tube wiring was appropriate technology for the era (low electrical loads, lighting-focused). However, modern electrical demands, insulation aging, and potential safety concerns mean older knob-and-tube systems often require evaluation by a qualified electrician or replacement.
+              <div class="ew-tl-note">
+                <span class="ew-note-label">Visual Indicator</span>
+                <p>Ceramic knobs mounted on framing, porcelain tubes through joists, open cloth-wrapped wires in attics and basements.</p>
               </div>
             </div>
-          </details>
+            <div class="ew-tl-dot"></div>
+            <div class="ew-tl-spacer"></div>
+          </div>
 
-          <details class="timeline-era">
-            <summary>
-              <span class="era-badge">1920s–1950s</span>
-              <strong>Cloth-Sheathed Cable and Early Nonmetallic Cable</strong>
-            </summary>
-            <div class="timeline-content">
-              <h3>1920s–1950s: Cloth-Sheathed Cable and Early NM Cable</h3>
+          <!-- Era 2: Cloth Sheathed — RIGHT (WARN) -->
+          <div class="ew-tl-row">
+            <div class="ew-tl-spacer"></div>
+            <div class="ew-tl-dot ew-tl-dot-warn"></div>
+            <div class="ew-tl-card ew-tl-card-warn">
+              <span class="ew-era-label ew-era-label-warn">1920s–1950s</span>
+              <h3>Cloth-Sheathed Cable</h3>
               <ul>
-                <li>Cloth/rubber sheathed cable began replacing individual knob-and-tube wires</li>
-                <li>Early nonmetallic (NM) cable introduced</li>
-                <li>Two-wire systems common; limited three-wire grounding</li>
-                <li>Rubber/cloth insulation vulnerable to age and brittleness</li>
-                <li>No equipment grounding conductor in most installations</li>
-                <li>Visual indicators: fabric-like outer sheathing, older junction boxes, brittle insulation</li>
+                <li>Bundled conductors inside cloth/rubber outer sheathing</li>
+                <li>Replaced open knob-and-tube runs in new construction</li>
+                <li>Early NM cable introduced with limited adoption</li>
+                <li>Two-wire systems common; grounding conductor rare</li>
+                <li>More practical to route than individual conductors</li>
               </ul>
-              <div class="feature-box">
-                <strong>Era Characteristics:</strong> This transition period shows homes moving from open knob-and-tube toward bundled, sheathed systems. Electrical loads were still modest compared to modern expectations.
+              <div class="ew-tl-note ew-tl-note-danger">
+                <span class="ew-note-label">Risk Note: Insulation Brittleness</span>
+                <p>Rubber and cloth insulation becomes brittle and cracks with age. Damaged insulation exposes live conductors — a fire and shock hazard requiring professional evaluation.</p>
               </div>
             </div>
-          </details>
+          </div>
 
-          <details class="timeline-era">
-            <summary>
-              <span class="era-badge">1940s–1960s</span>
-              <strong>Armored Cable, BX, and Metal-Clad Systems</strong>
-            </summary>
-            <div class="timeline-content">
-              <h3>1940s–1960s: Armored Cable, BX, and Metal-Clad Systems</h3>
+          <!-- Era 3: Armored/BX — LEFT -->
+          <div class="ew-tl-row">
+            <div class="ew-tl-card">
+              <span class="ew-era-label">1940s–1960s</span>
+              <h3>Armored / BX Cable</h3>
               <ul>
-                <li>Armored cable (BX) and metal-clad systems became more common in certain regions</li>
-                <li>Metal jacket provided physical protection to wires</li>
-                <li>More durable than cloth-sheathed cable</li>
-                <li>Grounding varied by installation era and type</li>
-                <li>Common in commercial buildings and some residential buildings</li>
-                <li>Offered better protection in basements, crawlspaces, and areas prone to damage</li>
+                <li>Metal spiral armor jacket surrounds conductors</li>
+                <li>Better physical protection than cloth-sheathed cable</li>
+                <li>Common in commercial and some residential installs</li>
+                <li>Preferred in basements, crawlspaces, and exposed areas</li>
+                <li>Grounding varied by era and installation method</li>
+                <li>Still permitted and used in certain applications today</li>
               </ul>
-              <div class="feature-box">
-                <strong>Visual Indicators:</strong> Spiral metal armor wrapping around the cables, silver/metallic appearance, often seen in basements and crawlspaces, Greenfield-style flexible conduit.
+              <div class="ew-tl-note">
+                <span class="ew-note-label">Visual Indicator</span>
+                <p>Distinctive spiral metal armor with silver/grey appearance. Flexible Greenfield-style conduit in older mechanical rooms and utility areas.</p>
               </div>
             </div>
-          </details>
+            <div class="ew-tl-dot"></div>
+            <div class="ew-tl-spacer"></div>
+          </div>
 
-          <details class="timeline-era">
-            <summary>
-              <span class="era-badge">1960s–1970s</span>
-              <strong>Aluminum Branch Circuit Wiring Era</strong>
-            </summary>
-            <div class="timeline-content">
-              <h3>1960s–1970s: Aluminum Branch Circuit Wiring Era</h3>
+          <!-- Era 4: Aluminum — RIGHT (DANGER) -->
+          <div class="ew-tl-row">
+            <div class="ew-tl-spacer"></div>
+            <div class="ew-tl-dot ew-tl-dot-danger"></div>
+            <div class="ew-tl-card ew-tl-card-danger">
+              <span class="ew-era-label ew-era-label-danger">1960s–1970s &bull; Evaluation Required</span>
+              <h3>Aluminum Branch Wiring</h3>
               <ul>
-                <li>Aluminum branch circuit wiring introduced due to copper cost and availability concerns</li>
-                <li>Cost-driven solution when copper prices rose</li>
-                <li>Common in homes built during this period</li>
-                <li>Later associated with oxidation and expansion/contraction concerns</li>
-                <li>Requires specific connectors and installation methods</li>
-                <li>Grounding practices improving but varied by installation</li>
+                <li>Aluminum used for branch circuits due to copper cost</li>
+                <li>Widespread in homes built 1965–1973</li>
+                <li>Aluminum expands and contracts more than copper</li>
+                <li>Oxidation at connections increases resistance and heat</li>
+                <li>Requires aluminum-rated devices and specific connectors</li>
               </ul>
-              <div class="feature-box">
-                <strong>⚠️ Aluminum Wiring Concern:</strong> Homes from this era may have aluminum branch circuit wiring. Aluminum expands and contracts at a different rate than copper, can oxidize, and may require specialized evaluation and repair methods. If you suspect aluminum wiring, contact a qualified electrician for assessment. <a href="/electrical-service-panel-history" style="color: #44e5c2;">See also: Electrical Service Panel History</a>
+              <span class="ew-warn-tag">
+                <span class="material-symbols-outlined">warning</span>
+                Requires specialized evaluation
+              </span>
+              <div class="ew-tl-note ew-tl-note-warn" style="margin-top:12px;">
+                <span class="ew-note-label">Visual Indicator</span>
+                <p>Silver-colored conductors at panel and junction boxes. May have "AL" or "ALUMINUM" printed on outer sheathing. See also: <a href="/electrical-service-panel-history" style="color:#f59e0b;">Electrical Panel History</a>.</p>
               </div>
             </div>
-          </details>
+          </div>
 
-          <details class="timeline-era">
-            <summary>
-              <span class="era-badge">1970s–1990s</span>
-              <strong>Grounded Copper NM Cable Becomes Common</strong>
-            </summary>
-            <div class="timeline-content">
-              <h3>1970s–1990s: Grounded Copper NM Cable Becomes Common</h3>
+          <!-- Era 5: Copper NM — LEFT -->
+          <div class="ew-tl-row">
+            <div class="ew-tl-card">
+              <span class="ew-era-label">1970s–2000s</span>
+              <h3>Copper NM (Romex)</h3>
               <ul>
-                <li>Copper nonmetallic (NM) cable became standard wiring method</li>
-                <li>Romex-style cable: copper conductors with PVC insulation inside nonmetallic sheathing</li>
-                <li>Three-wire systems with grounding conductor becoming more common</li>
-                <li>Better insulation materials (PVC replacing cloth/rubber)</li>
-                <li>Easier installation and more flexible than armored cable</li>
-                <li>Growing use of dedicated circuits for appliances, HVAC, and electric heating</li>
-                <li>GFCI protection begins expanding in bathrooms and kitchens</li>
+                <li>Copper conductors with PVC insulation in plastic sheathing</li>
+                <li>Three-wire systems (hot, neutral, bare ground) common</li>
+                <li>GFCI protection begins expanding in wet locations</li>
+                <li>Dedicated circuits for appliances and HVAC growing</li>
+                <li>Flexible, easy to route through finished construction</li>
+                <li>Color-coded outer sheathing (white 14 AWG, yellow 12 AWG)</li>
               </ul>
-              <div class="feature-box">
-                <strong>Visual Indicators:</strong> Look for orange, yellow, or white plastic-sheathed cable (Romex), three conductors visible (black hot, white neutral, bare copper ground), labels on the outer sheath with wire gauge and voltage rating.
+              <div class="ew-tl-note">
+                <span class="ew-note-label">Visual Indicator</span>
+                <p>Orange, yellow, or white plastic sheathing. Three conductors visible: black (hot), white (neutral), bare copper (ground). Gauge and voltage rating printed on sheath.</p>
               </div>
             </div>
-          </details>
+            <div class="ew-tl-dot"></div>
+            <div class="ew-tl-spacer"></div>
+          </div>
 
-          <details class="timeline-era">
-            <summary>
-              <span class="era-badge">2000s–Today</span>
-              <strong>Modern NM-B, AFCI/GFCI, and Specialty Circuits</strong>
-            </summary>
-            <div class="timeline-content">
-              <h3>2000s–Today: Modern NM-B, AFCI/GFCI, and Specialty Circuits</h3>
+          <!-- Era 6: Modern NM-B — RIGHT (SAFE) -->
+          <div class="ew-tl-row">
+            <div class="ew-tl-spacer"></div>
+            <div class="ew-tl-dot"></div>
+            <div class="ew-tl-card ew-tl-card-safe">
+              <span class="ew-era-label ew-era-label-safe">2000s–Today</span>
+              <h3>Modern NM-B</h3>
               <ul>
-                <li>NM-B cable: improved insulation and flame resistance</li>
-                <li>AFCI (Arc Fault Circuit Interrupter) protection expanding to all circuits</li>
-                <li>GFCI (Ground Fault Circuit Interrupter) protection standard in wet locations</li>
-                <li>Dedicated circuits for each major appliance, HVAC, and heating</li>
-                <li>Low-voltage wiring for data, audio, video, and smart home systems</li>
-                <li>Conduit systems for additional protection where codes require</li>
-                <li>Better labeling, color coding, and installation documentation</li>
-                <li>EV charging circuits and solar-ready wiring in new homes</li>
-                <li>Surge protection and whole-house protection becoming standard</li>
+                <li>Improved flame-resistant PVC insulation (Type B)</li>
+                <li>AFCI protection standard across all branch circuits</li>
+                <li>GFCI required in kitchens, baths, garages, and outdoors</li>
+                <li>Dedicated circuits for each major appliance required</li>
+                <li>EV charging and solar-ready circuits in new construction</li>
+                <li>Whole-home surge protection becoming standard practice</li>
               </ul>
-              <div class="feature-box">
-                <strong>Current Standard:</strong> Modern electrical codes prioritize safety, proper grounding, protection devices, and capacity for modern electrical loads. Wiring should be installed only by licensed electricians following current code.
+              <span class="ew-verified-tag">
+                <span class="material-symbols-outlined">verified</span>
+                Current Safety Standard
+              </span>
+              <div class="ew-tl-note ew-tl-note-safe" style="margin-top:12px;">
+                <span class="ew-note-label">Current Feature</span>
+                <p>AFCI/GFCI protection standard across all circuits, with improved labeling, documentation, and capacity for modern electrical loads.</p>
               </div>
             </div>
-          </details>
+          </div>
+
         </div>
       </section>
 
-      <section>
-        <h2>Wiring Type Comparison</h2>
-        <div class="wiring-comparison">
-          <div class="wiring-card">
-            <h4>Knob-and-Tube (KNT)</h4>
-            <div class="wiring-era">Late 1800s–1930s</div>
-            <p><strong>Visual Clue:</strong> Ceramic knobs and tubes, open wires</p>
-            <p><strong>At the time:</strong> Appropriate for low electrical loads, lighting-focused systems</p>
-            <p><strong>Current concerns:</strong> Aging insulation, no grounding, insufficient for modern loads</p>
+      <!-- ── WIRING TYPE REFERENCE GRID ──────────────────────────────────── -->
+      <section class="ew-section ew-grid-section">
+        <div class="ew-wrap">
+          <div class="ew-section-header">
+            <h2>Wiring Type Reference</h2>
+            <p>Visual identification guide for the three most commonly documented residential wiring types.</p>
           </div>
+          <div class="ew-wiring-grid">
 
-          <div class="wiring-card">
-            <h4>Cloth Wiring</h4>
-            <div class="wiring-era">1920s–1950s</div>
-            <p><strong>Visual Clue:</strong> Fabric-like outer sheathing, brittle insulation</p>
-            <p><strong>At the time:</strong> Improvement over open knob-and-tube</p>
-            <p><strong>Current concerns:</strong> Age, insulation brittleness, limited grounding</p>
-          </div>
+            <!-- Knob-and-Tube -->
+            <div class="ew-wiring-card ew-wiring-card-danger">
+              <div class="ew-card-img-wrap">
+                <div class="ew-card-img-fallback">Knob-and-Tube Wiring</div>
+                <img
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIEGuTDVWYzLcbOdsEFjVvg6cXuFmmSguF7UVeS2qmpE6YosNmaxqXwdG5I4s9GaFjSntSrnnq9jrduLg845NmajqKD_ZO4zBDi0DMbKo4GPCU0q4psZmZ1V-azbRpue4x8VtvU5On2SJ6P4jY85qWeh-n7Csy81MKrGqsxQffzCN6DCqjUluuWDY1Zd4vpQL4LAx2p4fPnpRLi8pKODq0i-outwzdYmeP0WMS5OKbo1IwsniDYo13DVcuJFyQPWSWgMAnPrBFZw"
+                  alt="Knob-and-tube wiring"
+                  onerror="this.style.display='none'"
+                >
+              </div>
+              <div class="ew-card-body">
+                <h4>Knob-and-Tube</h4>
+                <span class="ew-card-era">Late 1800s–1930s</span>
+                <p>Open copper conductors supported by ceramic insulators with no grounding conductor. Designed for low-load, lighting-era homes with limited circuit capacity.</p>
+                <span class="ew-card-status ew-status-danger">
+                  <span class="material-symbols-outlined">report_problem</span>
+                  Evaluation Recommended
+                </span>
+              </div>
+            </div>
 
-          <div class="wiring-card">
-            <h4>Armored/BX Cable</h4>
-            <div class="wiring-era">1940s–1960s+</div>
-            <p><strong>Visual Clue:</strong> Metal spiral armor, silver/metallic appearance</p>
-            <p><strong>At the time:</strong> Durable protection, good for exposed areas</p>
-            <p><strong>Current concerns:</strong> Still used; requires proper grounding methods</p>
-          </div>
+            <!-- Armored/BX -->
+            <div class="ew-wiring-card ew-wiring-card-maintenance">
+              <div class="ew-card-img-wrap">
+                <div class="ew-card-img-fallback">Armored / BX Cable</div>
+                <img
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIKS863lYItul8XL6AKj3SreDRVQAZgnMby1bbE-_oQKNAq6_GHPnbTdfxJukaWKJT4wS6YDZkwC1TVBZz7ITmR_kKtCFQDPW1yuMv-C8_wWXcRXDzKAKATcKhIYhTY_HbhnO_jMkM4eyb9MaUsWyVO7TLitP9_fxtHL_7rFS4ndY9KKMoIwA48X1x3c5pAZ8aetNwevRsZOrXLc7NXuXCXfwH-xX3L-cmkKFg_KvGWluUEVxDPqlWg0nJSJrq0ELiTlCBaw4GfQ"
+                  alt="Armored BX cable"
+                  onerror="this.style.display='none'"
+                >
+              </div>
+              <div class="ew-card-body">
+                <h4>Armored / BX Cable</h4>
+                <span class="ew-card-era">1940s–1960s+</span>
+                <p>Spiral metal armor provides physical protection. Still permitted in exposed locations today. Grounding depends on installation era and specific method used.</p>
+                <span class="ew-card-status ew-status-maintenance">
+                  <span class="material-symbols-outlined">build</span>
+                  Verify Grounding Method
+                </span>
+              </div>
+            </div>
 
-          <div class="wiring-card">
-            <h4>Aluminum Branch Wiring</h4>
-            <div class="wiring-era">1960s–1970s</div>
-            <p><strong>Visual Clue:</strong> Silver-colored conductors, older NM sheathing</p>
-            <p><strong>At the time:</strong> Cost-effective solution during copper shortages</p>
-            <p><strong>Current concerns:</strong> Oxidation, expansion concerns, needs evaluation</p>
-            <div class="wiring-concern">Requires qualified electrician assessment</div>
-          </div>
+            <!-- Modern NM-B -->
+            <div class="ew-wiring-card ew-wiring-card-safe">
+              <div class="ew-card-img-wrap">
+                <div class="ew-card-img-fallback">Modern NM-B Cable</div>
+                <img
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2HYuChu0H8xAni9qT2HN_tr3MRV5gkXam4nggOXAHuaWK5S4dMpsTei27rWdRx_MXj0zHN58GtqmM_d2Z6kopsNI64wYXLb4Bpw2HiZXxrC-W-TW0o-JPjHZQPHYM0S7enIx7pq30YSDU5iDDIbWzIOv235VsFOC0jIL95uj9ZVxbTlFlZWR_Lx_o4XZE1ZHauGeERJ_p8qSh8sEfYd8Dk5gNs_J0gYnFL-EEQUaPXhb5RdNrMvu5ojmD736FdgqAymA8LmhOgQ"
+                  alt="Modern NM-B cable"
+                  onerror="this.style.display='none'"
+                >
+              </div>
+              <div class="ew-card-body">
+                <h4>Modern NM-B</h4>
+                <span class="ew-card-era">2000s–Today</span>
+                <p>Copper conductors with flame-resistant PVC insulation in plastic outer sheathing. Full equipment grounding, AFCI/GFCI protection, and proper circuit capacity for modern loads.</p>
+                <span class="ew-card-status ew-status-safe">
+                  <span class="material-symbols-outlined">verified</span>
+                  Current Standard
+                </span>
+              </div>
+            </div>
 
-          <div class="wiring-card">
-            <h4>Copper NM (Romex)</h4>
-            <div class="wiring-era">1970s–2000s</div>
-            <p><strong>Visual Clue:</strong> Orange/yellow/white plastic sheathing, 3 conductors (black, white, bare)</p>
-            <p><strong>At the time:</strong> Flexible, efficient, grounded systems</p>
-            <p><strong>Current status:</strong> Still widely used; acceptable if properly installed</p>
-          </div>
-
-          <div class="wiring-card">
-            <h4>Modern NM-B</h4>
-            <div class="wiring-era">2000s–Today</div>
-            <p><strong>Visual Clue:</strong> Updated insulation, "NM-B" marking, AFCI/GFCI protection</p>
-            <p><strong>Current standard:</strong> Improved safety, flame resistance, better protection</p>
-            <p><strong>Features:</strong> Proper grounding, dedicated circuits, protective devices</p>
           </div>
         </div>
       </section>
 
-      <section>
-        <h2>Why Wiring Styles Changed Over Time</h2>
-        <ul>
-          <li><strong>Higher Electrical Loads:</strong> Modern homes require far more power than early systems were designed for (air conditioning, electric heating, multiple appliances running simultaneously)</li>
-          <li><strong>Need for Equipment Grounding:</strong> The third conductor for equipment grounding became essential for safety</li>
-          <li><strong>Safer Insulation Materials:</strong> Better plastics and rubber compounds replaced early cloth/rubber insulation</li>
-          <li><strong>Fire Prevention:</strong> Improved insulation reduced fire risk and damage potential</li>
-          <li><strong>Easier Installation:</strong> Bundled, pre-packaged cables were easier and faster to install than individual knob-and-tube wires</li>
-          <li><strong>Code Evolution:</strong> Building and electrical codes continuously updated safety, capacity, and protection requirements</li>
-          <li><strong>Appliance and HVAC Demand:</strong> As homes added more major appliances and central HVAC, wiring methods had to support higher loads and better circuit separation</li>
-          <li><strong>Protection Technologies:</strong> GFCI and AFCI protection required new wiring installation methods and circuit designs</li>
-          <li><strong>Reliability and Standardization:</strong> Modern wiring systems offer consistency, documentation, and compliance with insurance and code standards</li>
-        </ul>
+      <!-- ── VISUAL ID TABLE + PROPERTY CHECKLIST ──────────────────────── -->
+      <section class="ew-section ew-wrap">
+        <div class="ew-bento">
+
+          <div class="ew-table-section">
+            <h2>Visual Identification Guide</h2>
+            <div class="ew-table-wrap">
+              <table class="ew-table">
+                <thead>
+                  <tr>
+                    <th>Wiring Style</th>
+                    <th>Visual Clues</th>
+                    <th>Grounding</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong class="ew-danger-cell">Knob-and-Tube</strong></td>
+                    <td>Ceramic knobs on framing, porcelain tubes through joists, open cloth-wrapped conductors</td>
+                    <td><em class="ew-danger-cell">None</em></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Cloth NM</strong></td>
+                    <td>Fabric-like outer sheath (brown or black), brittle insulation visible at bends and splices</td>
+                    <td><em class="ew-danger-cell">Rarely present</em></td>
+                  </tr>
+                  <tr>
+                    <td><strong class="ew-warn-cell">Aluminum</strong></td>
+                    <td>Silver-colored conductors at panel; "AL" marking on sheathing; older NM jacket style</td>
+                    <td><em class="ew-warn-cell">Partial</em></td>
+                  </tr>
+                  <tr>
+                    <td><strong class="ew-safe-cell">Modern NM-B</strong></td>
+                    <td>Color-coded plastic sheath (yellow/white/orange), "NM-B" printed on jacket, 3 conductors</td>
+                    <td><em class="ew-safe-cell">Yes — bare copper</em></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="ew-sidebar">
+            <div class="ew-checklist-card">
+              <h3>Property Checklist</h3>
+              <p class="ew-checklist-sub">Key data points for insurance, inspection, or property research.</p>
+              <ul class="ew-checklist">
+                <li>
+                  <div class="ew-checkbox"></div>
+                  <span>Visible wiring type and approximate era</span>
+                </li>
+                <li>
+                  <div class="ew-checkbox"></div>
+                  <span>Conductor material (copper vs. aluminum)</span>
+                </li>
+                <li>
+                  <div class="ew-checkbox"></div>
+                  <span>Insulation and sheathing condition</span>
+                </li>
+                <li>
+                  <div class="ew-checkbox"></div>
+                  <span>Grounding conductor present?</span>
+                </li>
+                <li>
+                  <div class="ew-checkbox"></div>
+                  <span>GFCI / AFCI protection devices installed</span>
+                </li>
+              </ul>
+              <button class="ew-export-btn" onclick="window.print()">Export Documentation</button>
+            </div>
+          </aside>
+
+        </div>
       </section>
 
-      <section>
-        <h2>What to Document for Research or Insurance Claims</h2>
-        <div class="documentation-checklist">
-          <h3>Documentation Checklist for Property Research</h3>
+      <!-- ── FAQ ────────────────────────────────────────────────────────── -->
+      <section class="ew-section ew-wrap">
+        <div class="ew-faq-wrap">
+          <h2>Frequently Asked Questions</h2>
+
+          <div class="ew-faq-item">
+            <button class="ew-faq-btn" type="button" aria-expanded="false">
+              What is knob-and-tube wiring?
+              <span class="material-symbols-outlined ew-faq-arrow">expand_more</span>
+            </button>
+            <div class="ew-faq-answer">
+              <p>Knob-and-tube (KNT) wiring is an early electrical wiring method that uses individual copper conductors supported by ceramic knobs and tubes mounted to building framing. It was the standard in homes built from the late 1800s through the 1930s. The conductors are spaced apart for air cooling and have cloth or rubber insulation. Knob-and-tube has no equipment grounding conductor. If present in a home, evaluation by a licensed electrician is recommended to assess condition and compatibility with modern electrical loads.</p>
+            </div>
+          </div>
+
+          <div class="ew-faq-item">
+            <button class="ew-faq-btn" type="button" aria-expanded="false">
+              Is cloth wiring automatically unsafe?
+              <span class="material-symbols-outlined ew-faq-arrow">expand_more</span>
+            </button>
+            <div class="ew-faq-answer">
+              <p>Not automatically, but cloth wiring dates from the 1920s–1950s, and its insulation can become brittle, cracked, or damaged with age. If the insulation is intact and the system is compatible with the home's service panel, cloth wiring may still be functional. However, brittle or damaged insulation exposes live conductors and constitutes a fire and shock hazard. A qualified electrician can evaluate the wiring's condition and recommend whether repairs or replacement are appropriate.</p>
+            </div>
+          </div>
+
+          <div class="ew-faq-item">
+            <button class="ew-faq-btn" type="button" aria-expanded="false">
+              How can I tell if wiring is copper or aluminum?
+              <span class="material-symbols-outlined ew-faq-arrow">expand_more</span>
+            </button>
+            <div class="ew-faq-answer">
+              <p>At the electrical panel or junction boxes you may be able to see the conductor color: copper is reddish-orange or brown, while aluminum is silver or grey. Some wiring also has "AL" or "ALUMINUM" printed on the outer sheathing. Do not attempt to open panels, remove outlet covers, or handle wiring yourself. If you need to determine your wiring type for insurance, inspection, or research purposes, contact a licensed electrician to safely inspect and document the system.</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ── RELATED GUIDES ────────────────────────────────────────────── -->
+      <div class="ew-wrap">
+        <div class="ew-related">
+          <h3>Related Guides &amp; Tools</h3>
           <ul>
-            <li>Visible wiring type (knob-and-tube, cloth, armored, aluminum, copper NM, etc.)</li>
-            <li>Approximate age or era indicators (insulation color/material, sheathing style)</li>
-            <li>Conductor material if visible (copper, aluminum, other)</li>
-            <li>Insulation/sheathing condition (intact, brittle, damaged, water exposure)</li>
-            <li>Presence of grounding conductor (bare copper wire visible)</li>
-            <li>Location and extent (entire house, basement only, partial upgrade)</li>
-            <li>Compatibility with service panel (see Electrical Service Panel History guide)</li>
-            <li>Any visible signs of damage, burns, discoloration, or water exposure</li>
-            <li>Presence of GFCI or AFCI protection devices</li>
-            <li>Any professional electrician inspection report</li>
-            <li>Recent upgrades or modifications (knob-and-tube patch areas, etc.)</li>
-            <li>Photos of wiring in attics, basements, and panel connections</li>
+            <li><a href="/electrical-service-panel-history">Electrical Service Panel History Guide</a> — Learn about fuse boxes, breaker panels, brands, and service evolution</li>
+            <li><a href="/item-history-guides">Item History Guides</a> — Explore timelines for plumbing, HVAC, roofing, and other property systems</li>
+            <li><a href="/decoder-tool">Serial Number Decoder</a> — Identify when appliances and electronics were manufactured</li>
           </ul>
-          <p style="margin-top: 16px; font-size: 0.9rem; color: #64748b;">
-            <strong>Tip:</strong> If you're documenting wiring for insurance, property inspection, or research purposes, take clear photos of visible wiring runs, junction boxes, connections at the panel, and the service panel itself. Include photos of any areas showing age, damage, or upgrades.
-          </p>
         </div>
-      </section>
+      </div>
 
-      <section class="faq-section">
-        <h2>Frequently Asked Questions</h2>
-        <div class="faq-item">
-          <div class="faq-question">What is knob-and-tube wiring?</div>
-          <div class="faq-answer">
-            Knob-and-tube (KNT) wiring is an early electrical wiring method that uses individual copper conductors supported by ceramic knobs and tubes. It was standard in homes built from the late 1800s through the 1930s. The wires are spaced apart for air cooling and have cloth/rubber insulation. Knob-and-tube has no equipment grounding conductor.
-          </div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question">Is cloth wiring automatically unsafe?</div>
-          <div class="faq-answer">
-            Not automatically, but cloth wiring is typically from the 1920s–1950s era, and insulation can become brittle with age. If the insulation is intact and the system is compatible with the home's electrical service panel, cloth wiring may be acceptable. However, if insulation is damaged or the system is insufficient for modern electrical needs, evaluation by a qualified electrician is recommended.
-          </div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question">When was aluminum branch wiring commonly used?</div>
-          <div class="faq-answer">
-            Aluminum branch circuit wiring was commonly used in the 1960s and 1970s, particularly during periods when copper was scarce or expensive. Homes built during this era may have aluminum wiring in some or all circuits. Aluminum wiring has specific concerns related to oxidation and expansion, so if you suspect aluminum wiring, contact a qualified electrician for assessment.
-          </div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question">How can I tell if wiring is copper or aluminum?</div>
-          <div class="faq-answer">
-            At the electrical panel or junction boxes, you may see the wire color. Copper is reddish-orange/brown; aluminum is silver/gray. However, do not attempt to identify or work with wiring yourself. If you need to know your wiring type, contact a qualified electrician to inspect and document the system.
-          </div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question">What does "grounded" wiring mean?</div>
-          <div class="faq-answer">
-            Grounded wiring includes an equipment grounding conductor (a third wire, typically bare copper) that provides a path for electrical faults to safely reach ground. Older wiring (knob-and-tube, cloth, early NM) often lacked grounding conductors. Modern wiring includes grounding for safety.
-          </div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question">What is NM-B cable?</div>
-          <div class="faq-answer">
-            NM-B stands for Nonmetallic-B cable. It's the standard wiring method used in modern residential construction. It consists of copper conductors with PVC insulation, bundled together inside a plastic sheathing. The "B" indicates improved flame resistance compared to earlier NM versions. It includes a grounding conductor and is flexible, making it easier to install than armored cable.
-          </div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question">Can Decode My Item determine the exact age of wiring?</div>
-          <div class="faq-answer">
-            No. Wiring doesn't have visible manufacturing dates like appliances do. However, based on the wiring type, insulation material, sheathing style, and other characteristics, you can estimate the era or decade when it was likely installed. A qualified electrician can provide a more detailed assessment.
-          </div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question">Should I hire an electrician to inspect old wiring?</div>
-          <div class="faq-answer">
-            If your home has knob-and-tube, cloth, aluminum, or other older wiring, or if you're concerned about its condition, yes—contact a licensed electrician for a professional evaluation. They can assess safety, compatibility with modern electrical demands, and recommend any necessary upgrades or repairs.
-          </div>
-        </div>
-      </section>
-
-      <section style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px; margin-top: 40px;">
-        <h3 style="margin-top: 0; color: #0c4a6e;">Related Guides & Tools</h3>
-        <ul style="margin: 12px 0; padding-left: 20px;">
-          <li><a href="/electrical-service-panel-history" style="color: #44e5c2; text-decoration: none; font-weight: 600;">Electrical Service Panel History Guide</a> — Learn about fuse boxes, breaker panels, brands, and service evolution</li>
-          <li><a href="/item-history-guides" style="color: #44e5c2; text-decoration: none; font-weight: 600;">Item History Guides</a> — Explore timelines for plumbing, HVAC, roofing, and other property systems</li>
-          <li><a href="/decoder-tool" style="color: #44e5c2; text-decoration: none; font-weight: 600;">Serial Number Decoder</a> — Identify when appliances and electronics were manufactured</li>
-        </ul>
-      </section>
-    </div>
+    </div><!-- /.ew-page -->
   </main>
 
   <footer class="footer-sitemap">
@@ -745,5 +1222,38 @@
 </footer>
 
   <script defer src="script.js"></script>
+  <script>
+  (function() {
+    // Timeline scroll animation
+    var rows = document.querySelectorAll('.ew-tl-row');
+    if ('IntersectionObserver' in window) {
+      var obs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          if (e.isIntersecting) {
+            e.target.classList.add('ew-visible');
+            obs.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      rows.forEach(function(r) { obs.observe(r); });
+    } else {
+      rows.forEach(function(r) { r.classList.add('ew-visible'); });
+    }
+
+    // FAQ accordion
+    document.querySelectorAll('.ew-faq-btn').forEach(function(btn) {
+      var answer = btn.nextElementSibling;
+      answer.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+      btn.addEventListener('click', function() {
+        var isOpen = !answer.hidden;
+        answer.hidden = isOpen;
+        btn.setAttribute('aria-expanded', String(!isOpen));
+        var arrow = btn.querySelector('.ew-faq-arrow');
+        if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+      });
+    });
+  })();
+  </script>
 </body>
 </html>
