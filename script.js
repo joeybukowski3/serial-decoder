@@ -993,9 +993,11 @@ function renderStaticSidebar() {
       var brandData = getCategoryGroupData(catKey);
       if (!brandData.length) return;
 
-      var topIds = (TOP_BRANDS_BY_CATEGORY[catKey] || []).filter(function(id) {
-        return brandData.some(function(b) { return b.id === id; });
-      });
+      var topIds = catKey === 'appliances'
+        ? brandData.map(function(b) { return b.id; })
+        : (TOP_BRANDS_BY_CATEGORY[catKey] || []).filter(function(id) {
+            return brandData.some(function(b) { return b.id === id; });
+          });
       var topSet = {};
       topIds.forEach(function(id) { topSet[id] = true; });
 
