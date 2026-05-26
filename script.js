@@ -145,6 +145,20 @@ var CLIENT_MODEL_EVIDENCE = [
     aliases: ['FEFL79', 'Frigidaire FEFL79DBB', 'Frigidaire FEFL79']
   },
   {
+    brand: 'frigidaire',
+    estimatedYear: '2002',
+    yearRange: '2002',
+    model: 'FFCO7C3AW2',
+    aliases: ['FFCO7C3', 'Frigidaire FFCO7C3AW2', 'Frigidaire FFCO7C3']
+  },
+  {
+    brand: 'ge',
+    estimatedYear: '2012',
+    yearRange: '2011-2013',
+    model: 'GTH18GBCDCRBB',
+    aliases: ['GTH18GBC', 'GE GTH18GBCDCRBB', 'GE GTH18GBC']
+  },
+  {
     brand: 'whirlpool',
     estimatedYear: '2024',
     yearRange: '2023-2025',
@@ -4096,6 +4110,7 @@ var MODEL_PREFIX_ERA_MAP = [
   { prefix: /^FFBD/,       year: 2012, note: 'Frigidaire FFBD built-in dishwasher (2008-2016 era)' },
   { prefix: /^FGMV/,       year: 2014, note: 'Frigidaire Gallery microwave (2010-2018 era)' },
   { prefix: /^FRT/,        year: 1995, note: 'Frigidaire FRT refrigerator legacy (1985-2005 era)' },
+  { prefix: /^FFCO/,       year: 2002, note: 'Frigidaire FFCO compact freezer model evidence points to the early-2000s production cycle' },
   { prefix: /^ELFW/,       year: 2015, note: 'Electrolux ELFW front-load washer (2010-present era)' },
   { prefix: /^ELTF/,       year: 2015, note: 'Electrolux ELTF dryer (2010-present era)' },
   // ── Whirlpool ────────────────────────────────────────────────────────────
@@ -4116,6 +4131,7 @@ var MODEL_PREFIX_ERA_MAP = [
   { prefix: /^PYE[0-9]/,   year: 2016, note: 'GE Profile PYE French door with freezer-drawer (2013-present era)' },
   { prefix: /^GSS[0-9]/,   year: 2008, note: 'GE GSS side-by-side (2000-2015 era)' },
   { prefix: /^GTS[0-9]/,   year: 2010, note: 'GE GTS top-mount refrigerator (2005-present era)' },
+  { prefix: /^GTH[0-9]/,   year: 2010, note: 'GE GTH top-mount refrigerator (2005-present era)' },
   { prefix: /^GTW[0-9]/,   year: 2013, note: 'GE GTW top-load washer (2009-present era)' },
   { prefix: /^GFW[0-9]/,   year: 2014, note: 'GE GFW front-load washer (2010-present era)' },
   { prefix: /^GDF[0-9]/,   year: 2014, note: 'GE GDF dishwasher (2010-present era)' },

@@ -298,6 +298,65 @@ test('Frigidaire ambiguous serial still narrows from built-in model evidence whe
   assert.equal(resolved.source, 'client-evidence');
 });
 
+test('Frigidaire FFCO7C3AW2 with WB24435510 resolves to 2002 from built-in model evidence', async () => {
+  ctx.fetch = async () => {
+    throw new Error('lookup offline');
+  };
+
+  const frig = api.decoderData.appliances.decoders.frigidaire;
+  const out = frig.decode('WB24435510');
+  assert.ok(out);
+  assert.equal(out.year, '1992/2002/2012/2022');
+  assert.equal(out.month, 'Week 44 (see notes for decade)');
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: api.parseCandidateYears(out.year),
+    brand: 'Frigidaire',
+    model: 'FFCO7C3AW2',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, 2002);
+  assert.equal(resolved.source, 'client-evidence');
+});
+
+test('Frigidaire WB24435510 stays ambiguous without model evidence', async () => {
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: [1992, 2002, 2012, 2022],
+    brand: 'Frigidaire',
+    model: '',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, null);
+  assert.equal(
+    resolved.summary,
+    'Possible manufacture years: 1992, 2002, 2012, or 2022. Add a model number to narrow the date.'
+  );
+});
+
+test('Frigidaire WB24435510 stays ambiguous with unsupported model evidence', async () => {
+  ctx.fetch = async () => ({
+    ok: true,
+    headers: { get: () => 'application/json' },
+    json: async () => ({
+      brand: 'Frigidaire',
+      model: 'UNKNOWNMODEL',
+      estimatedYear: null,
+      yearRange: null
+    })
+  });
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: [1992, 2002, 2012, 2022],
+    brand: 'Frigidaire',
+    model: 'UNKNOWNMODEL',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, null);
+});
+
 test('LG ambiguous serial still narrows from built-in model evidence when lookup fails', async () => {
   ctx.fetch = async () => {
     throw new Error('lookup offline');
@@ -587,6 +646,44 @@ test('GE serial RG527327B decodes to August 1980/1992/2004/2016', () => {
   // GE: char0=month(R=August), char1=year(G=1980/1992/2004/2016)
   assert.equal(out.year, '1980/1992/2004/2016');
   assert.equal(out.month, 'August');
+});
+
+test('GE RZ825479 stays ambiguous without model evidence', async () => {
+  const ge = api.decoderData.appliances.decoders.ge;
+  const out = ge.decode('RZ825479');
+  assert.ok(out);
+  assert.equal(out.year, '1988/2000/2012/2024');
+  assert.equal(out.month, 'August');
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: api.parseCandidateYears(out.year),
+    brand: 'GE',
+    model: '',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, null);
+  assert.equal(api.computeEstimatedAge(out.year), '—');
+});
+
+test('GE GTH18GBCDCRBB with RZ825479 resolves to 2012 from model evidence', async () => {
+  ctx.fetch = async () => {
+    throw new Error('lookup offline');
+  };
+
+  const ge = api.decoderData.appliances.decoders.ge;
+  const out = ge.decode('RZ825479');
+  assert.ok(out);
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: api.parseCandidateYears(out.year),
+    brand: 'GE',
+    model: 'GTH18GBCDCRBB',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, 2012);
+  assert.equal(resolved.source, 'client-evidence');
 });
 
 test('Frigidaire serial NF11910958 decodes to 2001/2011/2021 week 19', () => {

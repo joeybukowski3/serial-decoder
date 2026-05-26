@@ -87,9 +87,10 @@ const HVAC_ERA_DATA = {
 
 const APPLIANCE_ERA_DATA = {
   frigidaire: {
-    defaultNote: 'Frigidaire model-prefix heuristic: TF-prefix lines indicate pre-1985 production; FRT/FEF lines span 1985-2005; FEFL lines span 1998-2010; FFEF/FFTR/FFSS lines indicate 2005-present.',
+    defaultNote: 'Frigidaire model-prefix heuristic: TF-prefix lines indicate pre-1985 production; FRT/FEF lines span 1985-2005; FFCO compact-freezer evidence can point to early-2000s production; FEFL lines span 1998-2010; FFEF/FFTR/FFSS lines indicate 2005-present.',
     rules: [
       { key: 'fefl', yearRange: '1998-2010', note: 'Frigidaire FEFL freestanding electric range models are generally associated with 1998-2010 production.' },
+      { key: 'ffco', yearRange: '2000-2004', note: 'Frigidaire FFCO compact-freezer model evidence is associated with early-2000s production.' },
       { key: 'ffef', yearRange: '2005-2015', note: 'Frigidaire Gallery FFEF electric range models are generally associated with 2005-2015 production.' },
       { key: 'fef',  yearRange: '1994-2006', note: 'Frigidaire FEF electric range models are generally associated with 1994-2006 production.' },
       { key: 'frt',  yearRange: '1985-2005', note: 'Frigidaire FRT refrigerator models are generally associated with 1985-2005 production.' },
@@ -107,10 +108,12 @@ const APPLIANCE_ERA_DATA = {
     ]
   },
   ge: {
-    defaultNote: 'GE family heuristic: Profile and Monogram lines follow different premium/flagship timelines; legacy Camelback consoles indicate older GE washer generations.',
+    defaultNote: 'GE family heuristic: Profile and Monogram lines follow different premium/flagship timelines; GTS/GTH top-mount refrigerator families generally point to post-2005 production; legacy Camelback consoles indicate older GE washer generations.',
     rules: [
       { key: 'profile', yearRange: '2000-Present', note: 'GE Profile lines are generally modern-era production (commonly 2000 and newer).' },
       { key: 'monogram', yearRange: '1990s-Present', note: 'GE Monogram lines are generally premium long-running production, commonly from the late 1990s onward.' },
+      { key: 'gth', yearRange: '2005-2016', note: 'GE GTH top-mount refrigerator models are generally associated with post-2005 production cycles.' },
+      { key: 'gts', yearRange: '2005-Present', note: 'GE GTS top-mount refrigerator models are generally associated with post-2005 production cycles.' },
       { key: 'camelback', yearRange: 'Pre-2000', note: 'GE Camelback console styling generally indicates older, pre-2000 era washer design.' }
     ]
   },
@@ -662,7 +665,8 @@ Research approach:
   - York: Affinity and Latitude series commonly map to 2005-2015 cycles.
 - Apply these appliance-era mappings when relevant:
   - Whirlpool washers: Direct Drive is generally 1980s-2010; Vertical Modular (VMW) is generally 2010-present.
-  - GE: Profile and Monogram follow different production windows; Camelback console styling indicates older legacy generations.
+  - Frigidaire / Electrolux family: FFCO compact-freezer evidence can indicate early-2000s production; FEFL generally maps to 1998-2010; FFEF/FFTR/FFSS are newer families.
+  - GE: Profile and Monogram follow different production windows; GTS/GTH top-mount refrigerators generally map to post-2005 production; Camelback console styling indicates older legacy generations.
   - Samsung washers: VRT indicates post-2006 era; AddWash indicates post-2016 era.
   - LG washers: Inverter DirectDrive branding aligns with cycles starting in 2009.
 - Apply this Nintendo-console mapping when relevant:

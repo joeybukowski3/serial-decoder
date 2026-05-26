@@ -112,6 +112,24 @@
       ]
     },
     {
+      "brand": "GE",
+      "model": "GTH18GBCDCRBB",
+      "normalizedBrand": "ge",
+      "normalizedModel": "gth18gbcdcrbb",
+      "category": "refrigerator",
+      "yearStart": 2011,
+      "yearEnd": 2013,
+      "estimatedYear": 2012,
+      "productionRange": "2011-2013",
+      "source": "GE GTH top-mount refrigerator model-family refinement",
+      "notes": "GTH18GBCDCRBB fits the GE GTH top-mount refrigerator family, which aligns this serial cycle to the early-2010s candidate rather than the older or newer repeating GE serial years.",
+      "aliases": [
+        "GTH18GBC",
+        "GE GTH18GBCDCRBB",
+        "GE GTH18GBC"
+      ]
+    },
+    {
       "brand": "Rheem",
       "model": "XE40M09EL55U1",
       "normalizedBrand": "rheem",
@@ -235,6 +253,24 @@
         "FEFL79",
         "Frigidaire FEFL79DBB",
         "Frigidaire FEFL79"
+      ]
+    },
+    {
+      "brand": "Frigidaire",
+      "model": "FFCO7C3AW2",
+      "normalizedBrand": "frigidaire",
+      "normalizedModel": "ffco7c3aw2",
+      "category": "freezer",
+      "yearStart": 2002,
+      "yearEnd": 2002,
+      "estimatedYear": 2002,
+      "productionRange": "2002",
+      "source": "Frigidaire FFCO7C3AW2 data plate marked Manufactured 11-02",
+      "notes": "FFCO7C3AW2 with serial WB24435510 matches a data plate marked Manufactured 11-02, so the serial's repeating year digit resolves to the 2002 candidate.",
+      "aliases": [
+        "FFCO7C3",
+        "Frigidaire FFCO7C3AW2",
+        "Frigidaire FFCO7C3"
       ]
     },
     {
