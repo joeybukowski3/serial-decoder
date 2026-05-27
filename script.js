@@ -3387,6 +3387,13 @@ function normalizeBrandId(brandId) {
   ) return 'ge';
 
   if (s === 'ge_caf' || s === 'cafe' || s === 'ge_profile' || s === 'ge_monogram' || s === 'hotpoint' || s === 'rca') return 'ge';
+  if (
+    cleaned === 'american water heater' ||
+    cleaned === 'american water heater company' ||
+    cleaned === 'americanwaterheater' ||
+    s === 'american_water_heater' ||
+    s === 'americanwaterheater'
+  ) return 'american_water_heater_company';
   return brandId;
 }
 

@@ -67,6 +67,8 @@ function loadDecoderContext() {
       expandKnownSmartLookupQuery,
       getSupplementalModelConfig,
       normalizeDecoderCategory,
+      normalizeBrandId,
+      sanitizeDecodeResult,
       extractKenmoreModelPrefix,
       resolveKenmoreDecoderFromPrefix
     };
@@ -566,6 +568,50 @@ test('A.O. Smith numeric YYWW serial 1504A023527 still decodes correctly', () =>
   assert.ok(out);
   assert.equal(out.year, '2015');
   assert.equal(out.month, 'Week 4');
+});
+
+test('American Water Heater numeric YYWW serial 9948125186 decodes to 1999 week 48', () => {
+  const brandId = api.normalizeBrandId('American Water Heater');
+  const american = api.decoderData.waterHeaters.decoders[brandId];
+  const out = american.decode('9948125186');
+
+  assert.equal(brandId, 'american_water_heater_company');
+  assert.ok(out);
+  assert.equal(out.year, '1999');
+  assert.equal(out.month, 'Week 48');
+  assert.equal(out.yearCode, '99');
+  assert.equal(out.weekDigits, '48');
+  assert.equal(out.decodeStyle, 'Numeric YYWW');
+  assert.equal(api.sanitizeDecodeResult(out).valid, true);
+});
+
+test('American Water Heater Company alias also routes to the same YYWW decoder', () => {
+  const brandId = api.normalizeBrandId('American Water Heater Company');
+  const american = api.decoderData.waterHeaters.decoders[brandId];
+  const out = american.decode('9948125186');
+
+  assert.equal(brandId, 'american_water_heater_company');
+  assert.ok(out);
+  assert.equal(out.year, '1999');
+  assert.equal(out.month, 'Week 48');
+});
+
+test('A.O. Smith-family numeric YYWW handles 00, 01, and 99 year edges', () => {
+  const american = api.decoderData.waterHeaters.decoders.american_water_heater_company;
+  const aos = api.decoderData.waterHeaters.decoders.a_o_smith;
+  const craftmaster = api.decoderData.waterHeaters.decoders.u_s_craftmaster;
+
+  assert.equal(american.decode('0048125186').year, '2000');
+  assert.equal(aos.decode('0148125186').year, '2001');
+  assert.equal(craftmaster.decode('9948125186').year, '1999');
+});
+
+test('A.O. Smith-family numeric YYWW rejects malformed lengths and invalid weeks', () => {
+  const american = api.decoderData.waterHeaters.decoders.american_water_heater_company;
+
+  assert.equal(american.decode('994'), null);
+  assert.equal(american.decode('0000125186'), null);
+  assert.equal(american.decode('9954125186'), null);
 });
 
 test('A.O. Smith rejects too-short serials', () => {

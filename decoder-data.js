@@ -19,6 +19,30 @@
   };
 }
 
+function decodeAOSmithFamilyNumericYYWW(serial) {
+  if (!serial || serial.length < 4) return null;
+  var yy = serial.substring(0, 2);
+  var ww = serial.substring(2, 4);
+  if (!/^\d{2}$/.test(yy) || !/^\d{2}$/.test(ww)) return null;
+
+  var week = parseInt(ww, 10);
+  if (week < 1 || week > 53) return null;
+
+  var yr2 = parseInt(yy, 10);
+  var fullYear = 2000 + yr2;
+  if (fullYear > new Date().getFullYear()) {
+    fullYear = 1900 + yr2;
+  }
+
+  return {
+    year: String(fullYear),
+    month: 'Week ' + week,
+    yearCode: yy,
+    weekDigits: ww,
+    decodeStyle: 'Numeric YYWW'
+  };
+}
+
 // Serial Number Decoder Database â€” Auto-generated from CSV
 // Generated: 2026-02-17
 // Source of truth for runtime decoding; CSV files are not loaded by the app.
@@ -2051,18 +2075,8 @@ var decoderData = {
         }
       }
       // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
-      var yy = serial.substring(0, 2);
-      var ww = serial.substring(2, 4);
-      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
-        var yr2 = parseInt(yy);
-        var fullYear2 = 2000 + yr2;
-        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
-          var week = parseInt(ww);
-          if (week >= 1 && week <= 53) {
-            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
-          }
-        }
-      }
+      var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
+      if (numericYYWW) return numericYYWW;
       return null;
     }
     },
@@ -2110,18 +2124,8 @@ var decoderData = {
         }
       }
       // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
-      var yy = serial.substring(0, 2);
-      var ww = serial.substring(2, 4);
-      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
-        var yr2 = parseInt(yy);
-        var fullYear2 = 2000 + yr2;
-        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
-          var week = parseInt(ww);
-          if (week >= 1 && week <= 53) {
-            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
-          }
-        }
-      }
+      var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
+      if (numericYYWW) return numericYYWW;
       return null;
     }
     },
@@ -2176,18 +2180,8 @@ var decoderData = {
         }
       }
       // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
-      var yy = serial.substring(0, 2);
-      var ww = serial.substring(2, 4);
-      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
-        var yr2 = parseInt(yy);
-        var fullYear2 = 2000 + yr2;
-        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
-          var week = parseInt(ww);
-          if (week >= 1 && week <= 53) {
-            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
-          }
-        }
-      }
+      var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
+      if (numericYYWW) return numericYYWW;
       return null;
     }
     },
@@ -2235,18 +2229,8 @@ var decoderData = {
         }
       }
       // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
-      var yy = serial.substring(0, 2);
-      var ww = serial.substring(2, 4);
-      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
-        var yr2 = parseInt(yy);
-        var fullYear2 = 2000 + yr2;
-        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
-          var week = parseInt(ww);
-          if (week >= 1 && week <= 53) {
-            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
-          }
-        }
-      }
+      var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
+      if (numericYYWW) return numericYYWW;
       return null;
     }
     },
@@ -2294,18 +2278,8 @@ var decoderData = {
         }
       }
       // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
-      var yy = serial.substring(0, 2);
-      var ww = serial.substring(2, 4);
-      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
-        var yr2 = parseInt(yy);
-        var fullYear2 = 2000 + yr2;
-        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
-          var week = parseInt(ww);
-          if (week >= 1 && week <= 53) {
-            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
-          }
-        }
-      }
+      var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
+      if (numericYYWW) return numericYYWW;
       return null;
     }
     },
@@ -2353,18 +2327,8 @@ var decoderData = {
         }
       }
       // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
-      var yy = serial.substring(0, 2);
-      var ww = serial.substring(2, 4);
-      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
-        var yr2 = parseInt(yy);
-        var fullYear2 = 2000 + yr2;
-        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
-          var week = parseInt(ww);
-          if (week >= 1 && week <= 53) {
-            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
-          }
-        }
-      }
+      var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
+      if (numericYYWW) return numericYYWW;
       return null;
     }
     },
@@ -2412,18 +2376,8 @@ var decoderData = {
         }
       }
       // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
-      var yy = serial.substring(0, 2);
-      var ww = serial.substring(2, 4);
-      if (/^\d{2}$/.test(yy) && /^\d{2}$/.test(ww)) {
-        var yr2 = parseInt(yy);
-        var fullYear2 = 2000 + yr2;
-        if (fullYear2 >= 2000 && fullYear2 <= YEAR_NOW) {
-          var week = parseInt(ww);
-          if (week >= 1 && week <= 53) {
-            return { year: String(fullYear2), month: 'Week ' + week, yearCode: yy, weekDigits: ww };
-          }
-        }
-      }
+      var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
+      if (numericYYWW) return numericYYWW;
       return null;
     }
     },
