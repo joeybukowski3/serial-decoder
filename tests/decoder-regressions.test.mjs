@@ -70,7 +70,9 @@ function loadDecoderContext() {
       normalizeBrandId,
       sanitizeDecodeResult,
       extractKenmoreModelPrefix,
-      resolveKenmoreDecoderFromPrefix
+      resolveKenmoreDecoderFromPrefix,
+      getVizioModelDecodeInput,
+      isLikelyVizioModelValue
     };
   `, ctx);
 
@@ -154,6 +156,34 @@ test('Vizio model requirement is scoped to electronics only', () => {
   assert.equal(vizioElectronics.required, true);
   assert.equal(vizioElectronics.useModelAsPrimaryInput, true);
   assert.equal(vizioAppliances.required, false);
+});
+
+test('Vizio VW32L HDTV10A falls back to model-era evidence instead of incomplete', () => {
+  const vizio = api.decoderData.electronics.decoders.vizio;
+  const result = vizio.decode('VW32L HDTV10A');
+
+  assert.ok(result);
+  assert.equal(result.year, '2007');
+  assert.equal(result.month, 'September');
+  assert.match(result.notes, /Serial number format was not directly decoded/);
+});
+
+test('Vizio reversed model and serial fields recover the model candidate', () => {
+  const resolved = api.getVizioModelDecodeInput('LSPATBH4026090', 'VW32L HDTV10A');
+  const vizio = api.decoderData.electronics.decoders.vizio;
+  const result = vizio.decode(resolved.model);
+
+  assert.equal(resolved.model, 'VW32L HDTV10A');
+  assert.equal(resolved.usedSwappedFields, true);
+  assert.ok(result);
+  assert.equal(result.year, '2007');
+});
+
+test('Unsupported Vizio serial without a model does not invent a date', () => {
+  const vizio = api.decoderData.electronics.decoders.vizio;
+
+  assert.equal(api.isLikelyVizioModelValue('LSPATBH4026090'), false);
+  assert.equal(vizio.decode('LSPATBH4026090'), null);
 });
 
 test('Kenmore requires a model prefix regardless of category key shape', () => {

@@ -1329,6 +1329,30 @@ function getSupplementalModelConfig(category, brandId) {
   };
 }
 
+function normalizeVizioModelCandidate(value) {
+  return String(value || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+}
+
+function isLikelyVizioModelValue(value) {
+  var normalized = normalizeVizioModelCandidate(value);
+  if (!normalized) return false;
+  if (/^[VMDPE][A-Z0-9]{0,4}\d{2}[A-Z0-9]*-[A-Z]\d+$/i.test(normalized)) return true;
+  if (/^VW\d{2}[A-Z]HDTV\d{2}[A-Z]$/i.test(normalized)) return true;
+  return false;
+}
+
+function getVizioModelDecodeInput(modelValue, serialValue) {
+  var model = String(modelValue || '').trim();
+  var serial = String(serialValue || '').trim();
+  if (isLikelyVizioModelValue(model)) {
+    return { model: model, usedSwappedFields: false };
+  }
+  if (isLikelyVizioModelValue(serial)) {
+    return { model: serial, usedSwappedFields: !!model };
+  }
+  return { model: model, usedSwappedFields: false };
+}
+
 function setSidebarGroupOpen(groupEl, open) {
   var btn = groupEl ? groupEl.querySelector('.sidebar-group-toggle') : null;
   var links = groupEl ? groupEl.querySelector('.sidebar-group-links') : null;
@@ -4547,6 +4571,11 @@ function decodeSerial() {
   var modelConfig = getSupplementalModelConfig(currentCategory, metaBrandId);
   var supplementalModel = getCurrentSupplementalModelValue(currentCategory, metaBrandId);
   var serialInput = dom.serialEl.value.trim();
+  var vizioModelInput = null;
+  if (currentCategory === 'electronics' && normalizeBrandId(metaBrandId) === 'vizio') {
+    vizioModelInput = getVizioModelDecodeInput(supplementalModel, serialInput);
+    if (!supplementalModel && vizioModelInput.model) supplementalModel = vizioModelInput.model;
+  }
   clearSupplementalModelError();
   if (!metaBrandId) return;
   if (modelConfig.required && !supplementalModel) {
@@ -4587,7 +4616,13 @@ function decodeSerial() {
 
   var decoder = decoderData[currentCategory].decoders[brandId];
   if (!decoder) { showCustomAlert('Decoder not found for this brand'); return; }
+  var usedSwappedVizioModelInput = false;
   if (modelConfig.useModelAsPrimaryInput) {
+    if (currentCategory === 'electronics' && normalizeBrandId(metaBrandId) === 'vizio') {
+      vizioModelInput = getVizioModelDecodeInput(supplementalModel, serialInput);
+      supplementalModel = vizioModelInput.model;
+      usedSwappedVizioModelInput = !!vizioModelInput.usedSwappedFields;
+    }
     serial = supplementalModel.replace(/[^A-Za-z0-9-]/g, '').trim();
   }
 
@@ -4699,7 +4734,7 @@ function decodeSerial() {
     document.getElementById('resultYear').textContent    = resolvedYearText;
     document.getElementById('resultMonth').textContent   = result.month;
     document.getElementById('resultBrand').textContent = getResultBrandDisplayName(metaBrandId, decoder.name, kenmoreResolution);
-    document.getElementById('resultMethod').textContent  = decoder.method || decoder.serialLengthNote || 'N/A';
+    document.getElementById('resultMethod').textContent  = result.method || decoder.method || decoder.serialLengthNote || 'N/A';
 
     // Append decode detail (specific codes used for this decode)
     (function() {
@@ -4717,7 +4752,10 @@ function decodeSerial() {
       }
     })();
 
-    var notesText = decoder.notes || decoder.decodeNotes || 'N/A';
+    var notesText = result.notes || decoder.notes || decoder.decodeNotes || 'N/A';
+    if (usedSwappedVizioModelInput) {
+      notesText = 'Model and serial fields appeared to be reversed, so the Vizio model was read from the serial field. ' + notesText;
+    }
     if (resultCandidates.length > 1) {
       notesText = updateSerialResultNotes(
         notesText,
@@ -4751,7 +4789,7 @@ function decodeSerial() {
       candidates: resultCandidates.slice(),
       chosenYear: initialResolution ? initialResolution.chosenYear : null,
       summary: initialResolution ? initialResolution.summary : '',
-      baseNotes: decoder.notes || decoder.decodeNotes || 'N/A',
+      baseNotes: result.notes || decoder.notes || decoder.decodeNotes || 'N/A',
       refinementModel: '',
       refinementContext: ''
     };
