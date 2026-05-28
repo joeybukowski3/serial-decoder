@@ -43,7 +43,45 @@ function decodeAOSmithFamilyNumericYYWW(serial) {
   };
 }
 
-// Serial Number Decoder Database â€” Auto-generated from CSV
+function normalizeFrigidaireElectroluxModel(modelHint) {
+  var normalized = String(modelHint || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return normalized.replace(/^(F{2,3}TR\d{4}VS)O$/, '$10');
+}
+
+function refineFrigidaireElectroluxYearFromModel(result, modelHint) {
+  if (!result || !result.year || !modelHint) return result;
+
+  var normalizedModel = normalizeFrigidaireElectroluxModel(modelHint);
+  var era = null;
+  if (/^F{2,3}TR2045VS0?$/.test(normalizedModel)) {
+    era = {
+      yearStart: 2020,
+      yearEnd: 2024,
+      estimatedYear: 2021,
+      note: 'Model context: FFTR/FFFTR2045VS-series top-freezer refrigerators align with the 2020-2024 production era, so the serial year digit resolves to 2021.'
+    };
+  }
+  if (!era) return result;
+
+  var candidates = String(result.year).match(/\b(19|20)\d{2}\b/g) || [];
+  var matching = candidates
+    .map(function(year) { return parseInt(year, 10); })
+    .filter(function(year) { return year >= era.yearStart && year <= era.yearEnd; });
+  if (!matching.length) return result;
+
+  var chosen = matching.reduce(function(prev, cur) {
+    return Math.abs(cur - era.estimatedYear) < Math.abs(prev - era.estimatedYear) ? cur : prev;
+  }, matching[0]);
+
+  return Object.assign({}, result, {
+    year: String(chosen),
+    modelNormalized: normalizedModel,
+    modelEraYearRange: era.yearStart + '-' + era.yearEnd,
+    modelRefinementNote: era.note
+  });
+}
+
+// Serial Number Decoder Database - Auto-generated from CSV
 // Generated: 2026-02-17
 // Source of truth for runtime decoding; CSV files are not loaded by the app.
 
@@ -1152,12 +1190,12 @@ var decoderData = {
       yearCodePosition: 'Character 2 (second letter)',
       monthCodePosition: 'Character 1 (first letter)',
       outputType: 'Month + Year',
-      decodeNotes: '12-year repeating cycle. This same GE-family decoding logic also applies to Cafe, GE Profile, GE Monogram, Hotpoint, and RCA appliance brands. GE water heaters manufactured by Rheem â€” use Group 7A. Haier-era units (post-2016) continue using same format.',
+      decodeNotes: '12-year repeating cycle. This same GE-family decoding logic also applies to Cafe, GE Profile, GE Monogram, Hotpoint, and RCA appliance brands. GE water heaters manufactured by Rheem - use Group 7A. Haier-era units (post-2016) continue using same format.',
       exampleSerial: 'RG527327B',
       exampleResult: 'R=August G=1980/1992/2004/2016',
       sources: 'products.geappliances.com; cannonsappliance.com; lumayeconsulting.com; en.tab-tv.com',
       method: 'Characters 1-2 (Character 1 = month, Character 2 = year)',
-      notes: '12-year repeating cycle. This same GE-family decoding logic also applies to Cafe, GE Profile, GE Monogram, Hotpoint, and RCA appliance brands. GE water heaters manufactured by Rheem â€” use Group 7A. Haier-era units (post-2016) continue using same format.',
+      notes: '12-year repeating cycle. This same GE-family decoding logic also applies to Cafe, GE Profile, GE Monogram, Hotpoint, and RCA appliance brands. GE water heaters manufactured by Rheem - use Group 7A. Haier-era units (post-2016) continue using same format.',
       source: 'products.geappliances.com; cannonsappliance.com; lumayeconsulting.com; en.tab-tv.com',
       patterns: [
         { name: '8-char standard', length: 8, mask: 'AA######', notes: 'Starts with two letters, followed by six digits.' },
@@ -1186,12 +1224,12 @@ var decoderData = {
       yearCodePosition: 'Character 2 (second letter)',
       monthCodePosition: 'Character 1 (first letter)',
       outputType: 'Month + Year',
-      decodeNotes: '12-year repeating cycle. GE water heaters manufactured by Rheem â€” use Group 7A. Haier-era units (post-2016) continue using same format.',
+      decodeNotes: '12-year repeating cycle. GE water heaters manufactured by Rheem - use Group 7A. Haier-era units (post-2016) continue using same format.',
       exampleSerial: 'RG527327B',
       exampleResult: 'R=August G=1980/1992/2004/2016',
       sources: 'products.geappliances.com; cannonsappliance.com; lumayeconsulting.com; en.tab-tv.com',
       method: 'Characters 1-2 (Character 1 = month, Character 2 = year)',
-      notes: '12-year repeating cycle. GE water heaters manufactured by Rheem â€” use Group 7A. Haier-era units (post-2016) continue using same format.',
+      notes: '12-year repeating cycle. GE water heaters manufactured by Rheem - use Group 7A. Haier-era units (post-2016) continue using same format.',
       source: 'products.geappliances.com; cannonsappliance.com; lumayeconsulting.com; en.tab-tv.com',
       yearMap: { 'A': '1977/1989/2001/2013/2025', 'D': '1978/1990/2002/2014/2026', 'F': '1979/1991/2003/2015', 'G': '1980/1992/2004/2016', 'H': '1981/1993/2005/2017', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'R': '1984/1996/2008/2020', 'S': '1985/1997/2009/2021', 'T': '1986/1998/2010/2022', 'V': '1987/1999/2011/2023', 'Z': '1988/2000/2012/2024' },
       monthMap: { 'A': 'January', 'D': 'February', 'F': 'March', 'G': 'April', 'H': 'May', 'L': 'June', 'M': 'July', 'R': 'August', 'S': 'September', 'T': 'October', 'V': 'November', 'Z': 'December' },
@@ -1219,21 +1257,21 @@ var decoderData = {
       yearCodePosition: 'Character 3 (first digit after 2-letter factory code)',
       monthCodePosition: 'Characters 4-5',
       outputType: 'Year + Week (approximate month)',
-      decodeNotes: 'Year digit can be decade-ambiguous ï¿½ model/style context often needed. Week-of-year helps pinpoint a date range.',
+      decodeNotes: 'Year digit can be decade-ambiguous - model/style context often needed. Week-of-year helps pinpoint a date range.',
       exampleSerial: 'NF11910958',
       exampleResult: '1=2001/2011 Week 19=~April -> April 2001',
       sources: 'electrical-forensics.com; cannonsappliance.com; lumayeconsulting.com; appliancefactoryparts.com',
       method: 'After factory letters: year digit + week digits (use week-of-year to pinpoint date range)',
-      notes: 'Year digit can be decade-ambiguous ï¿½ model/style context often needed. Week-of-year helps pinpoint a date range.',
+      notes: 'Year digit can be decade-ambiguous - model/style context often needed. Week-of-year helps pinpoint a date range.',
       source: 'electrical-forensics.com; cannonsappliance.com; lumayeconsulting.com; appliancefactoryparts.com',
       yearMap: { '0': '1990/2000/2010/2020', '1': '1991/2001/2011/2021', '2': '1992/2002/2012/2022', '3': '1993/2003/2013/2023', '4': '1994/2004/2014/2024', '5': '1995/2005/2015/2025', '6': '1996/2006/2016', '7': '1997/2007/2017', '8': '1988/1998/2008/2018', '9': '1989/1999/2009/2019' },
       monthMap: { 'Week 01-04': '~January', 'Week 05-08': '~February', 'Week 09-13': '~March', 'Week 14-17': '~April', 'Week 18-21': '~May', 'Week 22-26': '~June', 'Week 27-30': '~July', 'Week 31-34': '~August', 'Week 35-39': '~September', 'Week 40-43': '~October', 'Week 44-47': '~November', 'Week 48-52': '~December' },
-      decode: function(serial) {
+      decode: function(serial, modelHint) {
       if (!serial || serial.length < 5) return null;
       var yearDigit = serial[2];
       var week = serial.substring(3, 5);
       var y = this.yearMap[yearDigit];
-      return { year: y || 'Unknown code: ' + yearDigit, month: 'Week ' + week + ' (see notes for decade)', yearCode: yearDigit, weekDigits: week };
+      return refineFrigidaireElectroluxYearFromModel({ year: y || 'Unknown code: ' + yearDigit, month: 'Week ' + week + ' (see notes for decade)', yearCode: yearDigit, weekDigits: week }, modelHint);
     }
     },
     'electrolux': {
@@ -1256,12 +1294,12 @@ var decoderData = {
       source: 'electrical-forensics.com; cannonsappliance.com; lumayeconsulting.com; appliancefactoryparts.com',
       yearMap: { '0': '1990/2000/2010/2020', '1': '1991/2001/2011/2021', '2': '1992/2002/2012/2022', '3': '1993/2003/2013/2023', '4': '1994/2004/2014/2024', '5': '1995/2005/2015/2025', '6': '1996/2006/2016', '7': '1997/2007/2017', '8': '1988/1998/2008/2018', '9': '1989/1999/2009/2019' },
       monthMap: { 'Week 01-04': '~January', 'Week 05-08': '~February', 'Week 09-13': '~March', 'Week 14-17': '~April', 'Week 18-21': '~May', 'Week 22-26': '~June', 'Week 27-30': '~July', 'Week 31-34': '~August', 'Week 35-39': '~September', 'Week 40-43': '~October', 'Week 44-47': '~November', 'Week 48-52': '~December' },
-      decode: function(serial) {
+      decode: function(serial, modelHint) {
       if (!serial || serial.length < 5) return null;
       var yearDigit = serial[2];
       var week = serial.substring(3, 5);
       var y = this.yearMap[yearDigit];
-      return { year: y || 'Unknown code: ' + yearDigit, month: 'Week ' + week + ' (see notes for decade)', yearCode: yearDigit, weekDigits: week };
+      return refineFrigidaireElectroluxYearFromModel({ year: y || 'Unknown code: ' + yearDigit, month: 'Week ' + week + ' (see notes for decade)', yearCode: yearDigit, weekDigits: week }, modelHint);
     }
     },
     'philco': {
@@ -1622,7 +1660,7 @@ var decoderData = {
       products: 'Refrigerator; Washer; Dryer; Dishwasher; Range; Oven; Microwave',
       serialEra: '1990-Present',
       serialLengthNote: 'Enter the first 3 digits of the model number to identify the OEM manufacturer.',
-      decodeMethod: 'Prefix-based OEM routing â€” actual method determined by model number prefix',
+      decodeMethod: 'Prefix-based OEM routing - actual method determined by model number prefix',
       yearCodePosition: 'Varies by OEM manufacturer',
       monthCodePosition: 'Varies by OEM manufacturer',
       outputType: 'Year',
@@ -1636,7 +1674,7 @@ var decoderData = {
       yearMap: { '0': '2010/2040', '1': '2011/2041', '2': '2012/2042', '3': '2013/2043', '4': '2014/2044', '5': '2015/2045', '6': '2016/2046', '7': '2017/2047', '8': '2018/2048', '9': '2019/2049', 'X': '1990/2020', 'A': '1991/2021', 'B': '1992/2022', 'C': '1993/2023', 'D': '1994/2024', 'E': '1995/2025', 'F': '1996/2026', 'G': '1997/2027', 'H': '1998/2028', 'J': '1999/2029', 'K': '2000/2030', 'L': '2001/2031', 'M': '2002/2032', 'P': '2003/2033', 'R': '2004/2034', 'S': '2005/2035', 'T': '2006/2036', 'U': '2007/2037', 'W': '2008/2038', 'Y': '2009/2039' },
       monthMap: {},
       decode: function(serial) {
-        // Fallback only â€” actual decode routes through OEM manufacturer decoder via KENMORE_PREFIX_TO_DECODER.
+        // Fallback only - actual decode routes through OEM manufacturer decoder via KENMORE_PREFIX_TO_DECODER.
         // This function is reached only if OEM routing fails. Uses Whirlpool method as the most common default.
         if (!serial) return null;
         var letters = String(serial).match(/[A-Za-z]/g) || [];
@@ -2054,7 +2092,6 @@ var decoderData = {
       decode: function(serial) {
       if (!serial || serial.length < 3) return null;
       var YEAR_NOW = new Date().getFullYear();
-      // Pre-2008 format: starts with a letter â€” [Factory][Month code][2-digit year][...]
       // A.O. Smith format: [Month code][2-digit year][sequence] -- NO factory prefix
       if (/^[A-Za-z]/.test(serial)) {
         var monthChar = serial[0].toUpperCase();
@@ -2065,7 +2102,7 @@ var decoderData = {
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
       }
-      // Post-2008 numeric Format A: YYYYMM... â€” full 4-digit year (2000â€“present), then 2-digit month.
+      // Post-2008 numeric Format A: YYYYMM... - full 4-digit year (2000-present), then 2-digit month.
       if (/^\d{4}/.test(serial) && serial.length >= 6) {
         var yr4 = parseInt(serial.substring(0, 4));
         if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
@@ -2074,7 +2111,7 @@ var decoderData = {
           return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
         }
       }
-      // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
+      // Post-2008 numeric Format B: YYWW... - 2-digit year then 2-digit production week (01-53).
       var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
       if (numericYYWW) return numericYYWW;
       return null;
@@ -2103,7 +2140,7 @@ var decoderData = {
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
       var YEAR_NOW = new Date().getFullYear();
-      // Pre-2008 format: starts with a letter â€” [Factory][Month code][2-digit year][...]
+      // Pre-2008 format: starts with a letter - [Factory][Month code][2-digit year][...]
       if (/^[A-Za-z]/.test(serial)) {
         if (serial.length < 4) return null;
         var monthChar = serial[1].toUpperCase();
@@ -2114,7 +2151,7 @@ var decoderData = {
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
       }
-      // Post-2008 numeric Format A: YYYYMM... â€” full 4-digit year (2000â€“present), then 2-digit month.
+      // Post-2008 numeric Format A: YYYYMM... - full 4-digit year (2000-present), then 2-digit month.
       if (/^\d{4}/.test(serial) && serial.length >= 6) {
         var yr4 = parseInt(serial.substring(0, 4));
         if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
@@ -2123,7 +2160,7 @@ var decoderData = {
           return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
         }
       }
-      // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
+      // Post-2008 numeric Format B: YYWW... - 2-digit year then 2-digit production week (01-53).
       var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
       if (numericYYWW) return numericYYWW;
       return null;
@@ -2170,7 +2207,7 @@ var decoderData = {
         var legacyMonth = this.monthMap[legacyMonthChar];
         return { year: legacyFullYear, month: legacyMonth || 'Unknown code: ' + legacyMonthChar, yearCode: legacyYearDigits, monthCode: legacyMonthChar };
       }
-      // Post-2008 numeric Format A: YYYYMM... â€” full 4-digit year (2000â€“present), then 2-digit month.
+      // Post-2008 numeric Format A: YYYYMM... - full 4-digit year (2000-present), then 2-digit month.
       if (/^\d{4}/.test(serial) && serial.length >= 6) {
         var yr4 = parseInt(serial.substring(0, 4));
         if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
@@ -2179,7 +2216,7 @@ var decoderData = {
           return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
         }
       }
-      // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
+      // Post-2008 numeric Format B: YYWW... - 2-digit year then 2-digit production week (01-53).
       var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
       if (numericYYWW) return numericYYWW;
       return null;
@@ -2208,7 +2245,7 @@ var decoderData = {
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
       var YEAR_NOW = new Date().getFullYear();
-      // Pre-2008 format: starts with a letter â€” [Factory][Month code][2-digit year][...]
+      // Pre-2008 format: starts with a letter - [Factory][Month code][2-digit year][...]
       if (/^[A-Za-z]/.test(serial)) {
         if (serial.length < 4) return null;
         var monthChar = serial[1].toUpperCase();
@@ -2219,7 +2256,7 @@ var decoderData = {
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
       }
-      // Post-2008 numeric Format A: YYYYMM... â€” full 4-digit year (2000â€“present), then 2-digit month.
+      // Post-2008 numeric Format A: YYYYMM... - full 4-digit year (2000-present), then 2-digit month.
       if (/^\d{4}/.test(serial) && serial.length >= 6) {
         var yr4 = parseInt(serial.substring(0, 4));
         if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
@@ -2228,7 +2265,7 @@ var decoderData = {
           return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
         }
       }
-      // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
+      // Post-2008 numeric Format B: YYWW... - 2-digit year then 2-digit production week (01-53).
       var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
       if (numericYYWW) return numericYYWW;
       return null;
@@ -2257,7 +2294,7 @@ var decoderData = {
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
       var YEAR_NOW = new Date().getFullYear();
-      // Pre-2008 format: starts with a letter â€” [Factory][Month code][2-digit year][...]
+      // Pre-2008 format: starts with a letter - [Factory][Month code][2-digit year][...]
       if (/^[A-Za-z]/.test(serial)) {
         if (serial.length < 4) return null;
         var monthChar = serial[1].toUpperCase();
@@ -2268,7 +2305,7 @@ var decoderData = {
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
       }
-      // Post-2008 numeric Format A: YYYYMM... â€” full 4-digit year (2000â€“present), then 2-digit month.
+      // Post-2008 numeric Format A: YYYYMM... - full 4-digit year (2000-present), then 2-digit month.
       if (/^\d{4}/.test(serial) && serial.length >= 6) {
         var yr4 = parseInt(serial.substring(0, 4));
         if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
@@ -2277,7 +2314,7 @@ var decoderData = {
           return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
         }
       }
-      // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
+      // Post-2008 numeric Format B: YYWW... - 2-digit year then 2-digit production week (01-53).
       var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
       if (numericYYWW) return numericYYWW;
       return null;
@@ -2306,7 +2343,7 @@ var decoderData = {
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
       var YEAR_NOW = new Date().getFullYear();
-      // Pre-2008 format: starts with a letter â€” [Factory][Month code][2-digit year][...]
+      // Pre-2008 format: starts with a letter - [Factory][Month code][2-digit year][...]
       if (/^[A-Za-z]/.test(serial)) {
         if (serial.length < 4) return null;
         var monthChar = serial[1].toUpperCase();
@@ -2317,7 +2354,7 @@ var decoderData = {
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
       }
-      // Post-2008 numeric Format A: YYYYMM... â€” full 4-digit year (2000â€“present), then 2-digit month.
+      // Post-2008 numeric Format A: YYYYMM... - full 4-digit year (2000-present), then 2-digit month.
       if (/^\d{4}/.test(serial) && serial.length >= 6) {
         var yr4 = parseInt(serial.substring(0, 4));
         if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
@@ -2326,7 +2363,7 @@ var decoderData = {
           return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
         }
       }
-      // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
+      // Post-2008 numeric Format B: YYWW... - 2-digit year then 2-digit production week (01-53).
       var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
       if (numericYYWW) return numericYYWW;
       return null;
@@ -2355,7 +2392,7 @@ var decoderData = {
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
       var YEAR_NOW = new Date().getFullYear();
-      // Pre-2008 format: starts with a letter â€” [Factory][Month code][2-digit year][...]
+      // Pre-2008 format: starts with a letter - [Factory][Month code][2-digit year][...]
       if (/^[A-Za-z]/.test(serial)) {
         if (serial.length < 4) return null;
         var monthChar = serial[1].toUpperCase();
@@ -2366,7 +2403,7 @@ var decoderData = {
         var m2 = this.monthMap[monthChar];
         return { year: fullYear, month: m2 || 'Unknown code: ' + monthChar, yearCode: yearDigits, monthCode: monthChar };
       }
-      // Post-2008 numeric Format A: YYYYMM... â€” full 4-digit year (2000â€“present), then 2-digit month.
+      // Post-2008 numeric Format A: YYYYMM... - full 4-digit year (2000-present), then 2-digit month.
       if (/^\d{4}/.test(serial) && serial.length >= 6) {
         var yr4 = parseInt(serial.substring(0, 4));
         if (yr4 >= 2000 && yr4 <= YEAR_NOW) {
@@ -2375,7 +2412,7 @@ var decoderData = {
           return { year: String(yr4), month: m || 'Month ' + monthStr, yearCode: String(yr4), monthCode: monthStr };
         }
       }
-      // Post-2008 numeric Format B: YYWW... â€” 2-digit year then 2-digit production week (01â€“53).
+      // Post-2008 numeric Format B: YYWW... - 2-digit year then 2-digit production week (01-53).
       var numericYYWW = decodeAOSmithFamilyNumericYYWW(serial);
       if (numericYYWW) return numericYYWW;
       return null;
@@ -2815,7 +2852,7 @@ var decoderData = {
       exampleResult: 'J=2017 B=November',
       sources: 'homespy.io; electrical-forensics.com; samsung.com',
       method: '15-char serial: year at char 8, month at char 9. 11-char serial: year at char 4, month at char 5.',
-      notes: 'Samsung TVs and monitors use the same serial format as Samsung appliances. Serial label is on the back of the device. Some codes have a 20-year cycle â€” verify decade using model generation or condition.',
+      notes: 'Samsung TVs and monitors use the same serial format as Samsung appliances. Serial label is on the back of the device. Some codes have a 20-year cycle - verify decade using model generation or condition.',
       source: 'homespy.io; electrical-forensics.com; samsung.com',
       yearMap: { 'R': '2001/2021', 'T': '2002/2022', 'W': '2003/2023', 'X': '2004/2024', 'Y': '2005/2025', 'A': '2006/2026', 'P': '2007/2027', 'Q': '2008/2028', 'S': '2009/2029', 'Z': '2010/2030', 'B': '2011/2031', 'C': '2012/2032', 'D': '2013/2033', 'F': '2014/2034', 'G': '2015/2035', 'H': '2016/2036', 'J': '2017/2037', 'K': '2018/2038', 'M': '2019/2039', 'N': '2020/2040' },
       monthMap: { '1': 'January', '2': 'February', '3': 'March', '4': 'April', '5': 'May', '6': 'June', '7': 'July', '8': 'August', '9': 'September', 'A': 'October', 'B': 'November', 'C': 'December' },
@@ -2865,9 +2902,9 @@ var decoderData = {
       parentManufacturer: 'Apple Inc.',
       products: 'iPhone; iPad; Mac; iPod; Apple Watch',
       serialEra: '2010-Present',
-      serialLengthNote: '12-char (pre-2021): year at char 4, week at chars 5-6. 10-char (post-2021): randomized serial â€” no date encoding.',
+      serialLengthNote: '12-char (pre-2021): year at char 4, week at chars 5-6. 10-char (post-2021): randomized serial - no date encoding.',
       method: '12-char serial: char 4 = Year, chars 5-6 = Week. 10-char serial (post-2021): randomized.',
-      notes: 'Apple moved to randomized 10-character serials around 2021. For randomized serials, year cannot be decoded directly â€” use Smart Lookup with the model identifier (e.g., A2341). Year codes C and D each map to two possible decades (2010 or 2020).',
+      notes: 'Apple moved to randomized 10-character serials around 2021. For randomized serials, year cannot be decoded directly - use Smart Lookup with the model identifier (e.g., A2341). Year codes C and D each map to two possible decades (2010 or 2020).',
       decodeNotes: 'Apple moved to randomized serials (~2021). For those, Smart Lookup with the model number gives the best result.',
       exampleSerial: 'C02XG1JFJGH5',
       exampleResult: 'G=2011, Week 1J (~Week 27)',
@@ -2902,7 +2939,7 @@ var decoderData = {
       serialEra: '2009-Present',
       serialLengthNote: '15-char serial: year at char 8, month at char 9. Shorter serials: year at char 4, month at char 5.',
       method: '15-char serial: char 8 = Year. Shorter serials: char 4 = Year. Next char = Month.',
-      notes: 'Year codes B, C, D, E repeat â€” B=2009 or 2022, C=2010 or 2023, D=2011 or 2024, E=2012 or 2025. Use device model generation to confirm decade.',
+      notes: 'Year codes B, C, D, E repeat - B=2009 or 2022, C=2010 or 2023, D=2011 or 2024, E=2012 or 2025. Use device model generation to confirm decade.',
       decodeNotes: 'Some year codes have a 13-year cycle. Use device generation to resolve ambiguity.',
       exampleSerial: 'RX1K304XXXXXXX',
       exampleResult: 'K=2016 3=March',
@@ -3033,7 +3070,7 @@ var decoderData = {
         }
         return {
           year: 'No year suffix found',
-          month: 'Enter a Sony model number ending in H, J, K, L, M, or N â€” e.g., XR65A90K for a 2022 TV.',
+          month: 'Enter a Sony model number ending in H, J, K, L, M, or N - e.g., XR65A90K for a 2022 TV.',
           yearCode: lastChar, weekDigits: undefined
         };
       }

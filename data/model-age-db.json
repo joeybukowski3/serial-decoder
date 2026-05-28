@@ -274,6 +274,27 @@
       ]
     },
     {
+      "brand": "Frigidaire",
+      "model": "FFTR2045VS0",
+      "normalizedBrand": "frigidaire",
+      "normalizedModel": "fftr2045vs0",
+      "category": "refrigerator",
+      "yearStart": 2020,
+      "yearEnd": 2024,
+      "estimatedYear": 2021,
+      "productionRange": "2020-2024",
+      "source": "Frigidaire FFTR/FFFTR2045VS top-freezer refrigerator model-era support",
+      "notes": "FFTR/FFFTR2045VS-series top-freezer refrigerators are modern Frigidaire/Electrolux-family models that support early-2020s serial decade resolution, including 2021.",
+      "aliases": [
+        "FFTR2045VS",
+        "FFTR2045VSO",
+        "FFFTR2045VS0",
+        "FFFTR2045VSO",
+        "Frigidaire FFTR2045VS0",
+        "Frigidaire FFTR2045VS top freezer refrigerator"
+      ]
+    },
+    {
       "brand": "Goodman",
       "model": "GSX140361",
       "normalizedBrand": "goodman",

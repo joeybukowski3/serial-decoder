@@ -3405,8 +3405,8 @@ function normalizeBrandId(brandId) {
 
   if (
     cleaned === 'ge' ||
-    cleaned === 'cafe' || cleaned === 'caf�' ||
-    cleaned === 'ge cafe' || cleaned === 'ge caf�' || cleaned === 'ge caf' ||
+    cleaned === 'cafe' ||
+    cleaned === 'ge cafe' || cleaned === 'ge caf' ||
     cleaned === 'ge monogram' || cleaned === 'monogram' ||
     cleaned === 'ge profile' || cleaned === 'profile' ||
     cleaned === 'hotpoint' || cleaned === 'rca'
@@ -3991,12 +3991,10 @@ function ensureBrandAliasSearch() {
   group.className = 'form-group brand-alias-group';
   group.innerHTML = '' +
     '<label class="step-label sr-only" for="brandAliasInput">Search Brand</label>' +
-    '<input type="text" id="brandAliasInput" class="form-input" list="brandAliasList" placeholder="Search brand (e.g., GE Profile, Monogram, Caf�)">' +
+    '<input type="text" id="brandAliasInput" class="form-input" list="brandAliasList" placeholder="Search brand (e.g., GE Profile, Monogram, Cafe)">' +
     '<datalist id="brandAliasList">' +
       '<option value="GE"></option>' +
-      '<option value="Caf�"></option>' +
       '<option value="Cafe"></option>' +
-      '<option value="GE Caf�"></option>' +
       '<option value="GE Cafe"></option>' +
       '<option value="Monogram"></option>' +
       '<option value="Profile"></option>' +
@@ -4677,7 +4675,7 @@ function decodeSerial() {
     if (_eraVal && result && result.year) {
       var _filteredYear = filterYearsByEra(String(result.year), _eraVal);
       if (_filteredYear === null) {
-        // No candidate years match the selected era � show clear message, no age
+        // No candidate years match the selected era - show clear message, no age
         document.getElementById('resultBrand').textContent  = decoder.name;
         document.getElementById('resultMethod').textContent = decoder.method || decoder.serialLengthNote || 'N/A';
         document.getElementById('resultNotes').textContent  = sanitizeAlertText('No matching dates found for the selected era. Try switching to Pre-2006 or Post-2006.');
@@ -4769,6 +4767,9 @@ function decodeSerial() {
     }
     if (isKenmore && kenmoreResolution && kenmoreResolution.note) {
       notesText = kenmoreResolution.note + (notesText ? ' ' + notesText : '');
+    }
+    if (result.modelRefinementNote) {
+      notesText = notesText + (notesText ? ' ' : '') + result.modelRefinementNote;
     }
     document.getElementById('resultNotes').textContent = sanitizeAlertText(notesText);
     updateResultWarning(result, metaBrandId);
@@ -6367,15 +6368,17 @@ function clickSuggestion(modelNum) {
 function esc(s) {
   if (!s) return '';
   var div = document.createElement('div');
-  div.textContent = s;
+  div.textContent = sanitizeAlertText(s);
   return div.innerHTML;
 }
 
 function sanitizeAlertText(text) {
   if (text === null || text === undefined) return '';
   return String(text)
+    .replace(/(?:\u00EF\u00BF\u00BD|\uFFFD)+/g, '-')
     .replace(/\\ufe0e|\\ufe0f|ufe0e|ufe0f/gi, '')
-    .replace(/[\uFE0E\uFE0F\u200B-\u200D\u2060\u00AD]/g, '');
+    .replace(/[\uFE0E\uFE0F\u200B-\u200D\u2060\u00AD]/g, '')
+    .replace(/\s+-\s+/g, ' - ');
 }
 
 
