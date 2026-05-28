@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import { findExactLocalModelAgeMatch, loadLocalModelAgeDb, normalizeModelNumber } from '../lib/model-age-db.js';
 
 function loadDecoderContext() {
   function createMockElement() {
@@ -61,7 +62,8 @@ function loadDecoderContext() {
       getSupplementalModelConfig,
       normalizeDecoderCategory,
       extractKenmoreModelPrefix,
-      resolveKenmoreDecoderFromPrefix
+      resolveKenmoreDecoderFromPrefix,
+      sanitizeAlertText
     };
   `, ctx);
 
@@ -251,4 +253,63 @@ test('Smart Lookup expands LR3RE-1000 to the Litter-Robot product family', () =>
   assert.match(expanded, /Litter-Robot 3 Open Air/i);
   assert.match(expanded, /Whisker/i);
   assert.doesNotMatch(expanded, /Generac/i);
+});
+
+test('Frigidaire FFTR2045VS0 model context resolves BA10515647 to 2021', () => {
+  const frigidaire = api.decoderData.appliances.decoders.frigidaire;
+  const out = frigidaire.decode('BA10515647', 'FFTR2045VS0');
+
+  assert.ok(out);
+  assert.equal(out.year, '2021');
+  assert.equal(out.month, 'Week 05 (see notes for decade)');
+  assert.match(out.modelRefinementNote, /model context/i);
+});
+
+test('Frigidaire FFTR2045VSO trailing O typo still resolves BA10515647 to 2021', () => {
+  const frigidaire = api.decoderData.appliances.decoders.frigidaire;
+  const out = frigidaire.decode('BA10515647', 'FFTR2045VSO');
+
+  assert.ok(out);
+  assert.equal(out.year, '2021');
+  assert.equal(out.modelNormalized, 'FFTR2045VS0');
+});
+
+test('Electrolux decoder uses the same FFTR2045VS model-era context', () => {
+  const electrolux = api.decoderData.appliances.decoders.electrolux;
+  const out = electrolux.decode('BA10515647', 'FFTR2045VS0');
+
+  assert.ok(out);
+  assert.equal(out.year, '2021');
+});
+
+test('Frigidaire serial-only result remains decade-ambiguous', () => {
+  const frigidaire = api.decoderData.appliances.decoders.frigidaire;
+  const out = frigidaire.decode('BA10515647');
+
+  assert.ok(out);
+  assert.equal(out.year, '1991/2001/2011/2021');
+  assert.equal(api.parseCandidateYears(out.year).includes(2011), true);
+  assert.equal(api.parseCandidateYears(out.year).includes(2021), true);
+});
+
+test('Result text sanitizer removes replacement characters from user-facing notes', () => {
+  const mojibakeReplacement = '\u00EF\u00BF\u00BD';
+  const replacementChar = '\uFFFD';
+  const dirty = 'Decade ambiguity: ' + mojibakeReplacement + ' model/style context often needed. Bad replacement: ' + replacementChar;
+  const clean = api.sanitizeAlertText(dirty);
+
+  assert.equal(clean.includes(mojibakeReplacement), false);
+  assert.equal(clean.includes(replacementChar), false);
+  assert.match(clean, /Decade ambiguity: - model/);
+});
+
+test('Local model-era lookup normalizes Frigidaire trailing O typo for FFTR2045VS models', async () => {
+  assert.equal(normalizeModelNumber('FFTR2045VSO'), 'fftr2045vs0');
+  assert.equal(normalizeModelNumber('FFFTR2045VSO'), 'ffftr2045vs0');
+
+  const db = await loadLocalModelAgeDb({ forceReload: true });
+  const match = findExactLocalModelAgeMatch(db.records, 'FFTR2045VSO', 'Frigidaire');
+  assert.ok(match);
+  assert.equal(match.record.estimatedYear, 2021);
+  assert.equal(match.record.productionRange, '2020-2024');
 });
