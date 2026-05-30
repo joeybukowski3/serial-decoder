@@ -114,7 +114,17 @@ const APPLIANCE_ERA_DATA = {
       { key: 'monogram', yearRange: '1990s-Present', note: 'GE Monogram lines are generally premium long-running production, commonly from the late 1990s onward.' },
       { key: 'gth', yearRange: '2005-2016', note: 'GE GTH top-mount refrigerator models are generally associated with post-2005 production cycles.' },
       { key: 'gts', yearRange: '2005-Present', note: 'GE GTS top-mount refrigerator models are generally associated with post-2005 production cycles.' },
-      { key: 'camelback', yearRange: 'Pre-2000', note: 'GE Camelback console styling generally indicates older, pre-2000 era washer design.' }
+      { key: 'camelback', yearRange: 'Pre-2000', note: 'GE Camelback console styling generally indicates older, pre-2000 era washer design.' },
+      { key: 'pfsf', yearRange: '2005-2015', note: 'GE PFSF french door refrigerator models are generally associated with 2005-2015 production cycles.' },
+      { key: 'pfss', yearRange: '2004-2014', note: 'GE PFSS side-by-side refrigerator models are generally associated with 2004-2014 production cycles.' },
+      { key: 'pfe', yearRange: '2012-Present', note: 'GE Profile PFE french door refrigerator models are generally associated with 2012 and newer production.' },
+      { key: 'pds', yearRange: '2000-2012', note: 'GE Profile PDS french door refrigerator models are generally associated with 2000-2012 production cycles.' },
+      { key: 'gfe', yearRange: '2012-Present', note: 'GE GFE french door refrigerator models are generally associated with 2012 and newer production.' },
+      { key: 'gss', yearRange: '2000-2015', note: 'GE GSS side-by-side refrigerator models are generally associated with 2000-2015 production cycles.' },
+      { key: 'gse', yearRange: '2010-Present', note: 'GE GSE side-by-side refrigerator models are generally associated with 2010 and newer production.' },
+      { key: 'jwre', yearRange: '2005-2015', note: 'GE JWRE wall oven models are generally associated with 2005-2015 production cycles.' },
+      { key: 'jgbs', yearRange: '2005-Present', note: 'GE JGBS freestanding gas range models are generally associated with 2005 and newer production.' },
+      { key: 'jbs', yearRange: '2005-Present', note: 'GE JBS freestanding electric range models are generally associated with 2005 and newer production.' }
     ]
   },
   samsung: {

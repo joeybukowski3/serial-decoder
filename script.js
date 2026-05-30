@@ -3835,6 +3835,38 @@ async function resolveSerialYearFromModel(options) {
     };
   }
 
+  // Smart lookup fallback: age-lookup and deterministic both failed to resolve.
+  // Ask the smart-query-interpret API with brand + model + candidate years.
+  try {
+    var smartQuery = brand + ' ' + model + ' manufacture year candidates: ' + candidates.join(', ');
+    var smartResult = await fetchSmartLookupInterpretation(smartQuery);
+    // smart-query-interpret returns action/suggestions; extract any year mentioned in suggestions
+    var smartYearPicked = null;
+    var smartSummary = '';
+    if (smartResult && Array.isArray(smartResult.suggestions) && smartResult.suggestions.length) {
+      var allSuggestionText = smartResult.suggestions.join(' ');
+      var mentionedYears = parseCandidateYears(allSuggestionText);
+      if (mentionedYears.length) {
+        var target = mentionedYears[0];
+        smartYearPicked = candidates.reduce(function(prev, cur) {
+          return Math.abs(cur - target) < Math.abs(prev - target) ? cur : prev;
+        }, candidates[0]);
+        smartSummary = 'Smart lookup identified ' + target + ' as the most likely production year for ' + brand + ' model ' + model + '. Nearest serial-valid candidate: ' + smartYearPicked + '.';
+      }
+    }
+    if (smartYearPicked) {
+      return {
+        chosenYear: smartYearPicked,
+        summary: smartSummary,
+        confidence: 'Smart Lookup',
+        source: 'smart-lookup',
+        lookupData: lookup ? lookup.data : null
+      };
+    }
+  } catch (smartErr) {
+    console.warn('[Serial Decode] Smart lookup fallback failed.', smartErr);
+  }
+
   return {
     chosenYear: null,
     summary: (lookup && lookup.summary) || buildAmbiguousYearMessage(candidates, { modelAttempted: true }),
