@@ -4243,6 +4243,76 @@ var MODEL_PREFIX_ERA_MAP = [
   { prefix: /^LDF[0-9]/,   year: 2012, note: 'LG LDF dishwasher (2008-present era)' },
   { prefix: /^LRE[0-9]/,   year: 2013, note: 'LG LRE electric range (2008-present era)' },
   { prefix: /^LRG[0-9]/,   year: 2013, note: 'LG LRG gas range (2008-present era)' },
+  // ── KitchenAid ───────────────────────────────────────────────────────────
+  { prefix: /^KFIS[0-9]/,  year: 2013, note: 'KitchenAid KFIS French door refrigerator (2010-present era)' },
+  { prefix: /^KRFF[0-9]/,  year: 2016, note: 'KitchenAid KRFF French door refrigerator (2014-present era)' },
+  { prefix: /^KRFC[0-9]/,  year: 2016, note: 'KitchenAid KRFC counter-depth French door (2014-present era)' },
+  { prefix: /^KRSF[0-9]/,  year: 2015, note: 'KitchenAid KRSF side-by-side refrigerator (2012-present era)' },
+  { prefix: /^KRSC[0-9]/,  year: 2016, note: 'KitchenAid KRSC counter-depth side-by-side (2014-present era)' },
+  { prefix: /^KDFE[0-9]/,  year: 2014, note: 'KitchenAid KDFE dishwasher (2012-present era)' },
+  { prefix: /^KDTE[0-9]/,  year: 2015, note: 'KitchenAid KDTE dishwasher (2013-present era)' },
+  { prefix: /^KSEG[0-9]/,  year: 2014, note: 'KitchenAid KSEG slide-in electric range (2012-present era)' },
+  { prefix: /^KSGG[0-9]/,  year: 2014, note: 'KitchenAid KSGG slide-in gas range (2012-present era)' },
+  { prefix: /^KFED[0-9]/,  year: 2013, note: 'KitchenAid KFED freestanding dual-fuel range (2010-present era)' },
+  { prefix: /^KHMS[0-9]/,  year: 2012, note: 'KitchenAid KHMS over-the-range microwave (2008-present era)' },
+  { prefix: /^KFWB[0-9]/,  year: 2016, note: 'KitchenAid KFWB front-load washer (2014-present era)' },
+  { prefix: /^KHHE[0-9]/,  year: 2016, note: 'KitchenAid KHHE heat pump dryer (2014-present era)' },
+  // ── Jenn-Air ─────────────────────────────────────────────────────────────
+  { prefix: /^JFI[0-9]/,   year: 2012, note: 'Jenn-Air JFI French door refrigerator (2008-2018 era)' },
+  { prefix: /^JFC[0-9]/,   year: 2013, note: 'Jenn-Air JFC counter-depth French door (2010-present era)' },
+  { prefix: /^JCD[0-9]/,   year: 2010, note: 'Jenn-Air JCD built-in column refrigerator (2006-2016 era)' },
+  { prefix: /^JDB[0-9]/,   year: 2012, note: 'Jenn-Air JDB dishwasher (2008-present era)' },
+  { prefix: /^JES[0-9]/,   year: 2010, note: 'Jenn-Air JES electric slide-in range (2006-present era)' },
+  { prefix: /^JGS[0-9]/,   year: 2010, note: 'Jenn-Air JGS gas slide-in range (2006-present era)' },
+  { prefix: /^JMW[0-9]/,   year: 2012, note: 'Jenn-Air JMW wall oven (2008-present era)' },
+  // ── Amana ────────────────────────────────────────────────────────────────
+  { prefix: /^AFI[0-9]/,   year: 2010, note: 'Amana AFI French door refrigerator (2006-2016 era)' },
+  { prefix: /^ART[0-9]/,   year: 2012, note: 'Amana ART top-mount refrigerator (2008-present era)' },
+  { prefix: /^ASI[0-9]/,   year: 2010, note: 'Amana ASI side-by-side refrigerator (2006-2016 era)' },
+  { prefix: /^NED[0-9]/,   year: 2012, note: 'Amana NED electric dryer (2008-present era)' },
+  { prefix: /^NGD[0-9]/,   year: 2012, note: 'Amana NGD gas dryer (2008-present era)' },
+  { prefix: /^NTW[0-9]/,   year: 2012, note: 'Amana NTW top-load washer (2008-present era)' },
+  // ── Admiral ──────────────────────────────────────────────────────────────
+  { prefix: /^ATW[0-9]/,   year: 2010, note: 'Admiral ATW top-load washer (2006-2016 era)' },
+  { prefix: /^ADB[0-9]/,   year: 2010, note: 'Admiral ADB dishwasher (2006-2016 era)' },
+  // ── Electrolux ───────────────────────────────────────────────────────────
+  { prefix: /^EFME[0-9]/,  year: 2016, note: 'Electrolux EFME electric dryer (2014-present era)' },
+  { prefix: /^EFMG[0-9]/,  year: 2016, note: 'Electrolux EFMG gas dryer (2014-present era)' },
+  { prefix: /^EI[0-9]{2}S/, year: 2013, note: 'Electrolux EI-series side-by-side refrigerator (2010-present era)' },
+  { prefix: /^EI[0-9]{2}F/, year: 2014, note: 'Electrolux EI-series French door refrigerator (2012-present era)' },
+  { prefix: /^EW[0-9]{2}F/, year: 2014, note: 'Electrolux EW-series French door refrigerator (2012-present era)' },
+  { prefix: /^EIDW[0-9]/,  year: 2014, note: 'Electrolux EIDW dishwasher (2012-present era)' },
+  // ── Bradford White (water heaters) ───────────────────────────────────────
+  { prefix: /^MI[0-9]/,    year: 2012, note: 'Bradford White MI-series power vent water heater (2008-present era)' },
+  { prefix: /^MI50[0-9]/,  year: 2014, note: 'Bradford White MI50 50-gallon water heater (2010-present era)' },
+  { prefix: /^RG[0-9]/,    year: 2010, note: 'Bradford White RG-series atmospheric vent gas water heater (2005-present era)' },
+  { prefix: /^RE[0-9]/,    year: 2010, note: 'Bradford White RE-series electric water heater (2005-present era)' },
+  // ── Speed Queen ──────────────────────────────────────────────────────────
+  { prefix: /^AWN[0-9]/,   year: 2010, note: 'Speed Queen AWN top-load washer (2006-present era)' },
+  { prefix: /^AFN[0-9]/,   year: 2010, note: 'Speed Queen AFN front-load washer (2006-present era)' },
+  { prefix: /^ADE[0-9]/,   year: 2010, note: 'Speed Queen ADE electric dryer (2006-present era)' },
+  { prefix: /^ADG[0-9]/,   year: 2010, note: 'Speed Queen ADG gas dryer (2006-present era)' },
+  // ── Samsung TV / Electronics ──────────────────────────────────────────────
+  { prefix: /^UN[0-9]{2}[A-Z]{2}/, year: 2015, note: 'Samsung UN-series LED/LCD TV (2010-present era)' },
+  { prefix: /^QN[0-9]{2}[A-Z]{2}/, year: 2019, note: 'Samsung QN QLED TV (2017-present era)' },
+  { prefix: /^UA[0-9]{2}[A-Z]{2}/, year: 2013, note: 'Samsung UA-series LED TV international (2010-present era)' },
+  // ── LG Electronics (TVs) ─────────────────────────────────────────────────
+  { prefix: /^[0-9]{2}[A-Z]{2}[0-9]{4}[A-Z]/, year: 2015, note: 'LG TV standard model format (size + series + year indicator)' },
+  { prefix: /^OLED[0-9]{2}/,year: 2018, note: 'LG OLED TV series (2016-present era)' },
+  { prefix: /^NANO[0-9]{2}/,year: 2020, note: 'LG NanoCell TV series (2019-present era)' },
+  // ── Apple ─────────────────────────────────────────────────────────────────
+  { prefix: /^MK[A-Z][A-Z0-9]/,  year: 2021, note: 'Apple MK-prefix device (typically 2020-2022 era)' },
+  { prefix: /^MN[A-Z][A-Z0-9]/,  year: 2016, note: 'Apple MN-prefix device (typically 2015-2017 era)' },
+  { prefix: /^MQ[A-Z][A-Z0-9]/,  year: 2017, note: 'Apple MQ-prefix device (typically 2017-2018 era)' },
+  { prefix: /^MR[A-Z][A-Z0-9]/,  year: 2018, note: 'Apple MR-prefix device (typically 2018-2019 era)' },
+  { prefix: /^MW[A-Z][A-Z0-9]/,  year: 2020, note: 'Apple MW-prefix device (typically 2020-2021 era)' },
+  { prefix: /^MGNE/,        year: 2021, note: 'Apple MGNE-prefix MacBook (typically 2020-2021 era)' },
+  // ── HP ────────────────────────────────────────────────────────────────────
+  { prefix: /^[A-Z0-9]{6}#[A-Z]{3}/, year: 2015, note: 'HP standard SKU format (product number + region code)' },
+  // ── Panasonic ─────────────────────────────────────────────────────────────
+  { prefix: /^TC-[0-9]{2}/,year: 2013, note: 'Panasonic TC-series plasma/LCD TV (2008-2016 era)' },
+  { prefix: /^TH-[0-9]{2}/,year: 2015, note: 'Panasonic TH-series commercial display (2010-present era)' },
+  { prefix: /^TX-[0-9]{2}/,year: 2015, note: 'Panasonic TX-series LED TV (2012-present era)' },
 ];
 
 function resolveModelPrefixEraYear(model) {

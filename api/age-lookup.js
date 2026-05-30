@@ -140,6 +140,76 @@ const APPLIANCE_ERA_DATA = {
       { key: 'inverter directdrive', yearRange: '2009-Present', note: 'LG Inverter DirectDrive branding is generally associated with 2009 and newer production cycles.' },
       { key: 'directdrive', yearRange: '2009-Present', note: 'LG DirectDrive branding in modern appliance lines is commonly associated with 2009 and newer cycles.' }
     ]
+  },
+  kitchenaid: {
+    defaultNote: 'KitchenAid model heuristic: KFIS/KRFF/KRFC refrigerator lines are generally post-2010; Architect Series II lines are generally 2005-2015.',
+    rules: [
+      { key: 'kfis', yearRange: '2010-Present', note: 'KitchenAid KFIS French door refrigerator models are generally associated with 2010 and newer production.' },
+      { key: 'krff', yearRange: '2014-Present', note: 'KitchenAid KRFF French door refrigerator models are generally associated with 2014 and newer production.' },
+      { key: 'krfc', yearRange: '2014-Present', note: 'KitchenAid KRFC counter-depth refrigerator models are generally associated with 2014 and newer production.' },
+      { key: 'architect series ii', yearRange: '2005-2015', note: 'KitchenAid Architect Series II appliances are generally associated with 2005-2015 production.' },
+      { key: 'architect series', yearRange: '2000-2010', note: 'KitchenAid Architect Series appliances are generally associated with 2000-2010 production.' }
+    ]
+  },
+  jenn_air: {
+    defaultNote: 'Jenn-Air model heuristic: JFI/JFC refrigerator lines are generally post-2008; older JCD column units are pre-2016.',
+    rules: [
+      { key: 'jfi', yearRange: '2008-2018', note: 'Jenn-Air JFI French door refrigerator models are generally associated with 2008-2018 production.' },
+      { key: 'jfc', yearRange: '2010-Present', note: 'Jenn-Air JFC counter-depth refrigerator models are generally associated with 2010 and newer production.' },
+      { key: 'pro-style', yearRange: '2005-Present', note: 'Jenn-Air Pro-Style appliances are generally modern-era production.' },
+      { key: 'rise', yearRange: '2019-Present', note: 'Jenn-Air RISE collection appliances are associated with 2019 and newer production.' },
+      { key: 'noir', yearRange: '2019-Present', note: 'Jenn-Air NOIR collection appliances are associated with 2019 and newer production.' }
+    ]
+  },
+  amana: {
+    defaultNote: 'Amana model heuristic: Post-2006 Amana is a Whirlpool brand; AFI/ASI refrigerator lines are generally 2006-2016.',
+    rules: [
+      { key: 'afi', yearRange: '2006-2016', note: 'Amana AFI French door refrigerator models are generally associated with 2006-2016 production.' },
+      { key: 'art', yearRange: '2008-Present', note: 'Amana ART top-mount refrigerator models are generally associated with 2008 and newer production.' },
+      { key: 'asi', yearRange: '2006-2016', note: 'Amana ASI side-by-side refrigerator models are generally associated with 2006-2016 production.' }
+    ]
+  },
+  admiral: {
+    defaultNote: 'Admiral model heuristic: Post-2006 Admiral is a Whirlpool/Maytag brand; models are generally entry-level.',
+    rules: [
+      { key: 'atw', yearRange: '2006-2016', note: 'Admiral ATW top-load washer models are generally associated with 2006-2016 production.' }
+    ]
+  },
+  electrolux: {
+    defaultNote: 'Electrolux model heuristic: ELFW/ELTF laundry lines are generally post-2010; EI/EW refrigerator lines are generally post-2012.',
+    rules: [
+      { key: 'elfw', yearRange: '2010-Present', note: 'Electrolux ELFW front-load washer models are generally associated with 2010 and newer production.' },
+      { key: 'eltf', yearRange: '2010-Present', note: 'Electrolux ELTF dryer models are generally associated with 2010 and newer production.' },
+      { key: 'perfect steam', yearRange: '2012-Present', note: 'Electrolux Perfect Steam laundry appliances are generally associated with 2012 and newer production.' },
+      { key: 'luxcare', yearRange: '2015-Present', note: 'Electrolux LuxCare wash system is generally associated with 2015 and newer production.' }
+    ]
+  },
+  bradford_white: {
+    defaultNote: 'Bradford White model heuristic: MI-series power vent and RG-series atmospheric vent are common modern lines.',
+    rules: [
+      { key: 'mi', yearRange: '2008-Present', note: 'Bradford White MI-series power vent water heaters are generally associated with 2008 and newer production.' },
+      { key: 'rg', yearRange: '2005-Present', note: 'Bradford White RG-series gas water heaters are generally associated with 2005 and newer production.' },
+      { key: 're', yearRange: '2005-Present', note: 'Bradford White RE-series electric water heaters are generally associated with 2005 and newer production.' },
+      { key: 'defender safety system', yearRange: '2003-Present', note: 'Bradford White Defender Safety System is associated with 2003 and newer production.' }
+    ]
+  },
+  speed_queen: {
+    defaultNote: 'Speed Queen model heuristic: TR/TC top-load and FR/FC front-load laundry lines are modern; commercial-grade heritage spans decades.',
+    rules: [
+      { key: 'awn', yearRange: '2006-Present', note: 'Speed Queen AWN top-load washer models are generally associated with 2006 and newer production.' },
+      { key: 'afn', yearRange: '2006-Present', note: 'Speed Queen AFN front-load washer models are generally associated with 2006 and newer production.' },
+      { key: 'tr', yearRange: '2018-Present', note: 'Speed Queen TR-series top-load washer models are generally associated with 2018 and newer production.' },
+      { key: 'tc', yearRange: '2020-Present', note: 'Speed Queen TC-series commercial top-load washer models are generally associated with 2020 and newer production.' }
+    ]
+  },
+  sub_zero: {
+    defaultNote: 'Sub-Zero model heuristic: BI (Built-In) series spans decades; newer 700 and Classic series lines generally post-2015.',
+    rules: [
+      { key: '700', yearRange: '2015-Present', note: 'Sub-Zero 700 series refrigerators are generally associated with 2015 and newer production.' },
+      { key: 'classic', yearRange: '2018-Present', note: 'Sub-Zero Classic series refrigerators are generally associated with 2018 and newer production.' },
+      { key: 'bi-', yearRange: '1995-Present', note: 'Sub-Zero BI (Built-In) series spans a long production window; decade resolution requires physical inspection.' },
+      { key: 'pro 48', yearRange: '2000-Present', note: 'Sub-Zero Pro 48 series refrigerators are generally associated with 2000 and newer production.' }
+    ]
   }
 };
 
