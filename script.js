@@ -3675,11 +3675,19 @@ function setEstimatedAgeVisibility(visible, value) {
   }
 }
 
-function buildModelLookupQuery(brand, model, context) {
-  return [brand, model, context]
+function buildModelLookupQuery(brand, model, context, candidates) {
+  var parts = [brand, model]
     .map(function(part) { return String(part || '').trim(); })
-    .filter(Boolean)
-    .join(' ');
+    .filter(Boolean);
+  if (!parts.length) return '';
+  // When candidates are provided, build a directive query so Gemini
+  // understands it must pick from a specific set of candidate years.
+  if (candidates && candidates.length > 1) {
+    var candidateList = candidates.join(', ');
+    return parts.join(' ') + '. Manufacture year is one of: ' + candidateList +
+      '. Based on the model number and product era, which single year is most likely correct?';
+  }
+  return parts.concat([String(context || '').trim()]).filter(Boolean).join(' ');
 }
 
 function normalizeClientModelLookupValue(value) {
@@ -3723,7 +3731,7 @@ function buildSerialLookupCacheKey(brand, model, context, candidates) {
 }
 
 async function fetchModelLookupEvidence(brand, model, context, candidates) {
-  var query = buildModelLookupQuery(brand, model, context);
+  var query = buildModelLookupQuery(brand, model, context, candidates);
   if (!query) return { data: null, summary: '', fromCache: false };
 
   var cacheKey = buildSerialLookupCacheKey(brand, model, context, candidates);
@@ -3815,11 +3823,9 @@ async function resolveSerialYearFromModel(options) {
     };
   }
 
-  // Include the candidate years in the query so the AI response is targeted
-  var candidatesCtx = candidates.length > 1
-    ? 'narrowing candidates ' + candidates.join(' ')
-    : '';
-  var lookup = await fetchModelLookupEvidence(brand, model, candidatesCtx, candidates);
+  // candidates are now passed directly into buildModelLookupQuery
+  // so the AI query explicitly asks it to pick from the candidate years
+  var lookup = await fetchModelLookupEvidence(brand, model, context, candidates);
   var selected = lookup && lookup.data
     ? chooseCandidateFromLookup(candidates, lookup.data, model, context)
     : null;
