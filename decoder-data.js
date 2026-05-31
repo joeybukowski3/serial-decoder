@@ -2914,16 +2914,21 @@ var decoderData = {
       serialEra: '2010-Present',
       serialLengthNote: '12-char (pre-2021): year at char 4, week at chars 5-6. 10-char (post-2021): randomized serial - no date encoding.',
       method: '12-char serial: char 4 = Year, chars 5-6 = Week. 10-char serial (post-2021): randomized.',
-      notes: 'Apple moved to randomized 10-character serials around 2021. For randomized serials, year cannot be decoded directly - use Smart Lookup with the model identifier (e.g., A2341). Year codes C and D each map to two possible decades (2010 or 2020).',
+      notes: 'Apple moved to randomized 10-character serials around 2021. For randomized serials, year cannot be decoded directly - use Smart Lookup with the model identifier (e.g., A2341). All year codes repeat on a 10-year cycle (e.g. F = 2011 or 2021, C/D = 2010 or 2020). Use the model number or device generation to confirm the decade.',
       decodeNotes: 'Apple moved to randomized serials (~2021). For those, Smart Lookup with the model number gives the best result.',
       exampleSerial: 'C02XG1JFJGH5',
-      exampleResult: 'G=2011, Week 1J (~Week 27)',
+      exampleResult: 'G=2011 or 2021, Week 1J (~Week 27)',
       yearMap: {
-        'C': '2010/2020', 'D': '2010/2020', 'F': '2011', 'G': '2011',
-        'H': '2012', 'J': '2012', 'K': '2013', 'L': '2013',
-        'M': '2014', 'N': '2014', 'P': '2015', 'Q': '2015',
-        'R': '2016', 'S': '2016', 'T': '2017', 'V': '2017',
-        'W': '2018', 'X': '2019', 'Y': '2019', 'Z': '2020'
+        'C': '2010/2020', 'D': '2010/2020',
+        'F': '2011/2021', 'G': '2011/2021',
+        'H': '2012/2022', 'J': '2012/2022',
+        'K': '2013/2023', 'L': '2013/2023',
+        'M': '2014/2024', 'N': '2014/2024',
+        'P': '2015/2025', 'Q': '2015/2025',
+        'R': '2016/2026', 'S': '2016/2026',
+        'T': '2017/2027', 'V': '2017/2027',
+        'W': '2018/2028', 'X': '2019/2029',
+        'Y': '2019/2029', 'Z': '2020/2030'
       },
       monthMap: {},
       decode: function(serial) {
