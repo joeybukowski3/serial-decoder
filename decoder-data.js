@@ -1206,10 +1206,20 @@ var decoderData = {
       monthMap: { 'A': 'January', 'D': 'February', 'F': 'March', 'G': 'April', 'H': 'May', 'L': 'June', 'M': 'July', 'R': 'August', 'S': 'September', 'T': 'October', 'V': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
-      var monthChar = serial[0].toUpperCase();
-      var yearChar = serial[1].toUpperCase();
+      var s = String(serial).toUpperCase();
+      // Some older Hotpoint/GE-family serials begin with a digit (e.g. 2V553434).
+      // In that case, skip leading digits and use the first two letters as month/year.
+      var letters = s.match(/[A-Z]/g) || [];
+      var monthChar, yearChar;
+      if (/^[0-9]/.test(s) && letters.length >= 2) {
+        monthChar = null; // no month code in numeric-prefix format
+        yearChar = letters[0]; // first letter = year code
+      } else {
+        monthChar = s[0];
+        yearChar = s[1];
+      }
       var y = this.yearMap[yearChar];
-      var m = this.monthMap[monthChar];
+      var m = monthChar ? this.monthMap[monthChar] : 'N/A (numeric-prefix serial)';
       return { year: y || 'Unknown code: ' + yearChar, month: m || 'Unknown code: ' + monthChar, yearCode: yearChar, monthCode: monthChar };
     }
     },

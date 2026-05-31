@@ -4215,6 +4215,14 @@ var MODEL_PREFIX_ERA_MAP = [
   { prefix: /^GFE[0-9]/,   year: 2014, note: 'GE GFE French door refrigerator (2010-present era)' },
   { prefix: /^GSH[0-9]/,   year: 2006, note: 'GE GSH side-by-side refrigerator (2000-2012 era)' },
   { prefix: /^GBS[0-9]/,   year: 2010, note: 'GE GBS bottom-freezer refrigerator (2006-2015 era)' },
+  // ── GE / Hotpoint shared prefixes ────────────────────────────────────────
+  { prefix: /^HPS[0-9]/,   year: 2005, note: 'Hotpoint HPS side-by-side refrigerator (1999-2011 era)' },
+  { prefix: /^HPR[0-9]/,   year: 2000, note: 'Hotpoint HPR top-mount refrigerator (1995-2010 era)' },
+  { prefix: /^HTR[0-9]/,   year: 2000, note: 'Hotpoint HTR top-mount refrigerator (1995-2010 era)' },
+  { prefix: /^HSS[0-9]/,   year: 2005, note: 'Hotpoint HSS side-by-side refrigerator (1999-2011 era)' },
+  { prefix: /^CTX[0-9]/,   year: 2005, note: 'GE/Hotpoint CTX electric dryer (2000-2012 era)' },
+  { prefix: /^GTDP[0-9]/,  year: 2010, note: 'GE GTDP gas/electric dryer (2007-2015 era)' },
+  { prefix: /^GHWP[0-9]/,  year: 2008, note: 'GE/Hotpoint GHWP front-load washer (2004-2014 era)' },
   // ── Maytag ───────────────────────────────────────────────────────────────
   { prefix: /^MFI[0-9]/,   year: 2014, note: 'Maytag MFI French door refrigerator (2010-present era)' },
   { prefix: /^MBF[0-9]/,   year: 2010, note: 'Maytag MBF bottom-freezer (2006-2016 era)' },

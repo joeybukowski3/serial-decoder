@@ -124,7 +124,11 @@ const APPLIANCE_ERA_DATA = {
       { key: 'gse', yearRange: '2010-Present', note: 'GE GSE side-by-side refrigerator models are generally associated with 2010 and newer production.' },
       { key: 'jwre', yearRange: '2005-2015', note: 'GE JWRE wall oven models are generally associated with 2005-2015 production cycles.' },
       { key: 'jgbs', yearRange: '2005-Present', note: 'GE JGBS freestanding gas range models are generally associated with 2005 and newer production.' },
-      { key: 'jbs', yearRange: '2005-Present', note: 'GE JBS freestanding electric range models are generally associated with 2005 and newer production.' }
+      { key: 'jbs', yearRange: '2005-Present', note: 'GE JBS freestanding electric range models are generally associated with 2005 and newer production.' },
+      { key: 'hps', yearRange: '1999-2011', note: 'Hotpoint HPS side-by-side refrigerator models are generally associated with 1999-2011 production cycles.' },
+      { key: 'hss', yearRange: '1999-2011', note: 'Hotpoint HSS side-by-side refrigerator models are generally associated with 1999-2011 production cycles.' },
+      { key: 'hpr', yearRange: '1995-2010', note: 'Hotpoint HPR top-mount refrigerator models are generally associated with 1995-2010 production cycles.' },
+      { key: 'htr', yearRange: '1995-2010', note: 'Hotpoint HTR top-mount refrigerator models are generally associated with 1995-2010 production cycles.' }
     ]
   },
   samsung: {
