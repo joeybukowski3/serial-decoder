@@ -670,13 +670,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -699,13 +699,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -728,13 +728,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -757,13 +757,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -786,13 +786,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -815,13 +815,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -844,13 +844,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -873,13 +873,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -902,13 +902,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -931,13 +931,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -960,13 +960,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -989,13 +989,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -1018,13 +1018,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -1047,13 +1047,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -1076,13 +1076,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -1105,13 +1105,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -1134,13 +1134,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
@@ -1163,13 +1163,13 @@ var decoderData = {
       outputType: 'Month + Year',
       decodeNotes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       exampleSerial: '(any serial ending in NC)',
-      exampleResult: 'N=1984/2008/2020 + C=March',
+      exampleResult: 'N=1984/2008 (year), N=July (month) 2192 July 1984 or 2008',
       sources: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
       method: 'Last 2 characters encode date. 2nd-to-last=year; last=month.',
       notes: 'Post-2006 Maytag uses Whirlpool Group 1A format. These codes apply only to pre-acquisition units.',
       source: 'lumayeconsulting.com; appliancefactoryparts.com; electrical-forensics.com',
-      yearMap: { 'C': '1975/1987/1999/2011', 'E': '1977/1989/2001/2013', 'G': '1979/1991/2003/2015', 'H': '1980/1992/2004/2016', 'L': '1982/1994/2006/2018', 'M': '1983/1995/2007/2019', 'N': '1984/1996/2008/2020', 'R': '1985/1997/2009/2021', 'S': '1986/1998/2010/2022', 'T': '1987/1999/2011/2023', 'U': '1988/2000/2012/2024', 'V': '1989/2001/2013/2025' },
-      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'L': 'September', 'M': 'October', 'N': 'November', 'R': 'December' },
+      yearMap: { 'E': '1980/2004', 'G': '1981/2005', 'J': '1982/2006', 'L': '1983/2007', 'N': '1984/2008', 'P': '1985/2009', 'R': '1986/2010', 'T': '1987/2011', 'V': '1988/2012', 'X': '1989/2013', 'B': '1990/2014', 'D': '1991/2015', 'F': '1992/2016', 'H': '1993/2017', 'K': '1994/2018', 'M': '1995/2019', 'Q': '1996/2020', 'S': '1997/2021', 'U': '1998/2022', 'W': '1999/2023', 'Y': '2000/2024', 'Z': '2001/2025', 'A': '2002/2026', 'C': '2003/2027' },
+      monthMap: { 'A': 'January', 'B': 'January', 'C': 'February', 'D': 'February', 'E': 'March', 'F': 'March', 'G': 'April', 'H': 'April', 'J': 'May', 'K': 'May', 'L': 'June', 'M': 'June', 'N': 'July', 'P': 'August', 'Q': 'July', 'R': 'September', 'S': 'August', 'T': 'October', 'U': 'September', 'V': 'November', 'W': 'October', 'X': 'December', 'Y': 'November', 'Z': 'December' },
       decode: function(serial) {
       if (!serial || serial.length < 2) return null;
       var yearChar = serial[serial.length - 2].toUpperCase();
