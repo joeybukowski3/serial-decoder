@@ -675,7 +675,7 @@ var KENMORE_PREFIX_TO_DECODER = {
   '647': { manufacturer: 'Roper', decoderId: 'roper' },
   '835': { manufacturer: 'Roper', decoderId: 'roper' },
   '911': { manufacturer: 'Roper', decoderId: 'roper' },
-  '596': { manufacturer: 'Amana', decoderId: 'amana_post_2006' },
+  '596': { manufacturer: 'Amana', decoderId: 'maytag_pre_2006' },
   '174': { manufacturer: 'Caloric', decoderId: 'maytag_pre_2006' },
   '960': { manufacturer: 'Caloric', decoderId: 'maytag_pre_2006' },
   '629': { manufacturer: 'Jenn-Air', decoderId: 'jenn_air_pre_2006' },
