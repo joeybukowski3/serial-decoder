@@ -2090,15 +2090,15 @@ var decoderData = {
       yearCodePosition: 'Characters 2-3 (letter-coded serials)',
       monthCodePosition: 'Character 1 (letter-coded serials)',
       outputType: 'Month + Year',
-      decodeNotes: 'Reliance letter-coded month map: A=October, B=November, C=December, D=January, E=February, F=March, G=April, H=May, I=June, K=July, L=August, M=September. In this format, the first letter is month and the 2nd-3rd digits are year. Numeric serials can still use YYWW.',
+      decodeNotes: 'A.O. Smith letter-coded month map: A=January, B=February, C=March, D=April, E=May, F=June, G=July, H=August, J=September, K=October, L=November, M=December (I is skipped). In this format, the first letter is month and the 2nd-3rd digits are year. Numeric serials use YYWW.',
       exampleSerial: 'A1405618 (letter-coded) or 1504A023527 (numeric YYWW)',
-      exampleResult: 'A=October, 14=2014 \u2192 October 2014 | 15=2015, 04=week 4 \u2192 2015 week 4',
-      sources: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
-      method: 'Letter-coded format: first letter is month code (A=Oct ... M=Sep), digits 2-3 are year. Numeric format can use YYWW.',
-      notes: 'Reliance letter-coded month map: A=October, B=November, C=December, D=January, E=February, F=March, G=April, H=May, I=June, K=July, L=August, M=September. For this format, the first letter is month and the 2nd-3rd digits are year.',
-      source: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
+      exampleResult: 'A=January, 14=2014 \u2192 January 2014 | 15=2015, 04=week 4 \u2192 2015 week 4',
+      sources: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com; engineerfix.com; inspectapedia.com',
+      method: 'Letter-coded format: first letter is month code (A=Jan ... M=Dec, I skipped), digits 2-3 are year. Numeric format uses YYWW.',
+      notes: 'A.O. Smith letter-coded month map: A=January, B=February, C=March, D=April, E=May, F=June, G=July, H=August, J=September, K=October, L=November, M=December (I is skipped). For this format, the first letter is month and the 2nd-3rd digits are year.',
+      source: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com; engineerfix.com; inspectapedia.com',
       yearMap: { 'YY (e.g. 06 = 2006)': 'Prefix with 19XX or 20XX based on context', 'YYYY (e.g. 2018)': 'Read directly (e.g. 2018)' },
-      monthMap: { 'A': 'October', 'B': 'November', 'C': 'December', 'D': 'January', 'E': 'February', 'F': 'March', 'G': 'April', 'H': 'May', 'I': 'June', 'K': 'July', 'L': 'August', 'M': 'September', '10': 'October', '11': 'November', '12': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'J': 'September', 'K': 'October', 'L': 'November', 'M': 'December', '10': 'October', '11': 'November', '12': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
       decode: function(serial) {
       if (!serial || serial.length < 3) return null;
       var YEAR_NOW = new Date().getFullYear();
@@ -2146,7 +2146,7 @@ var decoderData = {
       notes: 'Pre-2008 Reliance serials generally use the A.O. Smith family month code map with the month in character 2 and the year in characters 3-4. I is skipped.',
       source: 'fastwaterheater.com; plumbingways.com; kcwaterheater.com; builderbuddy.com',
       yearMap: { 'YY (e.g. 06 = 2006)': 'Prefix with 19XX or 20XX based on context', 'YYYY (e.g. 2018)': 'Read directly (e.g. 2018)' },
-      monthMap: { 'A': 'October', 'B': 'November', 'C': 'December', 'D': 'January', 'E': 'February', 'F': 'March', 'G': 'April', 'H': 'May', 'I': 'June', 'K': 'July', 'L': 'August', 'M': 'September', '10': 'October', '11': 'November', '12': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
+      monthMap: { 'A': 'January', 'B': 'February', 'C': 'March', 'D': 'April', 'E': 'May', 'F': 'June', 'G': 'July', 'H': 'August', 'J': 'September', 'K': 'October', 'L': 'November', 'M': 'December', '10': 'October', '11': 'November', '12': 'December', '01': 'January', '02': 'February', '03': 'March', '04': 'April', '05': 'May', '06': 'June', '07': 'July', '08': 'August', '09': 'September' },
       decode: function(serial) {
       if (!serial || serial.length < 4) return null;
       var YEAR_NOW = new Date().getFullYear();

@@ -575,22 +575,22 @@ test('Smart Lookup expands LR3RE-1000 to the Litter-Robot product family', () =>
 
 // ── Audit: A.O. Smith off-by-one fix ─────────────────────────────────────────
 
-test('A.O. Smith letter-coded serial A1405618 decodes to October 2014', () => {
+test('A.O. Smith letter-coded serial A1405618 decodes to January 2014', () => {
   const aos = api.decoderData.waterHeaters.decoders.a_o_smith;
   const out = aos.decode('A1405618');
   assert.ok(out);
   assert.equal(out.year, '2014');
-  assert.equal(out.month, 'October');
+  assert.equal(out.month, 'January');
   assert.equal(out.monthCode, 'A');
   assert.equal(out.yearCode, '14');
 });
 
-test('A.O. Smith letter-coded serial H1309XXXXX decodes to May 2013', () => {
+test('A.O. Smith letter-coded serial H1309XXXXX decodes to August 2013', () => {
   const aos = api.decoderData.waterHeaters.decoders.a_o_smith;
   const out = aos.decode('H1309XXXXX');
   assert.ok(out);
   assert.equal(out.year, '2013');
-  assert.equal(out.month, 'May');
+  assert.equal(out.month, 'August');
   assert.equal(out.monthCode, 'H');
 });
 
