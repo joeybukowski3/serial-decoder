@@ -1,4 +1,15 @@
 User-agent: *
 Allow: /
+Disallow: /analytics-report
+Disallow: /analytics-report.html
+Disallow: /diagnostic
+Disallow: /diagnostic.html
+Disallow: /brand-page-template
+Disallow: /brand-page-template.html
+Disallow: /serial-guide-refactor
+Disallow: /serial-guide-refactor.html
+Disallow: /universal-decoder
+Disallow: /universal-decoder.html
+Disallow: /api/
 
 Sitemap: https://www.decodemyitem.com/sitemap.xml
