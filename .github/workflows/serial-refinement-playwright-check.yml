@@ -31,6 +31,7 @@ jobs:
           base64 --decode /tmp/serial-final-files.b64 > /tmp/serial-final-files.tar.gz
           echo 'f297eb2483a6a6960879fe67bb908a04ccd16aa644b1a45b1bebd1e475f56f9f  /tmp/serial-final-files.tar.gz' | sha256sum --check
           tar -xzf /tmp/serial-final-files.tar.gz -C .
+          git restore --source=HEAD -- .github/workflows/serial-refinement-ci.yml .github/workflows/serial-refinement-playwright-check.yml
       - name: Install dependencies
         run: npm ci
       - name: Build generated controller
@@ -49,11 +50,11 @@ jobs:
         run: |
           git add api/refine-serial-date.js tests/api/refine-serial-date.test.mjs
           git commit -m 'fix: rate limit grounded serial refinement'
-      - name: Commit deterministic build and CI
+      - name: Commit deterministic build scope
         shell: bash
         run: |
-          git add package.json .github/workflows/serial-refinement-ci.yml .github/workflows/serial-refinement-playwright-check.yml
-          git commit -m 'chore: keep refinement builds and CI deterministic'
+          git add package.json
+          git commit -m 'chore: keep refinement builds deterministic'
       - name: Commit documentation
         shell: bash
         run: |
