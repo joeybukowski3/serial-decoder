@@ -15,8 +15,8 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
-  <title>GE Serial Number Lookup — Manufacture Date Decoder | Decode My Item</title>
-  <meta name="description" content="Decode GE serial numbers to find manufacture date and appliance age. Supports GE refrigerators, dishwashers, ranges, washers, and ovens. Also works for GE Profile, Monogram, and Cafe.">
+  <title>GE Serial Number Decoder | Decode My Item</title>
+  <meta name="description" content="Decode GE serial numbers, estimate GE appliance age, and use the supported GE month/year letter pattern for refrigerators, dishwashers, laundry, ranges, and ovens.">
   <link rel="canonical" href="https://www.decodemyitem.com/ge-serial-number-lookup">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
@@ -38,56 +38,26 @@
 
   <!-- ═══ NAV ═══ -->
   <nav>
-  <a href="/" class="logo" aria-label="Decode My Item home">
-    <span class="material-symbols-outlined" style="color:#44e5c2;font-size:26px;flex-shrink:0;line-height:1;">qr_code_scanner</span>
-    <div>
-      <div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Decode - Research - Automate</div>
-    </div>
-  </a>
-  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
-  <ul>
+    <a href="/" class="logo" aria-label="Decode My Item home">
+      <span class="material-symbols-outlined logo-icon">qr_code_scanner</span>
+      <div>
+        <div class="logo-text">Decode My <span>Item</span></div>
+        <div class="logo-sub">Decode - Research - Automate</div>
+      </div>
+    </a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span><span></span><span></span><span></span></button>
+    <ul>
   <li><a href="/">Home</a></li>
   <li><a href="/decoder-tool">Serial Number Decoder</a></li>
   <li><a href="/smart-lookup">Smart Lookup</a></li>
-  <li><a href="/large-loss-decoder">Large Loss Decoder</a></li>
   <li><a href="/assistant">AI Assistant</a></li>
-  <li class="nav-dropdown-item">
-    <button class="nav-dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true">
-      Resources <span class="nav-chevron" aria-hidden="true">&#9662;</span>
-    </button>
-    <div class="nav-dropdown-panel" role="menu">
-      <div class="nav-dropdown-col">
-        <p class="nav-dropdown-label">Age Research</p>
-        <a href="/how-old-is-my-appliance" role="menuitem">How Old Is My Appliance?</a>
-        <a href="/how-old-is-my-hvac" role="menuitem">How Old Is My HVAC?</a>
-        <a href="/how-old-is-my-plumbing" role="menuitem">How Old Is My Water Heater?</a>
-        <a href="/how-old-is-my-electronics" role="menuitem">How Old Is My Electronics?</a>
-      </div>
-      <div class="nav-dropdown-col">
-        <p class="nav-dropdown-label">Item History Guides</p>
-        <a href="/item-history-guides" role="menuitem" class="nav-dropdown-featured">All History Guides &#8594;</a>
-        <a href="/electrical-service-panel-history" role="menuitem">Electrical Panels</a>
-        <a href="/electrical-wiring-history" role="menuitem">Electrical Wiring</a>
-        <a href="/hvac-system-history" role="menuitem">HVAC Systems</a>
-        <a href="/water-heater-history" role="menuitem">Water Heaters</a>
-        <a href="/major-appliances-history" role="menuitem">Major Appliances</a>
-        <a href="/tv-history" role="menuitem">TVs</a>
-        <a href="/computer-history" role="menuitem">Computers</a>
-      </div>
-      <div class="nav-dropdown-col">
-        <p class="nav-dropdown-label">Reference</p>
-        <a href="/serial-number-location-guide" role="menuitem">Serial Number Locations</a>
-        <a href="/appliance-age-for-insurance-and-replacement" role="menuitem">Appliance Age for Insurance</a>
-        <a href="/how-to-read-serial-number" role="menuitem">How to Read a Serial Number</a>
-        <a href="/methodology" role="menuitem">Methodology</a>
-        <a href="/about" role="menuitem">About</a>
-      </div>
-    </div>
-  </li>
+  <li><a href="/methodology">Methodology</a></li>
   <li><a href="/contact">Contact</a></li>
+  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
   <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
-</ul>
-</nav>
+
+    </ul>
+  </nav>
 
   <main>
 
@@ -146,10 +116,10 @@
               <div class="decoder-card-shell">
                 <div class="search-box">
                   <div class="search-tabs">
-                    <button class="search-tab cat-tab active" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
-                    <button class="search-tab cat-tab" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
-                    <button class="search-tab cat-tab" data-cat="hvac" onclick="selectCategory('hvac', this)">HVAC</button>
-                    <button class="search-tab cat-tab" data-cat="electronics" onclick="selectCategory('electronics', this)">Electronics</button>
+                    <button class="search-tab cat-tab active" data-cat="appliances" onclick="selectCatAndShowDecoder('appliances', this)">Appliances</button>
+                    <button class="search-tab cat-tab" data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">Water Heaters</button>
+                    <button class="search-tab cat-tab" data-cat="hvac" onclick="selectCatAndShowDecoder('hvac', this)">HVAC</button>
+                    <button class="search-tab cat-tab" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
                   </div>
                   <div class="search-panel" id="panel-decoder">
                     <!-- Brand Row -->
@@ -547,92 +517,69 @@
 
   <!-- ═══ FOOTER ═══ -->
   <footer class="footer-sitemap">
-  <div class="footer-sitemap-grid">
-
-    <div class="footer-col">
-      <p class="footer-col-heading">Tools</p>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-        <li><a href="/smart-lookup">Smart Lookup</a></li>
-        <li><a href="/large-loss-decoder">Large Loss Decoder</a></li>
-        <li><a href="/assistant">AI Assistant</a></li>
-        <li><a href="/brands">All Brands</a></li>
-      </ul>
+    <div class="footer-sitemap-grid">
+      <div class="footer-col">
+        <p class="footer-col-heading">Tools</p>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+          <li><a href="/smart-lookup">Smart Lookup</a></li>
+          <li><a href="/assistant">AI Assistant</a></li>
+          <li><a href="/brands">All Brands</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">By Appliance</p>
+        <ul>
+          <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
+          <li><a href="/washer-serial-number">Washing Machines</a></li>
+          <li><a href="/dryer-serial-number">Dryers</a></li>
+          <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
+          <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
+          <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
+          <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">By Brand</p>
+        <ul>
+          <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
+          <li><a href="/ge-serial-number-lookup">GE</a></li>
+          <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
+          <li><a href="/lg-serial-number-lookup">LG</a></li>
+          <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
+          <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
+          <li><a href="/trane-serial-number-lookup">Trane</a></li>
+          <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+          <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
+          <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
+          <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p class="footer-col-heading">Resources</p>
+        <ul>
+          <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
+          <li><a href="/how-old-is-my-hvac">How Old Is My HVAC?</a></li>
+          <li><a href="/how-old-is-my-plumbing">How Old Is My Water Heater?</a></li>
+          <li><a href="/how-old-is-my-electronics">How Old Is My Electronics?</a></li>
+          <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
+          <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
+          <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
+          <li><a href="/methodology">Methodology</a></li>
+          <li><a href="/about">About</a></li>
+        </ul>
+      </div>
     </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">By Appliance</p>
-      <ul>
-        <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
-        <li><a href="/washer-serial-number">Washing Machines</a></li>
-        <li><a href="/dryer-serial-number">Dryers</a></li>
-        <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
-        <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
-        <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
-        <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
-      </ul>
+    <div class="footer-bottom">
+      <span class="footer-bottom-copy">&copy; 2026 Decode My Item &middot; Database verified February 2026</span>
+      <div class="footer-bottom-links">
+        <a href="/contact">Contact</a>
+        <a href="/security">Security &amp; Data</a>
+        <a href="/privacy-policy">Privacy Policy</a>
+      </div>
     </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">By Brand</p>
-      <ul>
-        <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
-        <li><a href="/ge-serial-number-lookup">GE</a></li>
-        <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
-        <li><a href="/lg-serial-number-lookup">LG</a></li>
-        <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
-        <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
-        <li><a href="/trane-serial-number-lookup">Trane</a></li>
-        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
-        <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
-        <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
-        <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">Item History Guides</p>
-      <ul>
-        <li><a href="/item-history-guides">All History Guides</a></li>
-        <li><a href="/electrical-service-panel-history">Electrical Panels</a></li>
-        <li><a href="/electrical-wiring-history">Electrical Wiring</a></li>
-        <li><a href="/hvac-system-history">HVAC Systems</a></li>
-        <li><a href="/water-heater-history">Water Heaters</a></li>
-        <li><a href="/major-appliances-history">Major Appliances</a></li>
-        <li><a href="/tv-history">TVs</a></li>
-        <li><a href="/computer-history">Computers</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-col">
-      <p class="footer-col-heading">Resources</p>
-      <ul>
-        <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
-        <li><a href="/how-old-is-my-hvac">How Old Is My HVAC?</a></li>
-        <li><a href="/how-old-is-my-plumbing">How Old Is My Water Heater?</a></li>
-        <li><a href="/how-old-is-my-electronics">How Old Is My Electronics?</a></li>
-        <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
-        <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
-        <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
-        <li><a href="/methodology">Methodology</a></li>
-        <li><a href="/about">About</a></li>
-      </ul>
-    </div>
-
-  </div>
-
-  <div class="footer-bottom">
-    <span class="footer-bottom-copy">
-      &copy; 2026 Decode My Item &middot; Database verified February 2026
-    </span>
-    <div class="footer-bottom-links">
-      <a href="/contact">Contact</a>
-      <a href="/security">Security &amp; Data</a>
-      <a href="/privacy-policy">Privacy Policy</a>
-    </div>
-  </div>
-</footer>
+  </footer>
 
   <script>
     function selectCatAndShowDecoder(cat, btn) {
@@ -674,6 +621,8 @@
   <script defer src="analytics.js"></script>
   <script defer src="smart-lookup-bundle.js"></script>
   <script defer src="script.js"></script>
+  <script defer src="/serial-refinement-controller.js"></script>
+  <script defer src="voice-input.js"></script>
   
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/ge-serial-number-lookup#webpage","name":"GE Serial Number Decoder","description":"Decode GE serial numbers, estimate GE appliance age, and use the supported GE month/year letter pattern for refrigerators, dishwashers, laundry, ranges, and ovens.","url":"https://www.decodemyitem.com/ge-serial-number-lookup","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Item Assist","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"GE Serial Number Decoder"}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","@id":"https://www.decodemyitem.com/ge-serial-number-lookup#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.decodemyitem.com"},{"@type":"ListItem","position":2,"name":"GE Serial Number Decoder","item":"https://www.decodemyitem.com/ge-serial-number-lookup"}]}</script>
