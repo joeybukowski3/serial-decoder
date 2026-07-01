@@ -11,7 +11,9 @@ for (const filename of files) {
   if (!filename.endsWith('.html')) continue;
   const filePath = path.join(root, filename);
   let html = await readFile(filePath, 'utf8');
-  if (!/id=["'](?:decodeBtn|brand|serial)["']/.test(html) && !/script\.js/.test(html)) continue;
+  const hasDecodeButton = /id=["']decodeBtn["']/.test(html);
+  const hasSerialInput = /id=["']serial["']/.test(html);
+  if (!hasDecodeButton || !hasSerialInput) continue;
   if (html.includes('/serial-refinement-controller.js')) continue;
 
   if (/<script[^>]+src=["'][^"']*script\.js[^"']*["'][^>]*><\/script>/i.test(html)) {
@@ -25,4 +27,4 @@ for (const filename of files) {
   updated += 1;
 }
 
-console.log(`Ensured serial refinement controller on ${updated} HTML files.`);
+console.log(`Ensured serial refinement controller on ${updated} decoder HTML files.`);
