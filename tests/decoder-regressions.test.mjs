@@ -843,13 +843,15 @@ test('Result text sanitizer removes replacement characters from user-facing note
   assert.match(clean, /Decade ambiguity: - model/);
 });
 
-test('Local model-era lookup normalizes Frigidaire trailing O typo for FFTR2045VS models', async () => {
-  assert.equal(normalizeModelNumber('FFTR2045VSO'), 'fftr2045vs0');
-  assert.equal(normalizeModelNumber('FFFTR2045VSO'), 'ffftr2045vs0');
+test('Local model lookup preserves Frigidaire O/0 distinction', async () => {
+  assert.equal(normalizeModelNumber('FFTR2045VSO'), 'fftr2045vso');
+  assert.equal(normalizeModelNumber('FFTR2045VS0'), 'fftr2045vs0');
 
   const db = await loadLocalModelAgeDb({ forceReload: true });
-  const match = findExactLocalModelAgeMatch(db.records, 'FFTR2045VSO', 'Frigidaire');
-  assert.ok(match);
-  assert.equal(match.record.estimatedYear, 2021);
-  assert.equal(match.record.productionRange, '2020-2024');
+  const unverified = findExactLocalModelAgeMatch(db.records, 'FFTR2045VSO', 'Frigidaire');
+  const exact = findExactLocalModelAgeMatch(db.records, 'FFTR2045VS0', 'Frigidaire');
+  assert.equal(unverified, null);
+  assert.ok(exact);
+  assert.equal(exact.record.estimatedYear, undefined);
+  assert.equal(exact.record.productionRange, '2020-2024');
 });

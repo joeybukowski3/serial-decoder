@@ -850,19 +850,8 @@ Rules for exampleModelNumber and suggestedModelNumbers:
   if (result) {
     const finalResult = applyEraHints(result, normalizedQuery);
     
-    // ── Calculate estimatedYear from yearRange if estimatedYear is missing ──
-    if ((!finalResult.estimatedYear || finalResult.estimatedYear === 'Unknown' || finalResult.estimatedYear === null) && finalResult.yearRange) {
-      const yearsMatch = String(finalResult.yearRange).match(/(\d{4})/g);
-      if (yearsMatch && yearsMatch.length >= 2) {
-        const start = parseInt(yearsMatch[0], 10);
-        const end = parseInt(yearsMatch[yearsMatch.length - 1], 10);
-        const midpoint = Math.round((start + end) / 2);
-        // Bias toward recent: if midpoint is .5, round up
-        finalResult.estimatedYear = String(Math.ceil((start + end) / 2));
-      }
-    }
-    
-    finalResult._source = source;
+    // Preserve broad yearRange values as ranges; do not fabricate an exact midpoint year.
+        finalResult._source = source;
     finalResult._fallbackUsed = fallbackUsed;
 
     // Write cache (14-day TTL)

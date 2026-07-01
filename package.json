@@ -4,10 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/generate-seo-pages.js",
-    "dev": "npx serve .",
-    "test": "node tests/decoder-regressions.test.mjs",
-    "refresh-pricebook": "node scripts/refresh-pricebook.js"
+    "build": "npm run build:browser && npm run build:seo && npm run build:inject",
+    "dev": "npx vercel dev",
+    "test": "npm run test:decoder && npm run test:unit && npm run test:api",
+    "refresh-pricebook": "node scripts/refresh-pricebook.js",
+    "build:browser": "node scripts/build-serial-refinement-browser.js",
+    "build:seo": "node scripts/generate-seo-pages.js",
+    "build:inject": "node scripts/inject-serial-refinement-script.js",
+    "test:decoder": "node tests/decoder-regressions.test.mjs",
+    "test:unit": "node --test tests/refinement/*.test.mjs",
+    "test:api": "node --test tests/api/*.test.mjs",
+    "test:playwright": "npx playwright test tests/playwright-verify.spec.js tests/serial-refinement-ui.spec.js"
   },
   "dependencies": {
     "@upstash/ratelimit": "^2.0.8",

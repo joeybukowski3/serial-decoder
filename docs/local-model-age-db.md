@@ -82,3 +82,12 @@ The intended flow for `api/age-lookup.js` is:
 4. If no exact match exists, score close candidates.
 5. Return a formatted local response only when confidence clears a defined threshold.
 6. Fall back to the current AI lookup path for everything else.
+
+
+## Serial Refinement v2 Schema
+
+Serial-date refinement uses exact-model records and structured `refinementEvidence`. Broad `estimatedYear` guesses are retained only as `legacyEstimatedYear` metadata and are not used to choose a serial candidate.
+
+Each refinement evidence record can include `type`, `sourceName`, `sourceUrl`, `productionStart`, `productionEnd`, `availabilityStart`, `availabilityEnd`, `quality`, and `verified`. Exact selection is performed only by intersecting the serial-valid candidate years with a defensible evidence window.
+
+Short family prefixes are not exact aliases. O/0 and I/L/1 changes are represented as transcription alternatives and must be validated against a structured exact-model record before use.
