@@ -167,10 +167,11 @@
     renderRefinementOutput(currentRefinementView.response, currentRefinementView.checking);
   }
 
-  function renderVisibleRefinement(response, checking) {
+  function renderVisibleRefinement(response, checking, sequence) {
     currentRefinementView = {
       response: response || null,
       checking: Boolean(checking),
+      sequence: sequence == null ? requestSequence : sequence,
     };
     if (typeof window.renderSerialSummaryLayer === 'function') {
       window.renderSerialSummaryLayer();
@@ -183,8 +184,9 @@
     var attempts = 0;
     function tryRender() {
       if (sequence !== requestSequence) return;
+      if (currentRefinementView && currentRefinementView.sequence === sequence && !currentRefinementView.checking) return;
       if (document.getElementById('narrowDateOutput')) {
-        renderVisibleRefinement(null, true);
+        renderVisibleRefinement(null, true, sequence);
         return;
       }
       attempts += 1;
@@ -244,7 +246,7 @@
       var brandEl = document.getElementById('brand');
       window.updateResultWarning({ year: yearEl.textContent, month: monthEl ? monthEl.textContent : '' }, brandEl ? brandEl.value : '');
     }
-    renderVisibleRefinement(response, false);
+    renderVisibleRefinement(response, false, sequence);
   }
 
   function parseJsonSafe(response) {
@@ -268,7 +270,7 @@
     };
 
     if (!forceRetry && inFlightByFingerprint[key]) {
-      if (!currentRefinementView) renderVisibleRefinement(null, true);
+      if (!currentRefinementView) renderVisibleRefinement(null, true, activeRequest && activeRequest.sequence);
       return inFlightByFingerprint[key];
     }
     if (activeRequest && activeRequest.fingerprint !== key) invalidateActiveRequest();
@@ -277,6 +279,7 @@
     var controller = new AbortController();
     var timeoutId = setTimeout(function () { controller.abort(); }, BROWSER_TIMEOUT_MS);
     activeRequest = { fingerprint: key, controller: controller, sequence: sequence };
+    currentRefinementView = null;
     showCheckingWhenReady(sequence);
 
     var promise = fetch(API_URL, {
