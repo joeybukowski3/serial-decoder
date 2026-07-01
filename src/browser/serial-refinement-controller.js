@@ -6,11 +6,13 @@
   var installAttempts = 0;
   var legacyDecodeSerial = null;
   var legacySetLoadingSuccess = null;
+  var legacyRenderSerialSummaryLayer = null;
   var activeRequest = null;
   var requestSequence = 0;
   var inFlightByFingerprint = Object.create(null);
   var lastRefinementOptions = null;
   var serialDecodeActive = false;
+  var currentRefinementView = null;
 
   function safeText(value) {
     return String(value == null ? '' : value);
@@ -79,6 +81,8 @@
       try { activeRequest.controller.abort(); } catch (_) {}
     }
     activeRequest = null;
+    currentRefinementView = null;
+    lastRefinementOptions = null;
   }
 
   function getOriginalCandidates(fallback) {
@@ -146,15 +150,41 @@
       '</div>';
   }
 
+  function revealRefinementPanel() {
+    var panel = typeof window.ensureRefinementPanel === 'function' ? window.ensureRefinementPanel() : null;
+    if (!panel) return null;
+    panel.classList.remove('hidden');
+    panel.hidden = false;
+    var summaryLayer = document.getElementById('serialSummaryLayer');
+    if (summaryLayer) summaryLayer.classList.remove('serial-no-refine');
+    return panel;
+  }
+
+  function restoreCurrentRefinementView() {
+    if (!currentRefinementView) return;
+    var panel = revealRefinementPanel();
+    if (!panel) return;
+    renderRefinementOutput(currentRefinementView.response, currentRefinementView.checking);
+  }
+
+  function renderVisibleRefinement(response, checking) {
+    currentRefinementView = {
+      response: response || null,
+      checking: Boolean(checking),
+    };
+    if (typeof window.renderSerialSummaryLayer === 'function') {
+      window.renderSerialSummaryLayer();
+    } else {
+      restoreCurrentRefinementView();
+    }
+  }
+
   function showCheckingWhenReady(sequence) {
     var attempts = 0;
     function tryRender() {
       if (sequence !== requestSequence) return;
-      var panel = typeof window.ensureRefinementPanel === 'function' ? window.ensureRefinementPanel() : null;
-      if (panel) panel.classList.remove('hidden');
       if (document.getElementById('narrowDateOutput')) {
-        renderRefinementOutput(null, true);
-        if (typeof window.renderSerialSummaryLayer === 'function') window.renderSerialSummaryLayer();
+        renderVisibleRefinement(null, true);
         return;
       }
       attempts += 1;
@@ -208,17 +238,13 @@
       window.lastSerialResolutionState.candidates = originalCandidates.slice();
     }
 
-    var panel = typeof window.ensureRefinementPanel === 'function' ? window.ensureRefinementPanel() : null;
-    if (panel) panel.classList.remove('hidden');
-    renderRefinementOutput(response, false);
     if (typeof window.updateSearchQueryLine === 'function') window.updateSearchQueryLine();
     if (typeof window.updateResultWarning === 'function') {
       var monthEl = document.getElementById('resultMonth');
       var brandEl = document.getElementById('brand');
       window.updateResultWarning({ year: yearEl.textContent, month: monthEl ? monthEl.textContent : '' }, brandEl ? brandEl.value : '');
     }
-    if (typeof window.renderSerialSummaryLayer === 'function') window.renderSerialSummaryLayer();
-    renderRefinementOutput(response, false);
+    renderVisibleRefinement(response, false);
   }
 
   function parseJsonSafe(response) {
@@ -241,7 +267,10 @@
       context: snapshot.context,
     };
 
-    if (!forceRetry && inFlightByFingerprint[key]) return inFlightByFingerprint[key];
+    if (!forceRetry && inFlightByFingerprint[key]) {
+      if (!currentRefinementView) renderVisibleRefinement(null, true);
+      return inFlightByFingerprint[key];
+    }
     if (activeRequest && activeRequest.fingerprint !== key) invalidateActiveRequest();
 
     var sequence = ++requestSequence;
@@ -408,6 +437,16 @@
 
     legacyDecodeSerial = window.decodeSerial;
     legacySetLoadingSuccess = typeof window.setLoadingSuccess === 'function' ? window.setLoadingSuccess : null;
+    legacyRenderSerialSummaryLayer = typeof window.renderSerialSummaryLayer === 'function'
+      ? window.renderSerialSummaryLayer
+      : null;
+    if (legacyRenderSerialSummaryLayer) {
+      window.renderSerialSummaryLayer = function () {
+        var result = legacyRenderSerialSummaryLayer.apply(this, arguments);
+        restoreCurrentRefinementView();
+        return result;
+      };
+    }
     window.resolveSerialYearFromModel = progressiveResolver;
     window.decodeSerial = progressiveDecodeSerial;
 
