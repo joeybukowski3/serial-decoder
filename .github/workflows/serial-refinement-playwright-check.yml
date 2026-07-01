@@ -18,6 +18,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Archive source checkout
+        shell: bash
+        run: tar --exclude=.git -czf /tmp/serial-refinement-source.tar.gz .
+      - name: Upload source checkout
+        uses: actions/upload-artifact@v4
+        with:
+          name: serial-refinement-source
+          path: /tmp/serial-refinement-source.tar.gz
+          retention-days: 1
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
