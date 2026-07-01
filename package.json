@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run build:browser && npm run build:seo && npm run build:inject",
+    "build": "npm run build:browser && npm run build:inject",
     "dev": "npx vercel dev",
     "test": "npm run test:decoder && npm run test:unit && npm run test:api",
     "refresh-pricebook": "node scripts/refresh-pricebook.js",
