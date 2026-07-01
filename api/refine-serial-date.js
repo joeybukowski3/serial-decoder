@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis';
+import { Ratelimit } from '@upstash/ratelimit';
 import { buildSerialRefinementCacheKey, hashModelIdentifier } from '../lib/serial-refinement/cache-key.js';
 import { resolveCandidateIntersection, normalizeCandidateYears } from '../lib/serial-refinement/candidate-intersection.js';
 import { evaluateEvidencePolicy } from '../lib/serial-refinement/evidence-policy.js';
@@ -11,6 +12,8 @@ const PROVIDER_BUDGET_MS = 6500;
 const OFFICIAL_TTL_SECONDS = 60 * 60 * 24 * 60;
 const SECONDARY_TTL_SECONDS = 60 * 60 * 24 * 10;
 const MAX_CANDIDATES = 12;
+const GROUNDED_RATE_LIMIT_REQUESTS = 10;
+const GROUNDED_RATE_LIMIT_WINDOW = '1 m';
 
 function nowMs() {
   return Date.now();
@@ -78,6 +81,44 @@ function createDefaultRedis() {
   });
 }
 
+
+function getClientIp(req) {
+  const forwarded = req.headers?.['x-forwarded-for'];
+  if (Array.isArray(forwarded) && forwarded.length) return String(forwarded[0]).split(',')[0].trim();
+  if (forwarded) return String(forwarded).split(',')[0].trim();
+  const realIp = req.headers?.['x-real-ip'];
+  if (realIp) return String(realIp).trim();
+  return req.socket?.remoteAddress || 'unknown';
+}
+
+function createDefaultRateLimiter(redis) {
+  if (!redis) return null;
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(GROUNDED_RATE_LIMIT_REQUESTS, GROUNDED_RATE_LIMIT_WINDOW),
+    analytics: false,
+    prefix: 'serial-refinement-grounding-v1',
+  });
+}
+
+function createUnavailableResult({ input, timings, cacheStatus, errorCode, summary }) {
+  return assertRefinementResponseInvariant(createRefinementResponse({
+    status: 'unavailable',
+    candidateYears: input.candidateYears,
+    remainingCandidateYears: input.candidateYears,
+    chosenYear: null,
+    confidence: null,
+    resolutionBasis: 'serial-plus-model',
+    modelProductionRange: null,
+    evidence: [],
+    summary,
+    cacheStatus,
+    provider: 'none',
+    timings,
+    errorCode,
+  }));
+}
+
 function safeCachedResponse(value, candidateYears) {
   if (!value || typeof value !== 'object') return null;
   try {
@@ -103,6 +144,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
   const localLookup = dependencies.localLookup || findLocalRefinementEvidence;
   const providerLookup = dependencies.providerLookup || callGeminiGroundedSearch;
   const redisFactory = dependencies.redisFactory || createDefaultRedis;
+  const rateLimitFactory = dependencies.rateLimitFactory || createDefaultRateLimiter;
   const logger = dependencies.logger || console;
   const clock = dependencies.now || nowMs;
   const totalBudgetMs = dependencies.totalBudgetMs || TOTAL_BUDGET_MS;
@@ -170,7 +212,12 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       }
 
       const cacheKey = buildSerialRefinementCacheKey(input);
-      const redis = redisFactory();
+      let redis = null;
+      try {
+        redis = redisFactory();
+      } catch (_) {
+        redis = null;
+      }
       if (redis) {
         const cacheStart = clock();
         try {
@@ -199,6 +246,39 @@ export function createRefineSerialDateHandler(dependencies = {}) {
           timings.cacheMs = Math.max(0, clock() - cacheStart);
           cacheStatus = 'bypass';
         }
+      }
+
+      try {
+        const limiter = rateLimitFactory(redis);
+        if (limiter) {
+          const rateLimitResult = await limiter.limit(getClientIp(req));
+          if (!rateLimitResult?.success) {
+            timings.totalMs = Math.max(0, clock() - requestStart);
+            finalResponse = createUnavailableResult({
+              input,
+              timings,
+              cacheStatus,
+              errorCode: 'GROUNDING_RATE_LIMIT',
+              summary: 'Grounded model evidence is temporarily rate limited. The original serial-valid candidate years are preserved.',
+            });
+            logResult(logger, {
+              requestId,
+              brand: input.brand.toLowerCase(),
+              category: input.category.toLowerCase(),
+              modelHash: hashModelIdentifier(input.model),
+              candidateCount: input.candidateYears.length,
+              remainingCandidateCount: finalResponse.remainingCandidateYears.length,
+              status: finalResponse.status,
+              cacheStatus: finalResponse.cacheStatus,
+              provider: finalResponse.provider,
+              ...timings,
+              errorCode: finalResponse.errorCode,
+            });
+            return res.status(200).json(finalResponse);
+          }
+        }
+      } catch (_) {
+        // Rate limiting fails open so Redis outages do not block refinement.
       }
 
       const remainingBudget = totalBudgetMs - Math.max(0, clock() - requestStart);
@@ -255,29 +335,20 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       });
 
       const ttl = chooseCacheTtl(policy);
-      if (ttl > 0) {
+      if (ttl > 0 && redis) {
         try {
-          const redis = redisFactory();
-          if (redis) await redis.set(cacheKey, finalResponse, { ex: ttl });
+          await redis.set(cacheKey, finalResponse, { ex: ttl });
         } catch (_) {}
       }
     } catch (error) {
       const timedOut = error?.name === 'AbortError' || /abort|timeout/i.test(String(error?.message || ''));
       errorCode = timedOut ? 'REFINEMENT_TIMEOUT' : (error?.code || 'REFINEMENT_UNAVAILABLE');
-      finalResponse = createRefinementResponse({
-        status: 'unavailable',
-        candidateYears: input.candidateYears,
-        remainingCandidateYears: input.candidateYears,
-        chosenYear: null,
-        confidence: null,
-        resolutionBasis: 'serial-plus-model',
-        modelProductionRange: null,
-        evidence: [],
-        summary: 'Model evidence could not be checked. The original serial-valid candidate years are preserved.',
-        cacheStatus,
-        provider: 'none',
+      finalResponse = createUnavailableResult({
+        input,
         timings,
+        cacheStatus,
         errorCode,
+        summary: 'Model evidence could not be checked. The original serial-valid candidate years are preserved.',
       });
     }
 

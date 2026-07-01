@@ -14,7 +14,7 @@ function createResponse() {
 function request(overrides = {}) {
   return {
     method: 'POST',
-    headers: { 'x-request-id': 'test-request' },
+    headers: { 'x-request-id': 'test-request', 'x-forwarded-for': '203.0.113.10' },
     body: {
       brand: 'Whirlpool',
       category: 'appliances',
@@ -44,12 +44,15 @@ function silentLogger() {
   return { info() {}, error() {}, warn() {} };
 }
 
-test('local exact model evidence resolves by intersection without provider call', async () => {
+test('local exact model evidence bypasses cache, provider, and provider rate limit', async () => {
   let providerCalls = 0;
+  let redisFactoryCalls = 0;
+  let rateLimitFactoryCalls = 0;
   const handler = createRefineSerialDateHandler({
     localLookup: async () => ({ evidence: officialEvidence(2023, 2025), normalization: null }),
     providerLookup: async () => { providerCalls += 1; return { evidence: [] }; },
-    redisFactory: () => null,
+    redisFactory: () => { redisFactoryCalls += 1; throw new Error('redis should not run'); },
+    rateLimitFactory: () => { rateLimitFactoryCalls += 1; throw new Error('rate limit should not run'); },
     logger: silentLogger(),
   });
   const res = createResponse();
@@ -59,6 +62,8 @@ test('local exact model evidence resolves by intersection without provider call'
   assert.equal(res.payload.chosenYear, 2024);
   assert.equal(res.payload.provider, 'local-db');
   assert.equal(providerCalls, 0);
+  assert.equal(redisFactoryCalls, 0);
+  assert.equal(rateLimitFactoryCalls, 0);
 });
 
 test('local family heuristic cannot resolve an exact year', async () => {
@@ -75,7 +80,9 @@ test('local family heuristic cannot resolve an exact year', async () => {
   assert.deepEqual(res.payload.remainingCandidateYears, [1994, 2024]);
 });
 
-test('Redis hit returns versioned cached structured response', async () => {
+test('Redis hit bypasses provider and provider rate limit', async () => {
+  let providerCalls = 0;
+  let rateLimitFactoryCalls = 0;
   const cached = {
     status: 'resolved',
     candidateYears: [1994, 2024],
@@ -93,8 +100,9 @@ test('Redis hit returns versioned cached structured response', async () => {
   };
   const handler = createRefineSerialDateHandler({
     localLookup: async () => ({ evidence: [], normalization: null }),
-    providerLookup: async () => { throw new Error('provider should not run'); },
+    providerLookup: async () => { providerCalls += 1; throw new Error('provider should not run'); },
     redisFactory: () => ({ get: async () => cached, set: async () => {} }),
+    rateLimitFactory: () => { rateLimitFactoryCalls += 1; throw new Error('rate limit should not run'); },
     logger: silentLogger(),
   });
   const res = createResponse();
@@ -102,26 +110,69 @@ test('Redis hit returns versioned cached structured response', async () => {
   assert.equal(res.payload.status, 'resolved');
   assert.equal(res.payload.cacheStatus, 'hit');
   assert.equal(res.payload.provider, 'redis');
+  assert.equal(providerCalls, 0);
+  assert.equal(rateLimitFactoryCalls, 0);
 });
 
-test('Redis failure fails open to grounded provider', async () => {
+test('Redis and rate-limit failures fail open to grounded provider', async () => {
+  let providerCalls = 0;
   const handler = createRefineSerialDateHandler({
     localLookup: async () => ({ evidence: [], normalization: null }),
-    providerLookup: async () => ({ evidence: [{
+    providerLookup: async () => { providerCalls += 1; return { evidence: [{
       type: 'manufacturer',
       title: 'Official product page',
       sourceUrl: 'https://manufacturer.example/model',
       quality: 'official',
       productionStart: 2023,
       productionEnd: 2025,
-    }] }),
+    }] }; },
     redisFactory: () => ({ get: async () => { throw new Error('redis down'); }, set: async () => { throw new Error('redis down'); } }),
+    rateLimitFactory: () => ({ limit: async () => { throw new Error('redis down'); } }),
     logger: silentLogger(),
   });
   const res = createResponse();
   await handler(request(), res);
   assert.equal(res.payload.status, 'resolved');
   assert.equal(res.payload.provider, 'gemini-google-search');
+  assert.equal(providerCalls, 1);
+});
+
+test('provider-eligible requests are limited to ten per IP per minute', async () => {
+  let attempts = 0;
+  let providerCalls = 0;
+  const limiter = {
+    async limit(identifier) {
+      assert.equal(identifier, '203.0.113.10');
+      attempts += 1;
+      return { success: attempts <= 10 };
+    },
+  };
+  const handler = createRefineSerialDateHandler({
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    providerLookup: async () => { providerCalls += 1; return { evidence: [] }; },
+    redisFactory: () => ({ get: async () => null, set: async () => {} }),
+    rateLimitFactory: () => limiter,
+    logger: silentLogger(),
+  });
+
+  for (let index = 0; index < 10; index += 1) {
+    const res = createResponse();
+    await handler(request(), res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.payload.errorCode, 'INSUFFICIENT_EVIDENCE');
+  }
+
+  const limited = createResponse();
+  await handler(request(), limited);
+  assert.equal(limited.statusCode, 200);
+  assert.equal(limited.payload.status, 'unavailable');
+  assert.equal(limited.payload.errorCode, 'GROUNDING_RATE_LIMIT');
+  assert.equal(limited.payload.chosenYear, null);
+  assert.deepEqual(limited.payload.remainingCandidateYears, [1994, 2024]);
+  assert.equal(providerCalls, 10);
+  assert.equal(attempts, 11);
+  assert.equal(Object.hasOwn(limited.payload, 'reset'), false);
+  assert.doesNotMatch(JSON.stringify(limited.payload), /redis down|reset/i);
 });
 
 test('two cited secondary sources can resolve a candidate', async () => {
