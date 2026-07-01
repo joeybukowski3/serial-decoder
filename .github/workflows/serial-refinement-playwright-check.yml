@@ -1,0 +1,36 @@
+name: Serial refinement Playwright check
+
+on:
+  push:
+    branches:
+      - fix/serial-model-refinement-v2
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install application dependencies
+        run: npm ci
+      - name: Install Playwright test runner
+        run: npm install --no-save @playwright/test@latest
+      - name: Install Microsoft Edge
+        run: npx playwright install --with-deps msedge
+      - name: Start static site
+        shell: bash
+        run: |
+          python3 -m http.server 3001 > /tmp/serial-refinement-http.log 2>&1 &
+          echo $! > /tmp/serial-refinement-http.pid
+          sleep 2
+      - name: Run progressive refinement browser tests
+        run: npx playwright test tests/serial-refinement-ui.spec.js --reporter=line
