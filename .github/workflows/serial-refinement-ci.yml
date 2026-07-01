@@ -36,3 +36,31 @@ jobs:
           git diff --exit-code
       - name: Complete Node test suite
         run: npm test
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install application dependencies
+        run: npm ci
+      - name: Install pinned Playwright test runner
+        run: npm install --no-save @playwright/test@1.61.1
+      - name: Install Microsoft Edge
+        run: npx playwright install --with-deps msedge
+      - name: Rebuild focused browser controller
+        run: npm run build:browser
+      - name: Start static site
+        shell: bash
+        run: |
+          python3 -m http.server 3001 > /tmp/serial-refinement-http.log 2>&1 &
+          echo $! > /tmp/serial-refinement-http.pid
+          sleep 2
+      - name: Run decoder and refinement browser suites
+        run: npm run test:playwright -- --reporter=line
