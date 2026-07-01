@@ -209,10 +209,7 @@
     }
 
     var panel = typeof window.ensureRefinementPanel === 'function' ? window.ensureRefinementPanel() : null;
-    if (panel) {
-      if (response.status === 'resolved') panel.classList.add('hidden');
-      else panel.classList.remove('hidden');
-    }
+    if (panel) panel.classList.remove('hidden');
     renderRefinementOutput(response, false);
     if (typeof window.updateSearchQueryLine === 'function') window.updateSearchQueryLine();
     if (typeof window.updateResultWarning === 'function') {
@@ -364,7 +361,6 @@
   }
 
   function progressiveDecodeSerial() {
-    invalidateActiveRequest();
     disableLegacyModelDateRefinement();
     serialDecodeActive = true;
     var originalSetTimeout = window.setTimeout;
@@ -373,10 +369,12 @@
       if (delay === 1400) return originalSetTimeout.apply(window, [callback, 0].concat(args));
       return originalSetTimeout.apply(window, [callback, delay].concat(args));
     };
+    var safetyReset = originalSetTimeout(function () { serialDecodeActive = false; }, 2000);
     try {
       return legacyDecodeSerial.apply(this, arguments);
     } finally {
       window.setTimeout = originalSetTimeout;
+      originalSetTimeout(function () { clearTimeout(safetyReset); }, 2100);
     }
   }
 

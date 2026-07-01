@@ -51,3 +51,17 @@ test('short family alias cannot behave as an exact model', async () => {
   assert.equal(result.record, null);
   assert.deepEqual(result.evidence, []);
 });
+
+
+test('a long family alias without the complete revision cannot behave as exact', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'serial-refinement-db-'));
+  const dbPath = path.join(dir, 'db.json');
+  await writeFile(dbPath, JSON.stringify({ records: [{
+    brand: 'Whirlpool',
+    model: 'WMH31017HS12',
+    aliases: ['WMH31017HS'],
+    refinementEvidence: [{ type: 'local-db', quality: 'official', verified: true, productionStart: 2023, productionEnd: 2025 }],
+  }] }), 'utf8');
+  const result = await findLocalRefinementEvidence({ brand: 'Whirlpool', model: 'WMH31017HS', dbPath });
+  assert.equal(result.record, null);
+});

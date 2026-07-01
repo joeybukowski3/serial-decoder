@@ -19,7 +19,7 @@ function response(status, payload) {
   };
 }
 
-function groundedPayload(text, chunks = [{ web: { uri: 'https://manufacturer.example/model', title: 'Official Product Page' } }]) {
+function groundedPayload(text, chunks = [{ web: { uri: 'https://www.whirlpool.com/model', title: 'Whirlpool Official Product Page' } }]) {
   return {
     candidates: [{
       content: { parts: [{ text }] },
@@ -59,7 +59,7 @@ test('grounded provider returns cited structured evidence', async () => {
   });
   assert.deepEqual(body.tools, [{ google_search: {} }]);
   assert.equal(result.evidence.length, 1);
-  assert.equal(result.evidence[0].sourceUrl, 'https://manufacturer.example/model');
+  assert.equal(result.evidence[0].sourceUrl, 'https://www.whirlpool.com/model');
   assert.equal(result.evidence[0].quality, 'official');
 });
 
@@ -92,4 +92,37 @@ test('grounded provider maps 429 and 5xx without reading raw response bodies', a
     callGeminiGroundedSearch(request, { apiKey: 'test-key', fetchImpl: async () => response(500, {}) }),
     (error) => error.code === 'GROUNDING_PROVIDER_ERROR',
   );
+});
+
+
+test('grounded provider does not trust an official label from an unrelated source', async () => {
+  const fetchImpl = async () => ({
+    ok: true,
+    json: async () => ({ candidates: [{
+      content: { parts: [{ text: JSON.stringify({ evidence: [{
+        type: 'manual', title: 'Retailer copy', sourceName: 'Unrelated retailer', sourceIndex: 0,
+        productionStart: 2023, productionEnd: 2025, quality: 'official',
+      }] }) }] },
+      groundingMetadata: { groundingChunks: [{ web: { uri: 'https://example-retailer.test/item', title: 'Example Retailer' } }] },
+    }] }),
+  });
+  const result = await callGeminiGroundedSearch({ brand: 'Whirlpool', model: 'WMH31017HS12', candidateYears: [1994, 2024] }, { apiKey: 'test', fetchImpl });
+  assert.equal(result.evidence[0].quality, 'strong-secondary');
+});
+
+test('grounded provider request avoids incompatible structured-output mode for Gemini 2.5', async () => {
+  let requestBody;
+  const fetchImpl = async (_url, options) => {
+    requestBody = JSON.parse(options.body);
+    return {
+      ok: true,
+      json: async () => ({ candidates: [{
+        content: { parts: [{ text: JSON.stringify({ evidence: [{ type: 'manufacturer-support', sourceIndex: 0, availabilityStart: 2023, availabilityEnd: 2025 }] }) }] },
+        groundingMetadata: { groundingChunks: [{ web: { uri: 'https://www.whirlpool.com/support/model', title: 'Whirlpool support' } }] },
+      }] }),
+    };
+  };
+  await callGeminiGroundedSearch({ brand: 'Whirlpool', model: 'WMH31017HS12', candidateYears: [1994, 2024] }, { apiKey: 'test', fetchImpl });
+  assert.equal(requestBody.tools[0].google_search != null, true);
+  assert.equal(Object.hasOwn(requestBody.generationConfig, 'responseMimeType'), false);
 });

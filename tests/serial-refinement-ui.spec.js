@@ -109,3 +109,56 @@ test('changed input prevents a stale response from overwriting current candidate
     await browser.close();
   }
 });
+
+
+test('identical rapid decode clicks reuse one in-flight refinement request', async () => {
+  const { browser, context, page } = await openPage();
+  let calls = 0;
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  await page.route('**/api/refine-serial-date', async (route) => {
+    calls += 1;
+    await gate;
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+      status: 'resolved', candidateYears: [2004, 2014, 2024], remainingCandidateYears: [2014], chosenYear: 2014,
+      confidence: 'high', resolutionBasis: 'serial-plus-model', modelProductionRange: { start: 2013, end: 2016 }, evidence: [],
+      summary: 'Resolved.', cacheStatus: 'bypass', provider: 'local-db', timings: { localMs: 1, cacheMs: 0, onlineLookupMs: 0, totalMs: 1 }, errorCode: null,
+    }) });
+  });
+  try {
+    await fillDecode(page, 'lg', '412TATG1H105', 'WM3470HWA');
+    await page.click('#decodeBtn');
+    await expect(page.locator('#serialResults')).toBeVisible({ timeout: 500 });
+    await page.click('#decodeBtn');
+    await page.waitForTimeout(100);
+    expect(calls).toBe(1);
+    release();
+    await expect(page.locator('#resultYear')).toHaveText('2014');
+  } finally {
+    release();
+    await context.close();
+    await browser.close();
+  }
+});
+
+test('resolved result keeps the explanation and Evidence used section visible', async () => {
+  const { browser, context, page } = await openPage();
+  await page.route('**/api/refine-serial-date', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+      status: 'resolved', candidateYears: [1994, 2024], remainingCandidateYears: [2024], chosenYear: 2024,
+      confidence: 'high', resolutionBasis: 'serial-plus-model', modelProductionRange: { start: 2023, end: 2025 },
+      evidence: [{ type: 'manufacturer-support', title: 'Whirlpool support', sourceUrl: 'https://www.whirlpool.com/', quality: 'official', availabilityStart: 2023, availabilityEnd: 2025 }],
+      summary: 'Model evidence leaves 2024.', cacheStatus: 'miss', provider: 'gemini-google-search', timings: { localMs: 0, cacheMs: 0, onlineLookupMs: 1, totalMs: 1 }, errorCode: null,
+    }) });
+  });
+  try {
+    await fillDecode(page, 'whirlpool', 'TRD3481274', 'WMH31017HS12');
+    await page.click('#decodeBtn');
+    await expect(page.locator('#resultYear')).toHaveText('2024');
+    await expect(page.locator('.serial-refinement-status')).toBeVisible();
+    await expect(page.locator('.serial-refinement-evidence summary')).toHaveText('Evidence used');
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
