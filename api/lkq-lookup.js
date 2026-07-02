@@ -1,38 +1,27 @@
-import { Redis } from '@upstash/redis';
-import { Ratelimit } from '@upstash/ratelimit';
+import { buildSmartLkqCacheKey, chooseSmartLkqTtl, prepareReplacementForCache } from '../lib/smart-lookup/cache.js';
+import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
+import { classifySmartLookupQuery, normalizeKnownQuery, normalizeWhitespace } from '../lib/smart-lookup/normalize.js';
+import { callGeminiLkqProvider, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
+import {
+  createReplacementTimings,
+  createUnavailableReplacementResult,
+  normalizeCachedReplacementResult,
+  normalizeReplacementResult,
+} from '../lib/smart-lookup/replacement-schema.js';
+import {
+  boundedRateLimit,
+  boundedRedisGet,
+  boundedRedisSet,
+  createProviderRateLimiter,
+  createRedisClient,
+  getClientIp,
+} from '../lib/smart-lookup/redis.js';
+import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
 
-const redis = new Redis({
-  url:   process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
-
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, '1 m'),
-  analytics: false,
-});
-
-function getClientIp(req) {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (forwarded) return forwarded.split(',')[0].trim();
-  return req.socket?.remoteAddress || 'unknown';
-}
-
-function normalizeKnownItemQuery(query) {
-  const text = String(query || '').trim();
-  const normalized = text.toLowerCase();
-  if (!text) return '';
-
-  if (/\blr3re(?:-\d+)?\b/.test(normalized) && !/\blitter[\s-]*robot\b/.test(normalized)) {
-    return `${text} Whisker Litter-Robot 3 Open Air self-cleaning litter box`;
-  }
-
-  if (/\blitter[\s-]*robot\b/.test(normalized) && !/\bwhisker\b/.test(normalized)) {
-    return `${text} by Whisker`;
-  }
-
-  return text;
-}
+const TOTAL_BUDGET_MS = 9000;
+const PROVIDER_BUDGET_MS = 7000;
+const REDIS_CALL_BUDGET_MS = 250;
+const CACHE_WRITE_BUDGET_MS = 175;
 
 function extractLgTvSeriesInfo(value) {
   const text = String(value || '').toUpperCase();
@@ -40,10 +29,7 @@ function extractLgTvSeriesInfo(value) {
     || text.match(/\b([BCGZM])(\d)\b/)
     || text.match(/\b([BCGZM])(\d)[A-Z0-9]{2,}\b/);
   if (!match) return null;
-  return {
-    family: match[1],
-    generationDigit: parseInt(match[2], 10),
-  };
+  return { family: match[1], generationDigit: parseInt(match[2], 10) };
 }
 
 function getCurrentLgTvGenerationDigit() {
@@ -54,295 +40,208 @@ function getCurrentLgTvGenerationDigit() {
 function rewriteLgTvModelToGeneration(value, targetDigit) {
   const text = String(value || '');
   if (!text || !Number.isFinite(targetDigit)) return text;
-
   return text
     .replace(/(OLED\d+[A-Z]{0,3})([BCGZM])(\d)([A-Z0-9]*)/i, (_, prefix, family, __, suffix) => `${prefix}${family}${targetDigit}${suffix || ''}`)
     .replace(/\b([BCGZM])(\d)([A-Z0-9]{2,})\b/i, (_, family, __, suffix) => `${family}${targetDigit}${suffix}`)
     .replace(/\b([BCGZM])(\d)\b/i, (_, family) => `${family}${targetDigit}`);
 }
 
-function maybePromoteCurrentSuccessor(result) {
+export function maybePromoteCurrentSuccessor(result) {
   if (!result || typeof result !== 'object') return result;
-
-  const summary = result.itemSummary || {};
-  const successor = result.successorStatus || {};
-  const options = Array.isArray(result.replacementOptions) ? result.replacementOptions : [];
+  const copy = JSON.parse(JSON.stringify(result));
+  const summary = copy.itemSummary || {};
+  const successor = copy.successorStatus || {};
+  const options = Array.isArray(copy.replacementOptions) ? copy.replacementOptions : [];
   const first = options[0];
   const brand = String(summary.brand || first?.brand || successor.name || '').toLowerCase();
   const category = String(summary.category || '').toLowerCase();
   const originalInfo = extractLgTvSeriesInfo(summary.model || summary.modelNumber || summary.name || '');
   const successorInfo = extractLgTvSeriesInfo(successor.model || first?.model || successor.name || first?.name || '');
-
-  if (brand !== 'lg') return result;
-  if (category.indexOf('tv') === -1 && category.indexOf('oled') === -1) return result;
-  if (!originalInfo || !successorInfo) return result;
-  if (originalInfo.family !== successorInfo.family) return result;
-
+  if (brand !== 'lg' || (category.indexOf('tv') === -1 && category.indexOf('oled') === -1)) return copy;
+  if (!originalInfo || !successorInfo || originalInfo.family !== successorInfo.family) return copy;
   const currentDigit = getCurrentLgTvGenerationDigit();
-  if (!Number.isFinite(currentDigit) || currentDigit <= successorInfo.generationDigit) return result;
-  if (currentDigit <= originalInfo.generationDigit) return result;
-
-  const upgradeText = `Promoted to current in-market ${successorInfo.family}-series successor based on current model cycle.`;
-
+  if (!Number.isFinite(currentDigit) || currentDigit <= successorInfo.generationDigit || currentDigit <= originalInfo.generationDigit) return copy;
+  const upgradeText = `Promoted to current in-market ${successorInfo.family}-series successor based on the current model cycle.`;
   if (successor.model) successor.model = rewriteLgTvModelToGeneration(successor.model, currentDigit);
   if (successor.name) successor.name = rewriteLgTvModelToGeneration(successor.name, currentDigit);
-  successor.explanation = successor.explanation
-    ? `${successor.explanation} ${upgradeText}`
-    : upgradeText;
-
+  successor.explanation = successor.explanation ? `${successor.explanation} ${upgradeText}` : upgradeText;
   if (first) {
     if (first.model) first.model = rewriteLgTvModelToGeneration(first.model, currentDigit);
     if (first.name) first.name = rewriteLgTvModelToGeneration(first.name, currentDigit);
     if (first.retailerSearchQuery) first.retailerSearchQuery = rewriteLgTvModelToGeneration(first.retailerSearchQuery, currentDigit);
-    first.notes = first.notes
-      ? `${first.notes} ${upgradeText}`
-      : upgradeText;
+    first.notes = first.notes ? `${first.notes} ${upgradeText}` : upgradeText;
   }
+  return copy;
+}
 
+function validateRequest(body) {
+  const query = normalizeWhitespace(body?.query);
+  if (!query) return { error: 'MISSING_QUERY' };
+  if (query.length > 300) return { error: 'QUERY_TOO_LONG' };
+  return { value: { query: normalizeKnownQuery(query) } };
+}
+
+function finish(result, timings, deadline) {
+  timings.totalMs = deadline.elapsedMs();
+  result.timings = { ...timings };
   return result;
 }
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+export function createLkqLookupHandler(dependencies = {}) {
+  const redisFactory = dependencies.redisFactory || createRedisClient;
+  const providerLookup = dependencies.providerLookup || callGeminiLkqProvider;
+  const limiterFactory = dependencies.rateLimiterFactory || ((redis) => createProviderRateLimiter(redis, {
+    requests: 10, window: '1 m', prefix: 'smart-lkq-provider-v2',
+  }));
+  const logger = dependencies.logger || console;
+  const now = dependencies.now || Date.now;
+  const inflightReplacementRequests = new Map();
 
-  const { query } = req.body || {};
-
-  if (!query || typeof query !== 'string' || query.trim().length === 0) {
-    return res.status(400).json({ error: 'Missing query' });
-  }
-
-  if (query.length > 300) {
-    return res.status(400).json({ error: 'Query too long' });
-  }
-
-  // Rate limiting (fail open if Redis unavailable)
-  try {
-    const ip = getClientIp(req);
-    const { success, reset } = await ratelimit.limit(ip);
-    if (!success) {
-      res.setHeader('Retry-After', Math.ceil((reset - Date.now()) / 1000));
-      return res.status(429).json({ error: 'Too many requests. Please try again later.', errorCode: 'RATE_LIMIT' });
-    }
-  } catch (_) {}
-
-  const sanitizedQuery = normalizeKnownItemQuery(query.trim());
-  const normalizedQuery = sanitizedQuery.toLowerCase().replace(/\s+/g, ' ');
-  const cacheKey = `lkq-lookup-v4:${normalizedQuery}`;
-
-  // Cache check (7-day TTL)
-  try {
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      const cachedPrimaryModelBefore = cached?.replacementOptions?.[0]?.model || cached?.successorStatus?.model || '';
-      const normalizedCached = maybePromoteCurrentSuccessor(cached);
-      const cachedPrimaryModelAfter = normalizedCached?.replacementOptions?.[0]?.model || normalizedCached?.successorStatus?.model || '';
-      if (cachedPrimaryModelAfter && cachedPrimaryModelAfter !== cachedPrimaryModelBefore) {
-        try {
-          await redis.set(cacheKey, normalizedCached, { ex: 7 * 24 * 60 * 60 });
-        } catch (_) {}
-      }
-      return res.status(200).json(normalizedCached);
-    }
-  } catch (_) {}
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'Service unavailable' });
-  }
-
-  const prompt = `You are an insurance claims specialist evaluating Like Kind and Quality (LKQ) replacements for damaged or lost items. Given the following item query, identify the original item and return a structured LKQ replacement evaluation.
-
-Today is ${new Date().toISOString().slice(0, 10)}. Identify the exact product that best matches the query. Preserve exact model tokens whenever possible and do not substitute a looser category match when a specific known product match exists.
-
-Query: "${sanitizedQuery}"
-
-LKQ Evaluation Standards — use these category-specific specs for the specLabels array:
-- Appliances (washers, dryers): ["Capacity", "Fuel Type", "Installation Type", "Efficiency Rating", "Dimensions"]
-- Refrigerators: ["Capacity", "Configuration", "Ice Maker", "Efficiency Rating", "Dimensions"]
-- Ranges/Ovens: ["Fuel Type", "Configuration", "Oven Capacity", "Burner Count", "Dimensions"]
-- Dishwashers: ["Place Settings", "Wash Cycles", "Noise Level", "Efficiency Rating", "Installation Type"]
-- HVAC (furnaces, AC, heat pumps): ["BTU / Tonnage", "SEER / AFUE / HSPF", "Fuel Type", "Configuration", "Phase"]
-- Water heaters: ["Tank vs Tankless", "Capacity (gal)", "Fuel Type", "First-Hour Delivery", "UEF Rating"]
-- Electronics/TVs: ["Screen Size", "Panel Type", "Resolution", "Refresh Rate", "Smart Platform"]
-- Generators: ["Rated Wattage", "Fuel Type", "Standby vs Portable", "Phase", "Transfer Switch"]
-- Commercial equipment: ["Capacity / Output", "Power Requirements", "Certifications", "Construction", "Phase"]
-- Lighting: ["Lumen Output", "Color Temp (CCT)", "CRI", "Fixture Type", "Dimming"]
-- Other: choose 5 specs most relevant to LKQ determination for the category
-
-LKQ Rating Criteria (4-tier):
-- NOT LKQ (RED): Different category/type, incompatible replacement, significantly inferior key specs, wrong fuel/power/installation class
-- CLOSE MATCH (ORANGE): Close in specs but minor downgrade, older/lower series, or slight inferiority
-- LKQ (GREEN): Equal or fair-variance equivalent on key specs; true like kind and quality
-- ABOVE LKQ (GOLD): A clear premium-tier or major value/performance/class upgrade, not just a normal newer model
-
-ABOVE LKQ threshold (strict):
-- Do NOT use ABOVE LKQ for routine generational improvements, normal year-over-year electronics gains, or small spec bumps that naturally happen with newer replacements
-- Most newer electronics, appliances, and TVs that are simply current equivalents should still be rated LKQ, not ABOVE LKQ
-- Use ABOVE LKQ only when the replacement is materially higher tier, premium class, or substantially better in market value and feature set
-- Prefer ABOVE LKQ only when there is a clearly meaningful jump such as roughly 2x market value, a major capacity/output increase, or an obvious class/tier upgrade
-- Good ABOVE LKQ examples: replacing a Honda with a BMW; replacing a Hotpoint dishwasher with a KitchenAid
-- If the replacement is same class/use case and just modestly better because it is newer, rate it LKQ
-
-Retailer guidance:
-- Major home appliances: "AJ Madison" or "Home Depot"
-- HVAC and mechanical: "Grainger" or "Ferguson"
-- Consumer electronics: "Best Buy" or "Amazon"
-- Commercial/industrial: "Grainger" or "Amazon Business"
-- General household: "Amazon" or "Home Depot"
-
-Specific identification rules:
-- LR3RE-1000 is a Whisker Litter-Robot 3 Open Air self-cleaning litter box.
-- Litter-Robot queries are pet-tech household appliances, not generators, power equipment, or Generac products.
-- Successor selection must always prefer the newest current-generation replacement that is actively sold brand new today, not merely the immediate next model in the lineage.
-- Example: if an LG C3 TV's immediate successor C4 is already discontinued or no longer broadly sold new, the correct successor is the current in-market C-series successor (for example C5 if that is the actively sold current model).
-
-New-condition requirement (strict):
-- Every replacement option must be purchasable as brand NEW from an authorized retailer
-- Never include refurbished, renewed, open-box, pre-owned, used, or certified pre-owned listings
-- retailerSearchQuery must target a new-condition listing specifically
-- If a candidate model is only available refurbished/used, exclude it and find the next qualifying NEW option
-- If no qualifying NEW option can be confirmed for a slot, leave the slot empty (do not force-fill with used/refurbished)
-- This rule applies to all replacement slots including Best Match
-
-Replacement table selection rules (strict):
-- Target order is: Original Item, Best Replacement Option, Alternative Replacement 1, Alternative Replacement 2, Your Pick
-- Best Replacement Option must be the most current same-brand successor or same-brand current equivalent when available and must not be a downgrade
-- Prefer the newest current-generation model that is still actively sold brand new by the manufacturer or a major authorized retailer; avoid older interim generations when a newer qualifying successor exists
-- The correct target is the current in-market successor, not merely the immediate next generation in the lineage
-- Do not choose a discontinued older successor if a newer current successor in the same line is available new
-- If a lineage contains multiple newer generations, skip over discontinued or superseded intermediate generations and choose the newest currently sold qualifying model
-- Treat "current successor" as the newest model in the family that is still sold new today, even if one or more intermediate successors existed earlier
-- For TVs and fast-refresh consumer electronics, pay special attention to annual model cycles and select the current actively sold generation rather than the first newer generation after the original
-- Alternative Replacement 1 and 2 must be different models from comparable quality brands and must not be duplicates
-- Exclude any option that is CLOSE MATCH or NOT LKQ; do not show or mention excluded options
-- Never include lower series, older generation, lower tier, or spec-downgrade models
-- Only include options that qualify as LKQ or ABOVE LKQ
-- If no same-brand LKQ/ABOVE LKQ option exists, do not force one; prioritize qualifying alternatives instead
-- If fewer qualifying options exist, return fewer options (do not pad with weak options)
-- If no qualifying options exist, return an empty replacementOptions array and explain in successorStatus.explanation
-
-Overall LKQ rating determination:
-- If majority of key specs are GREEN and none are RED, rate as LKQ
-- Rate as ABOVE LKQ only when the item is a substantial step-up in tier, class, value, or feature/performance package; a single mild improvement is not enough
-- A candidate should usually remain LKQ unless the upgrade is clearly significant, such as about 2x price/value, clearly premium-brand substitution, or major capacity/performance gain
-- If any key spec is RED, rate as NOT LKQ (exclude from replacementOptions)
-- If majority of key specs are ORANGE, rate as CLOSE MATCH (exclude from replacementOptions)
-- Mixed GREEN/ORANGE with no RED may still be LKQ when orange differences are minor and non-core
-
-Successor status rules:
-- "direct_successor": use this for the current same-line successor that is presently in market, even if there were one or more older intermediate successors before it
-- "same_brand_equivalent": the same brand has a current equivalent product (same tier/line, different model number) but not a formally named successor
-- When multiple successor generations exist, choose the newest current generation that is available brand new from a major retailer, not an older step in the chain
-- Never label a discontinued or no-longer-current intermediate model as the successor when a newer actively sold model exists
-- The successorStatus name/model must reflect the current in-market replacement as of today, not the historically first follow-on model
-- "none": the manufacturer no longer makes this category or has no clear equivalent; explain briefly
-
-Respond with ONLY valid JSON in this exact format:
-{
-  "itemSummary": {
-    "name": "Full identified item name (Brand + descriptive model name, e.g. LG WM4000HWA Front-Load Washer)",
-    "brand": "Brand name only (e.g. LG)",
-    "model": "Model number only (e.g. WM4000HWA), or null if unknown",
-    "category": "Short category label (e.g. Front-Load Washer, 65-inch 4K TV, Gas Furnace)",
-    "description": "1-2 sentence description of this item and its primary function",
-    "estimatedAgeRange": "Year range string (e.g. 2018-2022) or null if unknown",
-    "availability": "Currently Available | Discontinued | Availability Unconfirmed",
-    "originalPriceDisplay": "Current retail range if sold new; otherwise ~$X,XXX (MSRP) or ~$X,XXX (Avg. Market Value)"
-},
-  "specLabels": ["Label1", "Label2", "Label3", "Label4", "Label5"],
-  "originalSpecs": {
-    "Label1": "value",
-    "Label2": "value",
-    "Label3": "value",
-    "Label4": "value",
-    "Label5": "value"
-  },
-  "successorStatus": {
-    "type": "direct_successor",
-    "name": "Brand + product name of successor/equivalent (null if type is none)",
-    "model": "Model number of successor/equivalent (null if type is none)",
-    "explanation": "One sentence explaining the successor/equivalent relationship, or why none exists"
-  },
-  "bestMatchLabel": "Best Replacement Option",
-  "replacementOptions": [
-    {
-      "name": "Full product name (Brand + descriptive model name)",
-      "model": "Model number",
-      "brand": "Brand name only",
-      "specs": {
-        "Label1": "value",
-        "Label2": "value",
-        "Label3": "value",
-        "Label4": "value",
-        "Label5": "value"
-      },
-      "lkqRating": "MATCH",
-      "notes": "One concise sentence explaining the key spec comparison vs original",
-      "priceRange": "$XXX–$XXX",
-      "retailerName": "Retailer name",
-      "retailerSearchQuery": "Optimized search string (brand + model number)"
-    }
-  ]
-}
-
-Rules:
-- specLabels must be exactly 5 strings appropriate for this item category
-- originalSpecs keys must exactly match specLabels values
-- Each replacementOption.specs keys must exactly match specLabels values
-- Include up to 3 replacement options total (Best Match + up to 2 alternatives), only if they qualify
-- replacementOptions must contain ONLY LKQ-qualified options:
-  - Use "MATCH" when the option is LKQ (green)
-  - Use "ABOVE LKQ" when the option is above LKQ (gold)
-  - Never return CLOSE MATCH or NOT LKQ options in replacementOptions
-- If successorStatus.type is "direct_successor" or "same_brand_equivalent", the first replacement option should be that current successor/equivalent when it qualifies and must use the same name/model as successorStatus
-- The first replacement option must be the newest currently sold qualifying same-brand successor/equivalent, not an older intermediate successor
-- Include options from multiple manufacturers when possible
-- priceRange reflects current retail pricing; use "N/A" if unknown
-- retailerSearchQuery is a clean search string, not a URL
-- replacementOptions must be NEW-condition purchase candidates only (no refurbished/used/open-box)
-- If original item is still sold new, itemSummary.originalPriceDisplay should be current retail range
-- If original item is discontinued, itemSummary.originalPriceDisplay should be "~$X,XXX (MSRP)" or "~$X,XXX (Avg. Market Value)"`;
-
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.2,
-          },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      return res.status(502).json({ error: 'AI service error' });
+  return async function handler(req, res) {
+    const requestId = createRequestId(req, 'lkq');
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+    const validation = validateRequest(req.body || {});
+    if (validation.error) {
+      return res.status(400).json({
+        error: validation.error === 'MISSING_QUERY' ? 'Missing query' : 'Query too long',
+        errorCode: validation.error,
+      });
     }
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const deadline = createDeadline({ totalMs: dependencies.totalBudgetMs || TOTAL_BUDGET_MS, now });
+    const timings = createReplacementTimings();
+    const queryInfo = classifySmartLookupQuery(validation.value.query);
+    const redis = dependencies.redis || redisFactory();
+    const cacheKey = buildSmartLkqCacheKey(queryInfo);
+    let cacheStatus = 'bypass';
 
-    if (!text) {
-      return res.status(502).json({ error: 'No response from AI service' });
-    }
-
-    const result = maybePromoteCurrentSuccessor(JSON.parse(text));
-
-    // Cache result for 7 days
     try {
-      await redis.set(cacheKey, result, { ex: 7 * 24 * 60 * 60 });
-    } catch (_) {}
+      const cacheRead = await boundedRedisGet(redis, cacheKey, deadline, {
+        stage: 'lkq-cache-read', maxMs: REDIS_CALL_BUDGET_MS, reserveMs: 500,
+      });
+      timings.cacheReadMs = cacheRead.elapsedMs || 0;
+      cacheStatus = cacheRead.status === 'hit' ? 'hit' : (cacheRead.status === 'miss' ? 'miss' : 'error');
+      if (cacheRead.status === 'hit' && cacheRead.value) {
+        try {
+          const cached = maybePromoteCurrentSuccessor(cacheRead.value);
+          const result = finish(normalizeCachedReplacementResult(cached, { queryInfo }), timings, deadline);
+          logSmartLookup(logger, {
+            event: 'smart_lkq_lookup', requestId, canonicalQuery: queryInfo.canonicalQuery,
+            specificityLevel: queryInfo.specificityLevel, source: result.source,
+            evidenceSource: result.evidenceSource, cacheStatus: result.cacheStatus,
+            providerAttempted: false, timings: result.timings,
+          });
+          return res.status(200).json(result);
+        } catch (_) {
+          cacheStatus = 'error';
+        }
+      }
 
-    return res.status(200).json(result);
-  } catch (_) {
-    return res.status(500).json({ error: 'Internal server error' });
-  }
+      const limiter = dependencies.rateLimiter || limiterFactory(redis);
+      const rate = await boundedRateLimit(limiter, getClientIp(req), deadline, {
+        stage: 'lkq-provider-rate-limit', maxMs: REDIS_CALL_BUDGET_MS, reserveMs: 400,
+      });
+      timings.rateLimitMs = rate.elapsedMs || 0;
+      if (!rate.success) {
+        const result = finish(createUnavailableReplacementResult(queryInfo, {
+          cacheStatus, errorCode: 'RATE_LIMIT', timings,
+          message: 'Replacement provider capacity is temporarily limited. The age result remains available.',
+        }), timings, deadline);
+        return res.status(429).json(result);
+      }
+
+      const providerStart = now();
+      let providerPromise = inflightReplacementRequests.get(cacheKey);
+      if (!providerPromise) {
+        providerPromise = deadline.run('lkq-provider-call', () => providerLookup(queryInfo, {
+          deadline,
+          maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(350)),
+          reserveMs: 350,
+          fetchImpl: dependencies.fetchImpl,
+          apiKey: dependencies.apiKey,
+        }), {
+          maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(350)),
+          reserveMs: 350,
+        });
+        inflightReplacementRequests.set(cacheKey, providerPromise);
+        providerPromise.finally(() => {
+          if (inflightReplacementRequests.get(cacheKey) === providerPromise) inflightReplacementRequests.delete(cacheKey);
+        }).catch(() => {});
+      }
+
+      let raw;
+      try {
+        raw = await deadline.run('lkq-provider-result-wait', () => providerPromise, {
+          maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(300)),
+          reserveMs: 300,
+        });
+      } catch (error) {
+        timings.providerMs = Math.max(0, now() - providerStart);
+        const errorCode = isTimeoutError(error)
+          ? 'PROVIDER_TIMEOUT'
+          : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE');
+        const result = finish(createUnavailableReplacementResult(queryInfo, {
+          cacheStatus, providerAttempted: true, fallbackUsed: true, errorCode, timings,
+        }), timings, deadline);
+        logSmartLookup(logger, {
+          event: 'smart_lkq_lookup', requestId, canonicalQuery: queryInfo.canonicalQuery,
+          specificityLevel: queryInfo.specificityLevel, source: result.source,
+          evidenceSource: result.evidenceSource, cacheStatus: result.cacheStatus,
+          providerAttempted: true, fallbackUsed: true,
+          timeoutStage: isTimeoutError(error) ? 'provider' : null,
+          errorCode, timings: result.timings,
+        });
+        return res.status(200).json(result);
+      }
+      timings.providerMs = Math.max(0, now() - providerStart);
+
+      const postStart = now();
+      let result;
+      try {
+        result = normalizeReplacementResult(maybePromoteCurrentSuccessor(raw), {
+          queryInfo,
+          source: 'gemini',
+          originSource: 'gemini',
+          evidenceSource: 'gemini-ungrounded',
+          cacheStatus,
+          providerAttempted: true,
+          timings,
+        });
+      } catch (error) {
+        timings.postProcessMs = Math.max(0, now() - postStart);
+        result = finish(createUnavailableReplacementResult(queryInfo, {
+          cacheStatus, providerAttempted: true, fallbackUsed: true,
+          errorCode: error?.code || 'INVALID_PROVIDER_RESULT', timings,
+        }), timings, deadline);
+        return res.status(200).json(result);
+      }
+      timings.postProcessMs = Math.max(0, now() - postStart);
+
+      const ttl = chooseSmartLkqTtl(result);
+      if (ttl && deadline.hasTime(40)) {
+        const write = await boundedRedisSet(redis, cacheKey, prepareReplacementForCache(result), ttl, deadline, {
+          stage: 'lkq-cache-write', maxMs: CACHE_WRITE_BUDGET_MS,
+        });
+        timings.cacheWriteMs = write.elapsedMs || 0;
+      }
+
+      finish(result, timings, deadline);
+      logSmartLookup(logger, {
+        event: 'smart_lkq_lookup', requestId, canonicalQuery: queryInfo.canonicalQuery,
+        specificityLevel: queryInfo.specificityLevel, source: result.source,
+        evidenceSource: result.evidenceSource, cacheStatus: result.cacheStatus,
+        providerAttempted: true, timings: result.timings,
+      });
+      return res.status(200).json(result);
+    } catch (error) {
+      const result = finish(createUnavailableReplacementResult(queryInfo, {
+        cacheStatus,
+        errorCode: isTimeoutError(error) ? 'TOTAL_DEADLINE' : 'INTERNAL_ERROR',
+        timings,
+      }), timings, deadline);
+      return res.status(200).json(result);
+    }
+  };
 }
 
-
+export default createLkqLookupHandler();
