@@ -1,0 +1,77 @@
+name: Smart Lookup v2 CI
+
+on:
+  push:
+    branches:
+      - fix/smart-lookup-performance-v2
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Production build
+        run: npm run build
+      - name: Confirm committed build output
+        run: git diff --exit-code
+      - name: Complete Node test suite
+        run: npm test
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install application dependencies
+        run: npm ci
+      - name: Install pinned Playwright test runner
+        run: npm install --no-save @playwright/test@1.61.1
+      - name: Install Microsoft Edge
+        run: npx playwright install --with-deps msedge
+      - name: Rebuild browser assets
+        run: npm run build:browser
+      - name: Start static site
+        shell: bash
+        run: |
+          python3 -m http.server 3001 > /tmp/smart-lookup-v2-http.log 2>&1 &
+          echo $! > /tmp/smart-lookup-v2-http.pid
+          sleep 2
+      - name: Run existing browser suites
+        run: npm run test:playwright -- --reporter=line
+
+  source-snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Create source snapshot
+        shell: bash
+        run: tar --exclude=.git --exclude=node_modules -czf serial-decoder-source.tgz .
+      - name: Upload source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-lookup-v2-source-snapshot
+          path: serial-decoder-source.tgz
+          retention-days: 3
