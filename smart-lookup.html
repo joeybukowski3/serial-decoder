@@ -118,7 +118,11 @@
     <label for="lookup-notes">Additional Notes (optional)</label>
     <textarea id="lookup-notes" placeholder="Any other details &mdash; color, size, features, where it was installed..."></textarea>
 
-    <button id="smartLookupBtn" class="btn-amber" style="width:100%;">&#10024; Run Smart Lookup</button>
+    <label class="lookup-checkbox" for="include-replacement-comparisons">
+      <input type="checkbox" id="include-replacement-comparisons">
+      <span>Include Replacement Options <span style="font-size:0.8em;opacity:0.6;font-weight:normal;">(increases load time)</span></span>
+    </label>
+    <button id="smartLookupBtn" class="btn-amber" style="width:100%;" data-smart-lookup-submit="1">&#10024; Run Smart Lookup</button>
     
     <!-- Loading state -->
     <div id="ageLoading" class="hidden" style="margin-top:20px;">
@@ -134,8 +138,6 @@
     <div id="ageResults" class="hidden" style="margin-top:20px;">
       <div id="smart-lookup-results"></div>
     </div>
-    
-    <div id="smart-lookup-results"></div>
     <p class="search-link" style="margin-top:12px;">Have a serial number? <a href="decoder-tool">Use the Serial Decoder &rarr;</a></p>
   </div>
 
@@ -253,7 +255,8 @@
 <script async src="analytics.js"></script>
 <script async src="item-history-guide-matcher.js"></script>
 <script async src="item-history-guide-integration.js"></script>
-<script async src="smart-lookup-bundle.js"></script>
+<script defer src="smart-lookup-bundle.js"></script>
 <script defer src="script.js"></script>
+<script defer src="/smart-lookup-controller.js"></script>
 </body>
 </html>
