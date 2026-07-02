@@ -1,0 +1,86 @@
+name: Serial refinement CI
+
+on:
+  push:
+    branches:
+      - fix/serial-model-refinement-v2
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Production build
+        run: npm run build
+      - name: Confirm committed build output
+        run: git diff --exit-code
+      - name: Confirm repeat build is idempotent
+        shell: bash
+        run: |
+          npm run build
+          git diff --exit-code
+      - name: Complete Node test suite
+        run: npm test
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install application dependencies
+        run: npm ci
+      - name: Install pinned Playwright test runner
+        run: npm install --no-save @playwright/test@1.61.1
+      - name: Install Microsoft Edge
+        run: npx playwright install --with-deps msedge
+      - name: Rebuild focused browser controller
+        run: npm run build:browser
+      - name: Start static site
+        shell: bash
+        run: |
+          python3 -m http.server 3001 > /tmp/serial-refinement-http.log 2>&1 &
+          echo $! > /tmp/serial-refinement-http.pid
+          sleep 2
+      - name: Run decoder and refinement browser suites
+        id: browser_tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          npm run test:playwright -- --reporter=json --trace=retain-on-failure > playwright-results.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Upload Playwright report and traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: serial-refinement-playwright-report
+          path: |
+            playwright-results.json
+            test-results
+          retention-days: 14
+      - name: Fail when browser tests failed
+        if: steps.browser_tests.outputs.exit_code != '0'
+        run: exit 1

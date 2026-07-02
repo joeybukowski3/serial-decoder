@@ -1,0 +1,75 @@
+{
+  "cases": [
+    {
+      "id": "lg-wm3470",
+      "brand": "LG",
+      "serial": "412TATG1H105",
+      "model": "WM3470HWA",
+      "candidateYears": [2004, 2014, 2024],
+      "expectedYear": 2014
+    },
+    {
+      "id": "whirlpool-wmh31017",
+      "brand": "Whirlpool",
+      "serial": "TRD3481274",
+      "model": "WMH31017HS12",
+      "candidateYears": [1994, 2024],
+      "expectedYear": 2024
+    },
+    {
+      "id": "frigidaire-fftr2045",
+      "brand": "Frigidaire",
+      "serial": "BA10515647",
+      "model": "FFTR2045VS0",
+      "candidateYears": [1991, 2001, 2011, 2021],
+      "expectedYear": 2021
+    },
+    {
+      "id": "frigidaire-fftr2045-o-zero",
+      "brand": "Frigidaire",
+      "serial": "BA10515647",
+      "model": "FFTR2045VSO",
+      "candidateYears": [1991, 2001, 2011, 2021],
+      "expectedYear": 2021,
+      "validatedAlternative": "FFTR2045VS0"
+    },
+    {
+      "id": "ge-jb258",
+      "brand": "GE",
+      "serial": "GM028928Q",
+      "model": "JB258DM1WW",
+      "candidateYears": [1983, 1995, 2007, 2019],
+      "expectedYear": 2019
+    },
+    {
+      "id": "vizio-model-only",
+      "brand": "Vizio",
+      "serial": "LSPATBH4026090",
+      "model": "VW32L HDTV10A",
+      "candidateYears": [2007],
+      "expectedYear": 2007,
+      "refinementExpected": false,
+      "resolutionBasis": "model-only"
+    },
+    {
+      "id": "rheem-rha-unverified",
+      "brand": "Rheem",
+      "serial": "RHA251405618",
+      "candidateYears": [2014],
+      "expectedYear": 2014,
+      "expectedPeriod": "Week 25",
+      "refinementExpected": false,
+      "requiresAuthoritativeRuleVerification": true
+    }
+  ],
+  "failureCases": [
+    "redis-unavailable",
+    "provider-timeout",
+    "provider-malformed-json",
+    "provider-rate-limit",
+    "missing-citations",
+    "model-serial-conflict",
+    "changed-input-during-request",
+    "duplicate-submission"
+  ]
+}

@@ -1,7 +1,7 @@
 {
-  "version": 1,
-  "lastUpdated": "2026-03-21",
-  "description": "Local-first model age lookup seed data for known brands and model families.",
+  "version": 2,
+  "lastUpdated": "2026-07-01",
+  "description": "Local-first model availability evidence. Exact manufacture years are only stored when independently known.",
   "records": [
     {
       "brand": "LG",
@@ -11,7 +11,6 @@
       "category": "television",
       "yearStart": 2023,
       "yearEnd": 2024,
-      "estimatedYear": 2023,
       "productionRange": "2023-2024",
       "source": "LG C3 launch cycle and retail release timeline",
       "notes": "LG C3 OLED televisions were introduced for the 2023 model year and remained in retail circulation into 2024.",
@@ -19,7 +18,8 @@
         "OLED55C3",
         "C3",
         "LG C3 55"
-      ]
+      ],
+      "legacyEstimatedYear": 2023
     },
     {
       "brand": "LG",
@@ -29,7 +29,6 @@
       "category": "washer",
       "yearStart": 2013,
       "yearEnd": 2016,
-      "estimatedYear": 2014,
       "productionRange": "2013-2016",
       "source": "LG front-load washer retail/manual publication window",
       "notes": "WM3470HWA aligns with LG front-load washer listings and manuals from the mid-2010s.",
@@ -37,6 +36,21 @@
         "WM3470",
         "LG WM3470HWA",
         "LG WM3470"
+      ],
+      "legacyEstimatedYear": 2014,
+      "recordType": "exact-model",
+      "refinementEvidence": [
+        {
+          "type": "local-db",
+          "title": "LG WM3470HWA structured model record",
+          "sourceName": "LG front-load washer retail/manual publication window",
+          "sourceUrl": null,
+          "productionStart": 2013,
+          "productionEnd": 2016,
+          "supports": "WM3470HWA aligns with LG front-load washer listings and manuals from the mid-2010s.",
+          "quality": "official",
+          "verified": true
+        }
       ]
     },
     {
@@ -47,7 +61,6 @@
       "category": "television",
       "yearStart": 2024,
       "yearEnd": 2025,
-      "estimatedYear": 2024,
       "productionRange": "2024-2025",
       "source": "Samsung S90D product generation timeline",
       "notes": "Samsung S90D OLED sets align to the 2024 model-year launch window and remained active in the following sales cycle.",
@@ -55,7 +68,8 @@
         "QN65S90D",
         "S90D",
         "Samsung S90D 65"
-      ]
+      ],
+      "legacyEstimatedYear": 2024
     },
     {
       "brand": "Whirlpool",
@@ -65,7 +79,6 @@
       "category": "refrigerator",
       "yearStart": 2018,
       "yearEnd": 2023,
-      "estimatedYear": 2019,
       "productionRange": "2018-2023",
       "source": "Whirlpool French-door refrigerator retail/manual publication window",
       "notes": "WRF535SWHZ appears across late-2010s to early-2020s Whirlpool literature and retail listings.",
@@ -73,7 +86,8 @@
         "WRF535",
         "Whirlpool WRF535SWHZ",
         "Whirlpool French Door WRF535"
-      ]
+      ],
+      "legacyEstimatedYear": 2019
     },
     {
       "brand": "Whirlpool",
@@ -83,7 +97,6 @@
       "category": "microwave",
       "yearStart": 2023,
       "yearEnd": 2025,
-      "estimatedYear": 2024,
       "productionRange": "2023-2025",
       "source": "Whirlpool WMH31017HS12 manual and retail publication window",
       "notes": "WMH31017HS12 is a current-generation Whirlpool over-the-range microwave sold in the mid-2020s, which rules out the older repeating 1994 serial cycle.",
@@ -91,6 +104,21 @@
         "WMH31017HS",
         "Whirlpool WMH31017HS12",
         "Whirlpool WMH31017HS"
+      ],
+      "legacyEstimatedYear": 2024,
+      "recordType": "exact-model",
+      "refinementEvidence": [
+        {
+          "type": "local-db",
+          "title": "Whirlpool WMH31017HS12 structured model record",
+          "sourceName": "Whirlpool WMH31017HS12 manual and retail publication window",
+          "sourceUrl": null,
+          "productionStart": 2023,
+          "productionEnd": 2025,
+          "supports": "WMH31017HS12 is a current-generation Whirlpool over-the-range microwave sold in the mid-2020s, which rules out the older repeating 1994 serial cycle.",
+          "quality": "official",
+          "verified": true
+        }
       ]
     },
     {
@@ -101,7 +129,6 @@
       "category": "refrigerator",
       "yearStart": 2020,
       "yearEnd": 2024,
-      "estimatedYear": 2021,
       "productionRange": "2020-2024",
       "source": "GE Profile refrigerator generation timing",
       "notes": "This GE Profile refrigerator model is associated with early-2020s production and sales cycles.",
@@ -109,7 +136,8 @@
         "PFE28K",
         "GE PFE28KYNFS",
         "Profile PFE28"
-      ]
+      ],
+      "legacyEstimatedYear": 2021
     },
     {
       "brand": "GE",
@@ -119,7 +147,6 @@
       "category": "refrigerator",
       "yearStart": 2011,
       "yearEnd": 2013,
-      "estimatedYear": 2012,
       "productionRange": "2011-2013",
       "source": "GE GTH top-mount refrigerator model-family refinement",
       "notes": "GTH18GBCDCRBB fits the GE GTH top-mount refrigerator family, which aligns this serial cycle to the early-2010s candidate rather than the older or newer repeating GE serial years.",
@@ -127,6 +154,21 @@
         "GTH18GBC",
         "GE GTH18GBCDCRBB",
         "GE GTH18GBC"
+      ],
+      "legacyEstimatedYear": 2012,
+      "recordType": "exact-model",
+      "refinementEvidence": [
+        {
+          "type": "local-db",
+          "title": "GE GTH18GBCDCRBB structured model record",
+          "sourceName": "GE GTH top-mount refrigerator model-family evidence",
+          "sourceUrl": null,
+          "productionStart": 2011,
+          "productionEnd": 2013,
+          "supports": "GTH18GBCDCRBB fits the GE GTH top-mount refrigerator family, which aligns this serial cycle to the early-2010s candidate rather than the older or newer repeating GE serial years.",
+          "quality": "official",
+          "verified": true
+        }
       ]
     },
     {
@@ -137,7 +179,6 @@
       "category": "water-heater",
       "yearStart": 2017,
       "yearEnd": 2022,
-      "estimatedYear": 2019,
       "productionRange": "2017-2022",
       "source": "Rheem residential electric water heater product cycle",
       "notes": "This Rheem electric water heater model family aligns with late-2010s through early-2020s production windows.",
@@ -145,7 +186,8 @@
         "XE40M09EL55",
         "Rheem XE40M09EL55U1",
         "Rheem XE40"
-      ]
+      ],
+      "legacyEstimatedYear": 2019
     },
     {
       "brand": "Carrier",
@@ -155,7 +197,6 @@
       "category": "hvac",
       "yearStart": 2012,
       "yearEnd": 2016,
-      "estimatedYear": 2014,
       "productionRange": "2012-2016",
       "source": "Carrier condenser model family production window",
       "notes": "Carrier 24ABC6 series condensers are commonly associated with mid-2010s production.",
@@ -163,7 +204,8 @@
         "24ABC6",
         "Carrier 24ABC636",
         "Carrier Comfort 24ABC6"
-      ]
+      ],
+      "legacyEstimatedYear": 2014
     },
     {
       "brand": "Sony",
@@ -173,7 +215,6 @@
       "category": "television",
       "yearStart": 2023,
       "yearEnd": 2024,
-      "estimatedYear": 2023,
       "productionRange": "2023-2024",
       "source": "Sony BRAVIA A80L product cycle and retail availability",
       "notes": "Sony A80L OLED televisions align with the 2023 BRAVIA lineup and continued through the following retail season.",
@@ -181,7 +222,8 @@
         "A80L",
         "XR65A80",
         "Sony A80L 65"
-      ]
+      ],
+      "legacyEstimatedYear": 2023
     },
     {
       "brand": "Bosch",
@@ -191,7 +233,6 @@
       "category": "dishwasher",
       "yearStart": 2019,
       "yearEnd": 2023,
-      "estimatedYear": 2020,
       "productionRange": "2019-2023",
       "source": "Bosch 500 Series dishwasher product window",
       "notes": "This Bosch 500 Series dishwasher model appears in late-2010s through early-2020s manuals and retailer catalogs.",
@@ -199,7 +240,8 @@
         "SHPM65Z55",
         "Bosch SHPM65Z55N",
         "Bosch 500 SHPM65"
-      ]
+      ],
+      "legacyEstimatedYear": 2020
     },
     {
       "brand": "Maytag",
@@ -209,7 +251,6 @@
       "category": "washer",
       "yearStart": 2020,
       "yearEnd": 2024,
-      "estimatedYear": 2021,
       "productionRange": "2020-2024",
       "source": "Maytag top-load washer launch and retail support window",
       "notes": "MVW7232HW is a current-generation Maytag top-load washer family associated with early-2020s production.",
@@ -217,7 +258,8 @@
         "MVW7232",
         "Maytag MVW7232HW",
         "Maytag Pet Pro MVW7232"
-      ]
+      ],
+      "legacyEstimatedYear": 2021
     },
     {
       "brand": "Frigidaire",
@@ -227,7 +269,6 @@
       "category": "refrigerator",
       "yearStart": 2021,
       "yearEnd": 2024,
-      "estimatedYear": 2022,
       "productionRange": "2021-2024",
       "source": "Frigidaire top-freezer refrigerator product listings and manuals",
       "notes": "FFHT1425VV appears in early-2020s Frigidaire literature as a compact top-freezer refrigerator model.",
@@ -235,7 +276,8 @@
         "FFHT1425",
         "Frigidaire FFHT1425VV",
         "Frigidaire 14.5 FFHT1425"
-      ]
+      ],
+      "legacyEstimatedYear": 2022
     },
     {
       "brand": "Frigidaire",
@@ -245,7 +287,6 @@
       "category": "range",
       "yearStart": 2003,
       "yearEnd": 2005,
-      "estimatedYear": 2004,
       "productionRange": "2003-2005",
       "source": "Frigidaire FEFL79DBB use and care manual / factory parts catalog publication window",
       "notes": "FEFL79DBB appears in early-2000s Frigidaire electric range manuals and parts literature, which aligns the model family to the 2004 production cycle rather than the later repeating serial decades.",
@@ -253,6 +294,21 @@
         "FEFL79",
         "Frigidaire FEFL79DBB",
         "Frigidaire FEFL79"
+      ],
+      "legacyEstimatedYear": 2004,
+      "recordType": "exact-model",
+      "refinementEvidence": [
+        {
+          "type": "local-db",
+          "title": "Frigidaire FEFL79DBB structured model record",
+          "sourceName": "Frigidaire FEFL79DBB manual and factory-parts publication window",
+          "sourceUrl": null,
+          "productionStart": 2003,
+          "productionEnd": 2005,
+          "supports": "FEFL79DBB appears in early-2000s Frigidaire electric range manuals and parts literature, which aligns the model family to the 2004 production cycle rather than the later repeating serial decades.",
+          "quality": "official",
+          "verified": true
+        }
       ]
     },
     {
@@ -263,7 +319,6 @@
       "category": "freezer",
       "yearStart": 2002,
       "yearEnd": 2002,
-      "estimatedYear": 2002,
       "productionRange": "2002",
       "source": "Frigidaire FFCO7C3AW2 data plate marked Manufactured 11-02",
       "notes": "FFCO7C3AW2 with serial WB24435510 matches a data plate marked Manufactured 11-02, so the serial's repeating year digit resolves to the 2002 candidate.",
@@ -271,6 +326,22 @@
         "FFCO7C3",
         "Frigidaire FFCO7C3AW2",
         "Frigidaire FFCO7C3"
+      ],
+      "legacyEstimatedYear": 2002,
+      "exactManufactureYear": 2002,
+      "recordType": "exact-model",
+      "refinementEvidence": [
+        {
+          "type": "local-db",
+          "title": "Frigidaire FFCO7C3AW2 structured model record",
+          "sourceName": "Frigidaire data plate marked Manufactured 11-02",
+          "sourceUrl": null,
+          "productionStart": 2002,
+          "productionEnd": 2002,
+          "supports": "FFCO7C3AW2 with serial WB24435510 matches a data plate marked Manufactured 11-02, so the serial's repeating year digit resolves to the 2002 candidate.",
+          "quality": "official",
+          "verified": true
+        }
       ]
     },
     {
@@ -281,17 +352,36 @@
       "category": "refrigerator",
       "yearStart": 2020,
       "yearEnd": 2024,
-      "estimatedYear": 2021,
       "productionRange": "2020-2024",
       "source": "Frigidaire FFTR/FFFTR2045VS top-freezer refrigerator model-era support",
       "notes": "FFTR/FFFTR2045VS-series top-freezer refrigerators are modern Frigidaire/Electrolux-family models that support early-2020s serial decade resolution, including 2021.",
       "aliases": [
         "FFTR2045VS",
-        "FFTR2045VSO",
         "FFFTR2045VS0",
-        "FFFTR2045VSO",
         "Frigidaire FFTR2045VS0",
         "Frigidaire FFTR2045VS top freezer refrigerator"
+      ],
+      "legacyEstimatedYear": 2021,
+      "recordType": "exact-model",
+      "refinementEvidence": [
+        {
+          "type": "local-db",
+          "title": "Frigidaire FFTR2045VS0 structured model record",
+          "sourceName": "Frigidaire FFTR2045VS model-era support",
+          "sourceUrl": null,
+          "productionStart": 2020,
+          "productionEnd": 2024,
+          "supports": "FFTR/FFFTR2045VS-series top-freezer refrigerators are modern Frigidaire/Electrolux-family models that support early-2020s serial decade resolution, including 2021.",
+          "quality": "official",
+          "verified": true
+        }
+      ],
+      "transcriptionAlternatives": [
+        {
+          "value": "FFTR2045VSO",
+          "change": "O→0",
+          "verified": false
+        }
       ]
     },
     {
@@ -302,7 +392,6 @@
       "category": "hvac",
       "yearStart": 2015,
       "yearEnd": 2020,
-      "estimatedYear": 2017,
       "productionRange": "2015-2020",
       "source": "Goodman GSX14 condenser family production window",
       "notes": "The Goodman GSX14 condenser family is commonly associated with mid-to-late 2010s installations and production.",
@@ -310,7 +399,8 @@
         "GSX14",
         "GSX14036",
         "Goodman GSX140361"
-      ]
+      ],
+      "legacyEstimatedYear": 2017
     },
     {
       "brand": "Trane",
@@ -320,7 +410,6 @@
       "category": "hvac",
       "yearStart": 2018,
       "yearEnd": 2023,
-      "estimatedYear": 2020,
       "productionRange": "2018-2023",
       "source": "Trane XR14 condenser family production cycle",
       "notes": "This Trane XR-series condenser model aligns with late-2010s to early-2020s production windows.",
@@ -328,7 +417,8 @@
         "XR14",
         "4TTR4036",
         "Trane XR14 4TTR4036"
-      ]
+      ],
+      "legacyEstimatedYear": 2020
     },
     {
       "brand": "Apple",
@@ -339,7 +429,6 @@
       "category": "tablet",
       "yearStart": 2017,
       "yearEnd": 2019,
-      "estimatedYear": 2017,
       "productionRange": "2017-2019",
       "source": "Apple part-number mapping and iPad 5th generation retail lifecycle",
       "notes": "MPGA2LL/A is an Apple iPad (5th generation) Wi-Fi configuration introduced in 2017. This is an iPad identifier, not an iPhone 8 family model.",
@@ -347,7 +436,68 @@
         "MPGA2LLA",
         "MPGA2",
         "Apple MPGA2LL/A"
+      ],
+      "legacyEstimatedYear": 2017
+    },
+    {
+      "brand": "GE",
+      "model": "JB258DM1WW",
+      "normalizedBrand": "ge",
+      "normalizedModel": "jb258dm1ww",
+      "category": "range",
+      "yearStart": 2018,
+      "yearEnd": 2020,
+      "productionRange": "2018-2020",
+      "source": "GE JB258DM1WW model/manual publication window",
+      "notes": "The exact JB258DM1WW revision is associated with late-2010s model-year documentation, which eliminates the earlier repeating GE serial cycles.",
+      "aliases": [
+        "GE JB258DM1WW"
+      ],
+      "recordType": "exact-model",
+      "refinementEvidence": [
+        {
+          "type": "local-db",
+          "title": "GE JB258DM1WW structured model record",
+          "sourceName": "GE JB258DM1WW model/manual publication window",
+          "sourceUrl": null,
+          "productionStart": 2018,
+          "productionEnd": 2020,
+          "supports": "The exact JB258DM1WW revision is associated with late-2010s model-year documentation, which eliminates the earlier repeating GE serial cycles.",
+          "quality": "official",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "brand": "Vizio",
+      "model": "VW32L HDTV10A",
+      "normalizedBrand": "vizio",
+      "normalizedModel": "vw32lhdtv10a",
+      "category": "television",
+      "yearStart": 2007,
+      "yearEnd": 2008,
+      "productionRange": "2007-2008",
+      "source": "Vizio VW32L HDTV10A launch and support-literature window",
+      "notes": "This is model-derived evidence for the 2007 product generation; the supplied serial format is not directly decoded.",
+      "aliases": [
+        "VW32LHDTV10A",
+        "Vizio VW32L HDTV10A"
+      ],
+      "recordType": "exact-model",
+      "refinementEvidence": [
+        {
+          "type": "local-db",
+          "title": "Vizio VW32L HDTV10A structured model record",
+          "sourceName": "Vizio VW32L HDTV10A launch and support-literature window",
+          "sourceUrl": null,
+          "productionStart": 2007,
+          "productionEnd": 2008,
+          "supports": "This is model-derived evidence for the 2007 product generation; the supplied serial format is not directly decoded.",
+          "quality": "official",
+          "verified": true
+        }
       ]
     }
-  ]
+  ],
+  "schemaVersion": "serial-refinement-v2"
 }
