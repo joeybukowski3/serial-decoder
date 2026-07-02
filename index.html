@@ -912,7 +912,7 @@
           </div>
           <p class="search-link" style="margin-top:10px;">Have a serial number? Use the Decode Serial Number panel on the left.</p>
           <div class="tool-panel-action">
-            <button class="btn-amber power-btn" type="button" onclick="runLKQLookup()">Search</button>
+            <button class="btn-amber power-btn" type="button" data-smart-lookup-submit="1">Search</button>
           </div>
         </div></div>
   </div>
@@ -981,7 +981,7 @@
   <!-- LKQ Results (Smart Lookup) -->
   <div id="ageResults" class="results-card hidden">
     <div class="results-header">
-      <h3>&#9878; LKQ Replacement Evaluation</h3>
+      <h3>Smart Lookup Results</h3>
       <div class="brand-logo-wrap" id="ageBrandLogo"></div>
     </div>
     <div class="results-body" id="smart-lookup-results"></div>
@@ -1324,7 +1324,8 @@ function selectCatAndShowDecoder(cat, btn) {
 <script defer src="analytics.js"></script>
 <script defer src="smart-lookup-bundle.js"></script>
 <script defer src="script.js"></script>
-  <script defer src="/serial-refinement-controller.js"></script>
+<script defer src="/serial-refinement-controller.js"></script>
+<script defer src="/smart-lookup-controller.js"></script>
 
 <script type="application/ld+json">
 {

@@ -1,229 +1,260 @@
-import { Redis } from '@upstash/redis';
-import { Ratelimit } from '@upstash/ratelimit';
+import { buildSmartInterpretCacheKey, prepareInterpretForCache } from '../lib/smart-lookup/cache.js';
+import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
+import { classifySmartLookupQuery, normalizeWhitespace } from '../lib/smart-lookup/normalize.js';
+import { callGeminiInterpretProvider, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
+import {
+  boundedRateLimit,
+  boundedRedisGet,
+  boundedRedisSet,
+  createProviderRateLimiter,
+  createRedisClient,
+  getClientIp,
+} from '../lib/smart-lookup/redis.js';
+import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
+const TOTAL_BUDGET_MS = 3500;
+const PROVIDER_BUDGET_MS = 2500;
+const REDIS_CALL_BUDGET_MS = 250;
+const CACHE_WRITE_BUDGET_MS = 150;
 
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(20, '1 m'),
-  analytics: false,
-});
-
-function getClientIp(req) {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (forwarded) return forwarded.split(',')[0].trim();
-  return req.socket?.remoteAddress || 'unknown';
+function validateRequest(body) {
+  const query = normalizeWhitespace(body?.query);
+  if (!query) return { error: 'MISSING_QUERY' };
+  if (query.length > 200) return { error: 'QUERY_TOO_LONG' };
+  return { value: { query } };
 }
 
-async function callGroqInterpret(prompt) {
-  const groqKey = process.env.GROQ_API_KEY;
-  if (!groqKey) throw new Error('Groq API key missing');
-  const model = process.env.GROQ_MODEL || 'llama-3.1-70b-versatile';
-  const groqController = new AbortController();
-  const groqTimeout = setTimeout(() => groqController.abort(), 12000);
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: 'You are a query interpretation layer. Return VALID JSON ONLY. Follow the requested schema exactly.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.1,
-      response_format: { type: 'json_object' }
-    }),
-    signal: groqController.signal
-  });
-  clearTimeout(groqTimeout);
-  if (!response.ok) throw new Error(`Groq error: ${response.status}`);
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Groq returned empty content');
-  return JSON.parse(content);
+function normalizeSuggestions(value) {
+  return Array.isArray(value)
+    ? value.map((item) => normalizeWhitespace(item)).filter(Boolean).slice(0, 5)
+    : [];
 }
 
-function normalizeQuery(query) {
-  return String(query || '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+function deterministicInterpretation(queryInfo) {
+  if (queryInfo.specificityLevel === 'specific') {
+    return {
+      action: 'bypass', queryKind: 'specific', confidence: 'high', scopeValid: true,
+      message: null, suggestions: [queryInfo.query], specificityLevel: 'specific',
+    };
+  }
+  if (queryInfo.specificityLevel === 'partial') {
+    return {
+      action: 'bypass', queryKind: 'specific', confidence: 'high', scopeValid: true,
+      message: 'This appears to be a partial model token. Smart Lookup will preserve it without inventing a complete model.',
+      suggestions: [queryInfo.query], specificityLevel: 'partial',
+    };
+  }
+  if (queryInfo.specificityLevel === 'brand-only' || queryInfo.specificityLevel === 'generic') {
+    return {
+      action: 'bypass', queryKind: 'general', confidence: 'high', scopeValid: true,
+      message: null, suggestions: [queryInfo.query], specificityLevel: queryInfo.specificityLevel,
+    };
+  }
+  return null;
 }
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { query } = req.body || {};
-  const sanitizedQuery = normalizeQuery(query);
-
-  if (!sanitizedQuery) {
-    return res.status(400).json({ error: 'Missing query' });
-  }
-
-  if (sanitizedQuery.length > 200) {
-    return res.status(400).json({ error: 'Query too long' });
-  }
-
-  try {
-    const ip = getClientIp(req);
-    const { success, reset } = await ratelimit.limit(ip);
-    if (!success) {
-      res.setHeader('Retry-After', Math.ceil((reset - Date.now()) / 1000));
-      return res.status(429).json({ error: 'Too many requests. Please try again later.', errorCode: 'RATE_LIMIT' });
-    }
-  } catch (_) {}
-
-  const normalizedQuery = sanitizedQuery.toLowerCase();
-  const cacheKey = `smart-query-interpret-v1:${normalizedQuery}`;
-
-  try {
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return res.status(200).json(cached);
-    }
-  } catch (_) {}
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'Service unavailable' });
-  }
-
-  const prompt = `You are a query interpretation layer for a serial number decoder and item research tool called Decode My Item.
-
-Input query: "${sanitizedQuery}"
-
-Interpret the query ONLY as a physical item that could appear on an insurance property claim.
-
-Allowed categories only:
-- Consumer electronics (TVs, phones, laptops, tablets, audio, cameras, gaming)
-- Home appliances (washers, dryers, refrigerators, dishwashers, ovens, microwaves, etc.)
-- HVAC systems and components (AC units, furnaces, heat pumps, thermostats, ductwork)
-- Water heaters and plumbing fixtures (tankless, traditional, fixtures, pumps)
-- Electrical panels, wiring, breakers, meters, and components
-- Generators and power equipment
-- Solar systems and components
-- Household fixtures and built-in property items
-- Commercial versions of any of the above
-
-Hard interpretation rules:
-- Never interpret the query as anything outside those categories
-- Treat ambiguous words as property/equipment brands or items
-- A shark is always Shark brand equipment, never an animal
-- Apple is always Apple electronics, never fruit
-- Carrier is always Carrier HVAC
-- Nest is always a Nest thermostat or Google Nest device
-- Always think like an expert insurance inspector focused only on damaged property and equipment
-
-Output behavior:
-- Set queryKind to "general" for brand-only, category-only, broad brand + category queries, or any search that does not identify a single product
-- Set queryKind to "specific" when the query includes a model number, clear distinguishing specs, or enough detail to identify a narrow product target
-- If the query is already a clear model number or complete, unambiguous item description, use action "bypass"
-- Otherwise use action "suggest" and produce between 1 and 5 ranked suggested interpretations
-- Suggestions do NOT need to be related to each other; they are independent best guesses
-- Suggestions must be specific and actionable, not vague category labels
-- Expand abbreviations, partial words, and likely typos into full item descriptions
-- Only use action "no_results" when the query is extremely vague or meaningless for property claims, such as pure gibberish or numeric-only text like "33", "abc", or "zzz"
-- Only use action "out_of_scope" if the final query still cannot plausibly map to any valid property/equipment item category after best effort interpretation
-
-Examples:
-- "Shark Bad" -> "Shark Robot Vacuum", "Shark Steam Mop", "Shark Cordless Vacuum"
-- "LG wash" -> "LG Front Load Washing Machine", "LG Top Load Washing Machine"
-- "Carr AC" -> "Carrier Central Air Conditioner", "Carrier Mini Split AC Unit"
-- "Samung 65" -> "Samsung 65-inch 4K Smart TV"
-- "hot wat heat" -> "Gas Water Heater", "Electric Water Heater", "Tankless Water Heater"
-- "braker box" -> "Electrical Panel / Breaker Box"
-
-Return ONLY valid JSON in this format:
-{
-  "action": "bypass",
-  "queryKind": "specific",
-  "confidence": "high",
-  "scopeValid": true,
-  "message": null,
-  "suggestions": [
-    "Specific item suggestion 1"
-  ]
-}`;
-
-  let parsed = null;
-  try {
-    const geminiInterpretController = new AbortController();
-    const geminiInterpretTimeout = setTimeout(() => geminiInterpretController.abort(), 10000);
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.1,
-          },
-        }),
-        signal: geminiInterpretController.signal,
-      }
-    );
-    clearTimeout(geminiInterpretTimeout);
-
-    if (!response.ok) throw new Error(`Gemini status ${response.status}`);
-
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error('Gemini returned empty parts');
-
-    parsed = JSON.parse(text);
-  } catch (geminiErr) {
-    console.error('[Interpret] Gemini failed, attempting Groq fallback...', geminiErr.message);
-    try {
-      parsed = await callGroqInterpret(prompt);
-    } catch (groqErr) {
-      console.error('[Interpret] Groq fallback failed also', groqErr.message);
-    }
-  }
-
-  if (!parsed) {
-    return res.status(200).json({
-      action: 'bypass',
-      queryKind: 'specific',
-      confidence: 'low',
-      scopeValid: true,
-      message: null,
-      suggestions: [sanitizedQuery]
-    });
-  }
-
+function normalizeProviderInterpretation(raw, queryInfo) {
+  const actions = new Set(['bypass', 'suggest', 'no_results', 'out_of_scope']);
+  const kinds = new Set(['general', 'specific']);
+  const confidence = new Set(['high', 'medium', 'low']);
   const payload = {
-    action: ['bypass', 'suggest', 'no_results', 'out_of_scope'].includes(parsed?.action) ? parsed.action : 'suggest',
-    queryKind: ['general', 'specific'].includes(parsed?.queryKind) ? parsed.queryKind : 'specific',
-    confidence: ['high', 'medium', 'low'].includes(parsed?.confidence) ? parsed.confidence : 'medium',
-    scopeValid: parsed?.scopeValid !== false,
-    message: typeof parsed?.message === 'string' && parsed.message.trim() ? parsed.message.trim() : null,
-    suggestions: Array.isArray(parsed?.suggestions)
-      ? parsed.suggestions.map((s) => normalizeQuery(s)).filter(Boolean).slice(0, 5)
-      : [],
+    action: actions.has(raw?.action) ? raw.action : 'suggest',
+    queryKind: kinds.has(raw?.queryKind) ? raw.queryKind : 'specific',
+    confidence: confidence.has(raw?.confidence) ? raw.confidence : 'medium',
+    scopeValid: raw?.scopeValid !== false,
+    message: normalizeWhitespace(raw?.message) || null,
+    suggestions: normalizeSuggestions(raw?.suggestions),
+    specificityLevel: queryInfo.specificityLevel,
   };
-
-  if (payload.action === 'suggest' && payload.suggestions.length === 0) {
-    payload.action = 'no_results';
-  }
-  if (payload.action === 'bypass' && payload.suggestions.length === 0) {
-    payload.suggestions = [sanitizedQuery];
-  }
+  if (payload.action === 'suggest' && !payload.suggestions.length) payload.action = 'no_results';
+  if (payload.action === 'bypass' && !payload.suggestions.length) payload.suggestions = [queryInfo.query];
   if (payload.action === 'no_results' && !payload.message) {
-    payload.message = "We couldn't identify an item from your search. Try entering a brand name, model number, or item description such as 'LG refrigerator' or 'Carrier AC unit'.";
+    payload.message = "We couldn't identify a physical property item. Enter a brand, model number, or item description.";
     payload.scopeValid = false;
   }
   if (payload.action === 'out_of_scope' && !payload.message) {
-    payload.message = 'Item Assist is designed for property and equipment research. Please enter an appliance, electronic, HVAC, electrical, or household item.';
+    payload.message = 'Decode My Item is designed for appliances, electronics, HVAC, electrical, plumbing, and household equipment.';
     payload.scopeValid = false;
   }
-
-  try {
-    await redis.set(cacheKey, payload, { ex: 7 * 24 * 60 * 60 });
-  } catch (_) {}
-
-  return res.status(200).json(payload);
+  return payload;
 }
+
+function withMetadata(payload, metadata = {}) {
+  return {
+    ...payload,
+    cacheStatus: metadata.cacheStatus || 'bypass',
+    source: metadata.source || 'static',
+    originSource: metadata.originSource || metadata.source || 'static',
+    providerAttempted: Boolean(metadata.providerAttempted),
+    fallbackUsed: Boolean(metadata.fallbackUsed),
+    timings: {
+      cacheReadMs: 0,
+      rateLimitMs: 0,
+      providerMs: 0,
+      cacheWriteMs: 0,
+      totalMs: 0,
+      ...(metadata.timings || {}),
+    },
+    errorCode: metadata.errorCode || null,
+  };
+}
+
+export function createSmartQueryInterpretHandler(dependencies = {}) {
+  const redisFactory = dependencies.redisFactory || createRedisClient;
+  const providerLookup = dependencies.providerLookup || callGeminiInterpretProvider;
+  const limiterFactory = dependencies.rateLimiterFactory || ((redis) => createProviderRateLimiter(redis, {
+    requests: 20, window: '1 m', prefix: 'smart-interpret-provider-v2',
+  }));
+  const logger = dependencies.logger || console;
+  const now = dependencies.now || Date.now;
+  const inflightInterpretRequests = new Map();
+
+  return async function handler(req, res) {
+    const requestId = createRequestId(req, 'interpret');
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+    const validation = validateRequest(req.body || {});
+    if (validation.error) {
+      return res.status(400).json({
+        error: validation.error === 'MISSING_QUERY' ? 'Missing query' : 'Query too long',
+        errorCode: validation.error,
+      });
+    }
+
+    const deadline = createDeadline({ totalMs: dependencies.totalBudgetMs || TOTAL_BUDGET_MS, now });
+    const timings = { cacheReadMs: 0, rateLimitMs: 0, providerMs: 0, cacheWriteMs: 0, totalMs: 0 };
+    const queryInfo = classifySmartLookupQuery(validation.value.query);
+    const deterministic = deterministicInterpretation(queryInfo);
+    if (deterministic) {
+      const result = withMetadata(deterministic, { source: 'static', timings });
+      result.timings.totalMs = deadline.elapsedMs();
+      logSmartLookup(logger, {
+        event: 'smart_query_interpret', requestId, canonicalQuery: queryInfo.canonicalQuery,
+        specificityLevel: queryInfo.specificityLevel, source: result.source,
+        cacheStatus: result.cacheStatus, providerAttempted: false, timings: result.timings,
+      });
+      return res.status(200).json(result);
+    }
+
+    try {
+    const redis = dependencies.redis || redisFactory();
+    const cacheKey = buildSmartInterpretCacheKey(queryInfo);
+    const cacheStart = now();
+    const cacheRead = await boundedRedisGet(redis, cacheKey, deadline, {
+      stage: 'interpret-cache-read', maxMs: REDIS_CALL_BUDGET_MS, reserveMs: 350,
+    });
+    timings.cacheReadMs = Math.max(cacheRead.elapsedMs || 0, now() - cacheStart);
+    if (cacheRead.status === 'hit' && cacheRead.value && typeof cacheRead.value === 'object') {
+      const result = withMetadata(normalizeProviderInterpretation(cacheRead.value, queryInfo), {
+        source: 'cache', originSource: cacheRead.value.originSource || cacheRead.value.source || 'gemini',
+        cacheStatus: 'hit', providerAttempted: false, timings,
+      });
+      result.timings.totalMs = deadline.elapsedMs();
+      logSmartLookup(logger, {
+        event: 'smart_query_interpret', requestId, canonicalQuery: queryInfo.canonicalQuery,
+        specificityLevel: queryInfo.specificityLevel, source: result.source,
+        cacheStatus: result.cacheStatus, providerAttempted: false, timings: result.timings,
+      });
+      return res.status(200).json(result);
+    }
+
+    let providerPromise = inflightInterpretRequests.get(cacheKey);
+    if (!providerPromise) {
+      providerPromise = (async () => {
+        const limiter = dependencies.rateLimiter || limiterFactory(redis);
+        const rate = await boundedRateLimit(limiter, getClientIp(req), deadline, {
+          stage: 'interpret-provider-rate-limit', maxMs: REDIS_CALL_BUDGET_MS, reserveMs: 250,
+        });
+        timings.rateLimitMs = rate.elapsedMs || 0;
+        if (!rate.success) {
+          const error = new Error('RATE_LIMIT');
+          error.code = 'RATE_LIMIT';
+          throw error;
+        }
+        return deadline.run('interpret-provider-call', () => providerLookup(queryInfo, {
+          deadline,
+          maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(250)),
+          reserveMs: 250,
+          fetchImpl: dependencies.fetchImpl,
+          apiKey: dependencies.apiKey,
+        }), {
+          maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(250)),
+          reserveMs: 250,
+        });
+      })();
+      inflightInterpretRequests.set(cacheKey, providerPromise);
+      providerPromise.finally(() => {
+        if (inflightInterpretRequests.get(cacheKey) === providerPromise) inflightInterpretRequests.delete(cacheKey);
+      }).catch(() => {});
+    }
+
+    const providerStart = now();
+    try {
+      const raw = await deadline.run('interpret-provider-result-wait', () => providerPromise, {
+        maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(250)),
+        reserveMs: 250,
+      });
+      timings.providerMs = Math.max(0, now() - providerStart);
+      const payload = normalizeProviderInterpretation(raw, queryInfo);
+      const result = withMetadata(payload, {
+        source: 'gemini', originSource: 'gemini', cacheStatus: cacheRead.status === 'miss' ? 'miss' : 'error',
+        providerAttempted: true, timings,
+      });
+      const cachePayload = prepareInterpretForCache(result);
+      if (cachePayload && deadline.hasTime(40)) {
+        const write = await boundedRedisSet(redis, cacheKey, cachePayload, 7 * 24 * 60 * 60, deadline, {
+          stage: 'interpret-cache-write', maxMs: CACHE_WRITE_BUDGET_MS,
+        });
+        timings.cacheWriteMs = write.elapsedMs || 0;
+      }
+      result.timings = { ...timings, totalMs: deadline.elapsedMs() };
+      logSmartLookup(logger, {
+        event: 'smart_query_interpret', requestId, canonicalQuery: queryInfo.canonicalQuery,
+        specificityLevel: queryInfo.specificityLevel, source: result.source,
+        cacheStatus: result.cacheStatus, providerAttempted: true, timings: result.timings,
+      });
+      return res.status(200).json(result);
+    } catch (error) {
+      timings.providerMs = Math.max(0, now() - providerStart);
+      const errorCode = isTimeoutError(error)
+        ? 'PROVIDER_TIMEOUT'
+        : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE');
+      const result = withMetadata({
+        action: 'bypass', queryKind: 'specific', confidence: 'low', scopeValid: true,
+        message: 'The original query is being used because interpretation was unavailable.',
+        suggestions: [queryInfo.query], specificityLevel: 'unknown',
+      }, {
+        source: 'fallback', cacheStatus: cacheRead.status === 'miss' ? 'miss' : 'error',
+        providerAttempted: true, fallbackUsed: true, errorCode, timings,
+      });
+      result.timings.totalMs = deadline.elapsedMs();
+      logSmartLookup(logger, {
+        event: 'smart_query_interpret', requestId, canonicalQuery: queryInfo.canonicalQuery,
+        specificityLevel: queryInfo.specificityLevel, source: result.source,
+        cacheStatus: result.cacheStatus, providerAttempted: true, fallbackUsed: true,
+        timeoutStage: isTimeoutError(error) ? 'provider' : null, errorCode, timings: result.timings,
+      });
+      return res.status(200).json(result);
+    }
+    } catch (error) {
+      const result = withMetadata({
+        action: 'bypass', queryKind: queryInfo.specificityLevel === 'generic' || queryInfo.specificityLevel === 'brand-only' ? 'general' : 'specific', confidence: 'low', scopeValid: true,
+        message: 'The original query is being used because interpretation was unavailable.',
+        suggestions: [queryInfo.query], specificityLevel: queryInfo.specificityLevel,
+      }, {
+        source: 'fallback', cacheStatus: 'error', providerAttempted: false, fallbackUsed: true,
+        errorCode: isTimeoutError(error) ? 'TOTAL_DEADLINE' : 'INTERNAL_ERROR', timings,
+      });
+      result.timings.totalMs = deadline.elapsedMs();
+      logSmartLookup(logger, {
+        event: 'smart_query_interpret', requestId, canonicalQuery: queryInfo.canonicalQuery,
+        specificityLevel: queryInfo.specificityLevel, source: result.source,
+        cacheStatus: result.cacheStatus, providerAttempted: false, fallbackUsed: true,
+        timeoutStage: isTimeoutError(error) ? error.stage || 'unknown' : null,
+        errorCode: result.errorCode, timings: result.timings,
+      });
+      return res.status(200).json(result);
+    }
+  };
+}
+
+export default createSmartQueryInterpretHandler();
