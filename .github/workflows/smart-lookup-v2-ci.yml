@@ -27,10 +27,18 @@ jobs:
         run: npm ci
       - name: Production build
         run: npm run build
+      - name: Re-run production build for deterministic output
+        run: npm run build
       - name: Confirm committed build output
         run: git diff --exit-code
       - name: Complete Node test suite
         run: npm test
+      - name: Smart Lookup unit tests
+        run: npm run test:smart-unit
+      - name: Smart Lookup API tests
+        run: npm run test:smart-api
+      - name: Smart Lookup benchmark tests
+        run: npm run test:smart-benchmark
 
   browser:
     runs-on: ubuntu-latest
@@ -45,33 +53,17 @@ jobs:
           cache: npm
       - name: Install application dependencies
         run: npm ci
-      - name: Install pinned Playwright test runner
-        run: npm install --no-save @playwright/test@1.61.1
-      - name: Install Microsoft Edge
-        run: npx playwright install --with-deps msedge
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
       - name: Rebuild browser assets
-        run: npm run build:browser
+        run: npm run build
       - name: Start static site
         shell: bash
         run: |
           python3 -m http.server 3001 > /tmp/smart-lookup-v2-http.log 2>&1 &
           echo $! > /tmp/smart-lookup-v2-http.pid
           sleep 2
+      - name: Run Smart Lookup browser suite
+        run: npm run test:smart-playwright -- --reporter=line
       - name: Run existing browser suites
         run: npm run test:playwright -- --reporter=line
-
-  source-snapshot:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Create source snapshot
-        shell: bash
-        run: tar --exclude=.git --exclude=node_modules -czf serial-decoder-source.tgz .
-      - name: Upload source snapshot
-        uses: actions/upload-artifact@v4
-        with:
-          name: smart-lookup-v2-source-snapshot
-          path: serial-decoder-source.tgz
-          retention-days: 3
