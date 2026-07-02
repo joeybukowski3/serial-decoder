@@ -23,57 +23,6 @@ const PROVIDER_BUDGET_MS = 7000;
 const REDIS_CALL_BUDGET_MS = 250;
 const CACHE_WRITE_BUDGET_MS = 175;
 
-function extractLgTvSeriesInfo(value) {
-  const text = String(value || '').toUpperCase();
-  const match = text.match(/OLED\d+[A-Z]{0,3}([BCGZM])(\d)[A-Z0-9]*/)
-    || text.match(/\b([BCGZM])(\d)\b/)
-    || text.match(/\b([BCGZM])(\d)[A-Z0-9]{2,}\b/);
-  if (!match) return null;
-  return { family: match[1], generationDigit: parseInt(match[2], 10) };
-}
-
-function getCurrentLgTvGenerationDigit() {
-  const year = new Date().getFullYear();
-  return Math.max(1, year - 2021);
-}
-
-function rewriteLgTvModelToGeneration(value, targetDigit) {
-  const text = String(value || '');
-  if (!text || !Number.isFinite(targetDigit)) return text;
-  return text
-    .replace(/(OLED\d+[A-Z]{0,3})([BCGZM])(\d)([A-Z0-9]*)/i, (_, prefix, family, __, suffix) => `${prefix}${family}${targetDigit}${suffix || ''}`)
-    .replace(/\b([BCGZM])(\d)([A-Z0-9]{2,})\b/i, (_, family, __, suffix) => `${family}${targetDigit}${suffix}`)
-    .replace(/\b([BCGZM])(\d)\b/i, (_, family) => `${family}${targetDigit}`);
-}
-
-export function maybePromoteCurrentSuccessor(result) {
-  if (!result || typeof result !== 'object') return result;
-  const copy = JSON.parse(JSON.stringify(result));
-  const summary = copy.itemSummary || {};
-  const successor = copy.successorStatus || {};
-  const options = Array.isArray(copy.replacementOptions) ? copy.replacementOptions : [];
-  const first = options[0];
-  const brand = String(summary.brand || first?.brand || successor.name || '').toLowerCase();
-  const category = String(summary.category || '').toLowerCase();
-  const originalInfo = extractLgTvSeriesInfo(summary.model || summary.modelNumber || summary.name || '');
-  const successorInfo = extractLgTvSeriesInfo(successor.model || first?.model || successor.name || first?.name || '');
-  if (brand !== 'lg' || (category.indexOf('tv') === -1 && category.indexOf('oled') === -1)) return copy;
-  if (!originalInfo || !successorInfo || originalInfo.family !== successorInfo.family) return copy;
-  const currentDigit = getCurrentLgTvGenerationDigit();
-  if (!Number.isFinite(currentDigit) || currentDigit <= successorInfo.generationDigit || currentDigit <= originalInfo.generationDigit) return copy;
-  const upgradeText = `Promoted to current in-market ${successorInfo.family}-series successor based on the current model cycle.`;
-  if (successor.model) successor.model = rewriteLgTvModelToGeneration(successor.model, currentDigit);
-  if (successor.name) successor.name = rewriteLgTvModelToGeneration(successor.name, currentDigit);
-  successor.explanation = successor.explanation ? `${successor.explanation} ${upgradeText}` : upgradeText;
-  if (first) {
-    if (first.model) first.model = rewriteLgTvModelToGeneration(first.model, currentDigit);
-    if (first.name) first.name = rewriteLgTvModelToGeneration(first.name, currentDigit);
-    if (first.retailerSearchQuery) first.retailerSearchQuery = rewriteLgTvModelToGeneration(first.retailerSearchQuery, currentDigit);
-    first.notes = first.notes ? `${first.notes} ${upgradeText}` : upgradeText;
-  }
-  return copy;
-}
-
 function validateRequest(body) {
   const query = normalizeWhitespace(body?.query);
   if (!query) return { error: 'MISSING_QUERY' };
@@ -123,8 +72,7 @@ export function createLkqLookupHandler(dependencies = {}) {
       cacheStatus = cacheRead.status === 'hit' ? 'hit' : (cacheRead.status === 'miss' ? 'miss' : 'error');
       if (cacheRead.status === 'hit' && cacheRead.value) {
         try {
-          const cached = maybePromoteCurrentSuccessor(cacheRead.value);
-          const result = finish(normalizeCachedReplacementResult(cached, { queryInfo }), timings, deadline);
+          const result = finish(normalizeCachedReplacementResult(cacheRead.value, { queryInfo }), timings, deadline);
           logSmartLookup(logger, {
             event: 'smart_lkq_lookup', requestId, canonicalQuery: queryInfo.canonicalQuery,
             specificityLevel: queryInfo.specificityLevel, source: result.source,
@@ -137,32 +85,31 @@ export function createLkqLookupHandler(dependencies = {}) {
         }
       }
 
-      const limiter = dependencies.rateLimiter || limiterFactory(redis);
-      const rate = await boundedRateLimit(limiter, getClientIp(req), deadline, {
-        stage: 'lkq-provider-rate-limit', maxMs: REDIS_CALL_BUDGET_MS, reserveMs: 400,
-      });
-      timings.rateLimitMs = rate.elapsedMs || 0;
-      if (!rate.success) {
-        const result = finish(createUnavailableReplacementResult(queryInfo, {
-          cacheStatus, errorCode: 'RATE_LIMIT', timings,
-          message: 'Replacement provider capacity is temporarily limited. The age result remains available.',
-        }), timings, deadline);
-        return res.status(429).json(result);
-      }
-
       const providerStart = now();
       let providerPromise = inflightReplacementRequests.get(cacheKey);
       if (!providerPromise) {
-        providerPromise = deadline.run('lkq-provider-call', () => providerLookup(queryInfo, {
-          deadline,
-          maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(350)),
-          reserveMs: 350,
-          fetchImpl: dependencies.fetchImpl,
-          apiKey: dependencies.apiKey,
-        }), {
-          maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(350)),
-          reserveMs: 350,
-        });
+        providerPromise = (async () => {
+          const limiter = dependencies.rateLimiter || limiterFactory(redis);
+          const rate = await boundedRateLimit(limiter, getClientIp(req), deadline, {
+            stage: 'lkq-provider-rate-limit', maxMs: REDIS_CALL_BUDGET_MS, reserveMs: 400,
+          });
+          timings.rateLimitMs = rate.elapsedMs || 0;
+          if (!rate.success) {
+            const error = new Error('RATE_LIMIT');
+            error.code = 'RATE_LIMIT';
+            throw error;
+          }
+          return deadline.run('lkq-provider-call', () => providerLookup(queryInfo, {
+            deadline,
+            maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(350)),
+            reserveMs: 350,
+            fetchImpl: dependencies.fetchImpl,
+            apiKey: dependencies.apiKey,
+          }), {
+            maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(350)),
+            reserveMs: 350,
+          });
+        })();
         inflightReplacementRequests.set(cacheKey, providerPromise);
         providerPromise.finally(() => {
           if (inflightReplacementRequests.get(cacheKey) === providerPromise) inflightReplacementRequests.delete(cacheKey);
@@ -177,11 +124,14 @@ export function createLkqLookupHandler(dependencies = {}) {
         });
       } catch (error) {
         timings.providerMs = Math.max(0, now() - providerStart);
-        const errorCode = isTimeoutError(error)
-          ? 'PROVIDER_TIMEOUT'
-          : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE');
+        const errorCode = error?.code === 'RATE_LIMIT'
+          ? 'RATE_LIMIT'
+          : (isTimeoutError(error)
+            ? 'PROVIDER_TIMEOUT'
+            : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE'));
         const result = finish(createUnavailableReplacementResult(queryInfo, {
-          cacheStatus, providerAttempted: true, fallbackUsed: true, errorCode, timings,
+          cacheStatus, providerAttempted: errorCode !== 'RATE_LIMIT', fallbackUsed: true, errorCode, timings,
+          message: errorCode === 'RATE_LIMIT' ? 'Replacement provider capacity is temporarily limited. The age result remains available.' : undefined,
         }), timings, deadline);
         logSmartLookup(logger, {
           event: 'smart_lkq_lookup', requestId, canonicalQuery: queryInfo.canonicalQuery,
@@ -198,7 +148,7 @@ export function createLkqLookupHandler(dependencies = {}) {
       const postStart = now();
       let result;
       try {
-        result = normalizeReplacementResult(maybePromoteCurrentSuccessor(raw), {
+        result = normalizeReplacementResult(raw, {
           queryInfo,
           source: 'gemini',
           originSource: 'gemini',
@@ -219,10 +169,12 @@ export function createLkqLookupHandler(dependencies = {}) {
 
       const ttl = chooseSmartLkqTtl(result);
       if (ttl && deadline.hasTime(40)) {
-        const write = await boundedRedisSet(redis, cacheKey, prepareReplacementForCache(result), ttl, deadline, {
+        const cachePayload = prepareReplacementForCache(result);
+        boundedRedisSet(redis, cacheKey, cachePayload, ttl, deadline, {
           stage: 'lkq-cache-write', maxMs: CACHE_WRITE_BUDGET_MS,
-        });
-        timings.cacheWriteMs = write.elapsedMs || 0;
+        }).then((write) => {
+          timings.cacheWriteMs = write.elapsedMs || 0;
+        }).catch(() => {});
       }
 
       finish(result, timings, deadline);

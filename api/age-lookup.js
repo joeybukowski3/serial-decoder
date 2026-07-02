@@ -153,7 +153,13 @@ export function createAgeLookupHandler(dependencies = {}) {
           maxMs: 400,
           reserveMs: 700,
         });
-      } catch (_) {}
+      } catch (error) {
+        logSmartLookup(logger, {
+          event: 'smart_age_local_error', requestId, canonicalQuery: queryInfo.canonicalQuery,
+          specificityLevel: queryInfo.specificityLevel, source: 'local-db',
+          errorCode: error?.code || 'LOCAL_LOOKUP_ERROR', timings,
+        });
+      }
       timings.localLookupMs = Math.max(0, now() - localStart);
 
       if (localResult) {
@@ -167,7 +173,7 @@ export function createAgeLookupHandler(dependencies = {}) {
         return res.status(200).json(result);
       }
 
-      const hvacQuick = decodeHvacSerial(queryInfo.query, queryInfo.normalizedQuery);
+      const hvacQuick = decodeHvacSerial(queryInfo.query, queryInfo.normalizedQuery, queryInfo);
       if (hvacQuick) {
         const result = finalizeTimings(normalizeLegacyResult(hvacQuick, queryInfo, {
           source: 'static',
@@ -256,41 +262,34 @@ export function createAgeLookupHandler(dependencies = {}) {
         return res.status(200).json(result);
       }
 
-      const rateLimiter = dependencies.rateLimiter || rateLimiterFactory(redis);
-      const rateResult = await boundedRateLimit(rateLimiter, getClientIp(req), deadline, {
-        stage: 'age-provider-rate-limit',
-        maxMs: REDIS_CALL_BUDGET_MS,
-        reserveMs: 400,
-      });
-      timings.rateLimitMs = rateResult.elapsedMs || 0;
-      if (!rateResult.success) {
-        const result = finalizeTimings(createUnavailableSmartAgeResult(queryInfo, {
-          source: 'fallback',
-          evidenceSource: 'none',
-          cacheStatus,
-          providerAttempted: false,
-          timings,
-          errorCode: 'RATE_LIMIT',
-          notes: 'Smart Lookup provider capacity is temporarily limited. Local and cached lookups remain available.',
-        }), timings, deadline);
-        logResult(logger, requestId, queryInfo, result);
-        return res.status(429).json(result);
-      }
-
       const providerStart = now();
       let rawProvider;
       let providerPromise = inflightProviderRequests.get(cacheKey);
       if (!providerPromise) {
-        providerPromise = deadline.run('age-provider-call', () => providerLookup(queryInfo, {
-          deadline,
-          maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
-          reserveMs: 350,
-          fetchImpl: dependencies.fetchImpl,
-          apiKey: dependencies.apiKey,
-        }), {
-          maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
-          reserveMs: 350,
-        });
+        providerPromise = (async () => {
+          const rateLimiter = dependencies.rateLimiter || rateLimiterFactory(redis);
+          const rateResult = await boundedRateLimit(rateLimiter, getClientIp(req), deadline, {
+            stage: 'age-provider-rate-limit',
+            maxMs: REDIS_CALL_BUDGET_MS,
+            reserveMs: 400,
+          });
+          timings.rateLimitMs = rateResult.elapsedMs || 0;
+          if (!rateResult.success) {
+            const error = new Error('RATE_LIMIT');
+            error.code = 'RATE_LIMIT';
+            throw error;
+          }
+          return deadline.run('age-provider-call', () => providerLookup(queryInfo, {
+            deadline,
+            maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
+            reserveMs: 350,
+            fetchImpl: dependencies.fetchImpl,
+            apiKey: dependencies.apiKey,
+          }), {
+            maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
+            reserveMs: 350,
+          });
+        })();
         inflightProviderRequests.set(cacheKey, providerPromise);
         providerPromise.finally(() => {
           if (inflightProviderRequests.get(cacheKey) === providerPromise) inflightProviderRequests.delete(cacheKey);
@@ -304,19 +303,22 @@ export function createAgeLookupHandler(dependencies = {}) {
         });
       } catch (error) {
         timings.providerMs = Math.max(0, now() - providerStart);
-        const errorCode = isTimeoutError(error)
-          ? 'PROVIDER_TIMEOUT'
-          : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE');
+        const errorCode = error?.code === 'RATE_LIMIT'
+          ? 'RATE_LIMIT'
+          : (isTimeoutError(error)
+            ? 'PROVIDER_TIMEOUT'
+            : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE'));
         const result = finalizeTimings(createUnavailableSmartAgeResult(queryInfo, {
           source: 'fallback',
           evidenceSource: 'none',
           cacheStatus,
-          providerAttempted: true,
+          providerAttempted: errorCode !== 'RATE_LIMIT',
           timings,
           errorCode,
+          notes: errorCode === 'RATE_LIMIT' ? 'Smart Lookup provider capacity is temporarily limited. Local and cached lookups remain available.' : undefined,
         }), timings, deadline);
         logResult(logger, requestId, queryInfo, result, { timeoutStage: isTimeoutError(error) ? 'provider' : null });
-        return res.status(200).json(result);
+        return res.status(errorCode === 'RATE_LIMIT' ? 429 : 200).json(result);
       }
       timings.providerMs = Math.max(0, now() - providerStart);
 
@@ -355,11 +357,13 @@ export function createAgeLookupHandler(dependencies = {}) {
 
       const ttlSeconds = chooseSmartAgeTtl(result);
       if (ttlSeconds > 0 && deadline.hasTime(50)) {
-        const writeResult = await boundedRedisSet(redis, cacheKey, prepareResultForCache(result), ttlSeconds, deadline, {
+        const cachePayload = prepareResultForCache(result);
+        boundedRedisSet(redis, cacheKey, cachePayload, ttlSeconds, deadline, {
           stage: 'age-cache-write',
           maxMs: CACHE_WRITE_BUDGET_MS,
-        });
-        timings.cacheWriteMs = writeResult.elapsedMs || 0;
+        }).then((writeResult) => {
+          timings.cacheWriteMs = writeResult.elapsedMs || 0;
+        }).catch(() => {});
       }
 
       finalizeTimings(result, timings, deadline);

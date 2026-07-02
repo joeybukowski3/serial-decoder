@@ -1,171 +1,256 @@
-import { Redis } from '@upstash/redis';
-import { Ratelimit } from '@upstash/ratelimit';
+import { buildSmartGeneralCacheKey } from '../lib/smart-lookup/cache.js';
+import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
+import { classifySmartLookupQuery, normalizeWhitespace } from '../lib/smart-lookup/normalize.js';
+import { callGeminiGeneralProvider, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
+import {
+  boundedRateLimit,
+  boundedRedisGet,
+  boundedRedisSet,
+  createProviderRateLimiter,
+  createRedisClient,
+  getClientIp,
+} from '../lib/smart-lookup/redis.js';
+import { buildDeterministicBroadResult } from '../lib/smart-lookup/static-results.js';
+import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
+const TOTAL_BUDGET_MS = 5000;
+const PROVIDER_BUDGET_MS = 3500;
+const REDIS_CALL_BUDGET_MS = 250;
+const CACHE_WRITE_BUDGET_MS = 150;
 
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(20, '1 m'),
-  analytics: false,
-});
-
-function getClientIp(req) {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (forwarded) return forwarded.split(',')[0].trim();
-  return req.socket?.remoteAddress || 'unknown';
+function validateRequest(body) {
+  const query = normalizeWhitespace(body?.query);
+  if (!query) return { error: 'MISSING_QUERY' };
+  if (query.length > 200) return { error: 'QUERY_TOO_LONG' };
+  return { value: { query } };
 }
 
-function normalizeQuery(query) {
-  return String(query || '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+function clean(value, maxLength = 800) {
+  return normalizeWhitespace(value).slice(0, maxLength);
 }
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+function normalizeGeneralPayload(raw, queryInfo) {
+  const refineOptions = Array.isArray(raw?.refineOptions)
+    ? raw.refineOptions
+        .map((item) => ({
+          label: clean(item?.label, 180),
+          query: clean(item?.query, 180),
+          year: clean(item?.year, 20),
+        }))
+        .filter((item) => item.label && item.query)
+        .slice(0, 5)
+    : [];
+  const fallbackCategory = queryInfo.genericCategory || 'General Property Item';
+  return {
+    itemCategory: clean(raw?.itemCategory || fallbackCategory, 100),
+    brand: clean(raw?.brand || queryInfo.brand, 80),
+    overview: clean(raw?.overview, 1000) || 'This broad item search needs a complete model number for model-level timing or replacement research.',
+    refineOptions,
+    averageModelLabel: clean(raw?.averageModelLabel, 180),
+    averageModelQuery: clean(raw?.averageModelQuery, 180),
+    averageModelCategory: clean(raw?.averageModelCategory || raw?.itemCategory || fallbackCategory, 100),
+  };
+}
 
-  const { query } = req.body || {};
-  const sanitizedQuery = normalizeQuery(query);
-  if (!sanitizedQuery) {
-    return res.status(400).json({ error: 'Missing query' });
-  }
-  if (sanitizedQuery.length > 200) {
-    return res.status(400).json({ error: 'Query too long' });
-  }
+function deterministicGeneral(queryInfo) {
+  const broad = buildDeterministicBroadResult(queryInfo);
+  if (!broad) return null;
+  return normalizeGeneralPayload({
+    itemCategory: broad.category || broad.itemCategory,
+    brand: broad.brand === 'Unknown' ? '' : broad.brand,
+    overview: broad.inventionSummary || broad.notes,
+    averageModelCategory: broad.category || broad.itemCategory,
+  }, queryInfo);
+}
 
-  try {
-    const ip = getClientIp(req);
-    const { success, reset } = await ratelimit.limit(ip);
-    if (!success) {
-      res.setHeader('Retry-After', Math.ceil((reset - Date.now()) / 1000));
-      return res.status(429).json({ error: 'Too many requests. Please try again later.', errorCode: 'RATE_LIMIT' });
-    }
-  } catch (_) {}
+function withMetadata(payload, metadata = {}) {
+  return {
+    ...payload,
+    cacheStatus: metadata.cacheStatus || 'bypass',
+    source: metadata.source || 'static',
+    originSource: metadata.originSource || metadata.source || 'static',
+    evidenceSource: metadata.evidenceSource || 'none',
+    providerAttempted: Boolean(metadata.providerAttempted),
+    fallbackUsed: Boolean(metadata.fallbackUsed),
+    timings: {
+      cacheReadMs: 0,
+      rateLimitMs: 0,
+      providerMs: 0,
+      cacheWriteMs: 0,
+      totalMs: 0,
+      ...(metadata.timings || {}),
+    },
+    errorCode: metadata.errorCode || null,
+  };
+}
 
-  const normalizedQuery = sanitizedQuery.toLowerCase();
-  const cacheKey = `smart-query-general-v1:${normalizedQuery}`;
+function logResult(logger, requestId, queryInfo, result, extra = {}) {
+  logSmartLookup(logger, {
+    event: 'smart_query_general',
+    requestId,
+    canonicalQuery: queryInfo.canonicalQuery,
+    specificityLevel: queryInfo.specificityLevel,
+    source: result.source,
+    evidenceSource: result.evidenceSource,
+    cacheStatus: result.cacheStatus,
+    providerAttempted: result.providerAttempted,
+    fallbackUsed: result.fallbackUsed,
+    timeoutStage: extra.timeoutStage || null,
+    errorCode: result.errorCode,
+    timings: result.timings,
+  });
+}
 
-  try {
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return res.status(200).json(cached);
-    }
-  } catch (_) {}
+export function createSmartQueryGeneralHandler(dependencies = {}) {
+  const redisFactory = dependencies.redisFactory || createRedisClient;
+  const providerLookup = dependencies.providerLookup || callGeminiGeneralProvider;
+  const limiterFactory = dependencies.rateLimiterFactory || ((redis) => createProviderRateLimiter(redis, {
+    requests: 20,
+    window: '1 m',
+    prefix: 'smart-general-provider-v2',
+  }));
+  const now = dependencies.now || Date.now;
+  const logger = dependencies.logger || console;
+  const inflightGeneralRequests = new Map();
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'Service unavailable' });
-  }
-
-  const prompt = `You are an insurance property claims research assistant helping with a broad or general item search.
-
-Original query: "${sanitizedQuery}"
-
-The query should be treated as a general product-family or category search, not a specific model lookup.
-
-Allowed categories only:
-- Consumer electronics
-- Home appliances
-- HVAC systems and components
-- Water heaters and plumbing fixtures
-- Electrical panels, breakers, wiring, and components
-- Generators and power equipment
-- Solar systems and components
-- Household fixtures and built-in property items
-- Commercial versions of any of the above
-
-Instructions:
-- Interpret the query only through the lens of insurable physical property and equipment
-- Identify the best-fitting item category and brand, if a brand is implied or stated
-- Write a brief 3-5 sentence overview suitable for an insurance claims workflow
-- For brand-only queries, describe the relevant product line that would matter on claims
-- For category-only queries, describe the category generally
-- Return 3 to 5 refinement options that users are likely searching for
-- Prioritize recent/current models first
-- Include one entry-level and one premium option when the product line has a clear range
-- Include one historically significant model when relevant
-- Make each refinement option specific and realistic, with Brand + Model Name + Year
-- Provide a practical average or mid-range representative model for calculating fallback LKQ options
-
-Return ONLY valid JSON in this format:
-{
-  "itemCategory": "Smartphone",
-  "brand": "Apple",
-  "overview": "3-5 sentence overview here.",
-  "refineOptions": [
-    {
-      "label": "Apple iPhone 15 Pro — 2023",
-      "query": "Apple iPhone 15 Pro",
-      "year": "2023"
-    }
-  ],
-  "averageModelLabel": "Apple iPhone 14 — 2022",
-  "averageModelQuery": "Apple iPhone 14",
-  "averageModelCategory": "Smartphone"
-}`;
-
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.2,
-          },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      return res.status(502).json({ error: 'AI service error' });
+  return async function handler(req, res) {
+    const requestId = createRequestId(req, 'general');
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+    const validation = validateRequest(req.body || {});
+    if (validation.error) {
+      return res.status(400).json({
+        error: validation.error === 'MISSING_QUERY' ? 'Missing query' : 'Query too long',
+        errorCode: validation.error,
+      });
     }
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      return res.status(502).json({ error: 'No response from AI service' });
-    }
-
-    const parsed = JSON.parse(text);
-    const payload = {
-      itemCategory: normalizeQuery(parsed?.itemCategory) || 'General Property Item',
-      brand: normalizeQuery(parsed?.brand) || '',
-      overview: normalizeQuery(parsed?.overview) || 'This search appears to describe a general property item category that may require a more specific model for precise LKQ research.',
-      refineOptions: Array.isArray(parsed?.refineOptions)
-        ? parsed.refineOptions
-            .map((item) => ({
-              label: normalizeQuery(item?.label),
-              query: normalizeQuery(item?.query),
-              year: normalizeQuery(item?.year),
-            }))
-            .filter((item) => item.label && item.query)
-            .slice(0, 5)
-        : [],
-      averageModelLabel: normalizeQuery(parsed?.averageModelLabel) || '',
-      averageModelQuery: normalizeQuery(parsed?.averageModelQuery) || '',
-      averageModelCategory: normalizeQuery(parsed?.averageModelCategory) || normalizeQuery(parsed?.itemCategory) || 'item',
-    };
-
-    if (!payload.averageModelQuery && payload.refineOptions.length) {
-      payload.averageModelQuery = payload.refineOptions[Math.min(1, payload.refineOptions.length - 1)].query;
-    }
-    if (!payload.averageModelLabel && payload.refineOptions.length) {
-      payload.averageModelLabel = payload.refineOptions[Math.min(1, payload.refineOptions.length - 1)].label;
-    }
+    const deadline = createDeadline({ totalMs: dependencies.totalBudgetMs || TOTAL_BUDGET_MS, now });
+    const timings = { cacheReadMs: 0, rateLimitMs: 0, providerMs: 0, cacheWriteMs: 0, totalMs: 0 };
+    const queryInfo = classifySmartLookupQuery(validation.value.query);
+    let cacheStatus = 'bypass';
 
     try {
-      await redis.set(cacheKey, payload, { ex: 7 * 24 * 60 * 60 });
-    } catch (_) {}
+      const deterministic = deterministicGeneral(queryInfo);
+      if (deterministic) {
+        const result = withMetadata(deterministic, { source: 'static', evidenceSource: 'heuristic', timings });
+        result.timings.totalMs = deadline.elapsedMs();
+        logResult(logger, requestId, queryInfo, result);
+        return res.status(200).json(result);
+      }
 
-    return res.status(200).json(payload);
-  } catch (_) {
-    return res.status(502).json({ error: 'General research service unavailable' });
-  }
+      const redis = dependencies.redis || redisFactory();
+      const cacheKey = buildSmartGeneralCacheKey(queryInfo);
+      const cacheRead = await boundedRedisGet(redis, cacheKey, deadline, {
+        stage: 'general-cache-read',
+        maxMs: REDIS_CALL_BUDGET_MS,
+        reserveMs: 300,
+      });
+      timings.cacheReadMs = cacheRead.elapsedMs || 0;
+      cacheStatus = cacheRead.status === 'hit' ? 'hit' : (cacheRead.status === 'miss' ? 'miss' : 'error');
+      if (cacheRead.status === 'hit' && cacheRead.value) {
+        const result = withMetadata(normalizeGeneralPayload(cacheRead.value, queryInfo), {
+          source: 'cache',
+          originSource: cacheRead.value.originSource || cacheRead.value.source || 'gemini',
+          evidenceSource: cacheRead.value.evidenceSource || 'gemini-ungrounded',
+          cacheStatus: 'hit',
+          timings,
+        });
+        result.timings.totalMs = deadline.elapsedMs();
+        logResult(logger, requestId, queryInfo, result);
+        return res.status(200).json(result);
+      }
+
+      let providerPromise = inflightGeneralRequests.get(cacheKey);
+      if (!providerPromise) {
+        providerPromise = (async () => {
+          const limiter = dependencies.rateLimiter || limiterFactory(redis);
+          const rate = await boundedRateLimit(limiter, getClientIp(req), deadline, {
+            stage: 'general-provider-rate-limit',
+            maxMs: REDIS_CALL_BUDGET_MS,
+            reserveMs: 250,
+          });
+          timings.rateLimitMs = rate.elapsedMs || 0;
+          if (!rate.success) {
+            const error = new Error('RATE_LIMIT');
+            error.code = 'RATE_LIMIT';
+            throw error;
+          }
+          return deadline.run('general-provider-call', () => providerLookup(queryInfo, {
+            deadline,
+            maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(250)),
+            reserveMs: 250,
+            fetchImpl: dependencies.fetchImpl,
+            apiKey: dependencies.apiKey,
+          }), {
+            maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(250)),
+            reserveMs: 250,
+          });
+        })();
+        inflightGeneralRequests.set(cacheKey, providerPromise);
+        providerPromise.finally(() => {
+          if (inflightGeneralRequests.get(cacheKey) === providerPromise) inflightGeneralRequests.delete(cacheKey);
+        }).catch(() => {});
+      }
+
+      const providerStart = now();
+      let raw;
+      try {
+        raw = await deadline.run('general-provider-result-wait', () => providerPromise, {
+          maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(250)),
+          reserveMs: 250,
+        });
+      } catch (error) {
+        timings.providerMs = Math.max(0, now() - providerStart);
+        const errorCode = isTimeoutError(error)
+          ? 'PROVIDER_TIMEOUT'
+          : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE');
+        const result = withMetadata(normalizeGeneralPayload({}, queryInfo), {
+          source: 'fallback',
+          cacheStatus,
+          providerAttempted: true,
+          fallbackUsed: true,
+          errorCode,
+          timings,
+        });
+        result.timings.totalMs = deadline.elapsedMs();
+        logResult(logger, requestId, queryInfo, result, { timeoutStage: isTimeoutError(error) ? 'provider' : null });
+        return res.status(200).json(result);
+      }
+      timings.providerMs = Math.max(0, now() - providerStart);
+
+      const result = withMetadata(normalizeGeneralPayload(raw, queryInfo), {
+        source: 'gemini',
+        originSource: 'gemini',
+        evidenceSource: 'gemini-ungrounded',
+        cacheStatus,
+        providerAttempted: true,
+        timings,
+      });
+      if (deadline.hasTime(40)) {
+        const cachePayload = { ...result, timings: { cacheReadMs: 0, rateLimitMs: 0, providerMs: 0, cacheWriteMs: 0, totalMs: 0 } };
+        boundedRedisSet(redis, cacheKey, cachePayload, 7 * 24 * 60 * 60, deadline, {
+          stage: 'general-cache-write',
+          maxMs: CACHE_WRITE_BUDGET_MS,
+        }).then((write) => {
+          timings.cacheWriteMs = write.elapsedMs || 0;
+        }).catch(() => {});
+      }
+      result.timings = { ...timings, totalMs: deadline.elapsedMs() };
+      logResult(logger, requestId, queryInfo, result);
+      return res.status(200).json(result);
+    } catch (error) {
+      const result = withMetadata(normalizeGeneralPayload({}, queryInfo), {
+        source: 'fallback',
+        cacheStatus,
+        fallbackUsed: true,
+        errorCode: isTimeoutError(error) ? 'TOTAL_DEADLINE' : 'INTERNAL_ERROR',
+        timings,
+      });
+      result.timings.totalMs = deadline.elapsedMs();
+      logResult(logger, requestId, queryInfo, result, { timeoutStage: isTimeoutError(error) ? error.stage || 'unknown' : null });
+      return res.status(200).json(result);
+    }
+  };
 }
+
+export default createSmartQueryGeneralHandler();
