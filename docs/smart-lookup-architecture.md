@@ -18,6 +18,8 @@ Browser Smart Lookup submits a normalized query to `/api/age-lookup`. If replace
 
 API routes use `createDeadline` with route-level total budgets and smaller stage budgets for Redis, provider, and cache writes. Deadline racing protects responses even when Redis, rate limit, or provider operations ignore `AbortController`.
 
+Gemini and Groq share the same route-level deadline. A Groq fallback never receives a fresh total timeout. A Gemini request that consumes its timeout budget does not start a second Groq timeout chain.
+
 ## Cache ordering
 
 Local and deterministic paths return before Redis. Cache reads occur before provider rate limiting. Identical in-flight provider requests are checked before provider rate limiting so concurrent duplicate requests share one paid provider call and one limiter operation. Cache keys are canonical and versioned.
@@ -27,6 +29,27 @@ Local and deterministic paths return before Redis. Cache reads occur before prov
 Provider rate limiting is cost-aware. If the Redis-backed limiter is unavailable or times out, the route fails open for eligible provider work rather than blocking all Smart Lookup usage. Local and cache paths never consume provider limiter capacity.
 
 ## Provider behavior
+
+Gemini remains the primary Smart Lookup provider. Groq is a short, bounded fallback for immediate Gemini failures that leave enough time inside the original deadline. Eligible primary failures are:
+
+- missing Gemini configuration when Groq is configured;
+- Gemini HTTP 429;
+- Gemini HTTP 5xx;
+- invalid Gemini response JSON;
+- empty Gemini output;
+- malformed Gemini model JSON.
+
+Network failures and full Gemini stage timeouts do not automatically start Groq, preventing a full sequential timeout chain.
+
+Groq uses the OpenAI-compatible chat-completions endpoint with JSON mode. The default production model is `openai/gpt-oss-20b`; it can be overridden with `GROQ_MODEL`.
+
+Required production configuration:
+
+- `GEMINI_API_KEY` for the primary provider;
+- `GROQ_API_KEY` for the fallback provider;
+- optional `GROQ_MODEL` to override the default Groq production model.
+
+The provider orchestration attaches internal metadata identifying whether Gemini or Groq produced the response and whether fallback occurred. This metadata is available to API routes for source-aware telemetry without logging raw queries or API keys.
 
 Providers are bounded, mocked in tests, and never used for local validation. Provider output is treated as ungrounded unless backed by structured local evidence. Malformed, unrelated, reversed, future, or impossible output becomes a safe unavailable response.
 
@@ -50,7 +73,17 @@ Provider-only price and retailer claims are volatile and unverified. Ungrounded 
 
 ## Tests
 
-Smart Lookup tests include Node unit tests, API handler tests with mocked Redis/providers, Playwright browser behavior tests, and mocked benchmark tests. Existing Serial Refinement browser tests remain under `npm run test:playwright`.
+Smart Lookup tests include Node unit tests, API handler tests with mocked Redis/providers, provider fallback tests, Playwright browser behavior tests, and mocked benchmark tests. Existing Serial Refinement browser tests remain under `npm run test:playwright`.
+
+Provider fallback tests verify:
+
+- Gemini remains primary;
+- eligible immediate Gemini failures invoke Groq;
+- Groq uses the expected endpoint, authorization header, model, and JSON mode;
+- missing Gemini configuration can use Groq;
+- a Gemini timeout does not start Groq;
+- dual-provider failure returns a bounded aggregate error;
+- the original total deadline remains authoritative.
 
 ## Benchmarks
 
@@ -58,4 +91,4 @@ Mocked benchmark coverage measures local hit, cache hit, provider success, provi
 
 ## Rollout and rollback
 
-Roll out by pushing this branch after local validation and owner approval. Roll back by reverting the Smart Lookup controller/build/page integration and API changes, leaving the previous legacy `script.js` runtime untouched.
+Before production rollout, add `GROQ_API_KEY` to the Vercel production environment and confirm the optional `GROQ_MODEL` value if the default should not be used. Deploy through the normal `main` branch workflow after tests pass. Roll back by reverting the Groq provider orchestration; Gemini remains independently usable.
