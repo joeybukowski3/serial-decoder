@@ -6,6 +6,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const root = path.resolve(__dirname, '..');
 const siteUrl = 'https://www.decodemyitem.com';
+const decoderBundleManifestPath = path.join(root, 'assets', 'decoders', 'decoder-bundles.json');
+const decoderBundleManifest = fs.existsSync(decoderBundleManifestPath)
+  ? JSON.parse(fs.readFileSync(decoderBundleManifestPath, 'utf8'))
+  : {};
 
 const navLinks = `
   <li><a href="/">Home</a></li>
@@ -78,6 +82,11 @@ function canonical(slug) {
 
 function scriptJson(obj) {
   return `<script type="application/ld+json">${JSON.stringify(obj)}</script>`;
+}
+
+function decoderBundleSrc(category) {
+  const key = category === 'water-heaters' ? 'waterHeaters' : category;
+  return decoderBundleManifest[key] || decoderBundleManifest.appliances || '';
 }
 
 function isBrandSerialLookupPage(page) {
@@ -925,7 +934,7 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
       if (hamburger) hamburger.classList.remove('active');
     });
   </script>
-  <script defer src="decoder-data.js"></script>
+  <script defer src="${decoderBundleSrc(page.category)}"></script>
   <script defer src="lkq-engine.js"></script>
   <script defer src="analytics.js"></script>
   <script defer src="smart-lookup-bundle.js"></script>
@@ -1527,7 +1536,7 @@ function renderPage(page) {
       });
     });
   </script>
-  <script defer src="decoder-data.js"></script>
+  <script defer src="${decoderBundleSrc(page.category)}"></script>
   <script defer src="lkq-engine.js"></script>
   <script defer src="analytics.js"></script>
   <script defer src="smart-lookup-bundle.js"></script>

@@ -1,0 +1,6 @@
+{
+  "appliances": "/assets/decoders/appliances.b10f3bbe08.js",
+  "hvac": "/assets/decoders/hvac.a90acb3d55.js",
+  "waterHeaters": "/assets/decoders/water-heaters.f47b015d41.js",
+  "electronics": "/assets/decoders/electronics.c686bcfeea.js"
+}

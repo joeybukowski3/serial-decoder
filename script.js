@@ -630,8 +630,11 @@ var BRAND_LOGOS = {
 // ===== STATE =====
 var currentCategory = 'appliances';
 var decoderData = window.decoderData || null;
-var DECODER_DATA_SCRIPT_ID = 'decoder-data-script';
-var decoderDataLoadCallbacks = [];
+var decoderDataLoadCallbacks = {};
+var DECODER_BUNDLE_MANIFEST_PATH = '/assets/decoders/decoder-bundles.json';
+var decoderBundleManifest = null;
+var decoderBundleManifestLoading = false;
+var decoderBundleManifestCallbacks = [];
 
 function toggleSidebar() {
   document.body.classList.toggle('sidebar-open');
@@ -854,6 +857,19 @@ function hasDecoderData() {
   return !!(window.decoderData && typeof window.decoderData === 'object');
 }
 
+function hasDecoderCategoryData(categoryKey) {
+  var key = normalizeDecoderCategory(categoryKey || currentCategory || 'appliances');
+  return !!(hasDecoderData() && window.decoderData[key] && window.decoderData[key].decoders);
+}
+
+function resetDecoderDataCaches() {
+  NORMALIZED_BRAND_CACHE = null;
+  BRAND_DIRECTORY_CACHE = null;
+  MOBILE_BRAND_CATEGORIES = null;
+  BRAND_CATEGORY_BY_ID = null;
+  CATEGORY_TO_BRANDS = null;
+}
+
 function syncDecoderDataRef() {
   if (hasDecoderData()) {
     decoderData = window.decoderData;
@@ -861,9 +877,10 @@ function syncDecoderDataRef() {
   return decoderData;
 }
 
-function flushDecoderDataCallbacks(error) {
-  var callbacks = decoderDataLoadCallbacks.slice();
-  decoderDataLoadCallbacks = [];
+function flushDecoderDataCallbacks(categoryKey, error) {
+  var key = normalizeDecoderCategory(categoryKey || getInitialDecoderCategory());
+  var callbacks = decoderDataLoadCallbacks[key] || [];
+  decoderDataLoadCallbacks[key] = [];
   callbacks.forEach(function(cb) {
     if (typeof cb !== 'function') return;
     try {
@@ -873,36 +890,109 @@ function flushDecoderDataCallbacks(error) {
   
   // If no callbacks were registered (data loaded after initial page load),
   // ensure the UI is initialized
-  if (!error && callbacks.length === 0 && hasDecoderData()) {
+  if (!error && callbacks.length === 0 && hasDecoderCategoryData(key)) {
     try {
       initializeDecoderUiWhenReady();
     } catch (_) {}
   }
 }
 
-function ensureDecoderDataLoaded(callback) {
-  if (typeof callback === 'function') {
-    decoderDataLoadCallbacks.push(callback);
-  }
-  if (hasDecoderData()) {
-    syncDecoderDataRef();
-    flushDecoderDataCallbacks(null);
+function getInitialDecoderCategory() {
+  var resetHomeSearch = shouldResetHomePageSearch();
+  try {
+    var params = new URLSearchParams(window.location.search || '');
+    var catParam = params.get('cat');
+    if (resetHomeSearch) return 'appliances';
+    if (catParam) return normalizeDecoderCategory(categoryNameToKey(catParam));
+    if (window.DEFAULT_CATEGORY) return normalizeDecoderCategory(categoryNameToKey(window.DEFAULT_CATEGORY));
+  } catch (_) {}
+  var activeTab = document.querySelector('.cat-tab.active');
+  if (activeTab) return normalizeDecoderCategory(activeTab.getAttribute('data-cat') || 'appliances');
+  return normalizeDecoderCategory(currentCategory || 'appliances');
+}
+
+function getDecoderScriptId(categoryKey) {
+  return 'decoder-data-script-' + normalizeDecoderCategory(categoryKey || 'appliances').replace(/[^A-Za-z0-9_-]/g, '-');
+}
+
+function flushDecoderBundleManifestCallbacks(error) {
+  var callbacks = decoderBundleManifestCallbacks.slice();
+  decoderBundleManifestCallbacks = [];
+  callbacks.forEach(function(cb) {
+    if (typeof cb !== 'function') return;
+    try {
+      cb(error || null, decoderBundleManifest);
+    } catch (_) {}
+  });
+}
+
+function ensureDecoderBundleManifest(callback) {
+  if (decoderBundleManifest) {
+    callback(null, decoderBundleManifest);
     return;
   }
-  if (document.getElementById('decoder-data-script')) {
-    return; // already loading
+  if (typeof callback === 'function') decoderBundleManifestCallbacks.push(callback);
+  if (decoderBundleManifestLoading) return;
+  decoderBundleManifestLoading = true;
+
+  fetch(DECODER_BUNDLE_MANIFEST_PATH, { cache: 'no-cache' })
+    .then(function(response) {
+      if (!response.ok) throw new Error('Decoder bundle manifest failed to load');
+      return response.json();
+    })
+    .then(function(manifest) {
+      decoderBundleManifest = manifest || {};
+      decoderBundleManifestLoading = false;
+      flushDecoderBundleManifestCallbacks(null);
+    })
+    .catch(function(error) {
+      decoderBundleManifestLoading = false;
+      flushDecoderBundleManifestCallbacks(error);
+    });
+}
+
+function ensureDecoderDataLoaded(categoryKey, callback) {
+  if (typeof categoryKey === 'function') {
+    callback = categoryKey;
+    categoryKey = getInitialDecoderCategory();
   }
-  var s = document.createElement('script');
-  s.id = 'decoder-data-script';
-  s.src = '/decoder-data.js';
-  s.onload = function() {
+  var requestedCategory = normalizeDecoderCategory(categoryKey || getInitialDecoderCategory());
+  if (typeof callback === 'function') {
+    if (!decoderDataLoadCallbacks[requestedCategory]) decoderDataLoadCallbacks[requestedCategory] = [];
+    decoderDataLoadCallbacks[requestedCategory].push(callback);
+  }
+  if (hasDecoderCategoryData(requestedCategory)) {
     syncDecoderDataRef();
-    flushDecoderDataCallbacks(null);
-  };
-  s.onerror = function() {
-    flushDecoderDataCallbacks(new Error('decoder-data.js failed to load'));
-  };
-  document.head.appendChild(s);
+    flushDecoderDataCallbacks(requestedCategory, null);
+    return;
+  }
+  ensureDecoderBundleManifest(function(manifestError, manifest) {
+    if (manifestError) {
+      flushDecoderDataCallbacks(requestedCategory, manifestError);
+      return;
+    }
+    var bundleSrc = manifest && manifest[requestedCategory];
+    if (!bundleSrc) {
+      flushDecoderDataCallbacks(requestedCategory, new Error('Unknown decoder category: ' + requestedCategory));
+      return;
+    }
+    var scriptId = getDecoderScriptId(requestedCategory);
+    if (document.getElementById(scriptId)) {
+      return; // already loading
+    }
+    var s = document.createElement('script');
+    s.id = scriptId;
+    s.src = bundleSrc;
+    s.onload = function() {
+      resetDecoderDataCaches();
+      syncDecoderDataRef();
+      flushDecoderDataCallbacks(requestedCategory, null);
+    };
+    s.onerror = function() {
+      flushDecoderDataCallbacks(requestedCategory, new Error(bundleSrc + ' failed to load'));
+    };
+    document.head.appendChild(s);
+  });
 }
 
 function initializeDecoderUiWhenReady() {
@@ -3091,16 +3181,16 @@ function initPage() {
   initMobileBrandGridToggle();
   var dom = getDecodeDom();
   var altQuery    = getSmartLookupInputEl();
+  var initialDecoderCategory = getInitialDecoderCategory();
   bindDecoderDataLoadTriggers();
-  if (hasDecoderData()) {
+  if (hasDecoderCategoryData(initialDecoderCategory)) {
     initializeDecoderUiWhenReady();
   } else {
-    // If decoder data not loaded yet, populate brands with a small delay to allow async data to load
-    setTimeout(function() {
-      if (hasDecoderData() && dom.brandEl) {
+    ensureDecoderDataLoaded(initialDecoderCategory, function(error) {
+      if (!error && dom.brandEl) {
         initializeDecoderUiWhenReady();
       }
-    }, 100);
+    });
   }
 
   try {
@@ -3240,6 +3330,16 @@ function selectCategory(cat, btn) {
   syncGlobalCategoryTabs(cat);
   prioritizeSidebarCategory(cat);
   syncSidebarActiveState();
+  if (!hasDecoderCategoryData(currentCategory)) {
+    ensureDecoderDataLoaded(currentCategory, function(error) {
+      if (error) {
+        showCustomAlert('The decoder category is still loading. Please try again.');
+        return;
+      }
+      selectCategory(cat, btn);
+    });
+    return;
+  }
   if (isMobileView()) populateMobileBrands();
   else populateBrands(currentCategory);
   
@@ -4567,6 +4667,17 @@ function decodeSerial() {
   }
   syncDecoderDataRef();
   currentCategory = getActiveDecoderCategory();
+  if (!hasDecoderCategoryData(currentCategory)) {
+    ensureDecoderDataLoaded(currentCategory, function(error) {
+      if (error) {
+        showCustomAlert('The decoder is still loading. Please try again.');
+        return;
+      }
+      initializeDecoderUiWhenReady();
+      decodeSerial();
+    });
+    return;
+  }
   var metaBrandId = getSelectedBrandForCategory(currentCategory) || dom.brandEl.value;
   var modelConfig = getSupplementalModelConfig(currentCategory, metaBrandId);
   var supplementalModel = getCurrentSupplementalModelValue(currentCategory, metaBrandId);
