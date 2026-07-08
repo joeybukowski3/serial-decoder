@@ -596,9 +596,10 @@ test('Rheem numeric serial 0302118742 resolves to 2021 using the documented Styl
 
 test('Non-Rheem brand does not use Rheem RH prefix week/year rule', () => {
   const ruud = api.decoderData.waterHeaters.decoders.ruud;
+  // Letters occupy the MMYY positions, so this is an unsupported format for
+  // Ruud's Style 1 decode. It previously produced the garbage year "20A2".
   const out = ruud.decode('RHA251405618');
-  assert.ok(out);
-  assert.notEqual(out.year, '2014');
+  assert.equal(out, null);
 });
 
 test('Reliance pre-2008 letter format uses month code in position 2 and year in positions 3-4', () => {
@@ -715,7 +716,9 @@ test('A.O. Smith rejects too-short serials', () => {
 
 test('Carrier year code 27 returns 2027 not 1927', () => {
   const carrier = api.decoderData.hvac.decoders.carrier;
-  const out = carrier.decode('XX27XXXXX');
+  // PR-1 strict parsing requires the documented leading WWYY digits, so the
+  // fixture uses week 14 instead of the old XX placeholder prefix.
+  const out = carrier.decode('1427XXXXX');
   assert.ok(out);
   assert.equal(out.year, '2027');
 });
@@ -729,7 +732,9 @@ test('Bryant year code 27 in WWYY position returns 2027', () => {
 
 test('Trane year code 27 returns 2027 not 1927', () => {
   const trane = api.decoderData.hvac.decoders.trane;
-  const out = trane.decode('XX27XXXXXX');
+  // PR-1 strict parsing requires the documented leading WWYY digits, so the
+  // fixture uses week 14 instead of the old XX placeholder prefix.
+  const out = trane.decode('1427XXXXXX');
   assert.ok(out);
   assert.equal(out.year, '2027');
 });
@@ -913,4 +918,187 @@ test('Local model lookup preserves Frigidaire O/0 distinction', async () => {
   assert.ok(exact);
   assert.equal(exact.record.estimatedYear, undefined);
   assert.equal(exact.record.productionRange, '2020-2024');
+});
+
+// ── PR-1 audit: strict-parse guards & honest unsupported-format state ────────
+
+const GENERIC_MMYY_WATER_HEATER_BRANDS = [
+  'ruud',
+  'richmond',
+  'vanguard',
+  'ge_water_heaters',
+  'montgomery_ward',
+  'aqua_therm',
+  'energy_master',
+  'cimarron',
+  'intertherm_miller'
+];
+
+test('Generic water-heater MMYY decoders reject letter-prefixed garbage like AB1234567', () => {
+  for (const brandId of GENERIC_MMYY_WATER_HEATER_BRANDS) {
+    const decoder = api.decoderData.waterHeaters.decoders[brandId];
+    assert.equal(decoder.decode('AB1234567'), null, brandId + ' should reject AB1234567');
+  }
+});
+
+test('Generic water-heater MMYY decoders reject invalid months 00 and 13', () => {
+  for (const brandId of GENERIC_MMYY_WATER_HEATER_BRANDS) {
+    const decoder = api.decoderData.waterHeaters.decoders[brandId];
+    assert.equal(decoder.decode('1334567890'), null, brandId + ' should reject month 13');
+    assert.equal(decoder.decode('0034567890'), null, brandId + ' should reject month 00');
+  }
+});
+
+test('Generic water-heater MMYY decoders reject implausible far-future years', () => {
+  for (const brandId of GENERIC_MMYY_WATER_HEATER_BRANDS) {
+    const decoder = api.decoderData.waterHeaters.decoders[brandId];
+    // MM=12 YY=34 would be 2034; that is not a plausible manufacture year.
+    assert.equal(decoder.decode('1234567890'), null, brandId + ' should reject year 2034');
+  }
+});
+
+test('Generic water-heater MMYY decoders still decode a valid MMYYXXXXXX serial', () => {
+  for (const brandId of GENERIC_MMYY_WATER_HEATER_BRANDS) {
+    const decoder = api.decoderData.waterHeaters.decoders[brandId];
+    const out = decoder.decode('0414B76543');
+    assert.ok(out, brandId + ' should decode 0414B76543');
+    assert.equal(out.year, '2014');
+    assert.equal(out.month, 'April');
+  }
+});
+
+test('Carrier rejects letter-prefixed garbage instead of decoding AB1234567 as 2012', () => {
+  const carrier = api.decoderData.hvac.decoders.carrier;
+  assert.equal(carrier.decode('AB1234567'), null);
+});
+
+test('Carrier rejects invalid production weeks 00 and 54', () => {
+  const carrier = api.decoderData.hvac.decoders.carrier;
+  assert.equal(carrier.decode('0019XXXXX'), null);
+  assert.equal(carrier.decode('5419XXXXX'), null);
+});
+
+test('Trane and American Standard reject malformed serials instead of decoding them as 2012', () => {
+  const trane = api.decoderData.hvac.decoders.trane;
+  const americanStandard = api.decoderData.hvac.decoders.american_standard;
+  assert.equal(trane.decode('AB1234567'), null);
+  assert.equal(americanStandard.decode('AB1234567'), null);
+});
+
+test('Carrier/Trane/American Standard reject implausible far-future year codes', () => {
+  // 1234567890 reads as week 12, year code 34 (2034) — beyond tolerance.
+  for (const brandId of ['carrier', 'trane', 'american_standard']) {
+    const decoder = api.decoderData.hvac.decoders[brandId];
+    assert.equal(decoder.decode('1234567890'), null, brandId + ' should reject year 2034');
+  }
+});
+
+test('American Standard still decodes a conforming WWYY serial', () => {
+  const out = api.decoderData.hvac.decoders.american_standard.decode('1419XXXX');
+  assert.ok(out);
+  assert.equal(out.year, '2019');
+});
+
+test('Rheem and Ruud HVAC no longer decode GE refrigerator serial GM028928Q', () => {
+  const rheem = api.decoderData.hvac.decoders.rheem;
+  const ruud = api.decoderData.hvac.decoders.ruud;
+  assert.equal(rheem.decode('GM028928Q'), null);
+  assert.equal(ruud.decode('GM028928Q'), null);
+});
+
+test('Rheem HVAC still decodes the documented letter+WWYY format', () => {
+  const out = api.decoderData.hvac.decoders.rheem.decode('X4502XXXX');
+  assert.ok(out);
+  assert.equal(out.year, '2002');
+  assert.equal(out.month, 'Week 45');
+});
+
+test('Bosch family never emits a fabricated year like 19AB', () => {
+  for (const brandId of ['bosch', 'thermador', 'gaggenau']) {
+    const decoder = api.decoderData.appliances.decoders[brandId];
+    assert.equal(decoder.decode('AB1234567'), null, brandId + ' letters in FD year position');
+    assert.equal(decoder.decode('1234567890'), null, brandId + ' month 34 is invalid');
+    const out = decoder.decode('FD8605123456');
+    assert.ok(out, brandId + ' known-good FD serial');
+    assert.equal(out.year, '2006');
+    assert.equal(out.month, 'May');
+  }
+});
+
+test('GE returns no result instead of an "Unknown code" year value', () => {
+  const ge = api.decoderData.appliances.decoders.ge;
+  // B is not a GE year letter, so this must be unsupported, not a year.
+  assert.equal(ge.decode('AB1234567'), null);
+  const known = ge.decode('GM028928Q');
+  assert.ok(known);
+  assert.equal(known.year, '1983/1995/2007/2019');
+});
+
+test('Cafe (GE family) returns no result instead of an "Unknown code" year value', () => {
+  const cafe = api.decoderData.appliances.decoders.cafe;
+  assert.equal(cafe.decode('AB1234567'), null);
+});
+
+test('Pre-2006 Maytag family returns no result instead of an "Unknown code" year value', () => {
+  const preMaytagFamily = [
+    'maytag_pre_2006',
+    'jenn_air_pre_2006',
+    'amana_pre_2006',
+    'admiral_pre_2006',
+    'magic_chef',
+    'speed_queen'
+  ];
+  for (const brandId of preMaytagFamily) {
+    const decoder = api.decoderData.appliances.decoders[brandId];
+    // Second-to-last character "6" is not a valid pre-2006 year letter.
+    assert.equal(decoder.decode('AB1234567'), null, brandId + ' should reject digit year code');
+  }
+});
+
+test('Pre-2006 Maytag family still decodes a mapped year letter', () => {
+  const out = api.decoderData.appliances.decoders.maytag_pre_2006.decode('12345678WA');
+  assert.ok(out);
+  assert.equal(out.year, '1999/2023');
+  assert.equal(out.month, 'January');
+});
+
+test('ASUS rejects short or non-alphanumeric garbage instead of returning 2010', () => {
+  const asus = api.decoderData.electronics.decoders.asus;
+  assert.equal(asus.decode('AB1234567'), null);
+  assert.equal(asus.decode('!!invalid!!'), null);
+});
+
+test('ASUS still decodes a full-length serial with valid year and month codes', () => {
+  const out = api.decoderData.electronics.decoders.asus.decode('E5N0CV123456');
+  assert.ok(out);
+  assert.equal(out.year, '2014');
+  assert.equal(out.month, 'May');
+});
+
+test('Bradford White year map uses slash-separated candidates after normalization', () => {
+  const out = api.decoderData.waterHeaters.decoders.bradford_white.decode('AC12345678');
+  assert.ok(out);
+  assert.equal(out.year, '1984/2004/2024');
+  assert.equal(out.month, 'March');
+});
+
+test('sanitizeDecodeResult only accepts explicit year formats and approved sentinels', () => {
+  const isValid = (year) => api.sanitizeDecodeResult({ year }).valid;
+
+  assert.equal(isValid('2012'), true);
+  assert.equal(isValid('1994/2024'), true);
+  assert.equal(isValid('2004/2014/2024'), true);
+  assert.equal(isValid('1983/1995/2007/2019'), true);
+  assert.equal(isValid('2009/2029'), true, 'one candidate in plausible range is enough');
+  assert.equal(isValid('Post-2021 (Randomized)'), true, 'approved Apple sentinel');
+
+  assert.equal(isValid('Unknown code: 6'), false);
+  assert.equal(isValid('19AB'), false);
+  assert.equal(isValid('No year suffix found'), false);
+  assert.equal(isValid('Year digit: A (decade unknown)'), false);
+  assert.equal(isValid('2034'), false, 'future single year');
+  assert.equal(isValid('1899'), false, 'pre-1980 single year');
+  assert.equal(isValid('2040/2043'), false, 'no candidate in plausible range');
+  assert.equal(isValid(''), false);
+  assert.equal(isValid('1984 or 2004/2024'), false, 'legacy or-format is normalized at the source');
 });
