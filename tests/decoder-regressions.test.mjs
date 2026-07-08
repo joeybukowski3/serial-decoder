@@ -62,6 +62,10 @@ function loadDecoderContext() {
       updateSerialResultNotes,
       chooseCandidateFromLookup,
       resolveSerialYearFromModel,
+      deterministicRefinement,
+      narrowCandidatesWithEvidence,
+      detectContradictoryEvidence,
+      normalizeModelEvidenceWindow,
       getCurrentSupplementalModelValue,
       setStoredSupplementalModel,
       KENMORE_PREFIX_TO_DECODER,
@@ -149,7 +153,11 @@ test('single category decoder bundle only registers that category', () => {
   assert.equal(splitData.appliances, undefined);
 });
 
-test('GE Narrow Date refinement selects the closest serial-valid candidate to lookup data', () => {
+test('GE Narrow Date refinement treats internally contradictory evidence as unusable (PR-2)', () => {
+  // PR-2 policy change: estimatedYear (2007) falls outside the yearRange
+  // window (2019-Present), so this evidence is contradictory and must not
+  // resolve to either side. Previously this picked 2007 via unbounded
+  // nearest-candidate selection, which is exactly the audit's risk case.
   const ge = api.decoderData.appliances.decoders.ge;
   const serialResult = ge.decode('GM028928Q');
   const candidates = Array.from(api.parseCandidateYears(serialResult.year));
@@ -162,7 +170,10 @@ test('GE Narrow Date refinement selects the closest serial-valid candidate to lo
   }, 'JB258DM1WW', '');
 
   assert.ok(selected);
-  assert.equal(selected.chosenYear, 2007);
+  assert.equal(selected.chosenYear, null);
+  assert.equal(selected.status, 'conflict');
+  assert.equal(selected.reason, 'contradictory-evidence');
+  assert.deepEqual(Array.from(selected.remainingCandidateYears), candidates);
 });
 
 test('Estimated age stays hidden when multiple valid manufacturer years are returned', () => {
@@ -174,7 +185,10 @@ test('Estimated age stays hidden when multiple valid manufacturer years are retu
   assert.equal(api.hasSingleResolvedYear(result.year), false);
 });
 
-test('Narrow Date still allows legitimate strong-evidence adjustment', () => {
+test('Narrow Date no longer picks a far-away candidate as "strong-evidence adjustment" (PR-2)', () => {
+  // PR-2 policy change: estimatedYear 2008 is 9+ years from every serial
+  // candidate, well outside the +/-3 year tolerance, so this must return
+  // conflict instead of the previous unbounded nearest-candidate pick (2017).
   const selected = api.chooseCandidateFromLookup(
     [2017, 2019],
     {
@@ -185,7 +199,182 @@ test('Narrow Date still allows legitimate strong-evidence adjustment', () => {
     ''
   );
   assert.ok(selected);
-  assert.equal(selected.chosenYear, 2017);
+  assert.equal(selected.chosenYear, null);
+  assert.equal(selected.status, 'conflict');
+  assert.deepEqual(Array.from(selected.remainingCandidateYears), [2017, 2019]);
+});
+
+// ── PR-2 audit: unified intersection/tolerance policy for model-assisted
+//    year narrowing (narrowCandidatesWithEvidence) ──────────────────────────
+
+test('narrowCandidatesWithEvidence resolves when exactly one candidate falls inside the model yearRange window', () => {
+  const result = api.narrowCandidatesWithEvidence([2004, 2014, 2024], { yearRange: '2013-2016' });
+  assert.ok(result);
+  assert.equal(result.status, 'resolved');
+  assert.equal(result.chosenYear, 2014);
+  assert.deepEqual(Array.from(result.remainingCandidateYears), [2014]);
+});
+
+test('narrowCandidatesWithEvidence stays ambiguous when multiple candidates fall inside the model yearRange window', () => {
+  // yearRange 2010-2025 intersects 2014 and 2024, but 2004 falls outside the
+  // window and is correctly excluded from the narrowed remaining set.
+  const result = api.narrowCandidatesWithEvidence([2004, 2014, 2024], { yearRange: '2010-2025' });
+  assert.ok(result);
+  assert.equal(result.status, 'ambiguous');
+  assert.equal(result.chosenYear, null);
+  assert.deepEqual(Array.from(result.remainingCandidateYears), [2014, 2024]);
+});
+
+test('narrowCandidatesWithEvidence returns conflict when no candidate falls inside the model yearRange window', () => {
+  const result = api.narrowCandidatesWithEvidence([1994, 2024], { yearRange: '2010-2013' });
+  assert.ok(result);
+  assert.equal(result.status, 'conflict');
+  assert.equal(result.chosenYear, null);
+  assert.deepEqual(Array.from(result.remainingCandidateYears), [1994, 2024]);
+});
+
+test('narrowCandidatesWithEvidence resolves a lone estimatedYear only within +/-3 year tolerance of exactly one candidate', () => {
+  const resolved = api.narrowCandidatesWithEvidence([2004, 2014, 2024], { estimatedYear: '2015' });
+  assert.ok(resolved);
+  assert.equal(resolved.status, 'resolved');
+  assert.equal(resolved.chosenYear, 2014);
+  assert.equal(resolved.confidence, 'Low', 'point-tolerance resolutions are lower confidence than window intersections');
+});
+
+test('narrowCandidatesWithEvidence does not resolve a lone estimatedYear more than 3 years from every candidate', () => {
+  const result = api.narrowCandidatesWithEvidence([2017, 2019], { estimatedYear: '2008' });
+  assert.ok(result);
+  assert.equal(result.status, 'conflict');
+  assert.equal(result.chosenYear, null);
+  assert.deepEqual(Array.from(result.remainingCandidateYears), [2017, 2019]);
+});
+
+test('narrowCandidatesWithEvidence stays ambiguous when a lone estimatedYear is within tolerance of multiple candidates', () => {
+  const result = api.narrowCandidatesWithEvidence([2012, 2014, 2024], { estimatedYear: '2013' });
+  assert.ok(result);
+  assert.equal(result.status, 'ambiguous');
+  assert.equal(result.chosenYear, null);
+  assert.deepEqual(Array.from(result.remainingCandidateYears), [2012, 2014]);
+});
+
+test('detectContradictoryEvidence flags an estimatedYear that falls outside the yearRange window', () => {
+  const contradictory = api.detectContradictoryEvidence({ estimatedYear: '2007', yearRange: '2019-Present' });
+  const consistent = api.detectContradictoryEvidence({ estimatedYear: '2014', yearRange: '2013-2016' });
+  assert.equal(contradictory, true);
+  assert.equal(consistent, false);
+});
+
+test('narrowCandidatesWithEvidence treats contradictory estimatedYear/yearRange evidence as unusable', () => {
+  const result = api.narrowCandidatesWithEvidence(
+    [1983, 1995, 2007, 2019],
+    { estimatedYear: '2007', yearRange: '2019-Present' }
+  );
+  assert.ok(result);
+  assert.equal(result.status, 'conflict');
+  assert.equal(result.reason, 'contradictory-evidence');
+  assert.equal(result.chosenYear, null);
+  assert.deepEqual(Array.from(result.remainingCandidateYears), [1983, 1995, 2007, 2019]);
+});
+
+test('narrowCandidatesWithEvidence returns null when there is no usable evidence signal', () => {
+  assert.equal(api.narrowCandidatesWithEvidence([2004, 2014, 2024], {}), null);
+  assert.equal(api.narrowCandidatesWithEvidence([2004, 2014, 2024], { estimatedYear: null, yearRange: null }), null);
+  assert.equal(api.narrowCandidatesWithEvidence([], { yearRange: '2013-2016' }), null);
+});
+
+test('Smart Lookup fallback cannot render a confirmed year unless it passes the unified policy', async () => {
+  // Candidates 9+ years from the LLM-suggested year must not resolve, even
+  // though the old code would nearest-select the first suggestion as if it
+  // were a confirmed decode.
+  let callCount = 0;
+  ctx.fetch = async (url) => {
+    callCount += 1;
+    if (String(url).includes('/api/age-lookup')) {
+      throw new Error('lookup offline');
+    }
+    if (String(url).includes('/api/smart-query-interpret')) {
+      return {
+        ok: true,
+        headers: { get: () => 'application/json' },
+        json: async () => ({ suggestions: ['This model was likely made around 2008.'] })
+      };
+    }
+    throw new Error('unexpected fetch: ' + url);
+  };
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: [2017, 2019],
+    brand: 'TestBrand',
+    model: 'NOMATCHMODEL',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, null);
+  assert.notEqual(resolved.source, 'smart-lookup');
+});
+
+test('Smart Lookup fallback can resolve a year when its suggestion passes the unified tolerance policy', async () => {
+  ctx.fetch = async (url) => {
+    if (String(url).includes('/api/age-lookup')) {
+      throw new Error('lookup offline');
+    }
+    if (String(url).includes('/api/smart-query-interpret')) {
+      return {
+        ok: true,
+        headers: { get: () => 'application/json' },
+        json: async () => ({ suggestions: ['This model was likely made in 2015.'] })
+      };
+    }
+    throw new Error('unexpected fetch: ' + url);
+  };
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: [2004, 2014, 2024],
+    brand: 'TestBrand',
+    model: 'NOMATCHMODEL',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, 2014);
+  assert.equal(resolved.source, 'smart-lookup');
+  assert.equal(resolved.confidence, 'Low', 'Smart Lookup evidence is supporting-only, never authoritative');
+});
+
+test('Smart Lookup fallback does not guess when suggestions mention multiple distinct years', async () => {
+  ctx.fetch = async (url) => {
+    if (String(url).includes('/api/age-lookup')) {
+      throw new Error('lookup offline');
+    }
+    if (String(url).includes('/api/smart-query-interpret')) {
+      return {
+        ok: true,
+        headers: { get: () => 'application/json' },
+        json: async () => ({ suggestions: ['Could be 2014 or maybe 2024, hard to say.'] })
+      };
+    }
+    throw new Error('unexpected fetch: ' + url);
+  };
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: [2004, 2014, 2024],
+    brand: 'TestBrand',
+    model: 'NOMATCHMODEL',
+    context: ''
+  });
+
+  assert.equal(resolved.chosenYear, null);
+  assert.notEqual(resolved.source, 'smart-lookup');
+});
+
+test('deterministicRefinement no longer nearest-selects a free-text year mention outside tolerance', () => {
+  const result = api.deterministicRefinement([2017, 2019], 'UNKNOWNMODEL', 'Model launched in 2008.');
+  assert.equal(result.chosenYear, null);
+});
+
+test('deterministicRefinement resolves a free-text year mention within tolerance of exactly one candidate', () => {
+  const result = api.deterministicRefinement([2004, 2014, 2024], 'UNKNOWNMODEL', 'Released around 2015.');
+  assert.equal(result.chosenYear, 2014);
+  assert.equal(result.confidence, 'Low');
 });
 
 test('Rare Samsung-built Kenmore serial layout decodes A00843ESC00128 as 2009/2029', () => {
