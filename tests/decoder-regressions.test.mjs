@@ -81,6 +81,29 @@ function loadDecoderContext() {
   return { api: ctx.__api, ctx };
 }
 
+function loadSplitDecoderData(bundleFiles) {
+  const ctx = { window: {} };
+  vm.createContext(ctx);
+
+  for (const file of bundleFiles) {
+    const source = fs.readFileSync(file, 'utf8');
+    vm.runInContext(source, ctx);
+  }
+
+  return ctx.window.decoderData;
+}
+
+function loadDecoderBundleManifest() {
+  const manifest = JSON.parse(fs.readFileSync('assets/decoders/decoder-bundles.json', 'utf8'));
+  return Object.fromEntries(
+    Object.entries(manifest).map(([key, value]) => [key, value.replace(/^\//, '')])
+  );
+}
+
+function plain(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 const { api, ctx } = loadDecoderContext();
 
 test('GE serial-only decode for GM028928Q remains unchanged', () => {
@@ -88,6 +111,42 @@ test('GE serial-only decode for GM028928Q remains unchanged', () => {
   const result = ge.decode('GM028928Q');
   assert.equal(result.year, '1983/1995/2007/2019');
   assert.equal(result.month, 'April');
+});
+
+test('category decoder bundles preserve decoder output parity with decoder-data.js', () => {
+  const manifest = loadDecoderBundleManifest();
+  const splitData = loadSplitDecoderData([
+    manifest.appliances,
+    manifest.waterHeaters,
+    manifest.hvac,
+    manifest.electronics
+  ]);
+
+  assert.deepEqual(
+    plain(splitData.appliances.decoders.ge.decode('GM028928Q')),
+    plain(api.decoderData.appliances.decoders.ge.decode('GM028928Q'))
+  );
+  assert.deepEqual(
+    plain(splitData.hvac.decoders.goodman.decode('1404123456')),
+    plain(api.decoderData.hvac.decoders.goodman.decode('1404123456'))
+  );
+  assert.deepEqual(
+    plain(splitData.waterHeaters.decoders.rheem.decode('RH120512345')),
+    plain(api.decoderData.waterHeaters.decoders.rheem.decode('RH120512345'))
+  );
+  assert.deepEqual(
+    plain(splitData.electronics.decoders.vizio.decode('VW32L HDTV10A')),
+    plain(api.decoderData.electronics.decoders.vizio.decode('VW32L HDTV10A'))
+  );
+});
+
+test('single category decoder bundle only registers that category', () => {
+  const manifest = loadDecoderBundleManifest();
+  const splitData = loadSplitDecoderData([manifest.hvac]);
+
+  assert.deepEqual(Object.keys(splitData), ['hvac']);
+  assert.ok(splitData.hvac.decoders.goodman);
+  assert.equal(splitData.appliances, undefined);
 });
 
 test('GE Narrow Date refinement selects the closest serial-valid candidate to lookup data', () => {
