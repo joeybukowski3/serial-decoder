@@ -82,7 +82,11 @@ function loadDecoderContext() {
       getKenmorePrefixDropdownOptions,
       applyKenmorePrefixFallback,
       isMaytagEraUnselected,
-      computeMaytagDualEraResult
+      computeMaytagDualEraResult,
+      findClientModelEvidence,
+      findClientModelFamilyEvidence,
+      foldOZeroForClientMatching,
+      normalizeClientModelLookupValue
     };
   `, ctx);
 
@@ -1484,4 +1488,83 @@ test('Maytag pre-2006 and post-2006 decoders remain directly usable when an era 
   assert.equal(postOut.year, '2013/2043');
 
   ctx.document.getElementById = originalGetById;
+});
+
+// ── Whirlpool WFE320 model-family recall (recall/classification fix) ────────
+
+test('foldOZeroForClientMatching folds letter-O to digit-0 only when a digit exists elsewhere', () => {
+  assert.equal(api.foldOZeroForClientMatching('WFE320MOJW0'), 'WFE320M0JW0');
+  assert.equal(api.foldOZeroForClientMatching('WFE320M0JW0'), 'WFE320M0JW0');
+  assert.equal(api.foldOZeroForClientMatching('OVEN'), 'OVEN', 'pure-letter words must not be corrupted');
+});
+
+test('WFE320M0JW0 and WFE320MOJW0 normalize to the same client-matching key', () => {
+  assert.equal(
+    api.normalizeClientModelLookupValue('WFE320M0JW0'),
+    api.normalizeClientModelLookupValue('WFE320MOJW0')
+  );
+});
+
+test('findClientModelFamilyEvidence recognizes the Whirlpool WFE320 family for both O/0 variants', () => {
+  const fromDigit = api.findClientModelFamilyEvidence('Whirlpool', 'WFE320M0JW0');
+  const fromLetter = api.findClientModelFamilyEvidence('Whirlpool', 'WFE320MOJW0');
+  assert.ok(fromDigit);
+  assert.ok(fromLetter);
+  assert.equal(fromDigit.isFamilyLevel, true);
+  assert.equal(fromDigit.yearRange, fromLetter.yearRange);
+});
+
+test('findClientModelFamilyEvidence does not fire for unrelated brands or unrelated Whirlpool models', () => {
+  assert.equal(api.findClientModelFamilyEvidence('LG', 'WFE320M0JW0'), null);
+  assert.equal(api.findClientModelFamilyEvidence('Whirlpool', 'WRF535SWHZ'), null);
+});
+
+test('Whirlpool RX3026733 serial decodes to the documented 1990/2020 ambiguous cycle', () => {
+  const whirlpool = api.decoderData.appliances.decoders.whirlpool;
+  const out = whirlpool.decode('RX3026733');
+  assert.ok(out);
+  assert.equal(out.year, '1990/2020');
+  assert.equal(out.month, 'Week 30');
+});
+
+test('Whirlpool RX3026733 with WFE320M0JW0 narrows to 2020 via the recognized model family (PR-33 intersection policy)', async () => {
+  const whirlpool = api.decoderData.appliances.decoders.whirlpool;
+  const candidates = api.parseCandidateYears(whirlpool.decode('RX3026733').year);
+  assert.deepEqual(Array.from(candidates), [1990, 2020]);
+
+  const resolved = await api.resolveSerialYearFromModel({ candidates, brand: 'Whirlpool', model: 'WFE320M0JW0', context: '' });
+
+  assert.equal(resolved.chosenYear, 2020, 'must narrow via intersection, not by nearest-candidate guessing');
+  assert.equal(resolved.source, 'client-family-evidence');
+  assert.notEqual(resolved.summary, '', 'must not return the generic "model evidence unavailable" message when the family is recognized');
+});
+
+test('Whirlpool RX3026733 with WFE320MOJW0 (letter-O typo) produces the same resolved result', async () => {
+  const whirlpool = api.decoderData.appliances.decoders.whirlpool;
+  const candidates = api.parseCandidateYears(whirlpool.decode('RX3026733').year);
+
+  const resolved = await api.resolveSerialYearFromModel({ candidates, brand: 'Whirlpool', model: 'WFE320MOJW0', context: '' });
+
+  assert.equal(resolved.chosenYear, 2020);
+  assert.equal(resolved.source, 'client-family-evidence');
+});
+
+test('Whirlpool RX3026733 with no model stays 1990/2020 ambiguous', async () => {
+  const whirlpool = api.decoderData.appliances.decoders.whirlpool;
+  const candidates = api.parseCandidateYears(whirlpool.decode('RX3026733').year);
+
+  const resolved = await api.resolveSerialYearFromModel({ candidates, brand: 'Whirlpool', model: '', context: '' });
+
+  assert.equal(resolved.chosenYear, null);
+  assert.equal(resolved.source, 'none');
+  assert.match(resolved.summary, /1990 or 2020/);
+});
+
+test('Whirlpool RX3026733 with unrelated model evidence does not choose a year by nearest-candidate guessing', async () => {
+  const whirlpool = api.decoderData.appliances.decoders.whirlpool;
+  const candidates = api.parseCandidateYears(whirlpool.decode('RX3026733').year);
+
+  const resolved = await api.resolveSerialYearFromModel({ candidates, brand: 'Whirlpool', model: 'WTW4816FW2', context: '' });
+
+  assert.equal(resolved.chosenYear, null, 'an unrelated/unrecognized model must never resolve to the nearest candidate');
 });

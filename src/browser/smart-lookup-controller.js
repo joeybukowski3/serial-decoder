@@ -46,6 +46,16 @@
       body: 'Serial numbers are brand-specific.',
       tryNext: 'Add the brand and item type so we can use the right decoding pattern.',
     },
+    'brand-missing': {
+      heading: 'Brand needed',
+      body: 'This looks like a product description, but we could not identify the brand.',
+      tryNext: 'Add the brand so we can recognize the product family.',
+    },
+    'product-family-recognized': {
+      heading: 'Product family recognized',
+      body: 'This looks like a product-family or retailer-title description, not an exact model number.',
+      tryNext: 'Add the exact model number from the product label.',
+    },
     timeout: {
       heading: 'Taking longer than expected',
       body: 'The lookup took too long, so we stopped before guessing.',
@@ -199,15 +209,32 @@
     if (code === 'INTRODUCTION_AFTER_RANGE' || code === 'REVERSED_RANGE') return 'conflict';
     if (code && MALFORMED_AGE_ERROR_CODES[code]) return 'malformed';
     if (code === 'INSUFFICIENT_QUERY_DETAIL') return 'missing-input';
-    // No errorCode at all means the request succeeded but simply had
-    // nothing useful to report. Whether a model was actually recognized
-    // distinguishes "add a serial number" from "add a brand" guidance.
-    if (!code) return data.model ? 'model-only-insufficient' : 'serial-only-no-brand';
+    if (!code) {
+      // No errorCode at all means the request succeeded but simply had
+      // nothing useful to report. Brand presence is the primary signal here
+      // -- a recognized brand (with or without a model) must never be
+      // reported as "brand needed" or "serial-only".
+      if (data.productFamily) return 'product-family-recognized';
+      var hasBrand = Boolean(data.brand) && data.brand !== 'Unknown';
+      if (hasBrand && data.model) return 'model-only-insufficient';
+      if (hasBrand) return 'missing-input';
+      if (data.category) return 'brand-missing';
+      return 'serial-only-no-brand';
+    }
     return 'unavailable-generic';
   }
 
   function copyForAgeOutcome(bucket, data) {
     var base = AGE_OUTCOME_COPY[bucket] || AGE_OUTCOME_COPY['unavailable-generic'];
+    if (bucket === 'product-family-recognized') {
+      var brandPart = data && data.brand && data.brand !== 'Unknown' ? data.brand + ' ' : '';
+      var familyPart = (data && data.productFamily) || 'Product family';
+      return {
+        heading: brandPart + familyPart + ' recognized',
+        body: (data && data.notes) || base.body,
+        tryNext: (data && data.refinementSuggestion) || base.tryNext,
+      };
+    }
     if (bucket === 'unavailable-generic' && data && data.notes) {
       return { heading: base.heading, body: data.notes, tryNext: base.tryNext };
     }
@@ -221,6 +248,19 @@
     if (!data) return 'network-error';
     if (Array.isArray(data.replacementOptions) && data.replacementOptions.length) return 'success';
     return 'unavailable';
+  }
+
+  function copyForReplacementOutcome(data) {
+    var summary = data && data.itemSummary;
+    var brand = summary && summary.brand && summary.brand !== 'Unknown' ? summary.brand : '';
+    var category = summary && summary.category ? summary.category : '';
+    var known = [brand, category].filter(Boolean).join(' ');
+    if (!known) return REPLACEMENT_UNAVAILABLE_COPY;
+    return {
+      heading: REPLACEMENT_UNAVAILABLE_COPY.heading,
+      body: 'We recognized this as a ' + known + ' item, but could not verify a reliable replacement match yet.',
+      tryNext: REPLACEMENT_UNAVAILABLE_COPY.tryNext,
+    };
   }
 
   function renderAge(data) {
@@ -376,7 +416,7 @@
         var bucket = classifyReplacementOutcome(data);
         state.replacement = bucket === 'success'
           ? { status: 'success', data: data, error: null, copy: null }
-          : { status: 'error', data: null, error: null, copy: REPLACEMENT_UNAVAILABLE_COPY };
+          : { status: 'error', data: null, error: null, copy: copyForReplacementOutcome(data) };
         render(query, wantReplacement);
       }).catch(function (error) {
         if (sequence !== state.sequence || error.name === 'AbortError') return;

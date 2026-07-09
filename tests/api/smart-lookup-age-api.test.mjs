@@ -98,3 +98,32 @@ test('HVAC model-only digits are not decoded as serial dates', async () => {
   assert.equal(out.payload.estimatedYearType, 'model-introduction');
   assert.equal(providerCalls, 1);
 });
+
+test('Samsung Q60 retailer-title description returns a product-family-recognized result, not brand-needed', async () => {
+  let providerCalls = 0;
+  const handler = createAgeLookupHandler({
+    localLookup: async () => null, redisFactory: () => redisMiss,
+    providerLookup: async () => { providerCalls += 1; throw new Error('provider should not run for a brand-only/partial static result'); },
+  });
+  const out = res();
+  await handler(req('Samsung - 65" Class Q60 Series LED 4K UHD Smart Tizen TV'), out);
+  assert.equal(out.statusCode, 200);
+  assert.equal(out.payload.errorCode, null);
+  assert.equal(out.payload.brand, 'Samsung');
+  assert.equal(out.payload.category, 'television');
+  assert.equal(out.payload.productFamily, 'Q60 Series');
+  assert.equal(out.payload.needsExactModel, true);
+  assert.equal(out.payload.introductionYear, null, 'must not fabricate an exact manufacture year from a broad title');
+  assert.match(out.payload.notes, /Q60 Series/);
+  assert.match(out.payload.refinementSuggestion, /QN65Q60RAFXZA/);
+  assert.equal(providerCalls, 0);
+});
+
+test('a Samsung Q60 description with no exact model does not say "Serial numbers are brand-specific" (verified via bucket-relevant fields)', async () => {
+  const handler = createAgeLookupHandler({ localLookup: async () => null, redisFactory: () => redisMiss });
+  const out = res();
+  await handler(req('Samsung Q60A 65 inch TV'), out);
+  assert.equal(out.payload.brand, 'Samsung');
+  assert.equal(out.payload.productFamily, 'Q60 Series');
+  assert.notEqual(out.payload.brand, 'Unknown');
+});

@@ -46,7 +46,11 @@ function loadSmartLookupController() {
   ctx.window = ctx;
   vm.createContext(ctx);
 
-  const source = fs.readFileSync('src/browser/smart-lookup-controller.js', 'utf8');
+  // Normalize CRLF to LF before matching the wrapper markers -- Windows
+  // checkouts (git core.autocrlf) can rewrite this file's line endings, and
+  // the marker strings below should not depend on the working tree's EOL
+  // setting.
+  const source = fs.readFileSync('src/browser/smart-lookup-controller.js', 'utf8').replace(/\r\n/g, '\n');
   const openMarker = "(function () {\n  'use strict';\n";
   const closeMarker = '\n}());\n';
   if (!source.startsWith(openMarker) || !source.endsWith(closeMarker)) {
@@ -59,6 +63,7 @@ function loadSmartLookupController() {
       classifyAgeOutcome,
       classifyReplacementOutcome,
       copyForAgeOutcome,
+      copyForReplacementOutcome,
       AGE_OUTCOME_COPY,
       REPLACEMENT_UNAVAILABLE_COPY,
       noResultCard,
@@ -217,4 +222,58 @@ test('renderAge success output is unchanged for a normal result (no regressions)
   assert.match(html, /Model introduced/);
   assert.match(html, /Known production\/availability/);
   assert.match(html, /Individual manufacture date requires serial number/);
+});
+
+// ── Recall fixes: recognized brand/category must never be misreported as
+//    brand-needed or serial-only (Upgrade 3) ─────────────────────────────────
+
+test('classifyAgeOutcome: a recognized product family is product-family-recognized, not brand-needed', () => {
+  const data = { brand: 'Samsung', category: 'television', productFamily: 'Q60 Series', model: null };
+  assert.equal(api.classifyAgeOutcome(data), 'product-family-recognized');
+});
+
+test('classifyAgeOutcome: recognized brand with no model/category is missing-input, not serial-only', () => {
+  const data = { brand: 'Whirlpool', category: null, model: null, productFamily: null };
+  assert.equal(api.classifyAgeOutcome(data), 'missing-input');
+});
+
+test('classifyAgeOutcome: recognized category with no brand is brand-missing, not serial-only', () => {
+  const data = { brand: 'Unknown', category: 'television', model: null, productFamily: null };
+  assert.equal(api.classifyAgeOutcome(data), 'brand-missing');
+});
+
+test('classifyAgeOutcome: no brand, no category, no family stays serial-only-no-brand', () => {
+  const data = { brand: 'Unknown', category: null, model: null, productFamily: null };
+  assert.equal(api.classifyAgeOutcome(data), 'serial-only-no-brand');
+});
+
+test('copyForAgeOutcome builds a dynamic "<Brand> <Family> recognized" heading using real API fields', () => {
+  const data = {
+    brand: 'Samsung',
+    productFamily: 'Q60 Series',
+    notes: 'This looks like a Samsung 65-inch Q60 Series television description, but it is not the exact model number. The Q60 family has multiple yearly model variants, such as Q60R/Q60RA, Q60T, Q60A, Q60B, Q60C, and Q60D. We need the exact model number to identify the precise model year.',
+    refinementSuggestion: 'Look for a model number like QN65Q60RAFXZA, QN65Q60AAFXZA, QN65Q60DAFXZA on the back label or in the TV settings.',
+  };
+  const copy = api.copyForAgeOutcome('product-family-recognized', data);
+  assert.equal(copy.heading, 'Samsung Q60 Series recognized');
+  assert.match(copy.body, /Q60 family has multiple yearly model variants/);
+  assert.match(copy.body, /Q60R\/Q60RA, Q60T, Q60A, Q60B, Q60C, and Q60D/);
+  assert.doesNotMatch(copy.body, /\b(19|20)\d{2}\b.*manufacture/i, 'must not claim an exact manufacture year');
+  assert.match(copy.tryNext, /QN65Q60RAFXZA/);
+});
+
+test('product-family-recognized copy never claims an exact manufacture year', () => {
+  const copy = api.copyForAgeOutcome('product-family-recognized', { brand: 'Samsung', productFamily: 'Q60 Series' });
+  assert.doesNotMatch(copy.body + ' ' + copy.tryNext, /estimated manufacture year is|manufacture year: (19|20)\d{2}/i);
+});
+
+test('replacement-unavailable copy preserves recognized brand/category instead of a generic message', () => {
+  const copy = api.copyForReplacementOutcome({ itemSummary: { brand: 'Samsung', category: 'television' }, replacementOptions: [] });
+  assert.match(copy.body, /Samsung television/);
+  assert.doesNotMatch(copy.body, /verified replacement (found|match)\b/i);
+});
+
+test('replacement-unavailable copy falls back to the generic message when nothing was recognized', () => {
+  const copy = api.copyForReplacementOutcome({ itemSummary: { brand: 'Unknown', category: null }, replacementOptions: [] });
+  assert.equal(copy, api.REPLACEMENT_UNAVAILABLE_COPY);
 });
