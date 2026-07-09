@@ -2,7 +2,7 @@ import { buildSmartAgeCacheKey, chooseSmartAgeTtl, prepareResultForCache } from 
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
 import { applyEraHints, decodeHvacSerial, findLocalModelAgeResult } from '../lib/smart-lookup/age-legacy.js';
 import { classifySmartLookupQuery, getVerifiedModelKey, normalizeWhitespace } from '../lib/smart-lookup/normalize.js';
-import { callGeminiAgeProvider, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
+import { callGeminiAgeProvider, getSmartLookupProviderMetadata, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
 import {
   createSmartLookupTimings,
   createUnavailableSmartAgeResult,
@@ -308,11 +308,15 @@ export function createAgeLookupHandler(dependencies = {}) {
           : (isTimeoutError(error)
             ? 'PROVIDER_TIMEOUT'
             : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE'));
+        // PROVIDERS_UNAVAILABLE means the Groq fallback was actually attempted
+        // (and also failed) before this error surfaced; every other code means
+        // Groq was never reached, so fallbackUsed must stay false here.
         const result = finalizeTimings(createUnavailableSmartAgeResult(queryInfo, {
           source: 'fallback',
           evidenceSource: 'none',
           cacheStatus,
           providerAttempted: errorCode !== 'RATE_LIMIT',
+          fallbackUsed: errorCode === 'PROVIDERS_UNAVAILABLE',
           timings,
           errorCode,
           notes: errorCode === 'RATE_LIMIT' ? 'Smart Lookup provider capacity is temporarily limited. Local and cached lookups remain available.' : undefined,
@@ -325,14 +329,18 @@ export function createAgeLookupHandler(dependencies = {}) {
       const postStart = now();
       let result;
       try {
+        // callGeminiAgeProvider already resolved through Gemini or its bounded
+        // Groq fallback; read which one actually served this result instead
+        // of assuming Gemini succeeded.
+        const providerMetadata = getSmartLookupProviderMetadata(rawProvider);
         const providerOptions = {
           queryInfo,
-          source: 'gemini',
-          originSource: 'gemini',
-          evidenceSource: 'gemini-ungrounded',
+          source: providerMetadata.provider,
+          originSource: providerMetadata.provider,
+          evidenceSource: providerMetadata.provider === 'groq' ? 'groq-ungrounded' : 'gemini-ungrounded',
           cacheStatus,
           providerAttempted: true,
-          fallbackUsed: false,
+          fallbackUsed: providerMetadata.fallbackUsed,
           timings,
           currentYear,
         };
