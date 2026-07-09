@@ -71,4 +71,107 @@ test.describe('Smart Lookup controller', () => {
     await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
     expect(errors).toEqual([]);
   });
+
+  test('loading message appears immediately on submit', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await route.fulfill({ json: { brand: 'Samsung', model: 'QN65Q80A', introductionYear: 2020 } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Checking known model and serial data');
+  });
+
+  test('progressive message advances while the provider is still working', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+      await route.fulfill({ json: { brand: 'Samsung', model: 'QN65Q80A', introductionYear: 2020, fallbackUsed: true } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Checking known model and serial data');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Searching trusted model evidence', { timeout: 2000 });
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('checking a backup source', { timeout: 3000 });
+    // Once the response actually arrives, the real fallbackUsed metadata
+    // should confirm the backup-source note truthfully -- not the time-based
+    // guess shown while waiting.
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('backup data source');
+  });
+
+  test('backup-source note does not appear when fallbackUsed is false', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: { brand: 'Samsung', model: 'QN65Q80A', introductionYear: 2020, fallbackUsed: false } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-age-panel')).not.toContainText('backup data source');
+  });
+
+  test('timeout response renders timeout-specific no-result copy', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: { errorCode: 'PROVIDER_TIMEOUT', notes: 'Smart Lookup could not establish a defensible model introduction or production range.' } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Taking longer than expected');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Try this next');
+    await expect(page.locator('#smart-lookup-age-panel')).not.toContainText('PROVIDER_TIMEOUT');
+  });
+
+  test('malformed provider output renders reliability-specific copy, not a raw error', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: { errorCode: 'UNRELATED_BRAND' } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('not reliable enough');
+    await expect(page.locator('#smart-lookup-age-panel')).not.toContainText('UNRELATED_BRAND');
+  });
+
+  test('replacement unavailable copy does not claim a verified replacement, and age still renders', async ({ page }) => {
+    await page.route('**/api/lkq-lookup', async (route) => {
+      await route.fulfill({ json: { errorCode: 'PROVIDER_TIMEOUT', replacementOptions: [] } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#include-replacement-comparisons').check();
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-replacement-panel')).toContainText('Replacement match unavailable');
+    await expect(page.locator('#smart-lookup-replacement-panel')).toContainText('Try adding the full model number');
+    await expect(page.locator('[data-smart-lookup-retry="replacement"]')).toBeVisible();
+  });
+
+  test('form input is not reset after a failure, and Edit your search refocuses it', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: { errorCode: 'PROVIDER_TIMEOUT' } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Taking longer than expected');
+    await expect(page.locator('#smart-lookup-input')).toHaveValue('Samsung QN65-Q80A');
+    await page.locator('[data-smart-lookup-edit="1"]').click();
+    await expect(page.locator('#smart-lookup-input')).toBeFocused();
+    await expect(page.locator('#smart-lookup-input')).toHaveValue('Samsung QN65-Q80A');
+  });
+
+  test('no raw error/provider details are rendered in the DOM on failure', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: { errorCode: 'GROQ_MALFORMED_JSON', errorMessage: 'internal stack trace details' } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('not reliable enough');
+    const panelText = await page.locator('#smart-lookup-age-panel').innerText();
+    expect(panelText).not.toMatch(/GROQ_MALFORMED_JSON|stack trace|gemini|groq/i);
+  });
 });

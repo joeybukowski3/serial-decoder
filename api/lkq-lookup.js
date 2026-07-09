@@ -1,7 +1,7 @@
 import { buildSmartLkqCacheKey, chooseSmartLkqTtl, prepareReplacementForCache } from '../lib/smart-lookup/cache.js';
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
 import { classifySmartLookupQuery, normalizeKnownQuery, normalizeWhitespace } from '../lib/smart-lookup/normalize.js';
-import { callGeminiLkqProvider, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
+import { callGeminiLkqProvider, getSmartLookupProviderMetadata, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
 import {
   createReplacementTimings,
   createUnavailableReplacementResult,
@@ -129,8 +129,10 @@ export function createLkqLookupHandler(dependencies = {}) {
           : (isTimeoutError(error)
             ? 'PROVIDER_TIMEOUT'
             : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE'));
+        // PROVIDERS_UNAVAILABLE means the Groq fallback was actually attempted
+        // (and also failed); every other code means Groq was never reached.
         const result = finish(createUnavailableReplacementResult(queryInfo, {
-          cacheStatus, providerAttempted: errorCode !== 'RATE_LIMIT', fallbackUsed: true, errorCode, timings,
+          cacheStatus, providerAttempted: errorCode !== 'RATE_LIMIT', fallbackUsed: errorCode === 'PROVIDERS_UNAVAILABLE', errorCode, timings,
           message: errorCode === 'RATE_LIMIT' ? 'Replacement provider capacity is temporarily limited. The age result remains available.' : undefined,
         }), timings, deadline);
         logSmartLookup(logger, {
@@ -148,19 +150,24 @@ export function createLkqLookupHandler(dependencies = {}) {
       const postStart = now();
       let result;
       try {
+        // providerLookup already resolved through Gemini or its bounded Groq
+        // fallback; read which one actually served this result instead of
+        // assuming Gemini succeeded.
+        const providerMetadata = getSmartLookupProviderMetadata(raw);
         result = normalizeReplacementResult(raw, {
           queryInfo,
-          source: 'gemini',
-          originSource: 'gemini',
-          evidenceSource: 'gemini-ungrounded',
+          source: providerMetadata.provider,
+          originSource: providerMetadata.provider,
+          evidenceSource: providerMetadata.provider === 'groq' ? 'groq-ungrounded' : 'gemini-ungrounded',
           cacheStatus,
           providerAttempted: true,
+          fallbackUsed: providerMetadata.fallbackUsed,
           timings,
         });
       } catch (error) {
         timings.postProcessMs = Math.max(0, now() - postStart);
         result = finish(createUnavailableReplacementResult(queryInfo, {
-          cacheStatus, providerAttempted: true, fallbackUsed: true,
+          cacheStatus, providerAttempted: true, fallbackUsed: getSmartLookupProviderMetadata(raw).fallbackUsed,
           errorCode: error?.code || 'INVALID_PROVIDER_RESULT', timings,
         }), timings, deadline);
         return res.status(200).json(result);
