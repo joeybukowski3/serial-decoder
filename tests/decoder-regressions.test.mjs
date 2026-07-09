@@ -78,7 +78,11 @@ function loadDecoderContext() {
       resolveKenmoreDecoderFromPrefix,
       getVizioModelDecodeInput,
       isLikelyVizioModelValue,
-      sanitizeAlertText
+      sanitizeAlertText,
+      getKenmorePrefixDropdownOptions,
+      applyKenmorePrefixFallback,
+      isMaytagEraUnselected,
+      computeMaytagDualEraResult
     };
   `, ctx);
 
@@ -436,12 +440,18 @@ test('Unsupported Vizio serial without a model does not invent a date', () => {
   assert.equal(vizio.decode('LSPATBH4026090'), null);
 });
 
-test('Kenmore requires a model prefix regardless of category key shape', () => {
+test('Kenmore model field is no longer required, and accepts a full model number (UX update)', () => {
+  // UX change: users can now decode Kenmore without providing a model
+  // number/prefix at all (falls back to the documented Whirlpool default),
+  // and the write-in field accepts a full model number rather than being
+  // truncated to a 3-digit prefix on every keystroke.
   const kenmoreAppliances = api.getSupplementalModelConfig('appliances', 'kenmore');
   const normalized = api.normalizeDecoderCategory('water-heaters');
 
-  assert.equal(kenmoreAppliances.required, true);
-  assert.equal(kenmoreAppliances.label, 'Model Prefix');
+  assert.equal(kenmoreAppliances.required, false);
+  assert.equal(kenmoreAppliances.label, 'Model Number');
+  assert.equal(kenmoreAppliances.maxLength, undefined);
+  assert.equal(kenmoreAppliances.sanitize, undefined);
   assert.equal(normalized, 'waterHeaters');
 });
 
@@ -1290,4 +1300,188 @@ test('sanitizeDecodeResult only accepts explicit year formats and approved senti
   assert.equal(isValid('2040/2043'), false, 'no candidate in plausible range');
   assert.equal(isValid(''), false);
   assert.equal(isValid('1984 or 2004/2024'), false, 'legacy or-format is normalized at the source');
+});
+
+// ── Kenmore model-prefix helper (UX improvement) ─────────────────────────────
+
+test('Kenmore prefix dropdown options come only from the existing KENMORE_PREFIX_TO_DECODER table', () => {
+  const options = api.getKenmorePrefixDropdownOptions();
+  const expectedPrefixes = Object.keys(api.KENMORE_PREFIX_TO_DECODER).sort((a, b) => Number(a) - Number(b));
+
+  assert.deepEqual(Array.from(options).map((option) => option.value), expectedPrefixes);
+  assert.ok(options.length > 0);
+
+  for (const option of options) {
+    const entry = api.KENMORE_PREFIX_TO_DECODER[option.value];
+    assert.ok(entry, 'every dropdown option must map to an existing supported prefix');
+    assert.equal(option.label, `${option.value} — ${entry.manufacturer}-built Kenmore`);
+  }
+
+  // Spot-check a couple of known entries to guard against silently dropping
+  // or renaming supported prefixes.
+  const byValue = Object.fromEntries(options.map((option) => [option.value, option.label]));
+  assert.equal(byValue['110'], '110 — Whirlpool-built Kenmore');
+  assert.equal(byValue['795'], '795 — LG-built Kenmore');
+  assert.equal(byValue['362'], '362 — General Electric-built Kenmore');
+});
+
+test('Kenmore prefix fallback uses the selected dropdown prefix when the model field is blank', () => {
+  const originalGetById = ctx.document.getElementById;
+  ctx.document.getElementById = (id) => (id === 'kenmoreModelPrefix' ? { value: '110' } : originalGetById(id));
+
+  const effective = api.applyKenmorePrefixFallback('');
+
+  assert.equal(effective, '110');
+  ctx.document.getElementById = originalGetById;
+});
+
+test('Typed Kenmore model number takes precedence over the dropdown prefix', () => {
+  const originalGetById = ctx.document.getElementById;
+  ctx.document.getElementById = (id) => (id === 'kenmoreModelPrefix' ? { value: '110' } : originalGetById(id));
+
+  // Typed value's own prefix (795) differs from the dropdown selection
+  // (110); the typed value must still win.
+  const effective = api.applyKenmorePrefixFallback('795.74053.410');
+
+  assert.equal(effective, '795.74053.410');
+  ctx.document.getElementById = originalGetById;
+});
+
+test('Kenmore prefix fallback returns blank when neither a typed value nor a dropdown selection exists', () => {
+  const originalGetById = ctx.document.getElementById;
+  ctx.document.getElementById = (id) => (id === 'kenmoreModelPrefix' ? { value: '' } : originalGetById(id));
+
+  assert.equal(api.applyKenmorePrefixFallback(''), '');
+  ctx.document.getElementById = originalGetById;
+});
+
+test('Kenmore 795 prefix from the dropdown alone routes to LG decoding (full typed model number still works too)', () => {
+  const originalGetById = ctx.document.getElementById;
+
+  // Blank model field, dropdown prefix 795 selected.
+  ctx.document.getElementById = (id) => (id === 'kenmoreModelPrefix' ? { value: '795' } : originalGetById(id));
+  const fromDropdown = api.applyKenmorePrefixFallback('');
+  const resolvedFromDropdown = api.resolveKenmoreDecoderFromPrefix(fromDropdown);
+  assert.equal(resolvedFromDropdown.prefix, '795');
+  assert.equal(resolvedFromDropdown.decoderId, 'lg');
+
+  // Existing typed-full-model-number path must still work unchanged.
+  ctx.document.getElementById = (id) => (id === 'kenmoreModelPrefix' ? { value: '' } : originalGetById(id));
+  const fromTyped = api.applyKenmorePrefixFallback('795.74053.410');
+  const resolvedFromTyped = api.resolveKenmoreDecoderFromPrefix(fromTyped);
+  assert.equal(resolvedFromTyped.prefix, '795');
+  assert.equal(resolvedFromTyped.decoderId, 'lg');
+
+  const lg = api.decoderData.appliances.decoders[resolvedFromDropdown.decoderId];
+  const out = lg.decode('410KR00219');
+  assert.ok(out);
+  assert.equal(out.year, '2004/2014/2024');
+
+  ctx.document.getElementById = originalGetById;
+});
+
+test('Kenmore write-in field is no longer truncated to a 3-digit prefix', () => {
+  const originalGetById = ctx.document.getElementById;
+  const input = { value: '106.71774017', setAttribute() {}, removeAttribute() {}, getAttribute: () => null };
+  ctx.document.getElementById = (id) => {
+    if (id === 'modelNumber') return input;
+    if (id === 'kenmoreModelPrefix') return { value: '' };
+    return originalGetById(id);
+  };
+
+  const value = api.getCurrentSupplementalModelValue('appliances', 'kenmore');
+
+  assert.equal(value, '106.71774017');
+  assert.equal(api.extractKenmoreModelPrefix(value), '106');
+  ctx.document.getElementById = originalGetById;
+});
+
+test('Kenmore decode still works without any prefix at all (falls back to documented Whirlpool default)', () => {
+  const resolved = api.resolveKenmoreDecoderFromPrefix('');
+  assert.equal(resolved.usedDefault, true);
+  assert.equal(resolved.manufacturer, 'Whirlpool');
+  assert.equal(resolved.decoderId, 'whirlpool');
+  assert.match(resolved.note, /Kenmore/i);
+});
+
+// ── Maytag pre/post-2006 combined result (UX improvement) ───────────────────
+
+test('isMaytagEraUnselected reflects the eraSelect element state', () => {
+  const originalGetById = ctx.document.getElementById;
+
+  ctx.document.getElementById = (id) => (id === 'eraSelect' ? { value: '' } : originalGetById(id));
+  assert.equal(api.isMaytagEraUnselected(), true);
+
+  ctx.document.getElementById = (id) => (id === 'eraSelect' ? { value: 'pre' } : originalGetById(id));
+  assert.equal(api.isMaytagEraUnselected(), false);
+
+  ctx.document.getElementById = (id) => (id === 'eraSelect' ? { value: 'post' } : originalGetById(id));
+  assert.equal(api.isMaytagEraUnselected(), false);
+
+  ctx.document.getElementById = originalGetById;
+});
+
+test('Maytag combined result shows both era styles when both pre-2006 and post-2006 decode validly', () => {
+  const result = api.computeMaytagDualEraResult('12345678WA', '');
+
+  assert.equal(result.supported, true);
+  assert.equal(result.preValid, true);
+  assert.equal(result.postValid, true);
+  assert.deepEqual(Array.from(result.combinedYears), [1999, 2013, 2043]);
+  assert.match(result.notesText, /Maytag pre-2006 style: 1999/);
+  assert.match(result.notesText, /Maytag post-2006 style: 2013\/2043/);
+  assert.match(result.notesText, /depends on whether this unit was made before or after Whirlpool/i);
+});
+
+test('Maytag combined result does not show a fake single confident age when multiple candidate years exist', () => {
+  const result = api.computeMaytagDualEraResult('12345678WA', '');
+
+  assert.equal(result.supported, true);
+  assert.equal(api.hasSingleResolvedYear(result.combinedYearDisplay), false);
+  assert.equal(api.computeEstimatedAge(result.combinedYearDisplay), '—');
+});
+
+test('Maytag combined result shows only the matching era style and notes the other did not match', () => {
+  const result = api.computeMaytagDualEraResult('W10123456', '');
+
+  assert.equal(result.supported, true);
+  assert.equal(result.preValid, false);
+  assert.equal(result.postValid, true);
+  assert.deepEqual(Array.from(result.combinedYears), [2011, 2041]);
+  assert.match(result.notesText, /pre-2006 style did not match/i);
+  assert.match(result.notesText, /post-2006 style: 2011\/2041/);
+  assert.doesNotMatch(result.notesText, /depends on whether this unit was made/i);
+});
+
+test('Maytag combined result reports unsupported when neither era style matches', () => {
+  const result = api.computeMaytagDualEraResult('1234567', '');
+
+  assert.equal(result.supported, false);
+  assert.equal(result.preValid, false);
+  assert.equal(result.postValid, false);
+  assert.match(result.reason, /neither.*pre-2006.*post-2006/i);
+});
+
+test('Maytag pre-2006 and post-2006 decoders remain directly usable when an era is explicitly selected', () => {
+  // Explicit era selection must keep using the single-decoder path
+  // unchanged -- isMaytagEraUnselected() must report false so decodeSerial's
+  // dual-era branch never triggers.
+  const originalGetById = ctx.document.getElementById;
+  ctx.document.getElementById = (id) => (id === 'eraSelect' ? { value: 'pre' } : originalGetById(id));
+  assert.equal(api.isMaytagEraUnselected(), false);
+
+  const pre = api.decoderData.appliances.decoders.maytag_pre_2006;
+  const out = pre.decode('12345678WA');
+  assert.ok(out);
+  assert.equal(out.year, '1999/2023');
+
+  ctx.document.getElementById = (id) => (id === 'eraSelect' ? { value: 'post' } : originalGetById(id));
+  assert.equal(api.isMaytagEraUnselected(), false);
+
+  const post = api.decoderData.appliances.decoders.maytag_post_2006;
+  const postOut = post.decode('12345678WA');
+  assert.ok(postOut);
+  assert.equal(postOut.year, '2013/2043');
+
+  ctx.document.getElementById = originalGetById;
 });
