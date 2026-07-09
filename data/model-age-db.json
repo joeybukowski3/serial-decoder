@@ -122,6 +122,38 @@
       ]
     },
     {
+      "brand": "Whirlpool",
+      "model": "WFE320M0JW0",
+      "normalizedBrand": "whirlpool",
+      "normalizedModel": "wfe320m0jw0",
+      "category": "range",
+      "yearStart": 2013,
+      "yearEnd": 2023,
+      "productionRange": "2013-2023",
+      "source": "Whirlpool WFE3xx freestanding electric range family (modern model-numbering era)",
+      "notes": "WFE320M0JW0 follows Whirlpool's WFE3xx freestanding electric-range naming convention introduced in the 2010s, which rules out the older repeating 1990s serial cycle for this serial format.",
+      "aliases": [
+        "WFE320",
+        "WFE320MOJW0",
+        "Whirlpool WFE320M0JW0"
+      ],
+      "legacyEstimatedYear": 2018,
+      "recordType": "exact-model",
+      "refinementEvidence": [
+        {
+          "type": "local-db",
+          "title": "Whirlpool WFE320M0JW0 structured model record",
+          "sourceName": "Whirlpool WFE3xx freestanding electric range family (modern model-numbering era)",
+          "sourceUrl": null,
+          "productionStart": 2013,
+          "productionEnd": 2023,
+          "supports": "WFE320M0JW0 follows Whirlpool's WFE3xx freestanding electric-range naming convention introduced in the 2010s, which rules out the older repeating 1990s serial cycle for this serial format.",
+          "quality": "official",
+          "verified": true
+        }
+      ]
+    },
+    {
       "brand": "GE",
       "model": "PFE28KYNFS",
       "normalizedBrand": "ge",
