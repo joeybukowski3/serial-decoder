@@ -74,6 +74,7 @@ function loadDecoderContext() {
       normalizeDecoderCategory,
       normalizeBrandId,
       sanitizeDecodeResult,
+      isIncompleteResult,
       extractKenmoreModelPrefix,
       resolveKenmoreDecoderFromPrefix,
       getVizioModelDecodeInput,
@@ -145,6 +146,10 @@ test('category decoder bundles preserve decoder output parity with decoder-data.
   assert.deepEqual(
     plain(splitData.waterHeaters.decoders.rheem.decode('RH120512345')),
     plain(api.decoderData.waterHeaters.decoders.rheem.decode('RH120512345'))
+  );
+  assert.deepEqual(
+    plain(splitData.waterHeaters.decoders.richmond.decode('Q082116285')),
+    plain(api.decoderData.waterHeaters.decoders.richmond.decode('Q082116285'))
   );
   assert.deepEqual(
     plain(splitData.electronics.decoders.vizio.decode('VW32L HDTV10A')),
@@ -795,6 +800,62 @@ test('Rheem numeric serial 0302118742 resolves to 2021 using the documented Styl
   assert.equal(out.month, 'Week 30');
   assert.equal(out.yearCode, '21');
   assert.equal(out.weekDigits, '30');
+});
+
+test('Richmond plant-prefix WWYY serial Q082116285 decodes to week 8 of 2021', () => {
+  const richmond = api.decoderData.waterHeaters.decoders.richmond;
+  const out = richmond.decode('Q082116285');
+
+  assert.ok(out);
+  assert.equal(out.year, '2021');
+  assert.equal(out.month, 'Week 8');
+  assert.equal(out.yearCode, '21');
+  assert.equal(out.weekDigits, '08');
+  assert.equal(out.plantCode, 'Q');
+  assert.equal(out.decodeStyle, 'Plant-prefix WWYY');
+  assert.match(out.notes, /Q0821 indicates week 08 of 2021/i);
+});
+
+test('Richmond plant-prefix WWYY decode remains valid with optional model GG50-38F3', () => {
+  const richmond = api.decoderData.waterHeaters.decoders.richmond;
+  const out = richmond.decode('Q082116285', 'GG50-38F3');
+
+  assert.ok(out);
+  assert.equal(out.year, '2021');
+  assert.equal(out.month, 'Week 8');
+  assert.deepEqual(plain(api.sanitizeDecodeResult(out)), { valid: true });
+  assert.equal(api.isIncompleteResult(out), false);
+});
+
+test('Rheem-family plant-prefix WWYY format accepts only weeks 01 through 53', () => {
+  for (const brandId of ['rheem', 'richmond', 'ruud']) {
+    const decoder = api.decoderData.waterHeaters.decoders[brandId];
+    assert.ok(decoder.decode('Q012116285'), brandId + ' should accept week 01');
+    assert.ok(decoder.decode('Q532116285'), brandId + ' should accept week 53');
+    assert.equal(decoder.decode('Q002116285'), null, brandId + ' should reject week 00');
+    assert.equal(decoder.decode('Q542116285'), null, brandId + ' should reject week 54');
+  }
+});
+
+test('Rheem-family plant-prefix WWYY format enforces the existing one-year future tolerance', () => {
+  const nextYear = new Date().getFullYear() + 1;
+  const tooFarFutureYear = nextYear + 1;
+  const withinTolerance = 'Q08' + String(nextYear).slice(-2) + '16285';
+  const beyondTolerance = 'Q08' + String(tooFarFutureYear).slice(-2) + '16285';
+
+  for (const brandId of ['rheem', 'richmond', 'ruud']) {
+    const decoder = api.decoderData.waterHeaters.decoders[brandId];
+    assert.ok(decoder.decode(withinTolerance), brandId + ' should allow current year + 1');
+    assert.equal(decoder.decode(beyondTolerance), null, brandId + ' should reject current year + 2');
+  }
+});
+
+test('GE and generic water-heater MMYY parsing do not gain plant-prefix WWYY support', () => {
+  const ge = api.decoderData.waterHeaters.decoders.ge_water_heaters;
+  const vanguard = api.decoderData.waterHeaters.decoders.vanguard;
+
+  assert.equal(ge.decode('Q082116285'), null);
+  assert.equal(vanguard.decode('Q082116285'), null);
 });
 
 test('Non-Rheem brand does not use Rheem RH prefix week/year rule', () => {
