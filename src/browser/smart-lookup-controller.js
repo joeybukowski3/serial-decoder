@@ -56,6 +56,11 @@
       body: 'This looks like a product-family or retailer-title description, not an exact model number.',
       tryNext: 'Add the exact model number from the product label.',
     },
+    'exact-model-insufficient': {
+      heading: 'Exact model recognized',
+      body: 'We recognized the exact model number, but this product-family context does not establish a unit manufacture date.',
+      tryNext: 'Use the serial number for unit-specific manufacture dating.',
+    },
     timeout: {
       heading: 'Taking longer than expected',
       body: 'The lookup took too long, so we stopped before guessing.',
@@ -208,13 +213,14 @@
     if (code === 'PROVIDER_TIMEOUT' || code === 'TOTAL_DEADLINE') return 'timeout';
     if (code === 'INTRODUCTION_AFTER_RANGE' || code === 'REVERSED_RANGE') return 'conflict';
     if (code && MALFORMED_AGE_ERROR_CODES[code]) return 'malformed';
+    if (data.productFamily && data.exactModel) return 'exact-model-insufficient';
+    if (data.productFamily) return 'product-family-recognized';
     if (code === 'INSUFFICIENT_QUERY_DETAIL') return 'missing-input';
     if (!code) {
       // No errorCode at all means the request succeeded but simply had
       // nothing useful to report. Brand presence is the primary signal here
       // -- a recognized brand (with or without a model) must never be
       // reported as "brand needed" or "serial-only".
-      if (data.productFamily) return 'product-family-recognized';
       var hasBrand = Boolean(data.brand) && data.brand !== 'Unknown';
       if (hasBrand && data.model) return 'model-only-insufficient';
       if (hasBrand) return 'missing-input';
@@ -229,8 +235,16 @@
     if (bucket === 'product-family-recognized') {
       var brandPart = data && data.brand && data.brand !== 'Unknown' ? data.brand + ' ' : '';
       var familyPart = (data && data.productFamily) || 'Product family';
+      if (!/\bseries$/i.test(familyPart)) familyPart += ' Series';
       return {
         heading: brandPart + familyPart + ' recognized',
+        body: (data && data.notes) || base.body,
+        tryNext: (data && data.refinementSuggestion) || base.tryNext,
+      };
+    }
+    if (bucket === 'exact-model-insufficient') {
+      return {
+        heading: ((data && data.brand && data.brand !== 'Unknown' ? data.brand + ' ' : '') + ((data && data.exactModel) || 'Exact model')) + ' recognized',
         body: (data && data.notes) || base.body,
         tryNext: (data && data.refinementSuggestion) || base.tryNext,
       };

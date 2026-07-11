@@ -127,3 +127,68 @@ test('a Samsung Q60 description with no exact model does not say "Serial numbers
   assert.equal(out.payload.productFamily, 'Q60 Series');
   assert.notEqual(out.payload.brand, 'Unknown');
 });
+
+test('LG C3 family query returns a safe partial result before the legacy C3 alias can substitute a model', async () => {
+  let localCalls = 0;
+  let providerCalls = 0;
+  const handler = createAgeLookupHandler({
+    localLookup: async () => {
+      localCalls += 1;
+      return { brand: 'LG', model: 'OLED55C3PUA', yearRange: '2023-2024' };
+    },
+    redisFactory: () => redisMiss,
+    providerLookup: async () => { providerCalls += 1; return {}; },
+  });
+  const out = res();
+  await handler(req('LG C3 TV'), out);
+
+  assert.equal(out.statusCode, 200);
+  assert.equal(out.payload.status, 'partial');
+  assert.equal(out.payload.resultType, 'product-family-recognized');
+  assert.equal(out.payload.brand, 'LG');
+  assert.equal(out.payload.category, 'television');
+  assert.equal(out.payload.productFamily, 'C3');
+  assert.equal(out.payload.seriesLine, 'OLED C3');
+  assert.equal(out.payload.model, null);
+  assert.equal(out.payload.exactModel, null);
+  assert.equal(out.payload.individualManufactureYear, null);
+  assert.equal(out.payload.modelYearFamilyYear, 2023);
+  assert.equal(out.payload.needsExactModel, true);
+  assert.match(out.payload.notes, /model-year family.*2023|2023.*model-year family/i);
+  assert.doesNotMatch(out.payload.notes, /manufacture year is 2023/i);
+  assert.match(out.payload.refinementSuggestion, /OLED42C3PUA/);
+  assert.equal(localCalls, 0);
+  assert.equal(providerCalls, 0);
+});
+
+test('LG OLED C3 uses the same deterministic product-family response', async () => {
+  const handler = createAgeLookupHandler({
+    localLookup: async () => { throw new Error('family query must bypass the local exact-model alias'); },
+    redisFactory: () => redisMiss,
+  });
+  const out = res();
+  await handler(req('LG OLED C3'), out);
+  assert.equal(out.payload.resultType, 'product-family-recognized');
+  assert.equal(out.payload.productFamily, 'C3');
+  assert.equal(out.payload.exactModel, null);
+});
+
+test('exact LG OLED model returns exact-model context without a unit manufacture year', async () => {
+  const handler = createAgeLookupHandler({
+    localLookup: async () => { throw new Error('deterministic exact LG recognition should run first'); },
+    redisFactory: () => redisMiss,
+  });
+  const out = res();
+  await handler(req('LG OLED65C3PUA'), out);
+  assert.equal(out.payload.status, 'partial');
+  assert.equal(out.payload.resultType, 'exact-model-insufficient');
+  assert.equal(out.payload.brand, 'LG');
+  assert.equal(out.payload.model, 'OLED65C3PUA');
+  assert.equal(out.payload.exactModel, 'OLED65C3PUA');
+  assert.equal(out.payload.screenSize, 65);
+  assert.equal(out.payload.productFamily, 'C3');
+  assert.equal(out.payload.modelYearFamilyYear, 2023);
+  assert.equal(out.payload.individualManufactureYear, null);
+  assert.equal(out.payload.introductionYear, null);
+  assert.match(out.payload.notes, /product family context/i);
+});

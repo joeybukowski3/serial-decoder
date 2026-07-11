@@ -174,4 +174,35 @@ test.describe('Smart Lookup controller', () => {
     const panelText = await page.locator('#smart-lookup-age-panel').innerText();
     expect(panelText).not.toMatch(/GROQ_MALFORMED_JSON|stack trace|gemini|groq/i);
   });
+
+  test('LG C3 family searches render useful partial recognition from the local API', async ({ page }) => {
+    await page.unroute('**/api/age-lookup');
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    for (const query of ['LG C3 TV', 'LG OLED C3']) {
+      await page.locator('#smart-lookup-input').fill(query);
+      await page.locator('#smartLookupBtn').click();
+      const panel = page.locator('#smart-lookup-age-panel');
+      await expect(panel).toContainText('LG C3 Series recognized');
+      await expect(panel).toContainText('LG C3 OLED TV product-family search');
+      await expect(panel).toContainText('2023 LG OLED C3 series');
+      await expect(panel).toContainText('OLED65C3PUA');
+      await expect(panel).not.toContainText('Brand needed');
+      await expect(panel).not.toContainText('Serial numbers are brand-specific');
+      await expect(panel).not.toContainText('manufacture year is 2023');
+    }
+  });
+
+  test('exact LG OLED and existing Samsung Q60 recognition still render correctly', async ({ page }) => {
+    await page.unroute('**/api/age-lookup');
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('LG OLED65C3PUA');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('LG OLED65C3PUA recognized');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('2023 LG OLED C3 model-year family');
+    await expect(page.locator('#smart-lookup-age-panel')).not.toContainText('manufacture year is 2023');
+
+    await page.locator('#smart-lookup-input').fill('Samsung Q60 Series TV');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Samsung Q60 Series recognized');
+  });
 });

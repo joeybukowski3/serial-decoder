@@ -146,6 +146,23 @@ export function createAgeLookupHandler(dependencies = {}) {
     let cacheStatus = 'bypass';
 
     try {
+      // A recognized product-family query must stay a family query. In
+      // particular, do not let a short legacy alias such as "C3" promote the
+      // request to one arbitrary screen-size model from the local database.
+      if (queryInfo.productFamily) {
+        const productFamilyResult = buildDeterministicBroadResult(queryInfo);
+        if (productFamilyResult) {
+          const result = finalizeTimings(normalizeLegacyResult(productFamilyResult, queryInfo, {
+            source: 'static',
+            evidenceSource: 'heuristic',
+            timings,
+            currentYear,
+          }), timings, deadline);
+          logResult(logger, requestId, queryInfo, result);
+          return res.status(200).json(result);
+        }
+      }
+
       const localStart = now();
       let localResult = null;
       try {

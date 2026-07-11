@@ -81,3 +81,66 @@ test('screen size is recognized across common retailer phrasings', () => {
   assert.equal(classifySmartLookupQuery('Samsung 65-inch QLED TV').screenSize, 65);
   assert.equal(classifySmartLookupQuery('Samsung 65 Class QLED TV').screenSize, 65);
 });
+
+test('LG C3 family queries are recognized without promoting C3 to an exact model', () => {
+  for (const query of ['LG C3 TV', 'lg oled c3', 'LG OLED-C3', '65 inch LG C3 TV']) {
+    const r = classifySmartLookupQuery(query);
+    assert.equal(r.brand, 'LG', query);
+    assert.equal(r.productType, 'television', query);
+    assert.equal(r.productFamily, 'C3', query);
+    assert.equal(r.seriesLine, 'OLED C3', query);
+    assert.equal(r.exactModel, null, query);
+    assert.equal(r.isProductFamilyQuery, true, query);
+    assert.equal(r.isMarketingDescription, true, query);
+    assert.equal(r.isSerialOnly, false, query);
+    assert.equal(r.needsExactModel, true, query);
+    assert.equal(r.modelYearFamilyYear, 2023, query);
+    assert.match(r.modelYearFamilyLabel, /model-year family/i, query);
+  }
+  assert.equal(classifySmartLookupQuery('65 inch LG C3 TV').screenSize, 65);
+});
+
+test('an exact LG OLED model preserves its model, screen size, and family context', () => {
+  for (const query of ['LG OLED65C3PUA', 'OLED65C3PUA', 'LG-OLED-65-C3-PUA']) {
+    const r = classifySmartLookupQuery(query);
+    assert.equal(r.brand, 'LG', query);
+    assert.equal(r.productType, 'television', query);
+    assert.equal(r.productFamily, 'C3', query);
+    assert.equal(r.exactModel, 'OLED65C3PUA', query);
+    assert.equal(r.screenSize, 65, query);
+    assert.equal(r.isProductFamilyQuery, false, query);
+    assert.equal(r.isMarketingDescription, false, query);
+    assert.equal(r.needsExactModel, false, query);
+    assert.equal(r.modelYearFamilyYear, 2023, query);
+  }
+  const conflictingBrand = classifySmartLookupQuery('Sony OLED65C3PUA');
+  assert.equal(conflictingBrand.brand, 'Sony');
+  assert.equal(conflictingBrand.productFamily, null);
+});
+
+test('seeded LG OLED families recognize C2, G3, and B3 only with LG television context', () => {
+  for (const [query, family, year] of [
+    ['LG C2 TV', 'C2', 2022],
+    ['LG G3 TV', 'G3', 2023],
+    ['LG B3 TV', 'B3', 2023],
+  ]) {
+    const r = classifySmartLookupQuery(query);
+    assert.equal(r.productFamily, family, query);
+    assert.equal(r.productType, 'television', query);
+    assert.equal(r.modelYearFamilyYear, year, query);
+  }
+  assert.equal(classifySmartLookupQuery('LG C3 washer').productFamily, null);
+});
+
+test('short C3 tokens remain ambiguous without safe LG context', () => {
+  const bare = classifySmartLookupQuery('C3');
+  assert.equal(bare.brand, '');
+  assert.equal(bare.productFamily, null);
+  assert.equal(bare.isSerialOnly, true);
+
+  const noBrand = classifySmartLookupQuery('65 inch C3 OLED TV');
+  assert.equal(noBrand.brand, '');
+  assert.equal(noBrand.productFamily, null);
+  assert.equal(noBrand.productType, 'television');
+  assert.equal(noBrand.isSerialOnly, false);
+});

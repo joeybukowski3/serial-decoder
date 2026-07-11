@@ -267,6 +267,39 @@ test('product-family-recognized copy never claims an exact manufacture year', ()
   assert.doesNotMatch(copy.body + ' ' + copy.tryNext, /estimated manufacture year is|manufacture year: (19|20)\d{2}/i);
 });
 
+test('LG C3 family copy uses the requested heading and exact-model guidance', () => {
+  const data = {
+    brand: 'LG',
+    productFamily: 'C3',
+    exactModel: null,
+    notes: 'This looks like an LG C3 OLED TV product-family search, but it is not the exact model number. LG C3 is a model-year family commonly associated with the 2023 LG OLED C3 series. Exact screen sizes and regional models vary.',
+    refinementSuggestion: 'Look for an exact model number such as OLED42C3PUA, OLED48C3PUA, OLED55C3PUA, OLED65C3PUA, OLED77C3PUA, OLED83C3PUA on the rear label, box, receipt, or TV settings.',
+  };
+  assert.equal(api.classifyAgeOutcome(data), 'product-family-recognized');
+  const copy = api.copyForAgeOutcome('product-family-recognized', data);
+  assert.equal(copy.heading, 'LG C3 Series recognized');
+  assert.match(copy.body, /2023 LG OLED C3 series/);
+  assert.match(copy.tryNext, /OLED83C3PUA/);
+  assert.doesNotMatch(copy.body, /manufacture year/i);
+});
+
+test('recognized family metadata outranks generic unavailable but not malformed reliability errors', () => {
+  const family = { brand: 'LG', category: 'television', productFamily: 'C3', exactModel: null, errorCode: 'LOOKUP_UNAVAILABLE' };
+  assert.equal(api.classifyAgeOutcome(family), 'product-family-recognized');
+  assert.equal(api.classifyAgeOutcome({ ...family, errorCode: 'INVALID_PROVIDER_RESULT' }), 'malformed');
+});
+
+test('exact LG model context uses exact-model-insufficient instead of generic unavailable', () => {
+  const data = {
+    brand: 'LG', productFamily: 'C3', exactModel: 'OLED65C3PUA', errorCode: 'LOOKUP_UNAVAILABLE',
+    notes: 'Product family context: 2023 LG OLED C3 model-year family; this does not establish the manufacture date of an individual TV.',
+  };
+  assert.equal(api.classifyAgeOutcome(data), 'exact-model-insufficient');
+  const copy = api.copyForAgeOutcome('exact-model-insufficient', data);
+  assert.equal(copy.heading, 'LG OLED65C3PUA recognized');
+  assert.match(copy.body, /does not establish the manufacture date/);
+});
+
 test('replacement-unavailable copy preserves recognized brand/category instead of a generic message', () => {
   const copy = api.copyForReplacementOutcome({ itemSummary: { brand: 'Samsung', category: 'television' }, replacementOptions: [] });
   assert.match(copy.body, /Samsung television/);
