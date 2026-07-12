@@ -175,34 +175,53 @@ test.describe('Smart Lookup controller', () => {
     expect(panelText).not.toMatch(/GROQ_MALFORMED_JSON|stack trace|gemini|groq/i);
   });
 
-  test('LG C3 family searches render useful partial recognition from the local API', async ({ page }) => {
+  test('LG C3 and C2 family searches render prominent model-year context from the local API', async ({ page }) => {
     await page.unroute('**/api/age-lookup');
     await page.goto('http://localhost:3001/smart-lookup.html');
-    for (const query of ['LG C3 TV', 'LG OLED C3']) {
+    for (const [query, year, heading] of [['LG C3 TV', '2023', 'LG C3 OLED TV'], ['LG OLED C3', '2023', 'LG C3 OLED TV'], ['LG C2 TV', '2022', 'LG C2 OLED TV']]) {
       await page.locator('#smart-lookup-input').fill(query);
       await page.locator('#smartLookupBtn').click();
       const panel = page.locator('#smart-lookup-age-panel');
-      await expect(panel).toContainText('LG C3 Series recognized');
-      await expect(panel).toContainText('LG C3 OLED TV product-family search');
-      await expect(panel).toContainText('2023 LG OLED C3 series');
-      await expect(panel).toContainText('OLED65C3PUA');
+      await expect(panel).toContainText(heading);
+      await expect(panel.locator('.smart-year-context-value')).toHaveText(year);
+      await expect(panel).toContainText('Model-year family');
+      await expect(panel).toContainText('Exact model');
+      await expect(panel).toContainText('Not provided');
+      await expect(panel).toContainText('Not available without serial or exact unit evidence');
       await expect(panel).not.toContainText('Brand needed');
       await expect(panel).not.toContainText('Serial numbers are brand-specific');
+      await expect(panel).not.toContainText('Lookup unavailable');
       await expect(panel).not.toContainText('manufacture year is 2023');
     }
   });
 
-  test('exact LG OLED and existing Samsung Q60 recognition still render correctly', async ({ page }) => {
+  test('exact LG OLED and Samsung Q60 family variants render year context correctly', async ({ page }) => {
     await page.unroute('**/api/age-lookup');
     await page.goto('http://localhost:3001/smart-lookup.html');
     await page.locator('#smart-lookup-input').fill('LG OLED65C3PUA');
     await page.locator('#smartLookupBtn').click();
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('LG OLED65C3PUA recognized');
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('2023 LG OLED C3 model-year family');
-    await expect(page.locator('#smart-lookup-age-panel')).not.toContainText('manufacture year is 2023');
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('LG OLED65C3PUA');
+    await expect(panel.locator('.smart-year-context-value')).toHaveText('2023');
+    await expect(panel).toContainText('Model-year family');
+    await expect(panel).toContainText('Screen size');
+    await expect(panel).toContainText('65 inches');
+    await expect(panel).toContainText('Not available without serial or exact unit evidence');
+    await expect(panel).not.toContainText('manufacture year is 2023');
 
     await page.locator('#smart-lookup-input').fill('Samsung Q60 Series TV');
     await page.locator('#smartLookupBtn').click();
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Samsung Q60 Series recognized');
+    await expect(panel).toContainText('Samsung Q60 Series TV');
+    await expect(panel.locator('.smart-year-context-value')).toHaveText('2019–2024');
+    await expect(panel).toContainText('Q60R / Q60RA: 2019 model-year family');
+    await expect(panel).toContainText('Q60D: 2024 model-year family');
+    await expect(panel).not.toContainText('Brand needed');
+    await expect(panel).not.toContainText('Serial numbers are brand-specific');
+
+    await page.locator('#smart-lookup-input').fill('Samsung Q60A 65 inch TV');
+    await page.locator('#smartLookupBtn').click();
+    await expect(panel.locator('.smart-year-context-value')).toHaveText('2021');
+    await expect(panel).toContainText('Model-year family');
+    await expect(panel).not.toContainText('manufacture year is 2021');
   });
 });

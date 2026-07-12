@@ -35,6 +35,7 @@ test('an exact Samsung Q60 model code is recognized as an exact model with model
   // The suffix letter is labeled as a model-YEAR-FAMILY, never as a claimed
   // manufacture year.
   assert.equal(r.modelYearFamilyLetter, 'R');
+  assert.equal(r.modelYearFamilyYear, 2019);
   assert.match(r.modelYearFamilyLabel, /model-year family/i);
   assert.doesNotMatch(r.modelYearFamilyLabel, /^manufacture year/i);
 });
@@ -45,6 +46,7 @@ test('Samsung Q60A partial query recognizes the family and its model-year letter
   assert.equal(r.productFamily, 'Q60 Series');
   assert.equal(r.screenSize, 65);
   assert.equal(r.modelYearFamilyLetter, 'A');
+  assert.equal(r.modelYearFamilyYear, 2021);
   assert.equal(r.exactModel, null, 'a partial token must never be promoted to an exact model');
   assert.equal(r.needsExactModel, true);
 });
