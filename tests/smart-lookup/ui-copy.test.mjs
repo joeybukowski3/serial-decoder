@@ -300,6 +300,49 @@ test('exact LG model context uses exact-model-insufficient instead of generic un
   assert.match(copy.body, /does not establish the manufacture date/);
 });
 
+test('supported LG family year context is a success and renders the year as the primary value', () => {
+  const data = {
+    brand: 'LG', displayName: 'LG C3 OLED TV', category: 'television', productFamily: 'C3', seriesLine: 'OLED C3',
+    exactModel: null, individualManufactureYear: null,
+    yearContext: { value: 2023, type: 'model-year-family', label: 'Model-year family', confidence: 'high', source: 'local-seed', isExactUnitDate: false },
+    notes: 'LG C3 is a model-year family commonly associated with the 2023 LG OLED C3 series. This is not the exact manufacture date of an individual unit.',
+    refinementSuggestion: 'For exact model details, look for OLED42C3PUA or OLED65C3PUA.',
+  };
+  assert.equal(api.classifyAgeOutcome(data), 'success');
+  const html = api.renderAge(data);
+  assert.match(html, /smart-year-context-value[^>]*>2023</);
+  assert.match(html, /Model-year family/);
+  assert.match(html, /Exact model<\/span><span class="result-value">Not provided/);
+  assert.match(html, /Not available without serial or exact unit evidence/);
+  assert.doesNotMatch(html, /Lookup unavailable|Brand needed|Serial numbers are brand-specific/);
+});
+
+test('Samsung Q60 variants render as structured model-year options without choosing one year', () => {
+  const data = {
+    brand: 'Samsung', displayName: 'Samsung Q60 Series TV', category: 'television', productFamily: 'Q60 Series',
+    yearContext: { startYear: 2019, endYear: 2024, type: 'production-range', label: 'Model-year variants', confidence: 'high', source: 'local-seed', isExactUnitDate: false },
+    yearVariants: [{ name: 'Q60R / Q60RA', year: 2019 }, { name: 'Q60A', year: 2021 }, { name: 'Q60D', year: 2024 }],
+  };
+  assert.equal(api.classifyAgeOutcome(data), 'success');
+  const html = api.renderAge(data);
+  assert.match(html, /2019–2024/);
+  assert.match(html, /Q60R \/ Q60RA/);
+  assert.match(html, /Q60A.*2021 model-year family/);
+  assert.match(html, /Q60D.*2024 model-year family/);
+  assert.doesNotMatch(html, /Brand needed|Serial numbers are brand-specific/);
+});
+
+test('recognized product with unknown year support gets specific next-action copy', () => {
+  const data = {
+    brand: 'LG', productFamily: 'Unseeded family',
+    yearContext: { type: 'unknown', label: 'Year context', confidence: 'partial', source: 'local-seed', isExactUnitDate: false },
+  };
+  assert.equal(api.classifyAgeOutcome(data), 'product-year-unverified');
+  const copy = api.copyForAgeOutcome('product-year-unverified', data);
+  assert.equal(copy.heading, 'Product recognized, year not verified yet');
+  assert.doesNotMatch(copy.body, /manufactur(?:e|ed) in (19|20)\d{2}/i);
+});
+
 test('replacement-unavailable copy preserves recognized brand/category instead of a generic message', () => {
   const copy = api.copyForReplacementOutcome({ itemSummary: { brand: 'Samsung', category: 'television' }, replacementOptions: [] });
   assert.match(copy.body, /Samsung television/);

@@ -114,6 +114,19 @@ test('Samsung Q60 retailer-title description returns a product-family-recognized
   assert.equal(out.payload.productFamily, 'Q60 Series');
   assert.equal(out.payload.needsExactModel, true);
   assert.equal(out.payload.introductionYear, null, 'must not fabricate an exact manufacture year from a broad title');
+  assert.deepEqual(out.payload.yearContext, {
+    startYear: 2019,
+    endYear: 2024,
+    type: 'production-range',
+    label: 'Model-year variants',
+    confidence: 'high',
+    source: 'local-seed',
+    isExactUnitDate: false,
+  });
+  assert.deepEqual(out.payload.yearVariants.map(({ name, year }) => [name, year]), [
+    ['Q60R / Q60RA', 2019], ['Q60T', 2020], ['Q60A', 2021],
+    ['Q60B', 2022], ['Q60C', 2023], ['Q60D', 2024],
+  ]);
   assert.match(out.payload.notes, /Q60 Series/);
   assert.match(out.payload.refinementSuggestion, /QN65Q60RAFXZA/);
   assert.equal(providerCalls, 0);
@@ -125,6 +138,9 @@ test('a Samsung Q60 description with no exact model does not say "Serial numbers
   await handler(req('Samsung Q60A 65 inch TV'), out);
   assert.equal(out.payload.brand, 'Samsung');
   assert.equal(out.payload.productFamily, 'Q60 Series');
+  assert.equal(out.payload.yearContext.value, 2021);
+  assert.equal(out.payload.yearContext.type, 'model-year-family');
+  assert.equal(out.payload.individualManufactureYear, null);
   assert.notEqual(out.payload.brand, 'Unknown');
 });
 
@@ -143,7 +159,8 @@ test('LG C3 family query returns a safe partial result before the legacy C3 alia
   await handler(req('LG C3 TV'), out);
 
   assert.equal(out.statusCode, 200);
-  assert.equal(out.payload.status, 'partial');
+  assert.equal(out.payload.status, 'partial-success');
+  assert.equal(out.payload.outcome, 'product-family-year-context');
   assert.equal(out.payload.resultType, 'product-family-recognized');
   assert.equal(out.payload.brand, 'LG');
   assert.equal(out.payload.category, 'television');
@@ -153,6 +170,14 @@ test('LG C3 family query returns a safe partial result before the legacy C3 alia
   assert.equal(out.payload.exactModel, null);
   assert.equal(out.payload.individualManufactureYear, null);
   assert.equal(out.payload.modelYearFamilyYear, 2023);
+  assert.deepEqual(out.payload.yearContext, {
+    value: 2023,
+    type: 'model-year-family',
+    label: 'Model-year family',
+    confidence: 'high',
+    source: 'local-seed',
+    isExactUnitDate: false,
+  });
   assert.equal(out.payload.needsExactModel, true);
   assert.match(out.payload.notes, /model-year family.*2023|2023.*model-year family/i);
   assert.doesNotMatch(out.payload.notes, /manufacture year is 2023/i);
@@ -171,6 +196,19 @@ test('LG OLED C3 uses the same deterministic product-family response', async () 
   assert.equal(out.payload.resultType, 'product-family-recognized');
   assert.equal(out.payload.productFamily, 'C3');
   assert.equal(out.payload.exactModel, null);
+  assert.equal(out.payload.yearContext.value, 2023);
+  assert.equal(out.payload.yearContext.type, 'model-year-family');
+});
+
+test('LG C2 returns 2022 as family context without a manufacture-date claim', async () => {
+  const handler = createAgeLookupHandler({ localLookup: async () => null, redisFactory: () => redisMiss });
+  const out = res();
+  await handler(req('LG C2 TV'), out);
+  assert.equal(out.payload.yearContext.value, 2022);
+  assert.equal(out.payload.yearContext.type, 'model-year-family');
+  assert.equal(out.payload.yearContext.isExactUnitDate, false);
+  assert.equal(out.payload.individualManufactureYear, null);
+  assert.equal(out.payload.manufactureYear, undefined);
 });
 
 test('exact LG OLED model returns exact-model context without a unit manufacture year', async () => {
@@ -180,7 +218,8 @@ test('exact LG OLED model returns exact-model context without a unit manufacture
   });
   const out = res();
   await handler(req('LG OLED65C3PUA'), out);
-  assert.equal(out.payload.status, 'partial');
+  assert.equal(out.payload.status, 'partial-success');
+  assert.equal(out.payload.outcome, 'exact-model-year-context');
   assert.equal(out.payload.resultType, 'exact-model-insufficient');
   assert.equal(out.payload.brand, 'LG');
   assert.equal(out.payload.model, 'OLED65C3PUA');
@@ -188,6 +227,9 @@ test('exact LG OLED model returns exact-model context without a unit manufacture
   assert.equal(out.payload.screenSize, 65);
   assert.equal(out.payload.productFamily, 'C3');
   assert.equal(out.payload.modelYearFamilyYear, 2023);
+  assert.equal(out.payload.yearContext.value, 2023);
+  assert.equal(out.payload.yearContext.type, 'model-year-family');
+  assert.equal(out.payload.yearContext.isExactUnitDate, false);
   assert.equal(out.payload.individualManufactureYear, null);
   assert.equal(out.payload.introductionYear, null);
   assert.match(out.payload.notes, /product family context/i);

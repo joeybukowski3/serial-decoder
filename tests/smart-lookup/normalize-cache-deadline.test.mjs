@@ -27,6 +27,40 @@ test('introduction year may precede production availability', () => {
   }, { queryInfo: classifySmartLookupQuery('Samsung QN65-Q80A'), source: 'local-db', evidenceSource: 'local-db' });
   assert.equal(result.introductionYear, 2020);
   assert.deepEqual(result.productionRange, { start: 2021, end: 2021, basis: 'retail availability' });
+  assert.deepEqual(result.yearContext, {
+    value: 2020,
+    type: 'market-introduction',
+    label: 'Marketplace introduction year',
+    confidence: 'medium',
+    source: 'local-model-evidence',
+    isExactUnitDate: false,
+  });
+});
+
+test('recognized product family may explicitly report that year support is unavailable', () => {
+  const queryInfo = {
+    ...classifySmartLookupQuery('LG television'),
+    specificityLevel: 'partial',
+    productFamily: 'Example family',
+  };
+  const result = normalizeSmartAgeResult({
+    brand: 'LG',
+    productFamily: 'Example family',
+    yearContext: {
+      type: 'unknown', label: 'Year context', confidence: 'partial', source: 'local-seed', isExactUnitDate: false,
+    },
+  }, { queryInfo, source: 'static', evidenceSource: 'heuristic' });
+  assert.equal(result.yearContext.type, 'unknown');
+  assert.equal(result.yearContext.value, undefined);
+  assert.equal(result.individualManufactureYear, null);
+});
+
+test('malformed year context is rejected without loosening validation', () => {
+  const queryInfo = classifySmartLookupQuery('Samsung QN65-Q80A');
+  assert.throws(() => normalizeSmartAgeResult({
+    brand: 'Samsung', model: 'QN65Q80A',
+    yearContext: { value: 2023, type: 'made-up-year', source: 'provider' },
+  }, { queryInfo, source: 'gemini' }), /INVALID_YEAR_CONTEXT/);
 });
 
 test('future, reversed, and impossible ranges are rejected', () => {

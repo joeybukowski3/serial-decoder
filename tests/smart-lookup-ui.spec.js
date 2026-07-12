@@ -1,5 +1,86 @@
 import { test, expect } from '@playwright/test';
 
+function modelYearContext(value) {
+  return {
+    value,
+    type: 'model-year-family',
+    label: 'Model-year family',
+    confidence: 'high',
+    source: 'local-seed',
+    isExactUnitDate: false,
+  };
+}
+
+function yearContextFixture(query) {
+  if (query === 'LG C3 TV' || query === 'LG OLED C3') {
+    return {
+      brand: 'LG', displayName: 'LG C3 OLED TV', category: 'television', productType: 'television',
+      productFamily: 'C3 OLED TV', model: null, exactModel: null,
+      status: 'partial-success', outcome: 'product-family-year-context', yearContext: modelYearContext(2023),
+      individualManufactureYear: null, manufactureYear: null, needsExactModel: true,
+    };
+  }
+  if (query === 'LG C2 TV') {
+    return {
+      brand: 'LG', displayName: 'LG C2 OLED TV', category: 'television', productType: 'television',
+      productFamily: 'C2 OLED TV', model: null, exactModel: null,
+      status: 'partial-success', outcome: 'product-family-year-context', yearContext: modelYearContext(2022),
+      individualManufactureYear: null, manufactureYear: null, needsExactModel: true,
+    };
+  }
+  if (query === 'LG OLED65C3PUA') {
+    return {
+      brand: 'LG', category: 'television', productType: 'television', productFamily: 'C3 OLED TV',
+      model: 'OLED65C3PUA', exactModel: 'OLED65C3PUA', screenSize: 65,
+      status: 'partial-success', outcome: 'exact-model-year-context', yearContext: modelYearContext(2023),
+      individualManufactureYear: null, manufactureYear: null,
+    };
+  }
+  if (query === 'Samsung Q60 Series TV') {
+    return {
+      brand: 'Samsung', displayName: 'Samsung Q60 Series TV', category: 'television', productType: 'television',
+      productFamily: 'Q60 Series', model: null, exactModel: null,
+      status: 'partial-success', outcome: 'product-family-year-context',
+      individualManufactureYear: null, manufactureYear: null, needsExactModel: true,
+      yearContext: {
+        startYear: 2019, endYear: 2024, type: 'production-range', label: 'Model-year variants',
+        confidence: 'high', source: 'local-seed', isExactUnitDate: false,
+      },
+      yearVariants: [
+        { name: 'Q60R / Q60RA', year: 2019 }, { name: 'Q60T', year: 2020 }, { name: 'Q60A', year: 2021 },
+        { name: 'Q60B', year: 2022 }, { name: 'Q60C', year: 2023 }, { name: 'Q60D', year: 2024 },
+      ],
+    };
+  }
+  if (query === 'Samsung Q60A 65 inch TV') {
+    return {
+      brand: 'Samsung', displayName: 'Samsung Q60A TV', category: 'television', productType: 'television',
+      productFamily: 'Q60A', model: null, exactModel: null, screenSize: 65,
+      status: 'partial-success', outcome: 'product-family-year-context', yearContext: modelYearContext(2021),
+      individualManufactureYear: null, manufactureYear: null, needsExactModel: true,
+    };
+  }
+  return null;
+}
+
+async function mockYearContextAgeLookup(page) {
+  const interceptedQueries = [];
+  await page.unroute('**/api/age-lookup');
+  await page.route('**/api/age-lookup*', async (route) => {
+    const request = route.request();
+    const requestUrl = new URL(request.url());
+    if (request.method() !== 'POST' || requestUrl.pathname !== '/api/age-lookup') {
+      throw new Error(`Unexpected Smart Lookup age request: ${request.method()} ${request.url()}`);
+    }
+    const body = request.postDataJSON();
+    const fixture = yearContextFixture(body?.query);
+    if (!fixture) throw new Error(`No Smart Lookup age fixture for query: ${body?.query || '(missing query)'}`);
+    interceptedQueries.push(body.query);
+    await route.fulfill({ json: fixture });
+  });
+  return interceptedQueries;
+}
+
 test.describe('Smart Lookup controller', () => {
   test.beforeEach(async ({ page }) => {
     await page.route('**/api/age-lookup', async (route) => {
@@ -175,34 +256,65 @@ test.describe('Smart Lookup controller', () => {
     expect(panelText).not.toMatch(/GROQ_MALFORMED_JSON|stack trace|gemini|groq/i);
   });
 
-  test('LG C3 family searches render useful partial recognition from the local API', async ({ page }) => {
-    await page.unroute('**/api/age-lookup');
+  test('LG C3 and C2 family searches render prominent model-year context from the mocked API', async ({ page }) => {
+    const interceptedQueries = await mockYearContextAgeLookup(page);
     await page.goto('http://localhost:3001/smart-lookup.html');
-    for (const query of ['LG C3 TV', 'LG OLED C3']) {
+    for (const [query, year, heading] of [['LG C3 TV', '2023', 'LG C3 OLED TV'], ['LG OLED C3', '2023', 'LG C3 OLED TV'], ['LG C2 TV', '2022', 'LG C2 OLED TV']]) {
       await page.locator('#smart-lookup-input').fill(query);
       await page.locator('#smartLookupBtn').click();
       const panel = page.locator('#smart-lookup-age-panel');
-      await expect(panel).toContainText('LG C3 Series recognized');
-      await expect(panel).toContainText('LG C3 OLED TV product-family search');
-      await expect(panel).toContainText('2023 LG OLED C3 series');
-      await expect(panel).toContainText('OLED65C3PUA');
+      await expect(panel).toContainText(heading);
+      await expect(panel.locator('.smart-year-context-value')).toHaveText(year);
+      await expect(panel).toContainText('Model-year family');
+      await expect(panel).toContainText('Exact model');
+      await expect(panel).toContainText('Not provided');
+      await expect(panel).toContainText('Not available without serial or exact unit evidence');
       await expect(panel).not.toContainText('Brand needed');
       await expect(panel).not.toContainText('Serial numbers are brand-specific');
+      await expect(panel).not.toContainText('Lookup unavailable');
       await expect(panel).not.toContainText('manufacture year is 2023');
+      await expect.poll(() => interceptedQueries.filter((value) => value === query).length, {
+        message: `Expected the /api/age-lookup mock to intercept ${query}`,
+      }).toBe(1);
     }
   });
 
-  test('exact LG OLED and existing Samsung Q60 recognition still render correctly', async ({ page }) => {
-    await page.unroute('**/api/age-lookup');
+  test('exact LG OLED and Samsung Q60 family variants render year context correctly', async ({ page }) => {
+    const interceptedQueries = await mockYearContextAgeLookup(page);
     await page.goto('http://localhost:3001/smart-lookup.html');
     await page.locator('#smart-lookup-input').fill('LG OLED65C3PUA');
     await page.locator('#smartLookupBtn').click();
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('LG OLED65C3PUA recognized');
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('2023 LG OLED C3 model-year family');
-    await expect(page.locator('#smart-lookup-age-panel')).not.toContainText('manufacture year is 2023');
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('LG OLED65C3PUA');
+    await expect(panel.locator('.smart-year-context-value')).toHaveText('2023');
+    await expect(panel).toContainText('Model-year family');
+    await expect(panel).toContainText('Screen size');
+    await expect(panel).toContainText('65 inches');
+    await expect(panel).toContainText('Not available without serial or exact unit evidence');
+    await expect(panel).not.toContainText('manufacture year is 2023');
+    await expect.poll(() => interceptedQueries.filter((value) => value === 'LG OLED65C3PUA').length, {
+      message: 'Expected the /api/age-lookup mock to intercept LG OLED65C3PUA',
+    }).toBe(1);
 
     await page.locator('#smart-lookup-input').fill('Samsung Q60 Series TV');
     await page.locator('#smartLookupBtn').click();
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Samsung Q60 Series recognized');
+    await expect(panel).toContainText('Samsung Q60 Series TV');
+    await expect(panel.locator('.smart-year-context-value')).toHaveText('2019–2024');
+    await expect(panel).toContainText('Q60R / Q60RA: 2019 model-year family');
+    await expect(panel).toContainText('Q60D: 2024 model-year family');
+    await expect(panel).not.toContainText('Brand needed');
+    await expect(panel).not.toContainText('Serial numbers are brand-specific');
+    await expect.poll(() => interceptedQueries.filter((value) => value === 'Samsung Q60 Series TV').length, {
+      message: 'Expected the /api/age-lookup mock to intercept Samsung Q60 Series TV',
+    }).toBe(1);
+
+    await page.locator('#smart-lookup-input').fill('Samsung Q60A 65 inch TV');
+    await page.locator('#smartLookupBtn').click();
+    await expect(panel.locator('.smart-year-context-value')).toHaveText('2021');
+    await expect(panel).toContainText('Model-year family');
+    await expect(panel).not.toContainText('manufacture year is 2021');
+    await expect.poll(() => interceptedQueries.filter((value) => value === 'Samsung Q60A 65 inch TV').length, {
+      message: 'Expected the /api/age-lookup mock to intercept Samsung Q60A 65 inch TV',
+    }).toBe(1);
   });
 });

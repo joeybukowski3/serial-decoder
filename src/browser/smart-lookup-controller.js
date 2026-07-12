@@ -61,6 +61,11 @@
       body: 'We recognized the exact model number, but this product-family context does not establish a unit manufacture date.',
       tryNext: 'Use the serial number for unit-specific manufacture dating.',
     },
+    'product-year-unverified': {
+      heading: 'Product recognized, year not verified yet',
+      body: 'We recognized the product, but do not have enough supported evidence to show a year context.',
+      tryNext: 'Add the exact model number or serial number from the product label.',
+    },
     timeout: {
       heading: 'Taking longer than expected',
       body: 'The lookup took too long, so we stopped before guessing.',
@@ -114,6 +119,7 @@
     GROQ_EMPTY: 1,
     INVALID_PROVIDER_RESULT: 1,
     PROVIDER_RESPONSE_INVALID: 1,
+    INVALID_YEAR_CONTEXT: 1,
   };
 
   function $(id) {
@@ -198,6 +204,11 @@
 
   function hasUsableAgeInfo(data) {
     if (!data) return false;
+    var context = data.yearContext;
+    if (context && context.type !== 'unknown') {
+      if (context.value) return true;
+      if (context.startYear && context.endYear) return true;
+    }
     if (data.introductionYear) return true;
     if (data.individualManufactureYear) return true;
     var range = data.productionRange;
@@ -207,12 +218,13 @@
 
   function classifyAgeOutcome(data) {
     if (!data) return 'network-error';
-    if (hasUsableAgeInfo(data)) return 'success';
     var code = data.errorCode || null;
     if (code === 'RATE_LIMIT') return 'rate-limited';
     if (code === 'PROVIDER_TIMEOUT' || code === 'TOTAL_DEADLINE') return 'timeout';
     if (code === 'INTRODUCTION_AFTER_RANGE' || code === 'REVERSED_RANGE') return 'conflict';
     if (code && MALFORMED_AGE_ERROR_CODES[code]) return 'malformed';
+    if (hasUsableAgeInfo(data)) return 'success';
+    if (data.productFamily && data.yearContext && data.yearContext.type === 'unknown') return 'product-year-unverified';
     if (data.productFamily && data.exactModel) return 'exact-model-insufficient';
     if (data.productFamily) return 'product-family-recognized';
     if (code === 'INSUFFICIENT_QUERY_DETAIL') return 'missing-input';
@@ -249,6 +261,13 @@
         tryNext: (data && data.refinementSuggestion) || base.tryNext,
       };
     }
+    if (bucket === 'product-year-unverified') {
+      return {
+        heading: base.heading,
+        body: (data && data.notes) || base.body,
+        tryNext: (data && data.refinementSuggestion) || base.tryNext,
+      };
+    }
     if (bucket === 'unavailable-generic' && data && data.notes) {
       return { heading: base.heading, body: data.notes, tryNext: base.tryNext };
     }
@@ -277,12 +296,61 @@
     };
   }
 
+  function getYearContext(data) {
+    if (data && data.yearContext && data.yearContext.type !== 'unknown') return data.yearContext;
+    if (data && data.individualManufactureYear) {
+      return { value: data.individualManufactureYear, type: 'manufacture-year', label: 'Manufacture year', isExactUnitDate: true };
+    }
+    if (data && data.introductionYear) {
+      return { value: data.introductionYear, type: 'market-introduction', label: 'Model introduced', isExactUnitDate: false };
+    }
+    if (data && data.productionRange && (data.productionRange.start || data.productionRange.end)) {
+      return { startYear: data.productionRange.start, endYear: data.productionRange.end, type: 'production-range', label: 'Production range', isExactUnitDate: false };
+    }
+    return null;
+  }
+
+  function formatYearContext(context) {
+    if (!context) return 'Not established';
+    if (context.value) return String(context.value);
+    if (context.startYear && context.endYear) {
+      return context.startYear === context.endYear ? String(context.startYear) : context.startYear + '–' + context.endYear;
+    }
+    return 'Not established';
+  }
+
+  function resultHeading(data) {
+    var brand = data && data.brand && data.brand !== 'Unknown' ? data.brand : '';
+    if (data && data.exactModel) return [brand, data.exactModel].filter(Boolean).join(' ');
+    if (data && data.displayName) return data.displayName;
+    if (data && data.productFamily) {
+      if (brand === 'LG' && /^OLED\b/i.test(data.seriesLine || '')) return brand + ' ' + data.productFamily + ' OLED TV';
+      return [brand, data.productFamily, data.category === 'television' ? 'TV' : ''].filter(Boolean).join(' ');
+    }
+    return [brand, data && data.model].filter(Boolean).join(' ') || 'Smart Lookup result';
+  }
+
   function renderAge(data) {
-    var introduced = data && data.introductionYear ? data.introductionYear : 'Not established';
-    var production = formatRange(data && data.productionRange, data && data.yearRange);
-    var serialMessage = data && data.individualManufactureYear
-      ? String(data.individualManufactureYear)
-      : 'Individual manufacture date requires serial number';
+    var context = getYearContext(data);
+    var primaryYear = formatYearContext(context);
+    var yearLabel = context && context.label ? context.label : 'Year context';
+    var manufactureMessage = context && context.isExactUnitDate
+      ? primaryYear
+      : (data && data.productFamily
+        ? 'Not available without serial or exact unit evidence'
+        : 'Individual manufacture date requires serial number');
+    var exactModel = data && data.exactModel
+      ? data.exactModel
+      : (data && !data.productFamily && data.model ? data.model : 'Not provided');
+    var productFamily = data && data.productFamily
+      ? (data.brand === 'LG' && /^OLED\b/i.test(data.seriesLine || '') ? data.productFamily + ' OLED TV' : data.productFamily)
+      : 'Not identified';
+    var variants = Array.isArray(data && data.yearVariants) ? data.yearVariants : [];
+    var variantsHtml = variants.length
+      ? '<div class="smart-year-variants" style="margin-top:14px;padding:14px 16px;border:1px solid #dbeafe;border-radius:12px;background:#f8fbff"><h4>Model-year variants</h4><ul style="margin:8px 0 0;padding-left:20px">' + variants.map(function (item) {
+          return '<li><strong>' + escapeHtml(item.name) + ':</strong> ' + escapeHtml(item.year) + ' model-year family</li>';
+        }).join('') + '</ul></div>'
+      : '';
     var evidence = Array.isArray(data && data.evidence) ? data.evidence.slice(0, 4) : [];
     var evidenceHtml = evidence.length
       ? '<details class="determination-details"><summary>Evidence used</summary><ul>' + evidence.map(function (item) {
@@ -294,13 +362,19 @@
     var fallbackNote = data && data.fallbackUsed
       ? '<p class="smart-lookup-fallback-note">A backup data source helped verify this result.</p>'
       : '';
-    return '<div class="smart-age-result">' +
-      '<h3>Model Age Information</h3>' +
+    return '<div class="smart-age-result smart-year-context-result">' +
+      '<h3>' + escapeHtml(resultHeading(data)) + '</h3>' +
       fallbackNote +
-      '<div class="result-row result-row--primary"><span class="result-label">Model introduced</span><span class="result-value">' + escapeHtml(introduced) + '</span></div>' +
-      '<div class="result-row"><span class="result-label">Known production/availability</span><span class="result-value">' + escapeHtml(production) + '</span></div>' +
-      '<div class="result-row"><span class="result-label">Individual manufacture date</span><span class="result-value">' + escapeHtml(serialMessage) + '</span></div>' +
-      (data && data.notes ? '<div class="info-block notes"><h4>Notes</h4><p>' + escapeHtml(data.notes) + '</p></div>' : '') +
+      '<div class="smart-year-context-primary" style="display:grid;gap:2px;margin:12px 0 8px;padding:18px;border:1px solid #bfdbfe;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#f8fafc)"><span class="smart-year-context-value" style="font:800 clamp(2.3rem,8vw,3.6rem)/1 JetBrains Mono,monospace;color:#1d4ed8">' + escapeHtml(primaryYear) + '</span><span class="smart-year-context-label" style="font-size:.9rem;font-weight:800;color:#334155">' + escapeHtml(yearLabel) + '</span></div>' +
+      '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + escapeHtml(data && data.brand && data.brand !== 'Unknown' ? data.brand : 'Not identified') + '</span></div>' +
+      (data && data.productFamily ? '<div class="result-row"><span class="result-label">Product family</span><span class="result-value">' + escapeHtml(productFamily) + '</span></div>' : '') +
+      '<div class="result-row"><span class="result-label">Exact model</span><span class="result-value">' + escapeHtml(exactModel) + '</span></div>' +
+      (data && data.screenSize ? '<div class="result-row"><span class="result-label">Screen size</span><span class="result-value">' + escapeHtml(data.screenSize) + ' inches</span></div>' : '') +
+      (data && data.productionRange ? '<div class="result-row"><span class="result-label">Known production/availability</span><span class="result-value">' + escapeHtml(formatRange(data.productionRange, data.yearRange)) + '</span></div>' : '') +
+      '<div class="result-row"><span class="result-label">Individual manufacture date</span><span class="result-value">' + escapeHtml(manufactureMessage) + '</span></div>' +
+      variantsHtml +
+      (data && data.notes ? '<div class="info-block notes"><h4>What this year means</h4><p>' + escapeHtml(data.notes) + '</p></div>' : '') +
+      (data && data.refinementSuggestion ? '<p class="smart-lookup-try-next"><strong>Try this next:</strong> ' + escapeHtml(data.refinementSuggestion) + '</p>' : '') +
       evidenceHtml +
       '</div>';
   }
