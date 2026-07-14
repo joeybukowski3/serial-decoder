@@ -223,3 +223,19 @@ test('Groq fallback respects the original total deadline', async () => {
   assert.equal(calls, 2);
   assert.ok(Date.now() - startedAt < 250);
 });
+
+test('Gemini requests carry a bounded maxOutputTokens cap', async () => {
+  let geminiBody = null;
+  await callSmartLookupAgeProvider(queryInfo, {
+    deadline: createDeadline({ totalMs: 5000 }),
+    maxMs: 4000,
+    apiKey: 'test-key',
+    fetchImpl: async (url, init) => {
+      geminiBody = JSON.parse(init.body);
+      return jsonResponse(200, geminiPayload({ brand: 'Samsung', model: 'QN65Q80A', specificityLevel: 'specific' }));
+    },
+  });
+  assert.ok(geminiBody, 'Gemini request was issued');
+  const cap = geminiBody.generationConfig?.maxOutputTokens;
+  assert.ok(Number.isInteger(cap) && cap > 0 && cap <= 4096, `maxOutputTokens must be a bounded integer, got ${cap}`);
+});
