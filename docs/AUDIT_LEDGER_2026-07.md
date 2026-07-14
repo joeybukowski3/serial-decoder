@@ -9,72 +9,94 @@ Baseline (before fixes): build ✅ · decoder tests 129/129 ✅ · refinement un
 
 | # | Severity | Finding | Evidence |
 |---|----------|---------|----------|
-| C1 | HIGH | `/where-is-my-serial-number` linked from 19 indexable pages ("Where Is My Serial Number?" related-links block) returns live 404. Correct target `/serial-number-location-guide` exists and returns 200. | `curl` live: 404 / 200; audit tool broken-link scan |
-| C2 | HIGH | sitemap.xml contains 5 URLs that 308-redirect (`*-serial-number-lookup` category variants → `*-serial-number`). Sitemap must list final URLs only. | vercel.json redirects vs sitemap.xml |
-| C3 | MED | `/brands` links to 13+ retired brand routes (`/ge`, `/whirlpool`, `/samsung`, …) that 308-redirect to `*-serial-number-lookup` pages. Internal links should point at final URLs. | audit tool redirected-link scan |
-| C4 | MED | 18 live pages link `/appliance-age-by-serial-number` which 308-redirects to `/how-old-is-my-appliance`. | audit tool |
-| C5 | MED | 118 internal links use `.html` suffix (brand-page template family: `replacement-lookup.html`, `appliance-age-estimator.html`, `tv-replacement-guide.html`, `hvac-replacement-guide.html`, `/index.html?cat=…`). With cleanUrls each is a 308 hop. | audit tool |
-| C6 | MED | Missing canonical tags on indexable pages: `/how-old-is-my-appliance`, `/how-old-is-my-hvac`, `/how-old-is-my-plumbing`, `/how-old-is-my-electronics`, `/smart-lookup`, `/large-loss-decoder`, `/serial-number-location-guide`. | audit tool head parse |
-| C7 | MED | Missing meta descriptions on the same guide pages + `/smart-lookup`, `/serial-number-location-guide`. | audit tool |
-| C8 | MED | Duplicate H1 "⚡ Serial Number Decoder" (header brand element marked up as `<h1>`) on `/about`, `/brands`, `/disclaimer`, `/privacy-policy`; page topic has no H1 of its own. | audit tool |
-| C9 | LOW | Orphan pages (no inbound internal links): `/whirlpool-refrigerator-serial-number-lookup`, `/whirlpool-dishwasher-serial-number-lookup`. In sitemap only. | audit tool |
-| C10 | LOW | No redirect exists for `/where-is-my-serial-number` even though it has been linked sitewide (already crawled as 404). | live 404 |
+| C1 | HIGH | `/where-is-my-serial-number` linked from 19 indexable pages returned a live 404. Correct target `/serial-number-location-guide` existed and returned 200. | live response + audit tool broken-link scan |
+| C2 | HIGH | sitemap.xml contained 5 URLs that 308-redirected. Sitemap must list final URLs only. | vercel.json redirects vs sitemap.xml |
+| C3 | MED | `/brands` linked to retired brand routes that redirected to final lookup pages. | audit tool redirected-link scan |
+| C4 | MED | 18 live pages linked `/appliance-age-by-serial-number`, which redirected to `/how-old-is-my-appliance`. | audit tool |
+| C5 | MED | Live internal links used `.html` suffixes and created cleanUrls redirect hops. | audit tool |
+| C6 | MED | Seven indexable pages were missing canonical tags. | audit tool head parse |
+| C7 | MED | Six indexable pages were missing meta descriptions. | audit tool |
+| C8 | MED | Four utility pages had a duplicate hidden H1 in the header wordmark. | audit tool |
+| C9 | LOW | Two Whirlpool sub-pages were orphaned from live internal navigation. | audit tool |
+| C10 | LOW | No compatibility redirect existed for the already-crawled `/where-is-my-serial-number` URL. | live response |
 
-## Likely defects requiring verification
+## Independent review findings
 
-| # | Finding | Verification plan |
-|---|---------|-------------------|
-| V1 | Decoder systemic risks: future-year mapping, week>53 acceptance, case/punctuation sensitivity across 100+ brands. | Invariant sweep harness against decoder-data.js (Phase 3) |
-| V2 | Analytics events may not cover decode_fail / smart lookup outcomes; possible raw-serial leakage into GA params. | grep gtag( calls in script.js / controllers (Phase 8) |
-| V3 | AdSense script loads sitewide with (apparently) no placed units — possible auto-ads reliance. | check ads.txt + `adsbygoogle` ins units (Phase 6) |
+A separate read-only review was completed before deployment. It found no Blockers and confirmed the routing, sitemap, canonical, decoder-boundary, and branch-integration work. It also found the following issues in this branch before merge:
+
+| # | Severity | Finding | Resolution |
+|---|----------|---------|------------|
+| R1 | HIGH | The GA4 forwarding denylist excluded only `query`, `serial`, and `model`. A raw serial could still be sent under `context`; `refinedQuery` and other renamed user-input fields could also pass. | Added `analytics-privacy-guard.js`, which wraps `window.gtag` and forwards only an explicit set of coarse event parameters. The guard is loaded before decoder helper scripts. Added executable payload tests that prove raw and arbitrarily named fields are removed. |
+| R2 | MED | `api/lkq-compare.js` called Gemini directly without output-token limit, request deadline, or reasonable bounds on `originalItem`, `originalSpecs`, and `specLabels`. | Added 2,048 output-token cap, 7-second abort deadline, bounded strings/collections, structured timeout/provider errors, and no raw provider errors in responses. |
+| R3 | MED | The decoder invariant sweep printed more than 1,000 mixed findings but always exited successfully. | Findings are now classified as fatal or informational. Exceptions, invalid week/month forms, and undefined/NaN/null leaks produce a non-zero exit. Raw candidate-year, case, and punctuation observations remain explicitly informational. |
+| R4 | MED | Existing analytics regression coverage searched source text rather than executing the forwarding behavior. | Added `tests/api/analytics-privacy.test.mjs`, which executes the guard and inspects actual forwarded `gtag` arguments. |
+| R5 | MED | Shared Smart Lookup Gemini token override remains bounded only by caller discipline. | Still open: the shared provider default is 2,048, but `geminiMaxOutputTokens` should be clamped in a follow-up change. The direct LKQ comparison endpoint is now independently capped. |
+| R6 | LOW | Seven changed pages retained old sitemap `lastmod` dates. | Still open as a low-priority sitemap freshness correction; sitemap validity and route inventory are unaffected. |
+
+The privacy finding was discovered before deployment. This branch has never been deployed to production, so the branch-introduced GA4 leak did not expose production inputs.
 
 ## Improvement opportunities (not defects)
 
 - Category pages (`/appliances`, `/hvac`, `/electronics`, `/water-heaters`) are deliberately `noindex, follow`. Flipping to index is a content-strategy call, not a repair. Left unchanged.
-- Item Assist ↔ DecodeMyItem relationship wording should be consistent sitewide (Phase 5 targeted fix).
-- Redundant rewrites in vercel.json (cleanUrls already serves extensionless URLs). Harmless; not worth churn.
+- Redundant rewrites in vercel.json duplicate cleanUrls behavior but are harmless.
+- Item Assist ↔ DecodeMyItem relationship wording should remain consistent as pages evolve.
 
 ## Working correctly (verified)
 
-- Build pipeline (decoder bundles, browser controllers, injection) — green.
-- All 264 automated tests pass at baseline.
-- robots.txt correctly blocks utility/template routes (`/diagnostic`, `/analytics-report`, `/brand-page-template`, `/serial-guide-refactor`, `/universal-decoder`, `/api/`).
+- Build pipeline (decoder bundles, browser controllers, injection) was green before the independent correction commits.
+- All original automated suites passed before the correction commits.
+- robots.txt blocks utility/template routes as intended.
 - Host canonicalization: apex → www 308 via vercel.json.
 - No duplicate titles or meta descriptions among indexable pages.
-- Sitemap contains all 64 indexable pages (after removing the 5 redirecting entries).
-- Security headers + CSP present sitewide.
+- Sitemap contains the 64 intended final indexable routes and no redirecting entries.
+- Security headers + CSP are present sitewide.
+- Smart Lookup deterministic-first behavior, schema validation, escaping, cache/rate limits, and structured provider-failure paths were verified.
 
-## Resolutions (this branch)
+## Resolutions (original audit work)
 
 | Ledger item | Status | Commit |
 |---|---|---|
-| C1 broken `/where-is-my-serial-number` links (19) | Fixed → `/serial-number-location-guide` + 308 redirect added | `ef89ed7` |
-| C2 redirecting sitemap entries (5) | Removed; sitemap = exactly 64 indexable pages | `ef89ed7` |
-| C3/C4/C5 redirect-chain + .html links (75 on live pages) | All rewritten to final clean URLs | `ef89ed7` |
-| C6/C7 missing canonicals (7) + descriptions (6) | Added | `225a1d1` |
-| C8 hidden duplicate H1 on 4 utility pages | Header wordmark demoted; topical H1 promoted | `225a1d1` |
-| C9 orphan Whirlpool sub-pages (2) | Linked from parent brand page | `ef89ed7` |
-| C10 no redirect for crawled 404 | vercel.json redirect added | `ef89ed7` |
-| V1 decoder systemic defects | 5 confirmed defect classes fixed w/ 6 regression tests (week 54–99, month 13–99, future years, fabricated months, future-candidate display) | `735ea74` |
-| V2 analytics gaps | decode_start/success/fail wired to GA4, raw inputs stripped, prod-host gated | `c36d76a` |
-| V3 AdSense/no units | Confirmed: loader on 65 pages, 0 ins units, ads.txt valid. Left as-is (possible account-side Auto Ads); documented in ad-readiness report | n/a |
+| C1 broken `/where-is-my-serial-number` links | Fixed → `/serial-number-location-guide` + compatibility redirect | `ef89ed7` |
+| C2 redirecting sitemap entries | Removed; sitemap = 64 final indexable pages | `ef89ed7` |
+| C3/C4/C5 redirect-chain + `.html` links | Rewritten to final clean URLs on live pages | `ef89ed7` |
+| C6/C7 missing canonicals + descriptions | Added | `225a1d1` |
+| C8 hidden duplicate H1 | Header wordmark demoted; topical H1 promoted | `225a1d1` |
+| C9 orphan Whirlpool sub-pages | Linked from parent brand page | `ef89ed7` |
+| C10 missing compatibility redirect | Added | `ef89ed7` |
+| V1 decoder systemic defects | Five confirmed defect classes fixed with regression coverage | `735ea74` |
+| V2 analytics funnel | decode_start/success/fail wired to GA4 and production-host gated; later privacy allowlist correction documented under R1 | `c36d76a` + follow-up |
+| V3 AdSense/no units | Loader on 65 pages, zero placed units, ads.txt valid. Left unchanged pending account-side Auto Ads verification. | n/a |
 | Item Assist ↔ DecodeMyItem | Relationship stated on About + Methodology; competitor citations removed from trust copy | `0e80aef` |
-| Smart Lookup Gemini output uncapped | maxOutputTokens 2048 + regression test | `1583f16` |
+| Shared Smart Lookup Gemini default | Default `maxOutputTokens` set to 2,048; override clamping remains open under R5 | `1583f16` |
 
-## Do-not-fix (deliberate)
+## Do-not-fix / deliberate scope decisions
 
-- Category pages (`/appliances`, `/hvac`, `/electronics`, `/water-heaters`) stay `noindex, follow` — indexing them is a content-strategy decision, not a repair.
-- Redundant vercel.json rewrites duplicating cleanUrls behavior — harmless; removing risks routing regressions for zero user benefit.
-- Retired `.html` brand files (whirlpool.html, ge.html, …) still in repo with stale internal links — unreachable in production (redirects win over cleanUrls); deleting is optional cleanup, not a defect.
-- Case-echo cosmetics in decoder output (e.g. "Week zz" for lowercase junk input) — unreachable for valid serials; pipeline uppercases nothing but decoders handle valid inputs case-insensitively (verified by probe).
-- Raw decoder dual-year outputs like "2010/2040" at the *data* level — by design for recycled formats; display-level collapse now handles impossible years.
-- AdSense loader script present with no units — possible account-side Auto Ads; removal not confirmed necessary (brief: remove only when confirmed).
-- localStorage-only analytics keeping raw Smart Lookup query in `recentEvents` — never leaves the browser; flagged for future review, not a defect.
-- `fireFallbackAlert` posts brand+serial to internal `/api/alerts` — pre-existing internal alerting, serial never goes to third parties; out of scope.
+- Category pages stay `noindex, follow` until an SEO content-strategy decision is made.
+- Redundant vercel.json rewrites remain because removing them has little value and some routing risk.
+- Retired `.html` brand files remain in the repository; their stale links are unreachable in production.
+- Cosmetic case echoes in invalid decoder messages remain low priority.
+- Raw decoder dual-year candidates remain in data by design; public result handling removes impossible future candidates.
+- AdSense loader remains until account-side Auto Ads status is checked.
+- Smart Lookup recent-query localStorage remains client-only and was not expanded in scope.
+- `fireFallbackAlert` posting serials to the internal `/api/alerts` endpoint remains a separate privacy/operations review item.
 
-## Out of scope (per project brief)
+## Remaining validation before merge
+
+Run from the updated branch:
+
+- `npm run build`
+- `npm test`
+- `npm run test:smart-unit`
+- `npm run test:smart-api`
+- `node scripts/audit/decoder-invariant-sweep.mjs`
+- `node scripts/audit/site-audit.mjs`
+- `git diff --check`
+
+The branch should not be merged until the new analytics privacy test and updated API behavior pass in the repository environment.
+
+## Out of scope
 
 - Activating ads; paid products; accounts.
-- Rewriting Smart Lookup architecture (extensive test coverage exists; only failure-path gaps addressed).
+- Broad Smart Lookup architecture rewrite.
 - Redesign or visual identity changes.
 - New programmatic pages.
