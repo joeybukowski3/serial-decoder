@@ -30,6 +30,10 @@ function makeResponse() {
   };
 }
 
+function normalize(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 function loadHandler(fetchImpl) {
   const env = { GEMINI_API_KEY: 'test-key' };
   const context = vm.createContext({
@@ -81,7 +85,7 @@ test('LKQ compare accepts a bounded request and sends token limit plus abort sig
   });
 
   assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.body, { rating: 'MATCH' });
+  assert.deepEqual(normalize(res.body), { rating: 'MATCH' });
   assert.ok(captured.signal instanceof AbortSignal);
   const requestBody = JSON.parse(captured.body);
   assert.equal(requestBody.generationConfig.maxOutputTokens, 2048);
@@ -134,7 +138,7 @@ test('LKQ compare redacts raw provider failures', async () => {
     throw new Error('secret provider detail and key');
   });
   assert.equal(res.statusCode, 502);
-  assert.deepEqual(res.body, { error: 'AI service unavailable', errorCode: 'PROVIDER_UNAVAILABLE' });
+  assert.deepEqual(normalize(res.body), { error: 'AI service unavailable', errorCode: 'PROVIDER_UNAVAILABLE' });
   assert.equal(JSON.stringify(res.body).includes('secret provider detail'), false);
 });
 
@@ -146,5 +150,5 @@ test('LKQ compare returns structured invalid JSON failure', async () => {
     }
   }));
   assert.equal(res.statusCode, 502);
-  assert.deepEqual(res.body, { error: 'AI service unavailable', errorCode: 'INVALID_RESPONSE' });
+  assert.deepEqual(normalize(res.body), { error: 'AI service unavailable', errorCode: 'INVALID_RESPONSE' });
 });
