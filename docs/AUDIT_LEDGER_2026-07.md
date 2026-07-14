@@ -44,6 +44,34 @@ Baseline (before fixes): build ✅ · decoder tests 129/129 ✅ · refinement un
 - Sitemap contains all 64 indexable pages (after removing the 5 redirecting entries).
 - Security headers + CSP present sitewide.
 
+## Resolutions (this branch)
+
+| Ledger item | Status | Commit |
+|---|---|---|
+| C1 broken `/where-is-my-serial-number` links (19) | Fixed → `/serial-number-location-guide` + 308 redirect added | `ef89ed7` |
+| C2 redirecting sitemap entries (5) | Removed; sitemap = exactly 64 indexable pages | `ef89ed7` |
+| C3/C4/C5 redirect-chain + .html links (75 on live pages) | All rewritten to final clean URLs | `ef89ed7` |
+| C6/C7 missing canonicals (7) + descriptions (6) | Added | `225a1d1` |
+| C8 hidden duplicate H1 on 4 utility pages | Header wordmark demoted; topical H1 promoted | `225a1d1` |
+| C9 orphan Whirlpool sub-pages (2) | Linked from parent brand page | `ef89ed7` |
+| C10 no redirect for crawled 404 | vercel.json redirect added | `ef89ed7` |
+| V1 decoder systemic defects | 5 confirmed defect classes fixed w/ 6 regression tests (week 54–99, month 13–99, future years, fabricated months, future-candidate display) | `735ea74` |
+| V2 analytics gaps | decode_start/success/fail wired to GA4, raw inputs stripped, prod-host gated | `c36d76a` |
+| V3 AdSense/no units | Confirmed: loader on 65 pages, 0 ins units, ads.txt valid. Left as-is (possible account-side Auto Ads); documented in ad-readiness report | n/a |
+| Item Assist ↔ DecodeMyItem | Relationship stated on About + Methodology; competitor citations removed from trust copy | `0e80aef` |
+| Smart Lookup Gemini output uncapped | maxOutputTokens 2048 + regression test | `1583f16` |
+
+## Do-not-fix (deliberate)
+
+- Category pages (`/appliances`, `/hvac`, `/electronics`, `/water-heaters`) stay `noindex, follow` — indexing them is a content-strategy decision, not a repair.
+- Redundant vercel.json rewrites duplicating cleanUrls behavior — harmless; removing risks routing regressions for zero user benefit.
+- Retired `.html` brand files (whirlpool.html, ge.html, …) still in repo with stale internal links — unreachable in production (redirects win over cleanUrls); deleting is optional cleanup, not a defect.
+- Case-echo cosmetics in decoder output (e.g. "Week zz" for lowercase junk input) — unreachable for valid serials; pipeline uppercases nothing but decoders handle valid inputs case-insensitively (verified by probe).
+- Raw decoder dual-year outputs like "2010/2040" at the *data* level — by design for recycled formats; display-level collapse now handles impossible years.
+- AdSense loader script present with no units — possible account-side Auto Ads; removal not confirmed necessary (brief: remove only when confirmed).
+- localStorage-only analytics keeping raw Smart Lookup query in `recentEvents` — never leaves the browser; flagged for future review, not a defect.
+- `fireFallbackAlert` posts brand+serial to internal `/api/alerts` — pre-existing internal alerting, serial never goes to third parties; out of scope.
+
 ## Out of scope (per project brief)
 
 - Activating ads; paid products; accounts.
