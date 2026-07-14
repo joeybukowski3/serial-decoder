@@ -31,7 +31,10 @@ const [controllerCode, patchCode] = await Promise.all([
   minifySource(patchSourcePath),
 ]);
 
-const loaderCode = `!function(){"use strict";function e(e,n){var t=document.createElement("script");t.src=e,t.async=!1,n&&(t.onload=n),document.head.appendChild(t)}e("/serial-refinement-controller-core.js",function(){e("/serial-refinement-single-candidate-patch.js")})}();\n`;
+// Load order matters: the analytics privacy guard must wrap window.gtag
+// before any decoder helper can emit events, and the multi-cycle year patch
+// must wrap sanitizeDecodeResult before the single-candidate patch runs.
+const loaderCode = `!function(){"use strict";function e(e,n){var t=document.createElement("script");t.src=e,t.async=!1,n&&(t.onload=n),document.head.appendChild(t)}e("/analytics-privacy-guard.js",function(){e("/serial-refinement-controller-core.js",function(){e("/serial-multicycle-year-patch.js",function(){e("/serial-refinement-single-candidate-patch.js")})})})}();\n`;
 
 await writeIfChanged(controllerCoreOutputPath, controllerCode);
 await writeIfChanged(patchOutputPath, patchCode);
