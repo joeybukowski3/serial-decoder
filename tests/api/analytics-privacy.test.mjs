@@ -15,6 +15,10 @@ function loadGuard() {
   return { window, calls };
 }
 
+function normalize(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 test('GA4 privacy guard strips raw and arbitrarily named user input fields', () => {
   const { window, calls } = loadGuard();
   window.gtag('event', 'feedback_opened', {
@@ -34,7 +38,7 @@ test('GA4 privacy guard strips raw and arbitrarily named user input fields', () 
   });
 
   assert.equal(calls.length, 1);
-  assert.deepEqual(calls[0], [
+  assert.deepEqual(normalize(calls[0]), [
     'event',
     'feedback_opened',
     { brand: 'Whirlpool', category: 'appliances', confidence: 'high' }
@@ -52,8 +56,8 @@ test('GA4 privacy guard preserves config calls and approved bounded scalars', ()
     result_type: 'deterministic'
   });
 
-  assert.deepEqual(calls[0], ['config', 'G-C3TXQS1DYP', { send_page_view: false }]);
-  assert.deepEqual(calls[1], [
+  assert.deepEqual(normalize(calls[0]), ['config', 'G-C3TXQS1DYP', { send_page_view: false }]);
+  assert.deepEqual(normalize(calls[1]), [
     'event',
     'decode_success',
     { brand: 'GE', category: 'appliances', mobile: false, batch_row_count: 4, result_type: 'deterministic' }
@@ -66,5 +70,5 @@ test('GA4 privacy guard drops oversized approved string values', () => {
     brand: 'x'.repeat(81),
     failure_type: 'unsupported'
   });
-  assert.deepEqual(calls[0][2], { failure_type: 'unsupported' });
+  assert.deepEqual(normalize(calls[0][2]), { failure_type: 'unsupported' });
 });
