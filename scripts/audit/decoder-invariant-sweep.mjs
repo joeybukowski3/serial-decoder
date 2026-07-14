@@ -3,16 +3,14 @@
  * Decoder invariant sweep (read-only audit).
  *
  * Loads decoder-data.js in a VM sandbox and probes every brand decoder with
- * a battery of generated + adversarial inputs. Any successful decode result
- * is checked against invariants:
- *   I1  every decoded 4-digit year is within [1940, currentYear + 1]
- *   I2  "Week NN" months are within 1..53
- *   I3  month names, when present, are real month names or Week/Quarter forms
- *   I4  lowercase input decodes identically to uppercase input
- *   I5  inputs with spaces/hyphens decode identically to the compact form
- *   I6  the result never leaks "undefined"/"NaN" into year or month text
+ * generated and adversarial inputs. Raw decoder candidates can legitimately
+ * include era alternatives that the public result pipeline later filters, so
+ * findings are classified rather than treated as one undifferentiated count.
  *
- * Violations are reported per brand; the script never modifies anything.
+ * Fatal invariants (non-zero exit): thrown exceptions, invalid displayed
+ * week/month forms, and undefined/NaN/null leaks. Raw out-of-range candidate
+ * years, case differences, and punctuation differences remain informational
+ * until they are evaluated through the public sanitize/render pipeline.
  *
  * Usage: node scripts/audit/decoder-invariant-sweep.mjs [--json <outfile>]
  */
@@ -23,6 +21,14 @@ import vm from 'node:vm';
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_MIN = 1940;
 const YEAR_MAX = CURRENT_YEAR + 1;
+const FATAL_INVARIANTS = new Set([
+  'THROW',
+  'THROW-lower',
+  'THROW-punct',
+  'I2-week-range',
+  'I3-month-form',
+  'I6-leak',
+]);
 
 function loadDecoderData() {
   const ctx = { console, window: {} };
@@ -32,34 +38,32 @@ function loadDecoderData() {
   return ctx.__d;
 }
 
-/** Generated probe battery: shapes commonly seen across manufacturers. */
 function probeInputs() {
   const probes = new Set();
   const letters = ['A', 'C', 'F', 'K', 'M', 'R', 'T', 'X'];
   const digitBlocks = ['0101', '1404', '2352', '9954', '3599', '0000', '5313', '9913'];
-  for (const d of digitBlocks) {
-    probes.add(d + '123456');       // NNNN + 6
-    probes.add(d + '12345');        // NNNN + 5
-    probes.add('S' + d + '12345');  // letter prefix
-    probes.add('RH' + d + '12345'); // two-letter prefix
+  for (const digits of digitBlocks) {
+    probes.add(digits + '123456');
+    probes.add(digits + '12345');
+    probes.add('S' + digits + '12345');
+    probes.add('RH' + digits + '12345');
   }
-  for (const l of letters) {
-    probes.add(l + '12345678');
-    probes.add(l + 'B1234567');
-    probes.add('X' + l + '123456J');
-    probes.add(l + '082116285');
+  for (const letter of letters) {
+    probes.add(letter + '12345678');
+    probes.add(letter + 'B1234567');
+    probes.add('X' + letter + '123456J');
+    probes.add(letter + '082116285');
   }
-  // adversarial / wrong-kind inputs
   [
-    'WRF535SWHZ',        // model number as serial
-    'GTS18GTHWW',        // model number as serial
-    '123',               // too short
-    '99999999999999',    // long digits
-    'ZZZZZZZZZZ',        // letters only
+    'WRF535SWHZ',
+    'GTS18GTHWW',
+    '123',
+    '99999999999999',
+    'ZZZZZZZZZZ',
     '9999999999',
-    '5501234567',        // plausible YYWW far future (2055 wk 01)
-    '2299123456',        // week 99
-  ].forEach((p) => probes.add(p));
+    '5501234567',
+    '2299123456',
+  ].forEach((probe) => probes.add(probe));
   return [...probes];
 }
 
@@ -69,33 +73,33 @@ function extractYears(text) {
 
 const MONTHS = new Set(['january','february','march','april','may','june','july','august','september','october','november','december']);
 
+function record(violations, entry) {
+  violations.push({ ...entry, severity: FATAL_INVARIANTS.has(entry.invariant) ? 'fatal' : 'info' });
+}
+
 function checkResult(brandKey, input, res, violations) {
   if (!res || typeof res !== 'object') return;
   const year = res.year == null ? '' : String(res.year);
   const month = res.month == null ? '' : String(res.month);
   if (/undefined|NaN|null/.test(year + ' ' + month)) {
-    violations.push({ brand: brandKey, input, invariant: 'I6-leak', detail: `year="${year}" month="${month}"` });
+    record(violations, { brand: brandKey, input, invariant: 'I6-leak', detail: `year="${year}" month="${month}"` });
   }
-  if (/unknown|invalid|unsupported|cannot/i.test(year)) return; // explicit non-answers are fine
-  const years = extractYears(year);
-  for (const y of years) {
-    if (y < YEAR_MIN || y > YEAR_MAX) {
-      violations.push({ brand: brandKey, input, invariant: 'I1-year-range', detail: `decoded year ${y} from "${year}"` });
+  if (/unknown|invalid|unsupported|cannot/i.test(year)) return;
+  for (const decodedYear of extractYears(year)) {
+    if (decodedYear < YEAR_MIN || decodedYear > YEAR_MAX) {
+      record(violations, { brand: brandKey, input, invariant: 'I1-year-range', detail: `raw candidate year ${decodedYear} from "${year}"` });
     }
   }
-  const wk = month.match(/week\s*(\d+)/i);
-  if (wk) {
-    const w = parseInt(wk[1], 10);
-    if (w < 1 || w > 53) {
-      violations.push({ brand: brandKey, input, invariant: 'I2-week-range', detail: `week ${w} (year "${year}")` });
+  const week = month.match(/week\s*(\d+)/i);
+  if (week) {
+    const value = parseInt(week[1], 10);
+    if (value < 1 || value > 53) {
+      record(violations, { brand: brandKey, input, invariant: 'I2-week-range', detail: `week ${value} (year "${year}")` });
     }
   } else if (month && !/quarter|q[1-4]|^\s*$|n\/?a|unknown|invalid/i.test(month)) {
     const monthWord = month.toLowerCase().replace(/[^a-z]/g, '');
-    if (monthWord && !MONTHS.has(monthWord) && !/^\d{1,2}$/.test(month.trim())) {
-      // month strings like "Unknown month code: Z" are fine; flag only leaks
-      if (!/code/i.test(month)) {
-        violations.push({ brand: brandKey, input, invariant: 'I3-month-form', detail: `month="${month}"` });
-      }
+    if (monthWord && !MONTHS.has(monthWord) && !/^\d{1,2}$/.test(month.trim()) && !/code/i.test(month)) {
+      record(violations, { brand: brandKey, input, invariant: 'I3-month-form', detail: `month="${month}"` });
     }
   }
 }
@@ -121,34 +125,31 @@ function main() {
         let res = null;
         try {
           res = decoder.decode(input);
-        } catch (err) {
-          violations.push({ brand: brandKey, input, invariant: 'THROW', detail: err.message });
+        } catch (error) {
+          record(violations, { brand: brandKey, input, invariant: 'THROW', detail: error.message });
           continue;
         }
         stats.decodes++;
-        if (res) {
-          stats.successes++;
-          checkResult(brandKey, input, res, violations);
-          // I4 case-insensitivity
-          try {
-            const lower = decoder.decode(input.toLowerCase());
-            if (stable(lower) !== stable(res)) {
-              violations.push({ brand: brandKey, input, invariant: 'I4-case', detail: `upper=${stable(res)} lower=${stable(lower)}` });
-            }
-          } catch (err) {
-            violations.push({ brand: brandKey, input: input.toLowerCase(), invariant: 'THROW-lower', detail: err.message });
+        if (!res) continue;
+        stats.successes++;
+        checkResult(brandKey, input, res, violations);
+        try {
+          const lower = decoder.decode(input.toLowerCase());
+          if (stable(lower) !== stable(res)) {
+            record(violations, { brand: brandKey, input, invariant: 'I4-case', detail: `upper=${stable(res)} lower=${stable(lower)}` });
           }
-          // I5 punctuation tolerance (insert space + hyphen mid-string)
-          if (input.length > 4) {
-            const spaced = input.slice(0, 3) + ' ' + input.slice(3, 6) + '-' + input.slice(6);
-            try {
-              const alt = decoder.decode(spaced);
-              if (alt && stable(alt) !== stable(res)) {
-                violations.push({ brand: brandKey, input: spaced, invariant: 'I5-punct', detail: `compact=${stable(res)} spaced=${stable(alt)}` });
-              }
-            } catch (err) {
-              violations.push({ brand: brandKey, input: spaced, invariant: 'THROW-punct', detail: err.message });
+        } catch (error) {
+          record(violations, { brand: brandKey, input: input.toLowerCase(), invariant: 'THROW-lower', detail: error.message });
+        }
+        if (input.length > 4) {
+          const spaced = input.slice(0, 3) + ' ' + input.slice(3, 6) + '-' + input.slice(6);
+          try {
+            const alt = decoder.decode(spaced);
+            if (alt && stable(alt) !== stable(res)) {
+              record(violations, { brand: brandKey, input: spaced, invariant: 'I5-punct', detail: `compact=${stable(res)} spaced=${stable(alt)}` });
             }
+          } catch (error) {
+            record(violations, { brand: brandKey, input: spaced, invariant: 'THROW-punct', detail: error.message });
           }
         }
       }
@@ -156,25 +157,32 @@ function main() {
   }
 
   const byInvariant = {};
-  for (const v of violations) byInvariant[v.invariant] = (byInvariant[v.invariant] || 0) + 1;
+  for (const violation of violations) byInvariant[violation.invariant] = (byInvariant[violation.invariant] || 0) + 1;
+  const fatal = violations.filter((violation) => violation.severity === 'fatal');
 
   console.log('=== DECODER INVARIANT SWEEP ===');
   console.log(`brands: ${stats.brands}, decode calls: ${stats.decodes}, successful decodes: ${stats.successes}`);
-  console.log('violations by invariant:', JSON.stringify(byInvariant));
+  console.log('findings by invariant:', JSON.stringify(byInvariant));
+  console.log(`fatal findings: ${fatal.length}; informational findings: ${violations.length - fatal.length}`);
+
   const byBrand = {};
-  for (const v of violations) {
-    byBrand[v.brand] = byBrand[v.brand] || [];
-    if (byBrand[v.brand].length < 4) byBrand[v.brand].push(v);
+  for (const violation of violations) {
+    byBrand[violation.brand] = byBrand[violation.brand] || [];
+    if (byBrand[violation.brand].length < 4) byBrand[violation.brand].push(violation);
   }
-  for (const [brand, vs] of Object.entries(byBrand)) {
+  for (const [brand, brandViolations] of Object.entries(byBrand)) {
     console.log(`\n${brand}:`);
-    for (const v of vs) console.log(`  [${v.invariant}] input="${v.input}" ${v.detail}`);
+    for (const violation of brandViolations) {
+      console.log(`  [${violation.severity.toUpperCase()} ${violation.invariant}] input="${violation.input}" ${violation.detail}`);
+    }
   }
 
-  const jsonIdx = process.argv.indexOf('--json');
-  if (jsonIdx !== -1 && process.argv[jsonIdx + 1]) {
-    fs.writeFileSync(process.argv[jsonIdx + 1], JSON.stringify({ stats, byInvariant, violations }, null, 2));
+  const jsonIndex = process.argv.indexOf('--json');
+  if (jsonIndex !== -1 && process.argv[jsonIndex + 1]) {
+    fs.writeFileSync(process.argv[jsonIndex + 1], JSON.stringify({ stats, byInvariant, fatalCount: fatal.length, violations }, null, 2));
   }
+
+  if (fatal.length > 0) process.exitCode = 1;
 }
 
 main();
