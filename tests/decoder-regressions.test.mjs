@@ -87,7 +87,8 @@ function loadDecoderContext() {
       findClientModelEvidence,
       findClientModelFamilyEvidence,
       foldOZeroForClientMatching,
-      normalizeClientModelLookupValue
+      normalizeClientModelLookupValue,
+      collapseImpossibleFutureYears
     };
   `, ctx);
 
@@ -1628,4 +1629,83 @@ test('Whirlpool RX3026733 with unrelated model evidence does not choose a year b
   const resolved = await api.resolveSerialYearFromModel({ candidates, brand: 'Whirlpool', model: 'WTW4816FW2', context: '' });
 
   assert.equal(resolved.chosenYear, null, 'an unrelated/unrecognized model must never resolve to the nearest candidate');
+});
+
+// ---------------------------------------------------------------------------
+// July 2026 foundation audit: invalid week/month codes and impossible future
+// candidate years must never surface as confident manufacture dates.
+// ---------------------------------------------------------------------------
+
+test('Whirlpool-family decoder rejects impossible production weeks', () => {
+  const whirlpool = api.decoderData.appliances.decoders.whirlpool;
+  assert.equal(whirlpool.decode('995412345'), null, 'week 54 must not decode');
+  assert.equal(whirlpool.decode('999912345'), null, 'week 99 must not decode');
+  assert.equal(whirlpool.decode('ZZZZZZZZZZ'), null, 'non-digit week must not decode');
+
+  const good = whirlpool.decode('C21435678');
+  assert.ok(good, 'known-good Whirlpool serial still decodes');
+  assert.equal(good.month, 'Week 14');
+
+  const sibling = api.decoderData.appliances.decoders.kitchenaid;
+  assert.equal(sibling.decode('995412345'), null, 'shared family helper covers siblings');
+});
+
+test('Frigidaire-family decoder rejects impossible production weeks', () => {
+  const frigidaire = api.decoderData.appliances.decoders.frigidaire;
+  assert.equal(frigidaire.decode('S995412345'), null, 'week 54 must not decode');
+
+  const good = frigidaire.decode('BA13407224');
+  assert.ok(good, 'known-good Frigidaire serial still decodes');
+  assert.match(good.month, /Week 34/);
+
+  const electrolux = api.decoderData.appliances.decoders.electrolux;
+  assert.equal(electrolux.decode('S995412345'), null, 'family copy covers Electrolux');
+});
+
+test('Goodman-family HVAC decoder rejects invalid month codes', () => {
+  const goodman = api.decoderData.hvac.decoders.goodman;
+  assert.equal(goodman.decode('2352123456'), null, 'month 52 must not decode');
+  assert.equal(goodman.decode('2313123456'), null, 'month 13 must not decode');
+
+  const good = goodman.decode('1404123456');
+  assert.equal(good.year, '2014');
+  assert.equal(good.month, 'April');
+
+  const amana = api.decoderData.hvac.decoders.amana;
+  assert.equal(amana.decode('2352123456'), null, 'Amana shares the YYMM rule');
+});
+
+test('Rheem water heater Style 1 no longer fabricates invalid months or future years', () => {
+  const rheem = api.decoderData.waterHeaters.decoders.rheem;
+  assert.equal(rheem.decode('9954123456'), null, 'month 99 / year 2054 must not decode');
+  assert.equal(rheem.decode('1254123456'), null, 'valid month but impossible year 2054 must not decode');
+
+  const style1 = rheem.decode('1291A39968');
+  assert.equal(style1.year, '1991');
+  assert.equal(style1.month, 'December');
+
+  const prefixed = rheem.decode('RH120512345');
+  assert.equal(prefixed.year, '2005');
+  assert.equal(prefixed.month, 'Week 12');
+});
+
+test('collapseImpossibleFutureYears drops future-only candidates without mutating input', () => {
+  const input = { year: '2012/2042', month: 'Week 14', notes: 'n' };
+  const collapsed = api.collapseImpossibleFutureYears(input);
+  assert.equal(collapsed.year, '2012');
+  assert.match(collapsed.notes, /2042/);
+  assert.equal(input.year, '2012/2042', 'input object must not be mutated');
+
+  const allPast = api.collapseImpossibleFutureYears({ year: '1989/1999/2009/2019' });
+  assert.equal(allPast.year, '1989/1999/2009/2019', 'plausible candidate sets are untouched');
+
+  const sentinel = api.collapseImpossibleFutureYears({ year: 'Post-2021 (Randomized)' });
+  assert.equal(sentinel.year, 'Post-2021 (Randomized)', 'sentinel years are untouched');
+
+  assert.equal(api.collapseImpossibleFutureYears(null), null);
+});
+
+test('decode pipeline applies future-year collapse before sanitization', () => {
+  const src = fs.readFileSync('script.js', 'utf8');
+  assert.match(src, /collapseImpossibleFutureYears\(p\.decode\(/);
 });
