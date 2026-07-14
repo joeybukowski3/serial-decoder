@@ -1709,3 +1709,15 @@ test('decode pipeline applies future-year collapse before sanitization', () => {
   const src = fs.readFileSync('script.js', 'utf8');
   assert.match(src, /collapseImpossibleFutureYears\(p\.decode\(/);
 });
+
+test('decode pipeline emits sanitized analytics events (no raw serial/query to GA4)', () => {
+  const src = fs.readFileSync('script.js', 'utf8');
+  assert.match(src, /trackAnalyticsEvent\("decode_start"/);
+  assert.match(src, /trackAnalyticsEvent\("decode_fail"/);
+  assert.match(src, /trackAnalyticsEvent\("decode_success"/);
+  // gtag forwarding must strip raw user inputs and only run on production hosts
+  assert.match(src, /"query"!==k&&"serial"!==k&&"model"!==k/);
+  assert.match(src, /decodemyitem\\.com\$\/\.test\(window\.location\.hostname\)/);
+  // events must never carry the serial value itself
+  assert.doesNotMatch(src, /trackAnalyticsEvent\("decode_(start|success|fail)",\{[^}]*serial:/);
+});
