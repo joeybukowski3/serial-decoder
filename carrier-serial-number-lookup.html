@@ -245,7 +245,66 @@
       </div>
     </div>
 
-    
+    <section class="section" id="carrier-worked-examples">
+      <div class="seo-copy-wrap">
+        <h2>Worked Carrier serial examples</h2>
+        <p>The supported Carrier path validates digits 1-2 as a week number (1-53) and reads digits 3-4 as the production year.</p>
+        <div class="table-wrap">
+          <table class="format-table">
+            <thead>
+              <tr>
+                <th>Label Field</th>
+                <th>What It Usually Means</th>
+                <th>Why It Matters</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Digits 1-2 of 1419XXXX</td>
+                <td>Week code "14" (valid: 1-53)</td>
+                <td>Confirms the opening digits look like a genuine Carrier rating-plate serial before the year is read.</td>
+              </tr>
+              <tr>
+                <td>Digits 3-4 of 1419XXXX</td>
+                <td>Year code "19"</td>
+                <td>19 is 50 or under, so it resolves to 2019. Result: 2019 (year only; this format does not resolve a month).</td>
+              </tr>
+              <tr>
+                <td>Digits 1-2 of 0892XXXX</td>
+                <td>Week code "08" (valid: 1-53)</td>
+                <td>Confirms the format before the year is read.</td>
+              </tr>
+              <tr>
+                <td>Digits 3-4 of 0892XXXX</td>
+                <td>Year code "92"</td>
+                <td>92 is over 50, so the supported path resolves it to 1992 instead of 2092. Result: 1992.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <section class="section" id="why-carrier-varies">
+      <div class="seo-copy-wrap">
+        <h2>Why Carrier-family serials can vary</h2>
+        <p>Carrier, Bryant, and Payne share the same parent company, and related HVAC brands can use similar digit-position conventions. The supported logic on this page is specific to Carrier-branded rating plates &mdash; a visually similar serial on a different badge is not guaranteed to follow the identical rule, so use the brand printed on the equipment rather than assuming every Carrier-family badge decodes identically.</p>
+        <p>Plant, product line, and era can also affect which digits carry meaningful information beyond the year. When the serial does not match the supported digits-3-4-year pattern, treat the result as unsupported rather than guessing at a different position.</p>
+      </div>
+    </section>
+    <section class="section" id="carrier-multiple-years">
+      <div class="seo-copy-wrap">
+        <h2>Does a Carrier serial show more than one possible year?</h2>
+        <p>No &mdash; unlike some appliance brands, the supported Carrier serial format does not use a repeating year cycle, so a successful decode resolves to a single year rather than a list of candidates.</p>
+        <p>When Carrier decoding does not produce a result, it is usually because the input failed a validation check rather than because of year ambiguity: the current logic rejects a week code outside 1-53, and it rejects a resulting year that would fall more than a couple of years in the future. In those cases, double-check the serial against the rating plate or try Smart Lookup rather than assuming the equipment is simply too new or too old to support.</p>
+      </div>
+    </section>
+    <section class="section" id="carrier-model-tonnage">
+      <div class="seo-copy-wrap">
+        <h2>Model number and tonnage context</h2>
+        <p>The serial number is what this decoder reads for manufacture year. The model number is a separate identifier for equipment family and generation &mdash; this site does not currently decode tonnage or capacity from a Carrier model number.</p>
+        <p>For tonnage or capacity details, check the equipment nameplate directly. Use the serial for age and the model number for product/capacity research as two separate signals rather than combining them into a single reading.</p>
+      </div>
+    </section>
 
     <!-- ═══ CONTENT SECTIONS ═══ -->
     <div class="bp-content-wrap">
@@ -264,7 +323,7 @@
             <span class="material-symbols-outlined bp-section-icon" style="color:#9fcaff;">category</span>
             <h2>What the model number can tell you</h2>
           </div>
-          <p>The Carrier model number helps confirm equipment family, tonnage, and product generation. That becomes useful when the serial fits a supported year position but you still need model-era context for a stronger replacement or claim summary.</p>
+          <p>The Carrier model number helps confirm equipment family and product generation. That becomes useful when the serial fits a supported year position but you still need model-era context for a stronger replacement or claim summary.</p>
         </div>
       </div>
 
@@ -341,6 +400,26 @@
         <code class="ex-serial">Model family still helps</code>
         <p class="ex-note">The model number helps verify the product generation and supports replacement research after the serial date is estimated.</p>
       </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Worked example</span>
+        </div>
+        <code class="ex-serial">1419XXXX</code>
+        <p class="ex-note">Digits 1-2 (14) validate as a week number, and digits 3-4 (19) resolve to year 2019. This format returns a year only, not a month.</p>
+      </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Worked example (older unit)</span>
+        </div>
+        <code class="ex-serial">0892XXXX</code>
+        <p class="ex-note">Digits 3-4 (92) fall above the 50 pivot, so the supported logic resolves this to 1992 rather than 2092.</p>
+      </div>
         </div>
       </div>
 
@@ -405,6 +484,14 @@
         <span class="material-symbols-outlined bp-check-icon">check_circle</span>
         <span>Do not apply appliance-style month/year rules to HVAC equipment.</span>
       </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Check the opening two digits: the supported path rejects a week code outside 1-53 rather than guessing at a year.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>A model number alone, without a serial, cannot produce a manufacture date here &mdash; try Smart Lookup for model-only research.</span>
+      </li>
           </ul>
         </div>
         <div class="bp-section-card">
@@ -449,6 +536,34 @@
         </summary>
         <div class="bp-faq-body"><p>Yes. Serial-based age support is useful for HVAC claims, especially when the rating plate photo is saved with the file.</p></div>
       </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>What date does a Carrier serial number show?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>The supported Carrier path resolves to a single production year read from digits 3-4. It does not resolve a month on this format.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Is there a Carrier model number lookup?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>This page focuses on serial-based age decoding. The model number is best used alongside the serial to confirm equipment family rather than as a stand-alone age lookup.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Does the Carrier model number tell me the tonnage?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>This site does not decode tonnage or capacity from the model number. Check the equipment nameplate for tonnage details.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>What if my Carrier serial is unsupported?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Confirm the full serial matches the rating plate, verify the opening two digits form a valid week number (1-53), and try Smart Lookup if the format still does not resolve.</p></div>
+      </details>
           </div>
         </div>
       </div>
@@ -460,7 +575,7 @@
           <h2>Related Decoder Pages</h2>
         </div>
         <div class="bp-pills-wrap">
-          <a href="/how-to-find-hvac-age" class="bp-pill">How to Find HVAC Age</a><a href="/hvac-age-by-serial-number" class="bp-pill">HVAC Age by Serial Number</a><a href="/trane-serial-number-lookup" class="bp-pill">Trane</a><a href="/rheem-serial-number-lookup" class="bp-pill">Rheem</a><a href="/goodman-serial-number-lookup" class="bp-pill">Goodman</a><a href="/how-old-is-my-appliance" class="bp-pill">How Old Is My Appliance?</a>
+          <a href="/how-old-is-my-hvac" class="bp-pill">How Old Is My HVAC?</a><a href="/trane-serial-number-lookup" class="bp-pill">Trane</a><a href="/rheem-serial-number-lookup" class="bp-pill">Rheem</a><a href="/goodman-serial-number-lookup" class="bp-pill">Goodman</a><a href="/smart-lookup" class="bp-pill">Smart Lookup</a><a href="/serial-number-location-guide" class="bp-pill">Serial Number Location Guide</a><a href="/methodology" class="bp-pill">Methodology</a>
         </div>
       </div>
 
@@ -679,7 +794,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/carrier-serial-number-lookup#webpage","name":"Carrier Serial Number Decoder","description":"Decode Carrier serial numbers, estimate HVAC age, and use the supported Carrier year-position logic with concise rating-plate guidance.","url":"https://www.decodemyitem.com/carrier-serial-number-lookup","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Item Assist","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"Carrier Serial Number Decoder"}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","@id":"https://www.decodemyitem.com/carrier-serial-number-lookup#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.decodemyitem.com"},{"@type":"ListItem","position":2,"name":"Carrier Serial Number Decoder","item":"https://www.decodemyitem.com/carrier-serial-number-lookup"}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://www.decodemyitem.com/carrier-serial-number-lookup#app","name":"Item Assist Serial Number Decoder","url":"https://www.decodemyitem.com/carrier-serial-number-lookup","description":"Carrier is preselected. Enter the full HVAC serial number exactly as printed on the rating plate.","applicationCategory":"UtilityApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/carrier-serial-number-lookup#faq","mainEntity":[{"@type":"Question","name":"How old is my Carrier unit?","acceptedAnswer":{"@type":"Answer","text":"Use the serial number from the rating plate. The supported Carrier path commonly reads digits 3-4 as the production year."}},{"@type":"Question","name":"Can the Carrier model number tell me the age?","acceptedAnswer":{"@type":"Answer","text":"Not as directly as the serial number. It is better for identifying the family and supporting replacement research."}},{"@type":"Question","name":"Why does my Carrier serial number not decode?","acceptedAnswer":{"@type":"Answer","text":"The label may be partial, the product may follow a different family, or the serial may fall outside the supported Carrier path."}},{"@type":"Question","name":"Where is the Carrier serial number plate located?","acceptedAnswer":{"@type":"Answer","text":"Most Carrier equipment places it on the outdoor cabinet, indoor access panel, or furnace service area depending on product type."}},{"@type":"Question","name":"Can this support claim documentation?","acceptedAnswer":{"@type":"Answer","text":"Yes. Serial-based age support is useful for HVAC claims, especially when the rating plate photo is saved with the file."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/carrier-serial-number-lookup#faq","mainEntity":[{"@type":"Question","name":"How old is my Carrier unit?","acceptedAnswer":{"@type":"Answer","text":"Use the serial number from the rating plate. The supported Carrier path commonly reads digits 3-4 as the production year."}},{"@type":"Question","name":"Can the Carrier model number tell me the age?","acceptedAnswer":{"@type":"Answer","text":"Not as directly as the serial number. It is better for identifying the family and supporting replacement research."}},{"@type":"Question","name":"Why does my Carrier serial number not decode?","acceptedAnswer":{"@type":"Answer","text":"The label may be partial, the product may follow a different family, or the serial may fall outside the supported Carrier path."}},{"@type":"Question","name":"Where is the Carrier serial number plate located?","acceptedAnswer":{"@type":"Answer","text":"Most Carrier equipment places it on the outdoor cabinet, indoor access panel, or furnace service area depending on product type."}},{"@type":"Question","name":"Can this support claim documentation?","acceptedAnswer":{"@type":"Answer","text":"Yes. Serial-based age support is useful for HVAC claims, especially when the rating plate photo is saved with the file."}},{"@type":"Question","name":"What date does a Carrier serial number show?","acceptedAnswer":{"@type":"Answer","text":"The supported Carrier path resolves to a single production year read from digits 3-4. It does not resolve a month on this format."}},{"@type":"Question","name":"Is there a Carrier model number lookup?","acceptedAnswer":{"@type":"Answer","text":"This page focuses on serial-based age decoding. The model number is best used alongside the serial to confirm equipment family rather than as a stand-alone age lookup."}},{"@type":"Question","name":"Does the Carrier model number tell me the tonnage?","acceptedAnswer":{"@type":"Answer","text":"This site does not decode tonnage or capacity from the model number. Check the equipment nameplate for tonnage details."}},{"@type":"Question","name":"What if my Carrier serial is unsupported?","acceptedAnswer":{"@type":"Answer","text":"Confirm the full serial matches the rating plate, verify the opening two digits form a valid week number (1-53), and try Smart Lookup if the format still does not resolve."}}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","@id":"https://www.decodemyitem.com/carrier-serial-number-lookup#howto","name":"Carrier Serial Number Decoder","description":"Choose the matching category and brand. Enter the full serial number exactly as printed on the label. Review the date estimate, notes, and fallback links if the serial does not decode.","step":[{"@type":"HowToStep","position":1,"name":"Step 1","text":"Choose the matching category and brand."},{"@type":"HowToStep","position":2,"name":"Step 2","text":"Enter the full serial number exactly as printed on the label."},{"@type":"HowToStep","position":3,"name":"Step 3","text":"Review the date estimate, notes, and fallback links if the serial does not decode."}]}</script>
 </body>
 </html>

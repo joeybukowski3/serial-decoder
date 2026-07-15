@@ -245,7 +245,59 @@
       </div>
     </div>
 
-    
+    <section class="section" id="how-old-is-my-goodman-unit">
+      <div class="seo-copy-wrap">
+        <h2>How old is my Goodman unit?</h2>
+        <p>Goodman HVAC serial numbers typically open with four digits: the first two are the production year and the next two are the production month. That opening YYMM group is the primary age signal &mdash; the remaining characters are usually plant or production-sequence tracking rather than date information.</p>
+        <p>Because the year is read directly from the serial rather than from a repeating letter or digit cycle, a Goodman result is usually a single year rather than a list of candidate years. The model number is still useful context: it can confirm the equipment family and help with replacement research, and it can flag a serial that does not look like a genuine Goodman or Amana rating-plate number.</p>
+      </div>
+    </section>
+    <section class="section" id="goodman-worked-examples">
+      <div class="seo-copy-wrap">
+        <h2>Worked Goodman serial examples</h2>
+        <p>Both examples below use the supported YYMM opening pattern.</p>
+        <div class="table-wrap">
+          <table class="format-table">
+            <thead>
+              <tr>
+                <th>Label Field</th>
+                <th>What It Usually Means</th>
+                <th>Why It Matters</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Digits 1-2 of 1908123456</td>
+                <td>Year code "19"</td>
+                <td>Resolves to 2019. No ambiguity: Goodman does not use a repeating year cycle.</td>
+              </tr>
+              <tr>
+                <td>Digits 3-4 of 1908123456</td>
+                <td>Month code "08"</td>
+                <td>Resolves to August, giving a full result of August 2019.</td>
+              </tr>
+              <tr>
+                <td>Digits 1-2 of 1404123456</td>
+                <td>Year code "14"</td>
+                <td>Resolves to 2014.</td>
+              </tr>
+              <tr>
+                <td>Digits 3-4 of 1404123456</td>
+                <td>Month code "04"</td>
+                <td>Resolves to April, giving a full result of April 2014.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <section class="section" id="model-tonnage-context">
+      <div class="seo-copy-wrap">
+        <h2>Model number and tonnage context</h2>
+        <p>The serial number is what this decoder reads for manufacture date. The model number is a separate identifier for equipment family and capacity &mdash; some Goodman/Amana model numbers include a capacity or tonnage code as part of the manufacturer's naming convention, but this site does not currently decode tonnage or BTU capacity from the model number.</p>
+        <p>If you need tonnage or capacity information, check the equipment nameplate directly or the <a href="/goodman-model-number-lookup">Goodman Model Number Lookup</a> page, and treat any tonnage figure from the model number as separate from, and not a substitute for, the serial-based age result.</p>
+      </div>
+    </section>
 
     <!-- ═══ CONTENT SECTIONS ═══ -->
     <div class="bp-content-wrap">
@@ -264,7 +316,7 @@
             <span class="material-symbols-outlined bp-section-icon" style="color:#9fcaff;">category</span>
             <h2>What the model number can tell you</h2>
           </div>
-          <p>The Goodman model number helps confirm equipment family, tonnage, and replacement class. It is useful for downstream replacement research even when the serial result itself is relatively direct.</p>
+          <p>The Goodman model number helps confirm equipment family and replacement class. It is useful for downstream replacement research even when the serial result itself is relatively direct.</p>
         </div>
       </div>
 
@@ -341,6 +393,26 @@
         <code class="ex-serial">Full serial required</code>
         <p class="ex-note">Capture the full serial anyway because the complete label still helps with replacement and claim documentation.</p>
       </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Worked example</span>
+        </div>
+        <code class="ex-serial">1908123456</code>
+        <p class="ex-note">Digits 1-2 (19) resolve to year 2019, and digits 3-4 (08) resolve to month August, giving a full result of August 2019.</p>
+      </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Worked example</span>
+        </div>
+        <code class="ex-serial">1404123456</code>
+        <p class="ex-note">Digits 1-2 (14) resolve to year 2014, and digits 3-4 (04) resolve to month April, giving a full result of April 2014.</p>
+      </div>
         </div>
       </div>
 
@@ -405,6 +477,14 @@
         <span class="material-symbols-outlined bp-check-icon">check_circle</span>
         <span>Do not apply appliance-style serial logic to HVAC equipment.</span>
       </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>Double-check for transcription mistakes (a misread 0/O, 1/I, or 8/B) before assuming the serial is unsupported.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>A model number alone, without a serial, cannot produce a manufacture date on this page &mdash; try the Goodman Model Number Lookup or Smart Lookup instead.</span>
+      </li>
           </ul>
         </div>
         <div class="bp-section-card">
@@ -449,6 +529,34 @@
         </summary>
         <div class="bp-faq-body"><p>Yes. The Goodman serial result is useful for HVAC claims, especially when the rating-plate photo is kept with the file.</p></div>
       </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>How old is a Goodman unit by serial number?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Enter the full rating-plate serial into the decoder above with Goodman selected. Digits 1-2 give the year and digits 3-4 give the month on the supported Goodman pattern.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Is the Goodman model number the same as the serial number?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>No. The model number identifies the equipment family (and, in some cases, includes a capacity code in the manufacturer's own naming convention). The serial number is the field this decoder reads for manufacture date.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Does the model number tell me the tonnage of my Goodman unit?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>This site does not decode tonnage or BTU capacity from the model number. Check the equipment nameplate directly, or use the Goodman Model Number Lookup page for model-focused research.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>What if my Goodman serial format is not supported?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Confirm the serial was copied exactly from the rating plate, watch for commonly misread characters, and try Smart Lookup with the model number if the standard decoder cannot resolve the format.</p></div>
+      </details>
           </div>
         </div>
       </div>
@@ -460,7 +568,7 @@
           <h2>Related Decoder Pages</h2>
         </div>
         <div class="bp-pills-wrap">
-          <a href="/how-to-find-hvac-age" class="bp-pill">How to Find HVAC Age</a><a href="/hvac-age-by-serial-number" class="bp-pill">HVAC Age by Serial Number</a><a href="/carrier-serial-number-lookup" class="bp-pill">Carrier</a><a href="/trane-serial-number-lookup" class="bp-pill">Trane</a><a href="/rheem-serial-number-lookup" class="bp-pill">Rheem</a><a href="/how-old-is-my-appliance" class="bp-pill">How Old Is My Appliance?</a>
+          <a href="/how-old-is-my-hvac" class="bp-pill">How Old Is My HVAC?</a><a href="/goodman-model-number-lookup" class="bp-pill">Goodman Model Number Lookup</a><a href="/carrier-serial-number-lookup" class="bp-pill">Carrier</a><a href="/smart-lookup" class="bp-pill">Smart Lookup</a><a href="/serial-number-location-guide" class="bp-pill">Serial Number Location Guide</a><a href="/methodology" class="bp-pill">Methodology</a>
         </div>
       </div>
 
@@ -679,7 +787,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/goodman-serial-number-lookup#webpage","name":"Goodman Serial Number Decoder","description":"Decode Goodman serial numbers, estimate HVAC age, and use the supported Goodman year/month format with concise rating-plate guidance.","url":"https://www.decodemyitem.com/goodman-serial-number-lookup","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Item Assist","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"Goodman Serial Number Decoder"}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","@id":"https://www.decodemyitem.com/goodman-serial-number-lookup#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.decodemyitem.com"},{"@type":"ListItem","position":2,"name":"Goodman Serial Number Decoder","item":"https://www.decodemyitem.com/goodman-serial-number-lookup"}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://www.decodemyitem.com/goodman-serial-number-lookup#app","name":"Item Assist Serial Number Decoder","url":"https://www.decodemyitem.com/goodman-serial-number-lookup","description":"Goodman is preselected. Enter the full HVAC serial number exactly as printed on the rating plate.","applicationCategory":"UtilityApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/goodman-serial-number-lookup#faq","mainEntity":[{"@type":"Question","name":"How old is my Goodman unit?","acceptedAnswer":{"@type":"Answer","text":"Use the serial number from the rating plate. The supported Goodman path commonly reads the first two digits as year and the next two as month."}},{"@type":"Question","name":"Can the Goodman model number tell me the age?","acceptedAnswer":{"@type":"Answer","text":"Not as directly as the serial number. It is better for identifying the family and supporting replacement research."}},{"@type":"Question","name":"Why does my Goodman serial number not decode?","acceptedAnswer":{"@type":"Answer","text":"The label may be partial, damaged, or outside the supported Goodman path."}},{"@type":"Question","name":"Where is the Goodman serial number plate located?","acceptedAnswer":{"@type":"Answer","text":"Most Goodman equipment places it on the outdoor cabinet, furnace service area, or indoor access panel depending on product type."}},{"@type":"Question","name":"Can this support claim documentation?","acceptedAnswer":{"@type":"Answer","text":"Yes. The Goodman serial result is useful for HVAC claims, especially when the rating-plate photo is kept with the file."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/goodman-serial-number-lookup#faq","mainEntity":[{"@type":"Question","name":"How old is my Goodman unit?","acceptedAnswer":{"@type":"Answer","text":"Use the serial number from the rating plate. The supported Goodman path commonly reads the first two digits as year and the next two as month."}},{"@type":"Question","name":"Can the Goodman model number tell me the age?","acceptedAnswer":{"@type":"Answer","text":"Not as directly as the serial number. It is better for identifying the family and supporting replacement research."}},{"@type":"Question","name":"Why does my Goodman serial number not decode?","acceptedAnswer":{"@type":"Answer","text":"The label may be partial, damaged, or outside the supported Goodman path."}},{"@type":"Question","name":"Where is the Goodman serial number plate located?","acceptedAnswer":{"@type":"Answer","text":"Most Goodman equipment places it on the outdoor cabinet, furnace service area, or indoor access panel depending on product type."}},{"@type":"Question","name":"Can this support claim documentation?","acceptedAnswer":{"@type":"Answer","text":"Yes. The Goodman serial result is useful for HVAC claims, especially when the rating-plate photo is kept with the file."}},{"@type":"Question","name":"How old is a Goodman unit by serial number?","acceptedAnswer":{"@type":"Answer","text":"Enter the full rating-plate serial into the decoder above with Goodman selected. Digits 1-2 give the year and digits 3-4 give the month on the supported Goodman pattern."}},{"@type":"Question","name":"Is the Goodman model number the same as the serial number?","acceptedAnswer":{"@type":"Answer","text":"No. The model number identifies the equipment family (and, in some cases, includes a capacity code in the manufacturer's own naming convention). The serial number is the field this decoder reads for manufacture date."}},{"@type":"Question","name":"Does the model number tell me the tonnage of my Goodman unit?","acceptedAnswer":{"@type":"Answer","text":"This site does not decode tonnage or BTU capacity from the model number. Check the equipment nameplate directly, or use the Goodman Model Number Lookup page for model-focused research."}},{"@type":"Question","name":"What if my Goodman serial format is not supported?","acceptedAnswer":{"@type":"Answer","text":"Confirm the serial was copied exactly from the rating plate, watch for commonly misread characters, and try Smart Lookup with the model number if the standard decoder cannot resolve the format."}}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","@id":"https://www.decodemyitem.com/goodman-serial-number-lookup#howto","name":"Goodman Serial Number Decoder","description":"Choose the Goodman HVAC path. Enter the full serial number from the equipment data plate. Review the supported year/month estimate and related HVAC links.","step":[{"@type":"HowToStep","position":1,"name":"Step 1","text":"Choose the Goodman HVAC path."},{"@type":"HowToStep","position":2,"name":"Step 2","text":"Enter the full serial number from the equipment data plate."},{"@type":"HowToStep","position":3,"name":"Step 3","text":"Review the supported year/month estimate and related HVAC links."}]}</script>
 </body>
 </html>
