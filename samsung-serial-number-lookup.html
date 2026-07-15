@@ -22,12 +22,12 @@
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Decode My Item">
-  <meta property="og:title" content="Samsung Serial Number Decoder | Item Assist">
+  <meta property="og:title" content="Samsung Serial Number Decoder | Decode My Item">
   <meta property="og:description" content="Decode Samsung appliance serial numbers, estimate appliance age, and use the supported 11-character and 15-character Samsung serial formats with clear confidence notes.">
   <meta property="og:url" content="https://www.decodemyitem.com/samsung-serial-number-lookup">
   <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Samsung Serial Number Decoder | Item Assist">
+  <meta name="twitter:title" content="Samsung Serial Number Decoder | Decode My Item">
   <meta name="twitter:description" content="Decode Samsung appliance serial numbers, estimate appliance age, and use the supported 11-character and 15-character Samsung serial formats with clear confidence notes.">
   <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <link rel="stylesheet" href="shared.css">
@@ -86,6 +86,7 @@
   </li>
   <li><a href="/contact">Contact</a></li>
   <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+
 </ul>
 </nav>
 
@@ -231,7 +232,7 @@
             <details class="determination-details">
               <summary>How this was determined</summary>
               <div class="determination-body" id="serialDeterminationBody">
-                We use the brand-specific serial rules already supported in Item Assist. When a brand repeats codes across decades, the result stays estimated until model era or installation context confirms the right cycle.
+                We use the brand-specific serial rules already supported in Decode My Item. When a brand repeats codes across decades, the result stays estimated until model era or installation context confirms the right cycle.
               </div>
             </details>
           </div>
@@ -245,7 +246,18 @@
       </div>
     </div>
 
-    
+    <section class="section" id="appliance-vs-tv">
+      <div class="seo-copy-wrap">
+        <h2>Samsung appliance serials vs. Samsung TV serials vs. model numbers</h2>
+        <p>Samsung appliances (refrigerators, washers, dryers, dishwashers, ranges) and Samsung TVs or monitors use related but separate identifier formats. Both families commonly use a letter code for year and a second character for month, but the character positions and supported serial lengths differ, so mixing the two paths can produce a confusing result.</p><p>A Samsung model number identifies the product family and generation. On its own it does not provide an exact manufacture date &mdash; the serial number is what this decoder reads for the supported year and month code.</p><p>Some newer Samsung electronics use serial formats that are not publicly documented in a way this tool can reliably parse. When that happens, <a href="/smart-lookup">Smart Lookup</a> can use the model number and any available context to estimate a product era instead of an exact date.</p>
+      </div>
+    </section>
+    <section class="section" id="model-vs-serial">
+      <div class="seo-copy-wrap">
+        <h2>Model number vs. serial number</h2>
+        <p>The model number and serial number answer different questions. The model number describes what the product is: the family, generation, and features. The serial number is what this decoder reads to estimate when a specific unit was made.</p><p>A model number can rule out an impossible decade for a repeating Samsung year code &mdash; for example, a model line introduced in the 2020s cannot be the 2000s candidate from the same year letter &mdash; but it does not replace the serial number as the primary age signal.</p>
+      </div>
+    </section>
 
     <!-- ═══ CONTENT SECTIONS ═══ -->
     <div class="bp-content-wrap">
@@ -340,6 +352,26 @@
         </div>
         <code class="ex-serial">Appliance serials only on this page</code>
         <p class="ex-note">Samsung TVs use a related but separate route. Use the appliance page only when the product is a refrigerator, washer, dryer, dishwasher, range, or oven.</p>
+      </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Worked appliance example</span>
+        </div>
+        <code class="ex-serial">A00843ESC00128</code>
+        <p class="ex-note">This 14-character serial is supported: character 8 (S) is the year code and character 9 (C) is the month code. The current decoder returns year 2009 or 2029 and month December. Both years are shown because the Samsung year code repeats on a 20-year cycle.</p>
+      </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">What the tool can and cannot determine (TV/electronics)</span>
+        </div>
+        <code class="ex-serial">07R5CAHJB001234</code>
+        <p class="ex-note">A documented Samsung TV/monitor serial pattern: character 8 (J) is the year code and character 9 (B) is the month code, giving year 2017 or 2037 and month November. The decoder can identify the supported year/month code on recognized formats, but it cannot confirm which of the two candidate years is correct without model or documentation context, and some newer TV serials may not be publicly decodable at all. See the Samsung TV Serial Number Decoder for the dedicated tool.</p>
       </div>
         </div>
       </div>
@@ -449,6 +481,27 @@
         </summary>
         <div class="bp-faq-body"><p>Yes. It is useful for age support and replacement research, especially when the product category is clear and the full serial is available.</p></div>
       </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Can a Samsung TV serial number show the manufacture date?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>On supported Samsung TV and monitor serial formats, yes: the decoder can read a year and month code using the same style of character-position logic as Samsung appliances. Some newer TV serial formats are not publicly decodable, and the year code repeats every 20 years, so the result is still a candidate rather than a single confirmed date.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Is the model number the same as the serial number?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>No. The model number identifies the product family and generation. The serial number is the field this decoder reads to estimate the manufacture year and month.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>What should I do if the serial number is unsupported?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Confirm you copied the full serial exactly as printed, check whether the product is an appliance or a TV/electronics item, and try Smart Lookup with the model number if the standard decoder cannot resolve the format.</p></div>
+      </details>
           </div>
         </div>
       </div>
@@ -460,7 +513,7 @@
           <h2>Related Decoder Pages</h2>
         </div>
         <div class="bp-pills-wrap">
-          <a href="/how-old-is-my-appliance" class="bp-pill">How Old Is My Appliance?</a><a href="/refrigerator-serial-number" class="bp-pill">Refrigerator Serial Number Lookup</a><a href="/washer-serial-number" class="bp-pill">Washer Serial Number Lookup</a><a href="/dishwasher-serial-number" class="bp-pill">Dishwasher Serial Number Lookup</a><a href="/samsung-tv-serial-number-decoder" class="bp-pill">Samsung TV Serial Number Decoder</a><a href="/lg-serial-number-lookup" class="bp-pill">LG</a>
+          <a href="/how-old-is-my-appliance" class="bp-pill">How Old Is My Appliance?</a><a href="/refrigerator-serial-number" class="bp-pill">Refrigerator Serial Number Lookup</a><a href="/samsung-tv-serial-number-decoder" class="bp-pill">Samsung TV Serial Number Decoder</a><a href="/how-old-is-my-electronics" class="bp-pill">How Old Is My Electronics?</a><a href="/serial-number-location-guide" class="bp-pill">Serial Number Location Guide</a><a href="/methodology" class="bp-pill">Methodology</a>
         </div>
       </div>
 
@@ -632,7 +685,7 @@
       <a href="/privacy-policy">Privacy Policy</a>
     </div>
   </div>
-</footer>
+  </footer>
 
   <script>
     function selectCatAndShowDecoder(cat, btn) {
@@ -676,10 +729,10 @@
   <script defer src="script.js"></script>
   <script defer src="/serial-refinement-controller.js"></script>
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/samsung-serial-number-lookup#webpage","name":"Samsung Serial Number Decoder","description":"Decode Samsung appliance serial numbers, estimate appliance age, and use the supported 11-character and 15-character Samsung serial formats with clear confidence notes.","url":"https://www.decodemyitem.com/samsung-serial-number-lookup","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Item Assist","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"Samsung Serial Number Decoder"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/samsung-serial-number-lookup#webpage","name":"Samsung Serial Number Decoder","description":"Decode Samsung appliance serial numbers, estimate appliance age, and use the supported 11-character and 15-character Samsung serial formats with clear confidence notes.","url":"https://www.decodemyitem.com/samsung-serial-number-lookup","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Decode My Item","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"Samsung Serial Number Decoder"}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","@id":"https://www.decodemyitem.com/samsung-serial-number-lookup#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.decodemyitem.com"},{"@type":"ListItem","position":2,"name":"Samsung Serial Number Decoder","item":"https://www.decodemyitem.com/samsung-serial-number-lookup"}]}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://www.decodemyitem.com/samsung-serial-number-lookup#app","name":"Item Assist Serial Number Decoder","url":"https://www.decodemyitem.com/samsung-serial-number-lookup","description":"Samsung is preselected. Enter the full appliance serial number exactly as printed on the label.","applicationCategory":"UtilityApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/samsung-serial-number-lookup#faq","mainEntity":[{"@type":"Question","name":"How old is my Samsung appliance?","acceptedAnswer":{"@type":"Answer","text":"Use the full serial number from the product tag. The supported Samsung appliance decoder checks the serial-length-specific year and month positions."}},{"@type":"Question","name":"Is this page for Samsung appliances or Samsung TVs?","acceptedAnswer":{"@type":"Answer","text":"This page is for major Samsung appliances. Use the Samsung TV page or Smart Lookup for TV and electronics-only searches."}},{"@type":"Question","name":"Why does the Samsung result still look estimated?","acceptedAnswer":{"@type":"Answer","text":"Some Samsung year codes repeat, so the decoder may still need model-era context to confirm the decade."}},{"@type":"Question","name":"Where is the Samsung serial number label located?","acceptedAnswer":{"@type":"Answer","text":"It depends on product type. Refrigerators usually place it inside the cabinet, laundry products place it around the opening, and ranges or dishwashers place it on the frame."}},{"@type":"Question","name":"Can this support claim documentation?","acceptedAnswer":{"@type":"Answer","text":"Yes. It is useful for age support and replacement research, especially when the product category is clear and the full serial is available."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://www.decodemyitem.com/samsung-serial-number-lookup#app","name":"Decode My Item Serial Number Decoder","url":"https://www.decodemyitem.com/samsung-serial-number-lookup","description":"Samsung is preselected. Enter the full appliance serial number exactly as printed on the label.","applicationCategory":"UtilityApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/samsung-serial-number-lookup#faq","mainEntity":[{"@type":"Question","name":"How old is my Samsung appliance?","acceptedAnswer":{"@type":"Answer","text":"Use the full serial number from the product tag. The supported Samsung appliance decoder checks the serial-length-specific year and month positions."}},{"@type":"Question","name":"Is this page for Samsung appliances or Samsung TVs?","acceptedAnswer":{"@type":"Answer","text":"This page is for major Samsung appliances. Use the Samsung TV page or Smart Lookup for TV and electronics-only searches."}},{"@type":"Question","name":"Why does the Samsung result still look estimated?","acceptedAnswer":{"@type":"Answer","text":"Some Samsung year codes repeat, so the decoder may still need model-era context to confirm the decade."}},{"@type":"Question","name":"Where is the Samsung serial number label located?","acceptedAnswer":{"@type":"Answer","text":"It depends on product type. Refrigerators usually place it inside the cabinet, laundry products place it around the opening, and ranges or dishwashers place it on the frame."}},{"@type":"Question","name":"Can this support claim documentation?","acceptedAnswer":{"@type":"Answer","text":"Yes. It is useful for age support and replacement research, especially when the product category is clear and the full serial is available."}},{"@type":"Question","name":"Can a Samsung TV serial number show the manufacture date?","acceptedAnswer":{"@type":"Answer","text":"On supported Samsung TV and monitor serial formats, yes: the decoder can read a year and month code using the same style of character-position logic as Samsung appliances. Some newer TV serial formats are not publicly decodable, and the year code repeats every 20 years, so the result is still a candidate rather than a single confirmed date."}},{"@type":"Question","name":"Is the model number the same as the serial number?","acceptedAnswer":{"@type":"Answer","text":"No. The model number identifies the product family and generation. The serial number is the field this decoder reads to estimate the manufacture year and month."}},{"@type":"Question","name":"What should I do if the serial number is unsupported?","acceptedAnswer":{"@type":"Answer","text":"Confirm you copied the full serial exactly as printed, check whether the product is an appliance or a TV/electronics item, and try Smart Lookup with the model number if the standard decoder cannot resolve the format."}}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","@id":"https://www.decodemyitem.com/samsung-serial-number-lookup#howto","name":"Samsung Serial Number Decoder","description":"Choose the matching category and brand. Enter the full serial number exactly as printed on the label. Review the date estimate, notes, and fallback links if the serial does not decode.","step":[{"@type":"HowToStep","position":1,"name":"Step 1","text":"Choose the matching category and brand."},{"@type":"HowToStep","position":2,"name":"Step 2","text":"Enter the full serial number exactly as printed on the label."},{"@type":"HowToStep","position":3,"name":"Step 3","text":"Review the date estimate, notes, and fallback links if the serial does not decode."}]}</script>
 </body>
 </html>

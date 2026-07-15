@@ -17,32 +17,32 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Methodology – Item Assist</title>
-  <meta name="description" content="How Item Assist determines manufacture dates from serial numbers. Rules-based decoding methodology, confidence levels, and reference sources.">
+  <title>Methodology – Decode My Item</title>
+  <meta name="description" content="How Decode My Item determines manufacture dates from serial numbers: source hierarchy, verification, ambiguity handling, correction policy, limitations, and testing.">
       <link rel="canonical" href="https://www.decodemyitem.com/methodology">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Item Assist">
-  <meta property="og:title" content="Methodology – Item Assist">
-  <meta property="og:description" content="How Item Assist determines manufacture dates from serial numbers. Rules-based decoding methodology, confidence levels, and reference sources.">
+  <meta property="og:site_name" content="Decode My Item">
+  <meta property="og:title" content="Methodology – Decode My Item">
+  <meta property="og:description" content="How Decode My Item determines manufacture dates from serial numbers: source hierarchy, verification, ambiguity handling, correction policy, limitations, and testing.">
   <meta property="og:url" content="https://www.decodemyitem.com/methodology">
   <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
-  <meta property="og:image:alt" content="Item Assist preview image">
+  <meta property="og:image:alt" content="Decode My Item preview image">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Methodology – Item Assist">
-  <meta name="twitter:description" content="How Item Assist determines manufacture dates from serial numbers. Rules-based decoding methodology, confidence levels, and reference sources.">
+  <meta name="twitter:title" content="Methodology – Decode My Item">
+  <meta name="twitter:description" content="How Decode My Item determines manufacture dates from serial numbers: source hierarchy, verification, ambiguity handling, correction policy, limitations, and testing.">
   <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "name": "Methodology – Item Assist",
-    "description": "How Item Assist determines manufacture dates from serial numbers. Rules-based decoding methodology, confidence levels, and reference sources.",
+    "name": "Methodology – Decode My Item",
+    "description": "How Decode My Item determines manufacture dates from serial numbers: source hierarchy, verification, ambiguity handling, correction policy, limitations, and testing.",
     "url": "https://www.decodemyitem.com/methodology",
     "publisher": {
       "@type": "Organization",
-      "name": "Item Assist",
+      "name": "Decode My Item",
       "url": "https://www.decodemyitem.com",
       "logo": {
         "@type": "ImageObject",
@@ -140,8 +140,32 @@
   <div class="prose">
 
     <h2>Overview</h2>
-    <p>Serial Number Decoder uses a curated database of manufacturer serial format rules compiled from publicly available technical documentation, service manuals, and trusted industry references. Each supported brand has a defined decoding method that extracts date information embedded within the serial number by the manufacturer.</p>
+    <p>Decode My Item is provided by Item Assist. Decode My Item (decodemyitem.com) is the product name for the serial-number decoder and Smart Lookup tools on this site; Item Assist is the team that builds, tests, and maintains them. You may see either name referenced on this site &mdash; both refer to the same decoder rules and the same verification process.</p>
+    <p>Decode My Item uses a curated database of manufacturer serial format rules compiled from publicly available technical documentation, service manuals, and trusted industry references. Each supported brand has a defined decoding method that extracts date information embedded within the serial number by the manufacturer.</p>
     <p>This is a rules-based system. When a serial number is entered, we apply the brand-specific format rules and return the encoded date without any estimation or inference. The output reflects what the manufacturer encoded in the serial number itself.</p>
+
+    <hr class="divider">
+
+    <h2>How decoder rules are researched</h2>
+    <p>New and updated decoder rules are researched in a consistent order, favoring the most authoritative source available for a given brand:</p>
+    <ol class="step-list">
+      <li><span class="step-num">1</span><span>Manufacturer service documentation, where it is publicly available.</span></li>
+      <li><span class="step-num">2</span><span>Manufacturer support materials, such as published date-code guidance.</span></li>
+      <li><span class="step-num">3</span><span>Established industry technical references for serial and date-code conventions.</span></li>
+      <li><span class="step-num">4</span><span>Field-verified serial examples, including nameplate photos and dated documentation submitted through feedback.</span></li>
+      <li><span class="step-num">5</span><span>Regression-tested corrections, when a reported issue leads to a rule fix.</span></li>
+    </ol>
+    <p>We do not treat other consumer lookup tools as authoritative sources for decoding rules.</p>
+
+    <h2>How rules are verified</h2>
+    <p>Before a decoding rule is published or changed, it is expected to be supported by more than one of the following:</p>
+    <div class="source-chips">
+      <span class="source-chip">Authoritative documentation where available</span>
+      <span class="source-chip">Real, field-verified serial examples</span>
+      <span class="source-chip">Consistency with known industry formats</span>
+      <span class="source-chip">An automated regression test</span>
+    </div>
+    <p>Rule changes are added to our automated regression test suite so that a future update cannot silently reintroduce a previously corrected error.</p>
 
     <h2>How It Works</h2>
     <ol class="step-list">
@@ -169,6 +193,11 @@
       </div>
     </div>
 
+    <h2>How ambiguity is handled</h2>
+    <p>Several manufacturers (GE and Samsung are two current examples) encode the year as a letter or digit on a repeating cycle, so the same code can correctly match more than one real year. When that happens, we show every candidate year the code matches rather than guessing at a single one.</p>
+    <p>A recognized model number can sometimes narrow a repeating result to a single year, either from a known production range or from a specific model record. When the model is not recognized, or when it only narrows the result to a range rather than a single year, the full set of candidates (or the production range) remains the honest result.</p>
+    <p>When a serial does not match any supported format for a brand, the result is unsupported rather than an estimated guess. We would rather tell you a result is unavailable than return a number that looks precise but is not backed by a rule.</p>
+
     <hr class="divider">
 
     <h2>Alternative Lookup (AI-Assisted)</h2>
@@ -190,6 +219,41 @@
       <strong>Important:</strong> Some manufacturers reuse serial year codes on repeating cycles. Always corroborate a Medium or Low confidence result with physical condition, purchase records, or installation documentation before using it in a formal claim determination.
     </div>
 
+    <hr class="divider">
+
+    <h2>Correction policy</h2>
+    <p>If you believe a result is wrong, you can report it using the feedback option on the decoder results panel or the <a href="/feedback">Feedback</a> page. Reported issues are reviewed against the source hierarchy above before a rule is changed.</p>
+    <p>Corrections are added to our automated regression tests before release, so the fix is verified and protected against regressing later. We do not promise a specific turnaround time for reviewing a report. Older redirects and historical page compatibility may remain in place even after a correction ships, so that existing links and bookmarks keep working.</p>
+
+    <h2>Limitations</h2>
+    <p>Decode My Item is a rules-based tool, and it has real limitations worth stating plainly:</p>
+    <ul>
+      <li>A partial, worn, or incomplete label can be missing the exact characters a rule depends on.</li>
+      <li>A transcribed or retyped serial number can introduce errors (a misread 0/O, 1/I, or 8/B, for example) that change the result.</li>
+      <li>Some modern electronics use randomized or unpublished serial formats that are not decodable with a documented rule.</li>
+      <li>Some brands do not have a publicly documented date-code rule at all, and are not supported for that reason rather than by oversight.</li>
+      <li>A product line's introduction year is not the same as an individual unit's manufacture date &mdash; a model can stay in production for several years.</li>
+      <li>Every result on this site is either an exact rule-based reading, an estimate, or a list of possible years. Treat estimates and possible-year lists as ranges, not confirmed dates.</li>
+    </ul>
+
+    <h2>Testing and change control</h2>
+    <p>Decoder logic is covered by an automated regression test suite that runs before changes are published, so existing brand rules cannot be silently broken by an unrelated update. Builds are checked for consistency so the same input produces the same output every time. We also run link and route audits to catch broken internal links, and browser checks across common screen sizes before a change goes live.</p>
+
+  </div>
+</section>
+
+<!-- ─── RELATED TOOLS ─── -->
+<section class="section">
+  <div class="prose">
+    <h2>Related tools and feedback</h2>
+    <p>
+      <a href="/decoder-tool">Serial Number Decoder</a> &middot;
+      <a href="/smart-lookup">Smart Lookup</a> &middot;
+      <a href="/brands">Brands</a> &middot;
+      <a href="/serial-number-location-guide">Serial Number Location Guide</a> &middot;
+      <a href="/about">About</a> &middot;
+      <a href="/feedback">Feedback</a>
+    </p>
   </div>
 </section>
 

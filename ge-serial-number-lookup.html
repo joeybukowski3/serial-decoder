@@ -22,12 +22,12 @@
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Decode My Item">
-  <meta property="og:title" content="GE Serial Number Decoder | Item Assist">
+  <meta property="og:title" content="GE Serial Number Decoder | Decode My Item">
   <meta property="og:description" content="Decode GE serial numbers, estimate GE appliance age, and use the supported GE month/year letter pattern for refrigerators, dishwashers, laundry, ranges, and ovens.">
   <meta property="og:url" content="https://www.decodemyitem.com/ge-serial-number-lookup">
   <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="GE Serial Number Decoder | Item Assist">
+  <meta name="twitter:title" content="GE Serial Number Decoder | Decode My Item">
   <meta name="twitter:description" content="Decode GE serial numbers, estimate GE appliance age, and use the supported GE month/year letter pattern for refrigerators, dishwashers, laundry, ranges, and ovens.">
   <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <link rel="stylesheet" href="shared.css">
@@ -86,6 +86,7 @@
   </li>
   <li><a href="/contact">Contact</a></li>
   <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
+
 </ul>
 </nav>
 
@@ -231,7 +232,7 @@
             <details class="determination-details">
               <summary>How this was determined</summary>
               <div class="determination-body" id="serialDeterminationBody">
-                We use the brand-specific serial rules already supported in Item Assist. When a brand repeats codes across decades, the result stays estimated until model era or installation context confirms the right cycle.
+                We use the brand-specific serial rules already supported in Decode My Item. When a brand repeats codes across decades, the result stays estimated until model era or installation context confirms the right cycle.
               </div>
             </details>
           </div>
@@ -245,7 +246,45 @@
       </div>
     </div>
 
-    
+    <section class="section" id="why-multiple-years">
+      <div class="seo-copy-wrap">
+        <h2>Why does GE show multiple possible years?</h2>
+        <p>GE-family serial numbers (including Cafe, GE Profile, GE Monogram, Hotpoint, and RCA appliances) use a 12-year repeating letter cycle for the year code. Because the same letter comes back around every 12 years, a single opening letter can correctly match several different years, and the decoder is designed to show all of them rather than guess at just one.</p><p>The model number, product styling, documentation, or install-date context can narrow a repeating GE result to a single year when that evidence is available. Without it, every candidate year the letter maps to is equally valid from the serial alone, and the honest result is the full list rather than a single picked year.</p>
+      </div>
+    </section>
+    <section class="section" id="ge-worked-example">
+      <div class="seo-copy-wrap">
+        <h2>Worked example: serial AA182127G with model GTWN8250D0WS</h2>
+        <p>This example shows what the current decoder logic determines from the serial alone, and what it does not.</p>
+        <div class="table-wrap">
+          <table class="format-table">
+            <thead>
+              <tr>
+                <th>Label Field</th>
+                <th>What It Usually Means</th>
+                <th>Why It Matters</th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td>Character 1 of AA182127G</td>
+              <td>Month code "A"</td>
+              <td>Resolves to January.</td>
+            </tr>
+            <tr>
+              <td>Character 2 of AA182127G</td>
+              <td>Year code "A"</td>
+              <td>The current decoder returns candidate years 1977, 1989, 2001, 2013, and 2025 &mdash; every year this letter has matched across the 12-year cycle so far.</td>
+            </tr>
+            <tr>
+              <td>Model GTWN8250D0WS</td>
+              <td>Not currently in this site's model-evidence data</td>
+              <td>The model number cannot narrow the candidate years for this example today. What additional evidence would help: a documented model-year introduction date, a dated manual or nameplate photo, or another independently known install date.</td>
+            </tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
     <!-- ═══ CONTENT SECTIONS ═══ -->
     <div class="bp-content-wrap">
@@ -341,6 +380,26 @@
         <code class="ex-serial">Opening letters matter most</code>
         <p class="ex-note">The serial sequence after the first two letters is usually production tracking rather than the core age signal on GE-family appliances.</p>
       </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Repeating-cycle example</span>
+        </div>
+        <code class="ex-serial">AA182127G</code>
+        <p class="ex-note">Month code A = January; year code A = 1977, 1989, 2001, 2013, or 2025. The serial alone cannot pick one of the five; see the worked example above.</p>
+      </div>
+      <div class="ex-terminal">
+        <div class="ex-terminal-bar">
+          <span class="ex-dot ex-dot-red"></span>
+          <span class="ex-dot ex-dot-amber"></span>
+          <span class="ex-dot ex-dot-green"></span>
+          <span class="ex-eyebrow">Model-assisted narrowing example</span>
+        </div>
+        <code class="ex-serial">RZ825479</code>
+        <p class="ex-note">Serial alone: month code R = August; year code Z = 1988, 2000, 2012, or 2024. Paired with model GTH18GBCDCRBB (a GE GTH top-mount refrigerator model in this site's model data, associated with 2011-2013), the result narrows to 2012.</p>
+      </div>
         </div>
       </div>
 
@@ -405,6 +464,14 @@
         <span class="material-symbols-outlined bp-check-icon">check_circle</span>
         <span>Capture the full serial even if the main age clue is at the front of the code.</span>
       </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>If the decoder shows several candidate years, that reflects the real repeating GE cycle rather than an error.</span>
+      </li>
+      <li class="bp-check-item">
+        <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+        <span>A model number that is not yet in this site's model data cannot narrow the candidates on its own.</span>
+      </li>
           </ul>
         </div>
         <div class="bp-section-card">
@@ -449,6 +516,34 @@
         </summary>
         <div class="bp-faq-body"><p>Yes. Just note when the decade is still estimated because the GE year code repeats across multiple cycles.</p></div>
       </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>What manufacture date does a GE serial number show?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>A GE serial resolves to a month from the first character and one or more candidate years from the second character. When the year letter has repeated more than once, more than one year can be correct.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Why do GE serial year codes repeat?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>GE-family serials use a 12-year repeating letter cycle. The same letter reappears every 12 years, so it can validly represent several different years rather than exactly one.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Can the model number narrow multiple GE candidate years?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Sometimes. If the model is recognized in this site's model data with a known production window, the candidates can narrow to a single year. If the model is not recognized, the full list of candidate years remains the honest result.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>What if my GE serial number is unsupported?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Confirm the full serial was entered exactly as printed, check that the opening two characters are letters rather than digits, and try Smart Lookup if the format still does not resolve.</p></div>
+      </details>
           </div>
         </div>
       </div>
@@ -460,7 +555,7 @@
           <h2>Related Decoder Pages</h2>
         </div>
         <div class="bp-pills-wrap">
-          <a href="/how-old-is-my-appliance" class="bp-pill">How Old Is My Appliance?</a><a href="/refrigerator-serial-number" class="bp-pill">Refrigerator Serial Number Lookup</a><a href="/dishwasher-serial-number" class="bp-pill">Dishwasher Serial Number Lookup</a><a href="/range-oven-serial-number" class="bp-pill">Range & Oven Serial Number Lookup</a><a href="/whirlpool-serial-number-lookup" class="bp-pill">Whirlpool</a><a href="/frigidaire-serial-number-lookup" class="bp-pill">Frigidaire</a>
+          <a href="/how-old-is-my-appliance" class="bp-pill">How Old Is My Appliance?</a><a href="/refrigerator-serial-number" class="bp-pill">Refrigerator Serial Number Lookup</a><a href="/whirlpool-serial-number-lookup" class="bp-pill">Whirlpool</a><a href="/smart-lookup" class="bp-pill">Smart Lookup</a><a href="/serial-number-location-guide" class="bp-pill">Serial Number Location Guide</a><a href="/methodology" class="bp-pill">Methodology</a>
         </div>
       </div>
 
@@ -632,7 +727,7 @@
       <a href="/privacy-policy">Privacy Policy</a>
     </div>
   </div>
-</footer>
+  </footer>
 
   <script>
     function selectCatAndShowDecoder(cat, btn) {
@@ -676,10 +771,10 @@
   <script defer src="script.js"></script>
   <script defer src="/serial-refinement-controller.js"></script>
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/ge-serial-number-lookup#webpage","name":"GE Serial Number Decoder","description":"Decode GE serial numbers, estimate GE appliance age, and use the supported GE month/year letter pattern for refrigerators, dishwashers, laundry, ranges, and ovens.","url":"https://www.decodemyitem.com/ge-serial-number-lookup","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Item Assist","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"GE Serial Number Decoder"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/ge-serial-number-lookup#webpage","name":"GE Serial Number Decoder","description":"Decode GE serial numbers, estimate GE appliance age, and use the supported GE month/year letter pattern for refrigerators, dishwashers, laundry, ranges, and ovens.","url":"https://www.decodemyitem.com/ge-serial-number-lookup","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Decode My Item","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"GE Serial Number Decoder"}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","@id":"https://www.decodemyitem.com/ge-serial-number-lookup#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.decodemyitem.com"},{"@type":"ListItem","position":2,"name":"GE Serial Number Decoder","item":"https://www.decodemyitem.com/ge-serial-number-lookup"}]}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://www.decodemyitem.com/ge-serial-number-lookup#app","name":"Item Assist Serial Number Decoder","url":"https://www.decodemyitem.com/ge-serial-number-lookup","description":"GE is preselected. Enter the full GE serial number exactly as printed on the label.","applicationCategory":"UtilityApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/ge-serial-number-lookup#faq","mainEntity":[{"@type":"Question","name":"How old is my GE appliance?","acceptedAnswer":{"@type":"Answer","text":"Use the serial number from the label. GE usually stores the age signal in the opening month and year letters rather than the model number."}},{"@type":"Question","name":"Can the GE model number tell me the age?","acceptedAnswer":{"@type":"Answer","text":"Not reliably by itself. It is better for identifying the family and confirming the likely decade when the serial year letter repeats."}},{"@type":"Question","name":"Why does the GE result still look estimated?","acceptedAnswer":{"@type":"Answer","text":"GE year letters repeat, so the decoder may still need model-family or installation-era context to confirm the decade."}},{"@type":"Question","name":"Where is the GE serial number label located?","acceptedAnswer":{"@type":"Answer","text":"Most GE appliances place it on an interior frame, cabinet wall, or opening edge depending on product type."}},{"@type":"Question","name":"Can this support claim documentation?","acceptedAnswer":{"@type":"Answer","text":"Yes. Just note when the decade is still estimated because the GE year code repeats across multiple cycles."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://www.decodemyitem.com/ge-serial-number-lookup#app","name":"Decode My Item Serial Number Decoder","url":"https://www.decodemyitem.com/ge-serial-number-lookup","description":"GE is preselected. Enter the full GE serial number exactly as printed on the label.","applicationCategory":"UtilityApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/ge-serial-number-lookup#faq","mainEntity":[{"@type":"Question","name":"How old is my GE appliance?","acceptedAnswer":{"@type":"Answer","text":"Use the serial number from the label. GE usually stores the age signal in the opening month and year letters rather than the model number."}},{"@type":"Question","name":"Can the GE model number tell me the age?","acceptedAnswer":{"@type":"Answer","text":"Not reliably by itself. It is better for identifying the family and confirming the likely decade when the serial year letter repeats."}},{"@type":"Question","name":"Why does the GE result still look estimated?","acceptedAnswer":{"@type":"Answer","text":"GE year letters repeat, so the decoder may still need model-family or installation-era context to confirm the decade."}},{"@type":"Question","name":"Where is the GE serial number label located?","acceptedAnswer":{"@type":"Answer","text":"Most GE appliances place it on an interior frame, cabinet wall, or opening edge depending on product type."}},{"@type":"Question","name":"Can this support claim documentation?","acceptedAnswer":{"@type":"Answer","text":"Yes. Just note when the decade is still estimated because the GE year code repeats across multiple cycles."}},{"@type":"Question","name":"What manufacture date does a GE serial number show?","acceptedAnswer":{"@type":"Answer","text":"A GE serial resolves to a month from the first character and one or more candidate years from the second character. When the year letter has repeated more than once, more than one year can be correct."}},{"@type":"Question","name":"Why do GE serial year codes repeat?","acceptedAnswer":{"@type":"Answer","text":"GE-family serials use a 12-year repeating letter cycle. The same letter reappears every 12 years, so it can validly represent several different years rather than exactly one."}},{"@type":"Question","name":"Can the model number narrow multiple GE candidate years?","acceptedAnswer":{"@type":"Answer","text":"Sometimes. If the model is recognized in this site's model data with a known production window, the candidates can narrow to a single year. If the model is not recognized, the full list of candidate years remains the honest result."}},{"@type":"Question","name":"What if my GE serial number is unsupported?","acceptedAnswer":{"@type":"Answer","text":"Confirm the full serial was entered exactly as printed, check that the opening two characters are letters rather than digits, and try Smart Lookup if the format still does not resolve."}}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","@id":"https://www.decodemyitem.com/ge-serial-number-lookup#howto","name":"GE Serial Number Decoder","description":"Choose the matching category and brand. Enter the full serial number exactly as printed on the label. Review the date estimate, notes, and fallback links if the serial does not decode.","step":[{"@type":"HowToStep","position":1,"name":"Step 1","text":"Choose the matching category and brand."},{"@type":"HowToStep","position":2,"name":"Step 2","text":"Enter the full serial number exactly as printed on the label."},{"@type":"HowToStep","position":3,"name":"Step 3","text":"Review the date estimate, notes, and fallback links if the serial does not decode."}]}</script>
 </body>
 </html>

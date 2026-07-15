@@ -15,10 +15,42 @@ const navLinks = `
   <li><a href="/">Home</a></li>
   <li><a href="/decoder-tool">Serial Number Decoder</a></li>
   <li><a href="/smart-lookup">Smart Lookup</a></li>
+  <li><a href="/large-loss-decoder">Large Loss Decoder</a></li>
   <li><a href="/assistant">AI Assistant</a></li>
-  <li><a href="/methodology">Methodology</a></li>
+  <li class="nav-dropdown-item">
+    <button class="nav-dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true">
+      Resources <span class="nav-chevron" aria-hidden="true">&#9662;</span>
+    </button>
+    <div class="nav-dropdown-panel" role="menu">
+      <div class="nav-dropdown-col">
+        <p class="nav-dropdown-label">Age Research</p>
+        <a href="/how-old-is-my-appliance" role="menuitem">How Old Is My Appliance?</a>
+        <a href="/how-old-is-my-hvac" role="menuitem">How Old Is My HVAC?</a>
+        <a href="/how-old-is-my-plumbing" role="menuitem">How Old Is My Water Heater?</a>
+        <a href="/how-old-is-my-electronics" role="menuitem">How Old Is My Electronics?</a>
+      </div>
+      <div class="nav-dropdown-col">
+        <p class="nav-dropdown-label">Item History Guides</p>
+        <a href="/item-history-guides" role="menuitem" class="nav-dropdown-featured">All History Guides &#8594;</a>
+        <a href="/electrical-service-panel-history" role="menuitem">Electrical Panels</a>
+        <a href="/electrical-wiring-history" role="menuitem">Electrical Wiring</a>
+        <a href="/hvac-system-history" role="menuitem">HVAC Systems</a>
+        <a href="/water-heater-history" role="menuitem">Water Heaters</a>
+        <a href="/major-appliances-history" role="menuitem">Major Appliances</a>
+        <a href="/tv-history" role="menuitem">TVs</a>
+        <a href="/computer-history" role="menuitem">Computers</a>
+      </div>
+      <div class="nav-dropdown-col">
+        <p class="nav-dropdown-label">Reference</p>
+        <a href="/serial-number-location-guide" role="menuitem">Serial Number Locations</a>
+        <a href="/appliance-age-for-insurance-and-replacement" role="menuitem">Appliance Age for Insurance</a>
+        <a href="/how-to-read-serial-number" role="menuitem">How to Read a Serial Number</a>
+        <a href="/methodology" role="menuitem">Methodology</a>
+        <a href="/about" role="menuitem">About</a>
+      </div>
+    </div>
+  </li>
   <li><a href="/contact">Contact</a></li>
-  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
   <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
 `;
 
@@ -98,12 +130,22 @@ function pageSiteLabel(page) {
 }
 
 function pageHtmlTitle(page) {
+  if (page.htmlTitleOverride) return page.htmlTitleOverride;
   const siteLabel = pageSiteLabel(page);
   return page.title.includes('Item Assist') ? page.title.replace('Item Assist', siteLabel) : `${page.title} | ${siteLabel}`;
 }
 
+function pageMetaDescription(page) {
+  return page.metaDescriptionOverride || page.description;
+}
+
 function pageSocialTitle(page) {
-  return page.title.includes('Item Assist') ? page.title.replace('Item Assist', 'Decode My Item') : `${page.title} | Decode My Item`;
+  const baseTitle = page.socialTitleOverride || page.title;
+  return baseTitle.includes('Item Assist') ? baseTitle.replace('Item Assist', 'Decode My Item') : `${baseTitle} | Decode My Item`;
+}
+
+function pageSocialDescription(page) {
+  return page.socialDescriptionOverride || page.description;
 }
 
 function breadcrumbItems(items) {
@@ -161,8 +203,8 @@ function renderWebPageSchema(page, url) {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     '@id': `${url}#webpage`,
-    name: page.title,
-    description: page.description,
+    name: page.socialTitleOverride || page.title,
+    description: pageSocialDescription(page),
     url,
     isPartOf: {
       '@type': 'WebSite',
@@ -378,10 +420,10 @@ function renderDecoderModule(page, opts = {}) {
               <div class="decoder-card-shell">
                 <div class="search-box">
                   <div class="search-tabs">
-                    <button class="search-tab cat-tab${page.category === 'appliances' ? ' active' : ''}" data-cat="appliances" onclick="selectCatAndShowDecoder('appliances', this)">Appliances</button>
-                    <button class="search-tab cat-tab${page.category === 'waterHeaters' ? ' active' : ''}" data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">Water Heaters</button>
-                    <button class="search-tab cat-tab${page.category === 'hvac' ? ' active' : ''}" data-cat="hvac" onclick="selectCatAndShowDecoder('hvac', this)">HVAC</button>
-                    <button class="search-tab cat-tab${page.category === 'electronics' ? ' active' : ''}" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
+                    <button class="search-tab cat-tab${page.category === 'appliances' ? ' active' : ''}" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
+                    <button class="search-tab cat-tab${page.category === 'waterHeaters' ? ' active' : ''}" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
+                    <button class="search-tab cat-tab${page.category === 'hvac' ? ' active' : ''}" data-cat="hvac" onclick="selectCategory('hvac', this)">HVAC</button>
+                    <button class="search-tab cat-tab${page.category === 'electronics' ? ' active' : ''}" data-cat="electronics" onclick="selectCategory('electronics', this)">Electronics</button>
                   </div>
 
                   <div class="search-panel" id="panel-decoder">
@@ -634,19 +676,19 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
   <title>${pageHtmlTitle(page)}</title>
-  <meta name="description" content="${page.description}">
+  <meta name="description" content="${pageMetaDescription(page)}">
   <link rel="canonical" href="${url}">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="${pageSiteLabel(page)}">
   <meta property="og:title" content="${pageSocialTitle(page)}">
-  <meta property="og:description" content="${page.description}">
+  <meta property="og:description" content="${pageSocialDescription(page)}">
   <meta property="og:url" content="${url}">
   <meta property="og:image" content="${siteUrl}/assets/item-assist-banner.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${pageSocialTitle(page)}">
-  <meta name="twitter:description" content="${page.description}">
+  <meta name="twitter:description" content="${pageSocialDescription(page)}">
   <meta name="twitter:image" content="${siteUrl}/assets/item-assist-banner.png">
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="seo-landing.css">
@@ -885,7 +927,6 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
       <ul>
         <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
         <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
-        <li><a href="/where-is-my-serial-number">Where Is My Serial Number?</a></li>
         <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
         <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
         <li><a href="/methodology">Methodology</a></li>
@@ -1116,19 +1157,19 @@ function renderPage(page) {
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
   <title>${pageHtmlTitle(page)}</title>
-  <meta name="description" content="${page.description}">
+  <meta name="description" content="${pageMetaDescription(page)}">
   <link rel="canonical" href="${url}">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="${pageSiteLabel(page)}">
   <meta property="og:title" content="${pageSocialTitle(page)}">
-  <meta property="og:description" content="${page.description}">
+  <meta property="og:description" content="${pageSocialDescription(page)}">
   <meta property="og:url" content="${url}">
   <meta property="og:image" content="${siteUrl}/assets/item-assist-banner.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${pageSocialTitle(page)}">
-  <meta name="twitter:description" content="${page.description}">
+  <meta name="twitter:description" content="${pageSocialDescription(page)}">
   <meta name="twitter:image" content="${siteUrl}/assets/item-assist-banner.png">
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="seo-landing.css">
@@ -1138,17 +1179,16 @@ function renderPage(page) {
 
   <!-- ═══ NAV ═══ -->
   <nav>
-    <a href="/" class="logo" aria-label="Decode My Item home">
-      <span class="material-symbols-outlined logo-icon">qr_code_scanner</span>
-      <div>
-        <div class="logo-text">Decode My <span>Item</span></div>
-        <div class="logo-sub">Decode - Research - Automate</div>
-      </div>
-    </a>
-    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span><span></span><span></span><span></span></button>
-    <ul>${navLinks}
-    </ul>
-  </nav>
+  <a href="/" class="logo" aria-label="Decode My Item home">
+    <span class="material-symbols-outlined" style="color:#44e5c2;font-size:26px;flex-shrink:0;line-height:1;">qr_code_scanner</span>
+    <div>
+      <div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Decode - Research - Automate</div>
+    </div>
+  </a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+  <ul>${navLinks}
+</ul>
+</nav>
 
   <main>
 
@@ -1202,10 +1242,10 @@ function renderPage(page) {
               <div class="decoder-card-shell">
                 <div class="search-box">
                   <div class="search-tabs">
-                    <button class="search-tab cat-tab${page.category === 'appliances' ? ' active' : ''}" data-cat="appliances" onclick="selectCatAndShowDecoder('appliances', this)">Appliances</button>
-                    <button class="search-tab cat-tab${page.category === 'waterHeaters' ? ' active' : ''}" data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">Water Heaters</button>
-                    <button class="search-tab cat-tab${page.category === 'hvac' ? ' active' : ''}" data-cat="hvac" onclick="selectCatAndShowDecoder('hvac', this)">HVAC</button>
-                    <button class="search-tab cat-tab${page.category === 'electronics' ? ' active' : ''}" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
+                    <button class="search-tab cat-tab${page.category === 'appliances' ? ' active' : ''}" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
+                    <button class="search-tab cat-tab${page.category === 'waterHeaters' ? ' active' : ''}" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
+                    <button class="search-tab cat-tab${page.category === 'hvac' ? ' active' : ''}" data-cat="hvac" onclick="selectCategory('hvac', this)">HVAC</button>
+                    <button class="search-tab cat-tab${page.category === 'electronics' ? ' active' : ''}" data-cat="electronics" onclick="selectCategory('electronics', this)">Electronics</button>
                   </div>
                   <div class="search-panel" id="panel-decoder">
                     <!-- Brand Row -->
@@ -1300,8 +1340,7 @@ function renderPage(page) {
         </div>
       </div>
     </div>
-
-    ${renderExtraSections(page.preGridSections)}
+${renderExtraSections(page.preGridSections)}
 
     <!-- ═══ CONTENT SECTIONS ═══ -->
     <div class="bp-content-wrap">
@@ -1453,60 +1492,83 @@ function renderPage(page) {
 
   <!-- ═══ FOOTER ═══ -->
   <footer class="footer-sitemap">
-    <div class="footer-sitemap-grid">
-      <div class="footer-col">
-        <p class="footer-col-heading">Tools</p>
-        <ul>
-          <li><a href="/">Home</a></li>
-          <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-          <li><a href="/smart-lookup">Smart Lookup</a></li>
-          <li><a href="/assistant">AI Assistant</a></li>
-          <li><a href="/brands">All Brands</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <p class="footer-col-heading">By Appliance</p>
-        <ul>
-          <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
-          <li><a href="/washer-serial-number">Washing Machines</a></li>
-          <li><a href="/dryer-serial-number">Dryers</a></li>
-          <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
-          <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
-          <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
-          <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <p class="footer-col-heading">By Brand</p>
-        <ul>
-          <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
-          <li><a href="/ge-serial-number-lookup">GE</a></li>
-          <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
-          <li><a href="/lg-serial-number-lookup">LG</a></li>
-          <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
-          <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
-          <li><a href="/trane-serial-number-lookup">Trane</a></li>
-          <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
-          <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
-          <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
-          <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <p class="footer-col-heading">Resources</p>
-        <ul>
-          ${footerResources.map(([href, label]) => `<li><a href="${href}">${label}</a></li>`).join('\n          ')}
-        </ul>
-      </div>
+  <div class="footer-sitemap-grid">
+
+    <div class="footer-col">
+      <p class="footer-col-heading">Tools</p>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+        <li><a href="/smart-lookup">Smart Lookup</a></li>
+        <li><a href="/large-loss-decoder">Large Loss Decoder</a></li>
+        <li><a href="/assistant">AI Assistant</a></li>
+        <li><a href="/brands">All Brands</a></li>
+      </ul>
     </div>
-    <div class="footer-bottom">
-      <span class="footer-bottom-copy">&copy; 2026 Decode My Item &middot; Database verified February 2026</span>
-      <div class="footer-bottom-links">
-        <a href="/contact">Contact</a>
-        <a href="/security">Security &amp; Data</a>
-        <a href="/privacy-policy">Privacy Policy</a>
-      </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">By Appliance</p>
+      <ul>
+        <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
+        <li><a href="/washer-serial-number">Washing Machines</a></li>
+        <li><a href="/dryer-serial-number">Dryers</a></li>
+        <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
+        <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
+        <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
+        <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
+      </ul>
     </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">By Brand</p>
+      <ul>
+        <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
+        <li><a href="/ge-serial-number-lookup">GE</a></li>
+        <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
+        <li><a href="/lg-serial-number-lookup">LG</a></li>
+        <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
+        <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
+        <li><a href="/trane-serial-number-lookup">Trane</a></li>
+        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+        <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
+        <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
+        <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">Item History Guides</p>
+      <ul>
+        <li><a href="/item-history-guides">All History Guides</a></li>
+        <li><a href="/electrical-service-panel-history">Electrical Panels</a></li>
+        <li><a href="/electrical-wiring-history">Electrical Wiring</a></li>
+        <li><a href="/hvac-system-history">HVAC Systems</a></li>
+        <li><a href="/water-heater-history">Water Heaters</a></li>
+        <li><a href="/major-appliances-history">Major Appliances</a></li>
+        <li><a href="/tv-history">TVs</a></li>
+        <li><a href="/computer-history">Computers</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">Resources</p>
+      <ul>
+        ${footerResources.map(([href, label]) => `<li><a href="${href}">${label}</a></li>`).join('\n        ')}
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <span class="footer-bottom-copy">
+      &copy; 2026 Decode My Item &middot; Database verified February 2026
+    </span>
+    <div class="footer-bottom-links">
+      <a href="/contact">Contact</a>
+      <a href="/security">Security &amp; Data</a>
+      <a href="/privacy-policy">Privacy Policy</a>
+    </div>
+  </div>
   </footer>
 
   <script>
@@ -1536,12 +1598,12 @@ function renderPage(page) {
       });
     });
   </script>
-  <script defer src="${decoderBundleSrc(page.category)}"></script>
+  <script defer src="decoder-data.js"></script>
   <script defer src="lkq-engine.js"></script>
   <script defer src="analytics.js"></script>
   <script defer src="smart-lookup-bundle.js"></script>
   <script defer src="script.js"></script>
-  <script defer src="voice-input.js"></script>
+  <script defer src="/serial-refinement-controller.js"></script>
   ${page.pageScript ? `<script>${page.pageScript}</script>` : ''}
   ${schema.map(scriptJson).join('\n  ')}
 </body>
@@ -1553,7 +1615,7 @@ function renderPage(page) {
 
 function baseLinkGroups() {
   return [
-    { title: 'Appliance Age Lookup', links: [['how-old-is-my-appliance', 'How Old Is My Appliance?'], ['where-is-my-serial-number', 'Where Is My Serial Number?'], ['appliance-age-for-insurance-and-replacement', 'Insurance, Repair & Replacement'], ['find-model-serial-number', 'Find Model & Serial Labels']] },
+    { title: 'Appliance Age Lookup', links: [['how-old-is-my-appliance', 'How Old Is My Appliance?'], ['serial-number-location-guide', 'Where Is My Serial Number?'], ['appliance-age-for-insurance-and-replacement', 'Insurance, Repair & Replacement'], ['find-model-serial-number', 'Find Model & Serial Labels']] },
     { title: 'Popular Appliance Brands', links: applianceBrandLinks.slice(0, 8) },
     { title: 'Appliance Type Lookups', links: applianceTypeLinks.slice(1, 6) },
     { title: 'HVAC Age Lookup', links: hvacLinks },
@@ -1566,6 +1628,8 @@ const pages = [
     slug: 'appliance-age-for-insurance-and-replacement',
     title: 'Why Appliance Age Matters for Insurance, Repair & Replacement',
     description: 'Learn why appliance age verification matters for insurance claims, repair decisions, replacement research, depreciation, and technician documentation.',
+    htmlTitleOverride: 'Appliance Age for Insurance Claims & Replacement | Decode My Item',
+    metaDescriptionOverride: 'Learn how to determine appliance age using serial numbers for insurance claims, depreciation calculations, and replacement decisions. Works for all major appliance brands.',
     h1: 'Why Appliance Age Matters for Insurance, Repair & Replacement',
     badge: 'Documentation workflow guide',
     category: 'appliances',
@@ -1613,7 +1677,7 @@ const pages = [
     locations: [
       { title: 'Major appliances', items: ['<a href="/refrigerator-serial-number">Refrigerators</a>', '<a href="/washer-serial-number">Washers</a>', '<a href="/dryer-serial-number">Dryers</a>', '<a href="/dishwasher-serial-number">Dishwashers</a>', '<a href="/range-oven-serial-number">Ranges & ovens</a>'] },
       { title: 'HVAC equipment', items: ['<a href="/carrier-serial-number-lookup">Carrier</a>', '<a href="/trane-serial-number-lookup">Trane</a>', '<a href="/rheem-serial-number-lookup">Rheem</a>', '<a href="/goodman-serial-number-lookup">Goodman</a>', '<a href="/hvac-age-by-serial-number">HVAC age lookup</a>'] },
-      { title: 'Support and replacement workflow', items: ['<a href="/how-old-is-my-appliance">How old is my appliance?</a>', '<a href="/where-is-my-serial-number">Where is my serial number?</a>', '<a href="/replacement-lookup">Replacement lookup</a>', 'Use Smart Lookup when the label is partial or missing'] }
+      { title: 'Support and replacement workflow', items: ['<a href="/how-old-is-my-appliance">How old is my appliance?</a>', '<a href="/serial-number-location-guide">Where is my serial number?</a>', '<a href="/replacement-lookup">Replacement lookup</a>', 'Use Smart Lookup when the label is partial or missing'] }
     ],
     problemSectionTitle: 'Appliance age vs condition',
     problems: [
@@ -1978,6 +2042,8 @@ const pages = [
     slug: 'whirlpool-serial-number-lookup',
     title: 'Whirlpool Serial Number Decoder',
     description: 'Decode Whirlpool serial numbers, estimate Whirlpool appliance age, and use supported year/week patterns for refrigerators, washers, dryers, dishwashers, and ranges.',
+    htmlTitleOverride: 'Whirlpool Serial Number Lookup — Manufacture Date & Age | Decode My Item',
+    metaDescriptionOverride: 'Decode your Whirlpool serial number to find the exact manufacture date and appliance age. Supports refrigerators, washers, dryers, dishwashers, and ranges. Enter serial number below.',
     h1: 'Whirlpool Serial Number Decoder',
     badge: 'Brand decoder',
     category: 'appliances',
@@ -2031,12 +2097,25 @@ const pages = [
       ['maytag-serial-number-lookup', 'Maytag'],
       ['kenmore-serial-number-lookup', 'Kenmore']
     ],
-    linkGroups: baseLinkGroups()
+    linkGroups: (() => {
+      const groups = baseLinkGroups();
+      groups.splice(2, 0, {
+        title: 'More Whirlpool Lookups',
+        links: [
+          ['whirlpool-refrigerator-serial-number-lookup', 'Whirlpool Refrigerator Serials'],
+          ['whirlpool-dishwasher-serial-number-lookup', 'Whirlpool Dishwasher Serials'],
+          ['whirlpool-model-number-lookup', 'Whirlpool Model Number Lookup']
+        ]
+      });
+      return groups;
+    })()
   },
   {
     slug: 'ge-serial-number-lookup',
     title: 'GE Serial Number Decoder',
     description: 'Decode GE serial numbers, estimate GE appliance age, and use the supported GE month/year letter pattern for refrigerators, dishwashers, laundry, ranges, and ovens.',
+    htmlTitleOverride: 'GE Serial Number Lookup — Manufacture Date Decoder | Decode My Item',
+    metaDescriptionOverride: 'Decode GE serial numbers to find manufacture date and appliance age. Supports GE refrigerators, dishwashers, ranges, washers, and ovens. Also works for GE Profile, Monogram, and Cafe.',
     h1: 'GE Serial Number Decoder',
     badge: 'Brand decoder',
     category: 'appliances',
@@ -2049,6 +2128,28 @@ const pages = [
     decodeSectionBody: 'Many GE-family appliances use the first character for month and the second character for year. That makes the beginning of the serial more important than the trailing sequence digits when you are checking age.',
     modelSectionTitle: 'What the model number can tell you',
     modelSectionBody: 'The model number helps confirm the appliance family, approximate generation, and likely decade. That matters because GE year codes repeat, so a direct serial result may still need product-era context.',
+    preGridSections: [
+      {
+        type: 'copy-block',
+        id: 'why-multiple-years',
+        title: 'Why does GE show multiple possible years?',
+        body: [
+          'GE-family serial numbers (including Cafe, GE Profile, GE Monogram, Hotpoint, and RCA appliances) use a 12-year repeating letter cycle for the year code. Because the same letter comes back around every 12 years, a single opening letter can correctly match several different years, and the decoder is designed to show all of them rather than guess at just one.',
+          'The model number, product styling, documentation, or install-date context can narrow a repeating GE result to a single year when that evidence is available. Without it, every candidate year the letter maps to is equally valid from the serial alone, and the honest result is the full list rather than a single picked year.'
+        ]
+      },
+      {
+        type: 'table',
+        id: 'ge-worked-example',
+        title: 'Worked example: serial AA182127G with model GTWN8250D0WS',
+        intro: 'This example shows what the current decoder logic determines from the serial alone, and what it does not.',
+        rows: [
+          { field: 'Character 1 of AA182127G', meaning: 'Month code "A"', why: 'Resolves to January.' },
+          { field: 'Character 2 of AA182127G', meaning: 'Year code "A"', why: 'The current decoder returns candidate years 1977, 1989, 2001, 2013, and 2025 &mdash; every year this letter has matched across the 12-year cycle so far.' },
+          { field: 'Model GTWN8250D0WS', meaning: 'Not currently in this site\'s model-evidence data', why: 'The model number cannot narrow the candidate years for this example today. What additional evidence would help: a documented model-year introduction date, a dated manual or nameplate photo, or another independently known install date.' }
+        ]
+      }
+    ],
     formatSectionTitle: 'Common GE serial number formats',
     formats: [
       { label: 'GE refrigerator format', pattern: 'Month letter in character 1; year letter in character 2', meaning: 'The first two letters usually carry the useful date logic.', confidence: 'Estimated decade. GE year letters repeat.' },
@@ -2059,7 +2160,9 @@ const pages = [
     examples: [
       { label: 'Illustrative GE pattern', serial: 'AZ123456', note: 'Illustrative GE-family pattern. The supported decode path treats the first letter as month and the second letter as year.' },
       { label: 'Cycle warning', serial: '...Z...', note: 'GE year letters repeat, so the decoder may still leave the decade estimated until model era or install context confirms it.' },
-      { label: 'Appliance-family reminder', serial: 'Opening letters matter most', note: 'The serial sequence after the first two letters is usually production tracking rather than the core age signal on GE-family appliances.' }
+      { label: 'Appliance-family reminder', serial: 'Opening letters matter most', note: 'The serial sequence after the first two letters is usually production tracking rather than the core age signal on GE-family appliances.' },
+      { label: 'Repeating-cycle example', serial: 'AA182127G', note: 'Month code A = January; year code A = 1977, 1989, 2001, 2013, or 2025. The serial alone cannot pick one of the five; see the worked example above.' },
+      { label: 'Model-assisted narrowing example', serial: 'RZ825479', note: 'Serial alone: month code R = August; year code Z = 1988, 2000, 2012, or 2024. Paired with model GTH18GBCDCRBB (a GE GTH top-mount refrigerator model in this site\'s model data, associated with 2011-2013), the result narrows to 2012.' }
     ],
     locationSectionTitle: 'Where to find the model and serial number',
     locations: [
@@ -2073,22 +2176,28 @@ const pages = [
       'Use the model number and product type to confirm the decade when the year letter repeats.',
       'Try Smart Lookup if the opening letters are worn or missing.',
       'Do not treat Samsung, LG, or Whirlpool serial logic as interchangeable with GE.',
-      'Capture the full serial even if the main age clue is at the front of the code.'
+      'Capture the full serial even if the main age clue is at the front of the code.',
+      'If the decoder shows several candidate years, that reflects the real repeating GE cycle rather than an error.',
+      'A model number that is not yet in this site\'s model data cannot narrow the candidates on its own.'
     ],
     faqs: [
       ['How old is my GE appliance?', 'Use the serial number from the label. GE usually stores the age signal in the opening month and year letters rather than the model number.'],
       ['Can the GE model number tell me the age?', 'Not reliably by itself. It is better for identifying the family and confirming the likely decade when the serial year letter repeats.'],
       ['Why does the GE result still look estimated?', 'GE year letters repeat, so the decoder may still need model-family or installation-era context to confirm the decade.'],
       ['Where is the GE serial number label located?', 'Most GE appliances place it on an interior frame, cabinet wall, or opening edge depending on product type.'],
-      ['Can this support claim documentation?', 'Yes. Just note when the decade is still estimated because the GE year code repeats across multiple cycles.']
+      ['Can this support claim documentation?', 'Yes. Just note when the decade is still estimated because the GE year code repeats across multiple cycles.'],
+      ['What manufacture date does a GE serial number show?', 'A GE serial resolves to a month from the first character and one or more candidate years from the second character. When the year letter has repeated more than once, more than one year can be correct.'],
+      ['Why do GE serial year codes repeat?', 'GE-family serials use a 12-year repeating letter cycle. The same letter reappears every 12 years, so it can validly represent several different years rather than exactly one.'],
+      ['Can the model number narrow multiple GE candidate years?', 'Sometimes. If the model is recognized in this site\'s model data with a known production window, the candidates can narrow to a single year. If the model is not recognized, the full list of candidate years remains the honest result.'],
+      ['What if my GE serial number is unsupported?', 'Confirm the full serial was entered exactly as printed, check that the opening two characters are letters rather than digits, and try Smart Lookup if the format still does not resolve.']
     ],
     relatedLinks: [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
       ['refrigerator-serial-number', 'Refrigerator Serial Number Lookup'],
-      ['dishwasher-serial-number', 'Dishwasher Serial Number Lookup'],
-      ['range-oven-serial-number', 'Range & Oven Serial Number Lookup'],
       ['whirlpool-serial-number-lookup', 'Whirlpool'],
-      ['frigidaire-serial-number-lookup', 'Frigidaire']
+      ['smart-lookup', 'Smart Lookup'],
+      ['serial-number-location-guide', 'Serial Number Location Guide'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
@@ -2096,6 +2205,8 @@ const pages = [
     slug: 'samsung-serial-number-lookup',
     title: 'Samsung Serial Number Decoder',
     description: 'Decode Samsung appliance serial numbers, estimate appliance age, and use the supported 11-character and 15-character Samsung serial formats with clear confidence notes.',
+    htmlTitleOverride: 'Samsung Serial Number Lookup — Manufacture Date & Age | Decode My Item',
+    metaDescriptionOverride: 'Decode Samsung serial numbers to find manufacture date, appliance age, and production week. Supports Samsung refrigerators, washers, dryers, and dishwashers. Fast and free.',
     h1: 'Samsung Serial Number Decoder',
     badge: 'Brand decoder',
     category: 'appliances',
@@ -2108,6 +2219,27 @@ const pages = [
     decodeSectionBody: 'Samsung appliance decoding depends on serial length. On supported 11-character serials, the year and month commonly sit in positions 4-5. On supported 15-character serials, the year and month commonly sit in positions 8-9.',
     modelSectionTitle: 'What the model number can tell you',
     modelSectionBody: 'The model number helps confirm whether the product is an appliance, a TV, or another electronics line, and it also helps resolve the decade when a Samsung year code repeats. That context is important because Samsung appliance and Samsung TV paths should not be mixed.',
+    preGridSections: [
+      {
+        type: 'copy-block',
+        id: 'appliance-vs-tv',
+        title: 'Samsung appliance serials vs. Samsung TV serials vs. model numbers',
+        body: [
+          'Samsung appliances (refrigerators, washers, dryers, dishwashers, ranges) and Samsung TVs or monitors use related but separate identifier formats. Both families commonly use a letter code for year and a second character for month, but the character positions and supported serial lengths differ, so mixing the two paths can produce a confusing result.',
+          'A Samsung model number identifies the product family and generation. On its own it does not provide an exact manufacture date &mdash; the serial number is what this decoder reads for the supported year and month code.',
+          'Some newer Samsung electronics use serial formats that are not publicly documented in a way this tool can reliably parse. When that happens, <a href="/smart-lookup">Smart Lookup</a> can use the model number and any available context to estimate a product era instead of an exact date.'
+        ]
+      },
+      {
+        type: 'copy-block',
+        id: 'model-vs-serial',
+        title: 'Model number vs. serial number',
+        body: [
+          'The model number and serial number answer different questions. The model number describes what the product is: the family, generation, and features. The serial number is what this decoder reads to estimate when a specific unit was made.',
+          'A model number can rule out an impossible decade for a repeating Samsung year code &mdash; for example, a model line introduced in the 2020s cannot be the 2000s candidate from the same year letter &mdash; but it does not replace the serial number as the primary age signal.'
+        ]
+      }
+    ],
     formatSectionTitle: 'Common Samsung serial number formats',
     formats: [
       { label: '11-character Samsung appliance serial', pattern: 'Year in character 4; month in character 5', meaning: 'The supported decoder checks character 4 for year code and character 5 for month code on this format.', confidence: 'Estimated when the year letter repeats.' },
@@ -2118,7 +2250,9 @@ const pages = [
     examples: [
       { label: 'Illustrative 11-character pattern', serial: 'XXXABXXXXXX', note: 'Illustrative 11-character Samsung appliance pattern. The current decoder checks character 4 for year and character 5 for month.' },
       { label: 'Illustrative 15-character pattern', serial: 'XXXXXXXABXXXXXX', note: 'Illustrative 15-character Samsung appliance pattern. The current decoder checks character 8 for year and character 9 for month.' },
-      { label: 'Category reminder', serial: 'Appliance serials only on this page', note: 'Samsung TVs use a related but separate route. Use the appliance page only when the product is a refrigerator, washer, dryer, dishwasher, range, or oven.' }
+      { label: 'Category reminder', serial: 'Appliance serials only on this page', note: 'Samsung TVs use a related but separate route. Use the appliance page only when the product is a refrigerator, washer, dryer, dishwasher, range, or oven.' },
+      { label: 'Worked appliance example', serial: 'A00843ESC00128', note: 'This 14-character serial is supported: character 8 (S) is the year code and character 9 (C) is the month code. The current decoder returns year 2009 or 2029 and month December. Both years are shown because the Samsung year code repeats on a 20-year cycle.' },
+      { label: 'What the tool can and cannot determine (TV/electronics)', serial: '07R5CAHJB001234', note: 'A documented Samsung TV/monitor serial pattern: character 8 (J) is the year code and character 9 (B) is the month code, giving year 2017 or 2037 and month November. The decoder can identify the supported year/month code on recognized formats, but it cannot confirm which of the two candidate years is correct without model or documentation context, and some newer TV serials may not be publicly decodable at all. See the Samsung TV Serial Number Decoder for the dedicated tool.' }
     ],
     locationSectionTitle: 'Where to find the model and serial number',
     locations: [
@@ -2139,15 +2273,18 @@ const pages = [
       ['Is this page for Samsung appliances or Samsung TVs?', 'This page is for major Samsung appliances. Use the Samsung TV page or Smart Lookup for TV and electronics-only searches.'],
       ['Why does the Samsung result still look estimated?', 'Some Samsung year codes repeat, so the decoder may still need model-era context to confirm the decade.'],
       ['Where is the Samsung serial number label located?', 'It depends on product type. Refrigerators usually place it inside the cabinet, laundry products place it around the opening, and ranges or dishwashers place it on the frame.'],
-      ['Can this support claim documentation?', 'Yes. It is useful for age support and replacement research, especially when the product category is clear and the full serial is available.']
+      ['Can this support claim documentation?', 'Yes. It is useful for age support and replacement research, especially when the product category is clear and the full serial is available.'],
+      ['Can a Samsung TV serial number show the manufacture date?', 'On supported Samsung TV and monitor serial formats, yes: the decoder can read a year and month code using the same style of character-position logic as Samsung appliances. Some newer TV serial formats are not publicly decodable, and the year code repeats every 20 years, so the result is still a candidate rather than a single confirmed date.'],
+      ['Is the model number the same as the serial number?', 'No. The model number identifies the product family and generation. The serial number is the field this decoder reads to estimate the manufacture year and month.'],
+      ['What should I do if the serial number is unsupported?', 'Confirm you copied the full serial exactly as printed, check whether the product is an appliance or a TV/electronics item, and try Smart Lookup with the model number if the standard decoder cannot resolve the format.']
     ],
     relatedLinks: [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
       ['refrigerator-serial-number', 'Refrigerator Serial Number Lookup'],
-      ['washer-serial-number', 'Washer Serial Number Lookup'],
-      ['dishwasher-serial-number', 'Dishwasher Serial Number Lookup'],
       ['samsung-tv-serial-number-decoder', 'Samsung TV Serial Number Decoder'],
-      ['lg-serial-number-lookup', 'LG']
+      ['how-old-is-my-electronics', 'How Old Is My Electronics?'],
+      ['serial-number-location-guide', 'Serial Number Location Guide'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
@@ -2577,6 +2714,8 @@ const pages = [
     slug: 'carrier-serial-number-lookup',
     title: 'Carrier Serial Number Decoder',
     description: 'Decode Carrier serial numbers, estimate HVAC age, and use the supported Carrier year-position logic with concise rating-plate guidance.',
+    htmlTitleOverride: 'Carrier Serial Number Lookup — HVAC Age & Manufacture Date | Decode My Item',
+    metaDescriptionOverride: 'Look up Carrier serial numbers to find the manufacture date, HVAC age, and production year. Supports Carrier air conditioners, furnaces, and heat pumps. Free and instant.',
     h1: 'Carrier Serial Number Decoder',
     badge: 'HVAC brand decoder',
     category: 'hvac',
@@ -2588,7 +2727,48 @@ const pages = [
     decodeSectionTitle: 'How to decode a Carrier serial number',
     decodeSectionBody: 'Supported Carrier serial decoding commonly uses digits 3-4 as the production year. Depending on the exact family, surrounding digits may track week, plant, or production sequence rather than a direct month.',
     modelSectionTitle: 'What the model number can tell you',
-    modelSectionBody: 'The Carrier model number helps confirm equipment family, tonnage, and product generation. That becomes useful when the serial fits a supported year position but you still need model-era context for a stronger replacement or claim summary.',
+    modelSectionBody: 'The Carrier model number helps confirm equipment family and product generation. That becomes useful when the serial fits a supported year position but you still need model-era context for a stronger replacement or claim summary.',
+    preGridSections: [
+      {
+        type: 'table',
+        id: 'carrier-worked-examples',
+        title: 'Worked Carrier serial examples',
+        intro: 'The supported Carrier path validates digits 1-2 as a week number (1-53) and reads digits 3-4 as the production year.',
+        rows: [
+          { field: 'Digits 1-2 of 1419XXXX', meaning: 'Week code "14" (valid: 1-53)', why: 'Confirms the opening digits look like a genuine Carrier rating-plate serial before the year is read.' },
+          { field: 'Digits 3-4 of 1419XXXX', meaning: 'Year code "19"', why: '19 is 50 or under, so it resolves to 2019. Result: 2019 (year only; this format does not resolve a month).' },
+          { field: 'Digits 1-2 of 0892XXXX', meaning: 'Week code "08" (valid: 1-53)', why: 'Confirms the format before the year is read.' },
+          { field: 'Digits 3-4 of 0892XXXX', meaning: 'Year code "92"', why: '92 is over 50, so the supported path resolves it to 1992 instead of 2092. Result: 1992.' }
+        ]
+      },
+      {
+        type: 'copy-block',
+        id: 'why-carrier-varies',
+        title: 'Why Carrier-family serials can vary',
+        body: [
+          'Carrier, Bryant, and Payne share the same parent company, and related HVAC brands can use similar digit-position conventions. The supported logic on this page is specific to Carrier-branded rating plates &mdash; a visually similar serial on a different badge is not guaranteed to follow the identical rule, so use the brand printed on the equipment rather than assuming every Carrier-family badge decodes identically.',
+          'Plant, product line, and era can also affect which digits carry meaningful information beyond the year. When the serial does not match the supported digits-3-4-year pattern, treat the result as unsupported rather than guessing at a different position.'
+        ]
+      },
+      {
+        type: 'copy-block',
+        id: 'carrier-multiple-years',
+        title: 'Does a Carrier serial show more than one possible year?',
+        body: [
+          'No &mdash; unlike some appliance brands, the supported Carrier serial format does not use a repeating year cycle, so a successful decode resolves to a single year rather than a list of candidates.',
+          'When Carrier decoding does not produce a result, it is usually because the input failed a validation check rather than because of year ambiguity: the current logic rejects a week code outside 1-53, and it rejects a resulting year that would fall more than a couple of years in the future. In those cases, double-check the serial against the rating plate or try Smart Lookup rather than assuming the equipment is simply too new or too old to support.'
+        ]
+      },
+      {
+        type: 'copy-block',
+        id: 'carrier-model-tonnage',
+        title: 'Model number and tonnage context',
+        body: [
+          'The serial number is what this decoder reads for manufacture year. The model number is a separate identifier for equipment family and generation &mdash; this site does not currently decode tonnage or capacity from a Carrier model number.',
+          'For tonnage or capacity details, check the equipment nameplate directly. Use the serial for age and the model number for product/capacity research as two separate signals rather than combining them into a single reading.'
+        ]
+      }
+    ],
     formatSectionTitle: 'Common Carrier serial number formats',
     formats: [
       { label: 'Carrier condenser and heat-pump serials', pattern: 'Digits 3-4 commonly map the year', meaning: 'The current decoder uses the supported Carrier year position rather than a generic appliance-style month code.', confidence: 'Moderate to high confidence when the label matches the supported format.' },
@@ -2599,7 +2779,9 @@ const pages = [
     examples: [
       { label: 'Illustrative Carrier pattern', serial: 'XX19XXXXX', note: 'Illustrative Carrier-family pattern. The supported path focuses on digits 3-4 for the production year.' },
       { label: 'Rating-plate reminder', serial: 'Full serial required', note: 'Capture the full rating-plate serial even when the key year signal appears early in the code.' },
-      { label: 'HVAC context reminder', serial: 'Model family still helps', note: 'The model number helps verify the product generation and supports replacement research after the serial date is estimated.' }
+      { label: 'HVAC context reminder', serial: 'Model family still helps', note: 'The model number helps verify the product generation and supports replacement research after the serial date is estimated.' },
+      { label: 'Worked example', serial: '1419XXXX', note: 'Digits 1-2 (14) validate as a week number, and digits 3-4 (19) resolve to year 2019. This format returns a year only, not a month.' },
+      { label: 'Worked example (older unit)', serial: '0892XXXX', note: 'Digits 3-4 (92) fall above the 50 pivot, so the supported logic resolves this to 1992 rather than 2092.' }
     ],
     locationSectionTitle: 'Where to find the model and serial number',
     locations: [
@@ -2613,22 +2795,29 @@ const pages = [
       'Make sure the product is Carrier-family equipment and not just a similar private-label unit.',
       'Use the model number to confirm the family when the serial year is clear but the product generation is not.',
       'Try Smart Lookup if the label is damaged or if the serial does not match the supported Carrier family pattern.',
-      'Do not apply appliance-style month/year rules to HVAC equipment.'
+      'Do not apply appliance-style month/year rules to HVAC equipment.',
+      'Check the opening two digits: the supported path rejects a week code outside 1-53 rather than guessing at a year.',
+      'A model number alone, without a serial, cannot produce a manufacture date here &mdash; try Smart Lookup for model-only research.'
     ],
     faqs: [
       ['How old is my Carrier unit?', 'Use the serial number from the rating plate. The supported Carrier path commonly reads digits 3-4 as the production year.'],
       ['Can the Carrier model number tell me the age?', 'Not as directly as the serial number. It is better for identifying the family and supporting replacement research.'],
       ['Why does my Carrier serial number not decode?', 'The label may be partial, the product may follow a different family, or the serial may fall outside the supported Carrier path.'],
       ['Where is the Carrier serial number plate located?', 'Most Carrier equipment places it on the outdoor cabinet, indoor access panel, or furnace service area depending on product type.'],
-      ['Can this support claim documentation?', 'Yes. Serial-based age support is useful for HVAC claims, especially when the rating plate photo is saved with the file.']
+      ['Can this support claim documentation?', 'Yes. Serial-based age support is useful for HVAC claims, especially when the rating plate photo is saved with the file.'],
+      ['What date does a Carrier serial number show?', 'The supported Carrier path resolves to a single production year read from digits 3-4. It does not resolve a month on this format.'],
+      ['Is there a Carrier model number lookup?', 'This page focuses on serial-based age decoding. The model number is best used alongside the serial to confirm equipment family rather than as a stand-alone age lookup.'],
+      ['Does the Carrier model number tell me the tonnage?', 'This site does not decode tonnage or capacity from the model number. Check the equipment nameplate for tonnage details.'],
+      ['What if my Carrier serial is unsupported?', 'Confirm the full serial matches the rating plate, verify the opening two digits form a valid week number (1-53), and try Smart Lookup if the format still does not resolve.']
     ],
     relatedLinks: [
-      ['how-to-find-hvac-age', 'How to Find HVAC Age'],
-      ['hvac-age-by-serial-number', 'HVAC Age by Serial Number'],
+      ['how-old-is-my-hvac', 'How Old Is My HVAC?'],
       ['trane-serial-number-lookup', 'Trane'],
       ['rheem-serial-number-lookup', 'Rheem'],
       ['goodman-serial-number-lookup', 'Goodman'],
-      ['how-old-is-my-appliance', 'How Old Is My Appliance?']
+      ['smart-lookup', 'Smart Lookup'],
+      ['serial-number-location-guide', 'Serial Number Location Guide'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
@@ -2754,6 +2943,8 @@ const pages = [
     slug: 'goodman-serial-number-lookup',
     title: 'Goodman Serial Number Decoder',
     description: 'Decode Goodman serial numbers, estimate HVAC age, and use the supported Goodman year/month format with concise rating-plate guidance.',
+    htmlTitleOverride: 'Goodman Serial Number Lookup — HVAC Age & Manufacture Date | Decode My Item',
+    metaDescriptionOverride: 'Decode Goodman serial numbers to find AC unit, furnace, or heat pump manufacture year. Supports all Goodman HVAC equipment. Useful for insurance claims and HVAC replacement decisions.',
     h1: 'Goodman Serial Number Decoder',
     badge: 'HVAC brand decoder',
     category: 'hvac',
@@ -2770,7 +2961,39 @@ const pages = [
     decodeSectionTitle: 'How to decode a Goodman serial number',
     decodeSectionBody: 'Supported Goodman HVAC serial decoding commonly uses the first two digits for year and the next two digits for month. That makes Goodman one of the clearer HVAC date paths on the site.',
     modelSectionTitle: 'What the model number can tell you',
-    modelSectionBody: 'The Goodman model number helps confirm equipment family, tonnage, and replacement class. It is useful for downstream replacement research even when the serial result itself is relatively direct.',
+    modelSectionBody: 'The Goodman model number helps confirm equipment family and replacement class. It is useful for downstream replacement research even when the serial result itself is relatively direct.',
+    preGridSections: [
+      {
+        type: 'copy-block',
+        id: 'how-old-is-my-goodman-unit',
+        title: 'How old is my Goodman unit?',
+        body: [
+          'Goodman HVAC serial numbers typically open with four digits: the first two are the production year and the next two are the production month. That opening YYMM group is the primary age signal &mdash; the remaining characters are usually plant or production-sequence tracking rather than date information.',
+          'Because the year is read directly from the serial rather than from a repeating letter or digit cycle, a Goodman result is usually a single year rather than a list of candidate years. The model number is still useful context: it can confirm the equipment family and help with replacement research, and it can flag a serial that does not look like a genuine Goodman or Amana rating-plate number.'
+        ]
+      },
+      {
+        type: 'table',
+        id: 'goodman-worked-examples',
+        title: 'Worked Goodman serial examples',
+        intro: 'Both examples below use the supported YYMM opening pattern.',
+        rows: [
+          { field: 'Digits 1-2 of 1908123456', meaning: 'Year code "19"', why: 'Resolves to 2019. No ambiguity: Goodman does not use a repeating year cycle.' },
+          { field: 'Digits 3-4 of 1908123456', meaning: 'Month code "08"', why: 'Resolves to August, giving a full result of August 2019.' },
+          { field: 'Digits 1-2 of 1404123456', meaning: 'Year code "14"', why: 'Resolves to 2014.' },
+          { field: 'Digits 3-4 of 1404123456', meaning: 'Month code "04"', why: 'Resolves to April, giving a full result of April 2014.' }
+        ]
+      },
+      {
+        type: 'copy-block',
+        id: 'model-tonnage-context',
+        title: 'Model number and tonnage context',
+        body: [
+          'The serial number is what this decoder reads for manufacture date. The model number is a separate identifier for equipment family and capacity &mdash; some Goodman/Amana model numbers include a capacity or tonnage code as part of the manufacturer\'s naming convention, but this site does not currently decode tonnage or BTU capacity from the model number.',
+          'If you need tonnage or capacity information, check the equipment nameplate directly or the <a href="/goodman-model-number-lookup">Goodman Model Number Lookup</a> page, and treat any tonnage figure from the model number as separate from, and not a substitute for, the serial-based age result.'
+        ]
+      }
+    ],
     formatSectionTitle: 'Common Goodman serial number formats',
     formats: [
       { label: 'Goodman condensers and heat pumps', pattern: 'Year in digits 1-2; month in digits 3-4', meaning: 'The supported path reads the opening four digits directly as year and month.', confidence: 'Higher confidence when the serial matches the supported pattern.' },
@@ -2781,7 +3004,9 @@ const pages = [
     examples: [
       { label: 'Illustrative Goodman pattern', serial: '1911XXXXX', note: 'Illustrative Goodman-family pattern. The supported path treats 19 as year and 11 as month when the serial matches this structure.' },
       { label: 'Direct-date reminder', serial: 'YYMM opening', note: 'Goodman is stronger than many HVAC brands because the supported serial structure can resolve to a more direct year/month reading.' },
-      { label: 'Rating-plate reminder', serial: 'Full serial required', note: 'Capture the full serial anyway because the complete label still helps with replacement and claim documentation.' }
+      { label: 'Rating-plate reminder', serial: 'Full serial required', note: 'Capture the full serial anyway because the complete label still helps with replacement and claim documentation.' },
+      { label: 'Worked example', serial: '1908123456', note: 'Digits 1-2 (19) resolve to year 2019, and digits 3-4 (08) resolve to month August, giving a full result of August 2019.' },
+      { label: 'Worked example', serial: '1404123456', note: 'Digits 1-2 (14) resolve to year 2014, and digits 3-4 (04) resolve to month April, giving a full result of April 2014.' }
     ],
     locationSectionTitle: 'Where to find the model and serial number',
     locations: [
@@ -2795,22 +3020,28 @@ const pages = [
       'Make sure you are reading the opening digits correctly because they carry the supported Goodman year/month logic.',
       'Use the model number for replacement-family research after the age estimate is returned.',
       'Try Smart Lookup if the data plate is damaged or if the serial does not match the supported Goodman structure.',
-      'Do not apply appliance-style serial logic to HVAC equipment.'
+      'Do not apply appliance-style serial logic to HVAC equipment.',
+      'Double-check for transcription mistakes (a misread 0/O, 1/I, or 8/B) before assuming the serial is unsupported.',
+      'A model number alone, without a serial, cannot produce a manufacture date on this page &mdash; try the Goodman Model Number Lookup or Smart Lookup instead.'
     ],
     faqs: [
       ['How old is my Goodman unit?', 'Use the serial number from the rating plate. The supported Goodman path commonly reads the first two digits as year and the next two as month.'],
       ['Can the Goodman model number tell me the age?', 'Not as directly as the serial number. It is better for identifying the family and supporting replacement research.'],
       ['Why does my Goodman serial number not decode?', 'The label may be partial, damaged, or outside the supported Goodman path.'],
       ['Where is the Goodman serial number plate located?', 'Most Goodman equipment places it on the outdoor cabinet, furnace service area, or indoor access panel depending on product type.'],
-      ['Can this support claim documentation?', 'Yes. The Goodman serial result is useful for HVAC claims, especially when the rating-plate photo is kept with the file.']
+      ['Can this support claim documentation?', 'Yes. The Goodman serial result is useful for HVAC claims, especially when the rating-plate photo is kept with the file.'],
+      ['How old is a Goodman unit by serial number?', 'Enter the full rating-plate serial into the decoder above with Goodman selected. Digits 1-2 give the year and digits 3-4 give the month on the supported Goodman pattern.'],
+      ['Is the Goodman model number the same as the serial number?', 'No. The model number identifies the equipment family (and, in some cases, includes a capacity code in the manufacturer\'s own naming convention). The serial number is the field this decoder reads for manufacture date.'],
+      ['Does the model number tell me the tonnage of my Goodman unit?', 'This site does not decode tonnage or BTU capacity from the model number. Check the equipment nameplate directly, or use the Goodman Model Number Lookup page for model-focused research.'],
+      ['What if my Goodman serial format is not supported?', 'Confirm the serial was copied exactly from the rating plate, watch for commonly misread characters, and try Smart Lookup with the model number if the standard decoder cannot resolve the format.']
     ],
     relatedLinks: [
-      ['how-to-find-hvac-age', 'How to Find HVAC Age'],
-      ['hvac-age-by-serial-number', 'HVAC Age by Serial Number'],
+      ['how-old-is-my-hvac', 'How Old Is My HVAC?'],
+      ['goodman-model-number-lookup', 'Goodman Model Number Lookup'],
       ['carrier-serial-number-lookup', 'Carrier'],
-      ['trane-serial-number-lookup', 'Trane'],
-      ['rheem-serial-number-lookup', 'Rheem'],
-      ['how-old-is-my-appliance', 'How Old Is My Appliance?']
+      ['smart-lookup', 'Smart Lookup'],
+      ['serial-number-location-guide', 'Serial Number Location Guide'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
@@ -2818,6 +3049,8 @@ const pages = [
     slug: 'asus-serial-number-decoder',
     title: 'ASUS Serial Number Manufacture Date Decoder',
     description: 'Estimate manufacture date from supported ASUS serial number formats for laptops, desktops, motherboards, and monitors.',
+    socialTitleOverride: 'ASUS Serial Number Lookup & Model Number Help',
+    socialDescriptionOverride: 'Use ASUS serial number lookup, ASUS model number lookup, and ASUS laptop serial number guidance to estimate manufacture date and identify supported ASUS device families.',
     h1: 'ASUS Serial Number Lookup & Model Number Help',
     badge: 'Electronics brand decoder',
     category: 'electronics',
