@@ -2816,8 +2816,8 @@ const pages = [
   },
   {
     slug: 'asus-serial-number-decoder',
-    title: 'ASUS Serial Number Lookup & Model Number Help',
-    description: 'Use ASUS serial number lookup, ASUS model number lookup, and ASUS laptop serial number guidance to estimate manufacture date and identify supported ASUS device families.',
+    title: 'ASUS Serial Number Manufacture Date Decoder',
+    description: 'Estimate manufacture date from supported ASUS serial number formats for laptops, desktops, motherboards, and monitors.',
     h1: 'ASUS Serial Number Lookup & Model Number Help',
     badge: 'Electronics brand decoder',
     category: 'electronics',
@@ -2931,9 +2931,25 @@ const sitemapEntries = [
   ['/whirlpool-model-number-lookup', 'monthly', '0.6'],
   ['/goodman-model-number-lookup', 'monthly', '0.6'],
   ['/whirlpool-refrigerator-serial-number-lookup', 'monthly', '0.6'],
-  ['/whirlpool-dishwasher-serial-number-lookup', 'monthly', '0.6']
+  ['/whirlpool-dishwasher-serial-number-lookup', 'monthly', '0.6'],
+  ['/item-history-guides', 'monthly', '0.8'],
+  ['/electrical-service-panel-history', 'monthly', '0.7'],
+  ['/electrical-wiring-history', 'monthly', '0.7'],
+  ['/hvac-system-history', 'monthly', '0.7'],
+  ['/water-heater-history', 'monthly', '0.7'],
+  ['/major-appliances-history', 'monthly', '0.7'],
+  ['/tv-history', 'monthly', '0.7'],
+  ['/computer-history', 'monthly', '0.7'],
+  ['/large-loss-decoder', 'weekly', '0.9'],
+  ['/google-pixel', 'monthly', '0.7'],
+  ['/panasonic', 'monthly', '0.6'],
+  ['/vizio', 'monthly', '0.6'],
+  ['/disclaimer', 'yearly', '0.3']
 ];
 
+// Only publish lastmod when a route has an explicitly maintained, material
+// content-review date. Shared navigation, formatting, generated output, and
+// unrelated commits do not qualify, so unreviewed routes intentionally omit it.
 function renderSitemap(entries) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
