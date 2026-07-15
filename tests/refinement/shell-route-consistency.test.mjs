@@ -12,7 +12,8 @@ const legacyRedirects = {
   '/dishwasher-serial-number-lookup': '/dishwasher-serial-number',
   '/dryer-serial-number-lookup': '/dryer-serial-number',
   '/oven-serial-number-lookup': '/range-oven-serial-number',
-  '/refrigerator-serial-number-lookup': '/refrigerator-serial-number'
+  '/refrigerator-serial-number-lookup': '/refrigerator-serial-number',
+  '/where-is-my-serial-number': '/serial-number-location-guide'
 };
 
 function rootHtmlFiles() {

@@ -15,10 +15,42 @@ const navLinks = `
   <li><a href="/">Home</a></li>
   <li><a href="/decoder-tool">Serial Number Decoder</a></li>
   <li><a href="/smart-lookup">Smart Lookup</a></li>
+  <li><a href="/large-loss-decoder">Large Loss Decoder</a></li>
   <li><a href="/assistant">AI Assistant</a></li>
-  <li><a href="/methodology">Methodology</a></li>
+  <li class="nav-dropdown-item">
+    <button class="nav-dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true">
+      Resources <span class="nav-chevron" aria-hidden="true">&#9662;</span>
+    </button>
+    <div class="nav-dropdown-panel" role="menu">
+      <div class="nav-dropdown-col">
+        <p class="nav-dropdown-label">Age Research</p>
+        <a href="/how-old-is-my-appliance" role="menuitem">How Old Is My Appliance?</a>
+        <a href="/how-old-is-my-hvac" role="menuitem">How Old Is My HVAC?</a>
+        <a href="/how-old-is-my-plumbing" role="menuitem">How Old Is My Water Heater?</a>
+        <a href="/how-old-is-my-electronics" role="menuitem">How Old Is My Electronics?</a>
+      </div>
+      <div class="nav-dropdown-col">
+        <p class="nav-dropdown-label">Item History Guides</p>
+        <a href="/item-history-guides" role="menuitem" class="nav-dropdown-featured">All History Guides &#8594;</a>
+        <a href="/electrical-service-panel-history" role="menuitem">Electrical Panels</a>
+        <a href="/electrical-wiring-history" role="menuitem">Electrical Wiring</a>
+        <a href="/hvac-system-history" role="menuitem">HVAC Systems</a>
+        <a href="/water-heater-history" role="menuitem">Water Heaters</a>
+        <a href="/major-appliances-history" role="menuitem">Major Appliances</a>
+        <a href="/tv-history" role="menuitem">TVs</a>
+        <a href="/computer-history" role="menuitem">Computers</a>
+      </div>
+      <div class="nav-dropdown-col">
+        <p class="nav-dropdown-label">Reference</p>
+        <a href="/serial-number-location-guide" role="menuitem">Serial Number Locations</a>
+        <a href="/appliance-age-for-insurance-and-replacement" role="menuitem">Appliance Age for Insurance</a>
+        <a href="/how-to-read-serial-number" role="menuitem">How to Read a Serial Number</a>
+        <a href="/methodology" role="menuitem">Methodology</a>
+        <a href="/about" role="menuitem">About</a>
+      </div>
+    </div>
+  </li>
   <li><a href="/contact">Contact</a></li>
-  <li><a href="/feedback">Feedback &amp; Bugs</a></li>
   <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
 `;
 
@@ -98,12 +130,22 @@ function pageSiteLabel(page) {
 }
 
 function pageHtmlTitle(page) {
+  if (page.htmlTitleOverride) return page.htmlTitleOverride;
   const siteLabel = pageSiteLabel(page);
   return page.title.includes('Item Assist') ? page.title.replace('Item Assist', siteLabel) : `${page.title} | ${siteLabel}`;
 }
 
+function pageMetaDescription(page) {
+  return page.metaDescriptionOverride || page.description;
+}
+
 function pageSocialTitle(page) {
-  return page.title.includes('Item Assist') ? page.title.replace('Item Assist', 'Decode My Item') : `${page.title} | Decode My Item`;
+  const baseTitle = page.socialTitleOverride || page.title;
+  return baseTitle.includes('Item Assist') ? baseTitle.replace('Item Assist', 'Decode My Item') : `${baseTitle} | Decode My Item`;
+}
+
+function pageSocialDescription(page) {
+  return page.socialDescriptionOverride || page.description;
 }
 
 function breadcrumbItems(items) {
@@ -161,8 +203,8 @@ function renderWebPageSchema(page, url) {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     '@id': `${url}#webpage`,
-    name: page.title,
-    description: page.description,
+    name: page.socialTitleOverride || page.title,
+    description: pageSocialDescription(page),
     url,
     isPartOf: {
       '@type': 'WebSite',
@@ -378,10 +420,10 @@ function renderDecoderModule(page, opts = {}) {
               <div class="decoder-card-shell">
                 <div class="search-box">
                   <div class="search-tabs">
-                    <button class="search-tab cat-tab${page.category === 'appliances' ? ' active' : ''}" data-cat="appliances" onclick="selectCatAndShowDecoder('appliances', this)">Appliances</button>
-                    <button class="search-tab cat-tab${page.category === 'waterHeaters' ? ' active' : ''}" data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">Water Heaters</button>
-                    <button class="search-tab cat-tab${page.category === 'hvac' ? ' active' : ''}" data-cat="hvac" onclick="selectCatAndShowDecoder('hvac', this)">HVAC</button>
-                    <button class="search-tab cat-tab${page.category === 'electronics' ? ' active' : ''}" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
+                    <button class="search-tab cat-tab${page.category === 'appliances' ? ' active' : ''}" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
+                    <button class="search-tab cat-tab${page.category === 'waterHeaters' ? ' active' : ''}" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
+                    <button class="search-tab cat-tab${page.category === 'hvac' ? ' active' : ''}" data-cat="hvac" onclick="selectCategory('hvac', this)">HVAC</button>
+                    <button class="search-tab cat-tab${page.category === 'electronics' ? ' active' : ''}" data-cat="electronics" onclick="selectCategory('electronics', this)">Electronics</button>
                   </div>
 
                   <div class="search-panel" id="panel-decoder">
@@ -634,19 +676,19 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
   <title>${pageHtmlTitle(page)}</title>
-  <meta name="description" content="${page.description}">
+  <meta name="description" content="${pageMetaDescription(page)}">
   <link rel="canonical" href="${url}">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="${pageSiteLabel(page)}">
   <meta property="og:title" content="${pageSocialTitle(page)}">
-  <meta property="og:description" content="${page.description}">
+  <meta property="og:description" content="${pageSocialDescription(page)}">
   <meta property="og:url" content="${url}">
   <meta property="og:image" content="${siteUrl}/assets/item-assist-banner.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${pageSocialTitle(page)}">
-  <meta name="twitter:description" content="${page.description}">
+  <meta name="twitter:description" content="${pageSocialDescription(page)}">
   <meta name="twitter:image" content="${siteUrl}/assets/item-assist-banner.png">
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="seo-landing.css">
@@ -885,7 +927,6 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
       <ul>
         <li><a href="/how-old-is-my-appliance">How Old Is My Appliance?</a></li>
         <li><a href="/serial-number-location-guide">Serial Number Location Guide</a></li>
-        <li><a href="/where-is-my-serial-number">Where Is My Serial Number?</a></li>
         <li><a href="/appliance-age-for-insurance-and-replacement">Appliance Age for Insurance</a></li>
         <li><a href="/how-to-read-serial-number">How to Read a Serial Number</a></li>
         <li><a href="/methodology">Methodology</a></li>
@@ -1116,19 +1157,19 @@ function renderPage(page) {
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
   <title>${pageHtmlTitle(page)}</title>
-  <meta name="description" content="${page.description}">
+  <meta name="description" content="${pageMetaDescription(page)}">
   <link rel="canonical" href="${url}">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="${pageSiteLabel(page)}">
   <meta property="og:title" content="${pageSocialTitle(page)}">
-  <meta property="og:description" content="${page.description}">
+  <meta property="og:description" content="${pageSocialDescription(page)}">
   <meta property="og:url" content="${url}">
   <meta property="og:image" content="${siteUrl}/assets/item-assist-banner.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${pageSocialTitle(page)}">
-  <meta name="twitter:description" content="${page.description}">
+  <meta name="twitter:description" content="${pageSocialDescription(page)}">
   <meta name="twitter:image" content="${siteUrl}/assets/item-assist-banner.png">
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="seo-landing.css">
@@ -1138,17 +1179,16 @@ function renderPage(page) {
 
   <!-- ═══ NAV ═══ -->
   <nav>
-    <a href="/" class="logo" aria-label="Decode My Item home">
-      <span class="material-symbols-outlined logo-icon">qr_code_scanner</span>
-      <div>
-        <div class="logo-text">Decode My <span>Item</span></div>
-        <div class="logo-sub">Decode - Research - Automate</div>
-      </div>
-    </a>
-    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span><span></span><span></span><span></span></button>
-    <ul>${navLinks}
-    </ul>
-  </nav>
+  <a href="/" class="logo" aria-label="Decode My Item home">
+    <span class="material-symbols-outlined" style="color:#44e5c2;font-size:26px;flex-shrink:0;line-height:1;">qr_code_scanner</span>
+    <div>
+      <div class="logo-text">Decode My <span>Item</span></div><div class="logo-sub">Decode - Research - Automate</div>
+    </div>
+  </a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+  <ul>${navLinks}
+</ul>
+</nav>
 
   <main>
 
@@ -1202,10 +1242,10 @@ function renderPage(page) {
               <div class="decoder-card-shell">
                 <div class="search-box">
                   <div class="search-tabs">
-                    <button class="search-tab cat-tab${page.category === 'appliances' ? ' active' : ''}" data-cat="appliances" onclick="selectCatAndShowDecoder('appliances', this)">Appliances</button>
-                    <button class="search-tab cat-tab${page.category === 'waterHeaters' ? ' active' : ''}" data-cat="waterHeaters" onclick="selectCatAndShowDecoder('waterHeaters', this)">Water Heaters</button>
-                    <button class="search-tab cat-tab${page.category === 'hvac' ? ' active' : ''}" data-cat="hvac" onclick="selectCatAndShowDecoder('hvac', this)">HVAC</button>
-                    <button class="search-tab cat-tab${page.category === 'electronics' ? ' active' : ''}" data-cat="electronics" onclick="selectCatAndShowDecoder('electronics', this)">Electronics</button>
+                    <button class="search-tab cat-tab${page.category === 'appliances' ? ' active' : ''}" data-cat="appliances" onclick="selectCategory('appliances', this)">Appliances</button>
+                    <button class="search-tab cat-tab${page.category === 'waterHeaters' ? ' active' : ''}" data-cat="waterHeaters" onclick="selectCategory('waterHeaters', this)">Water Heaters</button>
+                    <button class="search-tab cat-tab${page.category === 'hvac' ? ' active' : ''}" data-cat="hvac" onclick="selectCategory('hvac', this)">HVAC</button>
+                    <button class="search-tab cat-tab${page.category === 'electronics' ? ' active' : ''}" data-cat="electronics" onclick="selectCategory('electronics', this)">Electronics</button>
                   </div>
                   <div class="search-panel" id="panel-decoder">
                     <!-- Brand Row -->
@@ -1300,8 +1340,7 @@ function renderPage(page) {
         </div>
       </div>
     </div>
-
-    ${renderExtraSections(page.preGridSections)}
+${renderExtraSections(page.preGridSections)}
 
     <!-- ═══ CONTENT SECTIONS ═══ -->
     <div class="bp-content-wrap">
@@ -1453,60 +1492,83 @@ function renderPage(page) {
 
   <!-- ═══ FOOTER ═══ -->
   <footer class="footer-sitemap">
-    <div class="footer-sitemap-grid">
-      <div class="footer-col">
-        <p class="footer-col-heading">Tools</p>
-        <ul>
-          <li><a href="/">Home</a></li>
-          <li><a href="/decoder-tool">Serial Number Decoder</a></li>
-          <li><a href="/smart-lookup">Smart Lookup</a></li>
-          <li><a href="/assistant">AI Assistant</a></li>
-          <li><a href="/brands">All Brands</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <p class="footer-col-heading">By Appliance</p>
-        <ul>
-          <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
-          <li><a href="/washer-serial-number">Washing Machines</a></li>
-          <li><a href="/dryer-serial-number">Dryers</a></li>
-          <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
-          <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
-          <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
-          <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <p class="footer-col-heading">By Brand</p>
-        <ul>
-          <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
-          <li><a href="/ge-serial-number-lookup">GE</a></li>
-          <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
-          <li><a href="/lg-serial-number-lookup">LG</a></li>
-          <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
-          <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
-          <li><a href="/trane-serial-number-lookup">Trane</a></li>
-          <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
-          <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
-          <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
-          <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <p class="footer-col-heading">Resources</p>
-        <ul>
-          ${footerResources.map(([href, label]) => `<li><a href="${href}">${label}</a></li>`).join('\n          ')}
-        </ul>
-      </div>
+  <div class="footer-sitemap-grid">
+
+    <div class="footer-col">
+      <p class="footer-col-heading">Tools</p>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/decoder-tool">Serial Number Decoder</a></li>
+        <li><a href="/smart-lookup">Smart Lookup</a></li>
+        <li><a href="/large-loss-decoder">Large Loss Decoder</a></li>
+        <li><a href="/assistant">AI Assistant</a></li>
+        <li><a href="/brands">All Brands</a></li>
+      </ul>
     </div>
-    <div class="footer-bottom">
-      <span class="footer-bottom-copy">&copy; 2026 Decode My Item &middot; Database verified February 2026</span>
-      <div class="footer-bottom-links">
-        <a href="/contact">Contact</a>
-        <a href="/security">Security &amp; Data</a>
-        <a href="/privacy-policy">Privacy Policy</a>
-      </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">By Appliance</p>
+      <ul>
+        <li><a href="/refrigerator-serial-number">Refrigerators</a></li>
+        <li><a href="/washer-serial-number">Washing Machines</a></li>
+        <li><a href="/dryer-serial-number">Dryers</a></li>
+        <li><a href="/dishwasher-serial-number">Dishwashers</a></li>
+        <li><a href="/range-oven-serial-number">Ranges &amp; Ovens</a></li>
+        <li><a href="/hvac-age-by-serial-number">HVAC Systems</a></li>
+        <li><a href="/how-to-find-hvac-age">Finding HVAC Age</a></li>
+      </ul>
     </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">By Brand</p>
+      <ul>
+        <li><a href="/whirlpool-serial-number-lookup">Whirlpool</a></li>
+        <li><a href="/ge-serial-number-lookup">GE</a></li>
+        <li><a href="/samsung-serial-number-lookup">Samsung</a></li>
+        <li><a href="/lg-serial-number-lookup">LG</a></li>
+        <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
+        <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
+        <li><a href="/trane-serial-number-lookup">Trane</a></li>
+        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+        <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
+        <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
+        <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">Item History Guides</p>
+      <ul>
+        <li><a href="/item-history-guides">All History Guides</a></li>
+        <li><a href="/electrical-service-panel-history">Electrical Panels</a></li>
+        <li><a href="/electrical-wiring-history">Electrical Wiring</a></li>
+        <li><a href="/hvac-system-history">HVAC Systems</a></li>
+        <li><a href="/water-heater-history">Water Heaters</a></li>
+        <li><a href="/major-appliances-history">Major Appliances</a></li>
+        <li><a href="/tv-history">TVs</a></li>
+        <li><a href="/computer-history">Computers</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <p class="footer-col-heading">Resources</p>
+      <ul>
+        ${footerResources.map(([href, label]) => `<li><a href="${href}">${label}</a></li>`).join('\n        ')}
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <span class="footer-bottom-copy">
+      &copy; 2026 Decode My Item &middot; Database verified February 2026
+    </span>
+    <div class="footer-bottom-links">
+      <a href="/contact">Contact</a>
+      <a href="/security">Security &amp; Data</a>
+      <a href="/privacy-policy">Privacy Policy</a>
+    </div>
+  </div>
   </footer>
 
   <script>
@@ -1536,12 +1598,12 @@ function renderPage(page) {
       });
     });
   </script>
-  <script defer src="${decoderBundleSrc(page.category)}"></script>
+  <script defer src="decoder-data.js"></script>
   <script defer src="lkq-engine.js"></script>
   <script defer src="analytics.js"></script>
   <script defer src="smart-lookup-bundle.js"></script>
   <script defer src="script.js"></script>
-  <script defer src="voice-input.js"></script>
+  <script defer src="/serial-refinement-controller.js"></script>
   ${page.pageScript ? `<script>${page.pageScript}</script>` : ''}
   ${schema.map(scriptJson).join('\n  ')}
 </body>
@@ -1553,7 +1615,7 @@ function renderPage(page) {
 
 function baseLinkGroups() {
   return [
-    { title: 'Appliance Age Lookup', links: [['how-old-is-my-appliance', 'How Old Is My Appliance?'], ['where-is-my-serial-number', 'Where Is My Serial Number?'], ['appliance-age-for-insurance-and-replacement', 'Insurance, Repair & Replacement'], ['find-model-serial-number', 'Find Model & Serial Labels']] },
+    { title: 'Appliance Age Lookup', links: [['how-old-is-my-appliance', 'How Old Is My Appliance?'], ['serial-number-location-guide', 'Where Is My Serial Number?'], ['appliance-age-for-insurance-and-replacement', 'Insurance, Repair & Replacement'], ['find-model-serial-number', 'Find Model & Serial Labels']] },
     { title: 'Popular Appliance Brands', links: applianceBrandLinks.slice(0, 8) },
     { title: 'Appliance Type Lookups', links: applianceTypeLinks.slice(1, 6) },
     { title: 'HVAC Age Lookup', links: hvacLinks },
@@ -1566,6 +1628,8 @@ const pages = [
     slug: 'appliance-age-for-insurance-and-replacement',
     title: 'Why Appliance Age Matters for Insurance, Repair & Replacement',
     description: 'Learn why appliance age verification matters for insurance claims, repair decisions, replacement research, depreciation, and technician documentation.',
+    htmlTitleOverride: 'Appliance Age for Insurance Claims & Replacement | Decode My Item',
+    metaDescriptionOverride: 'Learn how to determine appliance age using serial numbers for insurance claims, depreciation calculations, and replacement decisions. Works for all major appliance brands.',
     h1: 'Why Appliance Age Matters for Insurance, Repair & Replacement',
     badge: 'Documentation workflow guide',
     category: 'appliances',
@@ -1613,7 +1677,7 @@ const pages = [
     locations: [
       { title: 'Major appliances', items: ['<a href="/refrigerator-serial-number">Refrigerators</a>', '<a href="/washer-serial-number">Washers</a>', '<a href="/dryer-serial-number">Dryers</a>', '<a href="/dishwasher-serial-number">Dishwashers</a>', '<a href="/range-oven-serial-number">Ranges & ovens</a>'] },
       { title: 'HVAC equipment', items: ['<a href="/carrier-serial-number-lookup">Carrier</a>', '<a href="/trane-serial-number-lookup">Trane</a>', '<a href="/rheem-serial-number-lookup">Rheem</a>', '<a href="/goodman-serial-number-lookup">Goodman</a>', '<a href="/hvac-age-by-serial-number">HVAC age lookup</a>'] },
-      { title: 'Support and replacement workflow', items: ['<a href="/how-old-is-my-appliance">How old is my appliance?</a>', '<a href="/where-is-my-serial-number">Where is my serial number?</a>', '<a href="/replacement-lookup">Replacement lookup</a>', 'Use Smart Lookup when the label is partial or missing'] }
+      { title: 'Support and replacement workflow', items: ['<a href="/how-old-is-my-appliance">How old is my appliance?</a>', '<a href="/serial-number-location-guide">Where is my serial number?</a>', '<a href="/replacement-lookup">Replacement lookup</a>', 'Use Smart Lookup when the label is partial or missing'] }
     ],
     problemSectionTitle: 'Appliance age vs condition',
     problems: [
@@ -1978,6 +2042,8 @@ const pages = [
     slug: 'whirlpool-serial-number-lookup',
     title: 'Whirlpool Serial Number Decoder',
     description: 'Decode Whirlpool serial numbers, estimate Whirlpool appliance age, and use supported year/week patterns for refrigerators, washers, dryers, dishwashers, and ranges.',
+    htmlTitleOverride: 'Whirlpool Serial Number Lookup — Manufacture Date & Age | Decode My Item',
+    metaDescriptionOverride: 'Decode your Whirlpool serial number to find the exact manufacture date and appliance age. Supports refrigerators, washers, dryers, dishwashers, and ranges. Enter serial number below.',
     h1: 'Whirlpool Serial Number Decoder',
     badge: 'Brand decoder',
     category: 'appliances',
@@ -2031,12 +2097,25 @@ const pages = [
       ['maytag-serial-number-lookup', 'Maytag'],
       ['kenmore-serial-number-lookup', 'Kenmore']
     ],
-    linkGroups: baseLinkGroups()
+    linkGroups: (() => {
+      const groups = baseLinkGroups();
+      groups.splice(2, 0, {
+        title: 'More Whirlpool Lookups',
+        links: [
+          ['whirlpool-refrigerator-serial-number-lookup', 'Whirlpool Refrigerator Serials'],
+          ['whirlpool-dishwasher-serial-number-lookup', 'Whirlpool Dishwasher Serials'],
+          ['whirlpool-model-number-lookup', 'Whirlpool Model Number Lookup']
+        ]
+      });
+      return groups;
+    })()
   },
   {
     slug: 'ge-serial-number-lookup',
     title: 'GE Serial Number Decoder',
     description: 'Decode GE serial numbers, estimate GE appliance age, and use the supported GE month/year letter pattern for refrigerators, dishwashers, laundry, ranges, and ovens.',
+    htmlTitleOverride: 'GE Serial Number Lookup — Manufacture Date Decoder | Decode My Item',
+    metaDescriptionOverride: 'Decode GE serial numbers to find manufacture date and appliance age. Supports GE refrigerators, dishwashers, ranges, washers, and ovens. Also works for GE Profile, Monogram, and Cafe.',
     h1: 'GE Serial Number Decoder',
     badge: 'Brand decoder',
     category: 'appliances',
@@ -2126,6 +2205,8 @@ const pages = [
     slug: 'samsung-serial-number-lookup',
     title: 'Samsung Serial Number Decoder',
     description: 'Decode Samsung appliance serial numbers, estimate appliance age, and use the supported 11-character and 15-character Samsung serial formats with clear confidence notes.',
+    htmlTitleOverride: 'Samsung Serial Number Lookup — Manufacture Date & Age | Decode My Item',
+    metaDescriptionOverride: 'Decode Samsung serial numbers to find manufacture date, appliance age, and production week. Supports Samsung refrigerators, washers, dryers, and dishwashers. Fast and free.',
     h1: 'Samsung Serial Number Decoder',
     badge: 'Brand decoder',
     category: 'appliances',
@@ -2633,6 +2714,8 @@ const pages = [
     slug: 'carrier-serial-number-lookup',
     title: 'Carrier Serial Number Decoder',
     description: 'Decode Carrier serial numbers, estimate HVAC age, and use the supported Carrier year-position logic with concise rating-plate guidance.',
+    htmlTitleOverride: 'Carrier Serial Number Lookup — HVAC Age & Manufacture Date | Decode My Item',
+    metaDescriptionOverride: 'Look up Carrier serial numbers to find the manufacture date, HVAC age, and production year. Supports Carrier air conditioners, furnaces, and heat pumps. Free and instant.',
     h1: 'Carrier Serial Number Decoder',
     badge: 'HVAC brand decoder',
     category: 'hvac',
@@ -2860,6 +2943,8 @@ const pages = [
     slug: 'goodman-serial-number-lookup',
     title: 'Goodman Serial Number Decoder',
     description: 'Decode Goodman serial numbers, estimate HVAC age, and use the supported Goodman year/month format with concise rating-plate guidance.',
+    htmlTitleOverride: 'Goodman Serial Number Lookup — HVAC Age & Manufacture Date | Decode My Item',
+    metaDescriptionOverride: 'Decode Goodman serial numbers to find AC unit, furnace, or heat pump manufacture year. Supports all Goodman HVAC equipment. Useful for insurance claims and HVAC replacement decisions.',
     h1: 'Goodman Serial Number Decoder',
     badge: 'HVAC brand decoder',
     category: 'hvac',
@@ -2964,6 +3049,8 @@ const pages = [
     slug: 'asus-serial-number-decoder',
     title: 'ASUS Serial Number Manufacture Date Decoder',
     description: 'Estimate manufacture date from supported ASUS serial number formats for laptops, desktops, motherboards, and monitors.',
+    socialTitleOverride: 'ASUS Serial Number Lookup & Model Number Help',
+    socialDescriptionOverride: 'Use ASUS serial number lookup, ASUS model number lookup, and ASUS laptop serial number guidance to estimate manufacture date and identify supported ASUS device families.',
     h1: 'ASUS Serial Number Lookup & Model Number Help',
     badge: 'Electronics brand decoder',
     category: 'electronics',
