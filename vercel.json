@@ -290,10 +290,6 @@
       "destination": "/index.html"
     },
     {
-      "source": "/universal-decoder",
-      "destination": "/universal-decoder.html"
-    },
-    {
       "source": "/methodology",
       "destination": "/methodology.html"
     },

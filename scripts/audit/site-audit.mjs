@@ -22,7 +22,7 @@ import { join, resolve } from 'node:path';
 const ROOT = resolve(new URL('../..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'));
 const ORIGIN = 'https://www.decodemyitem.com';
 
-const EXCLUDED_FILES = new Set(['brand-page-template.html', 'serial-guide-refactor.html']);
+const EXCLUDED_FILES = new Set(['brand-page-template.html']);
 
 function readVercelConfig() {
   return JSON.parse(readFileSync(join(ROOT, 'vercel.json'), 'utf8'));
