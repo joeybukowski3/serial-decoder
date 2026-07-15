@@ -96,11 +96,15 @@ test.describe('Smart Lookup controller', () => {
     await page.goto('http://localhost:3001/index.html?mode=smart#panel-smart');
     await page.locator('#include-replacement-comparisons').check();
     await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
-    await page.locator('[data-smart-lookup-submit="1"]').click();
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Known production/availability');
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Individual manufacture date requires serial number');
-    await expect(page.locator('#smart-lookup-age-panel')).not.toContainText('midpoint');
+    await Promise.all([
+      page.waitForResponse((response) => response.url().includes('/api/age-lookup') && response.request().method() === 'POST'),
+      page.locator('[data-smart-lookup-submit="1"]').click(),
+    ]);
+    const agePanel = page.locator('#smart-lookup-age-panel');
+    await expect(agePanel.locator('.smart-year-context-label')).toHaveText('Model introduced');
+    await expect(agePanel).toContainText('Known production/availability');
+    await expect(agePanel).toContainText('Individual manufacture date requires serial number');
+    await expect(agePanel).not.toContainText('midpoint');
     await expect(page.locator('#smart-lookup-replacement-panel')).toContainText('Samsung Q80C');
   });
 
@@ -119,10 +123,11 @@ test.describe('Smart Lookup controller', () => {
     await page.route('**/api/age-lookup', async (route) => { ageCalls += 1; await route.fulfill({ json: { brand: 'Samsung', model: 'QN65Q80A', introductionYear: 2020 } }); });
     await page.goto('http://localhost:3001/index.html?mode=smart#panel-smart');
     await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
-    await Promise.all([page.locator('[data-smart-lookup-submit="1"]').click(), page.locator('[data-smart-lookup-submit="1"]').click()]);
+    await page.locator('[data-smart-lookup-submit="1"]').dblclick();
     await expect.poll(() => ageCalls).toBe(1);
     await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A second');
-    await Promise.all([page.locator('#smart-lookup-input').press('Enter'), page.locator('[data-smart-lookup-submit="1"]').click()]);
+    await page.locator('#smart-lookup-input').press('Enter');
+    await page.locator('[data-smart-lookup-submit="1"]').click();
     await expect.poll(() => ageCalls).toBe(2);
   });
 
