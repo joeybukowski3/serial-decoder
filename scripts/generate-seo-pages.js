@@ -94,7 +94,7 @@ function isBrandSerialLookupPage(page) {
 }
 
 function pageSiteLabel(page) {
-  return isBrandSerialLookupPage(page) ? 'Decode My Item' : 'Item Assist';
+  return 'Decode My Item';
 }
 
 function pageHtmlTitle(page) {
@@ -103,7 +103,7 @@ function pageHtmlTitle(page) {
 }
 
 function pageSocialTitle(page) {
-  return page.title.includes('Item Assist') ? page.title : `${page.title} | Item Assist`;
+  return page.title.includes('Item Assist') ? page.title.replace('Item Assist', 'Decode My Item') : `${page.title} | Decode My Item`;
 }
 
 function breadcrumbItems(items) {
@@ -167,7 +167,7 @@ function renderWebPageSchema(page, url) {
     isPartOf: {
       '@type': 'WebSite',
       '@id': `${siteUrl}/#website`,
-      name: 'Item Assist',
+      name: 'Decode My Item',
       url: siteUrl
     },
     about: {
@@ -182,7 +182,7 @@ function renderWebApplicationSchema(page, url) {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     '@id': `${url}#app`,
-    name: 'Item Assist Serial Number Decoder',
+    name: 'Decode My Item Serial Number Decoder',
     url,
     description: page.decoderIntro || page.description,
     applicationCategory: 'UtilityApplication',
@@ -654,7 +654,7 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
 </head>
 <body class="serial-location-page" data-page-kind="brand-page">
   <nav>
-    <a href="/" class="logo" aria-label="Item Assist home">
+    <a href="/" class="logo" aria-label="Decode My Item home">
       <div>
         <div class="logo-text">Decode My <span>Item</span></div>
         <div class="logo-sub">Decode - Research - Automate</div>
