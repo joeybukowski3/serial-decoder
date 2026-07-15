@@ -691,6 +691,7 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
   <meta name="twitter:description" content="${pageSocialDescription(page)}">
   <meta name="twitter:image" content="${siteUrl}/assets/item-assist-banner.png">
   <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="responsive-navigation.css">
   <link rel="stylesheet" href="seo-landing.css">
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
@@ -980,6 +981,7 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
   <script defer src="analytics.js"></script>
   <script defer src="smart-lookup-bundle.js"></script>
   <script defer src="script.js"></script>
+  <script defer src="responsive-navigation.js"></script>
   ${schema.map(scriptJson).join('\n  ')}
 </body>
 </html>`;
@@ -1172,6 +1174,7 @@ function renderPage(page) {
   <meta name="twitter:description" content="${pageSocialDescription(page)}">
   <meta name="twitter:image" content="${siteUrl}/assets/item-assist-banner.png">
   <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="responsive-navigation.css">
   <link rel="stylesheet" href="seo-landing.css">
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
@@ -1603,6 +1606,7 @@ ${renderExtraSections(page.preGridSections)}
   <script defer src="analytics.js"></script>
   <script defer src="smart-lookup-bundle.js"></script>
   <script defer src="script.js"></script>
+  <script defer src="responsive-navigation.js"></script>
   <script defer src="/serial-refinement-controller.js"></script>
   ${page.pageScript ? `<script>${page.pageScript}</script>` : ''}
   ${schema.map(scriptJson).join('\n  ')}

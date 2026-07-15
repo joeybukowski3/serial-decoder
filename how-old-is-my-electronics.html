@@ -157,7 +157,7 @@ header {
 .mobile-menu a:hover { color: var(--primary); }
 .mobile-menu a.active { color: var(--primary); }
 
-@media (max-width: 1024px) {
+@media (max-width: 1140px) {
   .nav-links { display: none; }
   .mobile-toggle { display: block; }
   .nav-inner { padding: 0 20px; }
@@ -861,7 +861,7 @@ footer {
       <a href="https://www.decodemyitem.com/feedback">Feedback &amp; Bugs</a>
       <a href="https://www.decodemyitem.com/security">Security &amp; Data</a>
     </nav>
-    <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle menu">
+    <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu">
       <span class="material-symbols-outlined">menu</span>
     </button>
   </div>
@@ -1245,7 +1245,9 @@ footer {
 <script>
   const toggle = document.getElementById('mobile-toggle');
   const menu = document.getElementById('mobile-menu');
-  toggle.addEventListener('click', () => menu.classList.toggle('open'));
+  toggle.addEventListener('click', () => {
+    toggle.setAttribute('aria-expanded', String(menu.classList.toggle('open')));
+  });
 </script>
 </body>
 </html>

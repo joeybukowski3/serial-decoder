@@ -11,7 +11,7 @@
     "build:decoders": "node scripts/split-decoder-data.js",
     "build:browser": "node scripts/build-serial-refinement-browser.js",
     "build:seo": "npm run build:decoders && node scripts/generate-seo-pages.js",
-    "build:inject": "node scripts/inject-serial-refinement-script.js",
+    "build:inject": "node scripts/inject-serial-refinement-script.js && node scripts/inject-responsive-navigation-assets.js",
     "test:decoder": "node tests/decoder-regressions.test.mjs",
     "test:unit": "node --test tests/refinement/*.test.mjs",
     "test:api": "node --test tests/api/*.test.mjs",
