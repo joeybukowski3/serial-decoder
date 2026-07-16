@@ -66,6 +66,34 @@ test('local exact model evidence bypasses cache, provider, and provider rate lim
   assert.equal(rateLimitFactoryCalls, 0);
 });
 
+test('GE PFD87 label and base models resolve the A-code cycle to 2025', async () => {
+  for (const model of ['PFD87ESPV0RS', 'PFD87ESPVRS', '  pfd87espvrs  ']) {
+    let providerCalls = 0;
+    const handler = createRefineSerialDateHandler({
+      providerLookup: async () => { providerCalls += 1; throw new Error('provider should not run'); },
+      redisFactory: () => { throw new Error('redis should not run'); },
+      rateLimitFactory: () => { throw new Error('rate limit should not run'); },
+      logger: silentLogger(),
+    });
+    const res = createResponse();
+
+    await handler(request({
+      brand: 'GE',
+      serial: 'LA208110G',
+      model,
+      candidateYears: [1977, 1989, 2001, 2013, 2025],
+      decodedMonth: 'June',
+    }), res);
+
+    assert.equal(res.statusCode, 200, model);
+    assert.equal(res.payload.status, 'resolved', model);
+    assert.equal(res.payload.chosenYear, 2025, model);
+    assert.equal(res.payload.provider, 'local-db', model);
+    assert.match(res.payload.summary, /leaves 2025/i, model);
+    assert.equal(providerCalls, 0, model);
+  }
+});
+
 test('local family heuristic cannot resolve an exact year', async () => {
   const handler = createRefineSerialDateHandler({
     localLookup: async () => ({ evidence: [{ type: 'heuristic', quality: 'heuristic', yearRange: '2023-2025' }], normalization: null }),
