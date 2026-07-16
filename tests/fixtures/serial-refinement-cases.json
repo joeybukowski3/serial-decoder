@@ -42,6 +42,23 @@
       "expectedYear": 2019
     },
     {
+      "id": "ge-pfd87-label-model",
+      "brand": "GE",
+      "serial": "LA208110G",
+      "model": "PFD87ESPV0RS",
+      "candidateYears": [1977, 1989, 2001, 2013, 2025],
+      "expectedYear": 2025,
+      "validatedAlternative": "PFD87ESPVRS"
+    },
+    {
+      "id": "ge-pfd87-base-model",
+      "brand": "GE",
+      "serial": "LA208110G",
+      "model": "PFD87ESPVRS",
+      "candidateYears": [1977, 1989, 2001, 2013, 2025],
+      "expectedYear": 2025
+    },
+    {
       "id": "vizio-model-only",
       "brand": "Vizio",
       "serial": "LSPATBH4026090",

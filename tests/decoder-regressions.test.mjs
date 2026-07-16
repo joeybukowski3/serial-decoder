@@ -127,6 +127,21 @@ test('GE serial-only decode for GM028928Q remains unchanged', () => {
   assert.equal(result.month, 'April');
 });
 
+test('GE modern serial with a trailing plant character preserves all A-code cycles', () => {
+  const ge = api.decoderData.appliances.decoders.ge;
+
+  for (const serial of ['LA208110G', 'la208110g', '  LA208110G  ']) {
+    const normalized = serial.trim();
+    const result = ge.decode(normalized);
+    assert.ok(result, serial);
+    assert.equal(result.month, 'June', serial);
+    assert.equal(result.yearCode, 'A', serial);
+    assert.equal(result.year, '1977/1989/2001/2013/2025', serial);
+    assert.equal(api.hasSingleResolvedYear(result.year), false, serial);
+    assert.equal(api.computeEstimatedAge(result.year), '—', serial);
+  }
+});
+
 test('category decoder bundles preserve decoder output parity with decoder-data.js', () => {
   const manifest = loadDecoderBundleManifest();
   const splitData = loadSplitDecoderData([

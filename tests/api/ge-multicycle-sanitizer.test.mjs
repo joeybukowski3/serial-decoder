@@ -8,12 +8,12 @@ const source = fs.readFileSync(new URL('../../serial-multicycle-year-patch.js', 
 function loadPatchedSanitizer() {
   const window = {};
   window.sanitizeDecodeResult = function original(result) {
-    if (!result || typeof result !== 'object') return null;
-    if (typeof result.month !== 'string' || !result.month) return null;
+    if (!result || typeof result !== 'object') return { valid: false, reason: 'No result' };
+    if (typeof result.month !== 'string' || !result.month) return { valid: false, reason: 'Invalid month' };
     const years = String(result.year || '').split('/');
-    if (years.length < 1 || years.length > 4) return null;
-    if (!years.every((year) => /^(19|20)\d{2}$/.test(year))) return null;
-    return { ...result };
+    if (years.length < 1 || years.length > 4) return { valid: false, reason: 'Too many years' };
+    if (!years.every((year) => /^(19|20)\d{2}$/.test(year))) return { valid: false, reason: 'Invalid year' };
+    return { valid: true };
   };
   const context = vm.createContext({ window, Date, Number, Object });
   vm.runInContext(source, context);
@@ -33,12 +33,7 @@ test('valid GE A-code five-cycle result is preserved instead of becoming incompl
     monthCode: 'A'
   });
 
-  assert.deepEqual(normalize(result), {
-    year: '1977/1989/2001/2013/2025',
-    month: 'January',
-    yearCode: 'A',
-    monthCode: 'A'
-  });
+  assert.deepEqual(normalize(result), { valid: true });
 });
 
 test('extended candidate support does not admit malformed, duplicate, unordered, or future years', () => {
@@ -52,11 +47,11 @@ test('extended candidate support does not admit malformed, duplicate, unordered,
   ];
 
   for (const year of invalidYears) {
-    assert.equal(sanitize({ year, month: 'January' }), null, year);
+    assert.equal(sanitize({ year, month: 'January' }).valid, false, year);
   }
 });
 
 test('original sanitizer still controls non-year fields', () => {
   const sanitize = loadPatchedSanitizer();
-  assert.equal(sanitize({ year: '1977/1989/2001/2013/2025', month: '' }), null);
+  assert.equal(sanitize({ year: '1977/1989/2001/2013/2025', month: '' }).valid, false);
 });

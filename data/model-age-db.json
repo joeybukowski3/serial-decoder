@@ -501,6 +501,37 @@
       ]
     },
     {
+      "brand": "GE",
+      "model": "PFD87ESPVRS",
+      "normalizedBrand": "ge",
+      "normalizedModel": "pfd87espvrs",
+      "category": "dryer",
+      "yearStart": 2024,
+      "productionRange": "2024-present",
+      "source": "GE Appliances PFD87ESPVRS product record (manufactured from February 2024 onward)",
+      "notes": "GE identifies the PFD87ESPVRS dryer as manufactured from February 2024 onward. That production start eliminates earlier repetitions of the GE A year code.",
+      "aliases": [
+        "GE PFD87ESPVRS"
+      ],
+      "exactAliases": [
+        "PFD87ESPV0RS"
+      ],
+      "recordType": "exact-model",
+      "refinementEvidence": [
+        {
+          "type": "local-db",
+          "title": "GE PFD87ESPVRS official production-start record",
+          "sourceName": "GE Appliances PFD87ESPVRS product record",
+          "sourceUrl": "https://products.geappliances.com/appliance/gea-specs/PFD87ESPVRS",
+          "productionStart": 2024,
+          "productionEnd": null,
+          "supports": "GE lists PFD87ESPVRS as manufactured from February 2024 onward.",
+          "quality": "official",
+          "verified": true
+        }
+      ]
+    },
+    {
       "brand": "Vizio",
       "model": "VW32L HDTV10A",
       "normalizedBrand": "vizio",

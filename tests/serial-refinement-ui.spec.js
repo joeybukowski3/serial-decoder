@@ -123,6 +123,69 @@ test('serial candidates and loading status remain visible through legacy summary
   }
 });
 
+test('GE A-code modern serial stays useful without model evidence', async () => {
+  const { browser, context, page, diagnostics } = await openPage({ width: 390, height: 844 });
+  try {
+    await fillDecode(page, 'ge', '  la208110g  ', '');
+    await page.click('#decodeBtn');
+
+    await expect(page.locator('#serialResults')).toBeVisible();
+    await expect(page.locator('#resultYear')).toHaveText('1977/1989/2001/2013/2025');
+    await expect(page.locator('#resultMonth')).toHaveText('June');
+    await expect(page.locator('#resultNotes')).toContainText('Possible manufacture years');
+    await expect(page.locator('#resultNotes')).toContainText('Add a model number');
+    await expect(page.locator('.result-warning')).toHaveClass(/\bhidden\b/);
+    await expect(page.locator('#resultEstimatedAge')).toHaveText(/^(|—)$/);
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
+
+test('GE dryer label and base model forms refine the serial result to June 2025', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  const requestedModels = [];
+  await page.route('**/api/refine-serial-date', async (route) => {
+    const body = route.request().postDataJSON();
+    requestedModels.push(body.model);
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        candidateYears: [1977, 1989, 2001, 2013, 2025],
+        remainingCandidateYears: [2025],
+        chosenYear: 2025,
+        modelProductionRange: { start: 2024, end: null },
+        evidence: [{
+          type: 'local-db',
+          title: 'GE PFD87ESPVRS official production-start record',
+          quality: 'official',
+          supports: 'Manufactured from February 2024 onward.',
+        }],
+        summary: 'The model production era resolves the repeating GE year cycle to 2025.',
+      })),
+    });
+  });
+  try {
+    for (const model of ['PFD87ESPV0RS', 'PFD87ESPVRS']) {
+      await fillDecode(page, 'ge', 'LA208110G', model);
+      await page.click('#decodeBtn');
+      await expect(page.locator('#resultYear')).toHaveText('2025');
+      await expect(page.locator('#resultMonth')).toHaveText('June');
+      await expect(page.locator('#resultNotes')).toContainText('resolves the repeating GE year cycle');
+      await expect(page.locator('.result-warning')).toHaveClass(/\bhidden\b/);
+    }
+
+    expect(requestedModels).toEqual(['PFD87ESPV0RS', 'PFD87ESPVRS']);
+    await expect(page.getByRole('button', { name: /Possible Error\? Let Us Know/i }).first()).toBeVisible();
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
+
 test('unavailable refinement preserves candidates and Retry after legacy summary rerender', async () => {
   const { browser, context, page, diagnostics } = await openPage({ width: 390, height: 844 });
   await page.route('**/api/refine-serial-date', async (route) => {
