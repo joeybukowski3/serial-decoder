@@ -450,6 +450,48 @@ test('Unsupported Vizio serial without a model does not invent a date', () => {
   assert.equal(vizio.decode('LSPATBH4026090'), null);
 });
 
+test('Vizio V505-J09 returns model-year context without claiming a serial decode', () => {
+  const result = api.decoderData.electronics.decoders.vizio.decode('V505-J09');
+
+  assert.ok(result);
+  assert.equal(result.year, '2021');
+  assert.match(result.method, /model number year code/i);
+});
+
+test('Apple legacy and randomized serial paths remain explicitly different', () => {
+  const apple = api.decoderData.electronics.decoders.apple;
+  const legacy = apple.decode('C02X12ABCDEF');
+  const randomized = apple.decode('AB12CD34EF');
+
+  assert.deepEqual({ year: legacy.year, month: legacy.month }, { year: '2019/2029', month: 'Week 12' });
+  assert.equal(randomized.year, 'Post-2021 (Randomized)');
+  assert.match(randomized.month, /may be randomized/i);
+});
+
+test('HP CNX7120BXX preserves decade ambiguity and production week', () => {
+  const result = api.decoderData.electronics.decoders.hp.decode('CNX7120BXX');
+
+  assert.ok(result);
+  assert.equal(result.year, '2007/2017');
+  assert.equal(result.month, 'Week 12');
+});
+
+test('Sony XR65A90K returns model suffix year context', () => {
+  const result = api.decoderData.electronics.decoders.sony.decode('XR65A90K');
+
+  assert.ok(result);
+  assert.equal(result.year, '2022');
+  assert.equal(result.month, 'Model suffix: K');
+});
+
+test('Samsung TV example preserves candidate-year cycle and month', () => {
+  const result = api.decoderData.electronics.decoders.samsung_tv.decode('07R5CAHJB001234');
+
+  assert.ok(result);
+  assert.equal(result.year, '2017/2037');
+  assert.equal(result.month, 'November');
+});
+
 test('Kenmore model field is no longer required, and accepts a full model number (UX update)', () => {
   // UX change: users can now decode Kenmore without providing a model
   // number/prefix at all (falls back to the documented Whirlpool default),
