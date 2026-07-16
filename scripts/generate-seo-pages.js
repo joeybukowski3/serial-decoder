@@ -1665,7 +1665,7 @@ function electronicsLinkGroups() {
   return [
     { title: 'Electronics Research', links: [['how-old-is-my-electronics', 'Electronics Age Guide'], ['find-model-serial-number', 'Find Model & Serial Labels'], ['smart-lookup', 'Smart Lookup'], ['methodology', 'Methodology']] },
     { title: 'Supported Electronics Paths', links: electronicsLinks.slice(0, 7) },
-    { title: 'Product History', links: [['tv-history', 'TV History'], ['computer-history', 'Computer History'], ['tv-replacement-guide', 'TV Replacement Guide']] }
+    { title: 'Product History', links: [['tv-history', 'TV History'], ['computer-history', 'Computer History']] }
   ];
 }
 
@@ -2287,11 +2287,11 @@ const pages = [
     linkGroups: (() => {
       const groups = baseLinkGroups();
       groups.splice(2, 0, {
-        title: 'More Whirlpool Lookups',
+        title: 'Whirlpool Product Guides',
         links: [
-          ['whirlpool-refrigerator-serial-number-lookup', 'Whirlpool Refrigerator Serials'],
-          ['whirlpool-dishwasher-serial-number-lookup', 'Whirlpool Dishwasher Serials'],
-          ['whirlpool-model-number-lookup', 'Whirlpool Model Number Lookup']
+          ['refrigerator-serial-number', 'Refrigerator Serial Guide'],
+          ['dishwasher-serial-number', 'Dishwasher Serial Guide'],
+          ['smart-lookup', 'Model-Based Smart Lookup']
         ]
       });
       return groups;
@@ -3318,7 +3318,7 @@ const pages = [
         title: 'Model number and tonnage context',
         body: [
           'The serial number is what this decoder reads for manufacture date. The model number is a separate identifier for equipment family and capacity &mdash; some Goodman/Amana model numbers include a capacity or tonnage code as part of the manufacturer\'s naming convention, but this site does not currently decode tonnage or BTU capacity from the model number.',
-          'If you need tonnage or capacity information, check the equipment nameplate directly or the <a href="/goodman-model-number-lookup">Goodman Model Number Lookup</a> page, and treat any tonnage figure from the model number as separate from, and not a substitute for, the serial-based age result.'
+          'If you need tonnage or capacity information, check the equipment nameplate directly or use <a href="/smart-lookup">Smart Lookup</a> for model-focused research, and treat any tonnage figure from the model number as separate from, and not a substitute for, the serial-based age result.'
         ]
       }
     ],
@@ -3365,7 +3365,6 @@ const pages = [
     ],
     relatedLinks: [
       ['how-old-is-my-hvac', 'How Old Is My HVAC?'],
-      ['goodman-model-number-lookup', 'Goodman Model Number Lookup'],
       ['carrier-serial-number-lookup', 'Carrier'],
       ['smart-lookup', 'Smart Lookup'],
       ['serial-number-location-guide', 'Serial Number Location Guide'],
@@ -3626,7 +3625,7 @@ const pages = [
       ['What if my Sony model ends with another letter?', 'Use Sony support documents or Smart Lookup; this page does not extend the suffix mapping beyond supported evidence.']
     ],
     relatedSectionTitle: 'Sony TV Research',
-    relatedLinks: [['smart-lookup', 'Smart Lookup'], ['tv-history', 'TV History'], ['tv-replacement-guide', 'TV Replacement Guide'], ['find-model-serial-number', 'Find TV Labels'], ['methodology', 'Methodology']],
+    relatedLinks: [['smart-lookup', 'Smart Lookup'], ['tv-history', 'TV History'], ['find-model-serial-number', 'Find TV Labels'], ['methodology', 'Methodology']],
     bottomCtaTitle: 'Have a Sony serial but no model?',
     bottomCtaBody: 'Find the model name in TV system information or add the visible label details to Smart Lookup.',
     bottomPrimaryLabel: 'Check a Sony Model',
@@ -3731,7 +3730,7 @@ const pages = [
       ['Why did an arbitrary serial return no result?', 'That is intentional. The decoder refuses to invent a date from an unsupported Vizio serial.']
     ],
     relatedSectionTitle: 'Vizio TV Research',
-    relatedLinks: [['smart-lookup', 'Smart Lookup'], ['tv-history', 'TV History'], ['tv-replacement-guide', 'TV Replacement Guide'], ['find-model-serial-number', 'Find TV Labels'], ['methodology', 'Methodology']],
+    relatedLinks: [['smart-lookup', 'Smart Lookup'], ['tv-history', 'TV History'], ['find-model-serial-number', 'Find TV Labels'], ['methodology', 'Methodology']],
     bottomCtaTitle: 'Only have a Vizio serial?',
     bottomCtaBody: 'Recover the model from the label, box, receipt, or registration records before attempting a model-year lookup.',
     bottomPrimaryLabel: 'Check a Vizio Model',
@@ -3782,7 +3781,7 @@ const pages = [
       ['What if the serial length does not match?', 'Do not shift character positions manually. Confirm the full serial and use Smart Lookup if the format remains unsupported.']
     ],
     relatedSectionTitle: 'Samsung TV and Electronics Research',
-    relatedLinks: [['samsung-serial-number-lookup', 'Samsung Appliance Decoder'], ['smart-lookup', 'Smart Lookup'], ['tv-history', 'TV History'], ['tv-replacement-guide', 'TV Replacement Guide'], ['methodology', 'Methodology']],
+    relatedLinks: [['samsung-serial-number-lookup', 'Samsung Appliance Decoder'], ['smart-lookup', 'Smart Lookup'], ['tv-history', 'TV History'], ['methodology', 'Methodology']],
     bottomCtaTitle: 'Need to resolve a repeated Samsung TV year?',
     bottomCtaBody: 'Add the complete model code in Smart Lookup and keep the decoder result as a candidate range until the generation is confirmed.',
     linkGroups: electronicsLinkGroups()
@@ -3923,10 +3922,6 @@ const sitemapEntries = [
   ['/privacy-policy', 'yearly', '0.3'],
   ['/security', 'yearly', '0.3'],
   ['/smart-lookup', 'weekly', '0.9'],
-  ['/appliance-age-estimator', 'monthly', '0.6'],
-  ['/replacement-lookup', 'monthly', '0.6'],
-  ['/hvac-replacement-guide', 'monthly', '0.6'],
-  ['/tv-replacement-guide', 'monthly', '0.6'],
   ['/refrigerator-serial-number', 'monthly', '0.8'],
   ['/washer-serial-number', 'monthly', '0.8'],
   ['/dryer-serial-number', 'monthly', '0.8'],
@@ -3949,10 +3944,6 @@ const sitemapEntries = [
   ['/hp', 'monthly', '0.7'],
   ['/sony', 'monthly', '0.7'],
   ['/bosch', 'monthly', '0.7'],
-  ['/whirlpool-model-number-lookup', 'monthly', '0.6'],
-  ['/goodman-model-number-lookup', 'monthly', '0.6'],
-  ['/whirlpool-refrigerator-serial-number-lookup', 'monthly', '0.6'],
-  ['/whirlpool-dishwasher-serial-number-lookup', 'monthly', '0.6'],
   ['/item-history-guides', 'monthly', '0.8'],
   ['/electrical-service-panel-history', 'monthly', '0.7'],
   ['/electrical-wiring-history', 'monthly', '0.7'],

@@ -58,7 +58,11 @@
   </script>
     <link rel="stylesheet" href="global.css">
     <style>
-        .policy-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .policy-tab-panel, .static-card-body, .static-section { min-width: 0; }
+        .table-scroll { display: block; width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
+        .table-scroll:focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; border-radius: 4px; }
+        .table-scroll-hint { display: none; margin: 0.35rem 0; color: var(--text-mid); font-size: 0.78rem; }
+        .policy-table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 0.85rem; }
         .policy-table th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--text-main); border-bottom: 2px solid #e2e8f0; }
         .policy-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #e9edf2; vertical-align: top; color: var(--text-mid); }
         .policy-table tr:last-child td { border-bottom: none; }
@@ -70,6 +74,11 @@
         .tag-no   { display: inline-block; background: #fee2e2; color: #991b1b; font-size: 0.72rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 4px; }
         .tag-note { display: inline-block; background: #fef9c3; color: #713f12; font-size: 0.72rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 4px; }
         .policy-sub { font-size: 0.9rem; font-weight: 600; color: var(--text-dark); margin: 1.25rem 0 0.35rem; padding-bottom: 0.2rem; border-bottom: 1px dashed #cbd5e1; }
+        .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.35rem 0.55rem; max-width: 100%; }
+        @media (max-width: 700px) {
+            .table-scroll-hint { display: block; }
+            .footer-links .footer-sep { display: none; }
+        }
         .policy-tab-panel { display: none; }
         .policy-tab-panel.active { display: block; }
     </style>
@@ -213,7 +222,8 @@
                         <p class="policy-sub">AI Inference Providers (Smart Lookup only)</p>
                         <p>When you submit a Smart Lookup query, your query text is forwarded to one of the following AI providers:</p>
 
-                        <div class="table-scroll">
+                        <p class="table-scroll-hint" id="ai-provider-table-hint">Scroll horizontally to read all columns.</p>
+                        <div class="table-scroll" tabindex="0" role="region" aria-label="AI inference providers" aria-describedby="ai-provider-table-hint">
                             <table class="policy-table">
                                 <thead>
                                     <tr>
@@ -246,7 +256,8 @@
                         </div>
 
                         <p class="policy-sub">Infrastructure Services</p>
-                        <div class="table-scroll">
+                        <p class="table-scroll-hint" id="infrastructure-table-hint">Scroll horizontally to read all columns.</p>
+                        <div class="table-scroll" tabindex="0" role="region" aria-label="Infrastructure services" aria-describedby="infrastructure-table-hint">
                             <table class="policy-table">
                                 <thead>
                                     <tr>
@@ -288,7 +299,8 @@
 
                     <div class="static-section">
                         <h3>4. Data Retention</h3>
-                        <div class="table-scroll">
+                        <p class="table-scroll-hint" id="retention-table-hint">Scroll horizontally to read all columns.</p>
+                        <div class="table-scroll" tabindex="0" role="region" aria-label="Data retention periods" aria-describedby="retention-table-hint">
                             <table class="policy-table">
                                 <thead>
                                     <tr>
@@ -386,7 +398,8 @@
 
                     <div class="static-section">
                         <h3>Infrastructure Security Certifications</h3>
-                        <div class="table-scroll">
+                        <p class="table-scroll-hint" id="certification-table-hint">Scroll horizontally to read all columns.</p>
+                        <div class="table-scroll" tabindex="0" role="region" aria-label="Infrastructure security certifications" aria-describedby="certification-table-hint">
                             <table class="policy-table">
                                 <thead>
                                     <tr>

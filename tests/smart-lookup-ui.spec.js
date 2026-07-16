@@ -119,16 +119,35 @@ test.describe('Smart Lookup controller', () => {
   });
 
   test('double-click and Enter/click deduplicate requests', async ({ page }) => {
-    let ageCalls = 0;
-    await page.route('**/api/age-lookup', async (route) => { ageCalls += 1; await route.fulfill({ json: { brand: 'Samsung', model: 'QN65Q80A', introductionYear: 2020 } }); });
+    const ageQueries = [];
+    await page.route('**/api/age-lookup', async (route) => {
+      const body = route.request().postDataJSON();
+      ageQueries.push(body.query);
+      // Keep the request in flight long enough for both browser events to
+      // exercise the controller's real deduplication path.
+      await new Promise((resolve) => setTimeout(resolve, 75));
+      await route.fulfill({ json: { brand: 'Samsung', model: body.query, introductionYear: 2020 } });
+    });
     await page.goto('http://localhost:3001/index.html?mode=smart#panel-smart');
-    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
-    await page.locator('[data-smart-lookup-submit="1"]').dblclick();
-    await expect.poll(() => ageCalls).toBe(1);
-    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A second');
-    await page.locator('#smart-lookup-input').press('Enter');
-    await page.locator('[data-smart-lookup-submit="1"]').click();
-    await expect.poll(() => ageCalls).toBe(2);
+    const input = page.locator('#smart-lookup-input');
+    const submit = page.locator('[data-smart-lookup-submit="1"]');
+    const agePanel = page.locator('#smart-lookup-age-panel');
+    const queryA = 'Samsung QN65-Q80A';
+    const queryB = 'Samsung QN65-Q80A second';
+
+    await input.fill(queryA);
+    await submit.dblclick();
+    await expect(agePanel).toContainText(queryA);
+    await expect.poll(() => ageQueries.filter((query) => query === queryA).length).toBe(1);
+
+    // Start a genuinely independent submission only after Query A has
+    // visibly settled. Enter and click are two events for this one attempt.
+    await input.fill(queryB);
+    await input.press('Enter');
+    await submit.click();
+    await expect(agePanel).toContainText(queryB);
+    await expect.poll(() => ageQueries.filter((query) => query === queryB).length).toBe(1);
+    expect(ageQueries).toEqual([queryA, queryB]);
   });
 
   test('stale result rejection keeps latest query', async ({ page }) => {
