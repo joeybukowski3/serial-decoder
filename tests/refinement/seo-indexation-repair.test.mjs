@@ -44,20 +44,20 @@ test('legacy appliance-age redirect has one unambiguous noindex robots policy', 
   assert.deepEqual(robots, ['noindex, nofollow']);
 });
 
-test('priority sitemap pages have static inbound links from relevant pages', () => {
-  const priorityPages = [
-    '/whirlpool-dishwasher-serial-number-lookup',
-    '/whirlpool-refrigerator-serial-number-lookup',
+test('retained noindex workflows keep contextual static discovery while consolidated routes do not', () => {
+  const contextualNoindexPages = [
     '/appliance-age-estimator',
+    '/replacement-lookup',
     '/tv-replacement-guide',
     '/hvac-replacement-guide'
   ];
-  for (const page of priorityPages) assert.ok(hasStaticInboundLink(page), `${page} needs a static inbound internal link`);
+  for (const page of contextualNoindexPages) {
+    assert.ok(hasStaticInboundLink(page), `${page} needs a contextual static inbound link`);
+    assert.ok(!sitemapPaths.includes(page), `${page} must not be in sitemap.xml`);
+  }
 
-  const whirlpool = read('whirlpool.html');
-  assert.match(whirlpool, /href="\/whirlpool-dishwasher-serial-number-lookup"/);
-  assert.match(whirlpool, /href="\/whirlpool-refrigerator-serial-number-lookup"/);
   assert.match(read('how-old-is-my-appliance.html'), /href="\/appliance-age-estimator"/);
+  assert.match(read('appliance-age-for-insurance-and-replacement.html'), /href="\/replacement-lookup"/);
   assert.match(read('how-old-is-my-electronics.html'), /href="\/tv-replacement-guide"/);
   assert.match(read('how-old-is-my-hvac.html'), /href="\/hvac-replacement-guide"/);
 });
