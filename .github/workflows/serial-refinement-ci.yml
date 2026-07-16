@@ -52,8 +52,8 @@ jobs:
         run: npm ci
       - name: Install pinned Playwright test runner
         run: npm install --no-save @playwright/test@1.61.1
-      - name: Install Microsoft Edge
-        run: npx playwright install --with-deps msedge
+      - name: Install Playwright browsers used by the shared suite
+        run: npx playwright install --with-deps chromium msedge
       - name: Rebuild focused browser controller
         run: npm run build:browser
       - name: Start static site

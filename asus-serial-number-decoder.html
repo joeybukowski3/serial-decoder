@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
   <title>ASUS Serial Number Manufacture Date Decoder | Decode My Item</title>
-  <meta name="description" content="Estimate manufacture date from supported ASUS serial number formats for laptops, desktops, motherboards, and monitors.">
+  <meta name="description" content="Decode supported ASUS serials whose first two characters match the documented 2010-2025 year/month table, with device-specific label and BIOS recovery.">
   <link rel="canonical" href="https://www.decodemyitem.com/asus-serial-number-decoder">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
@@ -33,6 +33,11 @@
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="responsive-navigation.css">
   <link rel="stylesheet" href="seo-landing.css">
+  <style>
+    .section, .seo-copy-wrap, .table-wrap { min-width: 0; }
+    .seo-copy-wrap { max-width: 100%; }
+    .conf-pill { max-width: 100%; white-space: normal; overflow-wrap: anywhere; flex-shrink: 1; }
+  </style>
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body data-page-kind="brand-page">
@@ -136,7 +141,7 @@
 
     <!-- ═══ SUPPORTING INTRO ═══ -->
     <div class="bp-intro-strip">
-      <p>This page targets ASUS electronics intent, not appliance intent. The supported ASUS serial logic uses the first character for year code and the second character for month, while the model number helps narrow device family, generation, and warranty-style identification workflows.</p>
+      <p>This page targets ASUS electronics, not appliances. The supported table currently covers year codes A through S for 2010-2025, skipping I, O, and Q, and accepts month codes 1-9 plus A-C.</p>
     </div>
 
     <!-- ═══ DECODER TOOL ═══ -->
@@ -247,6 +252,45 @@
       </div>
     </div>
 
+    <section class="section" id="asus-worked-example">
+      <div class="seo-copy-wrap">
+        <h2>Verified ASUS serial example</h2>
+        <p>This fixture exercises the exact validation and character positions used by the current electronics decoder.</p>
+        <div class="table-wrap">
+          <table class="format-table">
+            <thead>
+              <tr>
+                <th>Label Field</th>
+                <th>What It Usually Means</th>
+                <th>Why It Matters</th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td>Serial E5N0CV123456</td>
+              <td>Character 1 E; character 2 5</td>
+              <td>The supported table maps E to 2014 and 5 to May.</td>
+            </tr>
+            <tr>
+              <td>Remaining characters</td>
+              <td>Not used for the date result</td>
+              <td>They still remain part of the complete identifier and should be preserved for support or warranty lookup.</td>
+            </tr>
+            <tr>
+              <td>Short AB1234567</td>
+              <td>Below supported length</td>
+              <td>The decoder rejects it instead of returning a date from the first two characters alone.</td>
+            </tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <section class="section" id="asus-identifier-recovery">
+      <div class="seo-copy-wrap">
+        <h2>Recovering an ASUS serial without guessing</h2>
+        <p>ASUS documents several recovery paths: the product label, packaging box, warranty card, BIOS or system information, and MyASUS on supported devices. Motherboards, graphics cards, notebooks, desktops, monitors, and phones do not all expose the identifier in the same place.</p><p>If the first year code is outside the current 2010-2025 table, this tool returns unsupported. Use the complete model and official ASUS records rather than extending the letter sequence by assumption.</p>
+      </div>
+    </section>
 
     <!-- ═══ CONTENT SECTIONS ═══ -->
     <div class="bp-content-wrap">
@@ -317,30 +361,10 @@
           <span class="ex-dot ex-dot-red"></span>
           <span class="ex-dot ex-dot-amber"></span>
           <span class="ex-dot ex-dot-green"></span>
-          <span class="ex-eyebrow">Illustrative ASUS pattern</span>
+          <span class="ex-eyebrow">Verified supported fixture</span>
         </div>
-        <code class="ex-serial">NBN1234567</code>
-        <p class="ex-note">Illustrative ASUS serial pattern. The supported path reads character 1 as year code and character 2 as month code, with A/B/C representing October through December.</p>
-      </div>
-      <div class="ex-terminal">
-        <div class="ex-terminal-bar">
-          <span class="ex-dot ex-dot-red"></span>
-          <span class="ex-dot ex-dot-amber"></span>
-          <span class="ex-dot ex-dot-green"></span>
-          <span class="ex-eyebrow">Model-number reminder</span>
-        </div>
-        <code class="ex-serial">UX3402 / ROG / PRIME families</code>
-        <p class="ex-note">The ASUS model number helps narrow the device family and generation after the serial age estimate is returned.</p>
-      </div>
-      <div class="ex-terminal">
-        <div class="ex-terminal-bar">
-          <span class="ex-dot ex-dot-red"></span>
-          <span class="ex-dot ex-dot-amber"></span>
-          <span class="ex-dot ex-dot-green"></span>
-          <span class="ex-eyebrow">Warranty-style lookup reminder</span>
-        </div>
-        <code class="ex-serial">Serial + model works best</code>
-        <p class="ex-note">For support or warranty-style identification, keep both the ASUS serial number and the ASUS model number together.</p>
+        <code class="ex-serial">E5N0CV123456</code>
+        <p class="ex-note">Character 1 E resolves to 2014 and character 2 5 resolves to May.</p>
       </div>
         </div>
       </div>
@@ -417,38 +441,45 @@
 
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>How do I find an ASUS laptop serial number?</span>
+          <span>Which ASUS year codes are supported?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>Check the bottom case, the original box, BIOS, or system information. Older units may also place it under the battery or on an underside label.</p></div>
+        <div class="bp-faq-body"><p>The current table covers A through S for 2010-2025 while skipping I, O, and Q. Codes beyond that table are not extrapolated.</p></div>
       </details>
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>Can the ASUS model number help if the serial is missing?</span>
+          <span>How are October, November, and December represented?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>Yes. The model number is useful for device-family identification, generation research, and Smart Lookup when the serial label is not readable.</p></div>
+        <div class="bp-faq-body"><p>The supported second-character month table uses A for October, B for November, and C for December after numeric months 1-9.</p></div>
       </details>
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>Does this work for ASUS motherboards?</span>
+          <span>Why is a nine-character ASUS string rejected?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>Yes. The supported ASUS serial logic can be used when the motherboard serial label is available, and the model number helps narrow the platform.</p></div>
+        <div class="bp-faq-body"><p>The current decoder requires at least ten alphanumeric characters before it reads the opening year and month codes.</p></div>
       </details>
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>Can this page help with ASUS warranty or identification intent?</span>
+          <span>Where can a notebook serial be recovered?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>Yes. The best workflow is to keep both the serial and model number together, especially for support, resale, or documentation needs.</p></div>
+        <div class="bp-faq-body"><p>ASUS identifies the product label, packaging, warranty card, BIOS or system information, and MyASUS as supported recovery locations.</p></div>
       </details>
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>Does this page target appliances?</span>
+          <span>Does the model number provide the manufacture date?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>No. This page is intentionally ASUS electronics-focused and does not target appliance age keywords.</p></div>
+        <div class="bp-faq-body"><p>No. It identifies the device family and supports research, but the date result on this page comes from a supported serial format.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Does this page cover ASUS appliances?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>No. It is limited to supported ASUS electronics such as notebooks, desktops, motherboards, and monitors.</p></div>
       </details>
           </div>
         </div>
@@ -461,7 +492,7 @@
           <h2>Related Decoder Pages</h2>
         </div>
         <div class="bp-pills-wrap">
-          <a href="/find-model-serial-number" class="bp-pill">Find Model & Serial Labels</a><a href="/samsung-tv-serial-number-decoder" class="bp-pill">Samsung TV Serial Number Decoder</a><a href="/hp" class="bp-pill">HP</a><a href="/apple" class="bp-pill">Apple</a><a href="/electronics" class="bp-pill">Electronics Hub</a><a href="/how-old-is-my-appliance" class="bp-pill">How Old Is My Appliance?</a>
+          <a href="/find-model-serial-number" class="bp-pill">Find Model & Serial Labels</a><a href="/samsung-tv-serial-number-decoder" class="bp-pill">Samsung TV Serial Number Decoder</a><a href="/hp" class="bp-pill">HP</a><a href="/apple" class="bp-pill">Apple</a><a href="/how-old-is-my-electronics" class="bp-pill">Electronics Identifier Guide</a><a href="/smart-lookup" class="bp-pill">Smart Lookup</a><a href="/methodology" class="bp-pill">Methodology</a>
         </div>
       </div>
 
@@ -585,7 +616,7 @@
         <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
         <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
         <li><a href="/trane-serial-number-lookup">Trane</a></li>
-        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+        <li><a href="/rheem-serial-number-lookup">Rheem HVAC</a></li>
         <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
         <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
         <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
@@ -648,6 +679,11 @@
       }
       brandSelect.value = 'asus';
       brandSelect.dispatchEvent(new Event('change'));
+      var mobileItemType = document.getElementById('mobileItemType');
+      if (mobileItemType && Array.prototype.some.call(mobileItemType.options, function(option) { return option.value === 'electronics'; })) {
+        mobileItemType.value = 'electronics';
+        mobileItemType.dispatchEvent(new Event('change'));
+      }
 
     }
     window.addEventListener('DOMContentLoaded', function() {
@@ -682,7 +718,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/asus-serial-number-decoder#webpage","name":"ASUS Serial Number Lookup & Model Number Help","description":"Use ASUS serial number lookup, ASUS model number lookup, and ASUS laptop serial number guidance to estimate manufacture date and identify supported ASUS device families.","url":"https://www.decodemyitem.com/asus-serial-number-decoder","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Decode My Item","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"ASUS Serial Number Lookup & Model Number Help"}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","@id":"https://www.decodemyitem.com/asus-serial-number-decoder#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.decodemyitem.com"},{"@type":"ListItem","position":2,"name":"ASUS Serial Number Lookup & Model Number Help","item":"https://www.decodemyitem.com/asus-serial-number-decoder"}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://www.decodemyitem.com/asus-serial-number-decoder#app","name":"Decode My Item Serial Number Decoder","url":"https://www.decodemyitem.com/asus-serial-number-decoder","description":"ASUS is preselected. Enter the full ASUS serial number exactly as shown on the device label.","applicationCategory":"UtilityApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/asus-serial-number-decoder#faq","mainEntity":[{"@type":"Question","name":"How do I find an ASUS laptop serial number?","acceptedAnswer":{"@type":"Answer","text":"Check the bottom case, the original box, BIOS, or system information. Older units may also place it under the battery or on an underside label."}},{"@type":"Question","name":"Can the ASUS model number help if the serial is missing?","acceptedAnswer":{"@type":"Answer","text":"Yes. The model number is useful for device-family identification, generation research, and Smart Lookup when the serial label is not readable."}},{"@type":"Question","name":"Does this work for ASUS motherboards?","acceptedAnswer":{"@type":"Answer","text":"Yes. The supported ASUS serial logic can be used when the motherboard serial label is available, and the model number helps narrow the platform."}},{"@type":"Question","name":"Can this page help with ASUS warranty or identification intent?","acceptedAnswer":{"@type":"Answer","text":"Yes. The best workflow is to keep both the serial and model number together, especially for support, resale, or documentation needs."}},{"@type":"Question","name":"Does this page target appliances?","acceptedAnswer":{"@type":"Answer","text":"No. This page is intentionally ASUS electronics-focused and does not target appliance age keywords."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/asus-serial-number-decoder#faq","mainEntity":[{"@type":"Question","name":"Which ASUS year codes are supported?","acceptedAnswer":{"@type":"Answer","text":"The current table covers A through S for 2010-2025 while skipping I, O, and Q. Codes beyond that table are not extrapolated."}},{"@type":"Question","name":"How are October, November, and December represented?","acceptedAnswer":{"@type":"Answer","text":"The supported second-character month table uses A for October, B for November, and C for December after numeric months 1-9."}},{"@type":"Question","name":"Why is a nine-character ASUS string rejected?","acceptedAnswer":{"@type":"Answer","text":"The current decoder requires at least ten alphanumeric characters before it reads the opening year and month codes."}},{"@type":"Question","name":"Where can a notebook serial be recovered?","acceptedAnswer":{"@type":"Answer","text":"ASUS identifies the product label, packaging, warranty card, BIOS or system information, and MyASUS as supported recovery locations."}},{"@type":"Question","name":"Does the model number provide the manufacture date?","acceptedAnswer":{"@type":"Answer","text":"No. It identifies the device family and supports research, but the date result on this page comes from a supported serial format."}},{"@type":"Question","name":"Does this page cover ASUS appliances?","acceptedAnswer":{"@type":"Answer","text":"No. It is limited to supported ASUS electronics such as notebooks, desktops, motherboards, and monitors."}}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","@id":"https://www.decodemyitem.com/asus-serial-number-decoder#howto","name":"ASUS Serial Number Lookup & Model Number Help","description":"Use the electronics tab with ASUS selected. Enter the full serial number from the laptop, motherboard, desktop, or monitor label. Use the model number when you need device-family or warranty-style identification context.","step":[{"@type":"HowToStep","position":1,"name":"Step 1","text":"Use the electronics tab with ASUS selected."},{"@type":"HowToStep","position":2,"name":"Step 2","text":"Enter the full serial number from the laptop, motherboard, desktop, or monitor label."},{"@type":"HowToStep","position":3,"name":"Step 3","text":"Use the model number when you need device-family or warranty-style identification context."}]}</script>
 </body>
 </html>

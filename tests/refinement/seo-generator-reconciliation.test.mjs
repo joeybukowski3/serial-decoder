@@ -11,23 +11,31 @@ const generator = fs.readFileSync(generatorPath, 'utf8');
 
 const generatedPages = [
   'appliance-age-for-insurance-and-replacement.html',
+  'apple.html',
   'asus-serial-number-decoder.html',
+  'bosch.html',
   'carrier-serial-number-lookup.html',
   'dishwasher-serial-number.html',
   'dryer-serial-number.html',
   'frigidaire-serial-number-lookup.html',
   'ge-serial-number-lookup.html',
   'goodman-serial-number-lookup.html',
+  'google-pixel.html',
+  'hp.html',
   'kenmore-serial-number-lookup.html',
   'lg-serial-number-lookup.html',
   'maytag-serial-number-lookup.html',
+  'panasonic.html',
   'range-oven-serial-number.html',
   'refrigerator-serial-number.html',
   'rheem-serial-number-lookup.html',
   'samsung-serial-number-lookup.html',
+  'samsung-tv-serial-number-decoder.html',
+  'sony.html',
   'trane-serial-number-lookup.html',
   'washer-serial-number.html',
-  'whirlpool-serial-number-lookup.html'
+  'whirlpool-serial-number-lookup.html',
+  'vizio.html'
 ];
 
 const targetBrandPages = [
@@ -45,7 +53,7 @@ const htmlTitleOverridePages = {
   'ge-serial-number-lookup.html': 'GE Serial Number Lookup — Manufacture Date Decoder | Decode My Item',
   'goodman-serial-number-lookup.html': 'Goodman Serial Number Lookup — HVAC Age & Manufacture Date | Decode My Item',
   'samsung-serial-number-lookup.html': 'Samsung Serial Number Lookup — Manufacture Date & Age | Decode My Item',
-  'whirlpool-serial-number-lookup.html': 'Whirlpool Serial Number Lookup — Manufacture Date & Age | Decode My Item'
+  'whirlpool-serial-number-lookup.html': 'Whirlpool Serial Number Decoder — Year Code & Week | Decode My Item'
 };
 
 function readPage(file) {

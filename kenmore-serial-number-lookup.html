@@ -33,6 +33,11 @@
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="responsive-navigation.css">
   <link rel="stylesheet" href="seo-landing.css">
+  <style>
+    .section, .seo-copy-wrap, .table-wrap { min-width: 0; }
+    .seo-copy-wrap { max-width: 100%; }
+    .conf-pill { max-width: 100%; white-space: normal; overflow-wrap: anywhere; flex-shrink: 1; }
+  </style>
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body data-page-kind="brand-page">
@@ -247,6 +252,45 @@
       </div>
     </div>
 
+    <section class="section" id="kenmore-worked-example">
+      <div class="seo-copy-wrap">
+        <h2>Worked Kenmore OEM-routing example</h2>
+        <p>The model prefix selects the decoder; the serial then supplies the date positions.</p>
+        <div class="table-wrap">
+          <table class="format-table">
+            <thead>
+              <tr>
+                <th>Label Field</th>
+                <th>What It Usually Means</th>
+                <th>Why It Matters</th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td>Model 795.74053.410</td>
+              <td>Prefix 795</td>
+              <td>The tested routing helper identifies an LG-built Kenmore refrigerator.</td>
+            </tr>
+            <tr>
+              <td>Serial 410KR00219</td>
+              <td>LG year digit 4; month 10</td>
+              <td>The decoder returns October with candidate years 2004, 2014, or 2024.</td>
+            </tr>
+            <tr>
+              <td>No additional model-era evidence</td>
+              <td>All three years remain</td>
+              <td>OEM routing identifies the rule but does not automatically resolve a repeating decade.</td>
+            </tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <section class="section" id="kenmore-fallback-limit">
+      <div class="seo-copy-wrap">
+        <h2>What the no-prefix fallback does and does not prove</h2>
+        <p>The current interface allows decoding without a model prefix and uses a documented Whirlpool-family fallback so the tool remains usable. That fallback is an assumption about OEM routing, not proof that Whirlpool built the unit.</p><p>For an approval-facing result, recover the full model from the label, manual, registration, or Smart Lookup whenever possible and record whether the OEM was confirmed or assumed.</p>
+      </div>
+    </section>
 <div class="bp-content-wrap" style="padding-bottom:0;padding-top:4px;">
   <div class="bp-section-card bp-full-width kenmore-prefix-section">
     <div class="bp-section-card-head">
@@ -388,30 +432,20 @@
           <span class="ex-dot ex-dot-red"></span>
           <span class="ex-dot ex-dot-amber"></span>
           <span class="ex-dot ex-dot-green"></span>
-          <span class="ex-eyebrow">Model prefix reminder</span>
+          <span class="ex-eyebrow">Verified LG-built Kenmore route</span>
         </div>
-        <code class="ex-serial">106.xxxxx</code>
-        <p class="ex-note">A prefix like 106 often signals Whirlpool-family routing before the serial is decoded.</p>
+        <code class="ex-serial">795.74053.410 + 410KR00219</code>
+        <p class="ex-note">Prefix 795 selects LG logic. The serial returns October and candidate years 2004, 2014, or 2024.</p>
       </div>
       <div class="ex-terminal">
         <div class="ex-terminal-bar">
           <span class="ex-dot ex-dot-red"></span>
           <span class="ex-dot ex-dot-amber"></span>
           <span class="ex-dot ex-dot-green"></span>
-          <span class="ex-eyebrow">Model prefix reminder</span>
+          <span class="ex-eyebrow">Verified Samsung-family serial fixture</span>
         </div>
-        <code class="ex-serial">362.xxxxx</code>
-        <p class="ex-note">A prefix like 362 often signals a GE-family path, where the opening serial letters carry the main age logic.</p>
-      </div>
-      <div class="ex-terminal">
-        <div class="ex-terminal-bar">
-          <span class="ex-dot ex-dot-red"></span>
-          <span class="ex-dot ex-dot-amber"></span>
-          <span class="ex-dot ex-dot-green"></span>
-          <span class="ex-eyebrow">OEM-routing reminder</span>
-        </div>
-        <code class="ex-serial">Serial alone is not always enough</code>
-        <p class="ex-note">If the OEM is unknown, the decoder may still leave the result estimated until the model family is clearer.</p>
+        <code class="ex-serial">A00843ESC00128</code>
+        <p class="ex-note">The supported Samsung path returns December with candidate years 2009 or 2029; the OEM must be established before applying that rule.</p>
       </div>
         </div>
       </div>
@@ -488,38 +522,45 @@
 
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>How old is my Kenmore appliance?</span>
+          <span>Why is Kenmore not decoded with one brand-wide rule?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>Use the model prefix to identify the OEM first, then decode the serial using the supported manufacturer path.</p></div>
+        <div class="bp-faq-body"><p>Kenmore products were built by multiple OEMs. The model prefix determines which manufacturer family is the appropriate serial path.</p></div>
       </details>
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>Can the Kenmore serial number tell me the age by itself?</span>
+          <span>What does Kenmore prefix 795 mean in this tool?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>Sometimes, but the model prefix is often needed first because Kenmore products were built by multiple OEM manufacturers.</p></div>
+        <div class="bp-faq-body"><p>It routes the appliance to the supported LG-family decoder. The full model and serial should still be retained.</p></div>
       </details>
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>Why does Kenmore need the model number more than other brands?</span>
+          <span>What happens when no Kenmore prefix is available?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>The model prefix often identifies who actually manufactured the appliance, and that decides which serial rule the decoder should apply.</p></div>
+        <div class="bp-faq-body"><p>The current interface permits a documented Whirlpool-family fallback, but labels the OEM assumption. Smart Lookup is safer when the prefix can be recovered.</p></div>
       </details>
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>Where is the Kenmore serial number label located?</span>
+          <span>Is a Kenmore model prefix always the first three digits?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>Kenmore labels usually follow the same placement patterns as the underlying OEM product type: inside the cabinet, around the opening, or on the frame.</p></div>
+        <div class="bp-faq-body"><p>The supported helper extracts the first three digits from a complete model such as 795.74053.410. Do not use three digits copied from an unrelated label field.</p></div>
       </details>
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>Can this support claim documentation?</span>
+          <span>Why can a correctly routed Kenmore result still show several years?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>Yes. Just note when the OEM is confirmed directly versus when the result still depends on a likely model-prefix match.</p></div>
+        <div class="bp-faq-body"><p>OEM formats such as LG, GE, Whirlpool, and Samsung can reuse year codes. Correct routing does not remove that separate cycle ambiguity.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>Where can I verify the complete Kenmore model?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Use the product label and Kenmore manual lookup. The manual search requires the model identifier, not the serial number.</p></div>
       </details>
           </div>
         </div>
@@ -532,7 +573,7 @@
           <h2>Related Decoder Pages</h2>
         </div>
         <div class="bp-pills-wrap">
-          <a href="/how-old-is-my-appliance" class="bp-pill">How Old Is My Appliance?</a><a href="/whirlpool-serial-number-lookup" class="bp-pill">Whirlpool</a><a href="/ge-serial-number-lookup" class="bp-pill">GE</a><a href="/lg-serial-number-lookup" class="bp-pill">LG</a><a href="/frigidaire-serial-number-lookup" class="bp-pill">Frigidaire</a><a href="/find-model-serial-number" class="bp-pill">Find Model & Serial Labels</a>
+          <a href="/how-old-is-my-appliance" class="bp-pill">How Old Is My Appliance?</a><a href="/whirlpool-serial-number-lookup" class="bp-pill">Whirlpool</a><a href="/ge-serial-number-lookup" class="bp-pill">GE</a><a href="/lg-serial-number-lookup" class="bp-pill">LG</a><a href="/frigidaire-serial-number-lookup" class="bp-pill">Frigidaire</a><a href="/find-model-serial-number" class="bp-pill">Find Model & Serial Labels</a><a href="/smart-lookup" class="bp-pill">Smart Lookup</a><a href="/methodology" class="bp-pill">Methodology</a>
         </div>
       </div>
 
@@ -656,7 +697,7 @@
         <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
         <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
         <li><a href="/trane-serial-number-lookup">Trane</a></li>
-        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+        <li><a href="/rheem-serial-number-lookup">Rheem HVAC</a></li>
         <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
         <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
         <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
@@ -719,6 +760,11 @@
       }
       brandSelect.value = 'kenmore';
       brandSelect.dispatchEvent(new Event('change'));
+      var mobileItemType = document.getElementById('mobileItemType');
+      if (mobileItemType && Array.prototype.some.call(mobileItemType.options, function(option) { return option.value === 'appliances'; })) {
+        mobileItemType.value = 'appliances';
+        mobileItemType.dispatchEvent(new Event('change'));
+      }
 
     }
     window.addEventListener('DOMContentLoaded', function() {
@@ -861,7 +907,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/kenmore-serial-number-lookup#webpage","name":"Kenmore Serial Number Decoder","description":"Decode Kenmore serial numbers, estimate appliance age, and use the supported OEM-routing logic that depends on the Kenmore model prefix.","url":"https://www.decodemyitem.com/kenmore-serial-number-lookup","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Decode My Item","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"Kenmore Serial Number Decoder"}}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","@id":"https://www.decodemyitem.com/kenmore-serial-number-lookup#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.decodemyitem.com"},{"@type":"ListItem","position":2,"name":"Kenmore Serial Number Decoder","item":"https://www.decodemyitem.com/kenmore-serial-number-lookup"}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://www.decodemyitem.com/kenmore-serial-number-lookup#app","name":"Decode My Item Serial Number Decoder","url":"https://www.decodemyitem.com/kenmore-serial-number-lookup","description":"Kenmore is preselected. Use the full serial and keep the model prefix nearby if possible.","applicationCategory":"UtilityApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/kenmore-serial-number-lookup#faq","mainEntity":[{"@type":"Question","name":"How old is my Kenmore appliance?","acceptedAnswer":{"@type":"Answer","text":"Use the model prefix to identify the OEM first, then decode the serial using the supported manufacturer path."}},{"@type":"Question","name":"Can the Kenmore serial number tell me the age by itself?","acceptedAnswer":{"@type":"Answer","text":"Sometimes, but the model prefix is often needed first because Kenmore products were built by multiple OEM manufacturers."}},{"@type":"Question","name":"Why does Kenmore need the model number more than other brands?","acceptedAnswer":{"@type":"Answer","text":"The model prefix often identifies who actually manufactured the appliance, and that decides which serial rule the decoder should apply."}},{"@type":"Question","name":"Where is the Kenmore serial number label located?","acceptedAnswer":{"@type":"Answer","text":"Kenmore labels usually follow the same placement patterns as the underlying OEM product type: inside the cabinet, around the opening, or on the frame."}},{"@type":"Question","name":"Can this support claim documentation?","acceptedAnswer":{"@type":"Answer","text":"Yes. Just note when the OEM is confirmed directly versus when the result still depends on a likely model-prefix match."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/kenmore-serial-number-lookup#faq","mainEntity":[{"@type":"Question","name":"Why is Kenmore not decoded with one brand-wide rule?","acceptedAnswer":{"@type":"Answer","text":"Kenmore products were built by multiple OEMs. The model prefix determines which manufacturer family is the appropriate serial path."}},{"@type":"Question","name":"What does Kenmore prefix 795 mean in this tool?","acceptedAnswer":{"@type":"Answer","text":"It routes the appliance to the supported LG-family decoder. The full model and serial should still be retained."}},{"@type":"Question","name":"What happens when no Kenmore prefix is available?","acceptedAnswer":{"@type":"Answer","text":"The current interface permits a documented Whirlpool-family fallback, but labels the OEM assumption. Smart Lookup is safer when the prefix can be recovered."}},{"@type":"Question","name":"Is a Kenmore model prefix always the first three digits?","acceptedAnswer":{"@type":"Answer","text":"The supported helper extracts the first three digits from a complete model such as 795.74053.410. Do not use three digits copied from an unrelated label field."}},{"@type":"Question","name":"Why can a correctly routed Kenmore result still show several years?","acceptedAnswer":{"@type":"Answer","text":"OEM formats such as LG, GE, Whirlpool, and Samsung can reuse year codes. Correct routing does not remove that separate cycle ambiguity."}},{"@type":"Question","name":"Where can I verify the complete Kenmore model?","acceptedAnswer":{"@type":"Answer","text":"Use the product label and Kenmore manual lookup. The manual search requires the model identifier, not the serial number."}}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","@id":"https://www.decodemyitem.com/kenmore-serial-number-lookup#howto","name":"Kenmore Serial Number Decoder","description":"Choose the matching category and brand. Enter the full serial number exactly as printed on the label. Review the date estimate, notes, and fallback links if the serial does not decode.","step":[{"@type":"HowToStep","position":1,"name":"Step 1","text":"Choose the matching category and brand."},{"@type":"HowToStep","position":2,"name":"Step 2","text":"Enter the full serial number exactly as printed on the label."},{"@type":"HowToStep","position":3,"name":"Step 3","text":"Review the date estimate, notes, and fallback links if the serial does not decode."}]}</script>
 </body>
 </html>
