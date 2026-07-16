@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>How Old is My Electronics | Decode My Item</title>
-  <meta name="description" content="Estimate the age of TVs, computers, and phones from serial or model numbers. Free decoders for Samsung, Sony, LG, Vizio, Apple, HP and more.">
+  <meta name="description" content="Learn which TV and computer serial numbers support date codes, when model year is the honest answer, where to find identifiers, and when to use Smart Lookup.">
   <link rel="canonical" href="https://www.decodemyitem.com/how-old-is-my-electronics">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -157,7 +157,7 @@ header {
 .mobile-menu a:hover { color: var(--primary); }
 .mobile-menu a.active { color: var(--primary); }
 
-@media (max-width: 1140px) {
+@media (max-width: 1290px) {
   .nav-links { display: none; }
   .mobile-toggle { display: block; }
   .nav-inner { padding: 0 20px; }
@@ -883,7 +883,7 @@ footer {
   <div class="hero-content">
     <span class="badge">Electronics Age Guide</span>
     <h1>How Old is My <span>Electronics?</span></h1>
-    <p class="hero-sub">Find the serial number label on your TV, laptop, desktop, or gaming console, then decode it to determine the manufacture date and device age.</p>
+    <p class="hero-sub">Find the right identifier first. Some TVs and computers expose supported serial date codes; others only support model-year or product-generation research.</p>
   </div>
 </section>
 
@@ -1093,50 +1093,52 @@ footer {
 </main>
 <div style="max-width:1200px;margin:0 auto 48px;padding:0 24px;">
   <div style="background:var(--surface-low);border:1px solid var(--outline-var);border-radius:16px;padding:32px;text-align:center;">
-    <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;">Once you've found the label, decode it to get the manufacture date and age.</p>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;">Once you have the label, choose the brand path that matches what the identifier can actually reveal.</p>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-      <a href="https://www.decodemyitem.com/decoder-tool" style="background:var(--primary);color:var(--on-primary);padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">Decode Electronics Serial →</a>
+      <a href="https://www.decodemyitem.com/brands" style="background:var(--primary);color:var(--on-primary);padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">Choose a Supported Brand Path →</a>
       <a href="https://www.decodemyitem.com/smart-lookup" style="background:transparent;color:var(--secondary);border:1px solid var(--secondary);padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">Try Smart Lookup →</a>
       <a href="/tv-replacement-guide" style="background:transparent;color:var(--secondary);border:1px solid var(--secondary);padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">Compare TV Replacement Options →</a>
     </div>
   </div>
 </div>
 <div class="brand-section" style="max-width:1200px;margin:0 auto 96px;padding:32px 24px;">
-  <h2 style="font-size:24px;font-weight:600;color:var(--on-surface);text-align:center;margin-bottom:32px;">Brand-Specific Nuances</h2>
+  <h2 style="font-size:24px;font-weight:600;color:var(--on-surface);text-align:center;margin-bottom:12px;">Supported Electronics Research Paths</h2>
+  <p style="max-width:780px;margin:0 auto 32px;text-align:center;color:var(--text-muted);line-height:1.7;">The result type differs by brand. Samsung TV and HP have supported serial-code paths; Sony and Vizio are model-based; Apple separates legacy serials from modern randomized identifiers; ASUS has a maintained opening-code decoder.</p>
   <div class="brand-grid">
-    <div class="brand-card"><div class="brand-card-name">Samsung</div><div class="brand-card-desc">QR codes &amp; barcodes on lower right-side exterior.</div></div>
-    <div class="brand-card"><div class="brand-card-name">LG</div><div class="brand-card-desc">High-gloss silver labels on side frames.</div></div>
-    <div class="brand-card"><div class="brand-card-name">Carrier</div><div class="brand-card-desc">Year is often encoded in the first 4 serial digits.</div></div>
-    <div class="brand-card"><div class="brand-card-name">Kenmore</div><div class="brand-card-desc">Model prefix (e.g. 110.) indicates actual maker.</div></div>
-    <div class="brand-card"><div class="brand-card-name">Whirlpool</div><div class="brand-card-desc">Uses large white labels inside doors or lid bases.</div></div>
-    <div class="brand-card"><div class="brand-card-name">Apple</div><div class="brand-card-desc">Laser-etched in tiny print on the bottom case.</div></div>
+    <a class="brand-card" href="/samsung-tv-serial-number-decoder"><div class="brand-card-name">Samsung TV</div><div class="brand-card-desc">Supported TV year/month character positions with repeating-cycle warnings.</div></a>
+    <a class="brand-card" href="/hp"><div class="brand-card-name">HP</div><div class="brand-card-desc">Supported year-digit and production-week fields, resolved with product context.</div></a>
+    <a class="brand-card" href="/apple"><div class="brand-card-name">Apple</div><div class="brand-card-desc">Legacy serial guidance plus an explicit stop for modern randomized identifiers.</div></a>
+    <a class="brand-card" href="/sony"><div class="brand-card-name">Sony TV</div><div class="brand-card-desc">Recent BRAVIA model-suffix years, not a serial manufacture-date claim.</div></a>
+    <a class="brand-card" href="/vizio"><div class="brand-card-name">Vizio TV</div><div class="brand-card-desc">Model-era lookup because arbitrary Vizio serials are not date-decoded.</div></a>
+    <a class="brand-card" href="/asus-serial-number-decoder"><div class="brand-card-name">ASUS</div><div class="brand-card-desc">Maintained opening-character year and month code path for supported serials.</div></a>
   </div>
+  <p style="max-width:780px;margin:32px auto 0;text-align:center;color:var(--text-muted);line-height:1.7;">Google Pixel and Panasonic identifier pages remain directly accessible for users who need label help, but they are temporarily excluded from the approval-facing index while their broad date rules are reviewed. Read the <a href="/methodology" style="color:var(--primary);">Methodology</a> for how supported, estimated, and unresolved results are separated.</p>
 </div>
 
 <!-- FAQ -->
 <div class="faq-section" style="max-width:800px;margin:0 auto;padding:0 24px 96px;">
-  <h2 style="font-size:24px;font-weight:600;color:var(--on-surface);text-align:center;margin-bottom:40px;">Tips for Hard-to-Read Labels</h2>
+  <h2 style="font-size:24px;font-weight:600;color:var(--on-surface);text-align:center;margin-bottom:40px;">Serial Number, Model Number, or Smart Lookup?</h2>
   <div class="faq-list">
     <details>
       <summary>
-        <h3>The label is faded or dirty. What now?</h3>
+        <h3>Can every electronics serial number reveal a manufacture date?</h3>
         <span class="material-symbols-outlined acc-icon">expand_more</span>
       </summary>
-      <div class="faq-body">Try using a bright flashlight from a side angle to create shadows in the embossed text. You can also carefully rub a graphite pencil over embossed lettering to make it stand out. For dirty labels, use a damp cloth but avoid harsh cleaners that might dissolve the ink.</div>
+      <div class="faq-body">No. Some supported formats contain a year, month, or week code, while modern randomized identifiers and model-based TV systems do not expose an exact unit date. The brand guide should state which result type it supports.</div>
     </details>
     <details>
       <summary>
-        <h3>Can I find the serial number in the software?</h3>
+        <h3>When is the model number more useful than the serial?</h3>
         <span class="material-symbols-outlined acc-icon">expand_more</span>
       </summary>
-      <div class="faq-body">Yes, for modern "smart" appliances and electronics. Check the settings menu under "About," "System Information," or "Network Status." On many smart fridges, it's also located in the 'Info' section of the external touchscreen display.</div>
+      <div class="faq-body">Use the model number for Sony and Vizio model-year research, to resolve a repeating HP or Samsung TV serial cycle, or to identify the generation of a modern Apple device whose serial is randomized.</div>
     </details>
     <details>
       <summary>
-        <h3>Why do I need the serial number vs just the model?</h3>
+        <h3>What should I do when the identifier does not match a supported rule?</h3>
         <span class="material-symbols-outlined acc-icon">expand_more</span>
       </summary>
-      <div class="faq-body">Manufacturers often change internal parts midway through a production year. The serial number identifies the specific "run" or date your unit was made, ensuring you order the exact replacement part that fits your specific build version.</div>
+      <div class="faq-body">Keep the result unresolved. Confirm the full label, identify the product family, and use <a href="/smart-lookup">Smart Lookup</a> with the model and a short description. Do not borrow a rule from another brand or turn a release year into an exact manufacture date.</div>
     </details>
   </div>
 </div>
