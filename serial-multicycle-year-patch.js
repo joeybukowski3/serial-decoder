@@ -28,7 +28,7 @@
 
   function patchedSanitizeDecodeResult(result) {
     var normallySanitized = original.apply(this, arguments);
-    if (normallySanitized) return normallySanitized;
+    if (normallySanitized && normallySanitized.valid !== false) return normallySanitized;
     if (!result || typeof result !== 'object') return normallySanitized;
 
     var candidates = parseExtendedYearCandidates(result.year);
@@ -40,11 +40,9 @@
       year: candidates.slice(0, 4).join('/')
     });
     var validated = original.call(this, probe);
-    if (!validated) return normallySanitized;
+    if (!validated || validated.valid === false) return normallySanitized;
 
-    return Object.assign({}, validated, {
-      year: candidates.join('/')
-    });
+    return validated;
   }
 
   patchedSanitizeDecodeResult.__dmiMultiCycleYearPatch = true;
