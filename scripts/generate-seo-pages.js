@@ -931,7 +931,7 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
         <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
         <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
         <li><a href="/trane-serial-number-lookup">Trane</a></li>
-        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+        <li><a href="/rheem-serial-number-lookup">Rheem HVAC</a></li>
         <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
         <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
         <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
@@ -1027,6 +1027,11 @@ function renderPage(page) {
       }
       brandSelect.value = '${page.brandValue}';
       brandSelect.dispatchEvent(new Event('change'));
+      var mobileItemType = document.getElementById('mobileItemType');
+      if (mobileItemType && Array.prototype.some.call(mobileItemType.options, function(option) { return option.value === '${page.category}'; })) {
+        mobileItemType.value = '${page.category}';
+        mobileItemType.dispatchEvent(new Event('change'));
+      }
       ${page.inputMode === 'model' ? `
       var purposeLabel = document.querySelector('label[for="serial"]');
       var purposeInput = document.getElementById('serial');
@@ -1200,6 +1205,11 @@ function renderPage(page) {
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="responsive-navigation.css">
   <link rel="stylesheet" href="seo-landing.css">
+  <style>
+    .section, .seo-copy-wrap, .table-wrap { min-width: 0; }
+    .seo-copy-wrap { max-width: 100%; }
+    .conf-pill { max-width: 100%; white-space: normal; overflow-wrap: anywhere; flex-shrink: 1; }
+  </style>
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body data-page-kind="brand-page">
@@ -1401,7 +1411,7 @@ ${renderExtraSections(page.preGridSections)}
         </div>
       </div>
 
-      <!-- Examples -->
+      ${page.examples && page.examples.length ? `<!-- Examples -->
       <div class="bp-section-card bp-full-width">
         <div class="bp-section-card-head">
           <span class="material-symbols-outlined bp-section-icon" style="color:${cat.color};">terminal</span>
@@ -1410,7 +1420,7 @@ ${renderExtraSections(page.preGridSections)}
         <div class="ex-terminals-grid">
           ${renderExampleTerminals(page.examples)}
         </div>
-      </div>
+      </div>` : ''}
 
       <!-- Location guide -->
       <div class="bp-section-card bp-full-width">
@@ -1556,7 +1566,7 @@ ${renderExtraSections(page.preGridSections)}
         <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
         <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
         <li><a href="/trane-serial-number-lookup">Trane</a></li>
-        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+        <li><a href="/rheem-serial-number-lookup">Rheem HVAC</a></li>
         <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
         <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
         <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
@@ -1771,20 +1781,42 @@ const pages = [
   },
   {
     slug: 'refrigerator-serial-number',
-    title: 'Refrigerator Serial Number Lookup | Find Age & Model Info',
-    description: 'Find refrigerator serial number labels, decode supported brand formats, and estimate refrigerator age with brand shortcuts and model-number guidance.',
-    h1: 'Refrigerator Serial Number Lookup',
+    title: 'Refrigerator Serial Number and Label Guide',
+    description: 'Find a refrigerator model and serial label, identify the manufacturer path, and interpret supported brand formats without assuming one universal date code.',
+    h1: 'Refrigerator Serial Number and Label Guide',
     badge: 'Appliance type guide',
     category: 'appliances',
     brandValue: '',
-    intro: 'Use this refrigerator serial number lookup page when you need to find the label, estimate age, or move from a model number into the fastest supported decode path.',
-    supportingIntro: 'Refrigerator serial numbers are usually brand-specific. The best workflow is to locate the label, choose the correct brand in the decoder, and use the model number only as a support signal when the serial result stays estimated.',
+    intro: 'Find the refrigerator label first, then choose the actual manufacturer path. Refrigerator serial formats are brand-specific, so the product type alone cannot determine a manufacture date.',
+    supportingIntro: 'This page is a refrigerator label and routing guide. It compares supported brand formats, explains private-label OEM cases, and shows when a model number can narrow a repeating serial-year cycle.',
+    primaryCtaLabel: 'Choose Brand and Decode',
     decoderIntro: 'Use the refrigerator brand and serial number exactly as shown on the label.',
     decoderPlaceholder: 'Enter refrigerator serial number',
     decodeSectionTitle: 'What the serial number can tell you',
-    decodeSectionBody: 'On supported refrigerator brands, the serial number often reveals the manufacturing year, month, or production week. That makes it the best first step for age checks, warranty-era research, and replacement planning.',
+    decodeSectionBody: 'A refrigerator serial number is only meaningful after the manufacturer is known. Supported Whirlpool, GE, LG, Samsung, Frigidaire, Bosch, and OEM-routed Kenmore paths use different positions and return different levels of precision.',
     modelSectionTitle: 'What the model number can tell you',
-    modelSectionBody: 'The model number usually identifies the product family, door style, and generation. It becomes especially useful when the serial year code repeats or when a private-label refrigerator needs an OEM match first.',
+    modelSectionBody: 'The model number identifies the refrigerator family and may expose the original manufacturer on a private-label unit. It can also narrow an ambiguous serial cycle when the repository has matching model-era evidence.',
+    preGridSections: [
+      {
+        type: 'copy-block',
+        id: 'refrigerator-brand-first',
+        title: 'Why refrigerator decoding starts with the brand',
+        body: [
+          'There is no refrigerator-wide date code. A Whirlpool-family serial can encode a repeating year letter and production week, while LG commonly uses an opening year digit and two-digit month. Frigidaire adds factory letters before its year and week positions, and Kenmore may need a model prefix before the correct OEM decoder is known.',
+          'Photograph both the model and serial fields before moving drawers or replacing an interior label. If the decoder returns several candidate years, use model-era evidence or Smart Lookup rather than choosing the newest year by assumption.'
+        ]
+      },
+      {
+        type: 'table',
+        id: 'refrigerator-verified-examples',
+        title: 'Verified refrigerator examples',
+        intro: 'These sanitized examples are tied to current regression fixtures and show why model context matters.',
+        rows: [
+          { field: 'Frigidaire BA10515647', meaning: 'Year digit 1; production week 05', why: 'Serial alone allows 1991, 2001, 2011, or 2021. Model FFTR2045VS0 narrows the tested result to week 05 of 2021.' },
+          { field: 'Kenmore model prefix 795 + LG serial 410KR00219', meaning: '795 routes to LG; opening 4 + 10', why: 'The route returns October with candidate years 2004, 2014, or 2024 until model-era evidence selects a decade.' }
+        ]
+      }
+    ],
     formatSectionTitle: 'Common refrigerator serial number formats',
     formats: [
       { label: 'Whirlpool-family refrigerators', pattern: '9 or 10 characters', meaning: 'Year code position changes by serial length, followed by a production week.', confidence: 'Estimated decade. Whirlpool cycles repeat.' },
@@ -1795,9 +1827,8 @@ const pages = [
     ],
     exampleSectionTitle: 'Refrigerator serial number examples',
     examples: [
-      { label: 'Supported Whirlpool example', serial: 'CB2501800', note: 'This is a supported Whirlpool-family example. The serial can resolve a production week, but the decade still needs appliance-era context.' },
-      { label: 'Supported Bosch-style FD example', serial: 'FD911100449', note: 'This FD example is stronger for Bosch-family kitchen products than most refrigerator formats because the year and month are embedded more directly.' },
-      { label: 'Illustrative LG pattern', serial: '810XXXXXXX', note: 'Illustrative LG refrigerator pattern. The current decoder treats the opening year digit and month digits as the main age signal, with decade resolved from product era.' }
+      { label: 'Frigidaire refrigerator with model context', serial: 'BA10515647 + FFTR2045VS0', note: 'The tested serial/model pair resolves to week 05 of 2021. Without the model, the serial year digit remains decade-ambiguous.' },
+      { label: 'Kenmore refrigerator routed to LG', serial: '795.74053.410 + 410KR00219', note: 'The 795 model prefix selects LG logic. The serial returns October and the candidate years 2004, 2014, or 2024.' }
     ],
     locationSectionTitle: 'Where to find the serial number',
     locations: [
@@ -1814,11 +1845,12 @@ const pages = [
       'The refrigerator family has multiple product lines that use different serial layouts.'
     ],
     faqs: [
-      ['How do I find the age of my refrigerator?', 'Locate the product label inside the cabinet, choose the brand in the decoder, and enter the serial number exactly as shown.'],
-      ['Can the model number tell me how old the refrigerator is?', 'Usually not by itself. The model number is better for identifying the product family, while the serial number usually carries the date logic.'],
-      ['Why does my refrigerator serial number not decode?', 'A partial label, the wrong brand path, a private-label OEM, or a repeating year code are the most common reasons.'],
-      ['Where is the refrigerator serial number label usually located?', 'Most refrigerators place it inside the fresh-food compartment on a side wall, behind a drawer, or on an interior trim area.'],
-      ['Can I still use this for claim documentation?', 'Yes. Just note whether the result is supported directly by the serial format or still estimated because the code cycle repeats.']
+      ['Do all refrigerator brands use the same serial date format?', 'No. Select the manufacturer before interpreting any positions. Product type alone does not determine the serial rule.'],
+      ['Why does a Kenmore refrigerator need its model prefix?', 'Kenmore is a private-label brand. The prefix can identify the OEM family whose serial logic should be used.'],
+      ['Can a refrigerator model number resolve the decade?', 'Sometimes. It can narrow a repeating serial cycle only when reliable model-era evidence overlaps one candidate year.'],
+      ['Where should I look on a French-door refrigerator?', 'Start on the interior side walls of the fresh-food compartment, then check behind lower drawers and interior trim. Manufacturer guidance differs by model.'],
+      ['Why did the decoder return several possible years?', 'Some brands reuse year codes. Keep every candidate until the model generation, installation record, or another reliable source resolves the cycle.'],
+      ['What should I do when the interior label is unreadable?', 'Check registration records, manuals, purchase documents, or Smart Lookup with the model number. Do not reconstruct missing serial characters.']
     ],
     relatedLinks: [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
@@ -1826,26 +1858,50 @@ const pages = [
       ['ge-serial-number-lookup', 'GE Refrigerator Age Path'],
       ['lg-serial-number-lookup', 'LG Refrigerator Age Path'],
       ['frigidaire-serial-number-lookup', 'Frigidaire Refrigerator Age Path'],
-      ['find-model-serial-number', 'Find Model & Serial Labels']
+      ['find-model-serial-number', 'Find Model & Serial Labels'],
+      ['smart-lookup', 'Smart Lookup'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
   {
     slug: 'washer-serial-number',
-    title: 'Washer Serial Number Lookup | Decode Brand, Age & Model Info',
-    description: 'Find washer serial number labels, decode supported brand formats, and use model-number context to estimate washer age faster.',
-    h1: 'Washer Serial Number Lookup',
+    title: 'Washer Model and Serial Number Label Guide',
+    description: 'Find top-load and front-load washer labels, choose the correct manufacturer decoder, and understand when a repeating serial code needs model-era evidence.',
+    h1: 'Washer Model and Serial Number Label Guide',
     badge: 'Appliance type guide',
     category: 'appliances',
     brandValue: '',
-    intro: 'Use this washer serial number lookup page when you need a fast age estimate, a label-location refresher, or a cleaner path from the model number into the supported brand decoder.',
-    supportingIntro: 'Washer serial numbers usually carry the stronger age signal. The model number helps confirm the generation and OEM family when the serial result stays decade-ambiguous.',
+    intro: 'Locate the washer label, identify the manufacturer, and then use that brand\'s supported serial path. Top-load and front-load washers do not share one universal date format.',
+    supportingIntro: 'This guide separates physical label recovery from date interpretation. The serial usually carries the age code, while the model identifies the platform and can help resolve an OEM or decade question.',
+    primaryCtaLabel: 'Choose Washer Brand',
     decoderIntro: 'Select the washer brand and enter the serial exactly as shown.',
     decoderPlaceholder: 'Enter washer serial number',
     decodeSectionTitle: 'What the serial number can tell you',
-    decodeSectionBody: 'On supported brands, the washer serial number can point to a manufacturing year, production week, or month-year window. That is usually the fastest way to document appliance age when purchase history is missing.',
+    decodeSectionBody: 'After the washer brand is selected, supported paths may return a production week, month, or repeating set of candidate years. A result is not exact when the manufacturer reuses its year code.',
     modelSectionTitle: 'What the model number can tell you',
-    modelSectionBody: 'The washer model number helps identify the family, platform, and OEM source. It is especially useful for Kenmore, Maytag-era overlap, and older products where the serial code alone is not enough to lock the decade.',
+    modelSectionBody: 'The model number distinguishes washer platform and OEM. It is especially important for Kenmore routing, Maytag pre/post-2006 logic, and model-assisted narrowing of an LG or Whirlpool-family year cycle.',
+    preGridSections: [
+      {
+        type: 'copy-block',
+        id: 'washer-load-style',
+        title: 'Top-load and front-load labels are not in the same place',
+        body: [
+          'For a top-load washer, inspect the underside of the lid, the tub rim, the rear control area, and the upper side panels. For a front-load washer, open the door and inspect the cabinet rim around the drum opening before checking the rear panel.',
+          'Record the model and serial as separate fields. An LG model normally begins with a letter, while the supported LG appliance serial path begins with the numeric year/month group. Mixing those identifiers produces an unsupported result.'
+        ]
+      },
+      {
+        type: 'table',
+        id: 'washer-verified-example',
+        title: 'Verified washer example',
+        intro: 'The regression fixture below demonstrates a serial cycle that becomes useful only when the washer model is also available.',
+        rows: [
+          { field: 'LG 412TATG1H105', meaning: 'Opening 4 = candidate year; 12 = December', why: 'Serial-only candidates are 2004, 2014, or 2024. Model WM3470HWA narrows the tested result to December 2014.' },
+          { field: 'LG model WM3470HWA', meaning: 'Front-load washer family context', why: 'The model is supporting evidence for the decade; it is not substituted into the serial decoder.' }
+        ]
+      }
+    ],
     formatSectionTitle: 'Common washer serial number formats',
     formats: [
       { label: 'Whirlpool / Maytag post-2006', pattern: '9 or 10 characters with year code + week', meaning: 'Many modern Whirlpool-family washers store the year code early in the serial and follow it with week digits.', confidence: 'Estimated decade. Use era or model clues if needed.' },
@@ -1856,9 +1912,7 @@ const pages = [
     ],
     exampleSectionTitle: 'Washer serial number examples',
     examples: [
-      { label: 'Supported Whirlpool example', serial: 'CB2501800', note: 'Supported Whirlpool-family example. The current decoder can use the year code and week digits after the correct brand path is selected.' },
-      { label: 'Illustrative GE pattern', serial: 'AZ123456', note: 'Illustrative GE washer pattern. The opening letters typically carry the month and year meaning.' },
-      { label: 'Illustrative Samsung pattern', serial: 'XXXABXXXXXX', note: 'Illustrative 11-character Samsung washer pattern. The supported decoder checks positions 4-5 for year and month on this serial family.' }
+      { label: 'LG washer with model-assisted decade', serial: '412TATG1H105 + WM3470HWA', note: 'The tested serial returns December and three candidate years. The washer model narrows that cycle to 2014.' }
     ],
     locationSectionTitle: 'Where to find the serial number',
     locations: [
@@ -1875,11 +1929,12 @@ const pages = [
       'A laundry center or stacked unit hides the tag near the opening or rear panel.'
     ],
     faqs: [
-      ['How do I tell how old my washer is?', 'Find the serial label, choose the correct brand, and run the serial number through the decoder.'],
-      ['What can the washer model number tell me?', 'It usually identifies the product family, the likely generation, and in some cases the OEM platform that built the washer.'],
-      ['Why does the washer serial number not decode?', 'Common reasons are a hidden label, a partial serial, the wrong brand path, or a repeated year code that still needs model-era context.'],
-      ['Where is the washer serial number label located?', 'Top-load models often place it under the lid, while front-load models usually place it around the door opening or on the rear panel.'],
-      ['Can this help with claim documentation?', 'Yes. Serial results are useful for age support, but the file should note when a decade is still estimated.']
+      ['Where is the label on a front-load washer?', 'Open the door and inspect the cabinet rim around the drum opening. If it is not there, check the rear panel or the manufacturer\'s model-specific guide.'],
+      ['Where is the label on a top-load washer?', 'Check beneath the lid, around the tub opening, behind the control panel, and on the upper side or rear cabinet.'],
+      ['Why do I need both model and serial for a Kenmore washer?', 'The model prefix can identify the original manufacturer; the serial is then interpreted with that OEM family\'s rule.'],
+      ['How does Maytag washer era affect the result?', 'Pre-2006 Maytag and post-2006 Whirlpool-family paths differ. If the era is unknown, keep both supported results instead of forcing one.'],
+      ['Can an LG washer serial return more than one year?', 'Yes. The leading year digit repeats by decade. A verified model family may narrow the candidates, but the serial alone cannot.'],
+      ['Should I enter the washer model into the serial field?', 'No. Keep the identifiers separate. Use the serial field for the label serial and the model field for model-era or OEM context.']
     ],
     relatedLinks: [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
@@ -1887,26 +1942,52 @@ const pages = [
       ['maytag-serial-number-lookup', 'Maytag Washer Path'],
       ['samsung-serial-number-lookup', 'Samsung Washer Path'],
       ['lg-serial-number-lookup', 'LG Washer Path'],
-      ['kenmore-serial-number-lookup', 'Kenmore Washer Path']
+      ['kenmore-serial-number-lookup', 'Kenmore Washer Path'],
+      ['smart-lookup', 'Smart Lookup'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
   {
     slug: 'dryer-serial-number',
-    title: 'Dryer Serial Number Lookup | Find Age by Serial Number',
-    description: 'Find dryer serial number labels, decode supported brand patterns, and use model-number context when the dryer serial result stays estimated.',
-    h1: 'Dryer Serial Number Lookup',
+    title: 'Dryer Model and Serial Number Label Guide',
+    description: 'Find dryer labels by configuration, identify the manufacturer path, and understand when a serial can support an age estimate without inventing a universal dryer code.',
+    h1: 'Dryer Model and Serial Number Label Guide',
     badge: 'Appliance type guide',
     category: 'appliances',
     brandValue: '',
-    intro: 'Use this dryer serial number lookup page to find the label, decode the strongest supported brand formats, and move faster when the year code needs model-era context.',
-    supportingIntro: 'Dryer age checks are usually serial-driven. The model number is mainly used to verify the generation, confirm OEM family, or support a fallback when the label is worn.',
+    intro: 'Start with the dryer\'s model-and-serial label and actual manufacturer. Gas, electric, stacked, and ventless dryers use different label locations, while date-code positions remain brand-specific.',
+    supportingIntro: 'This page does not apply one serial rule to every dryer. It helps locate the label, choose the correct brand decoder, and recognize when a repeating code or private-label OEM still needs model context.',
+    primaryCtaLabel: 'Choose Dryer Brand',
     decoderIntro: 'Select the dryer brand and enter the serial number exactly as shown.',
     decoderPlaceholder: 'Enter dryer serial number',
     decodeSectionTitle: 'What the serial number can tell you',
-    decodeSectionBody: 'Supported dryer serial formats can point to the manufacturing year, production week, or month-year window. That is usually enough to narrow age for replacement planning and claim support.',
+    decodeSectionBody: 'Supported brand paths can return a year cycle, production week, or month. The decoder must know whether the dryer is Whirlpool-family, Maytag legacy, GE, LG, Samsung, or another supported manufacturer before positions are interpreted.',
     modelSectionTitle: 'What the model number can tell you',
-    modelSectionBody: 'The dryer model number helps sort family, fuel type, and OEM source. It is useful when serial year codes repeat or when a private-label product needs a manufacturer match first.',
+    modelSectionBody: 'The model identifies the dryer family, configuration, and sometimes the private-label OEM. It can support decade research, but it is not a substitute for a missing serial date code.',
+    preGridSections: [
+      {
+        type: 'copy-block',
+        id: 'dryer-label-by-configuration',
+        title: 'Dryer configuration changes the search path',
+        body: [
+          'Open the dryer door and inspect the rim and cabinet edge first. On some gas dryers the identifying plate is behind an access panel; ventless models may place it near or behind the water tank; stacked laundry products often use the inside of the dryer door.',
+          'No dryer-specific serial fixture can represent every manufacturer. This guide therefore does not publish a fabricated cross-brand worked example. Choose the brand and use a verified brand page for the actual code positions.'
+        ]
+      },
+      {
+        type: 'ordered-list',
+        id: 'dryer-identification-order',
+        title: 'A defensible dryer identification order',
+        intro: 'Keep the physical and decoding steps separate.',
+        items: [
+          'Photograph the entire label, including brand, model, serial, fuel type, and electrical data.',
+          'Confirm whether the product is a standalone dryer, laundry center, stacked pair, or all-in-one unit.',
+          'Select the manufacturer path and preserve every candidate year returned by a repeating code.',
+          'Use the model family, installation record, or Smart Lookup only to narrow candidates with supporting evidence.'
+        ]
+      }
+    ],
     formatSectionTitle: 'Common dryer serial number formats',
     formats: [
       { label: 'Whirlpool-family dryers', pattern: '9 or 10 characters with year code + week', meaning: 'The year code usually sits in position 2 or 3 depending on total serial length.', confidence: 'Estimated decade. Whirlpool cycles repeat.' },
@@ -1916,11 +1997,7 @@ const pages = [
       { label: 'Samsung dryers', pattern: '11-char or 15-char serial', meaning: 'Year and month positions depend on serial length.', confidence: 'Estimated when repeated year codes appear.' }
     ],
     exampleSectionTitle: 'Dryer serial number examples',
-    examples: [
-      { label: 'Supported Whirlpool example', serial: 'CB2501800', note: 'Supported Whirlpool-family example. The code positions can resolve a week-based production window once the brand is confirmed.' },
-      { label: 'Illustrative LG pattern', serial: '810XXXXXXX', note: 'Illustrative LG dryer pattern. The opening year digit and month digits are the supported logic positions in the current decoder.' },
-      { label: 'Illustrative GE pattern', serial: 'AZ123456', note: 'Illustrative GE dryer pattern. The opening letters are usually the important month/year positions rather than the trailing digits.' }
-    ],
+    examples: [],
     locationSectionTitle: 'Where to find the serial number',
     locations: [
       { title: 'Door opening labels', items: ['Around the dryer door rim on many front-load and standard dryers', 'Check the cabinet edge if the tag is not visible at first glance'] },
@@ -1936,11 +2013,12 @@ const pages = [
       'A private-label dryer needs the model prefix first to identify the OEM path.'
     ],
     faqs: [
-      ['How do I find the age of my dryer?', 'Use the serial number on the product tag after selecting the correct brand in the decoder.'],
-      ['What can the dryer model number tell me?', 'It can identify the family, configuration, and sometimes the OEM platform behind the dryer.'],
-      ['Why does my dryer serial number not decode?', 'The most common reasons are a hidden or worn label, the wrong brand path, or a year code that still needs era context.'],
-      ['Where is the dryer serial number located?', 'Most dryers place it around the door opening, cabinet edge, or rear panel.'],
-      ['Can this support insurance documentation?', 'Yes. Serial-based age support is useful, but repeated year codes should still be labeled as estimated until the decade is confirmed.']
+      ['Where should I look first on a standalone dryer?', 'Open the door and inspect the rim, cabinet edge, and inside face of the door before checking the rear cabinet.'],
+      ['Does a gas dryer have a different label location?', 'It can. Some gas models place identifying information behind a lower access panel in addition to the door or rear-cabinet label.'],
+      ['Why is there no universal dryer serial example?', 'Manufacturers use different positions and cycles. A cross-brand example would imply a rule that does not exist.'],
+      ['How do I research a stacked laundry unit?', 'Check the inside of the dryer door and the washer opening, then record which serial belongs to each component.'],
+      ['Can the dryer model number determine manufacture date?', 'Usually not by itself. It identifies configuration and family and may help narrow a serial-year cycle when reliable era evidence exists.'],
+      ['What should I do with an unreadable door label?', 'Check the original registration, manual, sales record, or rear/service label, then use Smart Lookup with the model number if the serial remains unavailable.']
     ],
     relatedLinks: [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
@@ -1948,26 +2026,50 @@ const pages = [
       ['maytag-serial-number-lookup', 'Maytag Dryer Path'],
       ['ge-serial-number-lookup', 'GE Dryer Path'],
       ['lg-serial-number-lookup', 'LG Dryer Path'],
-      ['samsung-serial-number-lookup', 'Samsung Dryer Path']
+      ['samsung-serial-number-lookup', 'Samsung Dryer Path'],
+      ['smart-lookup', 'Smart Lookup'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
   {
     slug: 'dishwasher-serial-number',
-    title: 'Dishwasher Serial Number Lookup | Decode Age & Model Info',
-    description: 'Find dishwasher serial number labels, decode supported brand formats, and use model-number context when the dishwasher serial result stays estimated.',
-    h1: 'Dishwasher Serial Number Lookup',
+    title: 'Dishwasher Model and Serial Number Label Guide',
+    description: 'Find a dishwasher label on the door or tub, choose the manufacturer decoder, and compare supported FD, year-week, and month-year formats honestly.',
+    h1: 'Dishwasher Model and Serial Number Label Guide',
     badge: 'Appliance type guide',
     category: 'appliances',
     brandValue: '',
-    intro: 'Use this dishwasher serial number lookup page to find the label, decode supported serial formats, and move into the strongest brand path when the age code depends on the manufacturer.',
-    supportingIntro: 'Dishwasher age checks usually start with the serial number on the door frame or tub lip. The model number helps confirm the product family or OEM source when the serial format repeats or when the brand is private-label.',
+    intro: 'Open the dishwasher door to find the model-and-serial plate, then select the actual manufacturer. Bosch FD numbers, Whirlpool-family year/week codes, and Frigidaire factory/year/week strings are not interchangeable.',
+    supportingIntro: 'This page is designed for label recovery and brand routing. Panel-ready, drawer, and standard built-in dishwashers can hide identifiers in different places, and private-label products may need OEM identification before decoding.',
+    primaryCtaLabel: 'Choose Dishwasher Brand',
     decoderIntro: 'Select the dishwasher brand and enter the serial exactly as printed.',
     decoderPlaceholder: 'Enter dishwasher serial number',
     decodeSectionTitle: 'What the serial number can tell you',
-    decodeSectionBody: 'Supported dishwasher serial numbers can reveal a year, a production week, or a month-year window. That is usually the fastest way to estimate appliance age when service paperwork is missing.',
+    decodeSectionBody: 'Supported dishwasher paths return different outputs: Bosch FD can yield year and month, Whirlpool-family and Frigidaire formats often return a production week plus a repeating year cycle, and other brands use their own positions.',
     modelSectionTitle: 'What the model number can tell you',
-    modelSectionBody: 'The dishwasher model number helps identify the product family, trim, and OEM platform. It becomes more important when the serial code alone does not fully resolve the decade or when the dishwasher is sold under a private label.',
+    modelSectionBody: 'The model identifies the dishwasher family and may expose the OEM behind a Kenmore or private-label product. It can provide era context but should never be inserted into the serial field.',
+    preGridSections: [
+      {
+        type: 'copy-block',
+        id: 'dishwasher-open-door-labels',
+        title: 'Why the door must be open for a complete label check',
+        body: [
+          'Standard built-in dishwashers commonly place the label on the tub frame, inner door edge, or upper lip. Drawer units may use the side of the top drawer, while panel-ready trim can hide the plate near a hinge or side edge.',
+          'Capture the full label before closing the door. An FD field, model prefix, and serial number can serve different purposes, so treating every printed identifier as the serial can route the unit incorrectly.'
+        ]
+      },
+      {
+        type: 'table',
+        id: 'dishwasher-verified-examples',
+        title: 'Verified dishwasher-format examples',
+        intro: 'These fixtures exercise current brand decoders; apply them only after the dishwasher manufacturer is confirmed.',
+        rows: [
+          { field: 'Bosch FD8605123456', meaning: 'FD 86 + month 05', why: 'The tested Bosch-family path resolves to May 2006.' },
+          { field: 'Whirlpool-family C21435678', meaning: 'Year code 2 + week 14', why: 'The tested nine-character path returns week 14 and a repeating Whirlpool-family year cycle rather than one assumed decade.' }
+        ]
+      }
+    ],
     formatSectionTitle: 'Common dishwasher serial number formats',
     formats: [
       { label: 'Bosch-family dishwashers', pattern: 'FD code', meaning: 'The FD digits usually map directly to production year and month.', confidence: 'Higher confidence when FD is present.' },
@@ -1978,9 +2080,8 @@ const pages = [
     ],
     exampleSectionTitle: 'Dishwasher serial number examples',
     examples: [
-      { label: 'Supported Bosch example', serial: 'FD911100449', note: 'Supported Bosch-family FD example. This is one of the clearer dishwasher date paths because the FD code points to year and month more directly.' },
-      { label: 'Supported Whirlpool example', serial: 'CB2501800', note: 'Supported Whirlpool-family example. The date logic uses year code plus production week rather than a direct calendar month.' },
-      { label: 'Illustrative Frigidaire pattern', serial: 'VF24012345', note: 'Illustrative Frigidaire dishwasher pattern. The factory letters matter before the year and week positions are read.' }
+      { label: 'Bosch-family FD fixture', serial: 'FD8605123456', note: 'The current Bosch-family regression resolves FD 86 and month 05 to May 2006.' },
+      { label: 'Whirlpool-family week fixture', serial: 'C21435678', note: 'The nine-character fixture reads year code 2 and production week 14. The year code still repeats by cycle.' }
     ],
     locationSectionTitle: 'Where to find the serial number',
     locations: [
@@ -1997,11 +2098,12 @@ const pages = [
       'Only the model number is available from paperwork or a service invoice.'
     ],
     faqs: [
-      ['How do I find the age of my dishwasher?', 'Open the door, locate the product tag on the frame or tub edge, and decode the serial number after selecting the correct brand.'],
-      ['What can the dishwasher model number tell me?', 'It usually identifies the product family and can help confirm the OEM platform or generation when the serial result stays estimated.'],
-      ['Why does my dishwasher serial number not decode?', 'Common reasons are a worn tag, the wrong brand path, an OEM/private-label mismatch, or a repeating year code.'],
-      ['Where is the dishwasher serial number label located?', 'Most dishwashers place it on the inner door frame, tub lip, or side edge that is visible when the door is open.'],
-      ['Can I use this for claims or replacement research?', 'Yes. The result is useful for age support and replacement planning, especially when paired with the model number and product type.']
+      ['Is a Bosch FD number the same as the serial number?', 'It is a separate production field on Bosch-family rating plates. Use the FD path only when that field is actually present.'],
+      ['Where is the label on a built-in dishwasher?', 'Open the door and inspect the tub frame, inner door edge, upper lip, and hinge-side trim.'],
+      ['Where is the label on a drawer dishwasher?', 'Check the side of the upper drawer and the frame exposed when the drawer is open.'],
+      ['Why does a Kenmore dishwasher need its model prefix?', 'The prefix can identify the OEM, such as a Whirlpool-built 665 family, before the serial is interpreted.'],
+      ['Why can a production week be known but not the decade?', 'Some manufacturers repeat year codes. The week is read directly, while model era or installation records must resolve the year cycle.'],
+      ['What should I enter if the plate shows model, serial, and FD?', 'Keep each field separate. Select the brand, enter the actual serial, and use the FD or model only in the workflow that explicitly requests it.']
     ],
     relatedLinks: [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
@@ -2009,26 +2111,50 @@ const pages = [
       ['whirlpool-serial-number-lookup', 'Whirlpool Dishwasher Path'],
       ['ge-serial-number-lookup', 'GE Dishwasher Path'],
       ['frigidaire-serial-number-lookup', 'Frigidaire Dishwasher Path'],
-      ['samsung-serial-number-lookup', 'Samsung Dishwasher Path']
+      ['samsung-serial-number-lookup', 'Samsung Dishwasher Path'],
+      ['smart-lookup', 'Smart Lookup'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
   {
     slug: 'range-oven-serial-number',
-    title: 'Range & Oven Serial Number Lookup | Find Age & Model Info',
-    description: 'Find range and oven serial number labels, decode supported brand formats, and use model-number context to estimate cooking-appliance age.',
-    h1: 'Range & Oven Serial Number Lookup',
+    title: 'Range and Oven Model and Serial Number Guide',
+    description: 'Find range, wall-oven, and cooktop labels, select the correct manufacturer path, and use verified model-era evidence without assuming one cooking-product format.',
+    h1: 'Range and Oven Model and Serial Number Guide',
     badge: 'Appliance type guide',
     category: 'appliances',
     brandValue: '',
-    intro: 'Use this range and oven serial number lookup page when you need to find the label, decode supported cooking-appliance formats, or move from a model number into the right brand path.',
-    supportingIntro: 'Cooking products often hide the label behind the oven door, around the frame, or behind the lower drawer. The serial number usually drives the age estimate, while the model number helps confirm the product family and era.',
+    intro: 'Identify whether the product is a freestanding range, wall oven, or cooktop, find its complete rating plate, and then select the manufacturer. Cooking appliances do not share one universal serial date code.',
+    supportingIntro: 'The model distinguishes configuration, fuel type, and family. The serial supplies the brand-specific date positions, while verified model-era evidence may narrow a repeating year cycle.',
+    primaryCtaLabel: 'Choose Cooking Brand',
     decoderIntro: 'Select the cooking-appliance brand and enter the serial number exactly as shown.',
     decoderPlaceholder: 'Enter range or oven serial number',
     decodeSectionTitle: 'What the serial number can tell you',
-    decodeSectionBody: 'Supported range and oven serial numbers can point to a manufacturing year, production week, or month-year window. That is often enough to document age when the install date is uncertain.',
+    decodeSectionBody: 'Supported cooking-product paths differ by manufacturer. Whirlpool-family strings use a length-dependent year/week layout, GE uses opening month/year letters, and LG, Frigidaire, and Samsung each use different positions.',
     modelSectionTitle: 'What the model number can tell you',
-    modelSectionBody: 'The model number helps identify wall oven versus freestanding range, fuel type, and product generation. It is especially useful when the serial code repeats across decades or when the product line spans multiple factories.',
+    modelSectionBody: 'The model identifies range versus wall oven, fuel type, and generation. It can narrow serial candidates only when reliable family evidence overlaps one of the decoded years.',
+    preGridSections: [
+      {
+        type: 'copy-block',
+        id: 'cooking-product-labels',
+        title: 'Installed cooking products hide labels in different places',
+        body: [
+          'Freestanding ranges commonly use the oven frame or storage-drawer opening. Wall ovens often place the plate on trim visible with the door open, while cooktops may require viewing the underside from the cabinet below.',
+          'Do not move a built-in or gas appliance solely to search for a rear label. Check the accessible frame, cavity, drawer, paperwork, and manufacturer instructions first.'
+        ]
+      },
+      {
+        type: 'table',
+        id: 'range-verified-example',
+        title: 'Verified Whirlpool range example',
+        intro: 'This fixture shows the difference between a serial candidate cycle and model-assisted narrowing.',
+        rows: [
+          { field: 'Serial RX3026733', meaning: 'Whirlpool year code X; production week 30', why: 'The serial-only result is 1990 or 2020, not an automatic exact year.' },
+          { field: 'Model WFE320M0JW0', meaning: 'Recognized Whirlpool range family', why: 'The tested model-family evidence overlaps the 2020 candidate and narrows the result to week 30 of 2020.' }
+        ]
+      }
+    ],
     formatSectionTitle: 'Common range and oven serial number formats',
     formats: [
       { label: 'GE cooking products', pattern: 'Opening month/year letters', meaning: 'The first serial letters usually carry the age logic.', confidence: 'Estimated decade.' },
@@ -2039,9 +2165,7 @@ const pages = [
     ],
     exampleSectionTitle: 'Range and oven serial number examples',
     examples: [
-      { label: 'Supported Whirlpool example', serial: 'CB2501800', note: 'Supported Whirlpool-family example. The serial can resolve a week-based production window after the correct brand path is selected.' },
-      { label: 'Illustrative GE pattern', serial: 'AZ123456', note: 'Illustrative GE range pattern. The opening letters are usually the meaningful date positions.' },
-      { label: 'Illustrative Frigidaire pattern', serial: 'VF24012345', note: 'Illustrative Frigidaire cooking-product pattern. The factory letters matter before the year and week digits are interpreted.' }
+      { label: 'Whirlpool range with model evidence', serial: 'RX3026733 + WFE320M0JW0', note: 'The serial gives week 30 and the candidate years 1990 or 2020. The tested range-family model narrows the result to 2020.' }
     ],
     locationSectionTitle: 'Where to find the serial number',
     locations: [
@@ -2058,11 +2182,12 @@ const pages = [
       'The cooking product line spans multiple factories with different serial layouts.'
     ],
     faqs: [
-      ['How do I find the age of my range or oven?', 'Locate the product tag behind the door or drawer opening, select the correct brand, and decode the serial number.'],
-      ['What can the model number tell me?', 'It usually identifies the family, fuel type, and generation, which helps when the serial code alone cannot lock the decade.'],
-      ['Why does my range or oven serial number not decode?', 'Common reasons are a hidden or damaged label, the wrong brand path, or a serial code that repeats across multiple decades.'],
-      ['Where is the serial number label located on a range or wall oven?', 'Most products place it on the oven frame, behind the door, or inside the lower drawer opening.'],
-      ['Can this support replacement research?', 'Yes. It is useful for age estimates, replacement planning, and claim documentation when the result is labeled correctly as exact or estimated.']
+      ['Where is the label on a freestanding range?', 'Inspect the oven frame with the door open and the frame exposed by removing or opening the lower storage drawer.'],
+      ['Where is the label on a wall oven?', 'Check the side or lower trim visible when the oven door is open. Avoid removing the installed appliance solely to search behind it.'],
+      ['Where is the label on a cooktop?', 'Many cooktops place it on the underside, accessible from the cabinet below. Follow the manufacturer\'s instructions before moving or disconnecting anything.'],
+      ['Can a range model number resolve a repeating serial year?', 'Only when reliable model-family evidence overlaps one decoded candidate. The example on this page narrows a Whirlpool cycle that way.'],
+      ['Why should fuel type be recorded separately?', 'Gas and electric versions can share styling or family names while using different service information and replacement requirements.'],
+      ['Does an installation date prove manufacture date?', 'No. Installation can occur later. Keep installation records as context while treating the supported serial result as the production evidence.']
     ],
     relatedLinks: [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
@@ -2070,7 +2195,9 @@ const pages = [
       ['whirlpool-serial-number-lookup', 'Whirlpool Cooking Product Path'],
       ['frigidaire-serial-number-lookup', 'Frigidaire Cooking Product Path'],
       ['samsung-serial-number-lookup', 'Samsung Cooking Product Path'],
-      ['lg-serial-number-lookup', 'LG Cooking Product Path']
+      ['lg-serial-number-lookup', 'LG Cooking Product Path'],
+      ['smart-lookup', 'Smart Lookup'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
@@ -2078,8 +2205,8 @@ const pages = [
     slug: 'whirlpool-serial-number-lookup',
     title: 'Whirlpool Serial Number Decoder',
     description: 'Decode Whirlpool serial numbers, estimate Whirlpool appliance age, and use supported year/week patterns for refrigerators, washers, dryers, dishwashers, and ranges.',
-    htmlTitleOverride: 'Whirlpool Serial Number Lookup — Manufacture Date & Age | Decode My Item',
-    metaDescriptionOverride: 'Decode your Whirlpool serial number to find the exact manufacture date and appliance age. Supports refrigerators, washers, dryers, dishwashers, and ranges. Enter serial number below.',
+    htmlTitleOverride: 'Whirlpool Serial Number Decoder — Year Code & Week | Decode My Item',
+    metaDescriptionOverride: 'Decode supported 9- and 10-character Whirlpool serial numbers into candidate years and production week, with model-era guidance for repeating cycles.',
     h1: 'Whirlpool Serial Number Decoder',
     badge: 'Brand decoder',
     category: 'appliances',
@@ -2092,6 +2219,28 @@ const pages = [
     decodeSectionBody: 'Most Whirlpool-family appliance serial numbers use a year code plus a production week. Nine-character serials commonly use character 2 for year and characters 3-4 for week, while ten-character serials commonly shift that year code to character 3 and the week digits to characters 4-5.',
     modelSectionTitle: 'What the model number can tell you',
     modelSectionBody: 'The model number helps separate product families, confirm the era, and support the final decade choice when the Whirlpool year code repeats on a 30-year cycle. It is also useful when the serial label is incomplete or damaged.',
+    preGridSections: [
+      {
+        type: 'table',
+        id: 'whirlpool-worked-example',
+        title: 'Worked Whirlpool range-family example',
+        intro: 'The serial and model play separate roles in this regression-backed example.',
+        rows: [
+          { field: 'RX3026733 length', meaning: '9 alphanumeric characters', why: 'The supported nine-character path reads character 2 as year code and characters 3-4 as production week.' },
+          { field: 'X + 30', meaning: 'Candidate years 1990 or 2020; week 30', why: 'The serial alone cannot select the decade.' },
+          { field: 'Model WFE320M0JW0', meaning: 'Recognized Whirlpool range family', why: 'Current model-family evidence overlaps 2020, narrowing the tested result without nearest-year guessing.' }
+        ]
+      },
+      {
+        type: 'copy-block',
+        id: 'whirlpool-cycle-limit',
+        title: 'Why Whirlpool results can remain ambiguous',
+        body: [
+          'Whirlpool year letters repeat on a long cycle. The decoder therefore returns every supported candidate rather than treating a current-looking year as automatically correct.',
+          'A model family can narrow the cycle only when its documented era overlaps one candidate. Condition, styling, or an approximate installation date can be useful context, but they do not change the serial characters themselves.'
+        ]
+      }
+    ],
     formatSectionTitle: 'Common Whirlpool serial number formats',
     formats: [
       { label: '9-character Whirlpool serial', pattern: 'Year code in character 2; week digits in characters 3-4', meaning: 'The year code maps the likely year window and the next two digits point to the production week.', confidence: 'Estimated decade. Whirlpool year codes repeat.' },
@@ -2100,9 +2249,8 @@ const pages = [
     ],
     exampleSectionTitle: 'Whirlpool serial number examples',
     examples: [
-      { label: 'Supported example', serial: 'CB2501800', note: 'This is a supported Whirlpool-family example from the current decoder data. The code structure reveals a year window and production week.' },
-      { label: 'Illustrative 10-character pattern', serial: 'ABC2501800', note: 'Illustrative 10-character Whirlpool-family pattern. The current decoder uses character 3 for year and characters 4-5 for production week on this structure.' },
-      { label: 'Cycle warning', serial: '...B25...', note: 'A Whirlpool year code such as B can map to more than one decade cycle, which is why the result may still be estimated until model era or install context confirms the right decade.' }
+      { label: 'Verified nine-character fixture', serial: 'RX3026733', note: 'Character 2 is X and characters 3-4 are 30, producing week 30 with candidate years 1990 or 2020.' },
+      { label: 'Verified valid-week fixture', serial: 'C21435678', note: 'The supported decoder accepts week 14 and preserves the repeating year-code cycle. Invalid weeks 54 and 99 are rejected.' }
     ],
     locationSectionTitle: 'Where to find the model and serial number',
     locations: [
@@ -2119,11 +2267,12 @@ const pages = [
       'If the appliance is Kenmore-branded, route the model prefix first before assuming Whirlpool-family logic.'
     ],
     faqs: [
-      ['How old is my Whirlpool appliance?', 'Use the full serial number from the rating label. Whirlpool usually stores a year code and production week in the serial rather than the model number.'],
-      ['Can a Whirlpool model number tell me the age?', 'Not reliably by itself. The model number is more useful for identifying the family and confirming the era when year codes repeat.'],
-      ['Why does Whirlpool show an estimated decade?', 'Whirlpool year codes repeat across long cycles, so condition, product era, and model family may still be needed to confirm the right decade.'],
-      ['Where is the Whirlpool serial number label located?', 'It depends on product type. Refrigerators usually place it inside the cabinet, laundry products place it around the opening, and dishwashers or ranges place it on the frame.'],
-      ['Can this be used for insurance claims?', 'Yes. Just document whether the result is a direct supported decode or an estimated decade based on the repeated Whirlpool cycle.']
+      ['Why does Whirlpool serial length matter?', 'The supported nine-character format reads the year at character 2, while the ten-character format reads it at character 3. The production-week positions shift too.'],
+      ['Does Whirlpool encode a calendar month?', 'The supported path returns a production week, not a direct month. Converting that week to an exact calendar date would overstate the available precision.'],
+      ['Why can one Whirlpool letter represent two years?', 'The year code repeats on a long cycle. The decoder preserves both candidates until separate era evidence resolves them.'],
+      ['Can a model automatically choose the newest candidate?', 'No. A model narrows the cycle only when verified family evidence overlaps one candidate year.'],
+      ['Which characters does Whirlpool skip?', 'The current Whirlpool mapping skips I, N, O, Q, and V to reduce confusion. A serial containing an unsupported year code should not be forced into the sequence.'],
+      ['What happens when the week is 54 or 99?', 'The decoder rejects it. Supported production weeks must be between 01 and 53.']
     ],
     relatedLinks: [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
@@ -2131,7 +2280,9 @@ const pages = [
       ['washer-serial-number', 'Washer Serial Number Lookup'],
       ['dishwasher-serial-number', 'Dishwasher Serial Number Lookup'],
       ['maytag-serial-number-lookup', 'Maytag'],
-      ['kenmore-serial-number-lookup', 'Kenmore']
+      ['kenmore-serial-number-lookup', 'Kenmore'],
+      ['smart-lookup', 'Smart Lookup'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: (() => {
       const groups = baseLinkGroups();
@@ -2340,6 +2491,28 @@ const pages = [
     decodeSectionBody: 'Supported LG appliance serial numbers commonly use character 1 as the last digit of the year and characters 2-3 as the month. That makes the opening three characters the most important part of the serial for age checks.',
     modelSectionTitle: 'What the model number can tell you',
     modelSectionBody: 'The model number helps confirm the product family, generation, and likely decade. That matters because the LG year position is a single digit, so the decoder may still need model-era context to resolve the final decade.',
+    preGridSections: [
+      {
+        type: 'table',
+        id: 'lg-worked-example',
+        title: 'Worked LG washer example',
+        intro: 'This tested example preserves the serial result before applying model-era evidence.',
+        rows: [
+          { field: 'Serial 412TATG1H105', meaning: 'Year digit 4; month 12', why: 'The serial returns December with candidate years 2004, 2014, or 2024.' },
+          { field: 'Model WM3470HWA', meaning: 'Known LG washer family context', why: 'The current model evidence overlaps 2014 and narrows the tested result to December 2014.' },
+          { field: 'Serial without model', meaning: 'Three candidate years remain', why: 'The decoder does not silently select the newest decade.' }
+        ]
+      },
+      {
+        type: 'copy-block',
+        id: 'lg-model-versus-serial',
+        title: 'LG model and serial fields are not interchangeable',
+        body: [
+          'LG states that its product model numbers begin with a letter, while its appliance serial numbers begin with three digits. In the supported appliance path, those opening serial digits supply the year-cycle and month signal.',
+          'LG televisions and computer products have separate identification workflows. This page preselects the appliance decoder and should not be used to infer a TV date from a model number.'
+        ]
+      }
+    ],
     formatSectionTitle: 'Common LG serial number formats',
     formats: [
       { label: '8-12 character LG appliance serials', pattern: 'Year digit in character 1; month digits in characters 2-3', meaning: 'The opening digit and next two month digits usually drive the supported LG age estimate.', confidence: 'Estimated decade. LG year digits repeat.' },
@@ -2348,9 +2521,8 @@ const pages = [
     ],
     exampleSectionTitle: 'LG serial number examples',
     examples: [
-      { label: 'Illustrative LG pattern', serial: '810XXXXXXX', note: 'Illustrative LG appliance pattern. The supported decoder treats 8 as the year digit and 10 as the month code.' },
-      { label: 'Decade reminder', serial: '1 02 ...', note: 'An LG year digit such as 1 can represent more than one decade cycle, which is why model era still matters.' },
-      { label: 'Appliance-family reminder', serial: 'Opening digits matter most', note: 'The opening LG serial characters are usually the main age signal, while the remaining characters track line and sequence information.' }
+      { label: 'Verified LG washer fixture', serial: '412TATG1H105 + WM3470HWA', note: 'The serial returns December and 2004/2014/2024. Model evidence narrows the tested result to 2014.' },
+      { label: 'Verified LG-built Kenmore fixture', serial: '795.74053.410 + 410KR00219', note: 'The Kenmore model prefix routes to LG. The serial returns October and candidate years 2004, 2014, or 2024.' }
     ],
     locationSectionTitle: 'Where to find the model and serial number',
     locations: [
@@ -2367,11 +2539,12 @@ const pages = [
       'Capture the full code even though the opening characters carry the main date signal.'
     ],
     faqs: [
-      ['How old is my LG appliance?', 'Use the serial number from the label. The supported LG decoder reads the opening year digit and month digits, then uses model-era context when the decade repeats.'],
-      ['Can the LG model number tell me the age?', 'Not reliably by itself. It is better for identifying the family and helping resolve the decade when the year digit repeats.'],
-      ['Why does the LG result still look estimated?', 'The first serial digit is only the last digit of the year, so the decoder may still need model-era context to confirm the full decade.'],
-      ['Where is the LG serial number label located?', 'LG usually places it inside the appliance opening, on the cabinet wall, or on the interior frame depending on product type.'],
-      ['Can this support claim documentation?', 'Yes. The result is useful for age support, replacement research, and documenting whether the final decade is direct or estimated.']
+      ['Which LG serial characters are used for appliance age?', 'The supported path reads character 1 as a repeating year digit and characters 2-3 as a two-digit month.'],
+      ['Why does an LG serial return three possible years?', 'The serial contains only the final year digit, so the same value can recur every decade. The model may narrow it only when verified era evidence exists.'],
+      ['How can I distinguish an LG model from a serial?', 'LG guidance says model numbers begin with a letter while appliance serial numbers begin with three digits. Record both fields exactly as labeled.'],
+      ['Does this page decode LG televisions?', 'No. It preselects the LG appliance path. Television model and serial research belongs in the electronics workflow.'],
+      ['Where is the LG refrigerator label?', 'LG identifies interior liner locations, commonly the right side on older models and the left side on newer refrigerators.'],
+      ['Where is the LG laundry label?', 'Front-load washer and dryer labels are commonly around the door opening; top-load washer locations can include under the lid, rear controls, or a side panel.']
     ],
     relatedLinks: [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
@@ -2379,7 +2552,9 @@ const pages = [
       ['washer-serial-number', 'Washer Serial Number Lookup'],
       ['range-oven-serial-number', 'Range & Oven Serial Number Lookup'],
       ['samsung-serial-number-lookup', 'Samsung'],
-      ['ge-serial-number-lookup', 'GE']
+      ['ge-serial-number-lookup', 'GE'],
+      ['smart-lookup', 'Smart Lookup'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
@@ -2399,6 +2574,28 @@ const pages = [
     decodeSectionBody: 'Supported Frigidaire-family serial numbers commonly use the first numeric character after the opening factory letters as the year digit, followed by week digits that narrow the production window. The leading factory letters still matter and should not be removed.',
     modelSectionTitle: 'What the model number can tell you',
     modelSectionBody: 'The model number helps confirm the product family and era when the year digit repeats across decades. It also helps when the product is sold under an Electrolux-family or private-label variant with similar-looking serials.',
+    preGridSections: [
+      {
+        type: 'table',
+        id: 'frigidaire-worked-example',
+        title: 'Worked Frigidaire refrigerator example',
+        intro: 'This regression-backed pair shows both the raw serial cycle and the narrower model-supported result.',
+        rows: [
+          { field: 'Serial BA10515647', meaning: 'Factory prefix BA; year digit 1; week 05', why: 'Serial alone returns candidate years 1991, 2001, 2011, or 2021.' },
+          { field: 'Model FFTR2045VS0', meaning: 'Recognized top-freezer refrigerator family', why: 'Current model-era evidence intersects the 2021 candidate.' },
+          { field: 'Combined result', meaning: 'Week 05 of 2021', why: 'The model narrows a serial-valid candidate; it does not replace the serial decode.' }
+        ]
+      },
+      {
+        type: 'copy-block',
+        id: 'frigidaire-prefix-week',
+        title: 'Keep the factory prefix and validate the production week',
+        body: [
+          'The opening factory letters are part of the Frigidaire-family structure and should not be discarded. The numeric year and week positions are read after that prefix.',
+          'The decoder rejects impossible weeks such as 54. A readable year digit paired with an invalid week is not treated as a partial successful manufacture date.'
+        ]
+      }
+    ],
     formatSectionTitle: 'Common Frigidaire serial number formats',
     formats: [
       { label: 'Frigidaire refrigerators', pattern: 'Factory letters followed by year digit + week digits', meaning: 'The first numeric character after the plant code is often the year digit, followed by week information.', confidence: 'Estimated decade. Product line matters.' },
@@ -2407,9 +2604,8 @@ const pages = [
     ],
     exampleSectionTitle: 'Frigidaire serial number examples',
     examples: [
-      { label: 'Illustrative Frigidaire pattern', serial: 'VF24012345', note: 'Illustrative Frigidaire-family pattern. The factory letters matter before the year and week digits are interpreted.' },
-      { label: 'Plant-code reminder', serial: 'Factory letters stay in the serial', note: 'Do not drop the opening letters. They help define the correct Frigidaire-family decode path.' },
-      { label: 'Decade reminder', serial: 'Year digit can repeat', note: 'The supported Frigidaire year digit can overlap more than one decade, so model era can still matter.' }
+      { label: 'Verified model-refined fixture', serial: 'BA10515647 + FFTR2045VS0', note: 'The serial encodes week 05 with four candidate decades; the tested refrigerator model narrows the result to 2021.' },
+      { label: 'Verified serial-only fixture', serial: 'NF11910958', note: 'The current decoder returns week 19 and candidate years 2001, 2011, or 2021. No single year is invented.' }
     ],
     locationSectionTitle: 'Where to find the model and serial number',
     locations: [
@@ -2426,11 +2622,12 @@ const pages = [
       'Capture the full code without trimming spaces, letters, or suffix characters.'
     ],
     faqs: [
-      ['How old is my Frigidaire appliance?', 'Use the serial number from the label. The supported Frigidaire path usually reads a year digit and production week after the factory letters.'],
-      ['Can the Frigidaire model number tell me the age?', 'Not reliably by itself. It is mainly used to confirm the product family and likely decade when the serial year digit repeats.'],
-      ['Why does the Frigidaire result still look estimated?', 'The Frigidaire year digit can still overlap more than one decade, so model-family and product-era context may still be needed.'],
-      ['Where is the Frigidaire serial number label located?', 'Frigidaire usually places it on the interior cabinet wall, opening edge, or product frame depending on category.'],
-      ['Can this support claim documentation?', 'Yes. It is useful for age support and replacement research, especially when the full serial and product type are available.']
+      ['What do the opening letters in a Frigidaire serial mean here?', 'They are retained as the factory prefix. The supported decoder reads the following numeric positions for the repeating year digit and production week.'],
+      ['Why does the Frigidaire year digit return several decades?', 'A single numeric year code repeats. The serial alone cannot choose among all supported candidate years.'],
+      ['How can model FFTR2045VS0 narrow the result?', 'The repository contains model-era evidence for that refrigerator family. It overlaps the 2021 serial candidate in the tested example.'],
+      ['Does a week code of 54 decode?', 'No. The current Frigidaire-family implementation accepts production weeks 01 through 53 and rejects impossible values.'],
+      ['Where is the label on a Frigidaire dishwasher?', 'Open the door and check the interior side of the door and the right side of the tub.'],
+      ['Where is the label on a Frigidaire range?', 'Inspect the oven side trim and the storage-drawer frame while the door or drawer is open.']
     ],
     relatedLinks: [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
@@ -2438,7 +2635,9 @@ const pages = [
       ['dishwasher-serial-number', 'Dishwasher Serial Number Lookup'],
       ['range-oven-serial-number', 'Range & Oven Serial Number Lookup'],
       ['ge-serial-number-lookup', 'GE'],
-      ['whirlpool-serial-number-lookup', 'Whirlpool']
+      ['whirlpool-serial-number-lookup', 'Whirlpool'],
+      ['smart-lookup', 'Smart Lookup'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
@@ -2458,6 +2657,28 @@ const pages = [
     decodeSectionBody: 'Modern Whirlpool-era Maytag products often follow a year-code-plus-week pattern similar to Whirlpool-family serials. Older Maytag products may instead use the last two characters for year and month, which is why the era selector can matter.',
     modelSectionTitle: 'What the model number can tell you',
     modelSectionBody: 'The model number helps separate older legacy Maytag products from Whirlpool-era Maytag platforms. That context matters when the serial format repeats or when the decoder asks you to choose an era.',
+    preGridSections: [
+      {
+        type: 'table',
+        id: 'maytag-dual-era-example',
+        title: 'Worked Maytag dual-era example',
+        intro: 'When the era is unknown, the current workflow evaluates both supported styles and keeps their results separate.',
+        rows: [
+          { field: 'Serial 12345678WA — pre-2006 path', meaning: 'Ending W = year; A = January', why: 'The tested legacy path returns January with candidate years 1999 or 2023.' },
+          { field: 'Same serial — post-2006 path', meaning: 'Whirlpool-family length/position logic', why: 'The tested modern path returns candidate years 2013 or 2043.' },
+          { field: 'Era not selected', meaning: '1999, 2013, or 2043 remain', why: 'The interface does not display a fake single confident age when both formats match.' }
+        ]
+      },
+      {
+        type: 'copy-block',
+        id: 'maytag-era-decision',
+        title: 'Why the 2006 era boundary matters',
+        body: [
+          'Legacy Maytag serials can place year and month codes at the end, while post-2006 Whirlpool-era products commonly use Whirlpool-family year/week positions. Applying the newer rule to every older Maytag would be misleading.',
+          'Use the model family, purchase or installation record, styling, and label format to choose an era. If those clues do not settle it, preserve the combined candidate set and use Smart Lookup rather than forcing a choice.'
+        ]
+      }
+    ],
     formatSectionTitle: 'Common Maytag serial number formats',
     formats: [
       { label: 'Post-2006 Maytag', pattern: 'Whirlpool-style year code + week digits', meaning: 'Many modern Maytag products follow Whirlpool-family year/week logic.', confidence: 'Estimated decade. Era can still matter.' },
@@ -2466,9 +2687,8 @@ const pages = [
     ],
     exampleSectionTitle: 'Maytag serial number examples',
     examples: [
-      { label: 'Post-2006 style reminder', serial: '...year code + week...', note: 'Many newer Maytag appliances route into Whirlpool-family year/week logic after the era is confirmed.' },
-      { label: 'Legacy style reminder', serial: '...XY', note: 'Some older Maytag products use the ending characters for year and month rather than the opening positions.' },
-      { label: 'Era selector reminder', serial: 'Context matters', note: 'If the page asks for era, use the product age range, styling, or install date to choose the right Maytag decode path.' }
+      { label: 'Verified dual-era fixture', serial: '12345678WA', note: 'The tested legacy path returns January and 1999/2023; the post-2006 path returns 2013/2043. Era context is required.' },
+      { label: 'Verified post-2006-only fixture', serial: 'W10123456', note: 'The pre-2006 ending-code path does not match. The Whirlpool-era path returns candidate years 2011 or 2041.' }
     ],
     locationSectionTitle: 'Where to find the model and serial number',
     locations: [
@@ -2485,11 +2705,12 @@ const pages = [
       'Capture the full serial even when the main date clue may be near the end.'
     ],
     faqs: [
-      ['How old is my Maytag appliance?', 'Use the serial number from the label. The current decoder supports both Whirlpool-era Maytag logic and older legacy logic when the era is known.'],
-      ['Can the Maytag model number tell me the age?', 'It is more useful for confirming the platform and era than for direct date decoding.'],
-      ['Why does the Maytag page ask for era?', 'Some Maytag serial layouts repeat or change by production era, so the correct path sometimes depends on whether the appliance is pre-2006 or post-2006.'],
-      ['Where is the Maytag serial number label located?', 'Maytag usually places it on the interior opening, cabinet wall, or product frame depending on category.'],
-      ['Can this support claim documentation?', 'Yes. It is useful for age support, but any era-based assumption should be documented when the serial family overlaps.']
+      ['Why are pre-2006 and post-2006 Maytag separate?', 'Legacy Maytag and Whirlpool-era Maytag products use different supported code positions. The acquisition-era boundary changes which rule applies.'],
+      ['What happens when both Maytag formats match?', 'The interface keeps the combined candidate years and explains both paths. It does not choose one era without evidence.'],
+      ['Which characters matter on a legacy Maytag serial?', 'The supported pre-2006 path reads the second-to-last character for year and the last character for month.'],
+      ['Which characters matter on a newer Maytag serial?', 'The post-2006 path uses the Whirlpool-family length-dependent year and production-week positions.'],
+      ['Can the model number determine the era?', 'It can provide platform and generation evidence, but a model should not be treated as a direct serial manufacture date.'],
+      ['Where are Maytag laundry labels located?', 'Official Maytag guidance lists the washer lid/rear control area and dryer door, rear cabinet, or gas-access locations depending on product.']
     ],
     relatedLinks: [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
@@ -2497,7 +2718,9 @@ const pages = [
       ['dryer-serial-number', 'Dryer Serial Number Lookup'],
       ['whirlpool-serial-number-lookup', 'Whirlpool'],
       ['kenmore-serial-number-lookup', 'Kenmore'],
-      ['ge-serial-number-lookup', 'GE']
+      ['ge-serial-number-lookup', 'GE'],
+      ['smart-lookup', 'Smart Lookup'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
@@ -2525,9 +2748,8 @@ const pages = [
     ],
     exampleSectionTitle: 'Kenmore serial number examples',
     examples: [
-      { label: 'Model prefix reminder', serial: '106.xxxxx', note: 'A prefix like 106 often signals Whirlpool-family routing before the serial is decoded.' },
-      { label: 'Model prefix reminder', serial: '362.xxxxx', note: 'A prefix like 362 often signals a GE-family path, where the opening serial letters carry the main age logic.' },
-      { label: 'OEM-routing reminder', serial: 'Serial alone is not always enough', note: 'If the OEM is unknown, the decoder may still leave the result estimated until the model family is clearer.' }
+      { label: 'Verified LG-built Kenmore route', serial: '795.74053.410 + 410KR00219', note: 'Prefix 795 selects LG logic. The serial returns October and candidate years 2004, 2014, or 2024.' },
+      { label: 'Verified Samsung-family serial fixture', serial: 'A00843ESC00128', note: 'The supported Samsung path returns December with candidate years 2009 or 2029; the OEM must be established before applying that rule.' }
     ],
     locationSectionTitle: 'Where to find the model and serial number',
     locations: [
@@ -2544,11 +2766,12 @@ const pages = [
       'Capture the full serial even if the OEM path is not known yet.'
     ],
     faqs: [
-      ['How old is my Kenmore appliance?', 'Use the model prefix to identify the OEM first, then decode the serial using the supported manufacturer path.'],
-      ['Can the Kenmore serial number tell me the age by itself?', 'Sometimes, but the model prefix is often needed first because Kenmore products were built by multiple OEM manufacturers.'],
-      ['Why does Kenmore need the model number more than other brands?', 'The model prefix often identifies who actually manufactured the appliance, and that decides which serial rule the decoder should apply.'],
-      ['Where is the Kenmore serial number label located?', 'Kenmore labels usually follow the same placement patterns as the underlying OEM product type: inside the cabinet, around the opening, or on the frame.'],
-      ['Can this support claim documentation?', 'Yes. Just note when the OEM is confirmed directly versus when the result still depends on a likely model-prefix match.']
+      ['Why is Kenmore not decoded with one brand-wide rule?', 'Kenmore products were built by multiple OEMs. The model prefix determines which manufacturer family is the appropriate serial path.'],
+      ['What does Kenmore prefix 795 mean in this tool?', 'It routes the appliance to the supported LG-family decoder. The full model and serial should still be retained.'],
+      ['What happens when no Kenmore prefix is available?', 'The current interface permits a documented Whirlpool-family fallback, but labels the OEM assumption. Smart Lookup is safer when the prefix can be recovered.'],
+      ['Is a Kenmore model prefix always the first three digits?', 'The supported helper extracts the first three digits from a complete model such as 795.74053.410. Do not use three digits copied from an unrelated label field.'],
+      ['Why can a correctly routed Kenmore result still show several years?', 'OEM formats such as LG, GE, Whirlpool, and Samsung can reuse year codes. Correct routing does not remove that separate cycle ambiguity.'],
+      ['Where can I verify the complete Kenmore model?', 'Use the product label and Kenmore manual lookup. The manual search requires the model identifier, not the serial number.']
     ],
     relatedLinks: [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
@@ -2556,9 +2779,31 @@ const pages = [
       ['ge-serial-number-lookup', 'GE'],
       ['lg-serial-number-lookup', 'LG'],
       ['frigidaire-serial-number-lookup', 'Frigidaire'],
-      ['find-model-serial-number', 'Find Model & Serial Labels']
+      ['find-model-serial-number', 'Find Model & Serial Labels'],
+      ['smart-lookup', 'Smart Lookup'],
+      ['methodology', 'Methodology']
     ],
     preGridSections: [
+      {
+        type: 'table',
+        id: 'kenmore-worked-example',
+        title: 'Worked Kenmore OEM-routing example',
+        intro: 'The model prefix selects the decoder; the serial then supplies the date positions.',
+        rows: [
+          { field: 'Model 795.74053.410', meaning: 'Prefix 795', why: 'The tested routing helper identifies an LG-built Kenmore refrigerator.' },
+          { field: 'Serial 410KR00219', meaning: 'LG year digit 4; month 10', why: 'The decoder returns October with candidate years 2004, 2014, or 2024.' },
+          { field: 'No additional model-era evidence', meaning: 'All three years remain', why: 'OEM routing identifies the rule but does not automatically resolve a repeating decade.' }
+        ]
+      },
+      {
+        type: 'copy-block',
+        id: 'kenmore-fallback-limit',
+        title: 'What the no-prefix fallback does and does not prove',
+        body: [
+          'The current interface allows decoding without a model prefix and uses a documented Whirlpool-family fallback so the tool remains usable. That fallback is an assumption about OEM routing, not proof that Whirlpool built the unit.',
+          'For an approval-facing result, recover the full model from the label, manual, registration, or Smart Lookup whenever possible and record whether the OEM was confirmed or assumed.'
+        ]
+      },
       {
         type: 'raw',
         html: `
@@ -2860,19 +3105,41 @@ const pages = [
   {
     slug: 'trane-serial-number-lookup',
     title: 'Trane Serial Number Decoder',
-    description: 'Decode Trane serial numbers, estimate HVAC age, and use the supported Trane year-position logic with concise rating-plate guidance.',
+    description: 'Check the supported modern numeric Trane HVAC serial path, read the year from digits 3-4, and recover model/nameplate context when the format differs.',
     h1: 'Trane Serial Number Decoder',
     badge: 'HVAC brand decoder',
     category: 'hvac',
     brandValue: 'trane',
     intro: 'Use this Trane serial number decoder when you already know the brand and want the fastest supported HVAC age path from the rating plate.',
-    supportingIntro: 'Trane serial numbers are equipment-specific HVAC paths. The current decoder supports the common Trane year-position logic and keeps the result focused on rating-plate serial research instead of generic product guessing.',
+    supportingIntro: 'The current decoder supports a bounded modern numeric path, not every historical Trane serial era. It validates the opening week-shaped digits and reads digits 3-4 as year when the rating-plate string matches that structure.',
     decoderIntro: 'Trane is preselected. Enter the full HVAC serial number exactly as printed on the rating plate.',
     decoderPlaceholder: 'Enter Trane serial number',
     decodeSectionTitle: 'How to decode a Trane serial number',
-    decodeSectionBody: 'Supported Trane serial decoding commonly uses digits 3-4 as the production year. The surrounding characters usually act as plant and sequence identifiers rather than a direct month code.',
+    decodeSectionBody: 'The supported numeric Trane path requires two valid opening digits in the 01-53 range and reads digits 3-4 as the two-digit production year. The current output is year-only; it does not claim an exact month or day.',
     modelSectionTitle: 'What the model number can tell you',
-    modelSectionBody: 'The Trane model number helps confirm equipment family, tonnage, and generation. That supports a stronger replacement workflow once the serial estimate identifies the likely year.',
+    modelSectionBody: 'The model identifies the component and equipment family. It is useful for manuals, warranty records, and replacement research, but this page does not decode tonnage or manufacture date from the model.',
+    preGridSections: [
+      {
+        type: 'table',
+        id: 'trane-worked-example',
+        title: 'Verified Trane format example',
+        intro: 'This sanitized fixture exercises the supported numeric path and its validation boundaries.',
+        rows: [
+          { field: 'Serial 1427XXXXXX', meaning: 'Opening 14; year code 27', why: 'The opening value passes the 01-53 format check and digits 3-4 resolve to 2027 under the current one-year future tolerance.' },
+          { field: 'Serial AB1234567', meaning: 'Does not match numeric opening', why: 'The decoder rejects it rather than misreading digits later in the string as 2012.' },
+          { field: 'Serial 1234567890', meaning: 'Would imply 2034', why: 'The decoder rejects a year beyond its supported future tolerance.' }
+        ]
+      },
+      {
+        type: 'copy-block',
+        id: 'trane-supported-boundary',
+        title: 'What this Trane page does not cover',
+        body: [
+          'Trane has used more than one identifier style across product families and eras. A nameplate that does not begin with the supported numeric structure should be treated as unsupported here, not reshaped to fit the example.',
+          'Use the complete model and serial from each HVAC component. Trane registration and warranty support treat those as separate identifiers, and indoor and outdoor units may need to be researched individually.'
+        ]
+      }
+    ],
     formatSectionTitle: 'Common Trane serial number formats',
     formats: [
       { label: 'Trane condensers and heat pumps', pattern: 'Digits 3-4 commonly map the year', meaning: 'The current decoder uses the supported Trane year position instead of a generic month-year guess.', confidence: 'Moderate to high confidence when the label matches the supported path.' },
@@ -2881,9 +3148,7 @@ const pages = [
     ],
     exampleSectionTitle: 'Trane serial number examples',
     examples: [
-      { label: 'Illustrative Trane pattern', serial: 'XX19XXXXX', note: 'Illustrative Trane-family pattern. The supported path focuses on digits 3-4 for the production year.' },
-      { label: 'Rating-plate reminder', serial: 'Full serial required', note: 'Capture the whole serial because the surrounding characters help confirm you are using the right Trane path.' },
-      { label: 'Model-family reminder', serial: 'Model still matters', note: 'The Trane model number is useful for verifying the family and building a stronger replacement summary after the year is estimated.' }
+      { label: 'Verified supported fixture', serial: '1427XXXXXX', note: 'The current Trane regression reads digits 3-4 as 27 and returns 2027. It does not claim a month.' }
     ],
     locationSectionTitle: 'Where to find the model and serial number',
     locations: [
@@ -2900,38 +3165,63 @@ const pages = [
       'Do not apply appliance-style month/year rules to HVAC serials.'
     ],
     faqs: [
-      ['How old is my Trane unit?', 'Use the serial number from the rating plate. The supported Trane path commonly reads digits 3-4 as the production year.'],
-      ['Can the Trane model number tell me the age?', 'Not as directly as the serial number. It is better for identifying the equipment family and supporting replacement research.'],
-      ['Why does my Trane serial number not decode?', 'The label may be partial, the product may fall outside the supported family, or the serial may not match the main Trane pattern.'],
-      ['Where is the Trane serial number plate located?', 'Most Trane equipment places it on the outdoor cabinet, indoor access panel, or furnace service area depending on product type.'],
-      ['Can this support claim documentation?', 'Yes. Serial-based age support is useful for HVAC claims, especially when the rating-plate photo is preserved.']
+      ['Which Trane format is supported here?', 'The current path expects an opening four-digit numeric group, validates the first two digits, and reads digits 3-4 as year.'],
+      ['Does the supported Trane result include a production week?', 'No. The opening digits are validated as part of the supported structure, but the current Trane result is year-only.'],
+      ['Why is an alphabetic Trane serial rejected?', 'It falls outside this bounded numeric path. The tool does not scan later digits and invent a year.'],
+      ['Should I combine indoor and outdoor unit serials?', 'No. Photograph and research each component nameplate separately because a split system can contain components from different production dates.'],
+      ['Where does Trane say to find the serial?', 'Trane identifies the unit nameplate, metal tag, or sticker as the source for registration identifiers.'],
+      ['What should I do with an older unsupported Trane format?', 'Keep the full model and serial, check official warranty or manual records, or use Smart Lookup without forcing it into the modern numeric rule.']
     ],
     relatedLinks: [
+      ['how-old-is-my-hvac', 'How Old Is My HVAC?'],
       ['how-to-find-hvac-age', 'How to Find HVAC Age'],
       ['hvac-age-by-serial-number', 'HVAC Age by Serial Number'],
       ['carrier-serial-number-lookup', 'Carrier'],
       ['rheem-serial-number-lookup', 'Rheem'],
       ['goodman-serial-number-lookup', 'Goodman'],
-      ['how-old-is-my-appliance', 'How Old Is My Appliance?']
+      ['smart-lookup', 'Smart Lookup'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
   {
     slug: 'rheem-serial-number-lookup',
-    title: 'Rheem Serial Number Decoder',
-    description: 'Decode Rheem serial numbers, estimate HVAC age, and use the supported week/year Rheem HVAC pattern with concise rating-plate guidance.',
-    h1: 'Rheem Serial Number Decoder',
+    title: 'Rheem HVAC Serial Number Decoder',
+    description: 'Decode the supported Rheem HVAC letter-plus-WWYY serial format. Water-heater users are directed to the separate water-heater workflow.',
+    h1: 'Rheem HVAC Serial Number Decoder',
     badge: 'HVAC brand decoder',
     category: 'hvac',
     brandValue: 'rheem',
-    intro: 'Use this Rheem serial number decoder when you already know the brand and want the fastest supported HVAC age path from the rating plate.',
-    supportingIntro: 'Rheem HVAC serial numbers commonly include a week/year block after a leading letter. The current decoder supports that pattern and keeps the result focused on equipment age rather than generic model guessing.',
+    intro: 'Use this route only for Rheem heating and cooling equipment. Rheem water heaters use separate serial styles and should be researched through the existing water-heater guide.',
+    supportingIntro: 'The supported HVAC path reads a letter followed by a WWYY block. It must not be mixed with Rheem water-heater formats such as MMYY, embedded WWYY, or plant-prefix styles.',
     decoderIntro: 'Rheem is preselected. Enter the full HVAC serial number exactly as printed on the rating plate.',
-    decoderPlaceholder: 'Enter Rheem serial number',
+    decoderPlaceholder: 'Enter Rheem HVAC serial number',
     decodeSectionTitle: 'How to decode a Rheem serial number',
     decodeSectionBody: 'Supported Rheem HVAC serial decoding commonly looks for a four-digit week/year block after an opening letter. In many supported cases, the first two digits of that block point to production week and the next two point to year.',
     modelSectionTitle: 'What the model number can tell you',
-    modelSectionBody: 'The Rheem model number helps confirm equipment family, tonnage, and generation. That supports replacement research and helps explain the context of an estimated week/year result.',
+    modelSectionBody: 'The HVAC model identifies component family and supports manual, capacity, and replacement research. This page does not infer tonnage or date from the model number.',
+    preGridSections: [
+      {
+        type: 'table',
+        id: 'rheem-hvac-worked-example',
+        title: 'Verified Rheem HVAC example',
+        intro: 'The current HVAC regression distinguishes this path from Rheem water-heater parsing.',
+        rows: [
+          { field: 'Serial X4502XXXX', meaning: 'Opening letter X; WWYY block 4502', why: 'The supported Rheem HVAC decoder returns production week 45 of 2002.' },
+          { field: 'Serial GM028928Q', meaning: 'GE refrigerator-style string', why: 'The Rheem HVAC decoder rejects it rather than scanning for an unrelated year-looking pair.' },
+          { field: 'Water heater 1291A39968', meaning: 'MMYY water-heater style', why: 'This belongs to the water-heater decoder and resolves there to December 1991; it is intentionally not this page\'s HVAC example.' }
+        ]
+      },
+      {
+        type: 'copy-block',
+        id: 'rheem-category-boundary',
+        title: 'Choose Rheem HVAC or water heating before decoding',
+        body: [
+          'Rheem manufactures both heating-and-cooling equipment and water heaters, but the supported serial rules are category-specific. This page preselects HVAC and uses only the HVAC letter-plus-WWYY path.',
+          'For a tank, tankless, or hybrid water heater, use the <a href="/how-old-is-my-plumbing">water-heater age guide</a>. Rheem\'s official water-heater documentation describes a ten-digit rating-label serial with its own month/year interpretation.'
+        ]
+      }
+    ],
     formatSectionTitle: 'Common Rheem serial number formats',
     formats: [
       { label: 'Rheem HVAC serials', pattern: 'Letter + WWYY block', meaning: 'The supported path often reads the first four digits after an opening letter as production week and year.', confidence: 'Moderate to high confidence when the label matches the supported path.' },
@@ -2940,9 +3230,7 @@ const pages = [
     ],
     exampleSectionTitle: 'Rheem serial number examples',
     examples: [
-      { label: 'Illustrative Rheem pattern', serial: 'A2514XXXXX', note: 'Illustrative Rheem-family pattern. The supported path treats 25 as the week and 14 as the year when the serial matches this structure.' },
-      { label: 'Week/year reminder', serial: 'WWYY block', note: 'Rheem HVAC age estimates often resolve to a production week instead of a direct calendar month.' },
-      { label: 'Model-family reminder', serial: 'Model still helps', note: 'The Rheem model number is useful for tonnage and replacement-family research after the serial year is estimated.' }
+      { label: 'Verified Rheem HVAC fixture', serial: 'X4502XXXX', note: 'The supported letter-plus-WWYY path returns week 45 of 2002.' }
     ],
     locationSectionTitle: 'Where to find the model and serial number',
     locations: [
@@ -2959,19 +3247,23 @@ const pages = [
       'Do not mix water-heater Rheem formats with HVAC Rheem formats.'
     ],
     faqs: [
-      ['How old is my Rheem unit?', 'Use the serial number from the rating plate. The supported Rheem HVAC path commonly looks for a week/year block after the opening letter.'],
-      ['Can the Rheem model number tell me the age?', 'Not as directly as the serial number. It is better for identifying the family and helping with replacement research.'],
-      ['Why does my Rheem serial number not decode?', 'The serial may be partial, the label may be damaged, or the product may follow a different family than the supported HVAC path.'],
-      ['Where is the Rheem serial number plate located?', 'Most Rheem HVAC equipment places it on the outdoor cabinet or indoor access panel depending on product type.'],
-      ['Can this support claim documentation?', 'Yes. Serial-based age support is useful for HVAC claims, especially when the rating-plate photo is saved with the file.']
+      ['Is this page for Rheem water heaters?', 'No. It preselects Rheem HVAC. Use the water-heater guide for tank, tankless, and hybrid units.'],
+      ['What does WWYY mean on the supported HVAC path?', 'The two week digits come before the two year digits after the opening letter. X4502 therefore means week 45 of 2002.'],
+      ['Why does a valid Rheem water-heater serial fail here?', 'The categories use different decoders. A water-heater MMYY or embedded-WWYY format should not be sent through the HVAC rule.'],
+      ['Where is a Rheem split-system label?', 'Rheem identifies the back of the outdoor unit and the inside front cover of the indoor unit as model/serial locations.'],
+      ['Should indoor and outdoor components be researched separately?', 'Yes. Record the model and serial from each component rather than assuming the complete system shares one production date.'],
+      ['What if the HVAC serial is not letter plus WWYY?', 'Treat it as unsupported on this route and use official records or Smart Lookup. Do not rearrange characters to fit the example.']
     ],
     relatedLinks: [
+      ['how-old-is-my-hvac', 'How Old Is My HVAC?'],
       ['how-to-find-hvac-age', 'How to Find HVAC Age'],
       ['hvac-age-by-serial-number', 'HVAC Age by Serial Number'],
       ['carrier-serial-number-lookup', 'Carrier'],
       ['trane-serial-number-lookup', 'Trane'],
       ['goodman-serial-number-lookup', 'Goodman'],
-      ['how-old-is-my-appliance', 'How Old Is My Appliance?']
+      ['how-old-is-my-plumbing', 'Rheem Water Heater Age Guide'],
+      ['smart-lookup', 'Smart Lookup'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },
@@ -3084,7 +3376,7 @@ const pages = [
   {
     slug: 'asus-serial-number-decoder',
     title: 'ASUS Serial Number Manufacture Date Decoder',
-    description: 'Estimate manufacture date from supported ASUS serial number formats for laptops, desktops, motherboards, and monitors.',
+    description: 'Decode supported ASUS serials whose first two characters match the documented 2010-2025 year/month table, with device-specific label and BIOS recovery.',
     socialTitleOverride: 'ASUS Serial Number Lookup & Model Number Help',
     socialDescriptionOverride: 'Use ASUS serial number lookup, ASUS model number lookup, and ASUS laptop serial number guidance to estimate manufacture date and identify supported ASUS device families.',
     h1: 'ASUS Serial Number Lookup & Model Number Help',
@@ -3092,7 +3384,7 @@ const pages = [
     category: 'electronics',
     brandValue: 'asus',
     intro: 'Use this ASUS serial number lookup page when you need to find the label, estimate manufacture date, or move from an ASUS model number into the supported electronics decoder path.',
-    supportingIntro: 'This page targets ASUS electronics intent, not appliance intent. The supported ASUS serial logic uses the first character for year code and the second character for month, while the model number helps narrow device family, generation, and warranty-style identification workflows.',
+    supportingIntro: 'This page targets ASUS electronics, not appliances. The supported table currently covers year codes A through S for 2010-2025, skipping I, O, and Q, and accepts month codes 1-9 plus A-C.',
     decoderIntro: 'ASUS is preselected. Enter the full ASUS serial number exactly as shown on the device label.',
     decoderPlaceholder: 'Enter ASUS serial number',
     howToSteps: [
@@ -3104,6 +3396,28 @@ const pages = [
     decodeSectionBody: 'The supported ASUS serial path uses character 1 for the year code and character 2 for the month code. Month values usually run 1-9 for January through September, then A, B, and C for October through December.',
     modelSectionTitle: 'What the model number can tell you',
     modelSectionBody: 'The ASUS model number is useful for product-family identification, laptop series lookup, motherboard platform research, and warranty/support-style device matching when the serial result alone is not enough for a final conclusion.',
+    preGridSections: [
+      {
+        type: 'table',
+        id: 'asus-worked-example',
+        title: 'Verified ASUS serial example',
+        intro: 'This fixture exercises the exact validation and character positions used by the current electronics decoder.',
+        rows: [
+          { field: 'Serial E5N0CV123456', meaning: 'Character 1 E; character 2 5', why: 'The supported table maps E to 2014 and 5 to May.' },
+          { field: 'Remaining characters', meaning: 'Not used for the date result', why: 'They still remain part of the complete identifier and should be preserved for support or warranty lookup.' },
+          { field: 'Short AB1234567', meaning: 'Below supported length', why: 'The decoder rejects it instead of returning a date from the first two characters alone.' }
+        ]
+      },
+      {
+        type: 'copy-block',
+        id: 'asus-identifier-recovery',
+        title: 'Recovering an ASUS serial without guessing',
+        body: [
+          'ASUS documents several recovery paths: the product label, packaging box, warranty card, BIOS or system information, and MyASUS on supported devices. Motherboards, graphics cards, notebooks, desktops, monitors, and phones do not all expose the identifier in the same place.',
+          'If the first year code is outside the current 2010-2025 table, this tool returns unsupported. Use the complete model and official ASUS records rather than extending the letter sequence by assumption.'
+        ]
+      }
+    ],
     formatSectionTitle: 'Common ASUS serial number formats',
     formats: [
       { label: 'ASUS laptop serials', pattern: 'Year code in character 1; month code in character 2', meaning: 'The supported path reads the opening year and month code directly from the serial.', confidence: 'Moderate confidence. Use model family to confirm full year.' },
@@ -3112,9 +3426,7 @@ const pages = [
     ],
     exampleSectionTitle: 'ASUS serial number examples',
     examples: [
-      { label: 'Illustrative ASUS pattern', serial: 'NBN1234567', note: 'Illustrative ASUS serial pattern. The supported path reads character 1 as year code and character 2 as month code, with A/B/C representing October through December.' },
-      { label: 'Model-number reminder', serial: 'UX3402 / ROG / PRIME families', note: 'The ASUS model number helps narrow the device family and generation after the serial age estimate is returned.' },
-      { label: 'Warranty-style lookup reminder', serial: 'Serial + model works best', note: 'For support or warranty-style identification, keep both the ASUS serial number and the ASUS model number together.' }
+      { label: 'Verified supported fixture', serial: 'E5N0CV123456', note: 'Character 1 E resolves to 2014 and character 2 5 resolves to May.' }
     ],
     locationSectionTitle: 'Where to find the model and serial number',
     locations: [
@@ -3131,19 +3443,21 @@ const pages = [
       'Keep warranty/support-style lookup separate from manufacture-date estimation when documentation requires both.'
     ],
     faqs: [
-      ['How do I find an ASUS laptop serial number?', 'Check the bottom case, the original box, BIOS, or system information. Older units may also place it under the battery or on an underside label.'],
-      ['Can the ASUS model number help if the serial is missing?', 'Yes. The model number is useful for device-family identification, generation research, and Smart Lookup when the serial label is not readable.'],
-      ['Does this work for ASUS motherboards?', 'Yes. The supported ASUS serial logic can be used when the motherboard serial label is available, and the model number helps narrow the platform.'],
-      ['Can this page help with ASUS warranty or identification intent?', 'Yes. The best workflow is to keep both the serial and model number together, especially for support, resale, or documentation needs.'],
-      ['Does this page target appliances?', 'No. This page is intentionally ASUS electronics-focused and does not target appliance age keywords.']
+      ['Which ASUS year codes are supported?', 'The current table covers A through S for 2010-2025 while skipping I, O, and Q. Codes beyond that table are not extrapolated.'],
+      ['How are October, November, and December represented?', 'The supported second-character month table uses A for October, B for November, and C for December after numeric months 1-9.'],
+      ['Why is a nine-character ASUS string rejected?', 'The current decoder requires at least ten alphanumeric characters before it reads the opening year and month codes.'],
+      ['Where can a notebook serial be recovered?', 'ASUS identifies the product label, packaging, warranty card, BIOS or system information, and MyASUS as supported recovery locations.'],
+      ['Does the model number provide the manufacture date?', 'No. It identifies the device family and supports research, but the date result on this page comes from a supported serial format.'],
+      ['Does this page cover ASUS appliances?', 'No. It is limited to supported ASUS electronics such as notebooks, desktops, motherboards, and monitors.']
     ],
     relatedLinks: [
       ['find-model-serial-number', 'Find Model & Serial Labels'],
       ['samsung-tv-serial-number-decoder', 'Samsung TV Serial Number Decoder'],
       ['hp', 'HP'],
       ['apple', 'Apple'],
-      ['electronics', 'Electronics Hub'],
-      ['how-old-is-my-appliance', 'How Old Is My Appliance?']
+      ['how-old-is-my-electronics', 'Electronics Identifier Guide'],
+      ['smart-lookup', 'Smart Lookup'],
+      ['methodology', 'Methodology']
     ],
     linkGroups: baseLinkGroups()
   },

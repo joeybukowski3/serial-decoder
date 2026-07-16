@@ -15,24 +15,29 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
-  <title>Rheem Serial Number Decoder | Decode My Item</title>
-  <meta name="description" content="Decode Rheem serial numbers, estimate HVAC age, and use the supported week/year Rheem HVAC pattern with concise rating-plate guidance.">
+  <title>Rheem HVAC Serial Number Decoder | Decode My Item</title>
+  <meta name="description" content="Decode the supported Rheem HVAC letter-plus-WWYY serial format. Water-heater users are directed to the separate water-heater workflow.">
   <link rel="canonical" href="https://www.decodemyitem.com/rheem-serial-number-lookup">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Decode My Item">
-  <meta property="og:title" content="Rheem Serial Number Decoder | Decode My Item">
-  <meta property="og:description" content="Decode Rheem serial numbers, estimate HVAC age, and use the supported week/year Rheem HVAC pattern with concise rating-plate guidance.">
+  <meta property="og:title" content="Rheem HVAC Serial Number Decoder | Decode My Item">
+  <meta property="og:description" content="Decode the supported Rheem HVAC letter-plus-WWYY serial format. Water-heater users are directed to the separate water-heater workflow.">
   <meta property="og:url" content="https://www.decodemyitem.com/rheem-serial-number-lookup">
   <meta property="og:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Rheem Serial Number Decoder | Decode My Item">
-  <meta name="twitter:description" content="Decode Rheem serial numbers, estimate HVAC age, and use the supported week/year Rheem HVAC pattern with concise rating-plate guidance.">
+  <meta name="twitter:title" content="Rheem HVAC Serial Number Decoder | Decode My Item">
+  <meta name="twitter:description" content="Decode the supported Rheem HVAC letter-plus-WWYY serial format. Water-heater users are directed to the separate water-heater workflow.">
   <meta name="twitter:image" content="https://www.decodemyitem.com/assets/item-assist-banner.png">
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="responsive-navigation.css">
   <link rel="stylesheet" href="seo-landing.css">
+  <style>
+    .section, .seo-copy-wrap, .table-wrap { min-width: 0; }
+    .seo-copy-wrap { max-width: 100%; }
+    .conf-pill { max-width: 100%; white-space: normal; overflow-wrap: anywhere; flex-shrink: 1; }
+  </style>
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body data-page-kind="brand-page">
@@ -97,7 +102,7 @@
     <section class="bp-hero">
       <div class="bp-hero-inner">
         <nav class="breadcrumb-nav" aria-label="Breadcrumb">
-          <a href="/">Home</a><span class="breadcrumb-sep">/</span><span aria-current="page">Rheem Serial Number Decoder</span>
+          <a href="/">Home</a><span class="breadcrumb-sep">/</span><span aria-current="page">Rheem HVAC Serial Number Decoder</span>
         </nav>
 
         <div class="bp-hero-icon-wrap" style="background:#9fcaff18;border-color:#9fcaff30;">
@@ -108,8 +113,8 @@
           HVAC brand decoder
         </span>
 
-        <h1 class="bp-hero-title">Rheem Serial Number Decoder</h1>
-        <p class="bp-hero-sub">Use this Rheem serial number decoder when you already know the brand and want the fastest supported HVAC age path from the rating plate.</p>
+        <h1 class="bp-hero-title">Rheem HVAC Serial Number Decoder</h1>
+        <p class="bp-hero-sub">Use this route only for Rheem heating and cooling equipment. Rheem water heaters use separate serial styles and should be researched through the existing water-heater guide.</p>
 
         <ol class="bp-steps">
 
@@ -136,7 +141,7 @@
 
     <!-- ═══ SUPPORTING INTRO ═══ -->
     <div class="bp-intro-strip">
-      <p>Rheem HVAC serial numbers commonly include a week/year block after a leading letter. The current decoder supports that pattern and keeps the result focused on equipment age rather than generic model guessing.</p>
+      <p>The supported HVAC path reads a letter followed by a WWYY block. It must not be mixed with Rheem water-heater formats such as MMYY, embedded WWYY, or plant-prefix styles.</p>
     </div>
 
     <!-- ═══ DECODER TOOL ═══ -->
@@ -163,7 +168,7 @@
                     <!-- Serial Row -->
                     <div class="tool-input-group serial-row">
                       <label class="serial-label" for="serial">Enter Serial Number</label>
-                      <input type="text" id="serial" class="search-input" placeholder="Enter Rheem serial number">
+                      <input type="text" id="serial" class="search-input" placeholder="Enter Rheem HVAC serial number">
                     </div>
 
                     <!-- Era Group -->
@@ -247,6 +252,45 @@
       </div>
     </div>
 
+    <section class="section" id="rheem-hvac-worked-example">
+      <div class="seo-copy-wrap">
+        <h2>Verified Rheem HVAC example</h2>
+        <p>The current HVAC regression distinguishes this path from Rheem water-heater parsing.</p>
+        <div class="table-wrap">
+          <table class="format-table">
+            <thead>
+              <tr>
+                <th>Label Field</th>
+                <th>What It Usually Means</th>
+                <th>Why It Matters</th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td>Serial X4502XXXX</td>
+              <td>Opening letter X; WWYY block 4502</td>
+              <td>The supported Rheem HVAC decoder returns production week 45 of 2002.</td>
+            </tr>
+            <tr>
+              <td>Serial GM028928Q</td>
+              <td>GE refrigerator-style string</td>
+              <td>The Rheem HVAC decoder rejects it rather than scanning for an unrelated year-looking pair.</td>
+            </tr>
+            <tr>
+              <td>Water heater 1291A39968</td>
+              <td>MMYY water-heater style</td>
+              <td>This belongs to the water-heater decoder and resolves there to December 1991; it is intentionally not this page's HVAC example.</td>
+            </tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <section class="section" id="rheem-category-boundary">
+      <div class="seo-copy-wrap">
+        <h2>Choose Rheem HVAC or water heating before decoding</h2>
+        <p>Rheem manufactures both heating-and-cooling equipment and water heaters, but the supported serial rules are category-specific. This page preselects HVAC and uses only the HVAC letter-plus-WWYY path.</p><p>For a tank, tankless, or hybrid water heater, use the <a href="/how-old-is-my-plumbing">water-heater age guide</a>. Rheem's official water-heater documentation describes a ten-digit rating-label serial with its own month/year interpretation.</p>
+      </div>
+    </section>
 
     <!-- ═══ CONTENT SECTIONS ═══ -->
     <div class="bp-content-wrap">
@@ -265,7 +309,7 @@
             <span class="material-symbols-outlined bp-section-icon" style="color:#9fcaff;">category</span>
             <h2>What the model number can tell you</h2>
           </div>
-          <p>The Rheem model number helps confirm equipment family, tonnage, and generation. That supports replacement research and helps explain the context of an estimated week/year result.</p>
+          <p>The HVAC model identifies component family and supports manual, capacity, and replacement research. This page does not infer tonnage or date from the model number.</p>
         </div>
       </div>
 
@@ -317,30 +361,10 @@
           <span class="ex-dot ex-dot-red"></span>
           <span class="ex-dot ex-dot-amber"></span>
           <span class="ex-dot ex-dot-green"></span>
-          <span class="ex-eyebrow">Illustrative Rheem pattern</span>
+          <span class="ex-eyebrow">Verified Rheem HVAC fixture</span>
         </div>
-        <code class="ex-serial">A2514XXXXX</code>
-        <p class="ex-note">Illustrative Rheem-family pattern. The supported path treats 25 as the week and 14 as the year when the serial matches this structure.</p>
-      </div>
-      <div class="ex-terminal">
-        <div class="ex-terminal-bar">
-          <span class="ex-dot ex-dot-red"></span>
-          <span class="ex-dot ex-dot-amber"></span>
-          <span class="ex-dot ex-dot-green"></span>
-          <span class="ex-eyebrow">Week/year reminder</span>
-        </div>
-        <code class="ex-serial">WWYY block</code>
-        <p class="ex-note">Rheem HVAC age estimates often resolve to a production week instead of a direct calendar month.</p>
-      </div>
-      <div class="ex-terminal">
-        <div class="ex-terminal-bar">
-          <span class="ex-dot ex-dot-red"></span>
-          <span class="ex-dot ex-dot-amber"></span>
-          <span class="ex-dot ex-dot-green"></span>
-          <span class="ex-eyebrow">Model-family reminder</span>
-        </div>
-        <code class="ex-serial">Model still helps</code>
-        <p class="ex-note">The Rheem model number is useful for tonnage and replacement-family research after the serial year is estimated.</p>
+        <code class="ex-serial">X4502XXXX</code>
+        <p class="ex-note">The supported letter-plus-WWYY path returns week 45 of 2002.</p>
       </div>
         </div>
       </div>
@@ -417,38 +441,45 @@
 
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>How old is my Rheem unit?</span>
+          <span>Is this page for Rheem water heaters?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>Use the serial number from the rating plate. The supported Rheem HVAC path commonly looks for a week/year block after the opening letter.</p></div>
+        <div class="bp-faq-body"><p>No. It preselects Rheem HVAC. Use the water-heater guide for tank, tankless, and hybrid units.</p></div>
       </details>
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>Can the Rheem model number tell me the age?</span>
+          <span>What does WWYY mean on the supported HVAC path?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>Not as directly as the serial number. It is better for identifying the family and helping with replacement research.</p></div>
+        <div class="bp-faq-body"><p>The two week digits come before the two year digits after the opening letter. X4502 therefore means week 45 of 2002.</p></div>
       </details>
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>Why does my Rheem serial number not decode?</span>
+          <span>Why does a valid Rheem water-heater serial fail here?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>The serial may be partial, the label may be damaged, or the product may follow a different family than the supported HVAC path.</p></div>
+        <div class="bp-faq-body"><p>The categories use different decoders. A water-heater MMYY or embedded-WWYY format should not be sent through the HVAC rule.</p></div>
       </details>
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>Where is the Rheem serial number plate located?</span>
+          <span>Where is a Rheem split-system label?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>Most Rheem HVAC equipment places it on the outdoor cabinet or indoor access panel depending on product type.</p></div>
+        <div class="bp-faq-body"><p>Rheem identifies the back of the outdoor unit and the inside front cover of the indoor unit as model/serial locations.</p></div>
       </details>
       <details class="bp-faq-item">
         <summary class="bp-faq-summary">
-          <span>Can this support claim documentation?</span>
+          <span>Should indoor and outdoor components be researched separately?</span>
           <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
         </summary>
-        <div class="bp-faq-body"><p>Yes. Serial-based age support is useful for HVAC claims, especially when the rating-plate photo is saved with the file.</p></div>
+        <div class="bp-faq-body"><p>Yes. Record the model and serial from each component rather than assuming the complete system shares one production date.</p></div>
+      </details>
+      <details class="bp-faq-item">
+        <summary class="bp-faq-summary">
+          <span>What if the HVAC serial is not letter plus WWYY?</span>
+          <span class="material-symbols-outlined bp-faq-icon">expand_more</span>
+        </summary>
+        <div class="bp-faq-body"><p>Treat it as unsupported on this route and use official records or Smart Lookup. Do not rearrange characters to fit the example.</p></div>
       </details>
           </div>
         </div>
@@ -461,7 +492,7 @@
           <h2>Related Decoder Pages</h2>
         </div>
         <div class="bp-pills-wrap">
-          <a href="/how-to-find-hvac-age" class="bp-pill">How to Find HVAC Age</a><a href="/hvac-age-by-serial-number" class="bp-pill">HVAC Age by Serial Number</a><a href="/carrier-serial-number-lookup" class="bp-pill">Carrier</a><a href="/trane-serial-number-lookup" class="bp-pill">Trane</a><a href="/goodman-serial-number-lookup" class="bp-pill">Goodman</a><a href="/how-old-is-my-appliance" class="bp-pill">How Old Is My Appliance?</a>
+          <a href="/how-old-is-my-hvac" class="bp-pill">How Old Is My HVAC?</a><a href="/how-to-find-hvac-age" class="bp-pill">How to Find HVAC Age</a><a href="/hvac-age-by-serial-number" class="bp-pill">HVAC Age by Serial Number</a><a href="/carrier-serial-number-lookup" class="bp-pill">Carrier</a><a href="/trane-serial-number-lookup" class="bp-pill">Trane</a><a href="/goodman-serial-number-lookup" class="bp-pill">Goodman</a><a href="/how-old-is-my-plumbing" class="bp-pill">Rheem Water Heater Age Guide</a><a href="/smart-lookup" class="bp-pill">Smart Lookup</a><a href="/methodology" class="bp-pill">Methodology</a>
         </div>
       </div>
 
@@ -585,7 +616,7 @@
         <li><a href="/carrier-serial-number-lookup">Carrier</a></li>
         <li><a href="/goodman-serial-number-lookup">Goodman</a></li>
         <li><a href="/trane-serial-number-lookup">Trane</a></li>
-        <li><a href="/rheem-serial-number-lookup">Rheem</a></li>
+        <li><a href="/rheem-serial-number-lookup">Rheem HVAC</a></li>
         <li><a href="/frigidaire-serial-number-lookup">Frigidaire</a></li>
         <li><a href="/maytag-serial-number-lookup">Maytag</a></li>
         <li><a href="/kenmore-serial-number-lookup">Kenmore</a></li>
@@ -648,6 +679,11 @@
       }
       brandSelect.value = 'rheem';
       brandSelect.dispatchEvent(new Event('change'));
+      var mobileItemType = document.getElementById('mobileItemType');
+      if (mobileItemType && Array.prototype.some.call(mobileItemType.options, function(option) { return option.value === 'hvac'; })) {
+        mobileItemType.value = 'hvac';
+        mobileItemType.dispatchEvent(new Event('change'));
+      }
 
     }
     window.addEventListener('DOMContentLoaded', function() {
@@ -679,10 +715,10 @@
   <script defer src="responsive-navigation.js"></script>
   <script defer src="/serial-refinement-controller.js"></script>
 
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/rheem-serial-number-lookup#webpage","name":"Rheem Serial Number Decoder","description":"Decode Rheem serial numbers, estimate HVAC age, and use the supported week/year Rheem HVAC pattern with concise rating-plate guidance.","url":"https://www.decodemyitem.com/rheem-serial-number-lookup","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Decode My Item","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"Rheem Serial Number Decoder"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","@id":"https://www.decodemyitem.com/rheem-serial-number-lookup#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.decodemyitem.com"},{"@type":"ListItem","position":2,"name":"Rheem Serial Number Decoder","item":"https://www.decodemyitem.com/rheem-serial-number-lookup"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","@id":"https://www.decodemyitem.com/rheem-serial-number-lookup#webpage","name":"Rheem HVAC Serial Number Decoder","description":"Decode the supported Rheem HVAC letter-plus-WWYY serial format. Water-heater users are directed to the separate water-heater workflow.","url":"https://www.decodemyitem.com/rheem-serial-number-lookup","isPartOf":{"@type":"WebSite","@id":"https://www.decodemyitem.com/#website","name":"Decode My Item","url":"https://www.decodemyitem.com"},"about":{"@type":"Thing","name":"Rheem HVAC Serial Number Decoder"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","@id":"https://www.decodemyitem.com/rheem-serial-number-lookup#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.decodemyitem.com"},{"@type":"ListItem","position":2,"name":"Rheem HVAC Serial Number Decoder","item":"https://www.decodemyitem.com/rheem-serial-number-lookup"}]}</script>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://www.decodemyitem.com/rheem-serial-number-lookup#app","name":"Decode My Item Serial Number Decoder","url":"https://www.decodemyitem.com/rheem-serial-number-lookup","description":"Rheem is preselected. Enter the full HVAC serial number exactly as printed on the rating plate.","applicationCategory":"UtilityApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/rheem-serial-number-lookup#faq","mainEntity":[{"@type":"Question","name":"How old is my Rheem unit?","acceptedAnswer":{"@type":"Answer","text":"Use the serial number from the rating plate. The supported Rheem HVAC path commonly looks for a week/year block after the opening letter."}},{"@type":"Question","name":"Can the Rheem model number tell me the age?","acceptedAnswer":{"@type":"Answer","text":"Not as directly as the serial number. It is better for identifying the family and helping with replacement research."}},{"@type":"Question","name":"Why does my Rheem serial number not decode?","acceptedAnswer":{"@type":"Answer","text":"The serial may be partial, the label may be damaged, or the product may follow a different family than the supported HVAC path."}},{"@type":"Question","name":"Where is the Rheem serial number plate located?","acceptedAnswer":{"@type":"Answer","text":"Most Rheem HVAC equipment places it on the outdoor cabinet or indoor access panel depending on product type."}},{"@type":"Question","name":"Can this support claim documentation?","acceptedAnswer":{"@type":"Answer","text":"Yes. Serial-based age support is useful for HVAC claims, especially when the rating-plate photo is saved with the file."}}]}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","@id":"https://www.decodemyitem.com/rheem-serial-number-lookup#howto","name":"Rheem Serial Number Decoder","description":"Choose the matching category and brand. Enter the full serial number exactly as printed on the label. Review the date estimate, notes, and fallback links if the serial does not decode.","step":[{"@type":"HowToStep","position":1,"name":"Step 1","text":"Choose the matching category and brand."},{"@type":"HowToStep","position":2,"name":"Step 2","text":"Enter the full serial number exactly as printed on the label."},{"@type":"HowToStep","position":3,"name":"Step 3","text":"Review the date estimate, notes, and fallback links if the serial does not decode."}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"https://www.decodemyitem.com/rheem-serial-number-lookup#faq","mainEntity":[{"@type":"Question","name":"Is this page for Rheem water heaters?","acceptedAnswer":{"@type":"Answer","text":"No. It preselects Rheem HVAC. Use the water-heater guide for tank, tankless, and hybrid units."}},{"@type":"Question","name":"What does WWYY mean on the supported HVAC path?","acceptedAnswer":{"@type":"Answer","text":"The two week digits come before the two year digits after the opening letter. X4502 therefore means week 45 of 2002."}},{"@type":"Question","name":"Why does a valid Rheem water-heater serial fail here?","acceptedAnswer":{"@type":"Answer","text":"The categories use different decoders. A water-heater MMYY or embedded-WWYY format should not be sent through the HVAC rule."}},{"@type":"Question","name":"Where is a Rheem split-system label?","acceptedAnswer":{"@type":"Answer","text":"Rheem identifies the back of the outdoor unit and the inside front cover of the indoor unit as model/serial locations."}},{"@type":"Question","name":"Should indoor and outdoor components be researched separately?","acceptedAnswer":{"@type":"Answer","text":"Yes. Record the model and serial from each component rather than assuming the complete system shares one production date."}},{"@type":"Question","name":"What if the HVAC serial is not letter plus WWYY?","acceptedAnswer":{"@type":"Answer","text":"Treat it as unsupported on this route and use official records or Smart Lookup. Do not rearrange characters to fit the example."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","@id":"https://www.decodemyitem.com/rheem-serial-number-lookup#howto","name":"Rheem HVAC Serial Number Decoder","description":"Choose the matching category and brand. Enter the full serial number exactly as printed on the label. Review the date estimate, notes, and fallback links if the serial does not decode.","step":[{"@type":"HowToStep","position":1,"name":"Step 1","text":"Choose the matching category and brand."},{"@type":"HowToStep","position":2,"name":"Step 2","text":"Enter the full serial number exactly as printed on the label."},{"@type":"HowToStep","position":3,"name":"Step 3","text":"Review the date estimate, notes, and fallback links if the serial does not decode."}]}</script>
 </body>
 </html>
