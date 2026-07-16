@@ -53,8 +53,8 @@ jobs:
           cache: npm
       - name: Install application dependencies
         run: npm ci
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+      - name: Install Playwright browsers used by the shared suite
+        run: npx playwright install --with-deps chromium msedge
       - name: Rebuild browser assets
         run: npm run build
       - name: Start static site
