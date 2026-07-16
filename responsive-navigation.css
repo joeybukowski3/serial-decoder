@@ -1,5 +1,5 @@
-/* Shared desktop navigation needs 1140px. Below that, use the existing menu drawer. */
-@media (min-width: 769px) and (max-width: 1140px) {
+/* The complete shared desktop link set needs more than 1290px. */
+@media (min-width: 769px) and (max-width: 1290px) {
   .hamburger {
     display: flex;
     position: relative;

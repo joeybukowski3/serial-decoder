@@ -76,7 +76,7 @@ test('generator branding is Decode My Item, not Item Assist', () => {
   assert.doesNotMatch(generator, /'Item Assist Serial Number Decoder'/);
   assert.doesNotMatch(generator, /name: 'Item Assist'/);
   assert.match(generator, /return 'Decode My Item';/);
-  assert.match(generator, /name: 'Decode My Item Serial Number Decoder'/);
+  assert.match(generator, /name: page\.applicationName \|\| 'Decode My Item Serial Number Decoder'/);
 });
 
 test('generator supports per-page htmlTitleOverride and metaDescriptionOverride', () => {

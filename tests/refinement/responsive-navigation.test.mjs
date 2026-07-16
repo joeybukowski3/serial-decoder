@@ -7,8 +7,8 @@ const generator = fs.readFileSync(new URL('../../scripts/generate-seo-pages.js',
 const injector = fs.readFileSync(new URL('../../scripts/inject-responsive-navigation-assets.js', import.meta.url), 'utf8');
 const root = new URL('../../', import.meta.url);
 
-test('shared navigation switches to the drawer before its 1140px minimum width', () => {
-  assert.match(responsiveCss, /max-width:\s*1140px/);
+test('shared navigation switches to the drawer before its 1290px minimum width', () => {
+  assert.match(responsiveCss, /max-width:\s*1290px/);
   assert.match(responsiveCss, /nav > ul \{\s*display: none/);
   assert.match(responsiveCss, /\.hamburger \{\s*display: flex/);
 });

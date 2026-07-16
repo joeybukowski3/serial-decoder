@@ -90,9 +90,11 @@ const hvacLinks = [
 const electronicsLinks = [
   ['asus-serial-number-decoder', 'ASUS Serial Number Lookup'],
   ['samsung-tv-serial-number-decoder', 'Samsung TV Serial Number Decoder'],
-  ['apple', 'Apple'],
-  ['hp', 'HP'],
-  ['sony', 'Sony'],
+  ['apple', 'Apple Identifier Guide'],
+  ['hp', 'HP Serial Date Codes'],
+  ['sony', 'Sony TV Model Year Guide'],
+  ['vizio', 'Vizio Model Year Guide'],
+  ['bosch', 'Bosch Appliance FD Numbers'],
   ['find-model-serial-number', 'Find Device Labels']
 ];
 
@@ -110,6 +112,10 @@ const defaultHowToSteps = [
 
 function canonical(slug) {
   return `${siteUrl}/${slug}`;
+}
+
+function normalizeGeneratedHtml(html) {
+  return html.replace(/[ \t]+$/gm, '');
 }
 
 function scriptJson(obj) {
@@ -224,7 +230,7 @@ function renderWebApplicationSchema(page, url) {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     '@id': `${url}#app`,
-    name: 'Decode My Item Serial Number Decoder',
+    name: page.applicationName || 'Decode My Item Serial Number Decoder',
     url,
     description: page.decoderIntro || page.description,
     applicationCategory: 'UtilityApplication',
@@ -693,6 +699,15 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="responsive-navigation.css">
   <link rel="stylesheet" href="seo-landing.css">
+  <style>
+    .loc-cards-grid, .loc-card, .loc-card-head, .loc-list { min-width: 0; }
+    .loc-list li, .loc-list a { overflow-wrap: anywhere; }
+    @media (max-width: 360px) {
+      .bp-content-wrap, .bp-section-card, .loc-cards-grid, .loc-card { width: 100%; max-width: 100%; }
+      .loc-cards-grid { display: block; }
+      .loc-card + .loc-card { margin-top: 14px; }
+    }
+  </style>
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body class="serial-location-page" data-page-kind="brand-page">
@@ -993,13 +1008,15 @@ function renderPage(page) {
     { name: 'Home', url: siteUrl },
     { name: page.h1, url }
   ];
-  const schema = [
-    renderWebPageSchema(page, url),
-    renderBreadcrumbSchema(breadcrumbs, url),
-    renderWebApplicationSchema(page, url),
-    renderFaqSchema(page.faqs, url),
-    renderHowToSchema(page.h1, page.howToSteps || defaultHowToSteps, url)
-  ];
+  const schema = page.indexable === false
+    ? [renderWebPageSchema(page, url), renderBreadcrumbSchema(breadcrumbs, url)]
+    : [
+        renderWebPageSchema(page, url),
+        renderBreadcrumbSchema(breadcrumbs, url),
+        renderWebApplicationSchema(page, url),
+        renderFaqSchema(page.faqs, url),
+        renderHowToSchema(page.h1, page.howToSteps || defaultHowToSteps, url)
+      ];
   const preselectScript = page.brandValue
     ? `
       var brandSelect = document.getElementById('brand');
@@ -1009,7 +1026,14 @@ function renderPage(page) {
         return;
       }
       brandSelect.value = '${page.brandValue}';
-      brandSelect.dispatchEvent(new Event('change'));`
+      brandSelect.dispatchEvent(new Event('change'));
+      ${page.inputMode === 'model' ? `
+      var purposeLabel = document.querySelector('label[for="serial"]');
+      var purposeInput = document.getElementById('serial');
+      var purposeButton = document.getElementById('decodeBtn');
+      if (purposeLabel) purposeLabel.textContent = '${page.inputLabel}';
+      if (purposeInput) purposeInput.placeholder = '${page.decoderPlaceholder}';
+      if (purposeButton) purposeButton.textContent = '${page.actionLabel}';` : ''}`
     : '';
 
   if (page.template === 'serial-location-hub') {
@@ -1161,7 +1185,7 @@ function renderPage(page) {
   <title>${pageHtmlTitle(page)}</title>
   <meta name="description" content="${pageMetaDescription(page)}">
   <link rel="canonical" href="${url}">
-  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="robots" content="${page.indexable === false ? 'noindex, follow' : 'index, follow, max-image-preview:large'}">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="${pageSiteLabel(page)}">
@@ -1210,7 +1234,7 @@ function renderPage(page) {
         </div>
 
         <span class="bp-badge" style="color:${cat.color};border-color:${cat.color}30;background:${cat.color}10;">
-          ${cat.label}
+          ${page.badge || cat.label}
         </span>
 
         <h1 class="bp-hero-title">${page.h1}</h1>
@@ -1226,7 +1250,7 @@ function renderPage(page) {
 
         <a href="#decoder-tool" class="bp-cta-btn" style="background:${cat.color};color:#00382d;">
           <span class="material-symbols-outlined" style="font-size:18px;">bolt</span>
-          Decode Serial Number
+          ${page.primaryCtaLabel || 'Decode Serial Number'}
         </a>
       </div>
     </section>
@@ -1259,7 +1283,7 @@ function renderPage(page) {
 
                     <!-- Serial Row -->
                     <div class="tool-input-group serial-row">
-                      <label class="serial-label" for="serial">Enter Serial Number</label>
+                      <label class="serial-label" for="serial">${page.inputLabel || 'Enter Serial Number'}</label>
                       <input type="text" id="serial" class="search-input" placeholder="${page.decoderPlaceholder || 'Enter serial number exactly as shown'}">
                     </div>
 
@@ -1279,7 +1303,7 @@ function renderPage(page) {
 
                     <!-- Action Button -->
                     <div class="tool-panel-action" style="margin-top: 24px;">
-                      <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">Decode Serial Number</button>
+                      <button id="decodeBtn" class="btn-primary power-btn" type="button" disabled onclick="decodeSerial()">${page.actionLabel || 'Decode Serial Number'}</button>
                     </div>
                   </div>
                 </div>
@@ -1425,7 +1449,7 @@ ${renderExtraSections(page.preGridSections)}
       <div class="bp-section-card bp-full-width">
         <div class="bp-section-card-head">
           <span class="material-symbols-outlined bp-section-icon" style="color:${cat.color};">link</span>
-          <h2>Related Decoder Pages</h2>
+          <h2>${page.relatedSectionTitle || 'Related Decoder Pages'}</h2>
         </div>
         <div class="bp-pills-wrap">
           ${renderRelatedPills(page.relatedLinks)}
@@ -1444,11 +1468,11 @@ ${renderExtraSections(page.preGridSections)}
       <!-- Bottom CTA -->
       <div class="bp-cta-card">
         <span class="material-symbols-outlined" style="font-size:40px;color:${cat.color};margin-bottom:12px;">description</span>
-        <h2>Need a claim-ready replacement summary?</h2>
-        <p>Use the decoder above to start, or try Smart Lookup if the serial label is worn or missing.</p>
+        <h2>${page.bottomCtaTitle || 'Need a claim-ready replacement summary?'}</h2>
+        <p>${page.bottomCtaBody || 'Use the decoder above to start, or try Smart Lookup if the serial label is worn or missing.'}</p>
         <div class="bp-cta-row">
           <a href="#decoder-tool" class="bp-cta-btn" style="background:${cat.color};color:#00382d;">
-            <span class="material-symbols-outlined" style="font-size:16px;">bolt</span> Decode a Serial
+            <span class="material-symbols-outlined" style="font-size:16px;">bolt</span> ${page.bottomPrimaryLabel || 'Decode a Serial'}
           </a>
           <a href="/smart-lookup" class="bp-cta-btn-outline" style="border-color:${cat.color}40;color:${cat.color};">
             Try Smart Lookup →
@@ -1624,6 +1648,14 @@ function baseLinkGroups() {
     { title: 'Appliance Type Lookups', links: applianceTypeLinks.slice(1, 6) },
     { title: 'HVAC Age Lookup', links: hvacLinks },
     { title: 'Electronics Serial & Model Lookup', links: electronicsLinks }
+  ];
+}
+
+function electronicsLinkGroups() {
+  return [
+    { title: 'Electronics Research', links: [['how-old-is-my-electronics', 'Electronics Age Guide'], ['find-model-serial-number', 'Find Model & Serial Labels'], ['smart-lookup', 'Smart Lookup'], ['methodology', 'Methodology']] },
+    { title: 'Supported Electronics Paths', links: electronicsLinks.slice(0, 7) },
+    { title: 'Product History', links: [['tv-history', 'TV History'], ['computer-history', 'Computer History'], ['tv-replacement-guide', 'TV Replacement Guide']] }
   ];
 }
 
@@ -3114,6 +3146,444 @@ const pages = [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?']
     ],
     linkGroups: baseLinkGroups()
+  },
+  {
+    slug: 'apple',
+    title: 'Apple Serial Number and Model Identification Guide',
+    description: 'Identify Apple model and serial numbers, understand the limits of modern randomized serials, and use supported legacy formats or Smart Lookup without assuming an exact manufacture date.',
+    h1: 'Apple Serial Number and Model Identification Guide',
+    badge: 'Legacy serial and model guide',
+    category: 'electronics',
+    brandValue: 'apple',
+    applicationName: 'Apple Identifier Research Tool',
+    primaryCtaLabel: 'Check an Apple Identifier',
+    inputLabel: 'Enter Apple Serial Number',
+    actionLabel: 'Check Apple Identifier',
+    intro: 'Apple identifiers need an era check before they need a decoder. Older serial formats may expose a coded production week, while newer randomized serials do not provide a dependable date pattern for this tool to read.',
+    supportingIntro: 'Use the serial path only for a supported legacy format. For a modern iPhone, iPad, Mac, Watch, or accessory, the model number and Apple support records are the more honest route to product generation and service context.',
+    decoderIntro: 'Apple is preselected. A 12-character legacy-format serial may return candidate years and a coded week. A 10-character randomized serial will not produce a manufacture date.',
+    decoderPlaceholder: 'Enter Apple serial number',
+    howToSteps: [
+      'Find the serial and model identifier in Settings, About This Mac, on the device, or on the original packaging.',
+      'Use the decoder only when the serial matches the supported legacy-length path.',
+      'Use the model identifier or Smart Lookup when the serial is modern, randomized, or ambiguous.'
+    ],
+    decodeSectionTitle: 'Legacy serials versus randomized serials',
+    decodeSectionBody: 'The current decoder has a limited legacy path for 12-character serials: character 4 is treated as a repeating year code and characters 5-6 as a production-week field. Ten-character serials are treated as randomized and do not return a decoded date. A legacy result is still a candidate range, not proof of one exact manufacturing year.',
+    modelSectionTitle: 'Why the Apple model identifier matters',
+    modelSectionBody: 'The model identifier is the stronger clue for device family and generation. Apple documents how to reveal the model number in Settings and how to find serials on the device, packaging, or account. Smart Lookup can use that model context without pretending a randomized serial carries a public date code.',
+    formatSectionTitle: 'Apple identifier paths supported here',
+    formats: [
+      { label: 'Legacy 12-character serial', pattern: 'Character 4 year code; characters 5-6 week field', meaning: 'Returns candidate years because the year letters repeat. The device generation must resolve the cycle.', confidence: 'Estimated cycle; legacy formats only.' },
+      { label: 'Modern 10-character serial', pattern: 'Randomized identifier', meaning: 'The decoder explicitly reports that no date can be derived and directs the user to model research.', confidence: 'No manufacture-date decode.' },
+      { label: 'Model identifier', pattern: 'A-number or model number', meaning: 'Identifies the device family and supports generation research through Apple documentation or Smart Lookup.', confidence: 'Useful for identity, not unit manufacture date.' }
+    ],
+    exampleSectionTitle: 'Supported Apple identifier outcomes',
+    examples: [
+      { label: 'Legacy-format decoder regression', serial: 'C02X12ABCDEF', note: 'The current tested rule reads X as candidate years 2019 or 2029 and reads 12 as the week field. It cannot choose the correct cycle without model-era evidence.' },
+      { label: 'Randomized-format outcome', serial: '10 characters', note: 'The supported behavior is to stop and explain that the modern identifier is randomized rather than manufacture-date encoded.' },
+      { label: 'Model identification path', serial: 'Settings > General > About', note: 'Apple documents how to reveal the model number and serial in device settings; that is the preferred recovery route for current devices.' }
+    ],
+    locationSectionTitle: 'Where Apple exposes model and serial information',
+    locations: [
+      { title: 'iPhone and iPad', items: ['Open Settings, then General, then About', '<a href="https://support.apple.com/en-us/106343" rel="noopener">Apple explains how to reveal the model number from the displayed part number</a>'] },
+      { title: 'Mac', items: ['Use About This Mac or System Information', 'The underside and original packaging may also show the serial'] },
+      { title: 'If the device is unavailable', items: ['Check the original packaging, receipt, or Apple Account device list', '<a href="https://support.apple.com/en-us/102858" rel="noopener">Apple lists product-specific serial-number locations</a>'] }
+    ],
+    problemSectionTitle: 'When not to infer a manufacture date',
+    problems: [
+      'Do not decode a modern randomized serial as though it used the older year/week layout.',
+      'Do not treat a model release year as the manufacture date of one physical device.',
+      'Do not choose one decade from a repeating legacy code without model-era evidence.',
+      'Remove a leading S copied from a package barcode because Apple says it is not part of the serial.',
+      'Use Apple support records for warranty or service decisions that require authoritative confirmation.'
+    ],
+    faqs: [
+      ['Can every Apple serial number reveal a manufacture date?', 'No. The current tool only has a limited legacy-format path. Modern randomized serials do not provide a dependable public date pattern here.'],
+      ['What should I use for a modern Apple device?', 'Use the model identifier, device Settings, Apple Account records, or Smart Lookup for generation context.'],
+      ['Is a model release year the same as manufacture date?', 'No. A model may remain in production after introduction, so a release year identifies the family rather than the exact unit date.'],
+      ['Where can I find the Apple model number?', 'On iPhone and iPad, open Settings, General, About, then tap the displayed part number to reveal the model number.'],
+      ['Why can a legacy result show two years?', 'The supported legacy year letters repeat. Device generation or other documentation is needed to select the plausible cycle.']
+    ],
+    relatedSectionTitle: 'Apple and Electronics Research',
+    relatedLinks: [['smart-lookup', 'Smart Lookup'], ['how-old-is-my-electronics', 'Electronics Age Guide'], ['find-model-serial-number', 'Find Model & Serial Labels'], ['computer-history', 'Computer History'], ['methodology', 'Methodology']],
+    bottomCtaTitle: 'Have a modern Apple identifier?',
+    bottomCtaBody: 'Use the model number and device description in Smart Lookup rather than forcing a date from a randomized serial.',
+    bottomPrimaryLabel: 'Check a Legacy Serial',
+    linkGroups: electronicsLinkGroups()
+  },
+  {
+    slug: 'hp',
+    title: 'HP Serial Number Date Code and Product ID Guide',
+    description: 'Read the supported HP year-digit and production-week fields, distinguish product numbers from serial numbers, and verify ambiguous decade results with model context.',
+    h1: 'HP Serial Number Date Code and Product ID Guide',
+    badge: 'Computer and printer identifier guide',
+    category: 'electronics',
+    brandValue: 'hp',
+    intro: 'HP labels carry several identifiers with different jobs. The serial identifies one device, the product number identifies its configuration, and the supported date-code path can return a year cycle and production week without proving one exact decade.',
+    supportingIntro: 'This page covers HP notebooks, desktops, all-in-ones, monitors, and printers only where the serial matches the current tested rule. Keep the product number beside the serial because it is usually the better route to exact drivers, documentation, and model-family context.',
+    decoderIntro: 'HP is preselected. Enter the full serial; the supported path reads character 4 as a repeating year digit and characters 5-6 as a week number.',
+    decoderPlaceholder: 'Enter HP serial number',
+    howToSteps: ['Find the label or open HP System Information or HP Support Assistant.', 'Enter the serial exactly as printed and review the candidate year cycle and week.', 'Use the product number and model family to resolve the decade before relying on the estimate.'],
+    decodeSectionTitle: 'What the supported HP rule reads',
+    decodeSectionBody: 'For a serial with at least six characters, the current rule reads character 4 as the last digit of a candidate year and characters 5-6 as the production week. Because a single digit repeats every decade, the output can remain ambiguous. An invalid week does not become a made-up month.',
+    modelSectionTitle: 'Serial number versus product number',
+    modelSectionBody: 'HP states that the serial identifies the specific device, while the model or product number identifies the product configuration within a series. Use the product number to find the correct drivers and support documents; use the serial for device-specific service and warranty workflows.',
+    formatSectionTitle: 'HP identifiers and their roles',
+    formats: [
+      { label: 'Supported HP serial date field', pattern: 'Character 4 + characters 5-6', meaning: 'Character 4 supplies a repeating year digit; characters 5-6 supply a production-week number when valid.', confidence: 'Estimated decade; tested rule.' },
+      { label: 'Product number / P/N', pattern: 'Configuration-specific identifier', meaning: 'Separates variants within a model series and is the best key for drivers and documentation.', confidence: 'Identification only.' },
+      { label: 'Model or product name', pattern: 'Family name shown in software or on label', meaning: 'Provides generation and category context but does not identify one physical unit.', confidence: 'Context, not manufacture date.' }
+    ],
+    exampleSectionTitle: 'HP date-code walkthrough',
+    examples: [
+      { label: 'Tested decoder example', serial: 'CNX7120BXX', note: 'The current regression reads 7 as candidate years 2007 or 2017 and 12 as production week 12. The model family must decide which decade is plausible.' },
+      { label: 'Invalid week handling', serial: 'Week outside 01-53', note: 'The decoder preserves the year-cycle clue but labels the week field invalid instead of converting it to a false month.' },
+      { label: 'Product support workflow', serial: 'Serial + product number', note: 'HP recommends keeping both identifiers: the serial is device-specific, while the product number selects the exact configuration and documentation.' }
+    ],
+    locationSectionTitle: 'Where HP exposes the identifiers',
+    locations: [
+      { title: 'HP notebooks', items: ['Bottom label, battery compartment, kickstand, or original box', 'HP System Information and HP Support Assistant can display the identifiers'] },
+      { title: 'HP desktops and all-in-ones', items: ['Side, rear, top, bottom, or pull-out label depending on chassis', 'HP System Information can show the product name, product number, and serial'] },
+      { title: 'HP printers', items: ['Printer label or HP app product-information panel', '<a href="https://support.hp.com/gb-en/document/ish_2039298-1862169-16" rel="noopener">HP provides category-specific label instructions</a>'] }
+    ],
+    problemSectionTitle: 'Common HP interpretation mistakes',
+    problems: ['Using the product name from the front bezel as though it identifies the exact configuration.', 'Choosing a decade from the year digit without checking model generation.', 'Treating a week field as a calendar month.', 'Entering a product number in the serial field.', 'Assuming every HP product line and era follows the same date-code layout.'],
+    faqs: [
+      ['Can an HP serial number show an exact year?', 'The supported rule returns a repeating year digit, so model generation is needed when more than one decade is plausible.'],
+      ['What is the difference between an HP serial and product number?', 'The serial identifies one device. The product number identifies a configuration within a product series.'],
+      ['Does the supported HP result include a month?', 'No. It uses a production-week field, not a month field.'],
+      ['Where can I find HP identifiers without reading the label?', 'HP System Information, HP Support Assistant, and the HP app can display identifiers for supported product types.'],
+      ['What if the HP rule does not match?', 'Keep the result unresolved and use the product number or Smart Lookup; do not force another brand or product-line rule.']
+    ],
+    relatedSectionTitle: 'HP and Computer Research',
+    relatedLinks: [['smart-lookup', 'Smart Lookup'], ['how-old-is-my-electronics', 'Electronics Age Guide'], ['computer-history', 'Computer History'], ['find-model-serial-number', 'Find Device Labels'], ['methodology', 'Methodology']],
+    bottomCtaTitle: 'Need to resolve the HP decade?',
+    bottomCtaBody: 'Add the product number and model family in Smart Lookup when the serial year digit maps to more than one decade.',
+    linkGroups: electronicsLinkGroups()
+  },
+  {
+    slug: 'sony',
+    title: 'Sony TV Model Number Year Guide',
+    description: 'Use supported Sony BRAVIA model suffixes for model-generation context, find the TV model and serial labels, and avoid treating a model year as an exact unit manufacture date.',
+    h1: 'Sony TV Model Number Year Guide',
+    badge: 'Model-based TV research',
+    category: 'electronics',
+    brandValue: 'sony',
+    inputMode: 'model',
+    applicationName: 'Sony TV Model Year Guide',
+    primaryCtaLabel: 'Check a Sony TV Model',
+    inputLabel: 'Enter Sony TV Model Number',
+    actionLabel: 'Check Model Year',
+    intro: 'This Sony path is model-based. It reads a supported ending letter on recent BRAVIA model numbers as model-generation context; it does not decode the television serial number into an exact manufacture date.',
+    supportingIntro: 'Use a complete model such as XR65A90K. The suffix can identify a model-year family, while the separate serial remains the unit-specific identifier used for service and support.',
+    decoderIntro: 'Sony is preselected. Enter the TV model number, not the serial number. Supported suffixes H, J, K, L, M, and N map to model years 2020 through 2025 in the current rule.',
+    decoderPlaceholder: 'Enter Sony TV model, e.g. XR65A90K',
+    howToSteps: ['Find the full model name on the rear label, packaging, or TV system information.', 'Enter the model number and review the supported suffix result.', 'Treat the result as model-generation context, not the manufacture date of the individual TV.'],
+    decodeSectionTitle: 'What the Sony suffix can determine',
+    decodeSectionBody: 'The current rule reads the final letter of supported recent Sony TV model numbers: H=2020, J=2021, K=2022, L=2023, M=2024, and N=2025. This is a model-year interpretation. The serial number itself is not decoded by this path.',
+    modelSectionTitle: 'Model name and serial number are different',
+    modelSectionBody: 'Sony documents both fields separately on the product label and in TV system information. The model name identifies the product family; the serial identifies the individual unit. A suffix result cannot prove when that individual unit left the factory.',
+    formatSectionTitle: 'Supported Sony TV model clues',
+    formats: [
+      { label: 'Recent BRAVIA suffix', pattern: 'Model ends H / J / K / L / M / N', meaning: 'Returns model-year context from 2020 through 2025 using the current supported mapping.', confidence: 'Model year only.' },
+      { label: 'Sony serial number', pattern: 'Separate unit-specific identifier', meaning: 'Used for support and service; this page does not claim it contains a public manufacture-date code.', confidence: 'No serial date decode.' },
+      { label: 'Unsupported model suffix', pattern: 'Other endings or incomplete model', meaning: 'The tool asks for a supported full model instead of inventing a year.', confidence: 'Stops without a model year.' }
+    ],
+    exampleSectionTitle: 'Sony model-year example',
+    examples: [
+      { label: 'Tested BRAVIA model', serial: 'XR65A90K', note: 'The current regression maps final suffix K to the 2022 model-year family. It does not claim the physical TV was manufactured in 2022.' },
+      { label: 'Unsupported suffix', serial: 'Incomplete or unrecognized model', note: 'The expected result is guidance to supply a complete supported model, not a guessed date.' },
+      { label: 'Wall-mounted TV recovery', serial: 'Rear label or system information', note: 'Sony recommends using the TV menu, original packaging, receipt, or rear product sticker when the label is hard to reach.' }
+    ],
+    locationSectionTitle: 'Where to find Sony TV identifiers',
+    locations: [
+      { title: 'TV system information', items: ['Open the Help, Contact & Support, or Product Support area depending on model', 'System information can display both model name and serial number'] },
+      { title: 'Rear product label', items: ['Look near the side terminals, lower-right area, or bottom-center area', 'Use a small mirror and phone camera if the TV is wall mounted'] },
+      { title: 'Packaging and receipt', items: ['The original carton and manual may show the model', '<a href="https://www.sony.com/electronics/support/articles/00121074" rel="noopener">Sony documents the model and serial locations</a>'] }
+    ],
+    problemSectionTitle: 'What this page deliberately does not claim',
+    problems: ['A model suffix is not the manufacture date of one unit.', 'The serial number is not interchangeable with the model name.', 'Older or different Sony product families may use other naming systems.', 'An unsupported final letter does not justify choosing the nearest model year.', 'Service or warranty decisions should use Sony records and the unit serial.'],
+    faqs: [
+      ['Does this page decode Sony serial numbers?', 'No. The supported path reads recent Sony TV model suffixes for model-year context.'],
+      ['What does K mean in XR65A90K?', 'The current supported mapping treats final K as the 2022 model-year family.'],
+      ['Is model year the same as manufacture date?', 'No. Individual units can be manufactured during a broader production window.'],
+      ['Where is the model name on a wall-mounted Sony TV?', 'Check system information first, or use a small mirror and phone camera to read the rear label.'],
+      ['What if my Sony model ends with another letter?', 'Use Sony support documents or Smart Lookup; this page does not extend the suffix mapping beyond supported evidence.']
+    ],
+    relatedSectionTitle: 'Sony TV Research',
+    relatedLinks: [['smart-lookup', 'Smart Lookup'], ['tv-history', 'TV History'], ['tv-replacement-guide', 'TV Replacement Guide'], ['find-model-serial-number', 'Find TV Labels'], ['methodology', 'Methodology']],
+    bottomCtaTitle: 'Have a Sony serial but no model?',
+    bottomCtaBody: 'Find the model name in TV system information or add the visible label details to Smart Lookup.',
+    bottomPrimaryLabel: 'Check a Sony Model',
+    linkGroups: electronicsLinkGroups()
+  },
+  {
+    slug: 'bosch',
+    title: 'Bosch Appliance FD Number and Serial Date Guide',
+    description: 'Read supported Bosch appliance FD production numbers, distinguish E-Nr, FD, Z-Nr, and serial fields, and find the rating plate by appliance type.',
+    h1: 'Bosch Appliance FD Number and Serial Date Guide',
+    badge: 'Bosch appliance rating-plate guide',
+    category: 'appliances',
+    brandValue: 'bosch',
+    intro: 'Bosch belongs on the appliance path, not in a generic electronics cluster. The useful date field is the appliance FD production number; the E-Nr identifies the model, and the rating plate may also include a Z-Nr and serial.',
+    supportingIntro: 'This page is for Bosch dishwashers, refrigerators, ovens, ranges, cooktops, and related home appliances using the supported FD structure. It does not claim that Bosch consumer electronics use the same rule.',
+    decoderIntro: 'Bosch is preselected under Appliances. Enter the complete FD production number or supported Bosch rating-plate serial exactly as shown.',
+    decoderPlaceholder: 'Enter Bosch FD number, e.g. FD8605123456',
+    howToSteps: ['Locate the appliance rating plate and distinguish E-Nr from FD and Z-Nr.', 'Enter the full FD production number in the Bosch appliance decoder.', 'Keep the E-Nr for manuals, parts, and model-specific verification.'],
+    decodeSectionTitle: 'How the supported Bosch FD path works',
+    decodeSectionBody: 'For supported FD numbers, digits 3-4 are converted to a year by adding 1920 and digits 5-6 are read as the month. The decoder rejects impossible months instead of producing a date. This applies to the supported Bosch appliance FD structure.',
+    modelSectionTitle: 'E-Nr, FD, Z-Nr, and serial each have a job',
+    modelSectionBody: 'Bosch calls the E-Nr the model number and the FD the production number. Bosch registration and support pages also request the Z-Nr or serial information. Use the E-Nr for manuals and product documentation; use the supported FD field for production-date decoding.',
+    formatSectionTitle: 'Bosch appliance rating-plate fields',
+    formats: [
+      { label: 'FD production number', pattern: 'FD + year digits + month digits', meaning: 'The supported decoder derives a year and month from the FD positions after validating the month.', confidence: 'High for supported FD structure.' },
+      { label: 'E-Nr model number', pattern: 'Product model identifier', meaning: 'Used by Bosch for manuals, parts, registration, and model-specific documentation.', confidence: 'Identification only.' },
+      { label: 'Z-Nr / serial field', pattern: 'Additional unit identifier', meaning: 'Useful for service and registration but not interchangeable with the FD date field.', confidence: 'Unit identification.' }
+    ],
+    exampleSectionTitle: 'Bosch FD worked example',
+    examples: [
+      { label: 'Verified decoder regression', serial: 'FD8605123456', note: 'The tested Bosch appliance rule reads 86 + 1920 as 2006 and reads 05 as May.' },
+      { label: 'Invalid month protection', serial: 'FD86 13 ...', note: 'Month 13 is rejected. The decoder does not convert an impossible FD month into a plausible-looking date.' },
+      { label: 'Manual lookup path', serial: 'E-Nr', note: 'Use the E-Nr, including its suffix where shown, on Bosch support to retrieve the correct manual and specifications.' }
+    ],
+    locationSectionTitle: 'Where Bosch places the rating plate',
+    locations: [
+      { title: 'Bosch dishwashers', items: ['Check the inner door edge or frame after opening the door', 'Photograph the entire plate so E-Nr, FD, and serial fields stay together'] },
+      { title: 'Bosch refrigeration and cooking', items: ['Use Bosch appliance-specific rating-plate guidance for refrigerators, ovens, ranges, and cooktops', '<a href="https://www.bosch-home.com/us/owner-support/how-to-find-your-model-number" rel="noopener">Bosch provides a category-by-category plate finder</a>'] },
+      { title: 'Registration and manuals', items: ['Bosch registration requests E-Nr, FD, and Z-Nr from the rating label', '<a href="https://www.bosch-home.com/us/owner-support/owner-manuals/" rel="noopener">Bosch manuals are searched by E-Nr</a>'] }
+    ],
+    problemSectionTitle: 'Common Bosch field mistakes',
+    problems: ['Entering the E-Nr in the FD decoder field.', 'Dropping the FD prefix or copying only part of the production number.', 'Applying the appliance FD rule to unrelated Bosch product categories.', 'Reading the Z-Nr as the production date field.', 'Using a decoded date without retaining a rating-plate photo for verification.'],
+    faqs: [
+      ['What is the Bosch FD number?', 'Bosch calls FD the production number. The supported appliance decoder uses its year and month positions.'],
+      ['Is E-Nr the serial number?', 'No. Bosch uses E-Nr as the model number; the rating plate can separately show FD, Z-Nr, and serial information.'],
+      ['What does FD8605 mean?', 'Under the tested rule, 86 maps to 2006 and 05 maps to May.'],
+      ['Where is the Bosch dishwasher rating plate?', 'It is commonly on the inner door edge or frame; use Bosch category guidance for the exact product type.'],
+      ['Does this cover Bosch electronics?', 'No. This page is intentionally limited to supported Bosch home-appliance FD numbers.']
+    ],
+    relatedSectionTitle: 'Bosch Appliance Research',
+    relatedLinks: [['dishwasher-serial-number', 'Dishwasher Serial Numbers'], ['refrigerator-serial-number', 'Refrigerator Serial Numbers'], ['how-old-is-my-appliance', 'Appliance Age Guide'], ['find-model-serial-number', 'Find Rating Plates'], ['methodology', 'Methodology']],
+    bottomCtaTitle: 'Have the E-Nr but not the FD?',
+    bottomCtaBody: 'Use Bosch manual lookup or Smart Lookup for model-family research, then return to the appliance rating plate for the production number.',
+    linkGroups: baseLinkGroups()
+  },
+  {
+    slug: 'vizio',
+    title: 'Vizio TV Model Number Year Guide',
+    description: 'Use supported Vizio TV model-year codes and verified model-era records, find model and serial labels, and avoid claiming that Vizio serial numbers reveal manufacture dates.',
+    h1: 'Vizio TV Model Number Year Guide',
+    badge: 'Model-based TV identification',
+    category: 'electronics',
+    brandValue: 'vizio',
+    applicationName: 'Vizio TV Model Year Guide',
+    primaryCtaLabel: 'Check a Vizio Model',
+    inputLabel: 'Enter Vizio Model Number',
+    actionLabel: 'Check Model Year',
+    intro: 'Vizio serial numbers are not treated as a dependable public manufacture-date code here. The supported workflow uses the TV model number, including tested model-era records and year letters that appear after a hyphen on recognized model formats.',
+    supportingIntro: 'A model-year result identifies the product generation, not the factory date of one physical television. Keep the unit serial for registration and support, but enter the model number in this tool.',
+    decoderIntro: 'Vizio is preselected and the model field is required. Enter a complete model such as VW32L HDTV10A or V505-J09; unsupported models return no date rather than a serial-based guess.',
+    decoderPlaceholder: 'Serial is optional for Vizio',
+    howToSteps: ['Find the model number on the TV label or product records.', 'Enter the model in the Vizio model field shown by the decoder.', 'Treat the returned year as model-era context, not an exact unit manufacture date.'],
+    decodeSectionTitle: 'Why Vizio uses a model path',
+    decodeSectionBody: 'The current Vizio implementation explicitly requires a model number and does not decode arbitrary serials. It recognizes a verified legacy model-era record and supported post-hyphen year letters. An unrelated serial such as LSPATBH4026090 returns no result by itself.',
+    modelSectionTitle: 'What a Vizio model can reveal',
+    modelSectionBody: 'Recognized model numbers can identify series, screen-size family, variant, and model year. That is useful for replacement and compatibility research, but it is different from identifying the exact month or day a unit was built.',
+    formatSectionTitle: 'Supported Vizio model evidence',
+    formats: [
+      { label: 'Verified legacy model record', pattern: 'VW32L HDTV10A', meaning: 'Matches the repository-backed model-era lookup for September 2007.', confidence: 'Verified local model record.' },
+      { label: 'Post-hyphen year letter', pattern: '...-J## through ...-P##', meaning: 'Recognized letters map to model years 2021 through 2026 in the current rule.', confidence: 'Model year, not unit date.' },
+      { label: 'Vizio serial number', pattern: 'Unit-specific identifier', meaning: 'Retained for registration and support; arbitrary serials are not decoded into dates.', confidence: 'No serial date decode.' }
+    ],
+    exampleSectionTitle: 'Vizio model-year examples',
+    examples: [
+      { label: 'Verified model-era fixture', serial: 'VW32L HDTV10A', note: 'The existing regression returns September 2007 from the stored Vizio model record while explicitly stating that the serial format was not decoded.' },
+      { label: 'Supported year-letter example', serial: 'V505-J09', note: 'The current model rule reads J after the hyphen as model year 2021. The 09 portion is a variant, not a manufacture month.' },
+      { label: 'Unsupported serial behavior', serial: 'LSPATBH4026090', note: 'This serial alone returns no date. The model number is required instead of guessing from an unsupported serial pattern.' }
+    ],
+    locationSectionTitle: 'Where to find Vizio identifiers',
+    locations: [
+      { title: 'Rear TV label', items: ['Look on the back of the television for model and serial fields', 'Photograph the full label before mounting or moving the TV'] },
+      { title: 'Box and receipt', items: ['The serial may appear on the side of the original box or purchase receipt', '<a href="https://www.vizio.com/en/account/product-registration" rel="noopener">Vizio documents serial-number locations for registration</a>'] },
+      { title: 'Model field for this tool', items: ['Enter the model number, not the serial, in the model field', 'Use Smart Lookup when the model format is not recognized'] }
+    ],
+    problemSectionTitle: 'Common Vizio mistakes',
+    problems: ['Entering the unit serial where the model number is required.', 'Calling a model-year result an exact manufacture date.', 'Treating the digits after the year letter as a month.', 'Assuming every Vizio series uses the same model convention.', 'Forcing a result from an unsupported serial.'],
+    faqs: [
+      ['Can this page decode a Vizio serial number?', 'No. The supported workflow is model-based because Vizio serial formats are not treated as reliably date-decodable here.'],
+      ['What does J mean in V505-J09?', 'The current supported model mapping treats J after the hyphen as model year 2021.'],
+      ['Does model year equal manufacture date?', 'No. It identifies the product generation, not the production date of one unit.'],
+      ['What if I only have the serial?', 'Use the rear label, box, receipt, or Vizio registration records to recover the model, then use Smart Lookup if needed.'],
+      ['Why did an arbitrary serial return no result?', 'That is intentional. The decoder refuses to invent a date from an unsupported Vizio serial.']
+    ],
+    relatedSectionTitle: 'Vizio TV Research',
+    relatedLinks: [['smart-lookup', 'Smart Lookup'], ['tv-history', 'TV History'], ['tv-replacement-guide', 'TV Replacement Guide'], ['find-model-serial-number', 'Find TV Labels'], ['methodology', 'Methodology']],
+    bottomCtaTitle: 'Only have a Vizio serial?',
+    bottomCtaBody: 'Recover the model from the label, box, receipt, or registration records before attempting a model-year lookup.',
+    bottomPrimaryLabel: 'Check a Vizio Model',
+    linkGroups: electronicsLinkGroups()
+  },
+  {
+    slug: 'samsung-tv-serial-number-decoder',
+    title: 'Samsung TV Serial Number Decoder and Model Guide',
+    description: 'Decode supported Samsung TV and monitor serial year/month positions, understand repeating year codes, find TV identifiers, and separate TV logic from Samsung appliance and phone formats.',
+    h1: 'Samsung TV Serial Number Decoder and Model Guide',
+    badge: 'TV and monitor serial decoder',
+    category: 'electronics',
+    brandValue: 'samsung_tv',
+    intro: 'Samsung TVs and monitors have a distinct electronics path even when parts of the serial structure resemble Samsung appliances. This page covers the supported 15-character and shorter TV/monitor layouts, repeating year codes, and TV-specific label recovery.',
+    supportingIntro: 'The serial can expose a supported month and one or more candidate years. The model code is still needed when a year letter repeats, and newer or different Samsung product families may require Smart Lookup rather than this decoder.',
+    decoderIntro: 'Samsung TV is preselected. Enter the complete TV or monitor serial; 15-character formats use characters 8-9, while supported shorter formats use characters 4-5.',
+    decoderPlaceholder: 'Enter Samsung TV serial number',
+    howToSteps: ['Confirm the product is a TV, monitor, projector, or supported home-theater device.', 'Copy the complete serial from About This TV, the rear label, or original box.', 'Review the year/month code and use the model code to resolve any repeated-year cycle.'],
+    decodeSectionTitle: 'Supported Samsung TV serial positions',
+    decodeSectionBody: 'For a supported 15-character serial, character 8 is the year code and character 9 is the month code. Supported shorter serials use characters 4 and 5. Month codes 1-9 and A-C map January through December; several year letters repeat across a 20-year cycle.',
+    modelSectionTitle: 'Why the Samsung model code still matters',
+    modelSectionBody: 'Samsung states that the model code identifies the device type and includes product details such as screen size and region. On this site it is also the best clue for deciding which candidate year is plausible when a serial letter repeats.',
+    formatSectionTitle: 'Samsung TV and monitor serial paths',
+    formats: [
+      { label: '15-character TV serial', pattern: 'Year at character 8; month at character 9', meaning: 'Returns a supported month and candidate year or years from the electronics map.', confidence: 'Supported; decade may repeat.' },
+      { label: 'Shorter supported serial', pattern: 'Year at character 4; month at character 5', meaning: 'Uses the shorter Samsung electronics position rule when the serial is not 15 characters.', confidence: 'Supported format-dependent path.' },
+      { label: 'Samsung model code', pattern: 'Separate product-family identifier', meaning: 'Helps distinguish TV generation and resolve repeated serial year codes.', confidence: 'Context, not unit manufacture date.' }
+    ],
+    exampleSectionTitle: 'Samsung TV serial worked example',
+    examples: [
+      { label: 'Verified TV/electronics example', serial: '07R5CAHJB001234', note: 'Character 8 is J, which maps to candidate years 2017 or 2037. Character 9 is B, which maps to November. The model generation must resolve the year cycle.' },
+      { label: 'Repeated year warning', serial: 'R / T / W / X / Y / A', note: 'These supported Samsung TV year letters can represent more than one cycle; the decoder keeps the ambiguity visible.' },
+      { label: 'Category separation', serial: 'TV model + TV serial', note: 'Use this electronics path for TVs and monitors. Use the strengthened Samsung appliance page for refrigerators, laundry, cooking, and dishwashing products.' }
+    ],
+    locationSectionTitle: 'Where to find Samsung TV identifiers',
+    locations: [
+      { title: 'About This TV', items: ['Open Settings, Support, then About This TV or Contact Samsung', 'The screen can show model code, serial number, and software version'] },
+      { title: 'Rear product label', items: ['Look for a silver label on the back of the TV', 'Photograph it before wall mounting when possible'] },
+      { title: 'Samsung support path', items: ['Use the complete model code for manuals and generation context', '<a href="https://www.samsung.com/us/support/answer/ANS10005222/" rel="noopener">Samsung documents the About This TV identifier screen</a>'] }
+    ],
+    problemSectionTitle: 'When the Samsung TV result stays ambiguous',
+    problems: ['Use the model code to select the plausible cycle when a year letter repeats.', 'Do not use the Samsung appliance or phone decoder for a TV serial.', 'Confirm total serial length before reading character positions.', 'Do not call a model release year the manufacture date of the individual TV.', 'Use Smart Lookup when a newer or unsupported serial layout does not match.'],
+    faqs: [
+      ['Is this the same as the Samsung appliance decoder?', 'No. This page is for TVs, monitors, and supported electronics; the appliance page covers major appliances.'],
+      ['Why does a Samsung TV serial show two years?', 'Some supported year letters repeat across a 20-year cycle, so the model generation is needed to select the plausible one.'],
+      ['Where can I find the serial without removing a wall-mounted TV?', 'Open Settings, Support, About This TV or Contact Samsung on supported models.'],
+      ['Can the model code provide the exact manufacture date?', 'No. It provides product-generation context and can help resolve a serial cycle, but it is not the unit production date.'],
+      ['What if the serial length does not match?', 'Do not shift character positions manually. Confirm the full serial and use Smart Lookup if the format remains unsupported.']
+    ],
+    relatedSectionTitle: 'Samsung TV and Electronics Research',
+    relatedLinks: [['samsung-serial-number-lookup', 'Samsung Appliance Decoder'], ['smart-lookup', 'Smart Lookup'], ['tv-history', 'TV History'], ['tv-replacement-guide', 'TV Replacement Guide'], ['methodology', 'Methodology']],
+    bottomCtaTitle: 'Need to resolve a repeated Samsung TV year?',
+    bottomCtaBody: 'Add the complete model code in Smart Lookup and keep the decoder result as a candidate range until the generation is confirmed.',
+    linkGroups: electronicsLinkGroups()
+  },
+  {
+    slug: 'google-pixel',
+    title: 'Google Pixel Identifier and Serial Number Guide',
+    description: 'Find Google Pixel phone, tablet, watch, and dock identifiers and use model context without relying on an unverified manufacture-date serial rule.',
+    h1: 'Google Pixel Identifier and Serial Number Guide',
+    badge: 'Public noindex identifier guide',
+    category: 'electronics',
+    brandValue: 'google_pixel',
+    indexable: false,
+    applicationName: 'Google Pixel Identifier Guide',
+    primaryCtaLabel: 'Check a Pixel Identifier',
+    inputLabel: 'Enter Pixel Identifier',
+    actionLabel: 'Check Identifier',
+    intro: 'This page remains available for Pixel identifier help, but it is temporarily excluded from search indexing. The repository contains a limited year/week serial rule that is not supported by enough manufacturer documentation or regression evidence to present as an approval-facing manufacture-date decoder.',
+    supportingIntro: 'Use Google device settings, the Google Store device page, the physical product, or original packaging to recover the correct serial, IMEI, or model. Use Smart Lookup for product-family context rather than treating an unverified code as a unit date.',
+    decoderIntro: 'The current Pixel rule is under evidence review. Any output is provisional and should not be used as proof of manufacture date.',
+    decoderPlaceholder: 'Enter Pixel identifier for provisional check',
+    howToSteps: ['Identify whether you have a phone IMEI, tablet serial, watch identifier, or dock serial.', 'Confirm the identifier in Google device settings or account records.', 'Use the model and product family in Smart Lookup; do not rely on a provisional date code for high-stakes use.'],
+    decodeSectionTitle: 'Why this page is temporarily noindex',
+    decodeSectionBody: 'The current code reads an opening year digit and two-digit week, but repository evidence does not yet establish which Pixel families and eras reliably use that structure. The page therefore does not make an approval-facing manufacture-date promise.',
+    modelSectionTitle: 'Use the right Pixel identifier',
+    modelSectionBody: 'Pixel phones and watches may expose IMEI information, while Pixel Tablet and dock products expose product-specific serials. The model or product family is the safer starting point for generation research.',
+    formatSectionTitle: 'Pixel identifier recovery paths',
+    formats: [
+      { label: 'Pixel phone', pattern: 'IMEI and device information', meaning: 'Use About phone, Find My Device, or the original box to recover the official identifier.', confidence: 'Identification only.' },
+      { label: 'Pixel Tablet', pattern: 'Serial in Settings or engraved on device', meaning: 'Google documents separate tablet, dock, and bundle serial locations.', confidence: 'Identification only.' },
+      { label: 'Provisional date rule', pattern: 'Opening digit + week', meaning: 'Present in code but not strong enough for indexable manufacture-date claims.', confidence: 'Under evidence review.' }
+    ],
+    exampleSectionTitle: 'Honest Pixel outcomes',
+    examples: [
+      { label: 'Phone identifier path', serial: 'Settings > About phone > IMEI', note: 'Google documents this as a device identifier path, not as a manufacture-date decoder.' },
+      { label: 'Tablet serial path', serial: 'Settings > About Tablet > Model', note: 'The serial appears under model information and can also be engraved on the tablet.' },
+      { label: 'Date claim withheld', serial: 'Provisional year/week code', note: 'This page does not promote the internal rule as verified manufacture-date evidence until stronger documentation and tests exist.' }
+    ],
+    locationSectionTitle: 'Official Google identifier locations',
+    locations: [
+      { title: 'Pixel phones', items: ['Open Settings, About phone, then locate IMEI', 'Find My Device and the original box can also show the IMEI'] },
+      { title: 'Pixel Tablet and dock', items: ['Tablet serial appears in Settings and is engraved on the back', 'Dock serial appears in dock settings and on the bottom'] },
+      { title: 'Google Store help', items: ['Bundle products can have a bundle-specific serial', '<a href="https://support.google.com/store/answer/3333000?hl=en" rel="noopener">Google documents device-specific serial and IMEI locations</a>'] }
+    ],
+    problemSectionTitle: 'Do not overread Pixel identifiers',
+    problems: ['IMEI, model, and serial are different identifiers.', 'A device generation is not an exact manufacture date.', 'A rule that works on one Pixel family may not apply to another.', 'Do not use provisional output for warranty, resale, or claim documentation.', 'Use Google support records when authoritative confirmation is needed.'],
+    faqs: [
+      ['Why is this page noindex?', 'Its identifier guidance is useful, but the current date-code rule lacks enough verified evidence for an independent approval-facing search page.'],
+      ['Can a Pixel IMEI reveal manufacture date here?', 'No. This page treats IMEI as a device identifier, not a public manufacture-date code.'],
+      ['Where is a Pixel Tablet serial?', 'Google documents it in Settings under About Tablet and engraved on the back of the tablet.'],
+      ['What should I enter in Smart Lookup?', 'Use the Pixel model or generation plus any visible product description; avoid submitting account or personal data.'],
+      ['Will this page become indexable later?', 'Only after the supported product families and date behavior have stronger documentation and regression coverage.']
+    ],
+    relatedSectionTitle: 'Verified Electronics Research Paths',
+    relatedLinks: [['smart-lookup', 'Smart Lookup'], ['how-old-is-my-electronics', 'Electronics Age Guide'], ['find-model-serial-number', 'Find Device Labels'], ['methodology', 'Methodology']],
+    bottomCtaTitle: 'Need Pixel generation context?',
+    bottomCtaBody: 'Use the model and product family in Smart Lookup instead of treating an IMEI or provisional serial code as a manufacture date.',
+    bottomPrimaryLabel: 'Run a Provisional Check',
+    linkGroups: electronicsLinkGroups()
+  },
+  {
+    slug: 'panasonic',
+    title: 'Panasonic Model and Serial Number Location Guide',
+    description: 'Find Panasonic TV and electronics model and serial labels by product family without relying on an unverified universal manufacture-date serial rule.',
+    h1: 'Panasonic Model and Serial Number Location Guide',
+    badge: 'Public noindex location guide',
+    category: 'electronics',
+    brandValue: 'panasonic',
+    indexable: false,
+    applicationName: 'Panasonic Identifier Guide',
+    primaryCtaLabel: 'Check a Panasonic Identifier',
+    inputLabel: 'Enter Panasonic Identifier',
+    actionLabel: 'Check Identifier',
+    intro: 'Panasonic uses many product families, and the current repository has one broad opening-character rule that is not documented strongly enough to present as a universal manufacture-date decoder. This page remains public for label-location help but is temporarily excluded from search indexing.',
+    supportingIntro: 'Start with the product category and model prefix. Panasonic documents different label locations for TVs, audio products, cameras, projectors, and other equipment; those identifiers support manuals and service research even when no defensible date decode is available.',
+    decoderIntro: 'The current Panasonic date rule is provisional. Do not treat its output as proof of manufacture date.',
+    decoderPlaceholder: 'Enter Panasonic identifier for provisional check',
+    howToSteps: ['Identify the product family from its model prefix.', 'Find the model and serial label using Panasonic category guidance.', 'Use the model in manuals or Smart Lookup; keep any provisional serial result clearly unverified.'],
+    decodeSectionTitle: 'Why one universal Panasonic rule is not enough',
+    decodeSectionBody: 'The existing code interprets the first character as a repeating year digit and the second as a factory-or-month code. Because the second-character meaning varies by product line and the repository lacks product-family regression fixtures, that rule is not strong enough for an indexable manufacture-date claim.',
+    modelSectionTitle: 'Product family controls the research path',
+    modelSectionBody: 'Panasonic documents different model prefixes and label locations across televisions, audio products, Blu-ray players, cameras, projectors, and other devices. The model number is the safest key for manuals, specifications, and product-generation context.',
+    formatSectionTitle: 'Panasonic identification paths',
+    formats: [
+      { label: 'Televisions', pattern: 'TC- / TH- / TV- model prefixes', meaning: 'Model and serial may be on carton, side label, rear label, or underside of the frame.', confidence: 'Official location guidance.' },
+      { label: 'Audio and video products', pattern: 'Product-specific prefixes', meaning: 'Back, bottom, or side label varies by category; use Panasonic support guidance.', confidence: 'Official location guidance.' },
+      { label: 'Provisional opening-code rule', pattern: 'Year digit + factory/month code', meaning: 'Too broad and product-line dependent for approval-facing manufacture-date claims.', confidence: 'Under evidence review.' }
+    ],
+    exampleSectionTitle: 'What this page can verify today',
+    examples: [
+      { label: 'TV label recovery', serial: 'TC- / TH- / TV-', note: 'Panasonic documents TV model and serial information on the carton, side, rear, or underside label depending on model.' },
+      { label: 'Camera label recovery', serial: 'DMC- / DC-', note: 'Panasonic documents LUMIX model and serial information on the bottom of the camera body.' },
+      { label: 'Date claim withheld', serial: '4B123456', note: 'The current code can produce candidate years from this pattern, but the factory/month meaning is product-line dependent and is not promoted as verified.' }
+    ],
+    locationSectionTitle: 'Panasonic label locations vary by family',
+    locations: [
+      { title: 'Panasonic televisions', items: ['Check the carton, side label, rear label, or underside of the frame', 'Keep the model prefix because it identifies the TV family'] },
+      { title: 'Audio, video, and projectors', items: ['Labels are commonly on the back, bottom, or side depending on product', 'Use the complete model in Panasonic manuals'] },
+      { title: 'Panasonic support guidance', items: ['Select the exact category before relying on a label location', '<a href="https://help.na.panasonic.com/answers/how-to-find-the-model-number-or-serial-number-of-a-panasonic-product/" rel="noopener">Panasonic lists product-family-specific locations</a>'] }
+    ],
+    problemSectionTitle: 'Avoid cross-family assumptions',
+    problems: ['Do not apply a TV identifier pattern to a camera, audio product, or appliance.', 'Do not describe a factory code as a month without product-line evidence.', 'Do not choose a decade from one leading digit without model-era context.', 'Use manuals and support records for authoritative product identification.', 'Keep provisional decoder output out of high-stakes documentation.'],
+    faqs: [
+      ['Why is this Panasonic page noindex?', 'The location guidance is useful, but the current universal date rule is not sufficiently verified across Panasonic product families.'],
+      ['Where is a Panasonic TV serial?', 'Panasonic lists the carton, side label, rear label, and underside of the frame as possible locations.'],
+      ['Can the first serial character prove the manufacture year?', 'Not here. The current rule is decade-ambiguous and lacks enough product-family evidence.'],
+      ['What is the best Panasonic lookup key?', 'Use the complete model number for manuals and product-family research, with the serial retained for service identification.'],
+      ['Can Smart Lookup provide an exact unit date?', 'It may provide model-era context, but it should not convert a release year into an exact unit manufacture date.']
+    ],
+    relatedSectionTitle: 'Verified Electronics Research Paths',
+    relatedLinks: [['smart-lookup', 'Smart Lookup'], ['how-old-is-my-electronics', 'Electronics Age Guide'], ['find-model-serial-number', 'Find Device Labels'], ['tv-history', 'TV History'], ['methodology', 'Methodology']],
+    bottomCtaTitle: 'Need Panasonic product-family context?',
+    bottomCtaBody: 'Use the complete model prefix and category in Smart Lookup or Panasonic manuals; do not force one serial rule across unrelated product lines.',
+    bottomPrimaryLabel: 'Run a Provisional Check',
+    linkGroups: electronicsLinkGroups()
   }
 ];
 
@@ -3178,8 +3648,6 @@ const sitemapEntries = [
   ['/tv-history', 'monthly', '0.7'],
   ['/computer-history', 'monthly', '0.7'],
   ['/large-loss-decoder', 'weekly', '0.9'],
-  ['/google-pixel', 'monthly', '0.7'],
-  ['/panasonic', 'monthly', '0.6'],
   ['/vizio', 'monthly', '0.6'],
   ['/disclaimer', 'yearly', '0.3']
 ];
@@ -3200,7 +3668,7 @@ ${entries.map(([route, changefreq, priority]) => `  <url>
 }
 
 pages.forEach((page) => {
-  fs.writeFileSync(path.join(root, `${page.slug}.html`), renderPage(page));
+  fs.writeFileSync(path.join(root, `${page.slug}.html`), normalizeGeneratedHtml(renderPage(page)));
 });
 
 fs.writeFileSync(path.join(root, 'sitemap.xml'), renderSitemap(sitemapEntries));

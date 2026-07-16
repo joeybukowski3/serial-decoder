@@ -10,7 +10,7 @@ for (const width of widths) {
     await expect(page.locator('#hamburgerBtn')).toHaveCount(1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
-    if (width <= 1140) {
+    if (width <= 1290) {
       await expect(page.locator('#hamburgerBtn')).toBeVisible();
       await expect(page.locator('body > nav > ul')).toBeHidden();
     } else {

@@ -23,7 +23,7 @@ function rootHtmlFiles() {
 
 test('generated shell uses Decode My Item as its product brand', () => {
   assert.match(generator, /return 'Decode My Item';/);
-  assert.match(generator, /name: 'Decode My Item Serial Number Decoder'/);
+  assert.match(generator, /name: page\.applicationName \|\| 'Decode My Item Serial Number Decoder'/);
   assert.match(generator, /aria-label="Decode My Item home"/);
 });
 
