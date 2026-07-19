@@ -57,13 +57,16 @@ jobs:
         run: npx playwright install --with-deps chromium msedge
       - name: Rebuild browser assets
         run: npm run build
-      - name: Start static site
+      # The Smart Lookup suite's Playwright config owns starting and stopping
+      # its own server on 3001; pre-starting one here makes the second bind
+      # fail before test collection.
+      - name: Run Smart Lookup browser suite
+        run: npm run test:smart-playwright -- --reporter=line
+      - name: Start static site for existing browser suites
         shell: bash
         run: |
           python3 -m http.server 3001 > /tmp/smart-lookup-v2-http.log 2>&1 &
           echo $! > /tmp/smart-lookup-v2-http.pid
           sleep 2
-      - name: Run Smart Lookup browser suite
-        run: npm run test:smart-playwright -- --reporter=line
       - name: Run existing browser suites
         run: npm run test:playwright -- --reporter=line
