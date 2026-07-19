@@ -389,16 +389,40 @@
     return '';
   }
 
+  function isGroundedProviderResult(data) {
+    return Boolean(data)
+      && String(data.evidenceSource || '').toLowerCase() === 'gemini-grounded'
+      && Array.isArray(data.sources)
+      && data.sources.length > 0;
+  }
+
   function isUngroundedProviderResult(data) {
+    if (isGroundedProviderResult(data)) return false;
     var source = String((data && (data.evidenceSource || data.source || data.originSource)) || '').toLowerCase();
+    // A grounded label without retrieved sources degrades to the honest
+    // ungrounded wording rather than claiming live research.
     return source === 'gemini-ungrounded'
       || source === 'groq-ungrounded'
+      || source === 'gemini-grounded'
       || source === 'gemini'
       || source === 'groq';
   }
 
+  function retrievedDateLabel(data) {
+    if (!data || !data.retrievedAt) return '';
+    var parsed = new Date(data.retrievedAt);
+    if (isNaN(parsed.getTime())) return '';
+    return parsed.toISOString().slice(0, 10);
+  }
+
   function sourceQualifier(data) {
     if (!data) return '';
+    if (isGroundedProviderResult(data)) {
+      var retrievedOn = retrievedDateLabel(data);
+      return 'AI research grounded in live Google Search results'
+        + (retrievedOn ? ' retrieved ' + retrievedOn : '')
+        + '; review the cited web sources below.';
+    }
     if (isUngroundedProviderResult(data)) {
       var provider = providerName(data.evidenceSource || data.source || data.originSource);
       var prefix = provider ? provider + ' AI-assisted analysis' : 'AI-assisted analysis';
@@ -420,9 +444,24 @@
   }
 
   function evidenceHeading(data) {
+    if (isGroundedProviderResult(data)) return 'Findings from current web sources';
     if (isUngroundedProviderResult(data)) return 'Analysis basis';
     if (data && (data.source === 'cache' || data.cacheStatus === 'hit')) return 'Information considered';
     return 'How this result was determined';
+  }
+
+  function renderGroundedSources(data) {
+    if (!isGroundedProviderResult(data)) return '';
+    var items = data.sources.slice(0, 5).map(function (item) {
+      if (!item || !item.title) return '';
+      var label = escapeHtml(item.title);
+      if (item.uri && /^https:\/\//i.test(item.uri)) {
+        return '<li><a href="' + escapeHtml(item.uri) + '" target="_blank" rel="noopener nofollow">' + label + '</a></li>';
+      }
+      return '<li>' + label + '</li>';
+    }).filter(Boolean).join('');
+    if (!items) return '';
+    return '<details class="determination-details smart-lookup-sources"><summary>Web sources consulted</summary><ul>' + items + '</ul></details>';
   }
 
   function renderAge(data) {
@@ -476,6 +515,7 @@
       (data && data.notes ? '<div class="info-block notes"><h4>What this year means</h4><p>' + escapeHtml(data.notes) + '</p></div>' : '') +
       (data && data.refinementSuggestion ? '<p class="smart-lookup-try-next"><strong>Try this next:</strong> ' + escapeHtml(data.refinementSuggestion) + '</p>' : '') +
       evidenceHtml +
+      renderGroundedSources(data) +
       '</div>';
   }
 

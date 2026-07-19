@@ -359,6 +359,54 @@ test.describe('Smart Lookup controller', () => {
     await expect(panel).not.toContainText('Evidence used');
   });
 
+  test('grounded provider success renders retrieval qualifier and cited web sources', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: {
+        source: 'gemini',
+        evidenceSource: 'gemini-grounded',
+        brand: 'LG',
+        model: 'WM3900HWA',
+        introductionYear: 2019,
+        retrievedAt: '2026-07-19T12:00:00.000Z',
+        evidence: [{ detail: 'Listed on the manufacturer product page.' }],
+        sources: [
+          { title: 'lg.com', domain: 'lg.com', uri: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/a' },
+          { title: 'energystar.gov', domain: 'energystar.gov', uri: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/b' },
+        ],
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('LG WM3900HWA');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('AI research grounded in live Google Search results retrieved 2026-07-19');
+    await expect(panel).toContainText('Web sources consulted');
+    await expect(panel).toContainText('lg.com');
+    await expect(panel).toContainText('energystar.gov');
+    await expect(panel).not.toContainText('no live manufacturer source was verified');
+    const sourceLink = panel.locator('.smart-lookup-sources a').first();
+    await expect(sourceLink).toHaveAttribute('rel', 'noopener nofollow');
+  });
+
+  test('grounded response without sources falls back to ungrounded wording', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: {
+        source: 'gemini',
+        evidenceSource: 'gemini-grounded',
+        brand: 'LG',
+        model: 'WM3900HWA',
+        introductionYear: 2019,
+        sources: [],
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('LG WM3900HWA');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('AI-assisted analysis');
+    await expect(panel).not.toContainText('Web sources consulted');
+  });
+
   test('replacement unavailable copy does not claim a verified replacement, and age still renders', async ({ page }) => {
     await page.route('**/api/lkq-lookup', async (route) => {
       await route.fulfill({ json: { errorCode: 'PROVIDER_TIMEOUT', replacementOptions: [] } });
