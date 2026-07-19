@@ -1618,6 +1618,21 @@ test('classifyDecodeResult distinguishes complete, incomplete, unsupported, inva
     'incomplete',
     'ambiguous year candidates are not clean successes'
   );
+  // GM028928Q yields four candidates, which the unpatched sanitizer accepts;
+  // the five-candidate A-code path needs serial-multicycle-year-patch.js and
+  // is covered end-to-end by the Playwright GE A-code test.
+  const ambiguousGe = api.classifyDecodeResult(ge.decode('GM028928Q'), ge);
+  assert.equal(ambiguousGe.status, 'incomplete');
+  assert.equal(
+    ambiguousGe.ambiguousYears,
+    true,
+    'multi-cycle year lists are flagged as ambiguous, not treated as bad input'
+  );
+  assert.equal(
+    api.classifyDecodeResult({ year: '2016', month: 'Unknown code: Z' }, richmond).ambiguousYears,
+    undefined,
+    'genuinely incomplete dates carry no ambiguous-years flag'
+  );
   assert.equal(api.classifyDecodeResult(null, richmond).status, 'unsupported');
   assert.equal(api.classifyDecodeResult({ year: '2034', month: 'April' }, richmond).status, 'invalid');
   assert.equal(
@@ -1631,6 +1646,13 @@ test('decode pipeline only emits decode_success for complete classified results'
   assert.match(src, /classifyDecodeResult\(e,p\)/);
   assert.match(src, /"complete_success"===t\.status\?trackAnalyticsEvent\("decode_success"/);
   assert.match(src, /classification:t\.status/);
+});
+
+test('incomplete-result warning stays hidden for ambiguous multi-year results', () => {
+  const src = fs.readFileSync('script.js', 'utf8');
+  // The refinement panel is the intended UX for multi-cycle year lists; the
+  // "verify your inputs" warning must not fire for that classification.
+  assert.match(src, /"complete_success"!==s\.status&&!s\.ambiguousYears\|\|i/);
 });
 
 // ── Kenmore model-prefix helper (UX improvement) ─────────────────────────────
