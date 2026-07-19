@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import vm from 'node:vm';
 import { findExactLocalModelAgeMatch, loadLocalModelAgeDb, normalizeModelNumber } from '../lib/model-age-db.js';
+import { buildDecoderBundles } from '../scripts/split-decoder-data.js';
 
 function loadDecoderContext() {
   function createMockElement() {
@@ -181,6 +184,92 @@ test('single category decoder bundle only registers that category', () => {
   assert.deepEqual(Object.keys(splitData), ['hvac']);
   assert.ok(splitData.hvac.decoders.goodman);
   assert.equal(splitData.appliances, undefined);
+});
+
+function createTempDecoderOutputDir() {
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'decoder-bundles-'));
+}
+
+function seedPreviousDecoderBundles(dir) {
+  fs.mkdirSync(dir, { recursive: true });
+  const manifest = {
+    appliances: '/assets/decoders/appliances.0000000000.js',
+    hvac: '/assets/decoders/hvac.0000000000.js',
+    waterHeaters: '/assets/decoders/water-heaters.0000000000.js',
+    electronics: '/assets/decoders/electronics.0000000000.js'
+  };
+  Object.values(manifest).forEach((publicPath) => {
+    fs.writeFileSync(path.join(dir, publicPath.replace('/assets/decoders/', '')), 'previous bundle', 'utf8');
+  });
+  fs.writeFileSync(path.join(dir, 'decoder-bundles.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  return manifest;
+}
+
+function readTempManifest(dir) {
+  return JSON.parse(fs.readFileSync(path.join(dir, 'decoder-bundles.json'), 'utf8'));
+}
+
+test('atomic decoder bundle generation writes a complete deterministic manifest', () => {
+  const dir = createTempDecoderOutputDir();
+  try {
+    fs.writeFileSync(path.join(dir, 'appliances.deadbeef00.js'), 'obsolete bundle', 'utf8');
+
+    const artifacts = buildDecoderBundles({ sourcePath: 'decoder-data.js', outputDir: dir });
+    const manifest = readTempManifest(dir);
+
+    assert.deepEqual(Object.keys(manifest).sort(), ['appliances', 'electronics', 'hvac', 'waterHeaters']);
+    for (const publicPath of Object.values(manifest)) {
+      const file = publicPath.replace('/assets/decoders/', '');
+      const fullPath = path.join(dir, file);
+      assert.equal(fs.existsSync(fullPath), true, file + ' should exist');
+      assert.ok(fs.statSync(fullPath).size > 0, file + ' should be non-empty');
+    }
+    assert.equal(fs.existsSync(path.join(dir, 'appliances.deadbeef00.js')), false, 'obsolete bundles are removed after success');
+    assert.deepEqual(manifest, artifacts.manifest);
+
+    buildDecoderBundles({ sourcePath: 'decoder-data.js', outputDir: dir });
+    assert.deepEqual(readTempManifest(dir), manifest, 're-running generation is deterministic');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('atomic decoder bundle generation failure after temporary files preserves previous output', () => {
+  const dir = createTempDecoderOutputDir();
+  try {
+    const previous = seedPreviousDecoderBundles(dir);
+
+    assert.throws(
+      () => buildDecoderBundles({ sourcePath: 'decoder-data.js', outputDir: dir, simulateFailureAt: 'after-temp' }),
+      /Simulated decoder bundle generation failure/
+    );
+
+    assert.deepEqual(readTempManifest(dir), previous);
+    for (const publicPath of Object.values(previous)) {
+      assert.equal(fs.existsSync(path.join(dir, publicPath.replace('/assets/decoders/', ''))), true);
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('atomic decoder bundle generation failure after bundle publication does not expose a partial manifest', () => {
+  const dir = createTempDecoderOutputDir();
+  try {
+    const previous = seedPreviousDecoderBundles(dir);
+
+    assert.throws(
+      () => buildDecoderBundles({ sourcePath: 'decoder-data.js', outputDir: dir, simulateFailureAt: 'after-bundles' }),
+      /Simulated decoder bundle generation failure/
+    );
+
+    assert.deepEqual(readTempManifest(dir), previous);
+    for (const publicPath of Object.values(previous)) {
+      assert.equal(fs.existsSync(path.join(dir, publicPath.replace('/assets/decoders/', ''))), true);
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('GE Narrow Date refinement treats internally contradictory evidence as unusable (PR-2)', () => {
