@@ -3,7 +3,13 @@ import { providerAttemptCountFromMetadata, recordProviderAttemptMetrics, reserve
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
 import { applyEraHints, decodeHvacSerial, findLocalModelAgeResult } from '../lib/smart-lookup/age-legacy.js';
 import { classifySmartLookupQuery, getVerifiedModelKey, normalizeSmartLookupNotes, normalizeWhitespace, SMART_LOOKUP_NOTES_MAX_LENGTH } from '../lib/smart-lookup/normalize.js';
-import { callGeminiAgeProvider, getSmartLookupProviderMetadata, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
+import {
+  callGeminiAgeProvider,
+  callSmartLookupGroundedAgeProvider,
+  getSmartLookupProviderMetadata,
+  isGroundedAgeEnabled,
+  SmartLookupProviderError,
+} from '../lib/smart-lookup/provider.js';
 import {
   createSmartLookupTimings,
   createUnavailableSmartAgeResult,
@@ -110,6 +116,8 @@ function logResult(logger, requestId, queryInfo, result, extra = {}) {
     fallbackUsed: result?.fallbackUsed,
     timeoutStage: extra.timeoutStage || null,
     errorCode: result?.errorCode,
+    grounded: result?.evidenceSource === 'gemini-grounded',
+    groundedSourceCount: Array.isArray(result?.sources) ? result.sources.length : 0,
     budgetStatus: extra.budgetStatus || result?.budgetStatus || null,
     logicalLookupCount: extra.logicalLookupCount ?? result?.logicalLookupCount ?? null,
     actualProviderAttemptCount: extra.actualProviderAttemptCount ?? result?.actualProviderAttemptCount ?? null,
@@ -128,6 +136,8 @@ function recordSharedProviderAttempts(providerPromise, recordAttempts, redis, ki
 export function createAgeLookupHandler(dependencies = {}) {
   const localLookup = dependencies.localLookup || findLocalModelAgeResult;
   const providerLookup = dependencies.providerLookup || callGeminiAgeProvider;
+  const groundedProviderLookup = dependencies.groundedProviderLookup || callSmartLookupGroundedAgeProvider;
+  const groundedEnabled = dependencies.groundedEnabled ?? isGroundedAgeEnabled(dependencies.env);
   const reserveBudget = dependencies.reserveProviderBudget || reserveProviderBudget;
   const recordAttempts = dependencies.recordProviderAttemptMetrics || recordProviderAttemptMetrics;
   const redisFactory = dependencies.redisFactory || createRedisClient;
@@ -238,7 +248,13 @@ export function createAgeLookupHandler(dependencies = {}) {
       }
 
       redis = dependencies.redis || redisFactory();
-      const cacheKey = buildSmartAgeCacheKey(queryInfo);
+      // Grounded research is selective: only exact-model queries that already
+      // missed every local, verified, and deterministic path. Everything else
+      // keeps the existing closed-book provider behavior.
+      const useGrounded = groundedEnabled
+        && queryInfo.providerEligible
+        && queryInfo.modelCompleteness === 'exact';
+      const cacheKey = buildSmartAgeCacheKey(queryInfo, { grounded: useGrounded });
       const verifiedKey = getVerifiedModelKey(queryInfo);
       let cacheRead = { status: 'unavailable', value: null, elapsedMs: 0 };
       let verifiedRead = { status: 'unavailable', value: null, elapsedMs: 0 };
@@ -332,7 +348,8 @@ export function createAgeLookupHandler(dependencies = {}) {
             error.budgetResult = budgetResult;
             throw error;
           }
-          return deadline.run('age-provider-call', () => providerLookup(queryInfo, {
+          const selectedLookup = useGrounded ? groundedProviderLookup : providerLookup;
+          return deadline.run('age-provider-call', () => selectedLookup(queryInfo, {
             deadline,
             maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
             reserveMs: 350,
@@ -406,11 +423,18 @@ export function createAgeLookupHandler(dependencies = {}) {
         // Groq fallback; read which one actually served this result instead
         // of assuming Gemini succeeded.
         providerMetadata = getSmartLookupProviderMetadata(rawProvider);
+        const groundedWithSources = Boolean(providerMetadata.grounded)
+          && Array.isArray(providerMetadata.groundedSources)
+          && providerMetadata.groundedSources.length > 0;
         const providerOptions = {
           queryInfo,
           source: providerMetadata.provider,
           originSource: providerMetadata.provider,
-          evidenceSource: providerMetadata.provider === 'groq' ? 'groq-ungrounded' : 'gemini-ungrounded',
+          evidenceSource: providerMetadata.provider === 'groq'
+            ? 'groq-ungrounded'
+            : (groundedWithSources ? 'gemini-grounded' : 'gemini-ungrounded'),
+          groundedSources: groundedWithSources ? providerMetadata.groundedSources : [],
+          retrievedAt: groundedWithSources ? new Date().toISOString() : null,
           cacheStatus,
           providerAttempted: true,
           fallbackUsed: providerMetadata.fallbackUsed,

@@ -66,6 +66,16 @@ The provider orchestration attaches internal metadata identifying whether Gemini
 
 Providers are bounded, mocked in tests, and never used for local validation. Provider output is treated as ungrounded unless backed by structured local evidence. Malformed, unrelated, reversed, future, or impossible output becomes a safe unavailable response.
 
+## Grounded age research (optional)
+
+Setting `SMART_LOOKUP_GROUNDED_AGE=1` (also accepts `true`/`on`; default off) switches the age-lookup Gemini call to Google Search grounding for exact-model queries only. Grounding never runs for partial, brand-only, generic, product-family, local-hit, decoder-verified, cache-hit, deterministic, rate-limited, budget-exhausted, or Redis-outage paths — those keep their existing behavior and never consume grounded capacity.
+
+Because the Gemini API rejects `responseMimeType: application/json` combined with the `google_search` tool, grounded calls request plain text, instruct JSON-only output, strip optional code fences, and parse. Citations are read exclusively from the response `groundingMetadata` (`groundingChunks[].web.uri/title`) on the server; model-authored JSON can never inject sources. A grounded response with zero retrieved sources is downgraded to `gemini-ungrounded` so citations cannot be fabricated.
+
+Grounded results carry `evidenceSource: "gemini-grounded"`, a `sources` array (max 5 entries of title/domain/redirect URI), and a `retrievedAt` ISO timestamp. The browser renders a "Web sources consulted" list and a grounded source qualifier with the retrieval date. Grounded results share the existing route deadline, per-IP limiter, daily global budgets, and in-flight request sharing; the grounded Gemini attempt occupies the same chain slot as the closed-book Gemini attempt, and the bounded Groq fallback (always ungrounded) is unchanged, so no second timeout chain exists. Grounded failures fall back exactly like closed-book Gemini failures.
+
+Age cache schema is `v5`; grounded and ungrounded modes use distinct cache keys (`g1`/`g0` identity marker) so flipping the flag never serves one mode's cache to the other. Grounded results cache for 7 days and retain their stored `retrievedAt`. Google Search grounding billing: the paid tier includes 1,500 grounded prompts per UTC day for `gemini-2.5-flash` before per-query charges; the existing combined daily budget (default 180) keeps usage inside that free allotment. Roll back by removing the env flag — behavior returns to closed-book Gemini with the previous validation and wording.
+
 ## Date semantics
 
 Smart Lookup does not calculate midpoint years. Model data may expose `introductionYear`, `productionRange`, and, only with unit-specific evidence, `individualManufactureYear`. Introduction may precede production availability. An individual manufacture date requires a serial number or equivalent unit-specific evidence.
