@@ -1,7 +1,8 @@
-import { buildSmartAgeCacheKey, chooseSmartAgeTtl, prepareResultForCache } from '../lib/smart-lookup/cache.js';
+import { buildSmartAgeCacheKey, chooseSmartAgeTtl, hashCanonicalQuery, prepareResultForCache } from '../lib/smart-lookup/cache.js';
+import { providerAttemptCountFromMetadata, recordProviderAttemptMetrics, reserveProviderBudget } from '../lib/smart-lookup/budget.js';
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
 import { applyEraHints, decodeHvacSerial, findLocalModelAgeResult } from '../lib/smart-lookup/age-legacy.js';
-import { classifySmartLookupQuery, getVerifiedModelKey, normalizeWhitespace } from '../lib/smart-lookup/normalize.js';
+import { classifySmartLookupQuery, getVerifiedModelKey, normalizeSmartLookupNotes, normalizeWhitespace, SMART_LOOKUP_NOTES_MAX_LENGTH } from '../lib/smart-lookup/normalize.js';
 import { callGeminiAgeProvider, getSmartLookupProviderMetadata, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
 import {
   createSmartLookupTimings,
@@ -29,9 +30,11 @@ const PROVIDER_RATE_LIMIT_REQUESTS = 15;
 
 function validateRequestBody(body) {
   const query = normalizeWhitespace(body?.query);
+  const notes = normalizeSmartLookupNotes(body?.notes);
   if (!query) return { error: 'MISSING_QUERY' };
   if (query.length > 200) return { error: 'QUERY_TOO_LONG' };
-  return { value: { query } };
+  if (notes.length > SMART_LOOKUP_NOTES_MAX_LENGTH) return { error: 'NOTES_TOO_LONG' };
+  return { value: { query, notes } };
 }
 
 function normalizeLegacyResult(raw, queryInfo, options = {}) {
@@ -107,13 +110,26 @@ function logResult(logger, requestId, queryInfo, result, extra = {}) {
     fallbackUsed: result?.fallbackUsed,
     timeoutStage: extra.timeoutStage || null,
     errorCode: result?.errorCode,
+    budgetStatus: extra.budgetStatus || result?.budgetStatus || null,
+    logicalLookupCount: extra.logicalLookupCount ?? result?.logicalLookupCount ?? null,
+    actualProviderAttemptCount: extra.actualProviderAttemptCount ?? result?.actualProviderAttemptCount ?? null,
     timings: result?.timings,
   });
+}
+
+function recordSharedProviderAttempts(providerPromise, recordAttempts, redis, kind, attempts, deadline, options = {}) {
+  if (!attempts) return Promise.resolve({ actualProviderAttemptCount: 0 });
+  if (!providerPromise.__smartAttemptMetricsPromise) {
+    providerPromise.__smartAttemptMetricsPromise = recordAttempts(redis, kind, attempts, deadline, options);
+  }
+  return providerPromise.__smartAttemptMetricsPromise;
 }
 
 export function createAgeLookupHandler(dependencies = {}) {
   const localLookup = dependencies.localLookup || findLocalModelAgeResult;
   const providerLookup = dependencies.providerLookup || callGeminiAgeProvider;
+  const reserveBudget = dependencies.reserveProviderBudget || reserveProviderBudget;
+  const recordAttempts = dependencies.recordProviderAttemptMetrics || recordProviderAttemptMetrics;
   const redisFactory = dependencies.redisFactory || createRedisClient;
   const rateLimiterFactory = dependencies.rateLimiterFactory || ((redis) => createProviderRateLimiter(redis, {
     requests: PROVIDER_RATE_LIMIT_REQUESTS,
@@ -133,14 +149,20 @@ export function createAgeLookupHandler(dependencies = {}) {
     const validation = validateRequestBody(req.body || {});
     if (validation.error) {
       return res.status(400).json({
-        error: validation.error === 'MISSING_QUERY' ? 'Missing query' : 'Query too long',
+        error: validation.error === 'MISSING_QUERY'
+          ? 'Missing query'
+          : (validation.error === 'NOTES_TOO_LONG' ? 'Notes too long' : 'Query too long'),
         errorCode: validation.error,
       });
     }
 
     const deadline = createDeadline({ totalMs: totalBudgetMs, now });
     const timings = createSmartLookupTimings();
-    const queryInfo = classifySmartLookupQuery(validation.value.query);
+    const queryInfo = {
+      ...classifySmartLookupQuery(validation.value.query),
+      userNotes: validation.value.notes,
+      notesHash: validation.value.notes ? hashCanonicalQuery(validation.value.notes) : '',
+    };
     const currentYear = new Date().getFullYear();
     let redis = null;
     let cacheStatus = 'bypass';
@@ -282,6 +304,7 @@ export function createAgeLookupHandler(dependencies = {}) {
       const providerStart = now();
       let rawProvider;
       let providerPromise = inflightProviderRequests.get(cacheKey);
+      let budgetResult = null;
       if (!providerPromise) {
         providerPromise = (async () => {
           const rateLimiter = dependencies.rateLimiter || rateLimiterFactory(redis);
@@ -294,6 +317,19 @@ export function createAgeLookupHandler(dependencies = {}) {
           if (!rateResult.success) {
             const error = new Error('RATE_LIMIT');
             error.code = 'RATE_LIMIT';
+            throw error;
+          }
+          budgetResult = await reserveBudget(redis, 'age', deadline, {
+            stage: 'age-provider-global-budget',
+            maxMs: REDIS_CALL_BUDGET_MS,
+            reserveMs: 400,
+            now,
+            env: dependencies.env,
+          });
+          if (!budgetResult.allowed) {
+            const error = new Error(budgetResult.errorCode || 'BUDGET_STORE_UNAVAILABLE');
+            error.code = budgetResult.errorCode || 'BUDGET_STORE_UNAVAILABLE';
+            error.budgetResult = budgetResult;
             throw error;
           }
           return deadline.run('age-provider-call', () => providerLookup(queryInfo, {
@@ -322,9 +358,19 @@ export function createAgeLookupHandler(dependencies = {}) {
         timings.providerMs = Math.max(0, now() - providerStart);
         const errorCode = error?.code === 'RATE_LIMIT'
           ? 'RATE_LIMIT'
+          : (error?.code === 'GLOBAL_BUDGET_EXHAUSTED' || error?.code === 'BUDGET_STORE_UNAVAILABLE'
+            ? error.code
           : (isTimeoutError(error)
             ? 'PROVIDER_TIMEOUT'
-            : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE'));
+            : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE')));
+        const actualAttempts = providerAttemptCountFromMetadata(null, errorCode);
+        const attemptMetrics = actualAttempts
+          ? await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', actualAttempts, deadline, {
+              stage: 'age-provider-attempt-metrics',
+              maxMs: CACHE_WRITE_BUDGET_MS,
+              now,
+            })
+          : { actualProviderAttemptCount: 0 };
         // PROVIDERS_UNAVAILABLE means the Groq fallback was actually attempted
         // (and also failed) before this error surfaced; every other code means
         // Groq was never reached, so fallbackUsed must stay false here.
@@ -332,24 +378,34 @@ export function createAgeLookupHandler(dependencies = {}) {
           source: 'fallback',
           evidenceSource: 'none',
           cacheStatus,
-          providerAttempted: errorCode !== 'RATE_LIMIT',
+          providerAttempted: errorCode !== 'RATE_LIMIT' && errorCode !== 'GLOBAL_BUDGET_EXHAUSTED' && errorCode !== 'BUDGET_STORE_UNAVAILABLE',
           fallbackUsed: errorCode === 'PROVIDERS_UNAVAILABLE',
           timings,
           errorCode,
-          notes: errorCode === 'RATE_LIMIT' ? 'Smart Lookup provider capacity is temporarily limited. Local and cached lookups remain available.' : undefined,
+          notes: errorCode === 'RATE_LIMIT'
+            ? 'Smart Lookup provider capacity is temporarily limited. Local and cached lookups remain available.'
+            : (errorCode === 'GLOBAL_BUDGET_EXHAUSTED' || errorCode === 'BUDGET_STORE_UNAVAILABLE'
+              ? 'Smart Lookup provider capacity is temporarily limited. Please try again tomorrow.'
+              : undefined),
         }), timings, deadline);
-        logResult(logger, requestId, queryInfo, result, { timeoutStage: isTimeoutError(error) ? 'provider' : null });
+        logResult(logger, requestId, queryInfo, result, {
+          timeoutStage: isTimeoutError(error) ? 'provider' : null,
+          budgetStatus: error.budgetResult?.status || budgetResult?.status || null,
+          logicalLookupCount: error.budgetResult?.logicalLookupCount ?? budgetResult?.logicalLookupCount ?? null,
+          actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
+        });
         return res.status(errorCode === 'RATE_LIMIT' ? 429 : 200).json(result);
       }
       timings.providerMs = Math.max(0, now() - providerStart);
 
       const postStart = now();
       let result;
+      let providerMetadata = null;
       try {
         // callGeminiAgeProvider already resolved through Gemini or its bounded
         // Groq fallback; read which one actually served this result instead
         // of assuming Gemini succeeded.
-        const providerMetadata = getSmartLookupProviderMetadata(rawProvider);
+        providerMetadata = getSmartLookupProviderMetadata(rawProvider);
         const providerOptions = {
           queryInfo,
           source: providerMetadata.provider,
@@ -366,19 +422,35 @@ export function createAgeLookupHandler(dependencies = {}) {
         result = normalizeSmartAgeResult(hinted, providerOptions);
       } catch (error) {
         timings.postProcessMs = Math.max(0, now() - postStart);
+        const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', providerAttemptCountFromMetadata(providerMetadata), deadline, {
+          stage: 'age-provider-attempt-metrics',
+          maxMs: CACHE_WRITE_BUDGET_MS,
+          now,
+        });
         result = createUnavailableSmartAgeResult(queryInfo, {
           source: 'fallback',
           evidenceSource: 'none',
           cacheStatus,
           providerAttempted: true,
+          fallbackUsed: Boolean(providerMetadata?.fallbackUsed),
           timings,
           errorCode: error?.code || 'INVALID_PROVIDER_RESULT',
         });
         finalizeTimings(result, timings, deadline);
-        logResult(logger, requestId, queryInfo, result);
+        logResult(logger, requestId, queryInfo, result, {
+          budgetStatus: budgetResult?.status || null,
+          logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
+          actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? providerAttemptCountFromMetadata(providerMetadata),
+        });
         return res.status(200).json(result);
       }
       timings.postProcessMs = Math.max(0, now() - postStart);
+      const actualAttempts = providerAttemptCountFromMetadata(providerMetadata);
+      const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', actualAttempts, deadline, {
+        stage: 'age-provider-attempt-metrics',
+        maxMs: CACHE_WRITE_BUDGET_MS,
+        now,
+      });
 
       const ttlSeconds = chooseSmartAgeTtl(result);
       if (ttlSeconds > 0 && deadline.hasTime(50)) {
@@ -392,7 +464,11 @@ export function createAgeLookupHandler(dependencies = {}) {
       }
 
       finalizeTimings(result, timings, deadline);
-      logResult(logger, requestId, queryInfo, result);
+      logResult(logger, requestId, queryInfo, result, {
+        budgetStatus: budgetResult?.status || null,
+        logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
+        actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
+      });
       return res.status(200).json(result);
     } catch (error) {
       const result = finalizeTimings(createUnavailableSmartAgeResult(queryInfo, {

@@ -25,6 +25,7 @@
     { atMs: 3200, message: 'Still working — checking a backup source…' },
   ];
   var REPLACEMENT_LOADING_MESSAGE = 'Checking replacement guidance…';
+  var SMART_LOOKUP_NOTES_MAX_LENGTH = 300;
 
   // Copy for every non-success Smart Lookup age outcome. Each entry keeps a
   // short heading, a plain-language explanation, and one concrete next step.
@@ -130,8 +131,30 @@
     return String(value || '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
-  function fingerprint(query, includeReplacement) {
-    return JSON.stringify({ query: normalize(query).toLowerCase(), replacement: Boolean(includeReplacement) });
+  function normalizeNotes(value) {
+    var normalized = normalize(value);
+    return normalized.length > SMART_LOOKUP_NOTES_MAX_LENGTH
+      ? normalized.slice(0, SMART_LOOKUP_NOTES_MAX_LENGTH).trim()
+      : normalized;
+  }
+
+  function hashString(value) {
+    var text = String(value || '');
+    var hash = 2166136261;
+    var index;
+    for (index = 0; index < text.length; index += 1) {
+      hash ^= text.charCodeAt(index);
+      hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+    }
+    return (hash >>> 0).toString(16);
+  }
+
+  function fingerprint(query, includeReplacement, notes) {
+    return JSON.stringify({
+      query: normalize(query).toLowerCase(),
+      replacement: Boolean(includeReplacement),
+      notesHash: normalizeNotes(notes) ? hashString(normalizeNotes(notes)) : '',
+    });
   }
 
   function escapeHtml(value) {
@@ -147,6 +170,35 @@
   function includeReplacement() {
     var checkbox = $('include-replacement-comparisons');
     return Boolean(checkbox && checkbox.checked);
+  }
+
+  function lookupNotes() {
+    var notes = $('lookup-notes');
+    return notes ? normalizeNotes(notes.value) : '';
+  }
+
+  function requestBody(query, notes) {
+    var body = { query: query };
+    if (notes) body.notes = notes;
+    return body;
+  }
+
+  function submitButtons() {
+    var buttons = [];
+    var legacyButton = $('smartLookupBtn');
+    if (legacyButton) buttons.push(legacyButton);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-smart-lookup-submit="1"]'), function (button) {
+      if (buttons.indexOf(button) === -1) buttons.push(button);
+    });
+    return buttons;
+  }
+
+  function setBusy(isBusy) {
+    submitButtons().forEach(function (button) {
+      button.disabled = Boolean(isBusy);
+      button.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+      button.classList.toggle('is-loading', Boolean(isBusy));
+    });
   }
 
   function ensureShell() {
@@ -330,6 +382,49 @@
     return [brand, data && data.model].filter(Boolean).join(' ') || 'Smart Lookup result';
   }
 
+  function providerName(value) {
+    var source = String(value || '').toLowerCase();
+    if (source === 'groq' || source === 'groq-ungrounded') return 'Groq';
+    if (source === 'gemini' || source === 'gemini-ungrounded') return 'Gemini';
+    return '';
+  }
+
+  function isUngroundedProviderResult(data) {
+    var source = String((data && (data.evidenceSource || data.source || data.originSource)) || '').toLowerCase();
+    return source === 'gemini-ungrounded'
+      || source === 'groq-ungrounded'
+      || source === 'gemini'
+      || source === 'groq';
+  }
+
+  function sourceQualifier(data) {
+    if (!data) return '';
+    if (isUngroundedProviderResult(data)) {
+      var provider = providerName(data.evidenceSource || data.source || data.originSource);
+      var prefix = provider ? provider + ' AI-assisted analysis' : 'AI-assisted analysis';
+      return prefix + ' based on the information entered; no live manufacturer source was verified.';
+    }
+    if (data.source === 'cache' || data.cacheStatus === 'hit') {
+      return 'Previously cached Smart Lookup result; review the details below before relying on it.';
+    }
+    if (data.source === 'decoder-verified' || data.evidenceSource === 'user-verified') {
+      return 'Verified Decode My Item model evidence from a prior successful serial-number decode.';
+    }
+    if (data.source === 'static' || data.evidenceSource === 'heuristic') {
+      return 'Deterministic Decode My Item model-family logic.';
+    }
+    if (data.source === 'local-db' || data.evidenceSource === 'local-db') {
+      return 'Local Decode My Item model evidence.';
+    }
+    return '';
+  }
+
+  function evidenceHeading(data) {
+    if (isUngroundedProviderResult(data)) return 'Analysis basis';
+    if (data && (data.source === 'cache' || data.cacheStatus === 'hit')) return 'Information considered';
+    return 'How this result was determined';
+  }
+
   function renderAge(data) {
     var context = getYearContext(data);
     var primaryYear = formatYearContext(context);
@@ -353,18 +448,23 @@
       : '';
     var evidence = Array.isArray(data && data.evidence) ? data.evidence.slice(0, 4) : [];
     var evidenceHtml = evidence.length
-      ? '<details class="determination-details"><summary>Evidence used</summary><ul>' + evidence.map(function (item) {
+      ? '<details class="determination-details"><summary>' + escapeHtml(evidenceHeading(data)) + '</summary><ul>' + evidence.map(function (item) {
           return '<li>' + escapeHtml(item.detail || item.source || 'Evidence') + '</li>';
         }).join('') + '</ul></details>'
       : '';
     // fallbackUsed is real API metadata (which provider actually served this
     // result), not a guess -- safe to state plainly here.
     var fallbackNote = data && data.fallbackUsed
-      ? '<p class="smart-lookup-fallback-note">A backup data source helped verify this result.</p>'
+      ? '<p class="smart-lookup-fallback-note">A backup provider helped produce this result.</p>'
+      : '';
+    var qualifier = sourceQualifier(data);
+    var qualifierHtml = qualifier
+      ? '<p class="smart-lookup-source-note">' + escapeHtml(qualifier) + '</p>'
       : '';
     return '<div class="smart-age-result smart-year-context-result">' +
       '<h3>' + escapeHtml(resultHeading(data)) + '</h3>' +
       fallbackNote +
+      qualifierHtml +
       '<div class="smart-year-context-primary" style="display:grid;gap:2px;margin:12px 0 8px;padding:18px;border:1px solid #bfdbfe;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#f8fafc)"><span class="smart-year-context-value" style="font:800 clamp(2.3rem,8vw,3.6rem)/1 JetBrains Mono,monospace;color:#1d4ed8">' + escapeHtml(primaryYear) + '</span><span class="smart-year-context-label" style="font-size:.9rem;font-weight:800;color:#334155">' + escapeHtml(yearLabel) + '</span></div>' +
       '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + escapeHtml(data && data.brand && data.brand !== 'Unknown' ? data.brand : 'Not identified') + '</span></div>' +
       (data && data.productFamily ? '<div class="result-row"><span class="result-label">Product family</span><span class="result-value">' + escapeHtml(productFamily) + '</span></div>' : '') +
@@ -465,9 +565,23 @@
 
   function run(requestedQuery, options) {
     var query = normalize(requestedQuery != null ? requestedQuery : ($('smart-lookup-input') || {}).value);
+    var notes = normalizeNotes(options && options.notes != null ? options.notes : lookupNotes());
     var wantReplacement = options && typeof options.includeReplacement === 'boolean' ? options.includeReplacement : includeReplacement();
-    if (!query) return;
-    var nextFingerprint = fingerprint(query, wantReplacement);
+    if (!query) {
+      if (state.controller) state.controller.abort();
+      state.sequence += 1;
+      clearAgeStageTimers();
+      state.fingerprint = '';
+      state.age = { status: 'error', data: null, error: null, stageIndex: 0, copy: AGE_OUTCOME_COPY['missing-input'] };
+      state.replacement = { status: 'idle', data: null, error: null, copy: null };
+      setBusy(false);
+      showResults();
+      render('', false);
+      var input = $('smart-lookup-input');
+      if (input) input.focus();
+      return;
+    }
+    var nextFingerprint = fingerprint(query, wantReplacement, notes);
     var now = Date.now();
     if (state.fingerprint === nextFingerprint && (state.age.status === 'loading' || now - state.lastStartedAt < 750)) return;
     state.sequence += 1;
@@ -479,11 +593,13 @@
     clearAgeStageTimers();
     state.age = { status: 'loading', data: null, error: null, stageIndex: 0, copy: null };
     state.replacement = wantReplacement ? { status: 'loading', data: null, error: null, copy: null } : { status: 'idle', data: null, error: null, copy: null };
+    setBusy(true);
     showResults();
     render(query, wantReplacement);
     scheduleAgeStages(sequence, query, wantReplacement);
 
-    fetchJson('/api/age-lookup', { query: query }, state.controller.signal).then(function (data) {
+    var requests = [];
+    var ageRequest = fetchJson('/api/age-lookup', requestBody(query, notes), state.controller.signal).then(function (data) {
       if (sequence !== state.sequence || state.fingerprint !== nextFingerprint) return;
       clearAgeStageTimers();
       var bucket = classifyAgeOutcome(data);
@@ -497,9 +613,10 @@
       state.age = { status: 'error', data: null, error: null, copy: AGE_OUTCOME_COPY['network-error'] };
       render(query, wantReplacement);
     });
+    requests.push(ageRequest);
 
     if (wantReplacement) {
-      fetchJson('/api/lkq-lookup', { query: query }, state.controller.signal).then(function (data) {
+      var replacementRequest = fetchJson('/api/lkq-lookup', requestBody(query, notes), state.controller.signal).then(function (data) {
         if (sequence !== state.sequence || state.fingerprint !== nextFingerprint) return;
         var bucket = classifyReplacementOutcome(data);
         state.replacement = bucket === 'success'
@@ -511,7 +628,11 @@
         state.replacement = { status: 'error', data: null, error: null, copy: REPLACEMENT_UNAVAILABLE_COPY };
         render(query, wantReplacement);
       });
+      requests.push(replacementRequest);
     }
+    Promise.allSettled(requests).then(function () {
+      if (sequence === state.sequence && state.fingerprint === nextFingerprint) setBusy(false);
+    });
   }
 
   function bind() {
