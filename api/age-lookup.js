@@ -33,6 +33,13 @@ const REDIS_PHASE_BUDGET_MS = 500;
 const REDIS_CALL_BUDGET_MS = 250;
 const CACHE_WRITE_BUDGET_MS = 175;
 const PROVIDER_RATE_LIMIT_REQUESTS = 15;
+// Grounded search is bounded below the full PROVIDER_BUDGET_MS ceiling so a
+// genuine reserve remains, inside the SAME route deadline, for a bounded
+// ungrounded fallback if grounding times out. The total deadline never
+// changes and no fresh timeout chain is started.
+const GROUNDED_STAGE_BUDGET_MS = 4200;
+const GROUNDED_FALLBACK_MIN_REMAINING_MS = 1200;
+const GROUNDED_FALLBACK_RESERVE_MS = 300;
 
 function validateRequestBody(body) {
   const query = normalizeWhitespace(body?.query);
@@ -104,6 +111,7 @@ function finalizeTimings(result, timings, deadline) {
 }
 
 function logResult(logger, requestId, queryInfo, result, extra = {}) {
+  const grounded = extra.groundedTelemetry || {};
   logSmartLookup(logger, {
     event: 'smart_age_lookup',
     requestId,
@@ -118,6 +126,14 @@ function logResult(logger, requestId, queryInfo, result, extra = {}) {
     errorCode: result?.errorCode,
     grounded: result?.evidenceSource === 'gemini-grounded',
     groundedSourceCount: Array.isArray(result?.sources) ? result.sources.length : 0,
+    groundedAttempted: grounded.attempted || false,
+    groundedSucceeded: grounded.succeeded || false,
+    groundedFailureCode: grounded.failureCode || null,
+    groundedDurationMs: grounded.durationMs ?? null,
+    fallbackAttempted: grounded.fallbackAttempted || false,
+    fallbackProvider: grounded.fallbackProvider || null,
+    fallbackSucceeded: grounded.fallbackSucceeded ?? null,
+    fallbackDurationMs: grounded.fallbackDurationMs ?? null,
     budgetStatus: extra.budgetStatus || result?.budgetStatus || null,
     logicalLookupCount: extra.logicalLookupCount ?? result?.logicalLookupCount ?? null,
     actualProviderAttemptCount: extra.actualProviderAttemptCount ?? result?.actualProviderAttemptCount ?? null,
@@ -150,6 +166,9 @@ export function createAgeLookupHandler(dependencies = {}) {
   const now = dependencies.now || Date.now;
   const totalBudgetMs = dependencies.totalBudgetMs || TOTAL_BUDGET_MS;
   const providerBudgetMs = dependencies.providerBudgetMs || PROVIDER_BUDGET_MS;
+  const groundedStageBudgetMs = dependencies.groundedStageBudgetMs || GROUNDED_STAGE_BUDGET_MS;
+  const groundedFallbackMinRemainingMs = dependencies.groundedFallbackMinRemainingMs || GROUNDED_FALLBACK_MIN_REMAINING_MS;
+  const groundedFallbackReserveMs = dependencies.groundedFallbackReserveMs || GROUNDED_FALLBACK_RESERVE_MS;
   const inflightProviderRequests = new Map();
 
   return async function handler(req, res) {
@@ -321,6 +340,17 @@ export function createAgeLookupHandler(dependencies = {}) {
       let rawProvider;
       let providerPromise = inflightProviderRequests.get(cacheKey);
       let budgetResult = null;
+      const groundedTelemetry = {
+        attempted: false,
+        succeeded: false,
+        failureCode: null,
+        durationMs: null,
+        fallbackAttempted: false,
+        fallbackProvider: null,
+        fallbackSucceeded: null,
+        fallbackDurationMs: null,
+        recovered: false,
+      };
       if (!providerPromise) {
         providerPromise = (async () => {
           const rateLimiter = dependencies.rateLimiter || rateLimiterFactory(redis);
@@ -348,17 +378,95 @@ export function createAgeLookupHandler(dependencies = {}) {
             error.budgetResult = budgetResult;
             throw error;
           }
-          const selectedLookup = useGrounded ? groundedProviderLookup : providerLookup;
-          return deadline.run('age-provider-call', () => selectedLookup(queryInfo, {
-            deadline,
-            maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
-            reserveMs: 350,
-            fetchImpl: dependencies.fetchImpl,
-            apiKey: dependencies.apiKey,
-          }), {
-            maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
-            reserveMs: 350,
-          });
+
+          if (!useGrounded) {
+            return deadline.run('age-provider-call', () => providerLookup(queryInfo, {
+              deadline,
+              maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
+              reserveMs: 350,
+              fetchImpl: dependencies.fetchImpl,
+              apiKey: dependencies.apiKey,
+            }), {
+              maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
+              reserveMs: 350,
+            });
+          }
+
+          // Grounded path: bound the grounded attempt below the full provider
+          // ceiling so a genuine reserve remains for a same-deadline,
+          // same-budget-reservation ungrounded fallback if it times out.
+          // Every other grounded failure (400/429/5xx/malformed/empty) is
+          // already resolved inside callGeminiWithGroqFallback's existing
+          // bounded Groq path before it can reach this catch block, so only
+          // a genuine stage timeout is handled here -- this targets exactly
+          // the demonstrated gap (grounded timeouts never got any fallback)
+          // without duplicating already-working failure handling.
+          groundedTelemetry.attempted = true;
+          const groundedMaxMs = Math.min(groundedStageBudgetMs, deadline.remainingMs(350));
+          const groundedStart = now();
+          let groundedValue;
+          try {
+            groundedValue = await deadline.run('age-provider-call-grounded', () => groundedProviderLookup(queryInfo, {
+              deadline,
+              maxMs: groundedMaxMs,
+              reserveMs: 350,
+              fetchImpl: dependencies.fetchImpl,
+              apiKey: dependencies.apiKey,
+            }), {
+              maxMs: groundedMaxMs,
+              reserveMs: 350,
+            });
+          } catch (groundedError) {
+            groundedTelemetry.durationMs = Math.max(0, now() - groundedStart);
+            groundedTelemetry.failureCode = isTimeoutError(groundedError)
+              ? 'STAGE_TIMEOUT'
+              : (groundedError instanceof SmartLookupProviderError ? groundedError.code : 'PROVIDER_UNAVAILABLE');
+
+            if (!isTimeoutError(groundedError)) throw groundedError;
+            if (!deadline.hasTime(groundedFallbackMinRemainingMs, groundedFallbackReserveMs)) throw groundedError;
+
+            groundedTelemetry.fallbackAttempted = true;
+            const fallbackMaxMs = Math.min(providerBudgetMs, deadline.remainingMs(groundedFallbackReserveMs));
+            const fallbackStart = now();
+            try {
+              const fallbackValue = await deadline.run('age-provider-call-fallback', () => providerLookup(queryInfo, {
+                deadline,
+                maxMs: fallbackMaxMs,
+                reserveMs: groundedFallbackReserveMs,
+                fetchImpl: dependencies.fetchImpl,
+                apiKey: dependencies.apiKey,
+              }), {
+                maxMs: fallbackMaxMs,
+                reserveMs: groundedFallbackReserveMs,
+              });
+              groundedTelemetry.fallbackDurationMs = Math.max(0, now() - fallbackStart);
+              groundedTelemetry.fallbackSucceeded = true;
+              groundedTelemetry.fallbackProvider = getSmartLookupProviderMetadata(fallbackValue).provider;
+              groundedTelemetry.recovered = true;
+              // Mark the shared resolved value itself (not just this
+              // request's local groundedTelemetry) so a concurrent
+              // "hitchhiker" request awaiting the same in-flight promise --
+              // which never runs this branch itself -- still labels the
+              // result as recovered instead of defaulting to false.
+              if (fallbackValue && typeof fallbackValue === 'object') fallbackValue.__groundedFallbackRecovered = true;
+              return fallbackValue;
+            } catch (fallbackError) {
+              groundedTelemetry.fallbackDurationMs = Math.max(0, now() - fallbackStart);
+              groundedTelemetry.fallbackSucceeded = false;
+              groundedTelemetry.fallbackProvider = fallbackError instanceof SmartLookupProviderError ? fallbackError.provider : null;
+              // Preserve the original grounded timeout as the reported
+              // error; the fallback attempt failing too still means "the
+              // deadline could not produce a useful result."
+              throw groundedError;
+            }
+          }
+
+          groundedTelemetry.durationMs = Math.max(0, now() - groundedStart);
+          const groundedMeta = getSmartLookupProviderMetadata(groundedValue);
+          groundedTelemetry.succeeded = Boolean(groundedMeta.grounded)
+            && Array.isArray(groundedMeta.groundedSources)
+            && groundedMeta.groundedSources.length > 0;
+          return groundedValue;
         })();
         inflightProviderRequests.set(cacheKey, providerPromise);
         providerPromise.finally(() => {
@@ -380,7 +488,11 @@ export function createAgeLookupHandler(dependencies = {}) {
           : (isTimeoutError(error)
             ? 'PROVIDER_TIMEOUT'
             : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE')));
-        const actualAttempts = providerAttemptCountFromMetadata(null, errorCode);
+        // A grounded timeout that also attempted (and failed) a same-deadline
+        // fallback made one additional real provider call beyond what
+        // providerAttemptCountFromMetadata infers from the reported error
+        // alone; account for it so daily attempt metrics are not undercounted.
+        const actualAttempts = providerAttemptCountFromMetadata(null, errorCode) + (groundedTelemetry.fallbackAttempted ? 1 : 0);
         const attemptMetrics = actualAttempts
           ? await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', actualAttempts, deadline, {
               stage: 'age-provider-attempt-metrics',
@@ -410,6 +522,7 @@ export function createAgeLookupHandler(dependencies = {}) {
           budgetStatus: error.budgetResult?.status || budgetResult?.status || null,
           logicalLookupCount: error.budgetResult?.logicalLookupCount ?? budgetResult?.logicalLookupCount ?? null,
           actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
+          groundedTelemetry,
         });
         return res.status(errorCode === 'RATE_LIMIT' ? 429 : 200).json(result);
       }
@@ -426,6 +539,11 @@ export function createAgeLookupHandler(dependencies = {}) {
         const groundedWithSources = Boolean(providerMetadata.grounded)
           && Array.isArray(providerMetadata.groundedSources)
           && providerMetadata.groundedSources.length > 0;
+        // Read the marker off the resolved value itself (not the local
+        // groundedTelemetry object): a concurrent request that shared this
+        // provider call without running the fallback branch itself still
+        // needs to label the shared result correctly.
+        const groundedFallbackRecovered = Boolean(rawProvider && rawProvider.__groundedFallbackRecovered);
         const providerOptions = {
           queryInfo,
           source: providerMetadata.provider,
@@ -435,6 +553,7 @@ export function createAgeLookupHandler(dependencies = {}) {
             : (groundedWithSources ? 'gemini-grounded' : 'gemini-ungrounded'),
           groundedSources: groundedWithSources ? providerMetadata.groundedSources : [],
           retrievedAt: groundedWithSources ? new Date().toISOString() : null,
+          groundedFallback: groundedFallbackRecovered,
           cacheStatus,
           providerAttempted: true,
           fallbackUsed: providerMetadata.fallbackUsed,
@@ -446,7 +565,8 @@ export function createAgeLookupHandler(dependencies = {}) {
         result = normalizeSmartAgeResult(hinted, providerOptions);
       } catch (error) {
         timings.postProcessMs = Math.max(0, now() - postStart);
-        const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', providerAttemptCountFromMetadata(providerMetadata), deadline, {
+        const invalidAttempts = providerAttemptCountFromMetadata(providerMetadata) + (rawProvider && rawProvider.__groundedFallbackRecovered ? 1 : 0);
+        const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', invalidAttempts, deadline, {
           stage: 'age-provider-attempt-metrics',
           maxMs: CACHE_WRITE_BUDGET_MS,
           now,
@@ -464,12 +584,15 @@ export function createAgeLookupHandler(dependencies = {}) {
         logResult(logger, requestId, queryInfo, result, {
           budgetStatus: budgetResult?.status || null,
           logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
-          actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? providerAttemptCountFromMetadata(providerMetadata),
+          actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? invalidAttempts,
+          groundedTelemetry,
         });
         return res.status(200).json(result);
       }
       timings.postProcessMs = Math.max(0, now() - postStart);
-      const actualAttempts = providerAttemptCountFromMetadata(providerMetadata);
+      // A recovered grounded-timeout result was served by the fallback call,
+      // but the discarded grounded attempt was still one real provider call.
+      const actualAttempts = providerAttemptCountFromMetadata(providerMetadata) + (rawProvider && rawProvider.__groundedFallbackRecovered ? 1 : 0);
       const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', actualAttempts, deadline, {
         stage: 'age-provider-attempt-metrics',
         maxMs: CACHE_WRITE_BUDGET_MS,
@@ -492,6 +615,7 @@ export function createAgeLookupHandler(dependencies = {}) {
         budgetStatus: budgetResult?.status || null,
         logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
         actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
+        groundedTelemetry,
       });
       return res.status(200).json(result);
     } catch (error) {

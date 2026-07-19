@@ -415,6 +415,10 @@
     return parsed.toISOString().slice(0, 10);
   }
 
+  function isGroundedTimeoutFallbackResult(data) {
+    return Boolean(data) && data.groundedFallback === true && !isGroundedProviderResult(data);
+  }
+
   function sourceQualifier(data) {
     if (!data) return '';
     if (isGroundedProviderResult(data)) {
@@ -422,6 +426,9 @@
       return 'AI research grounded in live Google Search results'
         + (retrievedOn ? ' retrieved ' + retrievedOn : '')
         + '; review the cited web sources below.';
+    }
+    if (isGroundedTimeoutFallbackResult(data)) {
+      return 'AI-assisted model research completed, but live web verification timed out. Review this as an estimate rather than a source-verified finding.';
     }
     if (isUngroundedProviderResult(data)) {
       var provider = providerName(data.evidenceSource || data.source || data.originSource);
