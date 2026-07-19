@@ -74,6 +74,7 @@ function loadDecoderContext() {
       normalizeDecoderCategory,
       normalizeBrandId,
       sanitizeDecodeResult,
+      classifyDecodeResult,
       isIncompleteResult,
       extractKenmoreModelPrefix,
       resolveKenmoreDecoderFromPrefix,
@@ -1497,6 +1498,50 @@ test('sanitizeDecodeResult only accepts explicit year formats and approved senti
   assert.equal(isValid('2040/2043'), false, 'no candidate in plausible range');
   assert.equal(isValid(''), false);
   assert.equal(isValid('1984 or 2004/2024'), false, 'legacy or-format is normalized at the source');
+});
+
+test('classifyDecodeResult distinguishes complete, incomplete, unsupported, invalid, and decoder errors', () => {
+  const richmond = api.decoderData.waterHeaters.decoders.richmond;
+  const rheem = api.decoderData.waterHeaters.decoders.rheem;
+  const trane = api.decoderData.hvac.decoders.trane;
+  const ge = api.decoderData.appliances.decoders.ge;
+
+  assert.equal(
+    api.classifyDecodeResult(richmond.decode('RMLN0711511358', '6G50-38F1'), richmond).status,
+    'complete_success'
+  );
+  assert.equal(
+    api.classifyDecodeResult(rheem.decode('Q08-21-16285', 'GG50-38F3'), rheem).status,
+    'complete_success'
+  );
+  assert.equal(
+    api.classifyDecodeResult(trane.decode('1419XXXX'), trane).status,
+    'complete_success',
+    'legitimate year-only decoders remain clean successes'
+  );
+
+  assert.equal(
+    api.classifyDecodeResult({ year: '2016', month: 'Unknown code: Z' }, richmond).status,
+    'incomplete'
+  );
+  assert.equal(
+    api.classifyDecodeResult(ge.decode('GM028928Q'), ge).status,
+    'incomplete',
+    'ambiguous year candidates are not clean successes'
+  );
+  assert.equal(api.classifyDecodeResult(null, richmond).status, 'unsupported');
+  assert.equal(api.classifyDecodeResult({ year: '2034', month: 'April' }, richmond).status, 'invalid');
+  assert.equal(
+    api.classifyDecodeResult(null, richmond, { decoderError: true, reason: 'boom' }).status,
+    'decoder_error'
+  );
+});
+
+test('decode pipeline only emits decode_success for complete classified results', () => {
+  const src = fs.readFileSync('script.js', 'utf8');
+  assert.match(src, /classifyDecodeResult\(e,p\)/);
+  assert.match(src, /"complete_success"===t\.status\?trackAnalyticsEvent\("decode_success"/);
+  assert.match(src, /classification:t\.status/);
 });
 
 // ── Kenmore model-prefix helper (UX improvement) ─────────────────────────────
