@@ -179,6 +179,7 @@ test.describe('Smart Lookup controller', () => {
     expect(ageCalls).toBe(1);
 
     await page.route('**/api/age-lookup', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 75));
       await route.fulfill({ status: 502, json: { error: 'down' } });
     });
     await input.fill('Samsung QN65-Q80A error');
@@ -308,6 +309,54 @@ test.describe('Smart Lookup controller', () => {
     await page.locator('#smartLookupBtn').click();
     await expect(page.locator('#smart-lookup-age-panel')).toContainText('not reliable enough');
     await expect(page.locator('#smart-lookup-age-panel')).not.toContainText('UNRELATED_BRAND');
+  });
+
+  test('global budget exhaustion renders retryable capacity copy without raw internal details', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: { errorCode: 'GLOBAL_BUDGET_EXHAUSTED', notes: 'Smart Lookup provider capacity is temporarily limited. Please try again tomorrow.' } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('Smart Lookup provider capacity is temporarily limited');
+    await expect(panel).toContainText('Try this next');
+    const panelText = await panel.innerText();
+    expect(panelText).not.toMatch(/GLOBAL_BUDGET_EXHAUSTED|quota|redis|upstash|gemini|groq/i);
+  });
+
+  test('Redis unavailable capacity response is user-friendly and retryable', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: { errorCode: 'BUDGET_STORE_UNAVAILABLE', notes: 'Smart Lookup provider capacity is temporarily limited. Please try again tomorrow.' } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('Lookup unavailable');
+    await expect(panel).toContainText('try again tomorrow');
+    await expect(panel).not.toContainText('BUDGET_STORE_UNAVAILABLE');
+  });
+
+  test('ungrounded provider success is labeled as AI-assisted analysis, not live research', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: {
+        source: 'gemini',
+        evidenceSource: 'gemini-ungrounded',
+        brand: 'Samsung',
+        model: 'QN65Q80A',
+        introductionYear: 2020,
+        evidence: [{ detail: 'Model pattern knowledge' }],
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('AI-assisted analysis based on the information entered');
+    await expect(panel).toContainText('no live manufacturer source was verified');
+    await expect(panel).toContainText('Analysis basis');
+    await expect(panel).not.toContainText('Evidence used');
   });
 
   test('replacement unavailable copy does not claim a verified replacement, and age still renders', async ({ page }) => {

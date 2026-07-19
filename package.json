@@ -20,7 +20,7 @@
     "test:smart-unit": "node --test tests/smart-lookup/*.test.mjs",
     "test:smart-api": "node --test tests/api/smart-lookup-*.test.mjs",
     "test:smart-benchmark": "node --test tests/benchmarks/smart-lookup-benchmark.test.mjs",
-    "test:smart-playwright": "npx playwright test tests/smart-lookup-ui.spec.js"
+    "test:smart-playwright": "npx playwright test -c tests/smart-lookup-playwright.config.mjs"
   },
   "dependencies": {
     "@upstash/ratelimit": "^2.0.8",

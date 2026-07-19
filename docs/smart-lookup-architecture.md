@@ -26,7 +26,20 @@ Local and deterministic paths return before Redis. Cache reads occur before prov
 
 ## Rate-limit and Redis-outage policy
 
-Provider rate limiting is cost-aware. If the Redis-backed limiter is unavailable or times out, the route fails open for eligible provider work rather than blocking all Smart Lookup usage. Local and cache paths never consume provider limiter capacity.
+Provider rate limiting is cost-aware and has two layers:
+
+- Per-IP/minute limits continue to smooth individual traffic bursts.
+- UTC daily global provider budgets cap paid provider work across all direct API and browser callers.
+
+Local, deterministic, verified-model, and cache-hit paths never consume provider limiter or global provider budget capacity. Identical in-flight provider requests share one logical global budget reservation. Groq fallback attempts are tracked as additional actual provider attempts, while the logical lookup remains one user lookup.
+
+If Redis is unavailable after local/cache/static paths miss, paid provider work fails closed with a retryable service-capacity response instead of making uncontrolled Gemini or Groq calls. The public response does not expose quota counts, Redis errors, API keys, or internal infrastructure details.
+
+Provider budgets are keyed by UTC date and do not include query, serial, model, or notes content. Configure daily caps with:
+
+- `SMART_LOOKUP_AGE_DAILY_LIMIT` for age lookup logical provider requests;
+- `SMART_LOOKUP_LKQ_DAILY_LIMIT` for LKQ lookup logical provider requests;
+- `SMART_LOOKUP_COMBINED_DAILY_LIMIT` for the combined Smart Lookup logical provider budget.
 
 ## Provider behavior
 
