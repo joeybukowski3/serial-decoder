@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/smart-lookup-performance-v2
+      - main
   pull_request:
     branches:
       - main

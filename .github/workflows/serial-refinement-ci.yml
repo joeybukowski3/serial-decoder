@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/serial-model-refinement-v2
+      - main
   pull_request:
     branches:
       - main
