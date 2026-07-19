@@ -38,6 +38,23 @@ function finish(result, timings, deadline) {
   return result;
 }
 
+function logLkqResult(logger, requestId, queryInfo, result, extra = {}) {
+  logSmartLookup(logger, {
+    event: 'smart_lkq_lookup',
+    requestId,
+    canonicalQuery: queryInfo.canonicalQuery,
+    specificityLevel: queryInfo.specificityLevel,
+    source: result?.source,
+    evidenceSource: result?.evidenceSource,
+    cacheStatus: result?.cacheStatus,
+    providerAttempted: Boolean(result?.providerAttempted),
+    fallbackUsed: Boolean(result?.fallbackUsed),
+    timeoutStage: extra.timeoutStage || null,
+    errorCode: result?.errorCode || extra.errorCode || null,
+    timings: result?.timings,
+  });
+}
+
 export function createLkqLookupHandler(dependencies = {}) {
   const redisFactory = dependencies.redisFactory || createRedisClient;
   const providerLookup = dependencies.providerLookup || callGeminiLkqProvider;
@@ -81,12 +98,7 @@ export function createLkqLookupHandler(dependencies = {}) {
       if (cacheRead.status === 'hit' && cacheRead.value) {
         try {
           const result = finish(normalizeCachedReplacementResult(cacheRead.value, { queryInfo }), timings, deadline);
-          logSmartLookup(logger, {
-            event: 'smart_lkq_lookup', requestId, canonicalQuery: queryInfo.canonicalQuery,
-            specificityLevel: queryInfo.specificityLevel, source: result.source,
-            evidenceSource: result.evidenceSource, cacheStatus: result.cacheStatus,
-            providerAttempted: false, timings: result.timings,
-          });
+          logLkqResult(logger, requestId, queryInfo, result);
           return res.status(200).json(result);
         } catch (_) {
           cacheStatus = 'error';
@@ -143,13 +155,8 @@ export function createLkqLookupHandler(dependencies = {}) {
           cacheStatus, providerAttempted: errorCode !== 'RATE_LIMIT', fallbackUsed: errorCode === 'PROVIDERS_UNAVAILABLE', errorCode, timings,
           message: errorCode === 'RATE_LIMIT' ? 'Replacement provider capacity is temporarily limited. The age result remains available.' : undefined,
         }), timings, deadline);
-        logSmartLookup(logger, {
-          event: 'smart_lkq_lookup', requestId, canonicalQuery: queryInfo.canonicalQuery,
-          specificityLevel: queryInfo.specificityLevel, source: result.source,
-          evidenceSource: result.evidenceSource, cacheStatus: result.cacheStatus,
-          providerAttempted: true, fallbackUsed: true,
+        logLkqResult(logger, requestId, queryInfo, result, {
           timeoutStage: isTimeoutError(error) ? 'provider' : null,
-          errorCode, timings: result.timings,
         });
         return res.status(200).json(result);
       }
@@ -178,6 +185,7 @@ export function createLkqLookupHandler(dependencies = {}) {
           cacheStatus, providerAttempted: true, fallbackUsed: getSmartLookupProviderMetadata(raw).fallbackUsed,
           errorCode: error?.code || 'INVALID_PROVIDER_RESULT', timings,
         }), timings, deadline);
+        logLkqResult(logger, requestId, queryInfo, result);
         return res.status(200).json(result);
       }
       timings.postProcessMs = Math.max(0, now() - postStart);
@@ -193,12 +201,7 @@ export function createLkqLookupHandler(dependencies = {}) {
       }
 
       finish(result, timings, deadline);
-      logSmartLookup(logger, {
-        event: 'smart_lkq_lookup', requestId, canonicalQuery: queryInfo.canonicalQuery,
-        specificityLevel: queryInfo.specificityLevel, source: result.source,
-        evidenceSource: result.evidenceSource, cacheStatus: result.cacheStatus,
-        providerAttempted: true, timings: result.timings,
-      });
+      logLkqResult(logger, requestId, queryInfo, result);
       return res.status(200).json(result);
     } catch (error) {
       const result = finish(createUnavailableReplacementResult(queryInfo, {
@@ -206,6 +209,9 @@ export function createLkqLookupHandler(dependencies = {}) {
         errorCode: isTimeoutError(error) ? 'TOTAL_DEADLINE' : 'INTERNAL_ERROR',
         timings,
       }), timings, deadline);
+      logLkqResult(logger, requestId, queryInfo, result, {
+        timeoutStage: isTimeoutError(error) ? error.stage || 'unknown' : null,
+      });
       return res.status(200).json(result);
     }
   };

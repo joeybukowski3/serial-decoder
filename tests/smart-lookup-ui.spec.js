@@ -270,10 +270,10 @@ test.describe('Smart Lookup controller', () => {
     await expect(page.locator('#smart-lookup-age-panel')).toContainText('Searching trusted model evidence', { timeout: 2000 });
     await expect(page.locator('#smart-lookup-age-panel')).toContainText('checking a backup source', { timeout: 3000 });
     // Once the response actually arrives, the real fallbackUsed metadata
-    // should confirm the backup-source note truthfully -- not the time-based
+    // should confirm the backup-provider note truthfully -- not the time-based
     // guess shown while waiting.
     await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('backup data source');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('backup provider');
   });
 
   test('backup-source note does not appear when fallbackUsed is false', async ({ page }) => {
@@ -284,7 +284,7 @@ test.describe('Smart Lookup controller', () => {
     await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
     await page.locator('#smartLookupBtn').click();
     await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
-    await expect(page.locator('#smart-lookup-age-panel')).not.toContainText('backup data source');
+    await expect(page.locator('#smart-lookup-age-panel')).not.toContainText('backup provider');
   });
 
   test('timeout response renders timeout-specific no-result copy', async ({ page }) => {

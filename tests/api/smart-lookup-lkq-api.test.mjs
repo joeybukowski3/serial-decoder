@@ -10,6 +10,20 @@ function validReplacement(model = 'QN65Q80C') { return {
   replacementOptions: [{ brand: 'Samsung', model, name: 'Samsung Q80C', lkqRating: 'MATCH', evidence: ['same QLED series'], notes: 'Same series replacement.' }],
   successorStatus: { type: 'same_brand_equivalent', model, name: 'Samsung Q80C', explanation: 'Grounded same-series option.' },
 }; }
+function loggerCapture() {
+  const entries = [];
+  return {
+    entries,
+    logger: { info: (line) => entries.push(JSON.parse(line)), warn: () => {}, error: () => {} },
+  };
+}
+function withProviderMetadata(value, metadata) {
+  Object.defineProperty(value, Symbol.for('smart-lookup-provider-metadata'), {
+    value: Object.freeze(metadata),
+    enumerable: false,
+  });
+  return value;
+}
 
 test('provider success validates compatible replacement', async () => {
   const handler = createLkqLookupHandler({ redisFactory: () => ({ get: async () => null, set: async () => {} }), providerLookup: async () => validReplacement() });
@@ -17,6 +31,99 @@ test('provider success validates compatible replacement', async () => {
   await handler(req('Samsung QN65-Q80A television'), out);
   assert.equal(out.statusCode, 200);
   assert.equal(out.payload.replacementOptions.length, 1);
+});
+
+test('LKQ telemetry records provider not attempted on cache hit', async () => {
+  const { entries, logger } = loggerCapture();
+  const handler = createLkqLookupHandler({
+    redisFactory: () => ({ get: async () => validReplacement(), set: async () => {} }),
+    providerLookup: async () => { throw new Error('provider should not run'); },
+    logger,
+  });
+  const out = res();
+  await handler(req('Samsung QN65-Q80A television'), out);
+  assert.equal(out.payload.cacheStatus, 'hit');
+  assert.equal(entries.at(-1).providerAttempted, false);
+  assert.equal(entries.at(-1).fallbackUsed, false);
+  assert.equal(entries.at(-1).cacheStatus, 'hit');
+});
+
+test('LKQ telemetry records provider attempted without fallback on success', async () => {
+  const { entries, logger } = loggerCapture();
+  const handler = createLkqLookupHandler({
+    redisFactory: () => ({ get: async () => null, set: async () => {} }),
+    providerLookup: async () => withProviderMetadata(validReplacement(), { provider: 'gemini', fallbackUsed: false }),
+    logger,
+  });
+  const out = res();
+  await handler(req('Samsung QN65-Q80A television'), out);
+  assert.equal(entries.at(-1).providerAttempted, true);
+  assert.equal(entries.at(-1).fallbackUsed, false);
+  assert.equal(entries.at(-1).errorCode, null);
+});
+
+test('LKQ telemetry records provider fallback used on success', async () => {
+  const { entries, logger } = loggerCapture();
+  const handler = createLkqLookupHandler({
+    redisFactory: () => ({ get: async () => null, set: async () => {} }),
+    providerLookup: async () => withProviderMetadata(validReplacement(), { provider: 'groq', fallbackUsed: true }),
+    logger,
+  });
+  const out = res();
+  await handler(req('Samsung QN65-Q80A television'), out);
+  assert.equal(out.payload.fallbackUsed, true);
+  assert.equal(entries.at(-1).providerAttempted, true);
+  assert.equal(entries.at(-1).fallbackUsed, true);
+});
+
+test('LKQ telemetry records rate-limit without provider attempt', async () => {
+  const { entries, logger } = loggerCapture();
+  let providerCalls = 0;
+  const handler = createLkqLookupHandler({
+    redisFactory: () => ({ get: async () => null, set: async () => {} }),
+    rateLimiterFactory: () => ({ limit: async () => ({ success: false }) }),
+    providerLookup: async () => { providerCalls += 1; return validReplacement(); },
+    logger,
+  });
+  const out = res();
+  await handler(req('Samsung QN65-Q80A television'), out);
+  assert.equal(providerCalls, 0);
+  assert.equal(out.payload.errorCode, 'RATE_LIMIT');
+  assert.equal(entries.at(-1).providerAttempted, false);
+  assert.equal(entries.at(-1).fallbackUsed, false);
+  assert.equal(entries.at(-1).errorCode, 'RATE_LIMIT');
+});
+
+test('LKQ telemetry records provider timeout without hardcoded fallback', async () => {
+  const { entries, logger } = loggerCapture();
+  const handler = createLkqLookupHandler({
+    totalBudgetMs: 1500,
+    providerBudgetMs: 20,
+    redisFactory: () => ({ get: async () => null, set: async () => {} }),
+    providerLookup: async () => new Promise(() => {}),
+    logger,
+  });
+  const out = res();
+  await handler(req('Samsung QN65-Q80A television'), out);
+  assert.equal(out.payload.errorCode, 'PROVIDER_TIMEOUT');
+  assert.equal(entries.at(-1).providerAttempted, true);
+  assert.equal(entries.at(-1).fallbackUsed, false);
+  assert.equal(entries.at(-1).timeoutStage, 'provider');
+});
+
+test('LKQ telemetry records malformed provider response using normalized flags', async () => {
+  const { entries, logger } = loggerCapture();
+  const handler = createLkqLookupHandler({
+    redisFactory: () => ({ get: async () => null, set: async () => {} }),
+    providerLookup: async () => withProviderMetadata({ itemSummary: { brand: 'LG', model: 'BAD', category: 'washer' }, replacementOptions: [] }, { provider: 'gemini', fallbackUsed: false }),
+    logger,
+  });
+  const out = res();
+  await handler(req('Samsung QN65-Q80A television'), out);
+  assert.equal(out.payload.errorCode, 'UNRELATED_BRAND');
+  assert.equal(entries.at(-1).providerAttempted, true);
+  assert.equal(entries.at(-1).fallbackUsed, false);
+  assert.equal(entries.at(-1).errorCode, 'UNRELATED_BRAND');
 });
 
 test('LKQ lookup sends normalized notes as separate untrusted provider context', async () => {
