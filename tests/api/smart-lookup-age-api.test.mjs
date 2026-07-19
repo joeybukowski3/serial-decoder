@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
 
-function req(query) { return { method: 'POST', body: { query }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} }; }
+function req(query, extra = {}) { return { method: 'POST', body: { query, ...extra }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} }; }
 function res() {
   return { statusCode: 0, payload: null, status(code) { this.statusCode = code; return this; }, json(payload) { this.payload = payload; return this; }, setHeader() {} };
 }
@@ -34,6 +34,41 @@ test('cache hit bypasses provider and limiter', async () => {
   await handler(req('Samsung QN65-Q80A'), out);
   assert.equal(out.payload.cacheStatus, 'hit');
   assert.equal(limiterCalls, 0);
+});
+
+test('age lookup sends normalized notes as separate untrusted provider context', async () => {
+  let seenInfo = null;
+  const handler = createAgeLookupHandler({
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    providerLookup: async (queryInfo) => {
+      seenInfo = queryInfo;
+      return { brand: 'Samsung', model: 'QN65Q80A', introductionYear: 2020, productionRange: { start: 2021, end: 2021 } };
+    },
+  });
+  const out = res();
+  await handler(req('Samsung QN65-Q80A', { notes: '  Label says\npanel replaced   last year  ' }), out);
+  assert.equal(out.statusCode, 200);
+  assert.equal(seenInfo.userNotes, 'Label says panel replaced last year');
+  assert.equal(typeof seenInfo.notesHash, 'string');
+  assert.equal(seenInfo.notesHash.length, 24);
+});
+
+test('age lookup rejects over-limit notes before provider and logs no raw notes', async () => {
+  let providerCalls = 0;
+  const logs = [];
+  const handler = createAgeLookupHandler({
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    providerLookup: async () => { providerCalls += 1; return {}; },
+    logger: { info: (line) => logs.push(line), warn: () => {}, error: () => {} },
+  });
+  const out = res();
+  await handler(req('Samsung QN65-Q80A', { notes: 'sensitive note '.repeat(40) }), out);
+  assert.equal(out.statusCode, 400);
+  assert.equal(out.payload.errorCode, 'NOTES_TOO_LONG');
+  assert.equal(providerCalls, 0);
+  assert.equal(logs.join('\n').includes('sensitive note'), false);
 });
 
 test('verified-unit evidence does not become individual manufacture date for a different unit', async () => {

@@ -25,6 +25,7 @@
     { atMs: 3200, message: 'Still working — checking a backup source…' },
   ];
   var REPLACEMENT_LOADING_MESSAGE = 'Checking replacement guidance…';
+  var SMART_LOOKUP_NOTES_MAX_LENGTH = 300;
 
   // Copy for every non-success Smart Lookup age outcome. Each entry keeps a
   // short heading, a plain-language explanation, and one concrete next step.
@@ -130,8 +131,30 @@
     return String(value || '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
-  function fingerprint(query, includeReplacement) {
-    return JSON.stringify({ query: normalize(query).toLowerCase(), replacement: Boolean(includeReplacement) });
+  function normalizeNotes(value) {
+    var normalized = normalize(value);
+    return normalized.length > SMART_LOOKUP_NOTES_MAX_LENGTH
+      ? normalized.slice(0, SMART_LOOKUP_NOTES_MAX_LENGTH).trim()
+      : normalized;
+  }
+
+  function hashString(value) {
+    var text = String(value || '');
+    var hash = 2166136261;
+    var index;
+    for (index = 0; index < text.length; index += 1) {
+      hash ^= text.charCodeAt(index);
+      hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+    }
+    return (hash >>> 0).toString(16);
+  }
+
+  function fingerprint(query, includeReplacement, notes) {
+    return JSON.stringify({
+      query: normalize(query).toLowerCase(),
+      replacement: Boolean(includeReplacement),
+      notesHash: normalizeNotes(notes) ? hashString(normalizeNotes(notes)) : '',
+    });
   }
 
   function escapeHtml(value) {
@@ -147,6 +170,35 @@
   function includeReplacement() {
     var checkbox = $('include-replacement-comparisons');
     return Boolean(checkbox && checkbox.checked);
+  }
+
+  function lookupNotes() {
+    var notes = $('lookup-notes');
+    return notes ? normalizeNotes(notes.value) : '';
+  }
+
+  function requestBody(query, notes) {
+    var body = { query: query };
+    if (notes) body.notes = notes;
+    return body;
+  }
+
+  function submitButtons() {
+    var buttons = [];
+    var legacyButton = $('smartLookupBtn');
+    if (legacyButton) buttons.push(legacyButton);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-smart-lookup-submit="1"]'), function (button) {
+      if (buttons.indexOf(button) === -1) buttons.push(button);
+    });
+    return buttons;
+  }
+
+  function setBusy(isBusy) {
+    submitButtons().forEach(function (button) {
+      button.disabled = Boolean(isBusy);
+      button.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+      button.classList.toggle('is-loading', Boolean(isBusy));
+    });
   }
 
   function ensureShell() {
@@ -465,9 +517,23 @@
 
   function run(requestedQuery, options) {
     var query = normalize(requestedQuery != null ? requestedQuery : ($('smart-lookup-input') || {}).value);
+    var notes = normalizeNotes(options && options.notes != null ? options.notes : lookupNotes());
     var wantReplacement = options && typeof options.includeReplacement === 'boolean' ? options.includeReplacement : includeReplacement();
-    if (!query) return;
-    var nextFingerprint = fingerprint(query, wantReplacement);
+    if (!query) {
+      if (state.controller) state.controller.abort();
+      state.sequence += 1;
+      clearAgeStageTimers();
+      state.fingerprint = '';
+      state.age = { status: 'error', data: null, error: null, stageIndex: 0, copy: AGE_OUTCOME_COPY['missing-input'] };
+      state.replacement = { status: 'idle', data: null, error: null, copy: null };
+      setBusy(false);
+      showResults();
+      render('', false);
+      var input = $('smart-lookup-input');
+      if (input) input.focus();
+      return;
+    }
+    var nextFingerprint = fingerprint(query, wantReplacement, notes);
     var now = Date.now();
     if (state.fingerprint === nextFingerprint && (state.age.status === 'loading' || now - state.lastStartedAt < 750)) return;
     state.sequence += 1;
@@ -479,11 +545,13 @@
     clearAgeStageTimers();
     state.age = { status: 'loading', data: null, error: null, stageIndex: 0, copy: null };
     state.replacement = wantReplacement ? { status: 'loading', data: null, error: null, copy: null } : { status: 'idle', data: null, error: null, copy: null };
+    setBusy(true);
     showResults();
     render(query, wantReplacement);
     scheduleAgeStages(sequence, query, wantReplacement);
 
-    fetchJson('/api/age-lookup', { query: query }, state.controller.signal).then(function (data) {
+    var requests = [];
+    var ageRequest = fetchJson('/api/age-lookup', requestBody(query, notes), state.controller.signal).then(function (data) {
       if (sequence !== state.sequence || state.fingerprint !== nextFingerprint) return;
       clearAgeStageTimers();
       var bucket = classifyAgeOutcome(data);
@@ -497,9 +565,10 @@
       state.age = { status: 'error', data: null, error: null, copy: AGE_OUTCOME_COPY['network-error'] };
       render(query, wantReplacement);
     });
+    requests.push(ageRequest);
 
     if (wantReplacement) {
-      fetchJson('/api/lkq-lookup', { query: query }, state.controller.signal).then(function (data) {
+      var replacementRequest = fetchJson('/api/lkq-lookup', requestBody(query, notes), state.controller.signal).then(function (data) {
         if (sequence !== state.sequence || state.fingerprint !== nextFingerprint) return;
         var bucket = classifyReplacementOutcome(data);
         state.replacement = bucket === 'success'
@@ -511,7 +580,11 @@
         state.replacement = { status: 'error', data: null, error: null, copy: REPLACEMENT_UNAVAILABLE_COPY };
         render(query, wantReplacement);
       });
+      requests.push(replacementRequest);
     }
+    Promise.allSettled(requests).then(function () {
+      if (sequence === state.sequence && state.fingerprint === nextFingerprint) setBusy(false);
+    });
   }
 
   function bind() {

@@ -118,6 +118,76 @@ test.describe('Smart Lookup controller', () => {
     await expect(page.locator('[data-smart-lookup-retry="replacement"]')).toBeVisible();
   });
 
+  test('empty submission shows validation feedback and makes no API calls', async ({ page }) => {
+    let apiCalls = 0;
+    await page.route('**/api/age-lookup', async (route) => {
+      apiCalls += 1;
+      await route.fulfill({ json: {} });
+    });
+    await page.route('**/api/lkq-lookup', async (route) => {
+      apiCalls += 1;
+      await route.fulfill({ json: {} });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('   ');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('More details needed');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Try adding the brand, model number, category, or serial number');
+    await expect(page.locator('#smart-lookup-input')).toBeFocused();
+    expect(apiCalls).toBe(0);
+  });
+
+  test('dedicated page sends normalized notes as a separate request field', async ({ page }) => {
+    const ageBodies = [];
+    const replacementBodies = [];
+    await page.route('**/api/age-lookup', async (route) => {
+      ageBodies.push(route.request().postDataJSON());
+      await route.fulfill({ json: { brand: 'Samsung', model: 'QN65Q80A', introductionYear: 2020 } });
+    });
+    await page.route('**/api/lkq-lookup', async (route) => {
+      replacementBodies.push(route.request().postDataJSON());
+      await route.fulfill({ json: { itemSummary: { brand: 'Samsung', model: 'QN65Q80A' }, replacementOptions: [{ name: 'Samsung Q80C', model: 'QN65Q80C', lkqRating: 'MATCH' }] } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#include-replacement-comparisons').check();
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#lookup-notes').fill('  Label says\nparts were replaced   ');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    expect(ageBodies).toEqual([{ query: 'Samsung QN65-Q80A', notes: 'Label says parts were replaced' }]);
+    expect(replacementBodies).toEqual([{ query: 'Samsung QN65-Q80A', notes: 'Label says parts were replaced' }]);
+  });
+
+  test('submit button is disabled and busy during active lookup, then restores after success and error', async ({ page }) => {
+    let ageCalls = 0;
+    await page.route('**/api/age-lookup', async (route) => {
+      ageCalls += 1;
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await route.fulfill({ json: { brand: 'Samsung', model: 'QN65Q80A', introductionYear: 2020 } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    const input = page.locator('#smart-lookup-input');
+    const submit = page.locator('#smartLookupBtn');
+    await input.fill('Samsung QN65-Q80A');
+    await submit.click();
+    await expect(submit).toBeDisabled();
+    await expect(submit).toHaveAttribute('aria-busy', 'true');
+    await input.press('Enter');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(submit).toBeEnabled();
+    await expect(submit).toHaveAttribute('aria-busy', 'false');
+    expect(ageCalls).toBe(1);
+
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ status: 502, json: { error: 'down' } });
+    });
+    await input.fill('Samsung QN65-Q80A error');
+    await submit.click();
+    await expect(submit).toBeDisabled();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Lookup unavailable');
+    await expect(submit).toBeEnabled();
+  });
+
   test('double-click and Enter/click deduplicate requests', async ({ page }) => {
     const ageQueries = [];
     await page.route('**/api/age-lookup', async (route) => {

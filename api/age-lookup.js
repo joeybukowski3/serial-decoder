@@ -1,7 +1,7 @@
-import { buildSmartAgeCacheKey, chooseSmartAgeTtl, prepareResultForCache } from '../lib/smart-lookup/cache.js';
+import { buildSmartAgeCacheKey, chooseSmartAgeTtl, hashCanonicalQuery, prepareResultForCache } from '../lib/smart-lookup/cache.js';
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
 import { applyEraHints, decodeHvacSerial, findLocalModelAgeResult } from '../lib/smart-lookup/age-legacy.js';
-import { classifySmartLookupQuery, getVerifiedModelKey, normalizeWhitespace } from '../lib/smart-lookup/normalize.js';
+import { classifySmartLookupQuery, getVerifiedModelKey, normalizeSmartLookupNotes, normalizeWhitespace, SMART_LOOKUP_NOTES_MAX_LENGTH } from '../lib/smart-lookup/normalize.js';
 import { callGeminiAgeProvider, getSmartLookupProviderMetadata, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
 import {
   createSmartLookupTimings,
@@ -29,9 +29,11 @@ const PROVIDER_RATE_LIMIT_REQUESTS = 15;
 
 function validateRequestBody(body) {
   const query = normalizeWhitespace(body?.query);
+  const notes = normalizeSmartLookupNotes(body?.notes);
   if (!query) return { error: 'MISSING_QUERY' };
   if (query.length > 200) return { error: 'QUERY_TOO_LONG' };
-  return { value: { query } };
+  if (notes.length > SMART_LOOKUP_NOTES_MAX_LENGTH) return { error: 'NOTES_TOO_LONG' };
+  return { value: { query, notes } };
 }
 
 function normalizeLegacyResult(raw, queryInfo, options = {}) {
@@ -133,14 +135,20 @@ export function createAgeLookupHandler(dependencies = {}) {
     const validation = validateRequestBody(req.body || {});
     if (validation.error) {
       return res.status(400).json({
-        error: validation.error === 'MISSING_QUERY' ? 'Missing query' : 'Query too long',
+        error: validation.error === 'MISSING_QUERY'
+          ? 'Missing query'
+          : (validation.error === 'NOTES_TOO_LONG' ? 'Notes too long' : 'Query too long'),
         errorCode: validation.error,
       });
     }
 
     const deadline = createDeadline({ totalMs: totalBudgetMs, now });
     const timings = createSmartLookupTimings();
-    const queryInfo = classifySmartLookupQuery(validation.value.query);
+    const queryInfo = {
+      ...classifySmartLookupQuery(validation.value.query),
+      userNotes: validation.value.notes,
+      notesHash: validation.value.notes ? hashCanonicalQuery(validation.value.notes) : '',
+    };
     const currentYear = new Date().getFullYear();
     let redis = null;
     let cacheStatus = 'bypass';

@@ -1,6 +1,6 @@
-import { buildSmartLkqCacheKey, chooseSmartLkqTtl, prepareReplacementForCache } from '../lib/smart-lookup/cache.js';
+import { buildSmartLkqCacheKey, chooseSmartLkqTtl, hashCanonicalQuery, prepareReplacementForCache } from '../lib/smart-lookup/cache.js';
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
-import { classifySmartLookupQuery, normalizeKnownQuery, normalizeWhitespace } from '../lib/smart-lookup/normalize.js';
+import { classifySmartLookupQuery, normalizeKnownQuery, normalizeSmartLookupNotes, normalizeWhitespace, SMART_LOOKUP_NOTES_MAX_LENGTH } from '../lib/smart-lookup/normalize.js';
 import { callGeminiLkqProvider, getSmartLookupProviderMetadata, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
 import {
   createReplacementTimings,
@@ -25,9 +25,11 @@ const CACHE_WRITE_BUDGET_MS = 175;
 
 function validateRequest(body) {
   const query = normalizeWhitespace(body?.query);
+  const notes = normalizeSmartLookupNotes(body?.notes);
   if (!query) return { error: 'MISSING_QUERY' };
   if (query.length > 300) return { error: 'QUERY_TOO_LONG' };
-  return { value: { query: normalizeKnownQuery(query) } };
+  if (notes.length > SMART_LOOKUP_NOTES_MAX_LENGTH) return { error: 'NOTES_TOO_LONG' };
+  return { value: { query: normalizeKnownQuery(query), notes } };
 }
 
 function finish(result, timings, deadline) {
@@ -52,14 +54,20 @@ export function createLkqLookupHandler(dependencies = {}) {
     const validation = validateRequest(req.body || {});
     if (validation.error) {
       return res.status(400).json({
-        error: validation.error === 'MISSING_QUERY' ? 'Missing query' : 'Query too long',
+        error: validation.error === 'MISSING_QUERY'
+          ? 'Missing query'
+          : (validation.error === 'NOTES_TOO_LONG' ? 'Notes too long' : 'Query too long'),
         errorCode: validation.error,
       });
     }
 
     const deadline = createDeadline({ totalMs: dependencies.totalBudgetMs || TOTAL_BUDGET_MS, now });
     const timings = createReplacementTimings();
-    const queryInfo = classifySmartLookupQuery(validation.value.query);
+    const queryInfo = {
+      ...classifySmartLookupQuery(validation.value.query),
+      userNotes: validation.value.notes,
+      notesHash: validation.value.notes ? hashCanonicalQuery(validation.value.notes) : '',
+    };
     const redis = dependencies.redis || redisFactory();
     const cacheKey = buildSmartLkqCacheKey(queryInfo);
     let cacheStatus = 'bypass';

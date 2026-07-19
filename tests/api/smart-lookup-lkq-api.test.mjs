@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLkqLookupHandler } from '../../api/lkq-lookup.js';
 
-function req(query) { return { method: 'POST', body: { query }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} }; }
+function req(query, extra = {}) { return { method: 'POST', body: { query, ...extra }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} }; }
 function res() { return { statusCode: 0, payload: null, status(c) { this.statusCode = c; return this; }, json(p) { this.payload = p; return this; }, setHeader() {} }; }
 function validReplacement(model = 'QN65Q80C') { return {
   itemSummary: { brand: 'Samsung', model: 'QN65Q80A', category: 'television' },
@@ -17,6 +17,39 @@ test('provider success validates compatible replacement', async () => {
   await handler(req('Samsung QN65-Q80A television'), out);
   assert.equal(out.statusCode, 200);
   assert.equal(out.payload.replacementOptions.length, 1);
+});
+
+test('LKQ lookup sends normalized notes as separate untrusted provider context', async () => {
+  let seenInfo = null;
+  const handler = createLkqLookupHandler({
+    redisFactory: () => ({ get: async () => null, set: async () => {} }),
+    providerLookup: async (queryInfo) => {
+      seenInfo = queryInfo;
+      return validReplacement();
+    },
+  });
+  const out = res();
+  await handler(req('Samsung QN65-Q80A television', { notes: '  Need  like-kind\nreplacement only  ' }), out);
+  assert.equal(out.statusCode, 200);
+  assert.equal(seenInfo.userNotes, 'Need like-kind replacement only');
+  assert.equal(typeof seenInfo.notesHash, 'string');
+  assert.equal(seenInfo.notesHash.length, 24);
+});
+
+test('LKQ lookup rejects over-limit notes before provider and logs no raw notes', async () => {
+  let providerCalls = 0;
+  const logs = [];
+  const handler = createLkqLookupHandler({
+    redisFactory: () => ({ get: async () => null, set: async () => {} }),
+    providerLookup: async () => { providerCalls += 1; return validReplacement(); },
+    logger: { info: (line) => logs.push(line), warn: () => {}, error: () => {} },
+  });
+  const out = res();
+  await handler(req('Samsung QN65-Q80A television', { notes: 'private context '.repeat(40) }), out);
+  assert.equal(out.statusCode, 400);
+  assert.equal(out.payload.errorCode, 'NOTES_TOO_LONG');
+  assert.equal(providerCalls, 0);
+  assert.equal(logs.join('\n').includes('private context'), false);
 });
 
 test('LG successor fabrication prevention preserves provider model', async () => {
