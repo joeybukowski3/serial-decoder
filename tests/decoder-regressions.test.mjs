@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import vm from 'node:vm';
 import { findExactLocalModelAgeMatch, loadLocalModelAgeDb, normalizeModelNumber } from '../lib/model-age-db.js';
+import { buildDecoderBundles } from '../scripts/split-decoder-data.js';
 
 function loadDecoderContext() {
   function createMockElement() {
@@ -74,6 +77,7 @@ function loadDecoderContext() {
       normalizeDecoderCategory,
       normalizeBrandId,
       sanitizeDecodeResult,
+      classifyDecodeResult,
       isIncompleteResult,
       extractKenmoreModelPrefix,
       resolveKenmoreDecoderFromPrefix,
@@ -180,6 +184,92 @@ test('single category decoder bundle only registers that category', () => {
   assert.deepEqual(Object.keys(splitData), ['hvac']);
   assert.ok(splitData.hvac.decoders.goodman);
   assert.equal(splitData.appliances, undefined);
+});
+
+function createTempDecoderOutputDir() {
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'decoder-bundles-'));
+}
+
+function seedPreviousDecoderBundles(dir) {
+  fs.mkdirSync(dir, { recursive: true });
+  const manifest = {
+    appliances: '/assets/decoders/appliances.0000000000.js',
+    hvac: '/assets/decoders/hvac.0000000000.js',
+    waterHeaters: '/assets/decoders/water-heaters.0000000000.js',
+    electronics: '/assets/decoders/electronics.0000000000.js'
+  };
+  Object.values(manifest).forEach((publicPath) => {
+    fs.writeFileSync(path.join(dir, publicPath.replace('/assets/decoders/', '')), 'previous bundle', 'utf8');
+  });
+  fs.writeFileSync(path.join(dir, 'decoder-bundles.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  return manifest;
+}
+
+function readTempManifest(dir) {
+  return JSON.parse(fs.readFileSync(path.join(dir, 'decoder-bundles.json'), 'utf8'));
+}
+
+test('atomic decoder bundle generation writes a complete deterministic manifest', () => {
+  const dir = createTempDecoderOutputDir();
+  try {
+    fs.writeFileSync(path.join(dir, 'appliances.deadbeef00.js'), 'obsolete bundle', 'utf8');
+
+    const artifacts = buildDecoderBundles({ sourcePath: 'decoder-data.js', outputDir: dir });
+    const manifest = readTempManifest(dir);
+
+    assert.deepEqual(Object.keys(manifest).sort(), ['appliances', 'electronics', 'hvac', 'waterHeaters']);
+    for (const publicPath of Object.values(manifest)) {
+      const file = publicPath.replace('/assets/decoders/', '');
+      const fullPath = path.join(dir, file);
+      assert.equal(fs.existsSync(fullPath), true, file + ' should exist');
+      assert.ok(fs.statSync(fullPath).size > 0, file + ' should be non-empty');
+    }
+    assert.equal(fs.existsSync(path.join(dir, 'appliances.deadbeef00.js')), false, 'obsolete bundles are removed after success');
+    assert.deepEqual(manifest, artifacts.manifest);
+
+    buildDecoderBundles({ sourcePath: 'decoder-data.js', outputDir: dir });
+    assert.deepEqual(readTempManifest(dir), manifest, 're-running generation is deterministic');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('atomic decoder bundle generation failure after temporary files preserves previous output', () => {
+  const dir = createTempDecoderOutputDir();
+  try {
+    const previous = seedPreviousDecoderBundles(dir);
+
+    assert.throws(
+      () => buildDecoderBundles({ sourcePath: 'decoder-data.js', outputDir: dir, simulateFailureAt: 'after-temp' }),
+      /Simulated decoder bundle generation failure/
+    );
+
+    assert.deepEqual(readTempManifest(dir), previous);
+    for (const publicPath of Object.values(previous)) {
+      assert.equal(fs.existsSync(path.join(dir, publicPath.replace('/assets/decoders/', ''))), true);
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('atomic decoder bundle generation failure after bundle publication does not expose a partial manifest', () => {
+  const dir = createTempDecoderOutputDir();
+  try {
+    const previous = seedPreviousDecoderBundles(dir);
+
+    assert.throws(
+      () => buildDecoderBundles({ sourcePath: 'decoder-data.js', outputDir: dir, simulateFailureAt: 'after-bundles' }),
+      /Simulated decoder bundle generation failure/
+    );
+
+    assert.deepEqual(readTempManifest(dir), previous);
+    for (const publicPath of Object.values(previous)) {
+      assert.equal(fs.existsSync(path.join(dir, publicPath.replace('/assets/decoders/', ''))), true);
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('GE Narrow Date refinement treats internally contradictory evidence as unusable (PR-2)', () => {
@@ -885,6 +975,34 @@ test('Richmond plant-prefix WWYY decode remains valid with optional model GG50-3
   assert.equal(api.isIncompleteResult(out), false);
 });
 
+test('Rheem-family plant-prefix WWYY parser normalizes formatted direct input before prefix-MMYY matching', () => {
+  const variants = [
+    'Q082116285',
+    'Q08-21-16285',
+    'Q08 21 16285',
+    'Q08/21/16285',
+    'Q08.21.16285',
+    'q082116285',
+    'q08-21-16285',
+    'q08 21 16285',
+    'q08/21/16285',
+    'q08.21.16285'
+  ];
+
+  for (const brandId of ['rheem', 'richmond', 'ruud']) {
+    const decoder = api.decoderData.waterHeaters.decoders[brandId];
+    for (const serial of variants) {
+      const out = decoder.decode(serial, 'GG50-38F3');
+      assert.ok(out, brandId + ' should decode ' + serial);
+      assert.equal(out.year, '2021', brandId + ' ' + serial);
+      assert.equal(out.month, 'Week 8', brandId + ' ' + serial);
+      assert.equal(out.yearCode, '21', brandId + ' ' + serial);
+      assert.equal(out.weekDigits, '08', brandId + ' ' + serial);
+      assert.equal(out.decodeStyle, 'Plant-prefix WWYY', brandId + ' ' + serial);
+    }
+  }
+});
+
 test('Richmond Rheem-family letter-prefix MMYY serial RMLN0711511358 decodes to July 2011', () => {
   const richmond = api.decoderData.waterHeaters.decoders.richmond;
   const out = richmond.decode('RMLN0711511358', '6G50-38F1');
@@ -936,6 +1054,7 @@ test('Rheem-family plant-prefix WWYY format accepts only weeks 01 through 53', (
     assert.ok(decoder.decode('Q532116285'), brandId + ' should accept week 53');
     assert.equal(decoder.decode('Q002116285'), null, brandId + ' should reject week 00');
     assert.equal(decoder.decode('Q542116285'), null, brandId + ' should reject week 54');
+    assert.equal(decoder.decode('Q54-21-16285'), null, brandId + ' formatted week 54 must not fall through');
   }
 });
 
@@ -949,6 +1068,7 @@ test('Rheem-family plant-prefix WWYY format enforces the existing one-year futur
     const decoder = api.decoderData.waterHeaters.decoders[brandId];
     assert.ok(decoder.decode(withinTolerance), brandId + ' should allow current year + 1');
     assert.equal(decoder.decode(beyondTolerance), null, brandId + ' should reject current year + 2');
+    assert.equal(decoder.decode('Q08-' + String(tooFarFutureYear).slice(-2) + '-16285'), null, brandId + ' formatted current year + 2 should reject');
   }
 });
 
@@ -1467,6 +1587,50 @@ test('sanitizeDecodeResult only accepts explicit year formats and approved senti
   assert.equal(isValid('2040/2043'), false, 'no candidate in plausible range');
   assert.equal(isValid(''), false);
   assert.equal(isValid('1984 or 2004/2024'), false, 'legacy or-format is normalized at the source');
+});
+
+test('classifyDecodeResult distinguishes complete, incomplete, unsupported, invalid, and decoder errors', () => {
+  const richmond = api.decoderData.waterHeaters.decoders.richmond;
+  const rheem = api.decoderData.waterHeaters.decoders.rheem;
+  const trane = api.decoderData.hvac.decoders.trane;
+  const ge = api.decoderData.appliances.decoders.ge;
+
+  assert.equal(
+    api.classifyDecodeResult(richmond.decode('RMLN0711511358', '6G50-38F1'), richmond).status,
+    'complete_success'
+  );
+  assert.equal(
+    api.classifyDecodeResult(rheem.decode('Q08-21-16285', 'GG50-38F3'), rheem).status,
+    'complete_success'
+  );
+  assert.equal(
+    api.classifyDecodeResult(trane.decode('1419XXXX'), trane).status,
+    'complete_success',
+    'legitimate year-only decoders remain clean successes'
+  );
+
+  assert.equal(
+    api.classifyDecodeResult({ year: '2016', month: 'Unknown code: Z' }, richmond).status,
+    'incomplete'
+  );
+  assert.equal(
+    api.classifyDecodeResult(ge.decode('GM028928Q'), ge).status,
+    'incomplete',
+    'ambiguous year candidates are not clean successes'
+  );
+  assert.equal(api.classifyDecodeResult(null, richmond).status, 'unsupported');
+  assert.equal(api.classifyDecodeResult({ year: '2034', month: 'April' }, richmond).status, 'invalid');
+  assert.equal(
+    api.classifyDecodeResult(null, richmond, { decoderError: true, reason: 'boom' }).status,
+    'decoder_error'
+  );
+});
+
+test('decode pipeline only emits decode_success for complete classified results', () => {
+  const src = fs.readFileSync('script.js', 'utf8');
+  assert.match(src, /classifyDecodeResult\(e,p\)/);
+  assert.match(src, /"complete_success"===t\.status\?trackAnalyticsEvent\("decode_success"/);
+  assert.match(src, /classification:t\.status/);
 });
 
 // ── Kenmore model-prefix helper (UX improvement) ─────────────────────────────

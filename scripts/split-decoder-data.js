@@ -113,33 +113,117 @@ function buildBundle(source, category) {
 `;
 }
 
-const source = fs.readFileSync(sourcePath, 'utf8');
-fs.mkdirSync(outputDir, { recursive: true });
+function isManagedBundle(file) {
+  return /^(appliances|hvac|water-heaters|electronics)(?:\.[a-f0-9]{10})?\.js$/i.test(file);
+}
 
-fs.readdirSync(outputDir).forEach((file) => {
-  if (/^(appliances|hvac|water-heaters|electronics)(?:\.[a-f0-9]{10})?\.js$/i.test(file)) {
-    fs.unlinkSync(path.join(outputDir, file));
+function validateArtifacts(artifacts) {
+  const expectedKeys = categories.map((category) => category.key).sort();
+  const manifestKeys = Object.keys(artifacts.manifest).sort();
+  if (JSON.stringify(expectedKeys) !== JSON.stringify(manifestKeys)) {
+    throw new Error('Decoder bundle manifest does not contain every expected category');
   }
-});
 
-const manifest = {};
+  const filesByName = new Set(artifacts.files.map((file) => file.file));
+  for (const category of categories) {
+    const publicPath = artifacts.manifest[category.key];
+    const file = publicPath && publicPath.replace(/^\/assets\/decoders\//, '');
+    if (!file || !filesByName.has(file)) {
+      throw new Error(`Manifest entry for ${category.key} does not point to a generated file`);
+    }
+  }
 
-categories.forEach((category) => {
-  const bundle = buildBundle(source, category);
-  const hash = crypto.createHash('sha256').update(bundle).digest('hex').slice(0, 10);
-  const file = `${category.slug}.${hash}.js`;
-  manifest[category.key] = `/assets/decoders/${file}`;
-  fs.writeFileSync(
-    path.join(outputDir, file),
-    bundle,
-    'utf8'
-  );
-});
+  artifacts.files.forEach((file) => {
+    if (!file.contents || !file.contents.length) {
+      throw new Error(`Generated bundle ${file.file} is empty`);
+    }
+  });
+}
 
-fs.writeFileSync(
-  path.join(outputDir, 'decoder-bundles.json'),
-  `${JSON.stringify(manifest, null, 2)}\n`,
-  'utf8'
-);
+function createBundleArtifacts(source) {
+  const manifest = {};
+  const files = categories.map((category) => {
+    const contents = buildBundle(source, category);
+    const hash = crypto.createHash('sha256').update(contents).digest('hex').slice(0, 10);
+    const file = `${category.slug}.${hash}.js`;
+    manifest[category.key] = `/assets/decoders/${file}`;
+    return { category: category.key, file, contents };
+  });
 
-console.log(`Wrote ${categories.length} hashed decoder bundles to ${path.relative(root, outputDir)}`);
+  const artifacts = { manifest, files };
+  validateArtifacts(artifacts);
+  return artifacts;
+}
+
+function assertWrittenArtifacts(artifacts, dir) {
+  artifacts.files.forEach((file) => {
+    const target = path.join(dir, file.file);
+    if (!fs.existsSync(target) || fs.statSync(target).size <= 0) {
+      throw new Error(`Generated bundle ${file.file} was not written`);
+    }
+  });
+
+  const manifestPath = path.join(dir, 'decoder-bundles.json');
+  if (!fs.existsSync(manifestPath) || fs.statSync(manifestPath).size <= 0) {
+    throw new Error('Generated decoder bundle manifest was not written');
+  }
+}
+
+function publishArtifacts(artifacts, options = {}) {
+  const targetDir = options.outputDir || outputDir;
+  fs.mkdirSync(targetDir, { recursive: true });
+
+  const tempDir = fs.mkdtempSync(path.join(targetDir, '.decoder-build-'));
+  try {
+    artifacts.files.forEach((file) => {
+      fs.writeFileSync(path.join(tempDir, file.file), file.contents, 'utf8');
+    });
+    fs.writeFileSync(
+      path.join(tempDir, 'decoder-bundles.json'),
+      `${JSON.stringify(artifacts.manifest, null, 2)}\n`,
+      'utf8'
+    );
+    assertWrittenArtifacts(artifacts, tempDir);
+
+    if (options.simulateFailureAt === 'after-temp') {
+      throw new Error('Simulated decoder bundle generation failure after temporary files');
+    }
+
+    artifacts.files.forEach((file) => {
+      fs.copyFileSync(path.join(tempDir, file.file), path.join(targetDir, file.file));
+    });
+
+    if (options.simulateFailureAt === 'after-bundles') {
+      throw new Error('Simulated decoder bundle generation failure after bundle publication');
+    }
+
+    fs.renameSync(path.join(tempDir, 'decoder-bundles.json'), path.join(targetDir, 'decoder-bundles.json'));
+    assertWrittenArtifacts(artifacts, targetDir);
+
+    const keep = new Set(artifacts.files.map((file) => file.file));
+    fs.readdirSync(targetDir).forEach((file) => {
+      if (isManagedBundle(file) && !keep.has(file)) {
+        fs.unlinkSync(path.join(targetDir, file));
+      }
+    });
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
+export function buildDecoderBundles(options = {}) {
+  const activeSourcePath = options.sourcePath || sourcePath;
+  const activeOutputDir = options.outputDir || outputDir;
+  const source = fs.readFileSync(activeSourcePath, 'utf8');
+  const artifacts = createBundleArtifacts(source);
+  publishArtifacts(artifacts, {
+    outputDir: activeOutputDir,
+    simulateFailureAt: options.simulateFailureAt
+  });
+  return artifacts;
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const artifacts = buildDecoderBundles();
+  console.log(`Wrote ${artifacts.files.length} hashed decoder bundles to ${path.relative(root, outputDir)}`);
+}
