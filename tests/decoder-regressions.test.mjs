@@ -885,6 +885,34 @@ test('Richmond plant-prefix WWYY decode remains valid with optional model GG50-3
   assert.equal(api.isIncompleteResult(out), false);
 });
 
+test('Rheem-family plant-prefix WWYY parser normalizes formatted direct input before prefix-MMYY matching', () => {
+  const variants = [
+    'Q082116285',
+    'Q08-21-16285',
+    'Q08 21 16285',
+    'Q08/21/16285',
+    'Q08.21.16285',
+    'q082116285',
+    'q08-21-16285',
+    'q08 21 16285',
+    'q08/21/16285',
+    'q08.21.16285'
+  ];
+
+  for (const brandId of ['rheem', 'richmond', 'ruud']) {
+    const decoder = api.decoderData.waterHeaters.decoders[brandId];
+    for (const serial of variants) {
+      const out = decoder.decode(serial, 'GG50-38F3');
+      assert.ok(out, brandId + ' should decode ' + serial);
+      assert.equal(out.year, '2021', brandId + ' ' + serial);
+      assert.equal(out.month, 'Week 8', brandId + ' ' + serial);
+      assert.equal(out.yearCode, '21', brandId + ' ' + serial);
+      assert.equal(out.weekDigits, '08', brandId + ' ' + serial);
+      assert.equal(out.decodeStyle, 'Plant-prefix WWYY', brandId + ' ' + serial);
+    }
+  }
+});
+
 test('Richmond Rheem-family letter-prefix MMYY serial RMLN0711511358 decodes to July 2011', () => {
   const richmond = api.decoderData.waterHeaters.decoders.richmond;
   const out = richmond.decode('RMLN0711511358', '6G50-38F1');
@@ -936,6 +964,7 @@ test('Rheem-family plant-prefix WWYY format accepts only weeks 01 through 53', (
     assert.ok(decoder.decode('Q532116285'), brandId + ' should accept week 53');
     assert.equal(decoder.decode('Q002116285'), null, brandId + ' should reject week 00');
     assert.equal(decoder.decode('Q542116285'), null, brandId + ' should reject week 54');
+    assert.equal(decoder.decode('Q54-21-16285'), null, brandId + ' formatted week 54 must not fall through');
   }
 });
 
@@ -949,6 +978,7 @@ test('Rheem-family plant-prefix WWYY format enforces the existing one-year futur
     const decoder = api.decoderData.waterHeaters.decoders[brandId];
     assert.ok(decoder.decode(withinTolerance), brandId + ' should allow current year + 1');
     assert.equal(decoder.decode(beyondTolerance), null, brandId + ' should reject current year + 2');
+    assert.equal(decoder.decode('Q08-' + String(tooFarFutureYear).slice(-2) + '-16285'), null, brandId + ' formatted current year + 2 should reject');
   }
 });
 
