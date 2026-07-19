@@ -885,6 +885,50 @@ test('Richmond plant-prefix WWYY decode remains valid with optional model GG50-3
   assert.equal(api.isIncompleteResult(out), false);
 });
 
+test('Richmond Rheem-family letter-prefix MMYY serial RMLN0711511358 decodes to July 2011', () => {
+  const richmond = api.decoderData.waterHeaters.decoders.richmond;
+  const out = richmond.decode('RMLN0711511358', '6G50-38F1');
+
+  assert.ok(out);
+  assert.equal(out.year, '2011');
+  assert.equal(out.month, 'July');
+  assert.equal(out.yearCode, '11');
+  assert.equal(out.monthCode, '07');
+  assert.equal(out.prefix, 'RMLN');
+  assert.equal(out.decodeStyle, 'Letter-prefix MMYY');
+  assert.deepEqual(plain(api.sanitizeDecodeResult(out)), { valid: true });
+  assert.equal(api.isIncompleteResult(out), false);
+});
+
+test('Rheem-family alias handling decodes RMLN0711511358 as letter-prefix MMYY', () => {
+  for (const brandId of ['rheem', 'ruud']) {
+    const decoder = api.decoderData.waterHeaters.decoders[brandId];
+    const out = decoder.decode('RMLN0711511358', '6G50-38F1');
+
+    assert.ok(out, brandId + ' should decode RMLN0711511358');
+    assert.equal(out.year, '2011', brandId);
+    assert.equal(out.month, 'July', brandId);
+    assert.equal(out.decodeStyle, 'Letter-prefix MMYY', brandId);
+  }
+});
+
+test('Rheem-family letter-prefix MMYY parser normalizes lowercase and formatted serial input', () => {
+  const richmond = api.decoderData.waterHeaters.decoders.richmond;
+  const out = richmond.decode(' rmln-07 11-511358 ', '6G50-38F1');
+
+  assert.ok(out);
+  assert.equal(out.year, '2011');
+  assert.equal(out.month, 'July');
+  assert.equal(out.prefix, 'RMLN');
+});
+
+test('Rheem-family letter-prefix MMYY parser rejects invalid month values', () => {
+  for (const brandId of ['rheem', 'richmond', 'ruud']) {
+    const decoder = api.decoderData.waterHeaters.decoders[brandId];
+    assert.equal(decoder.decode('RMLN1311511358', '6G50-38F1'), null, brandId + ' should reject month 13');
+  }
+});
+
 test('Rheem-family plant-prefix WWYY format accepts only weeks 01 through 53', () => {
   for (const brandId of ['rheem', 'richmond', 'ruud']) {
     const decoder = api.decoderData.waterHeaters.decoders[brandId];
