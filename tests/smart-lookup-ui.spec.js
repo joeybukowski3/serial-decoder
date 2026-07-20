@@ -158,6 +158,195 @@ test.describe('Smart Lookup controller', () => {
     expect(replacementBodies).toEqual([{ query: 'Samsung QN65-Q80A', notes: 'Label says parts were replaced' }]);
   });
 
+  test('age result stays visible while a slow grounded LKQ lookup is still loading', async ({ page }) => {
+    await page.route('**/api/lkq-lookup', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      await route.fulfill({ json: {
+        itemSummary: { brand: 'Samsung', model: 'QN65Q80A' },
+        replacementRelationship: 'direct-successor',
+        replacement: { name: 'Samsung QN65Q80C', brand: 'Samsung', model: 'QN65Q80C', category: 'television' },
+        evidenceSource: 'manufacturer-grounded',
+        sources: [{ title: 'samsung.com', domain: 'samsung.com', uri: 'https://vertexaisearch.cloud.google.com/x' }],
+        priceObservations: [],
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#include-replacement-comparisons').check();
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-replacement-panel')).toContainText('Checking replacement guidance');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+  });
+
+  test('grounded LKQ success renders relationship, compatibility, pricing, and sources independently of age', async ({ page }) => {
+    await page.route('**/api/lkq-lookup', async (route) => {
+      await route.fulfill({ json: {
+        itemSummary: { brand: 'Samsung', model: 'QN65Q80A', category: 'television' },
+        replacementRelationship: 'direct-successor',
+        replacementRationale: 'Samsung lists the QN65Q80C as the current-year successor.',
+        replacement: { name: 'Samsung QN65Q80C', brand: 'Samsung', model: 'QN65Q80C', category: 'television' },
+        materialDifferences: ['Newer processor generation'],
+        compatibilityStatus: 'likely-compatible',
+        compatibilityWarnings: [],
+        evidenceSource: 'manufacturer-grounded',
+        retrievedAt: '2026-07-19T12:00:00.000Z',
+        sources: [{ title: 'samsung.com', domain: 'samsung.com', uri: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/a' }],
+        priceObservations: [
+          { seller: 'Best Buy', price: 1299.99, currency: 'USD', priceType: 'regular', condition: 'new', stockStatus: 'in-stock' },
+          { seller: 'Samsung.com', price: 1349.99, currency: 'USD', priceType: 'regular', condition: 'new', stockStatus: 'in-stock' },
+        ],
+        replacementCostRange: { low: 1299.99, high: 1349.99, currency: 'USD', basis: 'multiple-observations' },
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#include-replacement-comparisons').check();
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-replacement-panel');
+    await expect(panel).toContainText('Direct manufacturer successor');
+    await expect(panel).toContainText('Grounded in live Google Search results retrieved 2026-07-19');
+    await expect(panel).toContainText('Samsung QN65Q80C');
+    await expect(panel).toContainText('Newer processor generation');
+    await expect(panel).toContainText('Compatibility: Likely compatible');
+    await expect(panel).toContainText('Best Buy: $1299.99');
+    await expect(panel).toContainText('Replacement-cost guidance:');
+    await expect(panel).toContainText('$1299.99');
+    await expect(panel).toContainText('Sources consulted');
+    await expect(panel).toContainText('samsung.com');
+    const sourceLink = panel.locator('.smart-lookup-sources a').first();
+    await expect(sourceLink).toHaveAttribute('rel', 'noopener nofollow');
+  });
+
+  test('a compatibility caveat and a not-directly-compatible result both render their warnings', async ({ page }) => {
+    await page.route('**/api/lkq-lookup', async (route) => {
+      await route.fulfill({ json: {
+        itemSummary: { brand: 'Samsung', model: 'QN65Q80A', category: 'television' },
+        replacementRelationship: 'similar-alternative',
+        replacement: { name: 'Samsung QN65Q70C', brand: 'Samsung', model: 'QN65Q70C', category: 'television' },
+        compatibilityStatus: 'not-directly-compatible',
+        compatibilityWarnings: ['Different panel technology than the original unit'],
+        evidenceSource: 'retailer-grounded',
+        sources: [{ title: 'bestbuy.com', domain: 'bestbuy.com', uri: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/b' }],
+        priceObservations: [],
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#include-replacement-comparisons').check();
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-replacement-panel');
+    await expect(panel).toContainText('Compatibility: Not directly compatible');
+    await expect(panel).toContainText('Different panel technology than the original unit');
+  });
+
+  test('a single retailer price observation never renders as a market range', async ({ page }) => {
+    await page.route('**/api/lkq-lookup', async (route) => {
+      await route.fulfill({ json: {
+        itemSummary: { brand: 'Samsung', model: 'QN65Q80A', category: 'television' },
+        replacementRelationship: 'functional-equivalent',
+        replacement: { name: 'Samsung QN65Q80C', brand: 'Samsung', model: 'QN65Q80C', category: 'television' },
+        compatibilityStatus: 'likely-compatible',
+        evidenceSource: 'retailer-grounded',
+        sources: [{ title: 'bestbuy.com', domain: 'bestbuy.com', uri: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/c' }],
+        priceObservations: [{ seller: 'Best Buy', price: 1299.99, currency: 'USD', priceType: 'regular', condition: 'new', stockStatus: 'in-stock' }],
+        replacementCostRange: null,
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#include-replacement-comparisons').check();
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-replacement-panel');
+    await expect(panel).toContainText('Best Buy: $1299.99');
+    await expect(panel).not.toContainText('Replacement-cost guidance');
+  });
+
+  test('an ungrounded LKQ timeout-fallback result shows the estimate wording without a source list', async ({ page }) => {
+    await page.route('**/api/lkq-lookup', async (route) => {
+      await route.fulfill({ json: {
+        itemSummary: { brand: 'Samsung', model: 'QN65Q80A', category: 'television' },
+        replacementRelationship: 'functional-equivalent',
+        replacement: { name: 'Samsung QN65Q80C', brand: 'Samsung', model: 'QN65Q80C', category: 'television' },
+        compatibilityStatus: 'unknown',
+        evidenceSource: 'gemini-ungrounded',
+        groundedFallback: true,
+        sources: [],
+        priceObservations: [],
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#include-replacement-comparisons').check();
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-replacement-panel');
+    await expect(panel).toContainText('AI-assisted replacement research completed, but live web verification timed out.');
+    await expect(panel).not.toContainText('Sources consulted');
+    await expect(panel).not.toContainText('Grounded in live Google Search');
+  });
+
+  test('a genuine LKQ timeout with no recovered replacement does not erase the age result', async ({ page }) => {
+    await page.route('**/api/lkq-lookup', async (route) => {
+      await route.fulfill({ json: { errorCode: 'PROVIDER_TIMEOUT', replacementOptions: [], replacementRelationship: 'none-found' } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#include-replacement-comparisons').check();
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('[data-smart-lookup-retry="replacement"]')).toBeVisible();
+  });
+
+  test('no raw provider payload leaks into the LKQ panel', async ({ page }) => {
+    await page.route('**/api/lkq-lookup', async (route) => {
+      await route.fulfill({ json: {
+        itemSummary: { brand: 'Samsung', model: 'QN65Q80A', category: 'television' },
+        replacementRelationship: 'direct-successor',
+        replacement: { name: 'Samsung QN65Q80C', brand: 'Samsung', model: 'QN65Q80C', category: 'television' },
+        compatibilityStatus: 'likely-compatible',
+        evidenceSource: 'manufacturer-grounded',
+        sources: [{ title: 'samsung.com', domain: 'samsung.com', uri: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/d' }],
+        priceObservations: [],
+        __groundedFallbackRecovered: true,
+        rawProviderDebug: 'internal-only-debug-string',
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#include-replacement-comparisons').check();
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-replacement-panel');
+    await expect(panel).toContainText('Direct manufacturer successor');
+    await expect(panel).not.toContainText('rawProviderDebug');
+    await expect(panel).not.toContainText('internal-only-debug-string');
+    await expect(panel).not.toContainText('__groundedFallbackRecovered');
+  });
+
+  test('grounded LKQ rendering remains usable at mobile width', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.route('**/api/lkq-lookup', async (route) => {
+      await route.fulfill({ json: {
+        itemSummary: { brand: 'Samsung', model: 'QN65Q80A', category: 'television' },
+        replacementRelationship: 'direct-successor',
+        replacement: { name: 'Samsung QN65Q80C', brand: 'Samsung', model: 'QN65Q80C', category: 'television' },
+        compatibilityStatus: 'compatible-with-caveats',
+        compatibilityWarnings: ['Slightly larger cabinet depth'],
+        evidenceSource: 'manufacturer-grounded',
+        sources: [{ title: 'samsung.com', domain: 'samsung.com', uri: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/e' }],
+        priceObservations: [{ seller: 'Best Buy', price: 1299.99, currency: 'USD', priceType: 'regular', condition: 'new', stockStatus: 'in-stock' }],
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#include-replacement-comparisons').check();
+    await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-replacement-panel');
+    await expect(panel).toContainText('Direct manufacturer successor');
+    await expect(panel).toContainText('Compatibility: Compatible with caveats');
+    var box = await panel.boundingBox();
+    expect(box.width).toBeLessThanOrEqual(375);
+  });
+
   test('submit button is disabled and busy during active lookup, then restores after success and error', async ({ page }) => {
     let ageCalls = 0;
     await page.route('**/api/age-lookup', async (route) => {

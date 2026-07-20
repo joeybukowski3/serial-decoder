@@ -332,6 +332,7 @@
   function classifyReplacementOutcome(data) {
     if (!data) return 'network-error';
     if (Array.isArray(data.replacementOptions) && data.replacementOptions.length) return 'success';
+    if (data.replacementRelationship && data.replacementRelationship !== 'none-found' && data.replacement) return 'success';
     return 'unavailable';
   }
 
@@ -526,18 +527,139 @@
       '</div>';
   }
 
+  var LKQ_RELATIONSHIP_LABELS = {
+    'direct-successor': 'Direct manufacturer successor',
+    'same-series-successor': 'Same-series successor',
+    'functional-equivalent': 'Current functional equivalent',
+    'similar-alternative': 'Similar alternative',
+    'none-found': 'No defensible replacement found',
+  };
+
+  var LKQ_COMPATIBILITY_LABELS = {
+    'likely-compatible': 'Likely compatible',
+    'compatible-with-caveats': 'Compatible with caveats',
+    'not-directly-compatible': 'Not directly compatible',
+    unknown: 'Compatibility unknown',
+  };
+
+  function isGroundedLkqResult(data) {
+    return Boolean(data)
+      && (data.evidenceSource === 'manufacturer-grounded' || data.evidenceSource === 'retailer-grounded' || data.evidenceSource === 'mixed-grounded')
+      && Array.isArray(data.sources)
+      && data.sources.length > 0;
+  }
+
+  function isLkqTimeoutFallbackResult(data) {
+    return Boolean(data) && data.groundedFallback === true && !isGroundedLkqResult(data);
+  }
+
+  function lkqSourceQualifier(data) {
+    if (isGroundedLkqResult(data)) {
+      var retrievedOn = data.retrievedAt ? String(data.retrievedAt).slice(0, 10) : '';
+      return 'Grounded in live Google Search results' + (retrievedOn ? ' retrieved ' + retrievedOn : '') + '; review the cited sources below.';
+    }
+    if (isLkqTimeoutFallbackResult(data)) {
+      return 'AI-assisted replacement research completed, but live web verification timed out. Review this as an estimate rather than a source-verified finding.';
+    }
+    return 'AI-assisted analysis based on the information entered; no live source was verified.';
+  }
+
+  function renderLkqCompatibility(data) {
+    var status = data && data.compatibilityStatus;
+    if (!status) return '';
+    var warnings = Array.isArray(data.compatibilityWarnings) ? data.compatibilityWarnings : [];
+    var warningsHtml = warnings.length
+      ? '<ul>' + warnings.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul>'
+      : '';
+    return '<div class="lkq-compatibility"><h4>Compatibility: ' + escapeHtml(LKQ_COMPATIBILITY_LABELS[status] || status) + '</h4>' + warningsHtml + '</div>';
+  }
+
+  function formatPriceObservation(item) {
+    var priceText = '$' + Number(item.price).toFixed(2);
+    var typeText = item.priceType === 'sale' ? ' (sale price)' : '';
+    var conditionText = item.condition && item.condition !== 'new' ? ' (' + item.condition + ')' : '';
+    var stockText = item.stockStatus === 'out-of-stock' ? ' — out of stock' : '';
+    var dateText = item.observedAt ? ' as of ' + String(item.observedAt).slice(0, 10) : '';
+    return escapeHtml(item.seller) + ': ' + escapeHtml(priceText) + typeText + conditionText + stockText + dateText;
+  }
+
+  function renderLkqPricing(data) {
+    var observations = Array.isArray(data && data.priceObservations) ? data.priceObservations : [];
+    if (!observations.length) return '';
+    var rows = observations.map(function (item) { return '<li>' + formatPriceObservation(item) + '</li>'; }).join('');
+    var rangeHtml = '';
+    // A range only ever renders when the schema itself already computed one
+    // (>=2 qualifying observations or one manufacturer-labeled price); a
+    // single retailer observation is never presented as a market range.
+    if (data.replacementCostRange) {
+      var range = data.replacementCostRange;
+      var rangeText = range.low === range.high
+        ? '$' + Number(range.low).toFixed(2)
+        : '$' + Number(range.low).toFixed(2) + '–$' + Number(range.high).toFixed(2);
+      var basisText = range.basis === 'manufacturer-listed' ? 'manufacturer-listed price' : 'based on multiple current observations';
+      rangeHtml = '<p class="lkq-price-range"><strong>Replacement-cost guidance:</strong> ' + escapeHtml(rangeText) + ' (' + escapeHtml(basisText) + ')</p>';
+    }
+    return '<div class="lkq-pricing"><h4>Current price observations</h4>' + rangeHtml + '<ul>' + rows + '</ul></div>';
+  }
+
+  function renderLkqSources(data) {
+    if (!isGroundedLkqResult(data)) return '';
+    var items = data.sources.slice(0, 5).map(function (item) {
+      if (!item || !item.title) return '';
+      var label = escapeHtml(item.title);
+      if (item.uri && /^https:\/\//i.test(item.uri)) {
+        return '<li><a href="' + escapeHtml(item.uri) + '" target="_blank" rel="noopener nofollow">' + label + '</a></li>';
+      }
+      return '<li>' + label + '</li>';
+    }).filter(Boolean).join('');
+    if (!items) return '';
+    return '<details class="determination-details smart-lookup-sources"><summary>Sources consulted</summary><ul>' + items + '</ul></details>';
+  }
+
   function renderReplacement(data) {
-    var options = Array.isArray(data && data.replacementOptions) ? data.replacementOptions : [];
-    if (!options.length) {
+    var legacyOptions = Array.isArray(data && data.replacementOptions) ? data.replacementOptions : [];
+    var relationship = data && data.replacementRelationship;
+    var replacement = data && data.replacement;
+    var hasGroundedResult = Boolean(relationship && relationship !== 'none-found' && replacement);
+
+    if (!hasGroundedResult && !legacyOptions.length) {
       return noResultCard(REPLACEMENT_UNAVAILABLE_COPY, 'replacement');
     }
-    return '<div class="smart-replacement-result"><h3>Replacement Research</h3>' + options.map(function (item) {
-      return '<div class="lkq-option"><h4>' + escapeHtml(item.name || item.model || 'Replacement option') + '</h4>' +
-        '<p><strong>Rating:</strong> ' + escapeHtml(item.lkqRating || 'Review') + '</p>' +
-        '<p><strong>Model:</strong> ' + escapeHtml(item.model || 'Not verified') + '</p>' +
-        '<p><strong>Price:</strong> ' + escapeHtml(item.priceRange || 'Unavailable - unverified') + '</p>' +
-        '<p>' + escapeHtml(item.notes || '') + '</p></div>';
-    }).join('') + '</div>';
+
+    var html = '<div class="smart-replacement-result"><h3>Replacement Research</h3>';
+
+    if (relationship === 'none-found' && data.replacementRationale) {
+      html += '<div class="info-block"><h4>No defensible replacement found</h4><p>' + escapeHtml(data.replacementRationale) + '</p></div>';
+    }
+
+    if (hasGroundedResult) {
+      var replacementLabel = [replacement.brand, replacement.model || replacement.name].filter(Boolean).join(' ') || 'Replacement identified';
+      html += '<div class="lkq-best-match"><h4>' + escapeHtml(LKQ_RELATIONSHIP_LABELS[relationship] || relationship) + '</h4>' +
+        '<p class="smart-lookup-source-note">' + escapeHtml(lkqSourceQualifier(data)) + '</p>' +
+        '<p><strong>' + escapeHtml(replacementLabel) + '</strong></p>' +
+        (data.replacementRationale ? '<p>' + escapeHtml(data.replacementRationale) + '</p>' : '') +
+        '</div>';
+      var differences = Array.isArray(data.materialDifferences) ? data.materialDifferences : [];
+      if (differences.length) {
+        html += '<div class="lkq-differences"><h4>Important specification differences</h4><ul>' +
+          differences.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul></div>';
+      }
+      html += renderLkqCompatibility(data);
+      html += renderLkqPricing(data);
+      html += renderLkqSources(data);
+    }
+
+    if (legacyOptions.length) {
+      html += legacyOptions.map(function (item) {
+        return '<div class="lkq-option"><h4>' + escapeHtml(item.name || item.model || 'Replacement option') + '</h4>' +
+          '<p><strong>Rating:</strong> ' + escapeHtml(item.lkqRating || 'Review') + '</p>' +
+          '<p><strong>Model:</strong> ' + escapeHtml(item.model || 'Not verified') + '</p>' +
+          '<p><strong>Price:</strong> ' + escapeHtml(item.priceRange || 'Unavailable - unverified') + '</p>' +
+          '<p>' + escapeHtml(item.notes || '') + '</p></div>';
+      }).join('');
+    }
+
+    return html + '</div>';
   }
 
   function currentAgeStageMessage() {
