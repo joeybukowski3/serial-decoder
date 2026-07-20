@@ -383,10 +383,30 @@
     return base;
   }
 
+  // A recognized model-line/product-family/brand-category query can be
+  // genuinely useful even with no single named replacement (replacement:
+  // null, replacementRelationship: 'none-found') -- ranked candidates, a
+  // comparison checklist, known configuration variants, or refinement
+  // guidance are all still worth rendering instead of the generic
+  // "unavailable" card. See Phase 10 in docs/smart-lookup-architecture.md.
+  function hasProgressiveReplacementGuidance(data) {
+    if (!data) return false;
+    if (Array.isArray(data.replacementCandidates) && data.replacementCandidates.length) return true;
+    var precision = data.replacementPrecision;
+    if (precision !== 'model-line' && precision !== 'product-family' && precision !== 'brand-category') return false;
+    return Boolean(
+      (Array.isArray(data.comparisonCriteria) && data.comparisonCriteria.length)
+      || (Array.isArray(data.knownConfigurationVariants) && data.knownConfigurationVariants.length)
+      || (Array.isArray(data.recommendedIdentifiers) && data.recommendedIdentifiers.length)
+      || (data.originalIdentity && (data.originalIdentity.brand || data.originalIdentity.family || data.originalIdentity.modelLine))
+    );
+  }
+
   function classifyReplacementOutcome(data) {
     if (!data) return 'network-error';
     if (Array.isArray(data.replacementOptions) && data.replacementOptions.length) return 'success';
     if (data.replacementRelationship && data.replacementRelationship !== 'none-found' && data.replacement) return 'success';
+    if (hasProgressiveReplacementGuidance(data)) return 'success';
     return 'unavailable';
   }
 
@@ -651,7 +671,18 @@
     return Boolean(data) && data.groundedFallback === true && !isGroundedLkqResult(data);
   }
 
+  // A deterministic (Phase 8) replacement card was never produced by any
+  // provider call -- it must never be described as AI-assisted or grounded,
+  // even though it shares the same success/candidate rendering as a real
+  // provider result. Checked before every other qualifier below.
+  function isDeterministicLkqFallback(data) {
+    return Boolean(data) && data.deterministicFallbackUsed === true;
+  }
+
   function lkqSourceQualifier(data) {
+    if (isDeterministicLkqFallback(data)) {
+      return 'Deterministic Decode My Item model-line/family guidance; live replacement research did not complete.';
+    }
     if (isGroundedLkqResult(data)) {
       var retrievedOn = data.retrievedAt ? String(data.retrievedAt).slice(0, 10) : '';
       return 'Grounded in live Google Search results' + (retrievedOn ? ' retrieved ' + retrievedOn : '') + '; review the cited sources below.';
@@ -660,6 +691,90 @@
       return 'AI-assisted replacement research completed, but live web verification timed out. Review this as an estimate rather than a source-verified finding.';
     }
     return 'AI-assisted analysis based on the information entered; no live source was verified.';
+  }
+
+  var REPLACEMENT_PRECISION_LABELS = {
+    'exact-configuration': 'Exact configuration match',
+    'exact-model': 'Exact model result',
+    'model-line': 'Model-line guidance',
+    'product-family': 'Product-family guidance',
+    'brand-category': 'Broad brand/category guidance',
+    'category-guidance': 'General category guidance',
+  };
+
+  var REPLACEMENT_PRECISION_NOTES = {
+    'model-line': 'This result describes the recognized model line broadly -- the exact original configuration was not provided, so it may vary.',
+    'product-family': 'This result describes the recognized product family broadly, not one exact original model or configuration.',
+    'brand-category': 'This result describes the recognized brand and category broadly, not one specific product line.',
+  };
+
+  function renderOriginalIdentity(data) {
+    var identity = data && data.originalIdentity;
+    if (!identity || (!identity.brand && !identity.family && !identity.modelLine)) return '';
+    var rows = [
+      ['Brand', identity.brand],
+      ['Product family', identity.family],
+      ['Model line', identity.modelLine],
+      ['Category', identity.category],
+      ['Form factor', identity.formFactor],
+    ].filter(function (pair) { return pair[1]; });
+    if (!rows.length) return '';
+    var rowsHtml = rows.map(function (pair) {
+      return '<div class="result-row"><span class="result-label">' + escapeHtml(pair[0]) + '</span><span class="result-value">' + escapeHtml(pair[1]) + '</span></div>';
+    }).join('');
+    return '<div class="lkq-original-identity">' + rowsHtml + '</div>';
+  }
+
+  function renderStringListBlock(title, items) {
+    var list = Array.isArray(items) ? items.filter(Boolean) : [];
+    if (!list.length) return '';
+    return '<div class="info-block"><h4>' + escapeHtml(title) + '</h4><ul>' +
+      list.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul></div>';
+  }
+
+  function renderConfigurationVaries(data) {
+    if (!data || !data.configurationUnknown) return '';
+    return '<p class="smart-lookup-precision-note">Original configuration varies. No processor, RAM, storage, graphics, chassis size, power supply, port selection, or expansion capacity is assumed beyond what was provided.</p>';
+  }
+
+  function renderCandidateRelationship(value) {
+    return LKQ_RELATIONSHIP_LABELS[value] || value;
+  }
+
+  function renderReplacementCandidates(data) {
+    var candidates = Array.isArray(data && data.replacementCandidates) ? data.replacementCandidates : [];
+    if (!candidates.length) return '';
+    var items = candidates.map(function (candidate) {
+      var label = [candidate.brand, candidate.model || candidate.family].filter(Boolean).join(' ') || 'Candidate';
+      var specRows = candidate.specificationComparison && typeof candidate.specificationComparison === 'object'
+        ? Object.keys(candidate.specificationComparison).map(function (key) {
+            return '<div class="result-row"><span class="result-label">' + escapeHtml(key) + '</span><span class="result-value">' + escapeHtml(candidate.specificationComparison[key]) + '</span></div>';
+          }).join('')
+        : '';
+      var differences = Array.isArray(candidate.materialDifferences) && candidate.materialDifferences.length
+        ? '<ul>' + candidate.materialDifferences.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul>'
+        : '';
+      var compatibility = candidate.compatibilityStatus
+        ? '<p class="lkq-candidate-compatibility"><strong>Compatibility:</strong> ' + escapeHtml(LKQ_COMPATIBILITY_LABELS[candidate.compatibilityStatus] || candidate.compatibilityStatus) + '</p>'
+        : '';
+      var warnings = Array.isArray(candidate.compatibilityWarnings) && candidate.compatibilityWarnings.length
+        ? '<ul>' + candidate.compatibilityWarnings.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul>'
+        : '';
+      var pricing = Array.isArray(candidate.priceObservations) && candidate.priceObservations.length
+        ? '<ul>' + candidate.priceObservations.map(function (item) { return '<li>' + formatPriceObservation(item) + '</li>'; }).join('') + '</ul>'
+        : '';
+      return '<div class="lkq-candidate">' +
+        '<h4>#' + escapeHtml(candidate.rank) + ' ' + escapeHtml(label) + ' — ' + escapeHtml(renderCandidateRelationship(candidate.relationship)) + '</h4>' +
+        (candidate.category ? '<p class="lkq-candidate-category">' + escapeHtml(candidate.category) + '</p>' : '') +
+        (candidate.fitReason ? '<p>' + escapeHtml(candidate.fitReason) + '</p>' : '') +
+        specRows +
+        differences +
+        compatibility +
+        warnings +
+        pricing +
+        '</div>';
+    }).join('');
+    return '<div class="lkq-candidates"><h4>Ranked replacement candidates</h4>' + items + '</div>';
   }
 
   function renderLkqCompatibility(data) {
@@ -719,15 +834,31 @@
     var relationship = data && data.replacementRelationship;
     var replacement = data && data.replacement;
     var hasGroundedResult = Boolean(relationship && relationship !== 'none-found' && replacement);
+    var hasProgressiveGuidance = hasProgressiveReplacementGuidance(data);
 
-    if (!hasGroundedResult && !legacyOptions.length) {
+    if (!hasGroundedResult && !legacyOptions.length && !hasProgressiveGuidance) {
       return noResultCard(REPLACEMENT_UNAVAILABLE_COPY, 'replacement');
     }
 
     var html = '<div class="smart-replacement-result"><h3>Replacement Research</h3>';
 
+    // Every precision-badge/identity/configuration-varies addition below is
+    // gated to non-exact tiers only, so exact-model rendering (the existing,
+    // already-tested path) stays pixel-for-pixel unchanged.
+    var precision = data && data.replacementPrecision;
+    var isNonExactPrecision = precision === 'model-line' || precision === 'product-family'
+      || precision === 'brand-category' || precision === 'category-guidance';
+    if (isNonExactPrecision) {
+      var precisionLabel = REPLACEMENT_PRECISION_LABELS[precision];
+      if (precisionLabel) html += '<p class="smart-lookup-precision-badge">' + escapeHtml(precisionLabel) + '</p>';
+      var precisionNote = REPLACEMENT_PRECISION_NOTES[precision];
+      if (precisionNote) html += '<p class="smart-lookup-precision-note">' + escapeHtml(precisionNote) + '</p>';
+      html += renderOriginalIdentity(data);
+      html += renderConfigurationVaries(data);
+    }
+
     if (relationship === 'none-found' && data.replacementRationale) {
-      html += '<div class="info-block"><h4>No defensible replacement found</h4><p>' + escapeHtml(data.replacementRationale) + '</p></div>';
+      html += '<div class="info-block"><h4>No single defensible replacement found</h4><p>' + escapeHtml(data.replacementRationale) + '</p></div>';
     }
 
     if (hasGroundedResult) {
@@ -745,6 +876,23 @@
       html += renderLkqCompatibility(data);
       html += renderLkqPricing(data);
       html += renderLkqSources(data);
+    } else if (hasProgressiveGuidance) {
+      // No single named replacement, but a recognized model-line/family/
+      // brand-category query still has useful broad guidance -- render it
+      // instead of falling through to the unavailable card.
+      html += '<p class="smart-lookup-source-note">' + escapeHtml(lkqSourceQualifier(data)) + '</p>';
+      html += renderReplacementCandidates(data);
+      html += renderStringListBlock('Known configuration variants', data.knownConfigurationVariants);
+      html += renderStringListBlock('Compare candidates on', data.comparisonCriteria);
+      html += renderStringListBlock('Recommended minimum specifications', data.recommendedMinimumSpecs);
+      html += renderStringListBlock('Assumptions', data.assumptions);
+      html += renderStringListBlock('Specifications not known from this query', data.unknownOriginalSpecs);
+      html += renderLkqSources(data);
+    }
+
+    if (isNonExactPrecision && Array.isArray(data.recommendedIdentifiers) && data.recommendedIdentifiers.length) {
+      html += '<div class="smart-lookup-refinement"><p class="smart-lookup-try-next"><strong>To narrow this result:</strong></p><ul>' +
+        data.recommendedIdentifiers.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul></div>';
     }
 
     if (legacyOptions.length) {
