@@ -2,7 +2,13 @@ import { buildSmartLkqCacheKey, chooseSmartLkqTtl, hashCanonicalQuery, prepareRe
 import { providerAttemptCountFromMetadata, recordProviderAttemptMetrics, reserveProviderBudget } from '../lib/smart-lookup/budget.js';
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
 import { classifySmartLookupQuery, normalizeKnownQuery, normalizeSmartLookupNotes, normalizeWhitespace, SMART_LOOKUP_NOTES_MAX_LENGTH } from '../lib/smart-lookup/normalize.js';
-import { callGeminiLkqProvider, getSmartLookupProviderMetadata, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
+import {
+  callGeminiLkqProvider,
+  callSmartLookupGroundedLkqProvider,
+  getSmartLookupProviderMetadata,
+  isGroundedLkqEnabled,
+  SmartLookupProviderError,
+} from '../lib/smart-lookup/provider.js';
 import {
   createReplacementTimings,
   createUnavailableReplacementResult,
@@ -23,6 +29,15 @@ const TOTAL_BUDGET_MS = 9000;
 const PROVIDER_BUDGET_MS = 7000;
 const REDIS_CALL_BUDGET_MS = 250;
 const CACHE_WRITE_BUDGET_MS = 175;
+// Grounded LKQ research covers more ground per call than grounded age
+// research (original identity + replacement identity + compatibility +
+// pricing in one pass), so its stage ceiling is measured and set higher
+// than age's 4200ms -- see docs/smart-lookup-architecture.md for the full
+// measurement notes. It is still bounded below PROVIDER_BUDGET_MS so a
+// genuine reserve remains for a same-deadline fallback on timeout.
+const GROUNDED_LKQ_STAGE_BUDGET_MS = 5000;
+const GROUNDED_LKQ_FALLBACK_MIN_REMAINING_MS = 1500;
+const GROUNDED_LKQ_FALLBACK_RESERVE_MS = 300;
 
 function validateRequest(body) {
   const query = normalizeWhitespace(body?.query);
@@ -40,6 +55,7 @@ function finish(result, timings, deadline) {
 }
 
 function logLkqResult(logger, requestId, queryInfo, result, extra = {}) {
+  const grounded = extra.groundedTelemetry || {};
   logSmartLookup(logger, {
     event: 'smart_lkq_lookup',
     requestId,
@@ -55,6 +71,19 @@ function logLkqResult(logger, requestId, queryInfo, result, extra = {}) {
     actualProviderAttemptCount: extra.actualProviderAttemptCount ?? result?.actualProviderAttemptCount ?? null,
     timeoutStage: extra.timeoutStage || null,
     errorCode: result?.errorCode || extra.errorCode || null,
+    lkqRequested: true,
+    lkqGroundedAttempted: grounded.attempted || false,
+    lkqGroundedSucceeded: grounded.succeeded || false,
+    lkqGroundedSourceCount: Array.isArray(result?.sources) ? result.sources.length : 0,
+    lkqGroundedDurationMs: grounded.durationMs ?? null,
+    lkqFallbackAttempted: grounded.fallbackAttempted || false,
+    lkqFallbackProvider: grounded.fallbackProvider || null,
+    lkqFallbackSucceeded: grounded.fallbackSucceeded ?? null,
+    lkqFallbackDurationMs: grounded.fallbackDurationMs ?? null,
+    replacementRelationship: result?.replacementRelationship || null,
+    compatibilityStatus: result?.compatibilityStatus || null,
+    priceObservationCount: Array.isArray(result?.priceObservations) ? result.priceObservations.length : 0,
+    priceRangeProduced: Boolean(result?.replacementCostRange),
     timings: result?.timings,
   });
 }
@@ -70,6 +99,8 @@ function recordSharedProviderAttempts(providerPromise, recordAttempts, redis, ki
 export function createLkqLookupHandler(dependencies = {}) {
   const redisFactory = dependencies.redisFactory || createRedisClient;
   const providerLookup = dependencies.providerLookup || callGeminiLkqProvider;
+  const groundedProviderLookup = dependencies.groundedProviderLookup || callSmartLookupGroundedLkqProvider;
+  const groundedEnabled = dependencies.groundedEnabled ?? isGroundedLkqEnabled(dependencies.env);
   const reserveBudget = dependencies.reserveProviderBudget || reserveProviderBudget;
   const recordAttempts = dependencies.recordProviderAttemptMetrics || recordProviderAttemptMetrics;
   const limiterFactory = dependencies.rateLimiterFactory || ((redis) => createProviderRateLimiter(redis, {
@@ -77,6 +108,10 @@ export function createLkqLookupHandler(dependencies = {}) {
   }));
   const logger = dependencies.logger || console;
   const now = dependencies.now || Date.now;
+  const providerBudgetMs = dependencies.providerBudgetMs || PROVIDER_BUDGET_MS;
+  const groundedStageBudgetMs = dependencies.groundedStageBudgetMs || GROUNDED_LKQ_STAGE_BUDGET_MS;
+  const groundedFallbackMinRemainingMs = dependencies.groundedFallbackMinRemainingMs || GROUNDED_LKQ_FALLBACK_MIN_REMAINING_MS;
+  const groundedFallbackReserveMs = dependencies.groundedFallbackReserveMs || GROUNDED_LKQ_FALLBACK_RESERVE_MS;
   const inflightReplacementRequests = new Map();
 
   return async function handler(req, res) {
@@ -99,8 +134,14 @@ export function createLkqLookupHandler(dependencies = {}) {
       userNotes: validation.value.notes,
       notesHash: validation.value.notes ? hashCanonicalQuery(validation.value.notes) : '',
     };
+    // Grounded research is selective, matching the age-lookup eligibility
+    // rule: only exact-model queries, where real-world retailer/manufacturer
+    // pages are likely to exist and be worth the extra latency.
+    const useGrounded = groundedEnabled
+      && queryInfo.providerEligible
+      && queryInfo.modelCompleteness === 'exact';
     const redis = dependencies.redis || redisFactory();
-    const cacheKey = buildSmartLkqCacheKey(queryInfo);
+    const cacheKey = buildSmartLkqCacheKey(queryInfo, { grounded: useGrounded });
     let cacheStatus = 'bypass';
 
     try {
@@ -122,6 +163,17 @@ export function createLkqLookupHandler(dependencies = {}) {
       const providerStart = now();
       let providerPromise = inflightReplacementRequests.get(cacheKey);
       let budgetResult = null;
+      const groundedTelemetry = {
+        attempted: false,
+        succeeded: false,
+        failureCode: null,
+        durationMs: null,
+        fallbackAttempted: false,
+        fallbackProvider: null,
+        fallbackSucceeded: null,
+        fallbackDurationMs: null,
+        recovered: false,
+      };
       if (!providerPromise) {
         providerPromise = (async () => {
           const limiter = dependencies.rateLimiter || limiterFactory(redis);
@@ -147,16 +199,96 @@ export function createLkqLookupHandler(dependencies = {}) {
             error.budgetResult = budgetResult;
             throw error;
           }
-          return deadline.run('lkq-provider-call', () => providerLookup(queryInfo, {
-            deadline,
-            maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(350)),
-            reserveMs: 350,
-            fetchImpl: dependencies.fetchImpl,
-            apiKey: dependencies.apiKey,
-          }), {
-            maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(350)),
-            reserveMs: 350,
-          });
+
+          if (!useGrounded) {
+            return deadline.run('lkq-provider-call', () => providerLookup(queryInfo, {
+              deadline,
+              maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
+              reserveMs: 350,
+              fetchImpl: dependencies.fetchImpl,
+              apiKey: dependencies.apiKey,
+            }), {
+              maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
+              reserveMs: 350,
+            });
+          }
+
+          // Grounded path: bound the grounded attempt below the full
+          // provider ceiling so a genuine reserve remains for a same-
+          // deadline, same-budget-reservation ungrounded fallback if it
+          // times out. This mirrors the age-lookup grounded-timeout-fallback
+          // design exactly, including the fix for the outer-wait ceiling
+          // below -- see docs/smart-lookup-architecture.md.
+          groundedTelemetry.attempted = true;
+          const groundedMaxMs = Math.min(groundedStageBudgetMs, deadline.remainingMs(350));
+          const groundedStart = now();
+          let groundedValue;
+          try {
+            groundedValue = await deadline.run('lkq-provider-call-grounded', () => groundedProviderLookup(queryInfo, {
+              deadline,
+              maxMs: groundedMaxMs,
+              reserveMs: 350,
+              fetchImpl: dependencies.fetchImpl,
+              apiKey: dependencies.apiKey,
+            }), {
+              maxMs: groundedMaxMs,
+              reserveMs: 350,
+            });
+          } catch (groundedError) {
+            groundedTelemetry.durationMs = Math.max(0, now() - groundedStart);
+            groundedTelemetry.failureCode = isTimeoutError(groundedError)
+              ? 'STAGE_TIMEOUT'
+              : (groundedError instanceof SmartLookupProviderError ? groundedError.code : 'PROVIDER_UNAVAILABLE');
+
+            // Only a bounded stage timeout gets a same-deadline fallback
+            // here; every other grounded failure (400/429/5xx/malformed/
+            // empty) is already resolved inside callGeminiWithGroqFallback's
+            // existing bounded Groq path before it can reach this scope.
+            if (!isTimeoutError(groundedError)) throw groundedError;
+            if (!deadline.hasTime(groundedFallbackMinRemainingMs, groundedFallbackReserveMs)) throw groundedError;
+
+            groundedTelemetry.fallbackAttempted = true;
+            const fallbackMaxMs = Math.min(providerBudgetMs, deadline.remainingMs(groundedFallbackReserveMs));
+            const fallbackStart = now();
+            try {
+              const fallbackValue = await deadline.run('lkq-provider-call-fallback', () => providerLookup(queryInfo, {
+                deadline,
+                maxMs: fallbackMaxMs,
+                reserveMs: groundedFallbackReserveMs,
+                fetchImpl: dependencies.fetchImpl,
+                apiKey: dependencies.apiKey,
+              }), {
+                maxMs: fallbackMaxMs,
+                reserveMs: groundedFallbackReserveMs,
+              });
+              groundedTelemetry.fallbackDurationMs = Math.max(0, now() - fallbackStart);
+              groundedTelemetry.fallbackSucceeded = true;
+              groundedTelemetry.fallbackProvider = getSmartLookupProviderMetadata(fallbackValue).provider;
+              groundedTelemetry.recovered = true;
+              // Mark the shared resolved value itself (not just this
+              // request's local groundedTelemetry) so a concurrent
+              // "hitchhiker" request awaiting the same in-flight promise --
+              // which never runs this branch itself -- still labels the
+              // result as recovered instead of defaulting to false.
+              if (fallbackValue && typeof fallbackValue === 'object') fallbackValue.__groundedFallbackRecovered = true;
+              return fallbackValue;
+            } catch (fallbackError) {
+              groundedTelemetry.fallbackDurationMs = Math.max(0, now() - fallbackStart);
+              groundedTelemetry.fallbackSucceeded = false;
+              groundedTelemetry.fallbackProvider = fallbackError instanceof SmartLookupProviderError ? fallbackError.provider : null;
+              // Preserve the original grounded timeout as the reported
+              // error; the fallback attempt failing too still means "the
+              // deadline could not produce a useful result."
+              throw groundedError;
+            }
+          }
+
+          groundedTelemetry.durationMs = Math.max(0, now() - groundedStart);
+          const groundedMeta = getSmartLookupProviderMetadata(groundedValue);
+          groundedTelemetry.succeeded = Boolean(groundedMeta.grounded)
+            && Array.isArray(groundedMeta.groundedSources)
+            && groundedMeta.groundedSources.length > 0;
+          return groundedValue;
         })();
         inflightReplacementRequests.set(cacheKey, providerPromise);
         providerPromise.finally(() => {
@@ -166,8 +298,19 @@ export function createLkqLookupHandler(dependencies = {}) {
 
       let raw;
       try {
+        // Ungrounded-only requests keep the existing providerBudgetMs
+        // outer ceiling, sized for one provider call. A grounded request's
+        // inner sequence (rate limit, budget reserve, the bounded grounded
+        // stage, and on a grounded timeout the bounded same-deadline
+        // fallback) is already self-limiting at each stage via this same
+        // deadline, so the outer wait only needs to track the true
+        // remaining route budget, not re-impose a shorter, single-call
+        // sized ceiling on top of an already-bounded multi-stage sequence.
+        const providerWaitMaxMs = useGrounded
+          ? deadline.remainingMs(300)
+          : Math.min(providerBudgetMs, deadline.remainingMs(300));
         raw = await deadline.run('lkq-provider-result-wait', () => providerPromise, {
-          maxMs: Math.min(dependencies.providerBudgetMs || PROVIDER_BUDGET_MS, deadline.remainingMs(300)),
+          maxMs: providerWaitMaxMs,
           reserveMs: 300,
         });
       } catch (error) {
@@ -179,7 +322,11 @@ export function createLkqLookupHandler(dependencies = {}) {
           : (isTimeoutError(error)
             ? 'PROVIDER_TIMEOUT'
             : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE')));
-        const actualAttempts = providerAttemptCountFromMetadata(null, errorCode);
+        // A grounded timeout that also attempted (and failed) a same-deadline
+        // fallback made one additional real provider call beyond what
+        // providerAttemptCountFromMetadata infers from the reported error
+        // alone; account for it so daily attempt metrics are not undercounted.
+        const actualAttempts = providerAttemptCountFromMetadata(null, errorCode) + (groundedTelemetry.fallbackAttempted ? 1 : 0);
         const attemptMetrics = actualAttempts
           ? await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'lkq', actualAttempts, deadline, {
               stage: 'lkq-provider-attempt-metrics',
@@ -206,6 +353,7 @@ export function createLkqLookupHandler(dependencies = {}) {
           budgetStatus: error.budgetResult?.status || budgetResult?.status || null,
           logicalLookupCount: error.budgetResult?.logicalLookupCount ?? budgetResult?.logicalLookupCount ?? null,
           actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
+          groundedTelemetry,
         });
         return res.status(200).json(result);
       }
@@ -219,11 +367,24 @@ export function createLkqLookupHandler(dependencies = {}) {
         // fallback; read which one actually served this result instead of
         // assuming Gemini succeeded.
         providerMetadata = getSmartLookupProviderMetadata(raw);
+        // Read the recovery marker off the resolved value itself (not the
+        // local groundedTelemetry object): a concurrent request that shared
+        // this provider call without running the fallback branch itself
+        // still needs to label the shared result correctly.
+        const groundedFallbackRecovered = Boolean(raw && raw.__groundedFallbackRecovered);
+        const groundedWithMetadata = Boolean(providerMetadata.grounded)
+          && Array.isArray(providerMetadata.groundedSources)
+          && providerMetadata.groundedSources.length > 0;
         result = normalizeReplacementResult(raw, {
           queryInfo,
           source: providerMetadata.provider,
           originSource: providerMetadata.provider,
-          evidenceSource: providerMetadata.provider === 'groq' ? 'groq-ungrounded' : 'gemini-ungrounded',
+          evidenceSource: providerMetadata.provider === 'groq'
+            ? 'groq-ungrounded'
+            : (groundedWithMetadata ? 'grounded' : 'gemini-ungrounded'),
+          sources: groundedWithMetadata ? providerMetadata.groundedSources : [],
+          retrievedAt: groundedWithMetadata ? new Date().toISOString() : null,
+          groundedFallback: groundedFallbackRecovered,
           cacheStatus,
           providerAttempted: true,
           fallbackUsed: providerMetadata.fallbackUsed,
@@ -231,8 +392,8 @@ export function createLkqLookupHandler(dependencies = {}) {
         });
       } catch (error) {
         timings.postProcessMs = Math.max(0, now() - postStart);
-        const actualAttempts = providerAttemptCountFromMetadata(providerMetadata);
-        const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'lkq', actualAttempts, deadline, {
+        const invalidAttempts = providerAttemptCountFromMetadata(providerMetadata) + (raw && raw.__groundedFallbackRecovered ? 1 : 0);
+        const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'lkq', invalidAttempts, deadline, {
           stage: 'lkq-provider-attempt-metrics',
           maxMs: CACHE_WRITE_BUDGET_MS,
           now,
@@ -244,12 +405,15 @@ export function createLkqLookupHandler(dependencies = {}) {
         logLkqResult(logger, requestId, queryInfo, result, {
           budgetStatus: budgetResult?.status || null,
           logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
-          actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
+          actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? invalidAttempts,
+          groundedTelemetry,
         });
         return res.status(200).json(result);
       }
       timings.postProcessMs = Math.max(0, now() - postStart);
-      const actualAttempts = providerAttemptCountFromMetadata(providerMetadata);
+      // A recovered grounded-timeout result was served by the fallback call,
+      // but the discarded grounded attempt was still one real provider call.
+      const actualAttempts = providerAttemptCountFromMetadata(providerMetadata) + (raw && raw.__groundedFallbackRecovered ? 1 : 0);
       const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'lkq', actualAttempts, deadline, {
         stage: 'lkq-provider-attempt-metrics',
         maxMs: CACHE_WRITE_BUDGET_MS,
@@ -271,6 +435,7 @@ export function createLkqLookupHandler(dependencies = {}) {
         budgetStatus: budgetResult?.status || null,
         logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
         actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
+        groundedTelemetry,
       });
       return res.status(200).json(result);
     } catch (error) {

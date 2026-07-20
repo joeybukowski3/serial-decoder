@@ -98,9 +98,27 @@ Smart Lookup does not calculate midpoint years. Model data may expose `introduct
 
 LKQ replacement models must come from structured evidence or validated provider output. The system does not fabricate current-generation LG successors. Returned brand, model, and category must remain compatible with the requested item. Partial inputs remain partial and are not silently completed to exact model numbers.
 
+### Grounded LKQ research (optional)
+
+Setting `SMART_LOOKUP_GROUNDED_LKQ=1` (also accepts `true`/`on`; default off) switches `/api/lkq-lookup` to Google Search grounding for exact-model queries only, using the exact same eligibility rule, timeout-safe fallback chain, and text-mode JSON parsing already proven for grounded age research (`lib/smart-lookup/provider.js`'s `extractJsonFromText`/`parseGroundingSources` are shared, not duplicated).
+
+Identity comes before pricing: the grounded prompt requires the model to identify the original item, find the best-supported replacement candidate, compare specifications, and classify the replacement relationship *before* gathering price evidence, and price observations are only ever trusted (`priceObservations`, `replacementCostRange`) when the result actually ended up grounded (`manufacturer-grounded` / `retailer-grounded` / `mixed-grounded`) -- an ungrounded or timeout-recovered result never carries price data regardless of what the provider text claims.
+
+Replacement relationship values: `direct-successor`, `same-series-successor`, `functional-equivalent`, `similar-alternative`, `none-found`. A `direct-successor` claim requires at least one grounded source whose domain has the original brand's own normalized name as an exact dot-separated label (e.g. `lg.com`, not a substring match, to avoid false positives like "walgreens.com" for brand "LG"); lacking that evidence, the claim is downgraded to `same-series-successor` rather than rejected. A malformed or partial replacement model token is dropped (never trusted) and, if the relationship implied a specific successor, downgraded to `functional-equivalent`. A replacement in a different product category is rejected outright (`REPLACEMENT_CATEGORY_MISMATCH`), matching the existing `UNRELATED_CATEGORY` check on the original item.
+
+Compatibility values: `likely-compatible`, `compatible-with-caveats`, `not-directly-compatible`, `unknown` -- never guessed; a missing critical specification stays `unknown` rather than being inferred.
+
+Evidence-source values: `manufacturer-grounded`, `retailer-grounded`, `mixed-grounded` (computed server-side from which source domains matched the brand, never trusted from provider JSON), `gemini-ungrounded`, `groq-ungrounded`, `static`, `none`. A grounded classification with zero retrieved sources downgrades to the matching ungrounded label, exactly like the age contract.
+
+Grounded LKQ research is bounded below the full provider ceiling (`GROUNDED_LKQ_STAGE_BUDGET_MS`, 5000ms -- larger than age's 4200ms because a single LKQ pass covers original identity, replacement identity, compatibility, and pricing, not just a date) so a genuine reserve remains for a same-deadline, same-budget-reservation ungrounded fallback on a stage timeout (`GROUNDED_LKQ_FALLBACK_MIN_REMAINING_MS`, 1500ms). The outer `lkq-provider-result-wait` wrapper tracks the true remaining route deadline for grounded requests (not a `providerBudgetMs`-sized sub-ceiling), applying the same nested-timeout fix already shipped for grounded age research from the start, rather than reintroducing that bug class. A successful fallback recovery is marked `groundedFallback: true` on the shared resolved provider value itself (not just request-local state), so a concurrent request sharing the same in-flight promise is labeled correctly too.
+
+## Pricing rules
+
+Pricing is evidence-based and computed server-side from validated `priceObservations`, never trusted directly from provider JSON. Each observation requires an identifiable seller and a numeric price; entries matching accessory/part/warranty/installation-only/refurbished/used/open-box keywords are dropped. Default is new-condition only. A `replacementCostRange` is produced only when at least two same-currency new-condition observations exist, or exactly one observation explicitly labeled as a manufacturer/official/MSRP price -- a single ordinary retailer observation renders as an observation, never a range, and mixed currencies never merge into one range.
+
 ## Pricing limitations
 
-Provider-only price and retailer claims are volatile and unverified. Ungrounded prices are marked unavailable and retailers are marked not verified. Stable successor identity is separated from volatile price and availability context.
+Provider-only price and retailer claims are volatile and unverified. Ungrounded prices are marked unavailable and retailers are marked not verified. Stable successor identity is separated from volatile price and availability context. The identity/pricing cache split considered in the LKQ grounding design was not implemented: a single cache entry keeps the added Redis round-trips and invalidation surface low for this feature's first version, with the TTL itself already capped low (3 days) whenever price observations are present so stale pricing does not persist long; this can be revisited if production traffic shows the identity portion is disproportionately expensive to re-research every few days.
 
 ## Build commands
 
