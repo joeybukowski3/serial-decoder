@@ -316,3 +316,172 @@ test('grounded-timeout-fallback telemetry logs summary fields but never raw note
   assert.equal(logText.includes('WM3900HWA'), false);
   assert.equal(out.payload.groundedFallback, true);
 });
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Simulates realistic Redis/rate-limit/global-budget round-trip latency
+// instead of instantly-resolving mocks, so the combined (grounded timeout +
+// fallback) duration genuinely has to compete against real elapsed time
+// rather than near-zero elapsed time.
+function latentRedis(latencyMs) {
+  return {
+    get: async () => { await sleep(latencyMs); return null; },
+    set: async () => { await sleep(latencyMs); },
+    eval: async () => { await sleep(latencyMs); return [1, 1, 1]; },
+    incrby: async (_key, amount) => { await sleep(latencyMs); return amount; },
+    expire: async () => { await sleep(latencyMs); return 1; },
+  };
+}
+
+// This scenario is the exact regression reported from the live preview:
+// grounded search times out at its bounded stage ceiling, the same-deadline
+// ungrounded fallback starts correctly and is on track to finish inside the
+// true 8500ms-equivalent route deadline, but the combined
+// (overhead + grounded timeout + fallback) duration exceeds the OLD
+// providerBudgetMs-sized outer `provider-result-wait` ceiling (6500ms in
+// production; scaled down here for a fast, deterministic test). Against
+// commit 184b578 the outer wait aborts the still-in-flight fallback and
+// returns the flat timeout response; with the nested-timeout fix the outer
+// wait tracks the true remaining route deadline instead, so it doesn't
+// abort the fallback prematurely.
+test('REGRESSION: grounded timeout + fallback exceeding the old outer provider-result-wait ceiling still recovers within the true route deadline', async () => {
+  let fallbackCalls = 0;
+  const handler = createAgeLookupHandler({
+    totalBudgetMs: 1600,
+    providerBudgetMs: 500,
+    groundedStageBudgetMs: 300,
+    groundedFallbackMinRemainingMs: 50,
+    groundedFallbackReserveMs: 30,
+    groundedEnabled: true,
+    localLookup: async () => null,
+    redisFactory: () => latentRedis(15),
+    groundedProviderLookup: () => new Promise(() => {}),
+    providerLookup: async () => {
+      fallbackCalls += 1;
+      // Longer than providerBudgetMs (500ms, the old single-call outer
+      // ceiling) but the combined timeline still finishes well inside the
+      // 1600ms total route deadline.
+      await sleep(400);
+      return closedBookGeminiSuccess()();
+    },
+  });
+  const out = res();
+  const started = Date.now();
+  await handler(req('LG WM3900HWA'), out);
+  const elapsed = Date.now() - started;
+  assert.equal(fallbackCalls, 1, 'the fallback must have been attempted');
+  assert.equal(out.statusCode, 200);
+  assert.equal(out.payload.errorCode, null, `expected a recovered result, got errorCode=${out.payload.errorCode}`);
+  assert.equal(out.payload.groundedFallback, true);
+  assert.equal(out.payload.evidenceSource, 'gemini-ungrounded');
+  assert.equal(out.payload.model, 'WM3900HWA');
+  assert.ok(elapsed < 1600, `total elapsed (${elapsed}ms) must stay within the 1600ms route deadline`);
+});
+
+test('Samsung-style fast grounded success is unaffected by the outer-wait fix', async () => {
+  let groundedCalls = 0;
+  let fallbackCalls = 0;
+  const handler = createAgeLookupHandler({
+    groundedEnabled: true,
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    groundedProviderLookup: async () => {
+      groundedCalls += 1;
+      return withMetadata({
+        brand: 'Samsung', model: 'QN65Q60RAFXZA', specificityLevel: 'specific',
+        introductionYear: 2019, productionRange: { start: 2019, end: 2020 },
+        evidence: [{ detail: 'Manufacturer product page.', source: 'samsung.com' }],
+        suggestedModelNumbers: [],
+      }, {
+        provider: 'gemini', fallbackUsed: false, grounded: true,
+        groundedSources: [{ title: 'samsung.com', domain: 'samsung.com', uri: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/x' }],
+        searchQueryCount: 1,
+      });
+    },
+    providerLookup: async () => { fallbackCalls += 1; return closedBookGeminiSuccess()(); },
+  });
+  const out = res();
+  await handler(req('Samsung QN65Q60RAFXZA'), out);
+  assert.equal(groundedCalls, 1);
+  assert.equal(fallbackCalls, 0);
+  assert.equal(out.payload.evidenceSource, 'gemini-grounded');
+  assert.equal(out.payload.sources.length, 1);
+  assert.equal(out.payload.groundedFallback, false);
+});
+
+test('fallback that would exceed the true total route deadline still returns the safe timeout response', async () => {
+  let fallbackCalls = 0;
+  const handler = createAgeLookupHandler({
+    // Total must comfortably clear the pre-provider hasTime(900,300) gate
+    // (needs total >= ~1200 with near-zero elapsed).
+    totalBudgetMs: 1300,
+    providerBudgetMs: 5000,
+    groundedStageBudgetMs: 300,
+    groundedFallbackMinRemainingMs: 50,
+    groundedFallbackReserveMs: 100,
+    groundedEnabled: true,
+    localLookup: async () => null,
+    redisFactory: () => latentRedis(15),
+    groundedProviderLookup: () => new Promise(() => {}),
+    providerLookup: async () => {
+      fallbackCalls += 1;
+      // Deliberately far longer than any remaining route budget could ever
+      // allow, so even the fixed outer wait (tracking real remaining time,
+      // not an artificial shorter ceiling) must still time out safely
+      // rather than waiting out this full delay.
+      await sleep(2000);
+      return closedBookGeminiSuccess()();
+    },
+  });
+  const out = res();
+  const started = Date.now();
+  await handler(req('LG WM3900HWA'), out);
+  const elapsed = Date.now() - started;
+  assert.equal(fallbackCalls, 1, 'the fallback must still have been attempted');
+  assert.equal(out.payload.errorCode, 'PROVIDER_TIMEOUT');
+  assert.equal(out.payload.fallbackUsed, false);
+  assert.equal(out.payload.groundedFallback, false);
+  assert.ok(elapsed < 1500, `total elapsed (${elapsed}ms) must stay near the 1300ms total deadline, not the fallback's full 2000ms delay -- no second full timeout chain`);
+});
+
+test('ungrounded-only requests still use the existing providerBudgetMs outer ceiling, unaffected by the grounded fix', async () => {
+  let providerCalls = 0;
+  const handler = createAgeLookupHandler({
+    totalBudgetMs: 1600,
+    providerBudgetMs: 300,
+    groundedEnabled: false,
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    providerLookup: async (_input, options) => {
+      providerCalls += 1;
+      return closedBookGeminiSuccess()();
+    },
+  });
+  const out = res();
+  await handler(req('LG WM3900HWA'), out);
+  assert.equal(providerCalls, 1);
+  assert.equal(out.payload.evidenceSource, 'gemini-ungrounded');
+  assert.equal(out.payload.groundedFallback, false);
+});
+
+test('ungrounded-only provider timeout is still bounded by providerBudgetMs, not the full route deadline', async () => {
+  const handler = createAgeLookupHandler({
+    totalBudgetMs: 2000,
+    providerBudgetMs: 150,
+    groundedEnabled: false,
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    providerLookup: () => new Promise(() => {}),
+  });
+  const out = res();
+  const started = Date.now();
+  await handler(req('LG WM3900HWA'), out);
+  const elapsed = Date.now() - started;
+  assert.equal(out.payload.errorCode, 'PROVIDER_TIMEOUT');
+  // Must abort near the 150ms providerBudgetMs ceiling, not wait out the
+  // full 2000ms total deadline -- proving the ungrounded branch keeps its
+  // existing single-call-sized outer ceiling unchanged.
+  assert.ok(elapsed < 800, `ungrounded timeout took ${elapsed}ms; expected it to abort near the 150ms provider ceiling, not the 2000ms total deadline`);
+});

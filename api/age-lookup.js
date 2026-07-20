@@ -475,8 +475,23 @@ export function createAgeLookupHandler(dependencies = {}) {
       }
 
       try {
+        // Ungrounded-only requests keep the existing providerBudgetMs
+        // (6500ms) outer ceiling, sized for one provider call. A grounded
+        // request's inner sequence -- rate limit, budget reserve, the
+        // bounded grounded stage, and (on a grounded timeout) the bounded
+        // same-deadline fallback -- is already self-limiting at each stage
+        // via this same deadline, so the outer wait only needs to track the
+        // true remaining route budget, not re-impose a shorter, single-call
+        // sized ceiling on top of an already-bounded multi-stage sequence.
+        // This never extends the total deadline: if the true 8500ms is
+        // exhausted, the inner stages' own deadline.run calls (and this
+        // outer wait, now watching the same remaining time) time out at
+        // that same real boundary either way.
+        const providerWaitMaxMs = useGrounded
+          ? deadline.remainingMs(300)
+          : Math.min(providerBudgetMs, deadline.remainingMs(300));
         rawProvider = await deadline.run('provider-result-wait', () => providerPromise, {
-          maxMs: Math.min(providerBudgetMs, deadline.remainingMs(300)),
+          maxMs: providerWaitMaxMs,
           reserveMs: 300,
         });
       } catch (error) {
