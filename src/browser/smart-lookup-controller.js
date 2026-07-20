@@ -97,7 +97,49 @@
       body: 'We couldn’t reach Smart Lookup just now.',
       tryNext: 'Check your connection and try again.',
     },
+    'unusable-query': {
+      heading: 'We couldn’t identify a product',
+      body: 'This search didn’t contain a recognizable brand, category, or product description.',
+      tryNext: 'Add a brand, category, or model number so Smart Lookup can identify the item.',
+    },
+    'brand-category-recognized': {
+      heading: 'Broad brand/category guidance',
+      body: 'We recognized the brand and category, but not a specific model.',
+      tryNext: 'Enter the complete model number or serial number from the product label.',
+    },
   };
+
+  // Headings and short explanations shown for a result whose precision is
+  // less than an exact model -- these tell the user WHY the result is
+  // broad, what it covers, and what it does not establish, per the
+  // progressive-specificity product requirement.
+  var PRECISION_HEADINGS = {
+    exact: 'Exact model result',
+    'narrow-range': 'Narrow model-line estimate',
+    'model-line-range': 'Model-line estimate',
+    'family-range': 'Broad product-family estimate',
+    'broad-range': 'Broad brand/category guidance',
+    'general-guidance': 'General product guidance',
+  };
+
+  function precisionExplanation(data) {
+    if (!data || !data.precisionLevel) return '';
+    if (data.precisionLevel === 'family-range') {
+      return (data.recognizedFamily || data.productFamily || 'This product name')
+        + ' was used across multiple generations, so this result describes the overall family rather than one exact configuration.';
+    }
+    if (data.precisionLevel === 'model-line-range') {
+      return 'This result describes the ' + (data.recognizedSeries || data.seriesLine || 'model line')
+        + ' rather than one exact configuration.';
+    }
+    if (data.precisionLevel === 'broad-range') {
+      return 'This result describes the recognized brand and category broadly, not one specific model.';
+    }
+    if (data.precisionLevel === 'general-guidance') {
+      return 'This is general guidance rather than information about one specific product.';
+    }
+    return '';
+  }
 
   var REPLACEMENT_UNAVAILABLE_COPY = {
     heading: 'Replacement match unavailable',
@@ -276,9 +318,11 @@
     if (code === 'INTRODUCTION_AFTER_RANGE' || code === 'REVERSED_RANGE') return 'conflict';
     if (code && MALFORMED_AGE_ERROR_CODES[code]) return 'malformed';
     if (hasUsableAgeInfo(data)) return 'success';
+    if (data.querySpecificity === 'unusable') return 'unusable-query';
     if (data.productFamily && data.yearContext && data.yearContext.type === 'unknown') return 'product-year-unverified';
     if (data.productFamily && data.exactModel) return 'exact-model-insufficient';
     if (data.productFamily) return 'product-family-recognized';
+    if (!code && data.querySpecificity === 'brand-category') return 'brand-category-recognized';
     if (code === 'INSUFFICIENT_QUERY_DETAIL') return 'missing-input';
     if (!code) {
       // No errorCode at all means the request succeeded but simply had
@@ -322,6 +366,16 @@
     }
     if (bucket === 'unavailable-generic' && data && data.notes) {
       return { heading: base.heading, body: data.notes, tryNext: base.tryNext };
+    }
+    if (bucket === 'unusable-query') {
+      return { heading: base.heading, body: (data && data.notes) || base.body, tryNext: base.tryNext };
+    }
+    if (bucket === 'brand-category-recognized') {
+      return {
+        heading: base.heading,
+        body: (data && data.notes) || base.body,
+        tryNext: (data && data.refinementSuggestion) || base.tryNext,
+      };
     }
     if (bucket === 'rate-limited' && data && data.notes) {
       return { heading: base.heading, body: data.notes, tryNext: base.tryNext };
@@ -417,7 +471,25 @@
   }
 
   function isGroundedTimeoutFallbackResult(data) {
+    // groundedFallback is reserved exclusively for a real AI (Gemini/Groq)
+    // recovery of a timed-out grounded attempt (fallbackKind
+    // 'ungrounded-provider') -- never for a deterministic, non-AI result.
     return Boolean(data) && data.groundedFallback === true && !isGroundedProviderResult(data);
+  }
+
+  // A DIFFERENT kind of degradation than isGroundedTimeoutFallbackResult:
+  // no AI (Gemini or Groq) ever ran for this result -- a recognized
+  // model-line/family/brand-category query's own registry/deterministic
+  // data was substituted after a provider attempt failed or timed out. This
+  // must never be worded as "AI-assisted" or "research completed".
+  var DETERMINISTIC_DEGRADED_WORDING = {
+    'deterministic-model-line': 'We recognized this model line, but live research did not finish. This broad timeframe is based on model-line-level information rather than a source-verified exact-model lookup.',
+    'deterministic-family': 'We recognized this product family, but live research did not finish. This broad timeframe is based on family-level information rather than a source-verified exact-model lookup.',
+    'deterministic-brand-category': 'We recognized this brand and category, but live research did not finish. This broad guidance is based on general brand/category information rather than a source-verified lookup.',
+  };
+
+  function isDeterministicDegradedResult(data) {
+    return Boolean(data) && Object.prototype.hasOwnProperty.call(DETERMINISTIC_DEGRADED_WORDING, data.fallbackKind);
   }
 
   function sourceQualifier(data) {
@@ -427,6 +499,9 @@
       return 'AI research grounded in live Google Search results'
         + (retrievedOn ? ' retrieved ' + retrievedOn : '')
         + '; review the cited web sources below.';
+    }
+    if (isDeterministicDegradedResult(data)) {
+      return DETERMINISTIC_DEGRADED_WORDING[data.fallbackKind];
     }
     if (isGroundedTimeoutFallbackResult(data)) {
       return 'AI-assisted model research completed, but live web verification timed out. Review this as an estimate rather than a source-verified finding.';
@@ -508,8 +583,31 @@
     var qualifierHtml = qualifier
       ? '<p class="smart-lookup-source-note">' + escapeHtml(qualifier) + '</p>'
       : '';
+    // Precision badge + plain-language "why is this broad" line -- shown
+    // whenever the result is anything less than an exact model match.
+    var precisionLabel = data && PRECISION_HEADINGS[data.precisionLevel];
+    var precisionBadgeHtml = precisionLabel
+      ? '<p class="smart-lookup-precision-badge">' + escapeHtml(precisionLabel) + '</p>'
+      : '';
+    var precisionNote = precisionExplanation(data);
+    var precisionNoteHtml = precisionNote
+      ? '<p class="smart-lookup-precision-note">' + escapeHtml(precisionNote) + '</p>'
+      : '';
+    // Concrete, itemized refinement guidance ("enter the code starting with
+    // AN515...") takes priority over the single generic refinementSuggestion
+    // sentence when the API supplied specific identifiers to ask for.
+    var recommendedIdentifiers = Array.isArray(data && data.recommendedIdentifiers) ? data.recommendedIdentifiers : [];
+    var refinementHtml = recommendedIdentifiers.length
+      ? '<div class="smart-lookup-refinement"><p class="smart-lookup-try-next"><strong>To narrow this result:</strong></p><ul>' +
+        recommendedIdentifiers.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') +
+        '</ul></div>'
+      : (data && data.refinementSuggestion
+        ? '<p class="smart-lookup-try-next"><strong>Try this next:</strong> ' + escapeHtml(data.refinementSuggestion) + '</p>'
+        : '');
     return '<div class="smart-age-result smart-year-context-result">' +
       '<h3>' + escapeHtml(resultHeading(data)) + '</h3>' +
+      precisionBadgeHtml +
+      precisionNoteHtml +
       fallbackNote +
       qualifierHtml +
       '<div class="smart-year-context-primary" style="display:grid;gap:2px;margin:12px 0 8px;padding:18px;border:1px solid #bfdbfe;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#f8fafc)"><span class="smart-year-context-value" style="font:800 clamp(2.3rem,8vw,3.6rem)/1 JetBrains Mono,monospace;color:#1d4ed8">' + escapeHtml(primaryYear) + '</span><span class="smart-year-context-label" style="font-size:.9rem;font-weight:800;color:#334155">' + escapeHtml(yearLabel) + '</span></div>' +
@@ -521,7 +619,7 @@
       '<div class="result-row"><span class="result-label">Individual manufacture date</span><span class="result-value">' + escapeHtml(manufactureMessage) + '</span></div>' +
       variantsHtml +
       (data && data.notes ? '<div class="info-block notes"><h4>What this year means</h4><p>' + escapeHtml(data.notes) + '</p></div>' : '') +
-      (data && data.refinementSuggestion ? '<p class="smart-lookup-try-next"><strong>Try this next:</strong> ' + escapeHtml(data.refinementSuggestion) + '</p>' : '') +
+      refinementHtml +
       evidenceHtml +
       renderGroundedSources(data) +
       '</div>';

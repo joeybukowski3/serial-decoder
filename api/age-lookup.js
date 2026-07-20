@@ -196,22 +196,58 @@ export function createAgeLookupHandler(dependencies = {}) {
     let redis = null;
     let cacheStatus = 'bypass';
 
+    // A recognized product-family/model-line/brand-category query always
+    // has a safe, instant, deterministic answer ready as a fallback --
+    // built once here and re-normalized (cheap, no I/O) with fresh timings
+    // at whichever point below actually uses it. This is what lets a
+    // grounded-research timeout degrade to a useful card instead of an
+    // empty result, for any of the three deterministic-eligible tiers.
+    const hasDeterministicFallback = Boolean(queryInfo.productFamily) || queryInfo.querySpecificity === 'brand-category';
+    const deterministicFallbackRaw = hasDeterministicFallback ? buildDeterministicBroadResult(queryInfo) : null;
+    const buildDeterministicFallback = () => (deterministicFallbackRaw
+      ? normalizeLegacyResult(deterministicFallbackRaw, queryInfo, {
+          source: 'static', evidenceSource: 'heuristic', timings, currentYear,
+        })
+      : null);
+    // Which deterministic evidence kind backs this query's fallback, used
+    // ONLY when actually substituting for a failed/timed-out provider
+    // attempt below (never on the always-fast path) -- see the
+    // FALLBACK_KINDS comment in result-schema.js for why this must never be
+    // confused with groundedFallback (reserved for real AI recovery).
+    const deterministicFallbackKind = queryInfo.querySpecificity === 'model-line'
+      ? 'deterministic-model-line'
+      : (queryInfo.querySpecificity === 'brand-category' ? 'deterministic-brand-category' : 'deterministic-family');
+    const degradeToDeterministicFallback = () => {
+      const fallback = buildDeterministicFallback();
+      return fallback ? { ...fallback, fallbackKind: deterministicFallbackKind, groundedFallback: false } : null;
+    };
+
     try {
-      // A recognized product-family query must stay a family query. In
-      // particular, do not let a short legacy alias such as "C3" promote the
-      // request to one arbitrary screen-size model from the local database.
-      if (queryInfo.productFamily) {
-        const productFamilyResult = buildDeterministicBroadResult(queryInfo);
-        if (productFamilyResult) {
-          const result = finalizeTimings(normalizeLegacyResult(productFamilyResult, queryInfo, {
-            source: 'static',
-            evidenceSource: 'heuristic',
-            timings,
-            currentYear,
-          }), timings, deadline);
-          logResult(logger, requestId, queryInfo, result);
-          return res.status(200).json(result);
-        }
+      // A query with no recognizable product signal at all (empty,
+      // keyboard-mash, pure noise) gets a deterministic clarification and
+      // never reaches the provider.
+      if (queryInfo.querySpecificity === 'unusable') {
+        const result = finalizeTimings(normalizeLegacyResult(buildDeterministicBroadResult(queryInfo), queryInfo, {
+          source: 'static', evidenceSource: 'heuristic', timings, currentYear,
+        }), timings, deadline);
+        logResult(logger, requestId, queryInfo, result);
+        return res.status(200).json(result);
+      }
+
+      // A recognized product-family/brand-category query must stay
+      // classified as such. In particular, do not let a short legacy alias
+      // such as "C3" promote the request to one arbitrary screen-size model
+      // from the local database. When grounded research is not enabled or
+      // not eligible for this specificity tier, this deterministic result
+      // IS the answer -- same fast, safe behavior as before this change,
+      // and fallbackKind stays 'none' (this was never a degraded result).
+      // Otherwise, fall through to attempt grounded research within the
+      // same route deadline, with this result held in reserve as the
+      // fallback for any failure/timeout.
+      if (deterministicFallbackRaw && (!groundedEnabled || !queryInfo.groundedEligible)) {
+        const result = finalizeTimings(buildDeterministicFallback(), timings, deadline);
+        logResult(logger, requestId, queryInfo, result);
+        return res.status(200).json(result);
       }
 
       const localStart = now();
@@ -254,7 +290,12 @@ export function createAgeLookupHandler(dependencies = {}) {
         return res.status(200).json(result);
       }
 
-      const broadResult = buildDeterministicBroadResult(queryInfo);
+      // Skip this for a product-family/model-line/brand-category query that
+      // reached here on purpose (grounding is enabled and eligible -- see
+      // the branch above): buildDeterministicBroadResult would just rebuild
+      // the same deterministicFallbackRaw and short-circuit, defeating the
+      // whole point of continuing on to attempt grounded research below.
+      const broadResult = deterministicFallbackRaw ? null : buildDeterministicBroadResult(queryInfo);
       if (broadResult) {
         const result = finalizeTimings(normalizeLegacyResult(broadResult, queryInfo, {
           source: 'static',
@@ -267,12 +308,12 @@ export function createAgeLookupHandler(dependencies = {}) {
       }
 
       redis = dependencies.redis || redisFactory();
-      // Grounded research is selective: only exact-model queries that already
-      // missed every local, verified, and deterministic path. Everything else
-      // keeps the existing closed-book provider behavior.
+      // Grounded research covers exact-model queries (as before) plus
+      // model-line and product-family queries when grounding is enabled and
+      // eligible for this specificity tier -- see queryInfo.groundedEligible.
       const useGrounded = groundedEnabled
         && queryInfo.providerEligible
-        && queryInfo.modelCompleteness === 'exact';
+        && queryInfo.groundedEligible;
       const cacheKey = buildSmartAgeCacheKey(queryInfo, { grounded: useGrounded });
       const verifiedKey = getVerifiedModelKey(queryInfo);
       let cacheRead = { status: 'unavailable', value: null, elapsedMs: 0 };
@@ -324,14 +365,16 @@ export function createAgeLookupHandler(dependencies = {}) {
       }
 
       if (!queryInfo.providerEligible || !deadline.hasTime(900, 300)) {
-        const result = finalizeTimings(createUnavailableSmartAgeResult(queryInfo, {
-          source: 'fallback',
-          evidenceSource: 'none',
-          cacheStatus,
-          providerAttempted: false,
-          timings,
-          errorCode: 'INSUFFICIENT_QUERY_DETAIL',
-        }), timings, deadline);
+        const degraded = degradeToDeterministicFallback();
+        const result = finalizeTimings(degraded
+          || createUnavailableSmartAgeResult(queryInfo, {
+              source: 'fallback',
+              evidenceSource: 'none',
+              cacheStatus,
+              providerAttempted: false,
+              timings,
+              errorCode: 'INSUFFICIENT_QUERY_DETAIL',
+            }), timings, deadline);
         logResult(logger, requestId, queryInfo, result);
         return res.status(200).json(result);
       }
@@ -518,20 +561,30 @@ export function createAgeLookupHandler(dependencies = {}) {
         // PROVIDERS_UNAVAILABLE means the Groq fallback was actually attempted
         // (and also failed) before this error surfaced; every other code means
         // Groq was never reached, so fallbackUsed must stay false here.
-        const result = finalizeTimings(createUnavailableSmartAgeResult(queryInfo, {
-          source: 'fallback',
-          evidenceSource: 'none',
-          cacheStatus,
-          providerAttempted: errorCode !== 'RATE_LIMIT' && errorCode !== 'GLOBAL_BUDGET_EXHAUSTED' && errorCode !== 'BUDGET_STORE_UNAVAILABLE',
-          fallbackUsed: errorCode === 'PROVIDERS_UNAVAILABLE',
-          timings,
-          errorCode,
-          notes: errorCode === 'RATE_LIMIT'
-            ? 'Smart Lookup provider capacity is temporarily limited. Local and cached lookups remain available.'
-            : (errorCode === 'GLOBAL_BUDGET_EXHAUSTED' || errorCode === 'BUDGET_STORE_UNAVAILABLE'
-              ? 'Smart Lookup provider capacity is temporarily limited. Please try again tomorrow.'
-              : undefined),
-        }), timings, deadline);
+        // A recognized product-family/model-line/brand-category query
+        // degrades to its deterministic card instead of an empty
+        // "unavailable" result -- this is the graceful-degradation fix: the
+        // provider attempt failing (timeout, rate limit, or budget
+        // exhaustion) never erases evidence the classifier already had.
+        // This is a purely deterministic, non-AI result, so fallbackKind
+        // (not groundedFallback) is what labels it -- see
+        // degradeToDeterministicFallback above.
+        const degraded = degradeToDeterministicFallback();
+        const result = finalizeTimings(degraded
+          || createUnavailableSmartAgeResult(queryInfo, {
+              source: 'fallback',
+              evidenceSource: 'none',
+              cacheStatus,
+              providerAttempted: errorCode !== 'RATE_LIMIT' && errorCode !== 'GLOBAL_BUDGET_EXHAUSTED' && errorCode !== 'BUDGET_STORE_UNAVAILABLE',
+              fallbackUsed: errorCode === 'PROVIDERS_UNAVAILABLE',
+              timings,
+              errorCode,
+              notes: errorCode === 'RATE_LIMIT'
+                ? 'Smart Lookup provider capacity is temporarily limited. Local and cached lookups remain available.'
+                : (errorCode === 'GLOBAL_BUDGET_EXHAUSTED' || errorCode === 'BUDGET_STORE_UNAVAILABLE'
+                  ? 'Smart Lookup provider capacity is temporarily limited. Please try again tomorrow.'
+                  : undefined),
+            }), timings, deadline);
         logResult(logger, requestId, queryInfo, result, {
           timeoutStage: isTimeoutError(error) ? 'provider' : null,
           budgetStatus: error.budgetResult?.status || budgetResult?.status || null,
@@ -539,7 +592,7 @@ export function createAgeLookupHandler(dependencies = {}) {
           actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
           groundedTelemetry,
         });
-        return res.status(errorCode === 'RATE_LIMIT' ? 429 : 200).json(result);
+        return res.status(degraded ? 200 : (errorCode === 'RATE_LIMIT' ? 429 : 200)).json(result);
       }
       timings.providerMs = Math.max(0, now() - providerStart);
 
@@ -569,6 +622,11 @@ export function createAgeLookupHandler(dependencies = {}) {
           groundedSources: groundedWithSources ? providerMetadata.groundedSources : [],
           retrievedAt: groundedWithSources ? new Date().toISOString() : null,
           groundedFallback: groundedFallbackRecovered,
+          // Real AI (Gemini or Groq, closed-book) produced this result --
+          // 'ungrounded-provider' only when the grounded attempt actually
+          // timed out and this closed-book call recovered it; 'none' for
+          // an ordinary (non-recovered) provider success.
+          fallbackKind: groundedFallbackRecovered ? 'ungrounded-provider' : 'none',
           cacheStatus,
           providerAttempted: true,
           fallbackUsed: providerMetadata.fallbackUsed,
@@ -586,15 +644,17 @@ export function createAgeLookupHandler(dependencies = {}) {
           maxMs: CACHE_WRITE_BUDGET_MS,
           now,
         });
-        result = createUnavailableSmartAgeResult(queryInfo, {
-          source: 'fallback',
-          evidenceSource: 'none',
-          cacheStatus,
-          providerAttempted: true,
-          fallbackUsed: Boolean(providerMetadata?.fallbackUsed),
-          timings,
-          errorCode: error?.code || 'INVALID_PROVIDER_RESULT',
-        });
+        const degraded = degradeToDeterministicFallback();
+        result = degraded
+          || createUnavailableSmartAgeResult(queryInfo, {
+              source: 'fallback',
+              evidenceSource: 'none',
+              cacheStatus,
+              providerAttempted: true,
+              fallbackUsed: Boolean(providerMetadata?.fallbackUsed),
+              timings,
+              errorCode: error?.code || 'INVALID_PROVIDER_RESULT',
+            });
         finalizeTimings(result, timings, deadline);
         logResult(logger, requestId, queryInfo, result, {
           budgetStatus: budgetResult?.status || null,
@@ -634,14 +694,16 @@ export function createAgeLookupHandler(dependencies = {}) {
       });
       return res.status(200).json(result);
     } catch (error) {
-      const result = finalizeTimings(createUnavailableSmartAgeResult(queryInfo, {
-        source: 'fallback',
-        evidenceSource: 'none',
-        cacheStatus,
-        providerAttempted: false,
-        timings,
-        errorCode: isTimeoutError(error) ? 'TOTAL_DEADLINE' : 'INTERNAL_ERROR',
-      }), timings, deadline);
+      const degraded = degradeToDeterministicFallback();
+      const result = finalizeTimings(degraded
+        || createUnavailableSmartAgeResult(queryInfo, {
+            source: 'fallback',
+            evidenceSource: 'none',
+            cacheStatus,
+            providerAttempted: false,
+            timings,
+            errorCode: isTimeoutError(error) ? 'TOTAL_DEADLINE' : 'INTERNAL_ERROR',
+          }), timings, deadline);
       logResult(logger, requestId, queryInfo, result, { timeoutStage: isTimeoutError(error) ? error.stage || 'unknown' : null });
       return res.status(200).json(result);
     }
