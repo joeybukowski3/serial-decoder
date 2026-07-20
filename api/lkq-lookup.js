@@ -1,7 +1,8 @@
 import { buildSmartLkqCacheKey, chooseSmartLkqTtl, hashCanonicalQuery, prepareReplacementForCache } from '../lib/smart-lookup/cache.js';
 import { providerAttemptCountFromMetadata, recordProviderAttemptMetrics, reserveProviderBudget } from '../lib/smart-lookup/budget.js';
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
-import { classifySmartLookupQuery, normalizeKnownQuery, normalizeSmartLookupNotes, normalizeWhitespace, SMART_LOOKUP_NOTES_MAX_LENGTH } from '../lib/smart-lookup/normalize.js';
+import { classifySmartLookupQuery, deriveReplacementPrecision, normalizeKnownQuery, normalizeSmartLookupNotes, normalizeWhitespace, SMART_LOOKUP_NOTES_MAX_LENGTH } from '../lib/smart-lookup/normalize.js';
+import { buildDeterministicReplacementResult } from '../lib/smart-lookup/replacement-static-results.js';
 import {
   callGeminiLkqProvider,
   callSmartLookupGroundedLkqProvider,
@@ -13,6 +14,7 @@ import {
   createReplacementTimings,
   createUnavailableReplacementResult,
   normalizeCachedReplacementResult,
+  normalizeDeterministicReplacementResult,
   normalizeReplacementResult,
 } from '../lib/smart-lookup/replacement-schema.js';
 import {
@@ -84,6 +86,26 @@ function logLkqResult(logger, requestId, queryInfo, result, extra = {}) {
     compatibilityStatus: result?.compatibilityStatus || null,
     priceObservationCount: Array.isArray(result?.priceObservations) ? result.priceObservations.length : 0,
     priceRangeProduced: Boolean(result?.replacementCostRange),
+    // Progressive-LKQ telemetry (Phase 11, additive). Privacy-safe by
+    // construction: counts and enum-valued summaries only, never raw query
+    // text, notes, model numbers, serial/service-tag content, provider
+    // payloads, or candidate descriptions.
+    replacementPrecision: result?.replacementPrecision || null,
+    originalIdentityLevel: result?.originalIdentityLevel || null,
+    candidateCount: Array.isArray(result?.replacementCandidates) ? result.replacementCandidates.length : 0,
+    sameBrandCandidateCount: Array.isArray(result?.replacementCandidates)
+      ? result.replacementCandidates.filter((candidate) => candidate.brand
+        && queryInfo.brand
+        && String(candidate.brand).toLowerCase() === String(queryInfo.brand).toLowerCase()).length
+      : 0,
+    crossBrandCandidateCount: Array.isArray(result?.replacementCandidates)
+      ? result.replacementCandidates.filter((candidate) => candidate.brand
+        && queryInfo.brand
+        && String(candidate.brand).toLowerCase() !== String(queryInfo.brand).toLowerCase()).length
+      : 0,
+    configurationUnknown: Boolean(result?.configurationUnknown),
+    deterministicFallbackUsed: Boolean(result?.deterministicFallbackUsed),
+    refinementNeeded: Boolean(result?.refinementNeeded),
     timings: result?.timings,
   });
 }
@@ -129,21 +151,46 @@ export function createLkqLookupHandler(dependencies = {}) {
 
     const deadline = createDeadline({ totalMs: dependencies.totalBudgetMs || TOTAL_BUDGET_MS, now });
     const timings = createReplacementTimings();
-    const queryInfo = {
+    const baseQueryInfo = {
       ...classifySmartLookupQuery(validation.value.query),
       userNotes: validation.value.notes,
       notesHash: validation.value.notes ? hashCanonicalQuery(validation.value.notes) : '',
     };
-    // Grounded research is selective, matching the age-lookup eligibility
-    // rule: only exact-model queries, where real-world retailer/manufacturer
-    // pages are likely to exist and be worth the extra latency. Deliberately
-    // NOT expanded to model-line/product-family (unlike age-lookup's
-    // groundedEligible) -- broad-tier LKQ stays on the closed-book path,
-    // where the overclaim guard in buildLkqProviderPrompt/replacement-schema
-    // prevents it from naming one arbitrary product as THE family successor.
+    const queryInfo = {
+      ...baseQueryInfo,
+      // Notes can upgrade exact-model to exact-configuration once notes are
+      // attached; classifySmartLookupQuery itself has no notes to consult.
+      replacementPrecision: deriveReplacementPrecision(baseQueryInfo, validation.value.notes),
+    };
+    // Grounded research is selective: exact-model queries always qualify
+    // (real-world retailer/manufacturer pages are likely to exist), and --
+    // as of the progressive-LKQ work -- so do model-line queries and
+    // high-confidence product-family queries (`lkqGroundedEligible`,
+    // computed in normalize.js). A bare category, weak free-form
+    // description, brand-only match, or low-confidence family stays on the
+    // closed-book path, where the overclaim guard in
+    // buildLkqProviderPrompt/replacement-schema prevents it from naming one
+    // arbitrary product as THE family/category successor -- see Phase 4 in
+    // docs/smart-lookup-architecture.md.
     const useGrounded = groundedEnabled
       && queryInfo.providerEligible
-      && queryInfo.modelCompleteness === 'exact';
+      && queryInfo.lkqGroundedEligible;
+
+    // A recognized model-line/product-family/brand-category query always
+    // has a safe, instant, deterministic replacement card in reserve (Phase
+    // 8 -- see docs/smart-lookup-architecture.md "Progressive LKQ
+    // degradation"): built once here (cheap, no I/O, no provider budget)
+    // and substituted at every provider failure point below instead of the
+    // generic "temporarily unavailable" response, so a recognized query
+    // never renders an empty replacement panel purely because grounded or
+    // ungrounded provider research failed. Never itself written to cache
+    // (each substitution re-normalizes with fresh timings) and never
+    // labeled grounded or AI-assisted.
+    const deterministicFallbackRaw = buildDeterministicReplacementResult(queryInfo);
+    const buildDeterministicFallback = () => (deterministicFallbackRaw
+      ? finish(normalizeDeterministicReplacementResult(deterministicFallbackRaw, queryInfo, timings), timings, deadline)
+      : null);
+
     const redis = dependencies.redis || redisFactory();
     const cacheKey = buildSmartLkqCacheKey(queryInfo, { grounded: useGrounded });
     let cacheStatus = 'bypass';
@@ -355,7 +402,12 @@ export function createLkqLookupHandler(dependencies = {}) {
           : { actualProviderAttemptCount: 0 };
         // PROVIDERS_UNAVAILABLE means the Groq fallback was actually attempted
         // (and also failed); every other code means Groq was never reached.
-        const result = finish(createUnavailableReplacementResult(queryInfo, {
+        // A recognized model-line/family/brand-category query degrades to
+        // the deterministic fallback instead of the generic "temporarily
+        // unavailable" message -- the deterministic path makes no provider
+        // or Redis call, so it is always safe here regardless of which
+        // failure occurred (Phase 8).
+        const result = buildDeterministicFallback() || finish(createUnavailableReplacementResult(queryInfo, {
           cacheStatus,
           providerAttempted: errorCode !== 'RATE_LIMIT' && errorCode !== 'GLOBAL_BUDGET_EXHAUSTED' && errorCode !== 'BUDGET_STORE_UNAVAILABLE',
           fallbackUsed: errorCode === 'PROVIDERS_UNAVAILABLE',
@@ -373,6 +425,7 @@ export function createLkqLookupHandler(dependencies = {}) {
           logicalLookupCount: error.budgetResult?.logicalLookupCount ?? budgetResult?.logicalLookupCount ?? null,
           actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
           groundedTelemetry,
+          errorCode,
         });
         return res.status(200).json(result);
       }
@@ -417,7 +470,7 @@ export function createLkqLookupHandler(dependencies = {}) {
           maxMs: CACHE_WRITE_BUDGET_MS,
           now,
         });
-        result = finish(createUnavailableReplacementResult(queryInfo, {
+        result = buildDeterministicFallback() || finish(createUnavailableReplacementResult(queryInfo, {
           cacheStatus, providerAttempted: true, fallbackUsed: getSmartLookupProviderMetadata(raw).fallbackUsed,
           errorCode: error?.code || 'INVALID_PROVIDER_RESULT', timings,
         }), timings, deadline);
@@ -426,6 +479,7 @@ export function createLkqLookupHandler(dependencies = {}) {
           logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
           actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? invalidAttempts,
           groundedTelemetry,
+          errorCode: error?.code || 'INVALID_PROVIDER_RESULT',
         });
         return res.status(200).json(result);
       }
@@ -458,13 +512,15 @@ export function createLkqLookupHandler(dependencies = {}) {
       });
       return res.status(200).json(result);
     } catch (error) {
-      const result = finish(createUnavailableReplacementResult(queryInfo, {
+      const errorCode = isTimeoutError(error) ? 'TOTAL_DEADLINE' : 'INTERNAL_ERROR';
+      const result = buildDeterministicFallback() || finish(createUnavailableReplacementResult(queryInfo, {
         cacheStatus,
-        errorCode: isTimeoutError(error) ? 'TOTAL_DEADLINE' : 'INTERNAL_ERROR',
+        errorCode,
         timings,
       }), timings, deadline);
       logLkqResult(logger, requestId, queryInfo, result, {
         timeoutStage: isTimeoutError(error) ? error.stage || 'unknown' : null,
+        errorCode,
       });
       return res.status(200).json(result);
     }
