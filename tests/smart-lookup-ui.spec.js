@@ -407,6 +407,96 @@ test.describe('Smart Lookup controller', () => {
     await expect(panel).not.toContainText('Web sources consulted');
   });
 
+  test('grounded-timeout fallback renders the estimate wording without any grounded claim or source links', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: {
+        source: 'gemini',
+        evidenceSource: 'gemini-ungrounded',
+        groundedFallback: true,
+        brand: 'LG',
+        model: 'WM3900HWA',
+        introductionYear: 2019,
+        retrievedAt: null,
+        sources: [],
+        evidence: [{ detail: 'Model pattern knowledge.' }],
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('LG WM3900HWA');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('AI-assisted model research completed, but live web verification timed out.');
+    await expect(panel).toContainText('Review this as an estimate rather than a source-verified finding.');
+    await expect(panel).not.toContainText('grounded in live Google Search');
+    await expect(panel).not.toContainText('Web sources consulted');
+    await expect(panel).not.toContainText('no live manufacturer source was verified');
+    await expect(panel.locator('.smart-lookup-sources')).toHaveCount(0);
+    await expect(panel.locator('a[href*="vertexaisearch"]')).toHaveCount(0);
+  });
+
+  test('grounded-timeout fallback via Groq still renders the estimate wording, not the generic AI-assisted phrasing', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: {
+        source: 'groq',
+        evidenceSource: 'groq-ungrounded',
+        groundedFallback: true,
+        fallbackUsed: true,
+        brand: 'LG',
+        model: 'WM3900HWA',
+        introductionYear: 2019,
+        sources: [],
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('LG WM3900HWA');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('AI-assisted model research completed, but live web verification timed out.');
+    await expect(panel).not.toContainText('Groq AI-assisted analysis based on the information entered');
+  });
+
+  test('a genuine grounded timeout with no recoverable fallback still renders the existing timeout-only copy', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: {
+        errorCode: 'PROVIDER_TIMEOUT',
+        evidenceSource: 'none',
+        groundedFallback: false,
+        brand: 'LG',
+        model: 'WM3900HWA',
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('LG WM3900HWA');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('Taking longer than expected');
+    await expect(panel).not.toContainText('AI-assisted model research completed');
+  });
+
+  test('existing successful grounded rendering is unaffected by the timeout-fallback wording addition', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: {
+        source: 'gemini',
+        evidenceSource: 'gemini-grounded',
+        groundedFallback: false,
+        brand: 'LG',
+        model: 'WM3900HWA',
+        introductionYear: 2019,
+        retrievedAt: '2026-07-19T12:00:00.000Z',
+        sources: [
+          { title: 'lg.com', domain: 'lg.com', uri: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/a' },
+        ],
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('LG WM3900HWA');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('AI research grounded in live Google Search results retrieved 2026-07-19');
+    await expect(panel).toContainText('Web sources consulted');
+    await expect(panel).not.toContainText('live web verification timed out');
+  });
+
   test('replacement unavailable copy does not claim a verified replacement, and age still renders', async ({ page }) => {
     await page.route('**/api/lkq-lookup', async (route) => {
       await route.fulfill({ json: { errorCode: 'PROVIDER_TIMEOUT', replacementOptions: [] } });
