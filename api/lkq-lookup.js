@@ -136,13 +136,32 @@ export function createLkqLookupHandler(dependencies = {}) {
     };
     // Grounded research is selective, matching the age-lookup eligibility
     // rule: only exact-model queries, where real-world retailer/manufacturer
-    // pages are likely to exist and be worth the extra latency.
+    // pages are likely to exist and be worth the extra latency. Deliberately
+    // NOT expanded to model-line/product-family (unlike age-lookup's
+    // groundedEligible) -- broad-tier LKQ stays on the closed-book path,
+    // where the overclaim guard in buildLkqProviderPrompt/replacement-schema
+    // prevents it from naming one arbitrary product as THE family successor.
     const useGrounded = groundedEnabled
       && queryInfo.providerEligible
       && queryInfo.modelCompleteness === 'exact';
     const redis = dependencies.redis || redisFactory();
     const cacheKey = buildSmartLkqCacheKey(queryInfo, { grounded: useGrounded });
     let cacheStatus = 'bypass';
+
+    // A query with no recognizable product signal never reaches the
+    // provider -- mirrors the age-lookup unusable short-circuit. A missing
+    // age result must never be the reason replacement research looks like
+    // it "found nothing"; this keeps both routes consistent about what
+    // "nothing to work with" means.
+    if (queryInfo.querySpecificity === 'unusable') {
+      const result = finish(createUnavailableReplacementResult(queryInfo, {
+        cacheStatus: 'bypass',
+        providerAttempted: false,
+        message: "We couldn't identify a physical product from this search.",
+      }), timings, deadline);
+      logLkqResult(logger, requestId, queryInfo, result);
+      return res.status(200).json(result);
+    }
 
     try {
       const cacheRead = await boundedRedisGet(redis, cacheKey, deadline, {

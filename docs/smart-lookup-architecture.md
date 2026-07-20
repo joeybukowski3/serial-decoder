@@ -68,7 +68,7 @@ Providers are bounded, mocked in tests, and never used for local validation. Pro
 
 ## Grounded age research (optional)
 
-Setting `SMART_LOOKUP_GROUNDED_AGE=1` (also accepts `true`/`on`; default off) switches the age-lookup Gemini call to Google Search grounding for exact-model queries only. Grounding never runs for partial, brand-only, generic, product-family, local-hit, decoder-verified, cache-hit, deterministic, rate-limited, budget-exhausted, or Redis-outage paths — those keep their existing behavior and never consume grounded capacity.
+Setting `SMART_LOOKUP_GROUNDED_AGE=1` (also accepts `true`/`on`; default off) switches the age-lookup Gemini call to Google Search grounding for exact-model queries, and — as of the progressive-specificity work below — also for model-line and product-family queries when no local/registry evidence already answers them outright. Grounding still never runs for brand-category, category-only, free-description, unusable, local-hit, decoder-verified, cache-hit, rate-limited, budget-exhausted, or Redis-outage paths — those keep their existing deterministic-only behavior and never consume grounded capacity. Grounded LKQ replacement research (`SMART_LOOKUP_GROUNDED_LKQ`) remains exact-model only; see "Progressive specificity" below for why.
 
 Because the Gemini API rejects `responseMimeType: application/json` combined with the `google_search` tool, grounded calls request plain text, instruct JSON-only output, strip optional code fences, and parse. Citations are read exclusively from the response `groundingMetadata` (`groundingChunks[].web.uri/title`) on the server; model-authored JSON can never inject sources. A grounded response with zero retrieved sources is downgraded to `gemini-ungrounded` so citations cannot be fabricated.
 
@@ -89,6 +89,69 @@ The grounded stage is now bounded below the full provider ceiling (`GROUNDED_STA
 A successful recovery is marked `groundedFallback: true` on the result (server-derived on the returned provider value, not just request-local state, so a concurrent request sharing the same in-flight provider call is labeled correctly too) and rendered with distinct wording: "AI-assisted model research completed, but live web verification timed out. Review this as an estimate rather than a source-verified finding." — never the grounded-specific "grounded in live Google Search," "Web sources consulted," or any source links, since a recovered result by definition has no real citations.
 
 Age cache schema is `v5`; grounded and ungrounded modes use distinct cache keys (`g1`/`g0` identity marker) so flipping the flag never serves one mode's cache to the other. Grounded results cache for 7 days and retain their stored `retrievedAt`. Google Search grounding billing: the paid tier includes 1,500 grounded prompts per UTC day for `gemini-2.5-flash` before per-query charges; the existing combined daily budget (default 180) keeps usage inside that free allotment. Roll back by removing the env flag — behavior returns to closed-book Gemini with the previous validation and wording.
+
+## Progressive specificity
+
+Smart Lookup previously classified a query into a binary "have an exact model" / "don't" shape (`specificityLevel`), which left every unrecognized-but-real product (e.g. an unlisted laptop brand) indistinguishable from meaningless input — both fell into `specificityLevel: 'unknown'` and took the same expensive, timeout-prone path with no deterministic fallback. `lib/smart-lookup/normalize.js` now additionally computes `querySpecificity`, a 7-tier taxonomy, alongside (not replacing) the legacy field:
+
+`exact-model` → `model-line` → `product-family` → `brand-category` → `category-only` → `free-description` → `unusable`
+
+`brand-category` merges the legacy `brand-only` case (a category alone, e.g. "washer", is `category-only`; a recognized brand — with or without a category word — is `brand-category`, since the brand is the stronger signal). `unusable` is a new, narrow, deterministic (non-LLM) classification in `lib/smart-lookup/family-registry.js#isLikelyUnusableQuery` — empty input, near-zero letter content, or a very low vowel ratio in the letter content, checked only after brand/category/family/model recognition all failed. It is deliberately conservative (a false "unusable" call would silently block a real query from ever reaching the provider), and it is the only tier where `providerEligible` is `false` for a reason other than "a fast deterministic answer already exists."
+
+### Family/model-line recognition registry
+
+`lib/smart-lookup/family-registry.js` generalizes the pre-existing TV-only `TV_PRODUCT_FAMILY_SEEDS` mechanism (still used unchanged for Samsung Q-series/LG OLED families) into a brand-agnostic, data-driven `GENERAL_FAMILY_SEEDS` array. Each seed is brand- and category-scoped — a bare number or generic word can never match; the distinctive part of `familyPattern`/`modelLinePattern` always requires the brand's own product-name token (e.g. "Nitro 5", not "5") — which is what prevents cross-brand false positives for short family names. A seed can independently define a `familyPattern` (recognizes the family by name, e.g. "Nitro 5"), a `modelLinePattern` (recognizes a generation prefix without the full configuration suffix, e.g. "AN515-58"), and an `exactModelPattern` (recognizes the complete SKU, e.g. "AN515-58-57Y8"); `classifySmartLookupQuery` picks the most specific match available and — critically — overrides the older, brand-independent "hyphen implies exact" heuristic in `modelCompletenessFor` for any query the registry recognizes as a model-line (that heuristic is preserved unchanged for brands without a registry entry, for backward compatibility).
+
+Initial registry coverage and its sourcing basis (kept intentionally conservative — see `lib/smart-lookup/family-registry.js` for full citations and caveats):
+
+| Brand:family | Category | Confidence | Range basis |
+|---|---|---|---|
+| Acer:nitro-5 (+ AN515 model line) | laptop | medium | Launched 2017, still current; per-generation years (AN515-41 through -58+) are qualitative eras, not independently verified exact boundaries |
+| Dell:inspiron-15 | laptop | low | Modern 3000/5000/7000 naming from ~2014, still current; earlier Inspiron 1525/1545/15R generations noted but not modeled |
+| Samsung:galaxy-tab | tablet | medium | Family from 2010; Tab A/S/Active split in 2014, still current |
+| Whirlpool:cabrio | washer | low | Approximate mid-2000s–early-2020s window; exact start/end years could not be independently source-verified, so no false precision is asserted |
+| Trane:xr13 | air conditioner | low | Long-running, currently-sold single-stage line since roughly the mid-2000s; the line has had several marketing-name changes without a clean generational break |
+
+### Degradation ladder (why Acer Nitro 5 no longer times out into nothing)
+
+A recognized product-family/model-line/brand-category query always has a safe, instant, deterministic result (`buildDeterministicBroadResult` → `buildGeneralFamilyResult`/the brand-only branch in `lib/smart-lookup/static-results.js`) computed up front in `api/age-lookup.js`, before any network call. When grounded research is disabled or not eligible for the query's tier, that deterministic result **is** the response — same fast, zero-timeout-risk behavior the deterministic brand-only/generic paths already had, and `fallbackKind` stays `'none'` (this was never a degradation). When grounding is enabled and eligible (`queryInfo.groundedEligible`, true for `exact-model`/`model-line`/`product-family` and, as of the brand-category eligibility work below, a *meaningful* `brand-category` query), the handler instead continues past that point to attempt grounded (falling back to ungrounded, per the existing PR #52/#53 machinery) research within the *same* route deadline — with the deterministic result held in reserve and substituted at every failure point (grounded+ungrounded timeout, rate limit, budget exhaustion, invalid provider output, or total-deadline exhaustion) instead of the generic `createUnavailableSmartAgeResult`. No new timeout budget is introduced anywhere in this path; it reuses the identical deadline/budget primitives PR #52/#53 already established. A degraded result is a live, always-current re-derivation (cheap, no I/O), never a stale cached one, and it is never itself written to cache.
+
+This is what fixes the demonstrated failure: "Acer Nitro 5" now resolves `querySpecificity: 'product-family'`, has a deterministic family card ready immediately, and — even if a grounded attempt is enabled and times out — degrades to that same useful card instead of an empty timeout response.
+
+### Fallback labeling: `fallbackKind`, and why `groundedFallback` alone was not enough
+
+An earlier version of this degradation ladder marked every substituted deterministic result with `groundedFallback: true` — the same flag PR #52/#53 use for a *real* Gemini/Groq closed-book recovery of a timed-out grounded call. That is wrong: the browser reads `groundedFallback: true` as "AI-assisted model research completed, but live web verification timed out," and a purely deterministic, registry-derived result was never produced by any AI call. `normalizeSmartAgeResult` now carries an explicit, additive `fallbackKind` field —
+
+`none | ungrounded-provider | deterministic-model-line | deterministic-family | deterministic-brand-category | clarification`
+
+— and the two concepts are kept strictly separate:
+
+- `groundedFallback: true` + `fallbackKind: 'ungrounded-provider'` — a real Gemini/Groq closed-book call recovered a timed-out grounded attempt (unchanged PR #52/#53 behavior, set in `api/age-lookup.js`'s `providerOptions.fallbackKind = groundedFallbackRecovered ? 'ungrounded-provider' : 'none'`). The browser shows the existing "AI-assisted model research completed..." wording, no sources.
+- `groundedFallback: false` + `fallbackKind: 'deterministic-model-line' | 'deterministic-family' | 'deterministic-brand-category'` — the deterministic registry/classification result was substituted after a provider attempt actually failed (set only at the specific substitution points in `api/age-lookup.js` via `degradeToDeterministicFallback()`, never as a blanket default). The browser shows new, distinct, tier-specific wording (e.g. "We recognized this product family, but live research did not finish. This broad timeframe is based on family-level information rather than a source-verified exact-model lookup.") that never claims AI involvement or grounding.
+- `fallbackKind: 'clarification'` — the unusable-query result (`buildUnusableResult`); never a researched estimate of any kind.
+- `fallbackKind: 'none'` — everything else, including the always-fast deterministic path when grounding was never attempted (not eligible, or the flag is off) and any ordinary grounded/ungrounded provider success.
+
+`src/browser/smart-lookup-controller.js`'s `sourceQualifier()` checks `isDeterministicDegradedResult()` (keyed off `fallbackKind`) before `isGroundedTimeoutFallbackResult()` (keyed off `groundedFallback`), so the two wordings can never be conflated.
+
+Two related schema-level guards close off overclaim paths that only became reachable once brand-category queries could reach a provider at all: `productFamily` in a provider response is trusted only when the deterministic classifier already recognized one (`queryInfo.productFamily` truthy) — a provider can confirm a family, never invent one — and, for a brand-category (`specificityLevel: 'brand-only'`) request, `yearContext` is restricted to broad types (`production-range`, `market-introduction`, `release-year`, `unknown`); a `manufacture-year`/`manufacture-date`/`model-year-family` claim is stripped rather than trusted, since none of those are defensible without an identified model.
+
+### Result schema additions (additive)
+
+`normalizeSmartAgeResult` gained `querySpecificity`, `precisionLevel` (`exact | narrow-range | model-line-range | family-range | broad-range | general-guidance`), `confidenceLevel` (`high | medium | low | unknown`), `fallbackKind` (see above), `recognizedBrand/Category/Family/Series/Model`, `familyRange`/`modelLineRange` (open-ended-safe: `end` may be `null` with `current: true` rather than a synthetic end year), `generationSummary`, `refinementNeeded`/`refinementReason`, and `recommendedIdentifiers`. All are additive; every existing field keeps its prior meaning and validation.
+
+### Cache and prompts
+
+Cache keys (`lib/smart-lookup/cache.js`) now include `querySpecificity`, `familyId`, and `modelLineId` in their identity, so an exact-model, model-line, product-family, and brand-category result for otherwise-identical query text can never collide (`SMART_AGE_POLICY_VERSION` bumped to `model-semantics-3`, `SMART_LKQ_SCHEMA_VERSION` to `v7`). The age grounded/ungrounded prompts (`lib/smart-lookup/provider.js`) gain an additional instruction block — appended only for `model-line`/`product-family`/`brand-category` tiers, so the exact-model prompt text is unchanged — asking for a family/model-line-level range or, for brand-category, only broad known eras/availability periods/common model-number formats, never a selected model or a claimed manufacture year.
+
+### Brand-category grounded eligibility
+
+A *meaningful* brand-category query — both a recognized brand **and** a recognized category (e.g. "Whirlpool top-load washer", "Rheem gas water heater", "Samsung television", "Acer gaming laptop", "Trane heat pump") — is grounded-eligible for bounded research, using the same authoritative route deadline, one logical budget reservation, existing grounded-source validation, and same-deadline degradation behavior as every other tier (`isMeaningfulBrandCategory` in `lib/smart-lookup/normalize.js`). A bare brand with no category (e.g. "Whirlpool" alone) or a bare category with no brand (`category-only`: "refrigerator", "gaming laptop", "washer", "television", "appliance") stays deterministic-only — the audit found no demonstrated benefit from grounding that thin a signal, matching the existing conservative default for `category-only`/`unusable`. `appliance` was added to `GENERIC_CATEGORIES` so it classifies as `category-only` rather than falling through to the (provider-eligible) `free-description` tier.
+
+LKQ grounded eligibility was **not** expanded to brand-category in this change — it stays exact-model-only, matching already-merged, tested behavior (`tests/api/smart-lookup-grounded-lkq.test.mjs`).
+
+### LKQ interaction
+
+Grounded LKQ replacement research (`SMART_LOOKUP_GROUNDED_LKQ`) deliberately stays exact-model-only — this matches already-merged, tested behavior (`tests/api/smart-lookup-grounded-lkq.test.mjs`) and was not widened. For non-exact tiers, the closed-book LKQ prompt gains an overclaim guard instructing the model never to name one specific current product as *the* successor to an entire line/family/category, and `lib/smart-lookup/replacement-schema.js` enforces the same rule server-side (downgrading any `direct-successor`/`same-series-successor`/`direct_successor` claim to `similar-alternative`/`none` for `brand-category`/`category-only` queries) so the guarantee holds even if a provider response ignores the prompt. An LKQ failure or downgrade never touches the independent age-lookup result — the two routes share no mutable state.
 
 ## Date semantics
 
@@ -139,6 +202,8 @@ Provider fallback tests verify:
 - a Gemini timeout does not start Groq;
 - dual-provider failure returns a bounded aggregate error;
 - the original total deadline remains authoritative.
+
+`tests/smart-lookup/progressive-specificity.test.mjs` and `tests/api/smart-lookup-progressive-specificity.test.mjs` cover the querySpecificity taxonomy, the Acer Nitro 5 regression fixture (family/model-line/exact-model classification, and grounded-timeout degradation to a useful family card), meaningful-brand-category grounded eligibility (Whirlpool/Rheem/Samsung/Acer/Trane examples vs. bare-category/bare-brand non-eligibility), cache-key distinctness across specificity tiers and fallback kinds, schema-level stripping of an invented family or manufacture-year claim in a brand-category response, and the LKQ overclaim guard (including confirmation that LKQ grounding was deliberately not expanded to brand-category). `tests/smart-lookup/progressive-specificity-ui.test.mjs` covers the browser-rendered precision badge, itemized refinement guidance, the `unusable-query`/`brand-category-recognized` outcome buckets, and — critically — that grounded, AI-fallback (`groundedFallback`/`ungrounded-provider`), deterministic-fallback (`fallbackKind: deterministic-*`), and clarification wording are mutually exclusive and never conflated.
 
 ## Benchmarks
 
