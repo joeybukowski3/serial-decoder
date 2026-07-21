@@ -297,3 +297,68 @@ test('grounded telemetry logs source counts but never raw notes or URLs', async 
   assert.equal(logText.includes('estate sale'), false);
   assert.equal(logText.includes('vertexaisearch'), false);
 });
+
+// ── Exact-model deterministic reserve (inclusivity audit 2026-07) ────────────
+// Regression fixtures for the demonstrated production failure: an exact-model
+// query is grounded-eligible and therefore the most timeout-exposed tier, yet
+// it was the ONLY tier with no deterministic reserve, so a research timeout
+// returned an empty result for a fully identified product.
+
+test('an exact-model grounded timeout returns the recognized model instead of nothing', async () => {
+  const handler = createAgeLookupHandler({
+    totalBudgetMs: 1400,
+    groundedStageBudgetMs: 1000,
+    groundedFallbackMinRemainingMs: 1000,
+    groundedEnabled: true,
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    groundedProviderLookup: () => new Promise(() => {}),
+  });
+  const out = res();
+  await handler(req('LG WM3900HWA'), out);
+  assert.equal(out.payload.model, 'WM3900HWA');
+  assert.equal(out.payload.brand, 'LG');
+  assert.equal(out.payload.fallbackKind, 'deterministic-exact-model');
+  // The failure must stay attributable even though the response is useful.
+  assert.equal(out.payload.errorCode, 'PROVIDER_TIMEOUT');
+});
+
+test('the exact-model reserve never invents a year and is never labeled AI or grounded', async () => {
+  const handler = createAgeLookupHandler({
+    totalBudgetMs: 1400,
+    groundedStageBudgetMs: 1000,
+    groundedFallbackMinRemainingMs: 1000,
+    groundedEnabled: true,
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    groundedProviderLookup: () => new Promise(() => {}),
+  });
+  const out = res();
+  await handler(req('Samsung QN65Q60RAFXZA'), out);
+  assert.equal(out.payload.estimatedYear ?? null, null);
+  assert.equal(out.payload.individualManufactureYear ?? null, null);
+  assert.equal(out.payload.groundedFallback, false);
+  assert.equal(out.payload.evidenceSource, 'heuristic');
+  assert.deepEqual(out.payload.sources ?? [], []);
+});
+
+test('a local-database hit still outranks the exact-model reserve', async () => {
+  // The reserve must never overwrite stronger evidence: it is only ever
+  // consulted after a provider attempt has actually failed.
+  let groundedCalls = 0;
+  const handler = createAgeLookupHandler({
+    groundedEnabled: true,
+    redisFactory: () => redisMiss,
+    localLookup: async () => ({
+      brand: 'LG', model: 'WM3900HWA', category: 'washer',
+      specificityLevel: 'specific', estimatedYear: 2019,
+      notes: 'local', evidence: [{ detail: 'local', source: 'local-db' }],
+    }),
+    groundedProviderLookup: async () => { groundedCalls += 1; return {}; },
+  });
+  const out = res();
+  await handler(req('LG WM3900HWA'), out);
+  assert.equal(out.payload.source, 'local-db');
+  assert.equal(out.payload.fallbackKind, 'none');
+  assert.equal(groundedCalls, 0);
+});
