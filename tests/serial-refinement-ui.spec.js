@@ -186,6 +186,64 @@ test('GE dryer label and base model forms refine the serial result to June 2025'
   }
 });
 
+test('GE GFW850 label and family model forms refine FR31424IN to March 2020', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  const requestedModels = [];
+  await page.route('**/api/refine-serial-date', async (route) => {
+    const body = route.request().postDataJSON();
+    requestedModels.push(body.model);
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        candidateYears: [1984, 1996, 2008, 2020],
+        remainingCandidateYears: [2020],
+        chosenYear: 2020,
+        modelProductionRange: { start: 2019, end: 2021 },
+        modelNormalization: body.model === 'GFW850SPN0DG' ? {
+          original: 'GFW850SPN0DG',
+          canonical: 'GFW850SPN0DG',
+          usedValidatedAlternative: true,
+          validatedAlternative: { value: 'GFW850SPNDG', change: 'GFW850SPN0DG→GFW850SPNDG (validated exact model alias)' },
+        } : null,
+        evidence: [{
+          type: 'local-db',
+          title: 'GE GFW850SPNDG official production-window record',
+          quality: 'official',
+          supports: 'Manufactured December 2019 through December 2021.',
+        }],
+        summary: 'Serial decoding produced 1984, 1996, 2008, 2020. Model evidence eliminates the other serial-valid cycles and leaves 2020.',
+      })),
+    });
+  });
+  try {
+    for (const model of ['GFW850SPN0DG', 'GFW850SPNDG']) {
+      await fillDecode(page, 'ge', 'FR31424IN', model);
+      await page.click('#decodeBtn');
+      await expect(page.locator('#resultYear')).toHaveText('2020');
+      await expect(page.locator('#resultMonth')).toHaveText('March');
+      await expect(page.locator('#resultNotes')).toContainText('eliminates the other serial-valid cycles');
+      await expect(page.locator('.result-warning')).toHaveClass(/\bhidden\b/);
+      await expect(page.locator('#narrowDateOutput')).not.toContainText('Model evidence unavailable');
+      await expect(page.locator('[data-serial-refinement-retry="1"]')).toHaveCount(0);
+    }
+
+    // The label variant discloses the resolved canonical family; the
+    // canonical-model request has nothing to disclose (no alias was used).
+    await fillDecode(page, 'ge', 'FR31424IN', 'GFW850SPN0DG');
+    await page.click('#decodeBtn');
+    await expect(page.locator('.serial-refinement-normalization')).toContainText('GFW850SPN0DG');
+    await expect(page.locator('.serial-refinement-normalization')).toContainText('GFW850SPNDG');
+    await expect(page.locator('.serial-refinement-evidence summary')).toHaveText('Evidence used');
+
+    expect(requestedModels).toEqual(['GFW850SPN0DG', 'GFW850SPNDG', 'GFW850SPN0DG']);
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
+
 test('unavailable refinement preserves candidates and Retry after legacy summary rerender', async () => {
   const { browser, context, page, diagnostics } = await openPage({ width: 390, height: 844 });
   await page.route('**/api/refine-serial-date', async (route) => {
