@@ -73,6 +73,15 @@ function logLkqResult(logger, requestId, queryInfo, result, extra = {}) {
     actualProviderAttemptCount: extra.actualProviderAttemptCount ?? result?.actualProviderAttemptCount ?? null,
     timeoutStage: extra.timeoutStage || null,
     errorCode: result?.errorCode || extra.errorCode || null,
+    routeType: 'lkq',
+    identityLevel: queryInfo?.querySpecificity || null,
+    providerEligible: queryInfo?.providerEligible,
+    groundedEligible: queryInfo?.lkqGroundedEligible,
+    localEvidenceHit: false,
+    remainingMsAfterGrounded: extra.remainingMsAfterGrounded ?? grounded.remainingMsAfterGrounded ?? null,
+    inFlightShared: extra.inFlightShared ?? null,
+    deterministicFallbackUsed: Boolean(result?.deterministicFallbackUsed),
+    resultEvidenceType: result?.evidenceSource || null,
     lkqRequested: true,
     lkqGroundedAttempted: grounded.attempted || false,
     lkqGroundedSucceeded: grounded.succeeded || false,
@@ -251,6 +260,10 @@ export function createLkqLookupHandler(dependencies = {}) {
 
       const providerStart = now();
       let providerPromise = inflightReplacementRequests.get(cacheKey);
+      // True when this request attached to an already-running provider
+      // call instead of starting one. Distinguishes "slow provider" from
+      // "waited behind someone else's slow provider" in latency analysis.
+      const inFlightShared = Boolean(providerPromise);
       let budgetResult = null;
       const groundedTelemetry = {
         attempted: false,
@@ -333,6 +346,11 @@ export function createLkqLookupHandler(dependencies = {}) {
             // here; every other grounded failure (400/429/5xx/malformed/
             // empty) is already resolved inside callGeminiWithGroqFallback's
             // existing bounded Groq path before it can reach this scope.
+            // Captured BEFORE the hasTime gate so a grounded timeout that
+            // skips recovery still reports how much budget was actually left --
+            // "no time remained" and "recovery ran and failed" are different
+            // problems and were previously indistinguishable in logs.
+            groundedTelemetry.remainingMsAfterGrounded = deadline.remainingMs(0);
             if (!isTimeoutError(groundedError)) throw groundedError;
             if (!deadline.hasTime(groundedFallbackMinRemainingMs, groundedFallbackReserveMs)) throw groundedError;
 
@@ -455,6 +473,7 @@ export function createLkqLookupHandler(dependencies = {}) {
           logicalLookupCount: error.budgetResult?.logicalLookupCount ?? budgetResult?.logicalLookupCount ?? null,
           actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
           groundedTelemetry,
+        inFlightShared,
           errorCode,
         });
         return res.status(200).json(result);
@@ -513,6 +532,7 @@ export function createLkqLookupHandler(dependencies = {}) {
           logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
           actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? invalidAttempts,
           groundedTelemetry,
+        inFlightShared,
           errorCode: error?.code || 'INVALID_PROVIDER_RESULT',
         });
         return res.status(200).json(result);
@@ -543,6 +563,7 @@ export function createLkqLookupHandler(dependencies = {}) {
         logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
         actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
         groundedTelemetry,
+        inFlightShared,
       });
       return res.status(200).json(result);
     } catch (error) {
