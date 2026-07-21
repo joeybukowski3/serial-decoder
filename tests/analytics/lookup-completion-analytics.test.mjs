@@ -44,6 +44,10 @@ function createHarness({ withGtag = true, gtagImpl } = {}) {
   return { api: window.DecodeMyItemAnalytics, calls, listeners };
 }
 
+function plain(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 test('emits the canonical GA4 event through the existing gtag path', () => {
   const { api, calls } = createHarness();
   const result = api.track('decode_complete', {
@@ -53,7 +57,7 @@ test('emits the canonical GA4 event through the existing gtag path', () => {
   });
   assert.equal(result, true);
   assert.equal(calls.length, 1);
-  assert.deepEqual(calls[0], ['event', 'decode_complete', {
+  assert.deepEqual(plain(calls[0]), ['event', 'decode_complete', {
     lookup_type: 'serial-decode',
     result_status: 'resolved',
     candidate_year_count: 1,
@@ -94,7 +98,7 @@ test('drops unknown parameters and never serializes raw fixture values', () => {
   assert.equal(calls.length, 1);
   const serialized = JSON.stringify(calls[0]);
   fixtures.forEach((fixture) => assert.equal(serialized.includes(fixture), false, fixture));
-  assert.deepEqual(Object.keys(calls[0][2]).sort(), ['identity_level', 'lookup_type', 'result_status']);
+  assert.deepEqual([...Object.keys(calls[0][2])].sort(), ['identity_level', 'lookup_type', 'result_status']);
 });
 
 test('rejects unsupported event names', () => {
