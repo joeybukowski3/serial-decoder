@@ -124,6 +124,17 @@ function logResult(logger, requestId, queryInfo, result, extra = {}) {
     fallbackUsed: result?.fallbackUsed,
     timeoutStage: extra.timeoutStage || null,
     errorCode: result?.errorCode,
+    routeType: 'age',
+    identityLevel: queryInfo?.querySpecificity || null,
+    providerEligible: queryInfo?.providerEligible,
+    groundedEligible: queryInfo?.groundedEligible,
+    localEvidenceHit: result?.source === 'local-db' || result?.source === 'decoder-verified',
+    remainingMsAfterGrounded: extra.remainingMsAfterGrounded ?? grounded.remainingMsAfterGrounded ?? null,
+    inFlightShared: extra.inFlightShared ?? null,
+    deterministicFallbackUsed: typeof result?.fallbackKind === 'string'
+      ? result.fallbackKind.startsWith('deterministic-')
+      : null,
+    resultEvidenceType: result?.evidenceSource || null,
     grounded: result?.evidenceSource === 'gemini-grounded',
     groundedSourceCount: Array.isArray(result?.sources) ? result.sources.length : 0,
     groundedAttempted: grounded.attempted || false,
@@ -416,6 +427,10 @@ export function createAgeLookupHandler(dependencies = {}) {
       const providerStart = now();
       let rawProvider;
       let providerPromise = inflightProviderRequests.get(cacheKey);
+      // True when this request attached to an already-running provider
+      // call instead of starting one. Distinguishes "slow provider" from
+      // "waited behind someone else's slow provider" in latency analysis.
+      const inFlightShared = Boolean(providerPromise);
       let budgetResult = null;
       const groundedTelemetry = {
         attempted: false,
@@ -499,6 +514,11 @@ export function createAgeLookupHandler(dependencies = {}) {
               ? 'STAGE_TIMEOUT'
               : (groundedError instanceof SmartLookupProviderError ? groundedError.code : 'PROVIDER_UNAVAILABLE');
 
+            // Captured BEFORE the hasTime gate so a grounded timeout that
+            // skips recovery still reports how much budget was actually left --
+            // "no time remained" and "recovery ran and failed" are different
+            // problems and were previously indistinguishable in logs.
+            groundedTelemetry.remainingMsAfterGrounded = deadline.remainingMs(0);
             if (!isTimeoutError(groundedError)) throw groundedError;
             if (!deadline.hasTime(groundedFallbackMinRemainingMs, groundedFallbackReserveMs)) throw groundedError;
 
@@ -625,6 +645,7 @@ export function createAgeLookupHandler(dependencies = {}) {
           logicalLookupCount: error.budgetResult?.logicalLookupCount ?? budgetResult?.logicalLookupCount ?? null,
           actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
           groundedTelemetry,
+        inFlightShared,
         });
         return res.status(degraded ? 200 : (errorCode === 'RATE_LIMIT' ? 429 : 200)).json(result);
       }
@@ -695,6 +716,7 @@ export function createAgeLookupHandler(dependencies = {}) {
           logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
           actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? invalidAttempts,
           groundedTelemetry,
+        inFlightShared,
         });
         return res.status(200).json(result);
       }
@@ -725,6 +747,7 @@ export function createAgeLookupHandler(dependencies = {}) {
         logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
         actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
         groundedTelemetry,
+        inFlightShared,
       });
       return res.status(200).json(result);
     } catch (error) {
