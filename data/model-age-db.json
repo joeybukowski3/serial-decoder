@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "lastUpdated": "2026-07-01",
+  "lastUpdated": "2026-07-21",
   "description": "Local-first model availability evidence. Exact manufacture years are only stored when independently known.",
   "records": [
     {
@@ -587,6 +587,41 @@
           "productionStart": 2007,
           "productionEnd": 2008,
           "supports": "This is model-derived evidence for the 2007 product generation; the supplied serial format is not directly decoded.",
+          "quality": "official",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "brand": "Samsung",
+      "model": "QN65Q60RAFXZA",
+      "normalizedBrand": "samsung",
+      "normalizedModel": "qn65q60rafxza",
+      "category": "television",
+      "yearStart": 2019,
+      "yearEnd": 2020,
+      "productionRange": "2019-2020",
+      "source": "Samsung Q60R (2019) product generation timeline",
+      "notes": "Samsung Q60R QLED sets are the 2019 model-year generation and remained in the following sales cycle. The R generation letter is model-year specific (N=2018, R=2019, T=2020), so this record must never be widened to a bare \"Q60\" pattern, which spans unrelated generations. A production range is model-era evidence and does not establish the manufacture date of an individual unit.",
+      "aliases": [
+        "QN65Q60RA",
+        "QN65Q60RAFXZA"
+      ],
+      "exactAliases": [
+        "QN65Q60RAFXZA",
+        "QN65Q60RA"
+      ],
+      "legacyEstimatedYear": 2019,
+      "recordType": "exact-model",
+      "refinementEvidence": [
+        {
+          "type": "local-db",
+          "title": "Samsung QN65Q60RAFXZA (Q60R, 2019) structured model record",
+          "sourceName": "Samsung US official product page, model-year scoped",
+          "sourceUrl": "https://www.samsung.com/us/televisions-home-theater/tvs/qled-4k-tvs/65-class-q60-qled-smart-4k-uhd-tv-2019-qn65q60rafxza/v2/",
+          "productionStart": 2019,
+          "productionEnd": 2020,
+          "supports": "Samsung's own US product page scopes this exact model to the 2019 model year (Q60R generation); the R generation letter is model-year specific and independently verifiable against Samsung's N/R/T naming sequence.",
           "quality": "official",
           "verified": true
         }
