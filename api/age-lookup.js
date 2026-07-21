@@ -24,7 +24,7 @@ import {
   createRedisClient,
   getClientIp,
 } from '../lib/smart-lookup/redis.js';
-import { buildDeterministicBroadResult } from '../lib/smart-lookup/static-results.js';
+import { buildDeterministicBroadResult, buildExactModelReserveResult } from '../lib/smart-lookup/static-results.js';
 import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
 
 const TOTAL_BUDGET_MS = 8500;
@@ -216,10 +216,44 @@ export function createAgeLookupHandler(dependencies = {}) {
     // confused with groundedFallback (reserved for real AI recovery).
     const deterministicFallbackKind = queryInfo.querySpecificity === 'model-line'
       ? 'deterministic-model-line'
-      : (queryInfo.querySpecificity === 'brand-category' ? 'deterministic-brand-category' : 'deterministic-family');
-    const degradeToDeterministicFallback = () => {
-      const fallback = buildDeterministicFallback();
-      return fallback ? { ...fallback, fallbackKind: deterministicFallbackKind, groundedFallback: false } : null;
+      : (queryInfo.querySpecificity === 'exact-model'
+        ? 'deterministic-exact-model'
+        : (queryInfo.querySpecificity === 'brand-category' ? 'deterministic-brand-category' : 'deterministic-family'));
+    // An exact-model query previously had no reserve at all, so a research
+    // timeout returned an empty result for a fully identified product. This
+    // reserve is intentionally kept OUT of deterministicFallbackRaw: that
+    // value drives two fast paths above/below, and feeding it an exact-model
+    // card would answer every exact-model query without ever consulting the
+    // local model database or the provider. It is only ever substituted here,
+    // after a provider attempt has actually failed.
+    const exactModelReserveRaw = queryInfo.querySpecificity === 'exact-model'
+      ? buildExactModelReserveResult(queryInfo)
+      : null;
+    // `substitutedErrorCode` keeps the failure this card stands in for visible
+    // on the response, so telemetry attribution and retry-gating can still tell
+    // a substituted timeout/budget/outage from a query that never attempted
+    // research at all. It never changes what the card claims.
+    const degradeToDeterministicFallback = (substitutedErrorCode = null) => {
+      const raw = deterministicFallbackRaw || exactModelReserveRaw;
+      if (!raw) return null;
+      const fallback = normalizeLegacyResult(raw, queryInfo, {
+        source: 'static', evidenceSource: 'heuristic', timings, currentYear,
+      });
+      // A capacity failure still has actionable timing guidance ("try again
+      // tomorrow") that the deterministic card must not swallow: the user
+      // needs both what we recognized AND when research can be retried.
+      const capacityNote = substitutedErrorCode === 'RATE_LIMIT'
+        ? 'Smart Lookup provider capacity is temporarily limited. Local and cached lookups remain available.'
+        : ((substitutedErrorCode === 'GLOBAL_BUDGET_EXHAUSTED' || substitutedErrorCode === 'BUDGET_STORE_UNAVAILABLE')
+          ? 'Smart Lookup provider capacity is temporarily limited. Please try again tomorrow.'
+          : null);
+      return {
+        ...fallback,
+        fallbackKind: deterministicFallbackKind,
+        groundedFallback: false,
+        errorCode: substitutedErrorCode || fallback.errorCode || null,
+        notes: [fallback.notes, capacityNote].filter(Boolean).join(' '),
+      };
     };
 
     try {
@@ -365,7 +399,7 @@ export function createAgeLookupHandler(dependencies = {}) {
       }
 
       if (!queryInfo.providerEligible || !deadline.hasTime(900, 300)) {
-        const degraded = degradeToDeterministicFallback();
+        const degraded = degradeToDeterministicFallback('INSUFFICIENT_QUERY_DETAIL');
         const result = finalizeTimings(degraded
           || createUnavailableSmartAgeResult(queryInfo, {
               source: 'fallback',
@@ -569,7 +603,7 @@ export function createAgeLookupHandler(dependencies = {}) {
         // This is a purely deterministic, non-AI result, so fallbackKind
         // (not groundedFallback) is what labels it -- see
         // degradeToDeterministicFallback above.
-        const degraded = degradeToDeterministicFallback();
+        const degraded = degradeToDeterministicFallback(errorCode);
         const result = finalizeTimings(degraded
           || createUnavailableSmartAgeResult(queryInfo, {
               source: 'fallback',
@@ -644,7 +678,7 @@ export function createAgeLookupHandler(dependencies = {}) {
           maxMs: CACHE_WRITE_BUDGET_MS,
           now,
         });
-        const degraded = degradeToDeterministicFallback();
+        const degraded = degradeToDeterministicFallback(error?.code || 'INVALID_PROVIDER_RESULT');
         result = degraded
           || createUnavailableSmartAgeResult(queryInfo, {
               source: 'fallback',
@@ -694,7 +728,7 @@ export function createAgeLookupHandler(dependencies = {}) {
       });
       return res.status(200).json(result);
     } catch (error) {
-      const degraded = degradeToDeterministicFallback();
+      const degraded = degradeToDeterministicFallback(isTimeoutError(error) ? 'TOTAL_DEADLINE' : 'INTERNAL_ERROR');
       const result = finalizeTimings(degraded
         || createUnavailableSmartAgeResult(queryInfo, {
             source: 'fallback',
