@@ -13,7 +13,7 @@
     "build:seo": "npm run build:decoders && node scripts/generate-seo-pages.js",
     "build:inject": "node scripts/inject-serial-refinement-script.js && node scripts/inject-responsive-navigation-assets.js",
     "test:decoder": "node tests/decoder-regressions.test.mjs",
-    "test:unit": "node --test tests/refinement/*.test.mjs",
+    "test:unit": "node --test tests/refinement/*.test.mjs tests/analytics/*.test.mjs",
     "test:api": "node --test tests/api/*.test.mjs",
     "test:playwright": "npx playwright test tests/playwright-verify.spec.js tests/serial-refinement-ui.spec.js tests/electronics-page-quality.spec.js tests/generated-brand-quality.spec.js tests/adsense-final-readiness.spec.js",
     "build:smart-browser": "node scripts/build-smart-lookup-browser.js",
