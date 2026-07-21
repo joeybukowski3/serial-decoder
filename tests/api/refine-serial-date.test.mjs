@@ -94,6 +94,106 @@ test('GE PFD87 label and base models resolve the A-code cycle to 2025', async ()
   }
 });
 
+test('GE GFW850 demonstrated case: FR31424IN + GFW850SPN0DG resolves March serial cycle to 2020', async () => {
+  let providerCalls = 0;
+  const handler = createRefineSerialDateHandler({
+    providerLookup: async () => { providerCalls += 1; throw new Error('provider should not run'); },
+    redisFactory: () => { throw new Error('redis should not run'); },
+    rateLimitFactory: () => { throw new Error('rate limit should not run'); },
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+  await handler(request({
+    brand: 'GE',
+    serial: 'FR31424IN',
+    model: 'GFW850SPN0DG',
+    candidateYears: [1984, 1996, 2008, 2020],
+    decodedMonth: 'March',
+  }), res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.payload.status, 'resolved');
+  assert.equal(res.payload.chosenYear, 2020);
+  assert.equal(res.payload.provider, 'local-db');
+  assert.equal(res.payload.errorCode, null);
+  assert.equal(res.payload.modelNormalization.usedValidatedAlternative, true);
+  assert.equal(res.payload.modelNormalization.validatedAlternative.value, 'GFW850SPNDG');
+  assert.equal(providerCalls, 0);
+});
+
+test('GE GFW850 canonical family model resolves the same way as the label variant', async () => {
+  const handler = createRefineSerialDateHandler({
+    providerLookup: async () => { throw new Error('provider should not run'); },
+    redisFactory: () => { throw new Error('redis should not run'); },
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+  await handler(request({
+    brand: 'GE', serial: 'FR31424IN', model: 'GFW850SPNDG',
+    candidateYears: [1984, 1996, 2008, 2020], decodedMonth: 'March',
+  }), res);
+  assert.equal(res.payload.status, 'resolved');
+  assert.equal(res.payload.chosenYear, 2020);
+});
+
+test('GE GFW850 label variant is safe under lowercase, spacing, and whitespace formatting', async () => {
+  for (const model of ['gfw850spn0dg', 'GFW 850 SPN0 DG', '  GFW850SPN0DG  ']) {
+    const handler = createRefineSerialDateHandler({
+      providerLookup: async () => { throw new Error('provider should not run'); },
+      redisFactory: () => { throw new Error('redis should not run'); },
+      logger: silentLogger(),
+    });
+    const res = createResponse();
+    await handler(request({
+      brand: 'GE', serial: 'FR31424IN', model,
+      candidateYears: [1984, 1996, 2008, 2020], decodedMonth: 'March',
+    }), res);
+    assert.equal(res.payload.status, 'resolved', model);
+    assert.equal(res.payload.chosenYear, 2020, model);
+  }
+});
+
+test('an invalid GFW850 near-match never aliases silently and falls through to normal no-evidence handling', async () => {
+  let providerCalls = 0;
+  const handler = createRefineSerialDateHandler({
+    providerLookup: async () => { providerCalls += 1; return { evidence: [] }; },
+    redisFactory: () => ({ get: async () => null, set: async () => {} }),
+    rateLimitFactory: () => ({ limit: async () => ({ success: true }) }),
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+  await handler(request({
+    brand: 'GE', serial: 'FR31424IN', model: 'GFW850SPNXDG',
+    candidateYears: [1984, 1996, 2008, 2020], decodedMonth: 'March',
+  }), res);
+  // No silent alias: local evidence never resolves this token, so it
+  // legitimately falls through to the provider stage instead of quietly
+  // reusing the GFW850SPNDG family evidence.
+  assert.equal(providerCalls, 1);
+  assert.equal(res.payload.status, 'unavailable');
+  assert.equal(res.payload.chosenYear, null);
+  assert.deepEqual(res.payload.remainingCandidateYears, [1984, 1996, 2008, 2020]);
+  assert.equal(res.payload.errorCode, 'INSUFFICIENT_EVIDENCE');
+});
+
+test('GE GFW850: a retryable provider failure preserves candidates and never fabricates a resolved year', async () => {
+  const handler = createRefineSerialDateHandler({
+    providerLookup: async () => { const error = new Error('aborted'); error.name = 'AbortError'; throw error; },
+    redisFactory: () => ({ get: async () => null, set: async () => {} }),
+    rateLimitFactory: () => ({ limit: async () => ({ success: true }) }),
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+  await handler(request({
+    brand: 'GE', serial: 'FR31424IN', model: 'GFW850SPNXDG',
+    candidateYears: [1984, 1996, 2008, 2020], decodedMonth: 'March',
+  }), res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.payload.status, 'unavailable');
+  assert.equal(res.payload.errorCode, 'REFINEMENT_TIMEOUT');
+  assert.deepEqual(res.payload.remainingCandidateYears, [1984, 1996, 2008, 2020]);
+});
+
 test('local family heuristic cannot resolve an exact year', async () => {
   const handler = createRefineSerialDateHandler({
     localLookup: async () => ({ evidence: [{ type: 'heuristic', quality: 'heuristic', yearRange: '2023-2025' }], normalization: null }),

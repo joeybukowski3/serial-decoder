@@ -1314,6 +1314,26 @@ test('GE GTH18GBCDCRBB with RZ825479 resolves to 2012 from model evidence', asyn
   assert.equal(resolved.source, 'client-evidence');
 });
 
+test('GE FR31424IN decodes to March 1984/1996/2008/2020 and stays ambiguous without a model', async () => {
+  const ge = api.decoderData.appliances.decoders.ge;
+  const out = ge.decode('FR31424IN');
+  assert.ok(out);
+  assert.equal(out.year, '1984/1996/2008/2020');
+  assert.equal(out.month, 'March');
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates: api.parseCandidateYears(out.year),
+    brand: 'GE',
+    model: '',
+    context: '',
+  });
+
+  // Ambiguous, not incomplete: the decoder correctly returned the full
+  // repeating year cycle, it simply cannot be narrowed without a model.
+  assert.equal(resolved.chosenYear, null);
+  assert.equal(api.computeEstimatedAge(out.year), '—');
+});
+
 test('Frigidaire serial NF11910958 decodes to 2001/2011/2021 week 19', () => {
   const frig = api.decoderData.appliances.decoders.frigidaire;
   const out = frig.decode('NF11910958');
