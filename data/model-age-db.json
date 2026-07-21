@@ -532,6 +532,37 @@
       ]
     },
     {
+      "brand": "GE",
+      "model": "GFW850SPNDG",
+      "normalizedBrand": "ge",
+      "normalizedModel": "gfw850spndg",
+      "category": "washer",
+      "yearStart": 2019,
+      "productionRange": "2019-2021",
+      "source": "GE Appliances GFW850SPNDG product record (manufactured December 2019 - December 2021)",
+      "notes": "GE identifies the GFW850SPNDG front-load washer as manufactured December 2019 through December 2021. GFW850SPN0DG is the label/parts-printed variant of the same model (confirmed identical product listing across GE Appliance Parts, Sears PartsDirect, and PartSelect). That production window eliminates the earlier repetitions of the GE R year code, leaving only 2020.",
+      "aliases": [
+        "GE GFW850SPNDG"
+      ],
+      "exactAliases": [
+        "GFW850SPN0DG"
+      ],
+      "recordType": "exact-model",
+      "refinementEvidence": [
+        {
+          "type": "local-db",
+          "title": "GE GFW850SPNDG official production-window record",
+          "sourceName": "GE Appliances GFW850SPNDG product record",
+          "sourceUrl": "https://products.geappliances.com/appliance/gea-specs/GFW850SPNDG/support",
+          "productionStart": 2019,
+          "productionEnd": 2021,
+          "supports": "GE lists GFW850SPNDG as manufactured December 2019 through December 2021.",
+          "quality": "official",
+          "verified": true
+        }
+      ]
+    },
+    {
       "brand": "Vizio",
       "model": "VW32L HDTV10A",
       "normalizedBrand": "vizio",
