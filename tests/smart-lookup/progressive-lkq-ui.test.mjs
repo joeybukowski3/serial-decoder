@@ -194,3 +194,57 @@ test('unavailable card renders when neither a grounded result nor progressive gu
   const html = api.renderReplacement(data);
   assert.match(html, /smart-lookup-status--noresult/);
 });
+
+// ── Exact-model deterministic reserve (inclusivity audit 2026-07) ────────────
+// An exact-model LKQ timeout previously rendered the generic unavailable card
+// because hasProgressiveReplacementGuidance gated exact tiers out entirely --
+// the demonstrated Samsung QN65Q60RAFXZA / LG WM3900HWA production failure.
+
+function exactModelReserve(overrides = {}) {
+  return {
+    itemSummary: { brand: 'Samsung', model: 'QN65Q60RAFXZA', category: 'television', name: 'Samsung QN65Q60RAFXZA' },
+    replacementPrecision: 'exact-model',
+    replacementRelationship: 'none-found',
+    replacement: null,
+    replacementOptions: [],
+    replacementCandidates: [],
+    comparisonCriteria: ['Screen size (diagonal)', 'Panel technology and resolution'],
+    originalIdentity: { brand: 'Samsung', model: 'QN65Q60RAFXZA', category: 'television' },
+    replacementRationale: 'Replacement research did not complete within the request budget.',
+    deterministicFallbackUsed: true,
+    groundedFallback: false,
+    errorCode: 'PROVIDER_TIMEOUT',
+    ...overrides,
+  };
+}
+
+test('an exact-model deterministic reserve renders guidance instead of the unavailable card', () => {
+  const data = exactModelReserve();
+  assert.equal(api.classifyReplacementOutcome(data), 'success');
+  const html = api.renderReplacement(data);
+  assert.doesNotMatch(html, /smart-lookup-status--noresult/);
+  assert.match(html, /Screen size/);
+});
+
+test('an exact-model reserve says research did not complete, not that nothing was found', () => {
+  const html = api.renderReplacement(exactModelReserve());
+  assert.match(html, /Replacement research did not complete/);
+  assert.doesNotMatch(html, /No single defensible replacement found/);
+});
+
+test('an exact-model reserve is never worded as grounded or AI-assisted', () => {
+  const html = api.renderReplacement(exactModelReserve());
+  assert.doesNotMatch(html, /grounded in live Google Search/i);
+  assert.doesNotMatch(html, /Web sources consulted/i);
+  assert.doesNotMatch(html, /AI-assisted/i);
+});
+
+test('a real exact-model provider result is unaffected by the reserve branch', () => {
+  // Same precision tier, but NOT a deterministic fallback: must not be treated
+  // as progressive guidance, so the existing exact-model path stays unchanged.
+  const data = exactModelReserve({
+    deterministicFallbackUsed: false,
+    comparisonCriteria: ['Should not qualify as guidance'],
+  });
+  assert.equal(api.hasProgressiveReplacementGuidance(data), false);
+});

@@ -173,6 +173,51 @@ New additive schema fields (`replacement-schema.js`): `replacementPrecision`, `o
 
 **Browser rendering** (`src/browser/smart-lookup-controller.js`): `classifyReplacementOutcome` now also treats a recognized model-line/product-family/brand-category result with no single named replacement (`replacement: null`, `replacementRelationship: 'none-found'`) as `'success'` when it carries ranked candidates or progressive guidance (`hasProgressiveReplacementGuidance`), instead of falling through to the generic unavailable card. `renderReplacement` renders a precision badge, the recognized original identity, a "configuration varies" note, ranked candidates (with per-candidate relationship/compatibility/pricing), known configuration variants, a comparison checklist, assumptions, unknown-spec list, and refinement identifiers — all gated to non-exact `replacementPrecision` tiers so the existing exact-model rendering path is untouched. `lkqSourceQualifier` checks `isDeterministicLkqFallback` before every other qualifier so a deterministic card is never worded as grounded or AI-assisted.
 
+### Exact-model deterministic reserve
+
+Every specificity tier except `exact-model` had a deterministic reserve. That
+inversion was the root cause of the reported production timeouts for
+`Samsung QN65Q60RAFXZA` and `LG WM3900HWA`: an exact-model query is
+grounded-eligible (and so the most timeout-exposed tier), had no local record,
+and had nothing to fall back on — the tier where identity is best known was the
+least resilient. Three independent gaps had to close together:
+
+- `buildDeterministicReplacementResult` hard-returned `null` for exact-model, so
+  `api/lkq-lookup.js`'s `buildDeterministicFallback() || createUnavailable...`
+  always took the unavailable branch.
+- `buildDeterministicBroadResult` had no exact-model branch. The age reserve is
+  therefore a **separate** `buildExactModelReserveResult`, deliberately not a new
+  branch in that function: `buildDeterministicBroadResult` feeds two *fast paths*
+  in `api/age-lookup.js` (the "grounding disabled/ineligible, so this IS the
+  answer" short-circuit, and the post-local `broadResult` return), and returning
+  a card from it would answer every exact-model query without ever consulting the
+  local model database or the provider. The reserve is consulted only by
+  `degradeToDeterministicFallback()`, i.e. strictly after a provider attempt has
+  already failed, so it can never overwrite stronger evidence.
+- `hasProgressiveReplacementGuidance` in the browser gated exact tiers out
+  entirely, so a server-side reserve alone would still have rendered an empty
+  panel. The new branch is gated on `isDeterministicLkqFallback` so the ordinary
+  exact-model provider rendering path is untouched.
+
+Both reserves assert strictly less than any provider path: identity only — no
+year (`yearContext.type: 'unknown'`), no successor, no pricing, no sources. The
+age card is labeled `fallbackKind: 'deterministic-exact-model'` with wording that
+never reads as an AI, grounded, or year estimate.
+
+Substituted deterministic cards on both routes now carry the `errorCode` they
+stand in for, so a timeout stays attributable in telemetry and retry-gating
+rather than looking like a query that never attempted research. Capacity
+failures (`RATE_LIMIT`, `GLOBAL_BUDGET_EXHAUSTED`, `BUDGET_STORE_UNAVAILABLE`)
+additionally keep their actionable "try again tomorrow" guidance appended, so a
+useful card never swallows retry timing.
+
+**Timeout budgets are unchanged.** The grounded LKQ chain was measured
+(≈750ms Redis/limiter/budget → 5000ms grounded stage → ≈2900ms for the
+same-deadline closed-book fallback, inside a 9000ms route budget and a 10s
+Vercel ceiling) and found correctly bounded with a genuine reserve. The defect
+was the missing fallback, not the budget sizing, so no timeout was raised and no
+second timeout chain was introduced.
+
 ## Date semantics
 
 Smart Lookup does not calculate midpoint years. Model data may expose `introductionYear`, `productionRange`, and, only with unit-specific evidence, `individualManufactureYear`. Introduction may precede production availability. An individual manufacture date requires a serial number or equivalent unit-specific evidence.

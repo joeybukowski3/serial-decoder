@@ -393,6 +393,21 @@
     if (!data) return false;
     if (Array.isArray(data.replacementCandidates) && data.replacementCandidates.length) return true;
     var precision = data.replacementPrecision;
+    // An exact-model/exact-configuration deterministic reserve carries a
+    // confirmed identity and comparison criteria but no candidates. Without
+    // this branch it fell through to the generic "unavailable" card, which is
+    // how a fully identified product (e.g. Samsung QN65Q60RAFXZA) rendered an
+    // empty replacement panel purely because live research timed out. Gated
+    // on isDeterministicLkqFallback so the ordinary exact-model provider
+    // rendering path is untouched.
+    if (precision === 'exact-model' || precision === 'exact-configuration') {
+      if (!isDeterministicLkqFallback(data)) return false;
+      return Boolean(
+        (Array.isArray(data.comparisonCriteria) && data.comparisonCriteria.length)
+        || (data.originalIdentity && (data.originalIdentity.brand || data.originalIdentity.model))
+        || (data.itemSummary && data.itemSummary.model)
+      );
+    }
     if (precision !== 'model-line' && precision !== 'product-family' && precision !== 'brand-category') return false;
     return Boolean(
       (Array.isArray(data.comparisonCriteria) && data.comparisonCriteria.length)
@@ -506,6 +521,10 @@
     'deterministic-model-line': 'We recognized this model line, but live research did not finish. This broad timeframe is based on model-line-level information rather than a source-verified exact-model lookup.',
     'deterministic-family': 'We recognized this product family, but live research did not finish. This broad timeframe is based on family-level information rather than a source-verified exact-model lookup.',
     'deterministic-brand-category': 'We recognized this brand and category, but live research did not finish. This broad guidance is based on general brand/category information rather than a source-verified lookup.',
+    // Exact-model reserve: identity is confirmed deterministically, but no
+    // production-range evidence exists and research did not finish. This must
+    // never read as an age estimate -- no year is claimed in this result.
+    'deterministic-exact-model': 'We recognized this exact model number, but live research did not finish and no verified production range is on file for it. No manufacture year is estimated here; enter the serial number for a unit-specific date.',
   };
 
   function isDeterministicDegradedResult(data) {
@@ -858,7 +877,12 @@
     }
 
     if (relationship === 'none-found' && data.replacementRationale) {
-      html += '<div class="info-block"><h4>No single defensible replacement found</h4><p>' + escapeHtml(data.replacementRationale) + '</p></div>';
+      // A deterministic reserve means research never completed -- saying we
+      // "found" nothing would misrepresent a timeout as an exhaustive search.
+      var noneFoundHeading = isDeterministicLkqFallback(data)
+        ? 'Replacement research did not complete'
+        : 'No single defensible replacement found';
+      html += '<div class="info-block"><h4>' + noneFoundHeading + '</h4><p>' + escapeHtml(data.replacementRationale) + '</p></div>';
     }
 
     if (hasGroundedResult) {

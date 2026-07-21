@@ -187,9 +187,32 @@ export function createLkqLookupHandler(dependencies = {}) {
     // (each substitution re-normalizes with fresh timings) and never
     // labeled grounded or AI-assisted.
     const deterministicFallbackRaw = buildDeterministicReplacementResult(queryInfo);
-    const buildDeterministicFallback = () => (deterministicFallbackRaw
-      ? finish(normalizeDeterministicReplacementResult(deterministicFallbackRaw, queryInfo, timings), timings, deadline)
-      : null);
+    // `substituted` carries the failure this card is standing in for, so a
+    // deterministic result still reports its errorCode (telemetry attribution
+    // and browser retry-gating both depend on distinguishing a substituted
+    // timeout from a query that never attempted research).
+    const buildDeterministicFallback = (substituted = null) => {
+      if (!deterministicFallbackRaw) return null;
+      const code = substituted?.errorCode;
+      // A capacity failure still has actionable timing guidance that the
+      // deterministic card must not swallow: the user needs both what we
+      // recognized AND when replacement research can be retried.
+      const capacityNote = code === 'RATE_LIMIT'
+        ? 'Replacement provider capacity is temporarily limited. The age result remains available.'
+        : ((code === 'GLOBAL_BUDGET_EXHAUSTED' || code === 'BUDGET_STORE_UNAVAILABLE')
+          ? 'Replacement research capacity is temporarily limited. Please try again tomorrow.'
+          : null);
+      const raw = capacityNote
+        ? {
+            ...deterministicFallbackRaw,
+            successorStatus: {
+              ...deterministicFallbackRaw.successorStatus,
+              explanation: [deterministicFallbackRaw.successorStatus?.explanation, capacityNote].filter(Boolean).join(' '),
+            },
+          }
+        : deterministicFallbackRaw;
+      return finish(normalizeDeterministicReplacementResult(raw, queryInfo, timings, substituted || {}), timings, deadline);
+    };
 
     const redis = dependencies.redis || redisFactory();
     const cacheKey = buildSmartLkqCacheKey(queryInfo, { grounded: useGrounded });
@@ -407,9 +430,16 @@ export function createLkqLookupHandler(dependencies = {}) {
         // unavailable" message -- the deterministic path makes no provider
         // or Redis call, so it is always safe here regardless of which
         // failure occurred (Phase 8).
-        const result = buildDeterministicFallback() || finish(createUnavailableReplacementResult(queryInfo, {
+        const providerWasAttempted = errorCode !== 'RATE_LIMIT'
+          && errorCode !== 'GLOBAL_BUDGET_EXHAUSTED'
+          && errorCode !== 'BUDGET_STORE_UNAVAILABLE';
+        const result = buildDeterministicFallback({
+          errorCode,
           cacheStatus,
-          providerAttempted: errorCode !== 'RATE_LIMIT' && errorCode !== 'GLOBAL_BUDGET_EXHAUSTED' && errorCode !== 'BUDGET_STORE_UNAVAILABLE',
+          providerAttempted: providerWasAttempted,
+        }) || finish(createUnavailableReplacementResult(queryInfo, {
+          cacheStatus,
+          providerAttempted: providerWasAttempted,
           fallbackUsed: errorCode === 'PROVIDERS_UNAVAILABLE',
           errorCode,
           timings,
@@ -470,7 +500,11 @@ export function createLkqLookupHandler(dependencies = {}) {
           maxMs: CACHE_WRITE_BUDGET_MS,
           now,
         });
-        result = buildDeterministicFallback() || finish(createUnavailableReplacementResult(queryInfo, {
+        result = buildDeterministicFallback({
+          errorCode: error?.code || 'INVALID_PROVIDER_RESULT',
+          cacheStatus,
+          providerAttempted: true,
+        }) || finish(createUnavailableReplacementResult(queryInfo, {
           cacheStatus, providerAttempted: true, fallbackUsed: getSmartLookupProviderMetadata(raw).fallbackUsed,
           errorCode: error?.code || 'INVALID_PROVIDER_RESULT', timings,
         }), timings, deadline);
@@ -513,7 +547,7 @@ export function createLkqLookupHandler(dependencies = {}) {
       return res.status(200).json(result);
     } catch (error) {
       const errorCode = isTimeoutError(error) ? 'TOTAL_DEADLINE' : 'INTERNAL_ERROR';
-      const result = buildDeterministicFallback() || finish(createUnavailableReplacementResult(queryInfo, {
+      const result = buildDeterministicFallback({ errorCode, cacheStatus }) || finish(createUnavailableReplacementResult(queryInfo, {
         cacheStatus,
         errorCode,
         timings,

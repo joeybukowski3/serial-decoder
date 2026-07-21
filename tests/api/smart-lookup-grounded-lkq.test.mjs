@@ -436,3 +436,28 @@ test('grounded LKQ telemetry logs relationship/compatibility/price summary field
   assert.equal(logText.includes('vertexaisearch'), false);
   assert.equal(logText.includes('bestbuy.com'), false);
 });
+
+// ── Exact-model deterministic reserve (inclusivity audit 2026-07) ────────────
+
+test('an exact-model LKQ timeout returns recognized identity instead of an empty panel', async () => {
+  const handler = createLkqLookupHandler({
+    totalBudgetMs: 1400,
+    groundedStageBudgetMs: 1000,
+    groundedFallbackMinRemainingMs: 1000,
+    groundedFallbackReserveMs: 50,
+    groundedEnabled: true,
+    redisFactory: () => redisMiss,
+    groundedProviderLookup: () => new Promise(() => {}),
+  });
+  const out = res();
+  await handler(req('Samsung QN65Q60RAFXZA'), out);
+  assert.equal(out.payload.itemSummary.model, 'QN65Q60RAFXZA');
+  assert.equal(out.payload.deterministicFallbackUsed, true);
+  assert.equal(out.payload.errorCode, 'PROVIDER_TIMEOUT');
+  // Identity only -- never a fabricated successor, price, or citation.
+  assert.equal(out.payload.replacement, null);
+  assert.equal(out.payload.replacementRelationship, 'none-found');
+  assert.deepEqual(out.payload.sources ?? [], []);
+  assert.equal(out.payload.replacementCostRange ?? null, null);
+  assert.equal(out.payload.evidenceSource, 'static');
+});

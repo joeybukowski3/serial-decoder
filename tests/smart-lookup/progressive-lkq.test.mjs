@@ -150,9 +150,38 @@ test('deterministic fallback is null for a truly unusable query', () => {
   assert.equal(buildDeterministicReplacementResult(queryInfo), null);
 });
 
-test('deterministic fallback is null for exact-model queries (they never need a fallback card)', () => {
-  const queryInfo = classifySmartLookupQuery('Samsung QN65Q60RAFXZA');
-  assert.equal(buildDeterministicReplacementResult(queryInfo), null);
+// Superseded assumption: this previously asserted exact-model queries "never
+// need a fallback card". Production disproved it -- an exact-model LKQ timeout
+// (Samsung QN65Q60RAFXZA, LG WM3900HWA) had no reserve and rendered an empty
+// replacement panel for a fully identified product.
+test('exact-model queries get a deterministic reserve that confirms identity only', () => {
+  const raw = buildDeterministicReplacementResult(classifySmartLookupQuery('Samsung QN65Q60RAFXZA'));
+  assert.ok(raw, 'exact-model must have a deterministic reserve');
+  assert.equal(raw.itemSummary.brand, 'Samsung');
+  assert.equal(raw.itemSummary.model, 'QN65Q60RAFXZA');
+  assert.ok(raw.comparisonCriteria.length > 0, 'reserve must give the user something actionable');
+  // Identity is complete for this tier, so the card must not ask for more.
+  assert.equal(raw.refinementNeeded, false);
+});
+
+test('exact-model deterministic reserve never invents a successor, price, or source', () => {
+  for (const query of ['Samsung QN65Q60RAFXZA', 'LG WM3900HWA', 'GE GFW850SPN0DG']) {
+    const raw = buildDeterministicReplacementResult(classifySmartLookupQuery(query));
+    assert.ok(raw, `${query} must have a reserve`);
+    assert.equal(raw.replacement, null, `${query} must not name a replacement`);
+    assert.equal(raw.replacementRelationship, 'none-found');
+    assert.equal(raw.successorStatus.type, 'none');
+    assert.deepEqual(raw.replacementCandidates, []);
+    assert.deepEqual(raw.replacementOptions, []);
+    assert.equal(raw.compatibilityStatus, 'unknown');
+    assert.ok(!raw.sources, `${query} must not carry sources`);
+    assert.ok(!raw.priceObservations, `${query} must not carry pricing`);
+    assert.ok(!raw.replacementCostRange, `${query} must not carry a cost range`);
+  }
+});
+
+test('a query with no recognizable brand still has no replacement reserve', () => {
+  assert.equal(buildDeterministicReplacementResult(classifySmartLookupQuery('wm3900hwa')), null);
 });
 
 // ── Cache identity (Phase 9) ─────────────────────────────────────────────────
