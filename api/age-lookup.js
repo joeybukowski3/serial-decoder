@@ -1,7 +1,7 @@
 import { buildSmartAgeCacheKey, chooseSmartAgeTtl, hashCanonicalQuery, prepareResultForCache } from '../lib/smart-lookup/cache.js';
 import { providerAttemptCountFromMetadata, recordProviderAttemptMetrics, reserveProviderBudget } from '../lib/smart-lookup/budget.js';
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
-import { applyEraHints, decodeHvacSerial, findLocalModelAgeResult } from '../lib/smart-lookup/age-legacy.js';
+import { applyEraHints, decodeHvacSerial, findLocalModelAgeResult, findVerifiedExactEvidenceRecord } from '../lib/smart-lookup/age-legacy.js';
 import { classifySmartLookupQuery, getVerifiedModelKey, normalizeSmartLookupNotes, normalizeWhitespace, SMART_LOOKUP_NOTES_MAX_LENGTH } from '../lib/smart-lookup/normalize.js';
 import {
   callGeminiAgeProvider,
@@ -312,14 +312,102 @@ export function createAgeLookupHandler(dependencies = {}) {
       timings.localLookupMs = Math.max(0, now() - localStart);
 
       if (localResult) {
-        const result = finalizeTimings(normalizeLegacyResult(localResult, queryInfo, {
+        // A UNIQUE verified exact-evidence hit (canonical model or a verified
+        // exactAlias) is the strongest identity signal available, and it is
+        // strictly stronger than the text-shape classification that ran before
+        // the database was consulted. Promote the query to exact-model so the
+        // result is not stripped back to a partial/brand-only shape -- without
+        // this, `normalizeSmartAgeResult` discards the production range for a
+        // bare model number, which is why "GFW850SPN0DG" returned no range.
+        //
+        // This is NOT prefix or family inference: it fires only on strict
+        // equality against a verified record (see
+        // lib/model-evidence/exact-model-match.js), so "GFW850", "WM3900", or
+        // "Q60" can never reach it.
+        let localQueryInfo = queryInfo;
+        const recordBrand = localResult.brand && localResult.brand !== 'Unknown' ? localResult.brand : '';
+        const recordCategory = localResult.category || localResult.itemCategory || '';
+        // A brand or category the user actually supplied is never overwritten
+        // by the record; a conflict is surfaced instead of silently corrected.
+        const brandConflict = Boolean(queryInfo.brand && recordBrand
+          && queryInfo.brand.toLowerCase() !== recordBrand.toLowerCase());
+        const categoryConflict = Boolean(queryInfo.genericCategory && recordCategory
+          && queryInfo.genericCategory.toLowerCase() !== recordCategory.toLowerCase());
+        const evidenceConflict = brandConflict || categoryConflict;
+
+        if (localResult.verifiedExact && !evidenceConflict && recordBrand && recordCategory) {
+          localQueryInfo = {
+            ...queryInfo,
+            brand: queryInfo.brand || recordBrand,
+            genericCategory: queryInfo.genericCategory || recordCategory,
+            productType: queryInfo.productType || recordCategory,
+            specificityLevel: 'specific',
+            querySpecificity: 'exact-model',
+            exactModel: localResult.canonicalModel || queryInfo.exactModel,
+            modelCompleteness: 'exact',
+            providerEligible: false,
+            recognizedBrand: queryInfo.brand || recordBrand,
+            recognizedCategory: queryInfo.genericCategory || recordCategory,
+          };
+        }
+
+        const result = finalizeTimings(normalizeLegacyResult(localResult, localQueryInfo, {
           source: 'local-db',
           evidenceSource: 'local-db',
           timings,
           currentYear,
         }), timings, deadline);
-        logResult(logger, requestId, queryInfo, result);
+        // Diagnostics that let the browser show the entered value alongside the
+        // canonical model instead of appearing to silently rewrite the input.
+        result.enteredModel = localResult.enteredModel || null;
+        result.canonicalModel = localResult.canonicalModel || null;
+        result.matchedBy = localResult.matchedBy || null;
+        result.localEvidenceHit = true;
+        result.evidenceConflict = evidenceConflict || false;
+        if (evidenceConflict) {
+          result.evidenceConflictKind = brandConflict ? 'brand' : 'category';
+          result.refinementNeeded = true;
+        }
+        logResult(logger, requestId, localQueryInfo, result);
         return res.status(200).json(result);
+      }
+
+      // No brand-scoped local hit, but the user supplied a brand: check whether
+      // the model is a verified exact match for a DIFFERENT brand. Researching
+      // a contradictory identity would waste a paid call and could return a
+      // confident answer for a product that does not exist. The user's brand is
+      // preserved and the conflict is disclosed rather than silently corrected.
+      if (queryInfo.brand) {
+        let conflictEvidence = null;
+        try {
+          conflictEvidence = await deadline.run('local-evidence-conflict-check', () => findVerifiedExactEvidenceRecord(queryInfo.query), {
+            maxMs: 300, reserveMs: 700,
+          });
+        } catch (_) { conflictEvidence = null; }
+        const conflictBrand = conflictEvidence?.record?.brand || '';
+        if (conflictBrand && conflictBrand.toLowerCase() !== queryInfo.brand.toLowerCase()) {
+          const result = finalizeTimings(normalizeLegacyResult({
+            brand: queryInfo.brand,
+            model: conflictEvidence.enteredModel || queryInfo.modelIdentity || null,
+            itemCategory: null,
+            category: null,
+            specificityLevel: 'partial',
+            refinementSuggestion: `Confirm the brand on the product label. This model number matches a verified ${conflictBrand} record.`,
+            notes: `The entered brand (${queryInfo.brand}) does not match the brand on the verified record for this model number (${conflictBrand}). No age estimate is given, because the brand and model number describe different products. The entered values were not changed.`,
+            evidence: [{
+              detail: `Model number matches a verified ${conflictBrand} record, which conflicts with the entered brand.`,
+              source: 'Decode My Item verified local model evidence',
+            }],
+          }, queryInfo, {
+            source: 'static', evidenceSource: 'heuristic', timings, currentYear,
+          }), timings, deadline);
+          result.evidenceConflict = true;
+          result.evidenceConflictKind = 'brand';
+          result.refinementNeeded = true;
+          result.localEvidenceHit = false;
+          logResult(logger, requestId, queryInfo, result);
+          return res.status(200).json(result);
+        }
       }
 
       const hvacQuick = decodeHvacSerial(queryInfo.query, queryInfo.normalizedQuery, queryInfo);

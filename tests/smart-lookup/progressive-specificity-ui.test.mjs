@@ -272,3 +272,53 @@ test('a clarification result is never described as a researched estimate', () =>
   const combined = copy.heading + ' ' + copy.body + ' ' + copy.tryNext;
   assert.doesNotMatch(combined, /AI-assisted|grounded|research(ed)? estimate|live research/i);
 });
+
+// ── Verified exact-alias rendering ──────────────────────────────────────────
+
+function exactAliasResult(overrides = {}) {
+  return {
+    brand: 'GE', model: 'GFW850SPN0DG', category: 'washer', itemCategory: 'washer',
+    enteredModel: 'GFW850SPN0DG', canonicalModel: 'GFW850SPNDG', matchedBy: 'exact-alias',
+    querySpecificity: 'exact-model', precisionLevel: 'exact', source: 'local-db',
+    evidenceSource: 'local-db', localEvidenceHit: true, yearRange: '2019-2021',
+    productionRange: { start: 2019, end: 2021 }, fallbackKind: 'none',
+    evidenceConflict: false, evidence: [{ detail: 'Verified GE record', source: 'local-db' }],
+    ...overrides,
+  };
+}
+
+test('a verified exact-alias result shows both the entered and canonical model', () => {
+  const html = api.renderAge(exactAliasResult());
+  assert.match(html, /GFW850SPN0DG/);
+  assert.match(html, /GFW850SPNDG/);
+  assert.match(html, /verified label variant/i);
+});
+
+test('a verified exact-alias result never renders Unknown, retry, or a fallback warning', () => {
+  const html = api.renderAge(exactAliasResult());
+  assert.doesNotMatch(html, /Unknown/);
+  assert.doesNotMatch(html, /data-smart-lookup-retry/);
+  assert.doesNotMatch(html, /live research did not finish/i);
+});
+
+test('a brand conflict is disclosed rather than silently corrected', () => {
+  const html = api.renderAge(exactAliasResult({
+    brand: 'Samsung', source: 'static', evidenceSource: 'heuristic',
+    localEvidenceHit: false, evidenceConflict: true, evidenceConflictKind: 'brand',
+    canonicalModel: null, enteredModel: null, yearRange: null, productionRange: null,
+    notes: 'The entered brand (Samsung) does not match the brand on the verified record for this model number (GE).',
+  }));
+  assert.match(html, /Check the brand on the label/i);
+  assert.match(html, /does not match/i);
+  // The user's entry is not overwritten with GE.
+  assert.doesNotMatch(html, /verified label variant/i);
+});
+
+test('provider-authored text in the conflict note is escaped', () => {
+  const html = api.renderAge(exactAliasResult({
+    evidenceConflict: true, evidenceConflictKind: 'brand',
+    notes: '<img src=x onerror=alert(1)>',
+  }));
+  assert.doesNotMatch(html, /<img /);
+  assert.match(html, /&lt;img /);
+});

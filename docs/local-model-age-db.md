@@ -91,3 +91,52 @@ Serial-date refinement uses exact-model records and structured `refinementEviden
 Each refinement evidence record can include `type`, `sourceName`, `sourceUrl`, `productionStart`, `productionEnd`, `availabilityStart`, `availabilityEnd`, `quality`, and `verified`. Exact selection is performed only by intersecting the serial-valid candidate years with a defensible evidence window.
 
 Short family prefixes are not exact aliases. O/0 and I/L/1 changes are represented as transcription alternatives and must be validated against a structured exact-model record before use.
+
+## exactAliases vs aliases (2026-07)
+
+These two fields are **not** interchangeable and must not be merged:
+
+- **`model` / `exactAliases`** — verified identifiers for the *same exact model*
+  (label variants, parts-database variants). Compared with **strict equality only**.
+  Safe to base an exact-model identity claim, brand inference, or category
+  inference on.
+- **`aliases`** — broader alternate lookup names. These feed
+  `lib/model-age-db.js#buildSearchTerms`, which is consumed by Levenshtein/prefix
+  **fuzzy** scoring in `scoreLocalModelAgeConfidence`. Folding verified
+  identifiers into this pool would weaken exact matching, not strengthen it.
+
+Both Smart Lookup and serial refinement now resolve the exact fields through one
+shared matcher, `lib/model-evidence/exact-model-match.js`. Add a verified label
+variant to `exactAliases` once; do not duplicate it into `aliases`.
+
+Ambiguity is a first-class outcome — a token that resolves to more than one
+distinct record yields no match rather than silently selecting the first.
+`findExactEvidenceCollisions` validates the shipped database in tests.
+
+## Partial-evidence review: can we represent "introduction year, end unknown"?
+
+**Yes, safely.** Verified while reviewing a possible LG WM3900HWA record:
+
+- `parseYearRange` accepts `{ start, end: null }`.
+- `lib/serial-refinement/candidate-intersection.js` applies bounds
+  independently: `if (range.start != null && year < range.start) return false;`
+  and `if (range.end != null && year > range.end) return false;`. **A null end
+  simply does not constrain the upper bound**, so an open-ended record cannot
+  wrongly exclude a later candidate year.
+- `introductionYear` surfaces as `estimatedYearType: 'model-introduction'`,
+  which is distinct from a production range and never reads as a unit
+  manufacture date.
+
+A safe partial record therefore sets `introductionYear` and
+`refinementEvidence[].productionStart` with `productionEnd: null`, and **omits**
+the `productionRange` string. Do **not** write `"2019-present"`: that parses to
+an end of the current year, which asserts the model is still in production.
+
+Caveat to weigh before adding one: a partial record still produces a `local-db`
+hit and bypasses the provider, so it should only be added when the introduction
+year alone is genuinely more useful than live research.
+
+**LG WM3900HWA remains deferred.** LG's official spec sheet (dated 2/7/19)
+supports introduction in 2019, but LG publishes no end date. The schema could
+now represent that honestly; the record is being held pending a decision on
+whether introduction-year-only records should bypass the provider at all.

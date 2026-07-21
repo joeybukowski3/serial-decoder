@@ -607,6 +607,25 @@
           return '<li><strong>' + escapeHtml(item.name) + ':</strong> ' + escapeHtml(item.year) + ' model-year family</li>';
         }).join('') + '</ul></div>'
       : '';
+    // A verified exact-alias hit resolved the entered value to a different
+    // canonical model. Show both so the input never appears silently rewritten.
+    var canonicalNote = '';
+    if (data && data.canonicalModel && data.enteredModel
+      && String(data.canonicalModel).toUpperCase() !== String(data.enteredModel).toUpperCase()) {
+      canonicalNote = '<p class="smart-lookup-canonical-note">Entered model <strong>'
+        + escapeHtml(data.enteredModel)
+        + '</strong> is a verified label variant of canonical model <strong>'
+        + escapeHtml(data.canonicalModel) + '</strong>.</p>';
+    }
+    // A brand/category conflict is disclosed, never silently corrected.
+    var conflictNote = '';
+    if (data && data.evidenceConflict) {
+      conflictNote = '<div class="info-block smart-lookup-evidence-conflict"><h4>Check the '
+        + (data.evidenceConflictKind === 'category' ? 'product type' : 'brand')
+        + ' on the label</h4><p>'
+        + escapeHtml(data.notes || 'The entered details conflict with a verified record for this model number.')
+        + '</p></div>';
+    }
     var evidence = Array.isArray(data && data.evidence) ? data.evidence.slice(0, 4) : [];
     var evidenceHtml = evidence.length
       ? '<details class="determination-details"><summary>' + escapeHtml(evidenceHeading(data)) + '</summary><ul>' + evidence.map(function (item) {
@@ -645,6 +664,8 @@
         : '');
     return '<div class="smart-age-result smart-year-context-result">' +
       '<h3>' + escapeHtml(resultHeading(data)) + '</h3>' +
+      conflictNote +
+      canonicalNote +
       precisionBadgeHtml +
       precisionNoteHtml +
       fallbackNote +
