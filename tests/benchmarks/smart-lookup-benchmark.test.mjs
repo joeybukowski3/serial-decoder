@@ -26,3 +26,80 @@ test('mocked Smart Lookup benchmark scenarios complete without live providers', 
   assert.ok(results.every((item) => Number.isFinite(item.ms)));
   console.log(JSON.stringify({ smartLookupBenchmarks: results }));
 });
+
+// Verified exact-alias evidence scenarios (Phase 12). Each case pins identity
+// level, local-evidence status, provider eligibility, and the claims that are
+// allowed versus forbidden. No live providers.
+test('verified exact-alias benchmark scenarios resolve without providers', async () => {
+  const cases = [
+    {
+      label: 'verified exact alias, no brand supplied',
+      query: 'GFW850SPN0DG',
+      expect: { source: 'local-db', brand: 'GE', identity: 'exact-model', matchedBy: 'exact-alias', range: '2019-2021', conflict: false },
+    },
+    {
+      label: 'canonical exact model, no brand supplied',
+      query: 'GFW850SPNDG',
+      expect: { source: 'local-db', brand: 'GE', identity: 'exact-model', matchedBy: 'canonical-model', range: '2019-2021', conflict: false },
+    },
+    {
+      label: 'conflicting brand + verified exact alias',
+      query: 'Samsung GFW850SPN0DG',
+      expect: { source: 'static', brand: 'Samsung', matchedBy: null, range: null, conflict: true },
+    },
+    {
+      label: 'conflicting category + verified exact alias',
+      query: 'GE refrigerator GFW850SPN0DG',
+      expect: { source: 'local-db', brand: 'GE', matchedBy: 'exact-alias', conflict: true },
+    },
+    {
+      label: 'near-match alias must not resolve',
+      query: 'GFW850SPNXDG',
+      expect: { source: 'static', matchedBy: null, range: null, conflict: false },
+    },
+    {
+      label: 'exact alias with form-factor text',
+      query: 'GE GFW850SPN0DG front load washer',
+      expect: { source: 'local-db', brand: 'GE', matchedBy: 'exact-alias', range: '2019-2021', conflict: false },
+    },
+  ];
+
+  for (const testCase of cases) {
+    let providerCalls = 0;
+    const handler = createAgeLookupHandler({
+      redisFactory: () => redisMiss,
+      providerLookup: async () => { providerCalls += 1; return { brand: 'X', model: 'Y', specificityLevel: 'specific' }; },
+      groundedProviderLookup: async () => { providerCalls += 1; return {}; },
+      logger: { info: () => {} },
+    });
+    const out = res();
+    await handler(req(testCase.query), out);
+    const payload = out.payload;
+
+    assert.equal(providerCalls, 0, `${testCase.label}: no paid provider call expected`);
+    assert.equal(payload.source, testCase.expect.source, `${testCase.label}: source`);
+    if (testCase.expect.brand) assert.equal(payload.brand, testCase.expect.brand, `${testCase.label}: brand`);
+    if (testCase.expect.identity) assert.equal(payload.querySpecificity, testCase.expect.identity, `${testCase.label}: identity`);
+    assert.equal(payload.matchedBy ?? null, testCase.expect.matchedBy ?? null, `${testCase.label}: matchedBy`);
+    if ('range' in testCase.expect) assert.equal(payload.yearRange ?? null, testCase.expect.range, `${testCase.label}: range`);
+    assert.equal(Boolean(payload.evidenceConflict), testCase.expect.conflict, `${testCase.label}: conflict`);
+
+    // Forbidden claims for every case: local model-era evidence never asserts a
+    // manufacture date for the user's individual unit.
+    assert.equal(payload.individualManufactureYear ?? null, null, `${testCase.label}: no unit manufacture year`);
+  }
+});
+
+test('a verified exact alias still resolves locally during a simulated provider outage', async () => {
+  const handler = createAgeLookupHandler({
+    redisFactory: () => null, // Redis unavailable
+    providerLookup: async () => { throw new Error('provider outage'); },
+    groundedProviderLookup: async () => { throw new Error('provider outage'); },
+    logger: { info: () => {} },
+  });
+  const out = res();
+  await handler(req('GFW850SPN0DG'), out);
+  assert.equal(out.payload.source, 'local-db');
+  assert.equal(out.payload.yearRange, '2019-2021');
+  assert.equal(out.payload.errorCode ?? null, null);
+});
