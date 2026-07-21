@@ -1,4 +1,13 @@
 (() => {
+  const hasLookupTool = document.getElementById('decodeBtn') || document.getElementById('smart-lookup-input');
+  if (hasLookupTool && !document.querySelector('script[src$="lookup-completion-analytics.js"]')) {
+    const analyticsScript = document.createElement('script');
+    analyticsScript.src = '/lookup-completion-analytics.js';
+    analyticsScript.defer = true;
+    analyticsScript.id = 'lookup-completion-analytics-script';
+    document.head.appendChild(analyticsScript);
+  }
+
   const toggle = document.getElementById('hamburgerBtn');
   const menu = document.querySelector('nav > ul');
   if (!toggle || !menu) return;
