@@ -775,6 +775,12 @@ export function createAgeLookupHandler(dependencies = {}) {
           : (isTimeoutError(error)
             ? 'PROVIDER_TIMEOUT'
             : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE')));
+        // The aggregate PROVIDERS_UNAVAILABLE hides WHICH provider failed and
+        // why, which makes a production provider outage undiagnosable from the
+        // response alone. These are stable internal codes only -- never a raw
+        // provider body, credential, query, or URL.
+        const primaryProviderErrorCode = error?.primaryErrorCode || null;
+        const fallbackProviderErrorCode = error?.fallbackErrorCode || null;
         // A grounded timeout that also attempted (and failed) a same-deadline
         // fallback made one additional real provider call beyond what
         // providerAttemptCountFromMetadata infers from the reported error
@@ -814,6 +820,8 @@ export function createAgeLookupHandler(dependencies = {}) {
                   ? 'Smart Lookup provider capacity is temporarily limited. Please try again tomorrow.'
                   : undefined),
             }), timings, deadline);
+        if (primaryProviderErrorCode) result.providerErrorCode = primaryProviderErrorCode;
+        if (fallbackProviderErrorCode) result.fallbackProviderErrorCode = fallbackProviderErrorCode;
         logResult(logger, requestId, queryInfo, result, {
           timeoutStage: isTimeoutError(error) ? 'provider' : null,
           budgetStatus: error.budgetResult?.status || budgetResult?.status || null,
