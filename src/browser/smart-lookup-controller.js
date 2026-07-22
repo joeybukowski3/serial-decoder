@@ -480,8 +480,9 @@
   }
 
   function isGroundedProviderResult(data) {
+    var evidence = data ? String(data.evidenceSource || '').toLowerCase() : '';
     return Boolean(data)
-      && String(data.evidenceSource || '').toLowerCase() === 'gemini-grounded'
+      && (evidence === 'gemini-grounded' || evidence === 'openai-web')
       && Array.isArray(data.sources)
       && data.sources.length > 0;
   }
@@ -489,13 +490,16 @@
   function isUngroundedProviderResult(data) {
     if (isGroundedProviderResult(data)) return false;
     var source = String((data && (data.evidenceSource || data.source || data.originSource)) || '').toLowerCase();
-    // A grounded label without retrieved sources degrades to the honest
+    // A grounded/web label without retrieved sources degrades to the honest
     // ungrounded wording rather than claiming live research.
     return source === 'gemini-ungrounded'
       || source === 'groq-ungrounded'
       || source === 'gemini-grounded'
+      || source === 'openai-ungrounded'
+      || source === 'openai-web'
       || source === 'gemini'
-      || source === 'groq';
+      || source === 'groq'
+      || source === 'openai';
   }
 
   function retrievedDateLabel(data) {
@@ -535,7 +539,10 @@
     if (!data) return '';
     if (isGroundedProviderResult(data)) {
       var retrievedOn = retrievedDateLabel(data);
-      return 'AI research grounded in live Google Search results'
+      // Provider-neutral wording: this path now serves OpenAI web search as
+      // well as Gemini grounding, so naming one search engine would be wrong
+      // for most results.
+      return 'AI research grounded in live web search results'
         + (retrievedOn ? ' retrieved ' + retrievedOn : '')
         + '; review the cited web sources below.';
     }
@@ -643,11 +650,19 @@
       : '';
     // Precision badge + plain-language "why is this broad" line -- shown
     // whenever the result is anything less than an exact model match.
-    var precisionLabel = data && PRECISION_HEADINGS[data.precisionLevel];
+    // Suppress the broad-guidance badge and note once research has actually
+    // named a specific product: showing "Nintendo Switch 2" directly above
+    // "not one specific model" contradicts the answer we just gave. The
+    // badge still applies to genuinely broad results.
+    // Computed here, ahead of the precision badge, because `var` hoisting
+    // would otherwise leave it undefined at that point and let the
+    // contradictory broad-guidance badge render anyway.
+    var identifiedProduct = data && data.likelyProduct ? data.likelyProduct : '';
+    var precisionLabel = data && !identifiedProduct && PRECISION_HEADINGS[data.precisionLevel];
     var precisionBadgeHtml = precisionLabel
       ? '<p class="smart-lookup-precision-badge">' + escapeHtml(precisionLabel) + '</p>'
       : '';
-    var precisionNote = precisionExplanation(data);
+    var precisionNote = identifiedProduct ? "" : precisionExplanation(data);
     var precisionNoteHtml = precisionNote
       ? '<p class="smart-lookup-precision-note">' + escapeHtml(precisionNote) + '</p>'
       : '';
@@ -662,9 +677,47 @@
       : (data && data.refinementSuggestion
         ? '<p class="smart-lookup-try-next"><strong>Try this next:</strong> ' + escapeHtml(data.refinementSuggestion) + '</p>'
         : '');
+    // Usefulness-first "best available result" block. Leads with WHAT the
+    // product is when research identified one, so a researched identification
+    // is never buried under a "complete model required" clarification.
+    // identifiedProduct is computed above, ahead of the precision badge.
+    var bestAvailableHtml = '';
+    if (identifiedProduct) {
+      var timingText = data.releaseDate || data.estimatedEra
+        || (data.introductionYear ? String(data.introductionYear) : '')
+        || formatRange(data.productionRange, data.yearRange) || 'Not established';
+      var confidenceText = data.identityConfidence || data.confidenceLevel || '';
+      bestAvailableHtml = '<div class="info-block smart-lookup-best-result">' +
+        '<h4>Best available result</h4>' +
+        '<p class="smart-lookup-best-product"><strong>' + escapeHtml(identifiedProduct) + '</strong></p>' +
+        (data.productType ? '<p class="smart-lookup-best-type">' + escapeHtml(data.productType) + '</p>' : '') +
+        '<div class="result-row"><span class="result-label">Estimated model timing</span><span class="result-value">' + escapeHtml(timingText) + '</span></div>' +
+        (confidenceText ? '<div class="result-row"><span class="result-label">Confidence</span><span class="result-value">' + escapeHtml(confidenceText.charAt(0).toUpperCase() + confidenceText.slice(1)) + '</span></div>' : '') +
+        '<p class="smart-lookup-unit-caveat"><strong>Important:</strong> This describes the product/model era, not necessarily the manufacture date of your individual unit.' +
+        (data.serialNeededForExactUnitDate ? ' Enter the serial number to narrow it to your unit.' : '') +
+        '</p>' +
+        '</div>';
+    }
+    var caveats = Array.isArray(data && data.caveats) ? data.caveats.slice(0, 3) : [];
+    var caveatsHtml = caveats.length
+      ? '<div class="info-block smart-lookup-caveats"><h4>Things to keep in mind</h4><ul>' +
+        caveats.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul></div>'
+      : '';
+    // Candidates instead of a dead end when identity is genuinely ambiguous.
+    var alternatives = Array.isArray(data && data.alternativeMatches) ? data.alternativeMatches.slice(0, 3) : [];
+    var alternativesHtml = alternatives.length
+      ? '<div class="info-block smart-lookup-alternatives"><h4>Other possible matches</h4><ul>' +
+        alternatives.map(function (item) {
+          return '<li><strong>' + escapeHtml(item.product) + '</strong>'
+            + (item.confidence ? ' &mdash; ' + escapeHtml(item.confidence) + ' confidence' : '')
+            + (item.reason ? '<br>' + escapeHtml(item.reason) : '')
+            + '</li>';
+        }).join('') + '</ul></div>'
+      : '';
     return '<div class="smart-age-result smart-year-context-result">' +
       '<h3>' + escapeHtml(resultHeading(data)) + '</h3>' +
       conflictNote +
+      bestAvailableHtml +
       canonicalNote +
       precisionBadgeHtml +
       precisionNoteHtml +
@@ -679,6 +732,8 @@
       '<div class="result-row"><span class="result-label">Individual manufacture date</span><span class="result-value">' + escapeHtml(manufactureMessage) + '</span></div>' +
       variantsHtml +
       (data && data.notes ? '<div class="info-block notes"><h4>What this year means</h4><p>' + escapeHtml(data.notes) + '</p></div>' : '') +
+      caveatsHtml +
+      alternativesHtml +
       refinementHtml +
       evidenceHtml +
       renderGroundedSources(data) +

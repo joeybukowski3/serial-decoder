@@ -568,7 +568,7 @@ test.describe('Smart Lookup controller', () => {
     await page.locator('#smart-lookup-input').fill('LG WM3900HWA');
     await page.locator('#smartLookupBtn').click();
     const panel = page.locator('#smart-lookup-age-panel');
-    await expect(panel).toContainText('AI research grounded in live Google Search results retrieved 2026-07-19');
+    await expect(panel).toContainText('AI research grounded in live web search results retrieved 2026-07-19');
     await expect(panel).toContainText('Web sources consulted');
     await expect(panel).toContainText('lg.com');
     await expect(panel).toContainText('energystar.gov');
@@ -681,7 +681,7 @@ test.describe('Smart Lookup controller', () => {
     await page.locator('#smart-lookup-input').fill('LG WM3900HWA');
     await page.locator('#smartLookupBtn').click();
     const panel = page.locator('#smart-lookup-age-panel');
-    await expect(panel).toContainText('AI research grounded in live Google Search results retrieved 2026-07-19');
+    await expect(panel).toContainText('AI research grounded in live web search results retrieved 2026-07-19');
     await expect(panel).toContainText('Web sources consulted');
     await expect(panel).not.toContainText('live web verification timed out');
   });

@@ -217,13 +217,13 @@ test('grounded wording, AI-fallback wording, and deterministic-fallback wording 
   const deterministicText = api.sourceQualifier(deterministicDegradedResult());
 
   // Grounded success claims live research.
-  assert.match(groundedText, /grounded in live Google Search/i);
+  assert.match(groundedText, /grounded in live web search/i);
   // AI fallback claims AI-assisted research that did not finish verifying.
   assert.match(aiFallbackText, /AI-assisted model research completed/i);
   // Deterministic degradation must NOT claim AI involvement or grounded
   // research at all.
   assert.doesNotMatch(deterministicText, /AI-assisted/i);
-  assert.doesNotMatch(deterministicText, /grounded in live Google Search/i);
+  assert.doesNotMatch(deterministicText, /grounded in live web search/i);
   assert.match(deterministicText, /live research did not finish/i);
 
   // All three are textually distinct from one another.
@@ -248,7 +248,7 @@ test('deterministic-family, deterministic-model-line, and deterministic-brand-ca
   // None of the three ever claims AI involvement.
   for (const text of [familyText, modelLineText, brandCategoryText]) {
     assert.doesNotMatch(text, /AI-assisted/i);
-    assert.doesNotMatch(text, /grounded in live Google Search/i);
+    assert.doesNotMatch(text, /grounded in live web search/i);
   }
 });
 

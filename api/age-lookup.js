@@ -11,6 +11,11 @@ import {
   SmartLookupProviderError,
 } from '../lib/smart-lookup/provider.js';
 import {
+  callSmartLookupOpenAiAgeProvider,
+  isOpenAiSmartLookupEnabled,
+  DEFAULT_OPENAI_STAGE_MAX_MS,
+} from '../lib/smart-lookup/openai-provider.js';
+import {
   createSmartLookupTimings,
   createUnavailableSmartAgeResult,
   normalizeCachedSmartAgeResult,
@@ -27,7 +32,19 @@ import {
 import { buildDeterministicBroadResult, buildExactModelReserveResult } from '../lib/smart-lookup/static-results.js';
 import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
 
-const TOTAL_BUDGET_MS = 8500;
+const TOTAL_BUDGET_MS = 16000;
+// OpenAI-primary budgets, set from measured live preview latency rather than
+// guessed: OpenAI web research took 8.7s (Nintendo Switch 2), 8.8s (Sony
+// X90L), 9.3s (LG WM3900HWA), 12.9s and 15.6s (the two Miele H4080BM
+// phrasings). A 5s stage timed out 100% of the time, so 13s covers the
+// measured median and most of the tail while still leaving a real Groq
+// window -- the thing the old grounded Gemini stage never did.
+//
+// NOTE: this exceeds the original ~8.1s route target. That target predates
+// the measurement and is not achievable with web-search research; the old
+// 8.1s path returned nothing at all. See the PR discussion.
+const OPENAI_STAGE_BUDGET_MS = DEFAULT_OPENAI_STAGE_MAX_MS;
+const GROQ_FALLBACK_MAX_MS = 2500;
 const PROVIDER_BUDGET_MS = 6500;
 const REDIS_PHASE_BUDGET_MS = 500;
 const REDIS_CALL_BUDGET_MS = 250;
@@ -164,6 +181,13 @@ export function createAgeLookupHandler(dependencies = {}) {
   const localLookup = dependencies.localLookup || findLocalModelAgeResult;
   const providerLookup = dependencies.providerLookup || callGeminiAgeProvider;
   const groundedProviderLookup = dependencies.groundedProviderLookup || callSmartLookupGroundedAgeProvider;
+  // OpenAI (Responses API + web_search) is the primary research provider when
+  // enabled. It fully replaces the Gemini stages for the active sequence --
+  // see the openAiEnabled branch below for why Gemini is not chained after it.
+  const openAiProviderLookup = dependencies.openAiProviderLookup || callSmartLookupOpenAiAgeProvider;
+  const openAiEnabled = dependencies.openAiEnabled
+    ?? (isOpenAiSmartLookupEnabled(dependencies.env || process.env)
+      && Boolean((dependencies.env || process.env).OPENAI_API_KEY));
   const groundedEnabled = dependencies.groundedEnabled ?? isGroundedAgeEnabled(dependencies.env);
   const reserveBudget = dependencies.reserveProviderBudget || reserveProviderBudget;
   const recordAttempts = dependencies.recordProviderAttemptMetrics || recordProviderAttemptMetrics;
@@ -215,6 +239,15 @@ export function createAgeLookupHandler(dependencies = {}) {
     // empty result, for any of the three deterministic-eligible tiers.
     const hasDeterministicFallback = Boolean(queryInfo.productFamily) || queryInfo.querySpecificity === 'brand-category';
     const deterministicFallbackRaw = hasDeterministicFallback ? buildDeterministicBroadResult(queryInfo) : null;
+    // "Local deterministic results still win when they are stronger."
+    // A registry/seed-backed family card that already carries a
+    // high-confidence production range (e.g. Samsung Q60 Series 2019-2024,
+    // LG C3) is a better answer than anything research would add, and
+    // researching it would both spend paid provider budget and risk a weaker
+    // model-authored range displacing verified local evidence. Only weak
+    // deterministic cards (the low-confidence brand-category "we recognized
+    // the brand, now give us a model number" shape) fall through to research.
+    const deterministicIsStrong = deterministicFallbackRaw?.yearContext?.confidence === 'high';
     const buildDeterministicFallback = () => (deterministicFallbackRaw
       ? normalizeLegacyResult(deterministicFallbackRaw, queryInfo, {
           source: 'static', evidenceSource: 'heuristic', timings, currentYear,
@@ -244,9 +277,24 @@ export function createAgeLookupHandler(dependencies = {}) {
     // on the response, so telemetry attribution and retry-gating can still tell
     // a substituted timeout/budget/outage from a query that never attempted
     // research at all. It never changes what the card claims.
+    // A broad deterministic card (partial-model or category-only) for a
+    // research-eligible query. Previously this card was *returned* outright,
+    // which is what dead-ended a bare model token like "H4080BM" into
+    // "brand: Unknown / enter the complete model number" without any
+    // research attempt. It is now assigned below and held here purely as a
+    // last-resort reserve, on the same substitution path as every other
+    // deterministic reserve. Declared with `let` because it is computed
+    // later in the flow than this closure is defined; the closure is only
+    // ever invoked after that assignment has happened.
+    let broadReserveRaw = null;
     const degradeToDeterministicFallback = (substitutedErrorCode = null) => {
-      const raw = deterministicFallbackRaw || exactModelReserveRaw;
+      const raw = deterministicFallbackRaw || exactModelReserveRaw || broadReserveRaw;
       if (!raw) return null;
+      // The broad reserve is not tier-specific, so it reports its own kind
+      // rather than borrowing the tier-derived one.
+      const fallbackKind = (!deterministicFallbackRaw && !exactModelReserveRaw && broadReserveRaw)
+        ? 'deterministic-broad'
+        : deterministicFallbackKind;
       const fallback = normalizeLegacyResult(raw, queryInfo, {
         source: 'static', evidenceSource: 'heuristic', timings, currentYear,
       });
@@ -260,7 +308,7 @@ export function createAgeLookupHandler(dependencies = {}) {
           : null);
       return {
         ...fallback,
-        fallbackKind: deterministicFallbackKind,
+        fallbackKind,
         groundedFallback: false,
         errorCode: substitutedErrorCode || fallback.errorCode || null,
         notes: [fallback.notes, capacityNote].filter(Boolean).join(' '),
@@ -286,10 +334,20 @@ export function createAgeLookupHandler(dependencies = {}) {
       // not eligible for this specificity tier, this deterministic result
       // IS the answer -- same fast, safe behavior as before this change,
       // and fallbackKind stays 'none' (this was never a degraded result).
-      // Otherwise, fall through to attempt grounded research within the
-      // same route deadline, with this result held in reserve as the
-      // fallback for any failure/timeout.
-      if (deterministicFallbackRaw && (!groundedEnabled || !queryInfo.groundedEligible)) {
+      // Otherwise, fall through to attempt research within the same route
+      // deadline, with this result held in reserve as the fallback for any
+      // failure/timeout.
+      //
+      // Deliberately gated on `researchEligible` and NOT on `groundedEnabled`:
+      // whether live web grounding is configured decides *how* the provider
+      // is called, never *whether* a query with real product signal is
+      // allowed to be researched at all. Coupling the two meant that with
+      // SMART_LOOKUP_GROUNDED_AGE unset (its default), every brand-category
+      // query -- "Nintendo Switch 2" included -- returned a clarification
+      // card without any provider attempt. Closed-book research is still far
+      // more useful than "enter a complete model number", and it degrades
+      // back to exactly this reserve on any failure.
+      if (deterministicFallbackRaw && (!queryInfo.researchEligible || deterministicIsStrong)) {
         const result = finalizeTimings(buildDeterministicFallback(), timings, deadline);
         logResult(logger, requestId, queryInfo, result);
         return res.status(200).json(result);
@@ -429,7 +487,11 @@ export function createAgeLookupHandler(dependencies = {}) {
       // the same deterministicFallbackRaw and short-circuit, defeating the
       // whole point of continuing on to attempt grounded research below.
       const broadResult = deterministicFallbackRaw ? null : buildDeterministicBroadResult(queryInfo);
-      if (broadResult) {
+      // Hold the broad card in reserve rather than returning it when the
+      // query still deserves research -- see broadReserveRaw above.
+      if (broadResult && queryInfo.researchEligible) {
+        broadReserveRaw = broadResult;
+      } else if (broadResult) {
         const result = finalizeTimings(normalizeLegacyResult(broadResult, queryInfo, {
           source: 'static',
           evidenceSource: 'heuristic',
@@ -557,6 +619,36 @@ export function createAgeLookupHandler(dependencies = {}) {
             error.code = budgetResult.errorCode || 'BUDGET_STORE_UNAVAILABLE';
             error.budgetResult = budgetResult;
             throw error;
+          }
+
+          // Active production sequence: OpenAI web research, then Groq, then
+          // the caller's deterministic reserve. Gemini is deliberately NOT
+          // chained after OpenAI -- doing so would rebuild the measured
+          // failure where grounded (~4.2s) plus closed-book (~3.9s) consumed
+          // the entire route budget and starved every fallback. The Gemini
+          // branches below remain reachable only when OpenAI is disabled, so
+          // the provider stays available for benchmarking and re-enablement.
+          if (openAiEnabled) {
+            groundedTelemetry.attempted = true;
+            const openAiStart = now();
+            try {
+              const value = await openAiProviderLookup(queryInfo, {
+                deadline,
+                openAiMaxMs: Math.min(OPENAI_STAGE_BUDGET_MS, deadline.remainingMs(350)),
+                groqMaxMs: GROQ_FALLBACK_MAX_MS,
+                reserveMs: 350,
+                fetchImpl: dependencies.fetchImpl,
+                env: dependencies.env || process.env,
+              });
+              groundedTelemetry.durationMs = Math.max(0, now() - openAiStart);
+              return value;
+            } catch (openAiError) {
+              groundedTelemetry.durationMs = Math.max(0, now() - openAiStart);
+              groundedTelemetry.failureCode = isTimeoutError(openAiError)
+                ? 'STAGE_TIMEOUT'
+                : (openAiError instanceof SmartLookupProviderError ? openAiError.code : 'PROVIDER_UNAVAILABLE');
+              throw openAiError;
+            }
           }
 
           if (!useGrounded) {
@@ -688,6 +780,12 @@ export function createAgeLookupHandler(dependencies = {}) {
           : (isTimeoutError(error)
             ? 'PROVIDER_TIMEOUT'
             : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE')));
+        // The aggregate PROVIDERS_UNAVAILABLE hides WHICH provider failed and
+        // why, which makes a production provider outage undiagnosable from the
+        // response alone. These are stable internal codes only -- never a raw
+        // provider body, credential, query, or URL.
+        const primaryProviderErrorCode = error?.primaryErrorCode || null;
+        const fallbackProviderErrorCode = error?.fallbackErrorCode || null;
         // A grounded timeout that also attempted (and failed) a same-deadline
         // fallback made one additional real provider call beyond what
         // providerAttemptCountFromMetadata infers from the reported error
@@ -727,6 +825,8 @@ export function createAgeLookupHandler(dependencies = {}) {
                   ? 'Smart Lookup provider capacity is temporarily limited. Please try again tomorrow.'
                   : undefined),
             }), timings, deadline);
+        if (primaryProviderErrorCode) result.providerErrorCode = primaryProviderErrorCode;
+        if (fallbackProviderErrorCode) result.fallbackProviderErrorCode = fallbackProviderErrorCode;
         logResult(logger, requestId, queryInfo, result, {
           timeoutStage: isTimeoutError(error) ? 'provider' : null,
           budgetStatus: error.budgetResult?.status || budgetResult?.status || null,
@@ -759,10 +859,17 @@ export function createAgeLookupHandler(dependencies = {}) {
           queryInfo,
           source: providerMetadata.provider,
           originSource: providerMetadata.provider,
+          // An OpenAI answer counts as web-researched ONLY when the search
+          // tool actually returned citations; otherwise it is labelled as an
+          // ungrounded estimate so the card never claims web verification it
+          // does not have. SOURCES is a separate gate in result-schema.js.
           evidenceSource: providerMetadata.provider === 'groq'
             ? 'groq-ungrounded'
-            : (groundedWithSources ? 'gemini-grounded' : 'gemini-ungrounded'),
+            : (providerMetadata.provider === 'openai'
+              ? (groundedWithSources ? 'openai-web' : 'openai-ungrounded')
+              : (groundedWithSources ? 'gemini-grounded' : 'gemini-ungrounded')),
           groundedSources: groundedWithSources ? providerMetadata.groundedSources : [],
+          webSearchUsed: providerMetadata.webSearchUsed === true,
           retrievedAt: groundedWithSources ? new Date().toISOString() : null,
           groundedFallback: groundedFallbackRecovered,
           // Real AI (Gemini or Groq, closed-book) produced this result --
