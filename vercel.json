@@ -492,6 +492,9 @@
   "functions": {
     "api/refine-serial-date.js": {
       "maxDuration": 10
+    },
+    "api/age-lookup.js": {
+      "maxDuration": 60
     }
   }
 }

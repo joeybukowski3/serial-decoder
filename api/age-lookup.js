@@ -32,13 +32,13 @@ import {
 import { buildDeterministicBroadResult, buildExactModelReserveResult } from '../lib/smart-lookup/static-results.js';
 import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
 
-const TOTAL_BUDGET_MS = 8500;
+const TOTAL_BUDGET_MS = 50000; // TEMP measurement
 // OpenAI-primary budgets. Sized so the worst case (OpenAI exhausts its stage,
 // then Groq runs) stays at or under the ~8.1s the old Gemini failure path
 // already cost, while a successful OpenAI answer lands well under 6s. OpenAI
 // deliberately does NOT get the whole route: it must leave a usable Groq
 // window, which is precisely what the old grounded stage failed to do.
-const OPENAI_STAGE_BUDGET_MS = DEFAULT_OPENAI_STAGE_MAX_MS;
+const OPENAI_STAGE_BUDGET_MS = 45000; // TEMP measurement
 const GROQ_FALLBACK_MAX_MS = 2500;
 const PROVIDER_BUDGET_MS = 6500;
 const REDIS_PHASE_BUDGET_MS = 500;
