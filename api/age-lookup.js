@@ -32,13 +32,18 @@ import {
 import { buildDeterministicBroadResult, buildExactModelReserveResult } from '../lib/smart-lookup/static-results.js';
 import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
 
-const TOTAL_BUDGET_MS = 50000; // TEMP measurement
-// OpenAI-primary budgets. Sized so the worst case (OpenAI exhausts its stage,
-// then Groq runs) stays at or under the ~8.1s the old Gemini failure path
-// already cost, while a successful OpenAI answer lands well under 6s. OpenAI
-// deliberately does NOT get the whole route: it must leave a usable Groq
-// window, which is precisely what the old grounded stage failed to do.
-const OPENAI_STAGE_BUDGET_MS = 45000; // TEMP measurement
+const TOTAL_BUDGET_MS = 16000;
+// OpenAI-primary budgets, set from measured live preview latency rather than
+// guessed: OpenAI web research took 8.7s (Nintendo Switch 2), 8.8s (Sony
+// X90L), 9.3s (LG WM3900HWA), 12.9s and 15.6s (the two Miele H4080BM
+// phrasings). A 5s stage timed out 100% of the time, so 13s covers the
+// measured median and most of the tail while still leaving a real Groq
+// window -- the thing the old grounded Gemini stage never did.
+//
+// NOTE: this exceeds the original ~8.1s route target. That target predates
+// the measurement and is not achievable with web-search research; the old
+// 8.1s path returned nothing at all. See the PR discussion.
+const OPENAI_STAGE_BUDGET_MS = DEFAULT_OPENAI_STAGE_MAX_MS;
 const GROQ_FALLBACK_MAX_MS = 2500;
 const PROVIDER_BUDGET_MS = 6500;
 const REDIS_PHASE_BUDGET_MS = 500;
