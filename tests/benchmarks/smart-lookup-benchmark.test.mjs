@@ -55,7 +55,13 @@ test('verified exact-alias benchmark scenarios resolve without providers', async
     {
       label: 'near-match alias must not resolve',
       query: 'GFW850SPNXDG',
-      expect: { source: 'static', matchedBy: null, range: null, conflict: false },
+      // Under the usefulness-first research policy an unresolvable model
+      // token is researched rather than dead-ended, so a provider call is
+      // expected here. What this case actually guards still holds: the
+      // near-match must never resolve to the verified alias record -- no
+      // matchedBy, no borrowed year range.
+      allowProvider: true,
+      expect: { source: 'gemini', matchedBy: null, range: null, conflict: false },
     },
     {
       label: 'exact alias with form-factor text',
@@ -76,7 +82,9 @@ test('verified exact-alias benchmark scenarios resolve without providers', async
     await handler(req(testCase.query), out);
     const payload = out.payload;
 
-    assert.equal(providerCalls, 0, `${testCase.label}: no paid provider call expected`);
+    if (!testCase.allowProvider) {
+      assert.equal(providerCalls, 0, `${testCase.label}: no paid provider call expected`);
+    }
     assert.equal(payload.source, testCase.expect.source, `${testCase.label}: source`);
     if (testCase.expect.brand) assert.equal(payload.brand, testCase.expect.brand, `${testCase.label}: brand`);
     if (testCase.expect.identity) assert.equal(payload.querySpecificity, testCase.expect.identity, `${testCase.label}: identity`);

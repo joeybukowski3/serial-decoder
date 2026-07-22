@@ -98,7 +98,12 @@ test('grounded lookup is skipped when the flag is off', async () => {
   assert.equal(out.payload.retrievedAt, null);
 });
 
-test('partial model tokens never use grounded research', async () => {
+// Usefulness-first policy: a partial model token is a real product signal and
+// DOES now reach grounded research. Withholding research from it was the
+// defect that dead-ended queries like "H4080BM" into "brand: Unknown / enter
+// a complete model number". Research running is not a license to invent
+// precision, so the partial token itself must still be preserved verbatim.
+test('partial model tokens do reach grounded research but keep their token verbatim', async () => {
   let groundedCalls = 0;
   const handler = createAgeLookupHandler({
     groundedEnabled: true,
@@ -109,9 +114,8 @@ test('partial model tokens never use grounded research', async () => {
   });
   const out = res();
   await handler(req('Whirlpool WTW50'), out);
-  assert.equal(groundedCalls, 0);
+  assert.equal(groundedCalls, 1);
   assert.equal(out.payload.model, 'WTW50');
-  assert.equal(out.payload.introductionYear, null);
 });
 
 test('local hits bypass grounded research and provider budget', async () => {

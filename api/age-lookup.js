@@ -215,6 +215,15 @@ export function createAgeLookupHandler(dependencies = {}) {
     // empty result, for any of the three deterministic-eligible tiers.
     const hasDeterministicFallback = Boolean(queryInfo.productFamily) || queryInfo.querySpecificity === 'brand-category';
     const deterministicFallbackRaw = hasDeterministicFallback ? buildDeterministicBroadResult(queryInfo) : null;
+    // "Local deterministic results still win when they are stronger."
+    // A registry/seed-backed family card that already carries a
+    // high-confidence production range (e.g. Samsung Q60 Series 2019-2024,
+    // LG C3) is a better answer than anything research would add, and
+    // researching it would both spend paid provider budget and risk a weaker
+    // model-authored range displacing verified local evidence. Only weak
+    // deterministic cards (the low-confidence brand-category "we recognized
+    // the brand, now give us a model number" shape) fall through to research.
+    const deterministicIsStrong = deterministicFallbackRaw?.yearContext?.confidence === 'high';
     const buildDeterministicFallback = () => (deterministicFallbackRaw
       ? normalizeLegacyResult(deterministicFallbackRaw, queryInfo, {
           source: 'static', evidenceSource: 'heuristic', timings, currentYear,
@@ -244,9 +253,24 @@ export function createAgeLookupHandler(dependencies = {}) {
     // on the response, so telemetry attribution and retry-gating can still tell
     // a substituted timeout/budget/outage from a query that never attempted
     // research at all. It never changes what the card claims.
+    // A broad deterministic card (partial-model or category-only) for a
+    // research-eligible query. Previously this card was *returned* outright,
+    // which is what dead-ended a bare model token like "H4080BM" into
+    // "brand: Unknown / enter the complete model number" without any
+    // research attempt. It is now assigned below and held here purely as a
+    // last-resort reserve, on the same substitution path as every other
+    // deterministic reserve. Declared with `let` because it is computed
+    // later in the flow than this closure is defined; the closure is only
+    // ever invoked after that assignment has happened.
+    let broadReserveRaw = null;
     const degradeToDeterministicFallback = (substitutedErrorCode = null) => {
-      const raw = deterministicFallbackRaw || exactModelReserveRaw;
+      const raw = deterministicFallbackRaw || exactModelReserveRaw || broadReserveRaw;
       if (!raw) return null;
+      // The broad reserve is not tier-specific, so it reports its own kind
+      // rather than borrowing the tier-derived one.
+      const fallbackKind = (!deterministicFallbackRaw && !exactModelReserveRaw && broadReserveRaw)
+        ? 'deterministic-broad'
+        : deterministicFallbackKind;
       const fallback = normalizeLegacyResult(raw, queryInfo, {
         source: 'static', evidenceSource: 'heuristic', timings, currentYear,
       });
@@ -260,7 +284,7 @@ export function createAgeLookupHandler(dependencies = {}) {
           : null);
       return {
         ...fallback,
-        fallbackKind: deterministicFallbackKind,
+        fallbackKind,
         groundedFallback: false,
         errorCode: substitutedErrorCode || fallback.errorCode || null,
         notes: [fallback.notes, capacityNote].filter(Boolean).join(' '),
@@ -286,10 +310,20 @@ export function createAgeLookupHandler(dependencies = {}) {
       // not eligible for this specificity tier, this deterministic result
       // IS the answer -- same fast, safe behavior as before this change,
       // and fallbackKind stays 'none' (this was never a degraded result).
-      // Otherwise, fall through to attempt grounded research within the
-      // same route deadline, with this result held in reserve as the
-      // fallback for any failure/timeout.
-      if (deterministicFallbackRaw && (!groundedEnabled || !queryInfo.groundedEligible)) {
+      // Otherwise, fall through to attempt research within the same route
+      // deadline, with this result held in reserve as the fallback for any
+      // failure/timeout.
+      //
+      // Deliberately gated on `researchEligible` and NOT on `groundedEnabled`:
+      // whether live web grounding is configured decides *how* the provider
+      // is called, never *whether* a query with real product signal is
+      // allowed to be researched at all. Coupling the two meant that with
+      // SMART_LOOKUP_GROUNDED_AGE unset (its default), every brand-category
+      // query -- "Nintendo Switch 2" included -- returned a clarification
+      // card without any provider attempt. Closed-book research is still far
+      // more useful than "enter a complete model number", and it degrades
+      // back to exactly this reserve on any failure.
+      if (deterministicFallbackRaw && (!queryInfo.researchEligible || deterministicIsStrong)) {
         const result = finalizeTimings(buildDeterministicFallback(), timings, deadline);
         logResult(logger, requestId, queryInfo, result);
         return res.status(200).json(result);
@@ -429,7 +463,11 @@ export function createAgeLookupHandler(dependencies = {}) {
       // the same deterministicFallbackRaw and short-circuit, defeating the
       // whole point of continuing on to attempt grounded research below.
       const broadResult = deterministicFallbackRaw ? null : buildDeterministicBroadResult(queryInfo);
-      if (broadResult) {
+      // Hold the broad card in reserve rather than returning it when the
+      // query still deserves research -- see broadReserveRaw above.
+      if (broadResult && queryInfo.researchEligible) {
+        broadReserveRaw = broadResult;
+      } else if (broadResult) {
         const result = finalizeTimings(normalizeLegacyResult(broadResult, queryInfo, {
           source: 'static',
           evidenceSource: 'heuristic',
