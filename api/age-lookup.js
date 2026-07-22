@@ -11,6 +11,11 @@ import {
   SmartLookupProviderError,
 } from '../lib/smart-lookup/provider.js';
 import {
+  callSmartLookupOpenAiAgeProvider,
+  isOpenAiSmartLookupEnabled,
+  DEFAULT_OPENAI_STAGE_MAX_MS,
+} from '../lib/smart-lookup/openai-provider.js';
+import {
   createSmartLookupTimings,
   createUnavailableSmartAgeResult,
   normalizeCachedSmartAgeResult,
@@ -28,6 +33,13 @@ import { buildDeterministicBroadResult, buildExactModelReserveResult } from '../
 import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
 
 const TOTAL_BUDGET_MS = 8500;
+// OpenAI-primary budgets. Sized so the worst case (OpenAI exhausts its stage,
+// then Groq runs) stays at or under the ~8.1s the old Gemini failure path
+// already cost, while a successful OpenAI answer lands well under 6s. OpenAI
+// deliberately does NOT get the whole route: it must leave a usable Groq
+// window, which is precisely what the old grounded stage failed to do.
+const OPENAI_STAGE_BUDGET_MS = DEFAULT_OPENAI_STAGE_MAX_MS;
+const GROQ_FALLBACK_MAX_MS = 2500;
 const PROVIDER_BUDGET_MS = 6500;
 const REDIS_PHASE_BUDGET_MS = 500;
 const REDIS_CALL_BUDGET_MS = 250;
@@ -164,6 +176,13 @@ export function createAgeLookupHandler(dependencies = {}) {
   const localLookup = dependencies.localLookup || findLocalModelAgeResult;
   const providerLookup = dependencies.providerLookup || callGeminiAgeProvider;
   const groundedProviderLookup = dependencies.groundedProviderLookup || callSmartLookupGroundedAgeProvider;
+  // OpenAI (Responses API + web_search) is the primary research provider when
+  // enabled. It fully replaces the Gemini stages for the active sequence --
+  // see the openAiEnabled branch below for why Gemini is not chained after it.
+  const openAiProviderLookup = dependencies.openAiProviderLookup || callSmartLookupOpenAiAgeProvider;
+  const openAiEnabled = dependencies.openAiEnabled
+    ?? (isOpenAiSmartLookupEnabled(dependencies.env || process.env)
+      && Boolean((dependencies.env || process.env).OPENAI_API_KEY));
   const groundedEnabled = dependencies.groundedEnabled ?? isGroundedAgeEnabled(dependencies.env);
   const reserveBudget = dependencies.reserveProviderBudget || reserveProviderBudget;
   const recordAttempts = dependencies.recordProviderAttemptMetrics || recordProviderAttemptMetrics;
@@ -597,6 +616,36 @@ export function createAgeLookupHandler(dependencies = {}) {
             throw error;
           }
 
+          // Active production sequence: OpenAI web research, then Groq, then
+          // the caller's deterministic reserve. Gemini is deliberately NOT
+          // chained after OpenAI -- doing so would rebuild the measured
+          // failure where grounded (~4.2s) plus closed-book (~3.9s) consumed
+          // the entire route budget and starved every fallback. The Gemini
+          // branches below remain reachable only when OpenAI is disabled, so
+          // the provider stays available for benchmarking and re-enablement.
+          if (openAiEnabled) {
+            groundedTelemetry.attempted = true;
+            const openAiStart = now();
+            try {
+              const value = await openAiProviderLookup(queryInfo, {
+                deadline,
+                openAiMaxMs: Math.min(OPENAI_STAGE_BUDGET_MS, deadline.remainingMs(350)),
+                groqMaxMs: GROQ_FALLBACK_MAX_MS,
+                reserveMs: 350,
+                fetchImpl: dependencies.fetchImpl,
+                env: dependencies.env || process.env,
+              });
+              groundedTelemetry.durationMs = Math.max(0, now() - openAiStart);
+              return value;
+            } catch (openAiError) {
+              groundedTelemetry.durationMs = Math.max(0, now() - openAiStart);
+              groundedTelemetry.failureCode = isTimeoutError(openAiError)
+                ? 'STAGE_TIMEOUT'
+                : (openAiError instanceof SmartLookupProviderError ? openAiError.code : 'PROVIDER_UNAVAILABLE');
+              throw openAiError;
+            }
+          }
+
           if (!useGrounded) {
             return deadline.run('age-provider-call', () => providerLookup(queryInfo, {
               deadline,
@@ -797,10 +846,17 @@ export function createAgeLookupHandler(dependencies = {}) {
           queryInfo,
           source: providerMetadata.provider,
           originSource: providerMetadata.provider,
+          // An OpenAI answer counts as web-researched ONLY when the search
+          // tool actually returned citations; otherwise it is labelled as an
+          // ungrounded estimate so the card never claims web verification it
+          // does not have. SOURCES is a separate gate in result-schema.js.
           evidenceSource: providerMetadata.provider === 'groq'
             ? 'groq-ungrounded'
-            : (groundedWithSources ? 'gemini-grounded' : 'gemini-ungrounded'),
+            : (providerMetadata.provider === 'openai'
+              ? (groundedWithSources ? 'openai-web' : 'openai-ungrounded')
+              : (groundedWithSources ? 'gemini-grounded' : 'gemini-ungrounded')),
           groundedSources: groundedWithSources ? providerMetadata.groundedSources : [],
+          webSearchUsed: providerMetadata.webSearchUsed === true,
           retrievedAt: groundedWithSources ? new Date().toISOString() : null,
           groundedFallback: groundedFallbackRecovered,
           // Real AI (Gemini or Groq, closed-book) produced this result --
