@@ -654,6 +654,10 @@
     // named a specific product: showing "Nintendo Switch 2" directly above
     // "not one specific model" contradicts the answer we just gave. The
     // badge still applies to genuinely broad results.
+    // Computed here, ahead of the precision badge, because `var` hoisting
+    // would otherwise leave it undefined at that point and let the
+    // contradictory broad-guidance badge render anyway.
+    var identifiedProduct = data && data.likelyProduct ? data.likelyProduct : '';
     var precisionLabel = data && !identifiedProduct && PRECISION_HEADINGS[data.precisionLevel];
     var precisionBadgeHtml = precisionLabel
       ? '<p class="smart-lookup-precision-badge">' + escapeHtml(precisionLabel) + '</p>'
@@ -676,7 +680,7 @@
     // Usefulness-first "best available result" block. Leads with WHAT the
     // product is when research identified one, so a researched identification
     // is never buried under a "complete model required" clarification.
-    var identifiedProduct = data && data.likelyProduct ? data.likelyProduct : '';
+    // identifiedProduct is computed above, ahead of the precision badge.
     var bestAvailableHtml = '';
     if (identifiedProduct) {
       var timingText = data.releaseDate || data.estimatedEra
