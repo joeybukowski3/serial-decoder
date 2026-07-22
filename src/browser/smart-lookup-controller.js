@@ -539,7 +539,10 @@
     if (!data) return '';
     if (isGroundedProviderResult(data)) {
       var retrievedOn = retrievedDateLabel(data);
-      return 'AI research grounded in live Google Search results'
+      // Provider-neutral wording: this path now serves OpenAI web search as
+      // well as Gemini grounding, so naming one search engine would be wrong
+      // for most results.
+      return 'AI research grounded in live web search results'
         + (retrievedOn ? ' retrieved ' + retrievedOn : '')
         + '; review the cited web sources below.';
     }
@@ -647,11 +650,15 @@
       : '';
     // Precision badge + plain-language "why is this broad" line -- shown
     // whenever the result is anything less than an exact model match.
-    var precisionLabel = data && PRECISION_HEADINGS[data.precisionLevel];
+    // Suppress the broad-guidance badge and note once research has actually
+    // named a specific product: showing "Nintendo Switch 2" directly above
+    // "not one specific model" contradicts the answer we just gave. The
+    // badge still applies to genuinely broad results.
+    var precisionLabel = data && !identifiedProduct && PRECISION_HEADINGS[data.precisionLevel];
     var precisionBadgeHtml = precisionLabel
       ? '<p class="smart-lookup-precision-badge">' + escapeHtml(precisionLabel) + '</p>'
       : '';
-    var precisionNote = precisionExplanation(data);
+    var precisionNote = identifiedProduct ? "" : precisionExplanation(data);
     var precisionNoteHtml = precisionNote
       ? '<p class="smart-lookup-precision-note">' + escapeHtml(precisionNote) + '</p>'
       : '';
