@@ -172,8 +172,11 @@ for (const [label, fallbackErrorCode] of [
   });
 }
 
-test('free paths call no provider at all', async () => {
-  for (const query of ['Whirlpool', 'refrigerator', 'asdkjhasd', '']) {
+// General-search-first: a bare recognized brand or category is now
+// research-eligible (see lib/smart-lookup/normalize.js researchEligible) --
+// only genuinely unusable/empty input stays excluded from every provider.
+test('unusable paths call no provider at all', async () => {
+  for (const query of ['asdkjhqwe', '']) {
     const { handler, calls } = harness({ openai: () => { throw new Error('must not run'); } });
     const out = res();
     await handler(req(query), out);

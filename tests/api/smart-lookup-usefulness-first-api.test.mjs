@@ -79,13 +79,18 @@ test('research still runs for a named product when grounded search is disabled',
   assert.equal(calls.closedBook, 1, 'closed-book research must still run');
 });
 
-test('bare brand and bare category still short-circuit and spend no provider call', async () => {
+// General-search-first: a bare recognized brand or bare recognized category
+// is no longer excluded from research -- local classification is a
+// speed/confidence hint, not an eligibility gate (see
+// lib/smart-lookup/normalize.js researchEligible). Only genuinely unusable
+// input stays excluded from every provider.
+test('bare brand and bare category now reach the provider', async () => {
   for (const query of ['Whirlpool', 'refrigerator']) {
-    const { handler, calls } = harness(() => { throw new Error('provider must not run'); });
+    const { handler, calls } = harness((qi) => ({ brand: qi.brand, model: null, specificityLevel: qi.specificityLevel, notes: 'researched' }));
     const out = res();
     await handler(req(query), out);
     assert.equal(out.statusCode, 200, `${query} must still answer`);
-    assert.equal(calls.grounded + calls.closedBook, 0, `${query} must not call the provider`);
+    assert.equal(calls.grounded + calls.closedBook, 1, `${query} must reach the provider`);
   }
 });
 

@@ -564,7 +564,16 @@ export function createAgeLookupHandler(dependencies = {}) {
       }
 
       if (!queryInfo.providerEligible || !deadline.hasTime(900, 300)) {
-        const degraded = degradeToDeterministicFallback('INSUFFICIENT_QUERY_DETAIL');
+        // These are two different failures and must not share a message: a
+        // query that is not provider-eligible genuinely lacks product signal
+        // (insufficient detail), but a provider-eligible query that simply
+        // ran out of route deadline before research could start is a system
+        // timing issue, not a user-input issue -- misreporting it as
+        // "insufficient detail" tells the user to add information that would
+        // not have helped.
+        const deadlineExhausted = queryInfo.providerEligible && !deadline.hasTime(900, 300);
+        const preProviderErrorCode = deadlineExhausted ? 'TOTAL_DEADLINE' : 'INSUFFICIENT_QUERY_DETAIL';
+        const degraded = degradeToDeterministicFallback(preProviderErrorCode);
         const result = finalizeTimings(degraded
           || createUnavailableSmartAgeResult(queryInfo, {
               source: 'fallback',
@@ -572,7 +581,10 @@ export function createAgeLookupHandler(dependencies = {}) {
               cacheStatus,
               providerAttempted: false,
               timings,
-              errorCode: 'INSUFFICIENT_QUERY_DETAIL',
+              errorCode: preProviderErrorCode,
+              notes: deadlineExhausted
+                ? 'Smart Lookup ran out of time to research this before responding. Please try again.'
+                : undefined,
             }), timings, deadline);
         logResult(logger, requestId, queryInfo, result);
         return res.status(200).json(result);
