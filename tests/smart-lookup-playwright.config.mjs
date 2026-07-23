@@ -12,9 +12,8 @@ export default defineConfig({
   webServer: {
     // This config owns the server lifecycle. CI must not pre-start anything
     // on 3001 (a second bind aborts Playwright before test collection). The
-    // suite mocks every API call, so CI only needs the static site; local
-    // runs keep vercel dev for parity with production routes.
-    command: process.env.CI ? 'python3 -m http.server 3001' : 'npx vercel dev --listen 3001',
+    // suite mocks every API call, so it only needs the static site.
+    command: 'node tests/helpers/static-server.mjs . 3001',
     // Playwright defaults the command cwd to this config's directory
     // (tests/), which would serve the wrong tree; serve the repo root.
     cwd: repoRoot,
