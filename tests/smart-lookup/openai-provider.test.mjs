@@ -216,6 +216,7 @@ for (const [label, openAiStatus] of [['rate limit', 429], ['server error', 500],
     assert.equal(meta.provider, 'groq');
     assert.equal(meta.fallbackUsed, true);
     assert.equal(meta.primaryProvider, 'openai');
+    assert.equal(meta.model, 'openai/gpt-oss-20b');
     // A Groq answer is closed-book: never web-grounded, never cited.
     assert.equal(meta.grounded, false);
     assert.equal(meta.webSearchUsed, false);
@@ -235,6 +236,64 @@ test('when both OpenAI and Groq fail the caller sees a combined provider failure
   assert.equal(error.primaryErrorCode, 'OPENAI_RATE_LIMIT');
   assert.equal(counters.openai, 1);
   assert.equal(counters.groq, 1);
+});
+
+test('Groq HTTP failures preserve safe status/model diagnostics without raw response text', async () => {
+  const counters = { openai: 0, groq: 0 };
+  const error = await callSmartLookupOpenAiAgeProvider(QUERY, {
+    env: { ...ENV, GROQ_MODEL: 'diagnostic-model' },
+    deadline: deadline(),
+    groqApiKey: 'groq-key',
+    fetchImpl: async (url) => {
+      if (String(url).includes('openai.com')) {
+        counters.openai += 1;
+        return { ok: false, status: 429, json: async () => ({}), text: async () => '{}' };
+      }
+      counters.groq += 1;
+      return {
+        ok: false,
+        status: 400,
+        headers: { get: (key) => key === 'x-ratelimit-remaining-requests' ? '12' : null },
+        json: async () => ({}),
+        text: async () => '{"error":{"message":"do not leak me"}}',
+      };
+    },
+  }).catch((e) => e);
+  assert.equal(error.code, 'PROVIDERS_UNAVAILABLE');
+  assert.equal(error.fallbackErrorCode, 'GROQ_HTTP_ERROR');
+  assert.equal(error.fallbackStatus, 400);
+  assert.equal(error.fallbackModel, 'diagnostic-model');
+  assert.equal(String(error.message).includes('do not leak me'), false);
+  assert.equal(counters.openai, 1);
+  assert.equal(counters.groq, 1);
+});
+
+test('Groq rate limits preserve safe rate-limit headers', async () => {
+  const error = await callSmartLookupOpenAiAgeProvider(QUERY, {
+    env: ENV,
+    deadline: deadline(),
+    groqApiKey: 'groq-key',
+    fetchImpl: async (url) => {
+      if (String(url).includes('openai.com')) return { ok: false, status: 500, json: async () => ({}), text: async () => '{}' };
+      return {
+        ok: false,
+        status: 429,
+        headers: {
+          get: (key) => ({
+            'x-ratelimit-limit-requests': '1000',
+            'x-ratelimit-remaining-requests': '0',
+            'retry-after': '2',
+          })[key] || null,
+        },
+        json: async () => ({}),
+        text: async () => '{}',
+      };
+    },
+  }).catch((e) => e);
+  assert.equal(error.fallbackErrorCode, 'GROQ_RATE_LIMIT');
+  assert.equal(error.fallbackStatus, 429);
+  assert.equal(error.fallbackRateLimitHeaders['x-ratelimit-remaining-requests'], '0');
+  assert.equal(error.fallbackRateLimitHeaders['retry-after'], '2');
 });
 
 test('an OpenAI stage timeout is Groq-eligible (unlike the old Gemini path)', async () => {

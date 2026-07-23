@@ -786,6 +786,9 @@ export function createAgeLookupHandler(dependencies = {}) {
         // provider body, credential, query, or URL.
         const primaryProviderErrorCode = error?.primaryErrorCode || null;
         const fallbackProviderErrorCode = error?.fallbackErrorCode || null;
+        const fallbackProviderStatus = error?.fallbackStatus || null;
+        const fallbackProviderLatencyMs = error?.fallbackLatencyMs ?? null;
+        const fallbackProviderModel = error?.fallbackModel || null;
         // A grounded timeout that also attempted (and failed) a same-deadline
         // fallback made one additional real provider call beyond what
         // providerAttemptCountFromMetadata infers from the reported error
@@ -827,6 +830,9 @@ export function createAgeLookupHandler(dependencies = {}) {
             }), timings, deadline);
         if (primaryProviderErrorCode) result.providerErrorCode = primaryProviderErrorCode;
         if (fallbackProviderErrorCode) result.fallbackProviderErrorCode = fallbackProviderErrorCode;
+        if (fallbackProviderStatus) result.fallbackProviderStatus = fallbackProviderStatus;
+        if (fallbackProviderLatencyMs != null) result.fallbackProviderLatencyMs = fallbackProviderLatencyMs;
+        if (fallbackProviderModel) result.fallbackProviderModel = fallbackProviderModel;
         logResult(logger, requestId, queryInfo, result, {
           timeoutStage: isTimeoutError(error) ? 'provider' : null,
           budgetStatus: error.budgetResult?.status || budgetResult?.status || null,
@@ -886,6 +892,7 @@ export function createAgeLookupHandler(dependencies = {}) {
         const validatedProvider = normalizeSmartAgeResult(rawProvider, providerOptions);
         const hinted = applyEraHints(validatedProvider, queryInfo.normalizedQuery);
         result = normalizeSmartAgeResult(hinted, providerOptions);
+        if (providerMetadata.model) result.providerModel = providerMetadata.model;
       } catch (error) {
         timings.postProcessMs = Math.max(0, now() - postStart);
         const invalidAttempts = providerAttemptCountFromMetadata(providerMetadata) + (rawProvider && rawProvider.__groundedFallbackRecovered ? 1 : 0);

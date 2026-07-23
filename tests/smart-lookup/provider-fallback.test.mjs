@@ -106,6 +106,7 @@ test('Gemini 429 immediately falls back to Groq inside the same deadline', async
     fallbackUsed: true,
     primaryProvider: 'gemini',
     primaryErrorCode: 'PROVIDER_RATE_LIMIT',
+    model: 'openai/gpt-oss-20b',
   });
 });
 
