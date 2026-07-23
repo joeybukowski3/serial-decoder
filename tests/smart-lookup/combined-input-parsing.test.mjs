@@ -35,8 +35,25 @@ for (const query of [
 test('an explicitly labeled serial is assigned the serial role', () => {
   const result = info('Serial: FR31424IN Model: GFW850SPN0DG');
   assert.equal(result.serialIdentity, SERIAL);
+  assert.equal(result.serialToken, SERIAL);
   assert.equal(result.serialSource, 'labeled');
   assert.equal(result.modelIdentity, MODEL);
+  assert.doesNotMatch(result.providerQuery, /FR31424IN/);
+  assert.match(result.providerQuery, /GFW850SPN0DG/);
+});
+
+test('a trailing labeled serial is preserved instead of deleted before classification', () => {
+  const result = info('model: WM3900HWA serial: 902KWXXXX');
+  assert.equal(result.modelIdentity, 'WM3900HWA');
+  assert.equal(result.serialIdentity, '902KWXXXX');
+  assert.equal(result.providerQuery, 'model: WM3900HWA');
+});
+
+test('a labeled serial is never reconsidered as a model', () => {
+  const result = info('s/n ABC1234567 Samsung TV');
+  assert.equal(result.modelIdentity, '');
+  assert.equal(result.serialIdentity, 'ABC1234567');
+  assert.equal(result.providerQuery, 'Samsung TV');
 });
 
 test('an unlabeled second identifier stays ambiguous rather than being guessed into a serial', () => {
@@ -80,6 +97,15 @@ test('a service tag is never promoted to the model or the serial', () => {
   assert.equal(result.modelIdentity, 'OPTIPLEX9020');
   assert.equal(result.serialIdentity, '');
   assert.ok(result.ambiguousIdentifiers.includes('7PJ2XK1'));
+});
+
+test('an explicitly labeled service tag is separated from the model role and provider query', () => {
+  const result = info('Dell service tag JX2K9P1');
+  assert.equal(result.modelIdentity, '');
+  assert.equal(result.serialIdentity, '');
+  assert.equal(result.serviceTagIdentity, 'JX2K9P1');
+  assert.equal(result.providerQuery, 'Dell');
+  assert.equal(result.providerEligible, false);
 });
 
 test('a part number is not silently promoted to a serial role', () => {

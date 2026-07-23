@@ -287,6 +287,190 @@ test('HVAC model-only digits are not decoded as serial dates', async () => {
   assert.equal(providerCalls, 1);
 });
 
+test('ordinary four-digit HVAC query text never enters the serial-date shortcut', async () => {
+  let providerCalls = 0;
+  const handler = createAgeLookupHandler({
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    providerLookup: async (queryInfo) => {
+      providerCalls += 1;
+      return {
+        brand: queryInfo.brand || 'Unknown',
+        model: queryInfo.modelIdentity || null,
+        likelyProduct: [queryInfo.brand, queryInfo.modelIdentity || queryInfo.genericCategory].filter(Boolean).join(' '),
+        identityConfidence: 'medium',
+        notes: 'Model-level research only.',
+      };
+    },
+  });
+
+  for (const query of [
+    'Trane XR14 2019',
+    'Goodman furnace installed 2015',
+    'Carrier HVAC replaced in 2020',
+    'Rheem water heater model 2018',
+  ]) {
+    const out = res();
+    await handler(req(query), out);
+    assert.equal(out.statusCode, 200, query);
+    assert.equal(out.payload.individualManufactureYear, null, query);
+    assert.equal(out.payload.estimatedYearType, null, query);
+    assert.equal(out.payload.serialRule, null, query);
+    assert.equal(out.payload.serialDetected, null, query);
+    assert.doesNotMatch(out.payload.notes || '', /\bweek\s+\d{1,2}\b|WWYY|YYMM/i, query);
+  }
+  assert.equal(providerCalls, 4);
+});
+
+test('explicit HVAC serial preserves century candidates and asks for model-era refinement', async () => {
+  let providerCalls = 0;
+  const currentYear = new Date().getFullYear();
+  const nextTwoDigits = String((currentYear + 1) % 100).padStart(2, '0');
+  const serial = `20${nextTwoDigits}`;
+  const handler = createAgeLookupHandler({
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    providerLookup: async () => { providerCalls += 1; throw new Error('provider should not run'); },
+  });
+  const out = res();
+  await handler(req(`Trane serial ${serial}`), out);
+
+  assert.equal(out.statusCode, 200);
+  assert.equal(out.payload.individualManufactureYear, null);
+  assert.equal(out.payload.estimatedYear, null);
+  assert.equal(out.payload.manufactureDateAmbiguous, true);
+  assert.deepEqual(out.payload.manufactureYearCandidates, [
+    1900 + Number(nextTwoDigits),
+    2000 + Number(nextTwoDigits),
+  ]);
+  assert.deepEqual(out.payload.serialDetected, { token: serial, action: 'use-decoder' });
+  assert.match(out.payload.notes, /repeats by century/i);
+  assert.match(out.payload.refinementSuggestion, /complete model number|model-era evidence/i);
+  assert.equal(providerCalls, 0);
+});
+
+test('explicit Goodman HVAC serial still recognizes its supported YYMM pattern without false precision', async () => {
+  const handler = createAgeLookupHandler({
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    providerLookup: async () => { throw new Error('provider should not run'); },
+  });
+  const out = res();
+  await handler(req('Goodman serial 1404123456'), out);
+
+  assert.equal(out.payload.brand, 'Goodman');
+  assert.deepEqual(out.payload.manufactureYearCandidates, [1914, 2014]);
+  assert.equal(out.payload.manufactureDateAmbiguous, true);
+  assert.equal(out.payload.individualManufactureYear, null);
+  assert.match(out.payload.notes, /April.*YYMM/i);
+});
+
+test('an explicit Rheem water-heater serial does not enter the HVAC shortcut', async () => {
+  let providerCalls = 0;
+  const handler = createAgeLookupHandler({
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    providerLookup: async () => {
+      providerCalls += 1;
+      return {
+        brand: 'Rheem',
+        likelyProduct: 'Rheem water heater',
+        productType: 'water heater',
+        identityConfidence: 'medium',
+        notes: 'Model-level water-heater research only.',
+      };
+    },
+  });
+  const out = res();
+  await handler(req('Rheem water heater serial X4502XXXX'), out);
+
+  assert.equal(out.payload.individualManufactureYear, null);
+  assert.deepEqual(out.payload.manufactureYearCandidates, []);
+  assert.equal(out.payload.serialRule, null);
+  assert.deepEqual(out.payload.serialDetected, { token: 'X4502XXXX', action: 'use-decoder' });
+  assert.equal(providerCalls, 1);
+});
+
+test('serial-bearing model queries preserve roles and cannot be spoofed by provider output', async () => {
+  const seen = [];
+  const handler = createAgeLookupHandler({
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    providerLookup: async (queryInfo) => {
+      seen.push(queryInfo);
+      const brand = queryInfo.brand || (queryInfo.modelIdentity === 'WM3900HWA' ? 'LG' : 'GE');
+      return {
+        brand,
+        model: queryInfo.modelIdentity || null,
+        likelyProduct: `${brand} researched product`,
+        identityConfidence: 'high',
+        introductionYear: 2019,
+        individualManufactureYear: 2014,
+        serialDetected: { token: 'PROVIDER-SPOOF', action: 'decoded' },
+        serialRule: 'Provider-invented serial format.',
+        serialLocation: 'Provider-invented serial location.',
+        notes: 'Model-level research result.',
+      };
+    },
+  });
+
+  const cases = [
+    ['serial FR31424IN model GFW850SPN0DG', 'GFW850SPN0DG', 'FR31424IN'],
+    ['model: WM3900HWA serial: 902KWXXXX', 'WM3900HWA', '902KWXXXX'],
+    ['s/n ABC1234567 Samsung TV', '', 'ABC1234567'],
+  ];
+  for (const [query, model, serial] of cases) {
+    const out = res();
+    await handler(req(query), out);
+    assert.equal(out.statusCode, 200, query);
+    assert.equal(out.payload.model || '', model, query);
+    assert.deepEqual(out.payload.serialDetected, { token: serial, action: 'use-decoder' }, query);
+    assert.equal(out.payload.individualManufactureYear, null, query);
+    assert.equal(out.payload.serialRule, null, query);
+    assert.equal(out.payload.serialLocation, null, query);
+    assert.equal(out.payload.introductionYear, 2019, 'model-level research remains available');
+  }
+  assert.equal(seen.length, 3);
+  for (const queryInfo of seen) {
+    assert.ok(queryInfo.serialIdentity);
+    assert.doesNotMatch(queryInfo.providerQuery, new RegExp(queryInfo.serialIdentity, 'i'));
+  }
+});
+
+test('serial-only input returns decoder guidance without provider decoding', async () => {
+  let providerCalls = 0;
+  const handler = createAgeLookupHandler({
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    providerLookup: async () => { providerCalls += 1; return {}; },
+  });
+  const out = res();
+  await handler(req('serial number 12345678'), out);
+
+  assert.deepEqual(out.payload.serialDetected, { token: '12345678', action: 'use-decoder' });
+  assert.equal(out.payload.individualManufactureYear, null);
+  assert.equal(out.payload.estimatedYear, null);
+  assert.match(out.payload.refinementSuggestion, /Serial Number Decoder/i);
+  assert.equal(providerCalls, 0);
+});
+
+test('Dell service tag is not treated as a model number or sent to a provider', async () => {
+  let providerCalls = 0;
+  const handler = createAgeLookupHandler({
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    providerLookup: async () => { providerCalls += 1; return {}; },
+  });
+  const out = res();
+  await handler(req('Dell service tag JX2K9P1'), out);
+
+  assert.equal(out.payload.brand, 'Dell');
+  assert.equal(out.payload.model, null);
+  assert.equal(out.payload.individualManufactureYear, null);
+  assert.match(out.payload.notes, /service or asset tag.*not a model number/i);
+  assert.equal(providerCalls, 0);
+});
+
 test('Samsung Q60 retailer-title description returns a product-family-recognized result, not brand-needed', async () => {
   let providerCalls = 0;
   const handler = createAgeLookupHandler({
