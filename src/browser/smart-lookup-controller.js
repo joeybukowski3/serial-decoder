@@ -158,8 +158,11 @@
     INVALID_RESULT: 1,
     PROVIDER_MALFORMED_JSON: 1,
     GROQ_MALFORMED_JSON: 1,
+    XAI_MALFORMED_RESPONSE: 1,
+    XAI_SCHEMA_INVALID: 1,
     PROVIDER_EMPTY: 1,
     GROQ_EMPTY: 1,
+    XAI_EMPTY_RESULT: 1,
     INVALID_PROVIDER_RESULT: 1,
     PROVIDER_RESPONSE_INVALID: 1,
     INVALID_YEAR_CONTEXT: 1,
@@ -481,6 +484,7 @@
 
   function providerName(value) {
     var source = String(value || '').toLowerCase();
+    if (source === 'xai' || source === 'xai-ungrounded' || source === 'xai-web') return 'xAI Grok';
     if (source === 'groq' || source === 'groq-ungrounded') return 'Groq';
     if (source === 'gemini' || source === 'gemini-ungrounded') return 'Gemini';
     return '';
@@ -489,7 +493,7 @@
   function isGroundedProviderResult(data) {
     var evidence = data ? String(data.evidenceSource || '').toLowerCase() : '';
     return Boolean(data)
-      && (evidence === 'gemini-grounded' || evidence === 'openai-web')
+      && (evidence === 'gemini-grounded' || evidence === 'openai-web' || evidence === 'xai-web')
       && Array.isArray(data.sources)
       && data.sources.length > 0;
   }
@@ -501,11 +505,14 @@
     // ungrounded wording rather than claiming live research.
     return source === 'gemini-ungrounded'
       || source === 'groq-ungrounded'
+      || source === 'xai-ungrounded'
       || source === 'gemini-grounded'
       || source === 'openai-ungrounded'
       || source === 'openai-web'
+      || source === 'xai-web'
       || source === 'gemini'
       || source === 'groq'
+      || source === 'xai'
       || source === 'openai';
   }
 
@@ -517,14 +524,14 @@
   }
 
   function isGroundedTimeoutFallbackResult(data) {
-    // groundedFallback is reserved exclusively for a real AI (Gemini/Groq)
+    // groundedFallback is reserved exclusively for a real AI
     // recovery of a timed-out grounded attempt (fallbackKind
     // 'ungrounded-provider') -- never for a deterministic, non-AI result.
     return Boolean(data) && data.groundedFallback === true && !isGroundedProviderResult(data);
   }
 
   // A DIFFERENT kind of degradation than isGroundedTimeoutFallbackResult:
-  // no AI (Gemini or Groq) ever ran for this result -- a recognized
+  // no AI ever ran for this result -- a recognized
   // model-line/family/brand-category query's own registry/deterministic
   // data was substituted after a provider attempt failed or timed out. This
   // must never be worded as "AI-assisted" or "research completed".

@@ -37,14 +37,14 @@ const TOTAL_BUDGET_MS = 16000;
 // guessed: OpenAI web research took 8.7s (Nintendo Switch 2), 8.8s (Sony
 // X90L), 9.3s (LG WM3900HWA), 12.9s and 15.6s (the two Miele H4080BM
 // phrasings). A 5s stage timed out 100% of the time, so 13s covers the
-// measured median and most of the tail while still leaving a real Groq
+// measured median and most of the tail while still leaving a real xAI
 // window -- the thing the old grounded Gemini stage never did.
 //
 // NOTE: this exceeds the original ~8.1s route target. That target predates
 // the measurement and is not achievable with web-search research; the old
 // 8.1s path returned nothing at all. See the PR discussion.
 const OPENAI_STAGE_BUDGET_MS = DEFAULT_OPENAI_STAGE_MAX_MS;
-const GROQ_FALLBACK_MAX_MS = 2500;
+const XAI_FALLBACK_MAX_MS = 2500;
 const PROVIDER_BUDGET_MS = 6500;
 const REDIS_PHASE_BUDGET_MS = 500;
 const REDIS_CALL_BUDGET_MS = 250;
@@ -621,8 +621,8 @@ export function createAgeLookupHandler(dependencies = {}) {
             throw error;
           }
 
-          // Active production sequence: OpenAI web research, then Groq, then
-          // the caller's deterministic reserve. Gemini is deliberately NOT
+          // Active production sequence: OpenAI web research, then xAI Grok,
+          // then the caller's deterministic reserve. Gemini is deliberately NOT
           // chained after OpenAI -- doing so would rebuild the measured
           // failure where grounded (~4.2s) plus closed-book (~3.9s) consumed
           // the entire route budget and starved every fallback. The Gemini
@@ -635,7 +635,7 @@ export function createAgeLookupHandler(dependencies = {}) {
               const value = await openAiProviderLookup(queryInfo, {
                 deadline,
                 openAiMaxMs: Math.min(OPENAI_STAGE_BUDGET_MS, deadline.remainingMs(350)),
-                groqMaxMs: GROQ_FALLBACK_MAX_MS,
+                xaiMaxMs: XAI_FALLBACK_MAX_MS,
                 reserveMs: 350,
                 fetchImpl: dependencies.fetchImpl,
                 env: dependencies.env || process.env,
@@ -668,8 +668,8 @@ export function createAgeLookupHandler(dependencies = {}) {
           // ceiling so a genuine reserve remains for a same-deadline,
           // same-budget-reservation ungrounded fallback if it times out.
           // Every other grounded failure (400/429/5xx/malformed/empty) is
-          // already resolved inside callGeminiWithGroqFallback's existing
-          // bounded Groq path before it can reach this catch block, so only
+          // already resolved inside the legacy Gemini provider's bounded
+          // internal fallback before it can reach this catch block, so only
           // a genuine stage timeout is handled here -- this targets exactly
           // the demonstrated gap (grounded timeouts never got any fallback)
           // without duplicating already-working failure handling.
@@ -801,9 +801,9 @@ export function createAgeLookupHandler(dependencies = {}) {
               now,
             })
           : { actualProviderAttemptCount: 0 };
-        // PROVIDERS_UNAVAILABLE means the Groq fallback was actually attempted
+        // PROVIDERS_UNAVAILABLE means the xAI fallback was actually attempted
         // (and also failed) before this error surfaced; every other code means
-        // Groq was never reached, so fallbackUsed must stay false here.
+        // xAI was never reached, so fallbackUsed must stay false here.
         // A recognized product-family/model-line/brand-category query
         // degrades to its deterministic card instead of an empty
         // "unavailable" result -- this is the graceful-degradation fix: the
@@ -849,9 +849,8 @@ export function createAgeLookupHandler(dependencies = {}) {
       let result;
       let providerMetadata = null;
       try {
-        // callGeminiAgeProvider already resolved through Gemini or its bounded
-        // Groq fallback; read which one actually served this result instead
-        // of assuming Gemini succeeded.
+        // Read which provider actually served this result instead of assuming
+        // the primary provider succeeded.
         providerMetadata = getSmartLookupProviderMetadata(rawProvider);
         const groundedWithSources = Boolean(providerMetadata.grounded)
           && Array.isArray(providerMetadata.groundedSources)
@@ -869,16 +868,18 @@ export function createAgeLookupHandler(dependencies = {}) {
           // tool actually returned citations; otherwise it is labelled as an
           // ungrounded estimate so the card never claims web verification it
           // does not have. SOURCES is a separate gate in result-schema.js.
-          evidenceSource: providerMetadata.provider === 'groq'
-            ? 'groq-ungrounded'
+          evidenceSource: providerMetadata.provider === 'xai'
+            ? (groundedWithSources ? 'xai-web' : 'xai-ungrounded')
             : (providerMetadata.provider === 'openai'
               ? (groundedWithSources ? 'openai-web' : 'openai-ungrounded')
-              : (groundedWithSources ? 'gemini-grounded' : 'gemini-ungrounded')),
+              : (providerMetadata.provider === 'groq'
+                ? 'groq-ungrounded'
+                : (groundedWithSources ? 'gemini-grounded' : 'gemini-ungrounded'))),
           groundedSources: groundedWithSources ? providerMetadata.groundedSources : [],
           webSearchUsed: providerMetadata.webSearchUsed === true,
           retrievedAt: groundedWithSources ? new Date().toISOString() : null,
           groundedFallback: groundedFallbackRecovered,
-          // Real AI (Gemini or Groq, closed-book) produced this result --
+          // Real AI produced this result --
           // 'ungrounded-provider' only when the grounded attempt actually
           // timed out and this closed-book call recovered it; 'none' for
           // an ordinary (non-recovered) provider success.

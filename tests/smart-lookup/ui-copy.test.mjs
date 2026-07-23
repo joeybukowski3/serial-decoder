@@ -113,7 +113,7 @@ test('classifyAgeOutcome: INTRODUCTION_AFTER_RANGE and REVERSED_RANGE map to con
 });
 
 test('classifyAgeOutcome: validation/malformed provider codes map to malformed', () => {
-  for (const code of ['UNRELATED_BRAND', 'UNRELATED_MODEL', 'INVALID_YEAR', 'PROVIDER_MALFORMED_JSON', 'GROQ_MALFORMED_JSON', 'INVALID_PROVIDER_RESULT']) {
+  for (const code of ['UNRELATED_BRAND', 'UNRELATED_MODEL', 'INVALID_YEAR', 'PROVIDER_MALFORMED_JSON', 'XAI_SCHEMA_INVALID', 'INVALID_PROVIDER_RESULT']) {
     assert.equal(api.classifyAgeOutcome({ errorCode: code }), 'malformed', code);
   }
 });
@@ -284,14 +284,14 @@ test('cached and uncertain provider results use source-appropriate qualifiers', 
     evidence: [{ detail: 'Cached detail' }],
   });
   const uncertain = api.renderAge({
-    source: 'groq',
-    evidenceSource: 'groq-ungrounded',
+    source: 'xai',
+    evidenceSource: 'xai-ungrounded',
     yearContext: { value: 2020, type: 'market-introduction', label: 'Model introduced', confidence: 'partial' },
     evidence: [{ detail: 'Partial model pattern' }],
   });
   assert.match(cached, /Previously cached Smart Lookup result/);
   assert.match(cached, /Information considered/);
-  assert.match(uncertain, /Groq AI-assisted analysis/);
+  assert.match(uncertain, /xAI Grok AI-assisted analysis/);
   assert.match(uncertain, /no live manufacturer source was verified/);
 });
 
