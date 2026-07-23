@@ -119,6 +119,75 @@ test('brand-category query gets dedicated broad-guidance copy instead of a gener
   assert.notEqual(copy.heading, api.AGE_OUTCOME_COPY['missing-input'].heading);
 });
 
+test('LG TV historical context renders as a positive broad result with model refinement', () => {
+  const html = api.renderAge({
+    brand: 'LG',
+    category: 'television',
+    querySpecificity: 'brand-category',
+    precisionLevel: 'broad-range',
+    contextLevel: 'brand-category',
+    historicalContext: 'LG predecessor GoldStar produced Korea-first televisions in the 1960s; this is brand/category history, not a unit age.',
+    categoryEntryYear: 1966,
+    contextConfidence: 'high',
+    refinementSuggestion: 'Enter the full LG TV model number from the rear label or TV settings.',
+    recommendedIdentifiers: ['Enter the full model number from the rear label or TV settings.'],
+    yearContext: { type: 'market-introduction', value: 1966, label: 'Brand/category history', isExactUnitDate: false },
+  });
+  assert.match(html, /Best available result/);
+  assert.match(html, /LG television/i);
+  assert.match(html, /Historical context/);
+  assert.match(html, /brand\/category history/i);
+  assert.match(html, /model number/i);
+  assert.doesNotMatch(html, /Complete model required|Could not identify|Brand needed/i);
+});
+
+test('Dell XPS 15 model-line context renders without dead-end clarification', () => {
+  const html = api.renderAge({
+    brand: 'Dell',
+    category: 'laptop',
+    productFamily: 'XPS 15',
+    seriesLine: 'XPS 15',
+    querySpecificity: 'model-line',
+    precisionLevel: 'model-line-range',
+    contextLevel: 'model-line',
+    historicalContext: 'The Dell XPS 15 name covers many generations; this is product-line history rather than a physical unit manufacture date.',
+    lineIntroductionYear: 2010,
+    generationRange: '2010-2024',
+    contextConfidence: 'medium',
+    recommendedIdentifiers: ['Enter the full model designation or Dell service tag.'],
+    yearContext: { type: 'market-introduction', value: 2010, label: 'Product-line introduction', isExactUnitDate: false },
+  });
+  assert.match(html, /Dell XPS 15/);
+  assert.match(html, /Product-line introduction/);
+  assert.match(html, /many generations/i);
+  assert.match(html, /service tag/i);
+  assert.doesNotMatch(html, /Complete model required|Could not identify|Brand needed/i);
+});
+
+test('Dell XPS 15 9530 generation context distinguishes release timing from unit manufacture date', () => {
+  const html = api.renderAge({
+    brand: 'Dell',
+    category: 'laptop',
+    productFamily: 'XPS 15',
+    seriesLine: 'XPS 15 9530',
+    recognizedSeries: 'XPS 15 9530',
+    querySpecificity: 'model-line',
+    precisionLevel: 'model-line-range',
+    contextLevel: 'model-line',
+    historicalContext: 'XPS 15 9530 identifies a 2023-era XPS 15 generation, not the manufacture date of one physical laptop.',
+    lineIntroductionYear: 2023,
+    generationRange: '2023-2024',
+    contextConfidence: 'medium',
+    recommendedIdentifiers: ['Enter the Dell service tag or full configuration details.'],
+    yearContext: { type: 'market-introduction', value: 2023, label: 'Product-line introduction', isExactUnitDate: false },
+  });
+  assert.match(html, /2023/);
+  assert.match(html, /XPS 15 9530/);
+  assert.match(html, /not the manufacture date/i);
+  assert.match(html, /Individual manufacture date/);
+  assert.doesNotMatch(html, /Manufacture year<\/span>/i);
+});
+
 test('unusable query gets a clarification card, not "brand needed"/"serial-only" copy', () => {
   const data = { querySpecificity: 'unusable', notes: "We couldn't identify a physical product from this search." };
   const bucket = api.classifyAgeOutcome(data);

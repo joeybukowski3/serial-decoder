@@ -623,11 +623,11 @@ test.describe('Smart Lookup controller', () => {
     await expect(panel.locator('a[href*="vertexaisearch"]')).toHaveCount(0);
   });
 
-  test('grounded-timeout fallback via Groq still renders the estimate wording, not the generic AI-assisted phrasing', async ({ page }) => {
+  test('grounded-timeout fallback via xAI still renders the estimate wording, not the generic AI-assisted phrasing', async ({ page }) => {
     await page.route('**/api/age-lookup', async (route) => {
       await route.fulfill({ json: {
-        source: 'groq',
-        evidenceSource: 'groq-ungrounded',
+        source: 'xai',
+        evidenceSource: 'xai-ungrounded',
         groundedFallback: true,
         fallbackUsed: true,
         brand: 'LG',
@@ -641,7 +641,7 @@ test.describe('Smart Lookup controller', () => {
     await page.locator('#smartLookupBtn').click();
     const panel = page.locator('#smart-lookup-age-panel');
     await expect(panel).toContainText('AI-assisted model research completed, but live web verification timed out.');
-    await expect(panel).not.toContainText('Groq AI-assisted analysis based on the information entered');
+    await expect(panel).not.toContainText('xAI Grok AI-assisted analysis based on the information entered');
   });
 
   test('a genuine grounded timeout with no recoverable fallback still renders the existing timeout-only copy', async ({ page }) => {
@@ -716,14 +716,14 @@ test.describe('Smart Lookup controller', () => {
 
   test('no raw error/provider details are rendered in the DOM on failure', async ({ page }) => {
     await page.route('**/api/age-lookup', async (route) => {
-      await route.fulfill({ json: { errorCode: 'GROQ_MALFORMED_JSON', errorMessage: 'internal stack trace details' } });
+      await route.fulfill({ json: { errorCode: 'XAI_SCHEMA_INVALID', errorMessage: 'internal stack trace details' } });
     });
     await page.goto('http://localhost:3001/smart-lookup.html');
     await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
     await page.locator('#smartLookupBtn').click();
     await expect(page.locator('#smart-lookup-age-panel')).toContainText('not reliable enough');
     const panelText = await page.locator('#smart-lookup-age-panel').innerText();
-    expect(panelText).not.toMatch(/GROQ_MALFORMED_JSON|stack trace|gemini|groq/i);
+    expect(panelText).not.toMatch(/XAI_SCHEMA_INVALID|stack trace|gemini|xai|grok/i);
   });
 
   test('LG C3 and C2 family searches render prominent model-year context from the mocked API', async ({ page }) => {

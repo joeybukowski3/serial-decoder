@@ -163,11 +163,14 @@ test('fallback age provider result records two actual provider attempts', async 
     redisFactory: () => redisMiss,
     reserveProviderBudget: async () => ({ allowed: true, status: 'allowed', logicalLookupCount: 1 }),
     recordProviderAttemptMetrics: async (_redis, _kind, attempts) => { recordedAttempts += attempts; return { status: 'recorded', actualProviderAttemptCount: attempts }; },
-    providerLookup: async () => withProviderMetadata({ brand: 'Samsung', model: 'QN65Q80A', introductionYear: 2020, productionRange: { start: 2021, end: 2021 } }, { provider: 'groq', fallbackUsed: true }),
+    providerLookup: async () => withProviderMetadata({ brand: 'Samsung', model: 'QN65Q80A', introductionYear: 2020, productionRange: { start: 2021, end: 2021 } }, { provider: 'xai', fallbackUsed: true, model: 'grok-test-model' }),
   });
   const out = res();
   await handler(req('Samsung QN65-Q80A'), out);
   assert.equal(out.payload.fallbackUsed, true);
+  assert.equal(out.payload.source, 'xai');
+  assert.equal(out.payload.evidenceSource, 'xai-ungrounded');
+  assert.equal(out.payload.providerModel, 'grok-test-model');
   assert.equal(recordedAttempts, 2);
 });
 

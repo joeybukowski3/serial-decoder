@@ -145,6 +145,33 @@ test('a total provider failure still returns the deterministic reserve, not an e
   assert.ok(String(out.payload.fallbackKind).startsWith('deterministic-'));
 });
 
+for (const [label, fallbackErrorCode] of [
+  ['xAI insufficient quota', 'XAI_QUOTA_EXHAUSTED'],
+  ['xAI temporary 429', 'XAI_RATE_LIMIT'],
+]) {
+  test(`${label} returns the deterministic reserve promptly`, async () => {
+    const { handler } = harness({
+      openai: () => {
+        const error = new Error('providers unavailable');
+        error.code = 'PROVIDERS_UNAVAILABLE';
+        error.primaryErrorCode = 'OPENAI_RATE_LIMIT';
+        error.fallbackErrorCode = fallbackErrorCode;
+        error.fallbackStatus = 429;
+        throw error;
+      },
+    });
+    const started = Date.now();
+    const out = res();
+    await handler(req('Nintendo Switch 2'), out);
+    const elapsed = Date.now() - started;
+    assert.equal(out.statusCode, 200);
+    assert.equal(out.payload.brand, 'Nintendo');
+    assert.ok(String(out.payload.fallbackKind).startsWith('deterministic-'));
+    assert.equal(out.payload.fallbackUsed, false, 'deterministic reserve is not a provider result');
+    assert.ok(elapsed < 500, `deterministic reserve should be prompt after immediate xAI failure, took ${elapsed}ms`);
+  });
+}
+
 test('free paths call no provider at all', async () => {
   for (const query of ['Whirlpool', 'refrigerator', 'asdkjhasd', '']) {
     const { handler, calls } = harness({ openai: () => { throw new Error('must not run'); } });

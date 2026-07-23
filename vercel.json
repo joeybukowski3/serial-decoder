@@ -494,7 +494,7 @@
       "maxDuration": 10
     },
     "api/age-lookup.js": {
-      "maxDuration": 25
+      "maxDuration": 35
     }
   }
 }

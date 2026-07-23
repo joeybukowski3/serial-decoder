@@ -158,8 +158,11 @@
     INVALID_RESULT: 1,
     PROVIDER_MALFORMED_JSON: 1,
     GROQ_MALFORMED_JSON: 1,
+    XAI_MALFORMED_RESPONSE: 1,
+    XAI_SCHEMA_INVALID: 1,
     PROVIDER_EMPTY: 1,
     GROQ_EMPTY: 1,
+    XAI_EMPTY_RESULT: 1,
     INVALID_PROVIDER_RESULT: 1,
     PROVIDER_RESPONSE_INVALID: 1,
     INVALID_YEAR_CONTEXT: 1,
@@ -298,6 +301,7 @@
 
   function hasUsableAgeInfo(data) {
     if (!data) return false;
+    if (data.historicalContext || data.inventionSummary) return true;
     var context = data.yearContext;
     if (context && context.type !== 'unknown') {
       if (context.value) return true;
@@ -469,11 +473,18 @@
       if (brand === 'LG' && /^OLED\b/i.test(data.seriesLine || '')) return brand + ' ' + data.productFamily + ' OLED TV';
       return [brand, data.productFamily, data.category === 'television' ? 'TV' : ''].filter(Boolean).join(' ');
     }
+    if (data && data.contextLevel === 'brand-category') {
+      return [brand, data.category || data.itemCategory].filter(Boolean).join(' ') || 'Brand/category history';
+    }
+    if (data && data.contextLevel === 'category-history') {
+      return ((data.category || data.itemCategory || 'Product category') + ' history').replace(/^\w/, function (letter) { return letter.toUpperCase(); });
+    }
     return [brand, data && data.model].filter(Boolean).join(' ') || 'Smart Lookup result';
   }
 
   function providerName(value) {
     var source = String(value || '').toLowerCase();
+    if (source === 'xai' || source === 'xai-ungrounded' || source === 'xai-web') return 'xAI Grok';
     if (source === 'groq' || source === 'groq-ungrounded') return 'Groq';
     if (source === 'gemini' || source === 'gemini-ungrounded') return 'Gemini';
     return '';
@@ -482,7 +493,7 @@
   function isGroundedProviderResult(data) {
     var evidence = data ? String(data.evidenceSource || '').toLowerCase() : '';
     return Boolean(data)
-      && (evidence === 'gemini-grounded' || evidence === 'openai-web')
+      && (evidence === 'gemini-grounded' || evidence === 'openai-web' || evidence === 'xai-web')
       && Array.isArray(data.sources)
       && data.sources.length > 0;
   }
@@ -494,11 +505,14 @@
     // ungrounded wording rather than claiming live research.
     return source === 'gemini-ungrounded'
       || source === 'groq-ungrounded'
+      || source === 'xai-ungrounded'
       || source === 'gemini-grounded'
       || source === 'openai-ungrounded'
       || source === 'openai-web'
+      || source === 'xai-web'
       || source === 'gemini'
       || source === 'groq'
+      || source === 'xai'
       || source === 'openai';
   }
 
@@ -510,14 +524,14 @@
   }
 
   function isGroundedTimeoutFallbackResult(data) {
-    // groundedFallback is reserved exclusively for a real AI (Gemini/Groq)
+    // groundedFallback is reserved exclusively for a real AI
     // recovery of a timed-out grounded attempt (fallbackKind
     // 'ungrounded-provider') -- never for a deterministic, non-AI result.
     return Boolean(data) && data.groundedFallback === true && !isGroundedProviderResult(data);
   }
 
   // A DIFFERENT kind of degradation than isGroundedTimeoutFallbackResult:
-  // no AI (Gemini or Groq) ever ran for this result -- a recognized
+  // no AI ever ran for this result -- a recognized
   // model-line/family/brand-category query's own registry/deterministic
   // data was substituted after a provider attempt failed or timed out. This
   // must never be worded as "AI-assisted" or "research completed".
@@ -525,6 +539,7 @@
     'deterministic-model-line': 'We recognized this model line, but live research did not finish. This broad timeframe is based on model-line-level information rather than a source-verified exact-model lookup.',
     'deterministic-family': 'We recognized this product family, but live research did not finish. This broad timeframe is based on family-level information rather than a source-verified exact-model lookup.',
     'deterministic-brand-category': 'We recognized this brand and category, but live research did not finish. This broad guidance is based on general brand/category information rather than a source-verified lookup.',
+    'deterministic-broad': 'Live research did not finish. This broad guidance is based on deterministic product-category information rather than a source-verified lookup.',
     // Exact-model reserve: identity is confirmed deterministically, but no
     // production-range evidence exists and research did not finish. This must
     // never read as an age estimate -- no year is claimed in this result.
@@ -658,6 +673,9 @@
     // would otherwise leave it undefined at that point and let the
     // contradictory broad-guidance badge render anyway.
     var identifiedProduct = data && data.likelyProduct ? data.likelyProduct : '';
+    var broadHistoricalTitle = !identifiedProduct && data && (data.historicalContext || data.inventionSummary)
+      ? resultHeading(data)
+      : '';
     var precisionLabel = data && !identifiedProduct && PRECISION_HEADINGS[data.precisionLevel];
     var precisionBadgeHtml = precisionLabel
       ? '<p class="smart-lookup-precision-badge">' + escapeHtml(precisionLabel) + '</p>'
@@ -682,18 +700,26 @@
     // is never buried under a "complete model required" clarification.
     // identifiedProduct is computed above, ahead of the precision badge.
     var bestAvailableHtml = '';
-    if (identifiedProduct) {
+    if (identifiedProduct || broadHistoricalTitle) {
       var timingText = data.releaseDate || data.estimatedEra
+        || data.generationRange
+        || (data.lineIntroductionYear ? String(data.lineIntroductionYear) : '')
+        || (data.familyIntroductionYear ? String(data.familyIntroductionYear) : '')
+        || (data.categoryEntryYear ? String(data.categoryEntryYear) : '')
         || (data.introductionYear ? String(data.introductionYear) : '')
         || formatRange(data.productionRange, data.yearRange) || 'Not established';
-      var confidenceText = data.identityConfidence || data.confidenceLevel || '';
+      var confidenceText = data.contextConfidence || data.identityConfidence || data.confidenceLevel || '';
+      var specificityText = data.contextLevel || data.querySpecificity || '';
+      var contextText = data.historicalContext || data.inventionSummary || '';
       bestAvailableHtml = '<div class="info-block smart-lookup-best-result">' +
         '<h4>Best available result</h4>' +
-        '<p class="smart-lookup-best-product"><strong>' + escapeHtml(identifiedProduct) + '</strong></p>' +
+        '<p class="smart-lookup-best-product"><strong>' + escapeHtml(identifiedProduct || broadHistoricalTitle) + '</strong></p>' +
         (data.productType ? '<p class="smart-lookup-best-type">' + escapeHtml(data.productType) + '</p>' : '') +
-        '<div class="result-row"><span class="result-label">Estimated model timing</span><span class="result-value">' + escapeHtml(timingText) + '</span></div>' +
+        '<div class="result-row"><span class="result-label">' + escapeHtml(identifiedProduct ? 'Estimated model timing' : 'Historical timing') + '</span><span class="result-value">' + escapeHtml(timingText) + '</span></div>' +
+        (specificityText ? '<div class="result-row"><span class="result-label">Specificity</span><span class="result-value">' + escapeHtml(specificityText.replace(/-/g, ' ')) + '</span></div>' : '') +
         (confidenceText ? '<div class="result-row"><span class="result-label">Confidence</span><span class="result-value">' + escapeHtml(confidenceText.charAt(0).toUpperCase() + confidenceText.slice(1)) + '</span></div>' : '') +
-        '<p class="smart-lookup-unit-caveat"><strong>Important:</strong> This describes the product/model era, not necessarily the manufacture date of your individual unit.' +
+        (contextText ? '<p><strong>Historical context:</strong> ' + escapeHtml(contextText) + '</p>' : '') +
+        '<p class="smart-lookup-unit-caveat"><strong>Important:</strong> This describes ' + escapeHtml(identifiedProduct ? 'the product/model era' : 'historical context') + ', not the manufacture date of your individual unit.' +
         (data.serialNeededForExactUnitDate ? ' Enter the serial number to narrow it to your unit.' : '') +
         '</p>' +
         '</div>';
