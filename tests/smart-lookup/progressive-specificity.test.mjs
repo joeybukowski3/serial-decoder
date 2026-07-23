@@ -242,7 +242,7 @@ for (const query of ['refrigerator', 'gaming laptop', 'washer', 'television', 'a
 
 test('a bare recognized brand with no category is not "meaningful" enough for grounded research', () => {
   const r = classifySmartLookupQuery('Whirlpool');
-  assert.equal(r.querySpecificity, 'brand-category');
+  assert.equal(r.querySpecificity, 'brand-only');
   assert.equal(r.groundedEligible, false);
   assert.equal(r.providerEligible, false);
 });

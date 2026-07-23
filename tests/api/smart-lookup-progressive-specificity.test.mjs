@@ -120,6 +120,174 @@ test('Whirlpool top-load washer is recognized as brand-category and eligible for
   assert.equal(info.groundedEligible, true);
 });
 
+test('mandatory broad product examples classify into useful progressive tiers', () => {
+  const cases = [
+    ['Samsung TV', 'brand-category', true],
+    ['Sony Bravia', 'product-family', true],
+    ['Miele oven', 'brand-category', true],
+    ['Generac Guardian', 'product-family', true],
+    ['Nintendo Switch', 'product-family', true],
+    ['PlayStation', 'product-family', true],
+    ['Whirlpool refrigerator', 'brand-category', true],
+    ['LG', 'brand-only', false],
+    ['television', 'category-only', false],
+    ['random nonsense', 'unusable', false],
+  ];
+  for (const [query, tier, providerEligible] of cases) {
+    const info = classifySmartLookupQuery(query);
+    assert.equal(info.querySpecificity, tier, query);
+    assert.equal(info.providerEligible, providerEligible, query);
+  }
+});
+
+test('LG TV returns researched brand/category historical context and asks for model refinement', async () => {
+  const handler = createAgeLookupHandler({
+    ...BASE_DEPS,
+    openAiEnabled: true,
+    openAiProviderLookup: async () => withMetadata({
+      brand: 'LG',
+      specificityLevel: 'brand-only',
+      contextLevel: 'brand-category',
+      historicalContext: 'LG predecessor GoldStar produced Korea-first televisions in the 1960s; this is brand/category history, not a unit age.',
+      categoryEntryYear: 1966,
+      contextConfidence: 'high',
+      refinementNeeded: true,
+      refinementSuggestion: 'Enter the full LG TV model number from the rear label or TV settings.',
+      recommendedIdentifiers: ['Enter the full model number from the rear label or TV settings.'],
+      evidence: [{ detail: 'LG company history identifies GoldStar TV production.', source: 'LG company history' }],
+    }, {
+      provider: 'openai',
+      fallbackUsed: false,
+      grounded: true,
+      webSearchUsed: true,
+      groundedSources: [{ title: 'LG company history', domain: 'www.lg.com', uri: 'https://www.lg.com/global/about-lg/company-history/' }],
+      searchQueryCount: 1,
+    }),
+  });
+  const out = res();
+  await handler(req('LG TV'), out);
+  assert.equal(out.statusCode, 200);
+  assert.equal(out.payload.brand, 'LG');
+  assert.equal(out.payload.querySpecificity, 'brand-category');
+  assert.equal(out.payload.contextLevel, 'brand-category');
+  assert.equal(out.payload.categoryEntryYear, 1966);
+  assert.match(out.payload.historicalContext, /brand\/category history/i);
+  assert.match(out.payload.refinementSuggestion, /model number/i);
+  assert.equal(out.payload.yearContext.isExactUnitDate, false);
+  assert.equal(out.payload.evidenceSource, 'openai-web');
+  assert.equal(out.payload.sources.length, 1);
+});
+
+test('LG alone stays brand-only and does not falsely claim television history', async () => {
+  let calls = 0;
+  const handler = createAgeLookupHandler({
+    ...BASE_DEPS,
+    openAiEnabled: true,
+    openAiProviderLookup: async () => { calls += 1; return withMetadata({}, { provider: 'openai' }); },
+  });
+  const out = res();
+  await handler(req('LG'), out);
+  assert.equal(out.statusCode, 200);
+  assert.equal(calls, 0);
+  assert.equal(out.payload.querySpecificity, 'brand-only');
+  assert.equal(out.payload.contextLevel, null);
+  assert.doesNotMatch(out.payload.notes, /television/i);
+});
+
+test('television returns category history without pretending to identify a unit', async () => {
+  let calls = 0;
+  const handler = createAgeLookupHandler({
+    ...BASE_DEPS,
+    openAiEnabled: true,
+    openAiProviderLookup: async () => { calls += 1; return withMetadata({}, { provider: 'openai' }); },
+  });
+  const out = res();
+  await handler(req('television'), out);
+  assert.equal(out.statusCode, 200);
+  assert.equal(calls, 0);
+  assert.equal(out.payload.querySpecificity, 'category-only');
+  assert.equal(out.payload.contextLevel, 'category-history');
+  assert.match(out.payload.historicalContext, /television/i);
+  assert.equal(out.payload.yearContext, null);
+});
+
+test('Dell XPS 15 returns model-line context instead of a dead-end clarification', async () => {
+  const handler = createAgeLookupHandler({
+    ...BASE_DEPS,
+    openAiEnabled: true,
+    openAiProviderLookup: async () => withMetadata({
+      brand: 'Dell',
+      specificityLevel: 'partial',
+      contextLevel: 'model-line',
+      productFamily: 'XPS 15',
+      seriesLine: 'XPS 15',
+      historicalContext: 'The Dell XPS 15 name covers many generations; this is product-line history rather than a physical unit manufacture date.',
+      familyIntroductionYear: 2010,
+      lineIntroductionYear: 2010,
+      generationRange: '2010-2024',
+      contextConfidence: 'medium',
+      refinementNeeded: true,
+      refinementSuggestion: 'Enter the full model designation, service tag, or generation identifier.',
+      recommendedIdentifiers: ['Enter the full model designation or Dell service tag.'],
+      evidence: [{ detail: 'XPS 15 line history.', source: 'Dell/support references' }],
+    }, {
+      provider: 'openai',
+      fallbackUsed: false,
+      grounded: true,
+      webSearchUsed: true,
+      groundedSources: [{ title: 'Dell XPS 15 history', domain: 'www.dell.com', uri: 'https://www.dell.com/support/home' }],
+      searchQueryCount: 1,
+    }),
+  });
+  const out = res();
+  await handler(req('Dell XPS 15'), out);
+  assert.equal(out.statusCode, 200);
+  assert.equal(out.payload.querySpecificity, 'model-line');
+  assert.equal(out.payload.contextLevel, 'model-line');
+  assert.equal(out.payload.lineIntroductionYear, 2010);
+  assert.equal(out.payload.fallbackKind, 'none');
+  assert.match(out.payload.refinementSuggestion, /service tag|generation/i);
+  assert.doesNotMatch(out.payload.notes || '', /complete model required/i);
+});
+
+test('Dell XPS 15 9530 returns generation-specific model-line context', async () => {
+  const handler = createAgeLookupHandler({
+    ...BASE_DEPS,
+    openAiEnabled: true,
+    openAiProviderLookup: async () => withMetadata({
+      brand: 'Dell',
+      specificityLevel: 'partial',
+      contextLevel: 'model-line',
+      productFamily: 'XPS 15',
+      seriesLine: 'XPS 15 9530',
+      historicalContext: 'XPS 15 9530 identifies a 2023-era XPS 15 generation, not the manufacture date of one physical laptop.',
+      familyIntroductionYear: 2010,
+      lineIntroductionYear: 2023,
+      generationRange: '2023-2024',
+      contextConfidence: 'medium',
+      refinementNeeded: true,
+      refinementSuggestion: 'Enter the Dell service tag or full configuration details for a unit-specific lookup.',
+      recommendedIdentifiers: ['Enter the Dell service tag or full configuration details.'],
+    }, {
+      provider: 'openai',
+      fallbackUsed: false,
+      grounded: true,
+      webSearchUsed: true,
+      groundedSources: [{ title: 'Dell XPS 15 9530', domain: 'www.dell.com', uri: 'https://www.dell.com/en-us/shop/cty/pdp/spd/xps-15-9530-laptop/usexchcto9530rpl01' }],
+      searchQueryCount: 1,
+    }),
+  });
+  const out = res();
+  await handler(req('Dell XPS 15 9530'), out);
+  assert.equal(out.statusCode, 200);
+  assert.equal(out.payload.querySpecificity, 'model-line');
+  assert.equal(out.payload.recognizedSeries, 'XPS 15 9530');
+  assert.equal(out.payload.lineIntroductionYear, 2023);
+  assert.equal(out.payload.yearContext.value, 2023);
+  assert.equal(out.payload.yearContext.isExactUnitDate, false);
+  assert.match(out.payload.historicalContext, /not the manufacture date/i);
+});
+
 test('Whirlpool top-load washer: a grounded broad-range result can render (known product eras) without selecting an arbitrary exact model', async () => {
   const handler = createAgeLookupHandler({
     ...BASE_DEPS,
@@ -221,7 +389,7 @@ test('refrigerator (category-only) reserves no provider budget by default and re
 
 test('a bare brand with no category ("Whirlpool" alone) is not meaningful enough for grounded research', () => {
   const info = classifySmartLookupQuery('Whirlpool');
-  assert.equal(info.querySpecificity, 'brand-category');
+  assert.equal(info.querySpecificity, 'brand-only');
   assert.equal(info.groundedEligible, false);
   assert.equal(info.providerEligible, false);
 });
