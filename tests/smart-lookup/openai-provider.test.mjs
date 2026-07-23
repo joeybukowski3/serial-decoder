@@ -54,7 +54,7 @@ function okFetch(payload) {
   return async () => ({ ok: true, status: 200, json: async () => payload, text: async () => JSON.stringify(payload) });
 }
 function statusFetch(status, body = '{}') {
-  return async () => ({ ok: false, status, json: async () => JSON.parse(body), text: async () => body });
+  return async () => ({ ok: false, status, headers: { get: () => null }, json: async () => JSON.parse(body), text: async () => body });
 }
 
 test('enablement flag parses the documented truthy forms only', () => {
@@ -135,6 +135,8 @@ test('HTTP failures map to stable internal codes and leak no response body', asy
     [403, '{}', 'OPENAI_AUTH_ERROR'],
     [404, '{"error":{"code":"model_not_found"}}', 'OPENAI_MODEL_UNAVAILABLE'],
     [429, '{}', 'OPENAI_RATE_LIMIT'],
+    [429, '{"error":{"code":"insufficient_quota"}}', 'OPENAI_QUOTA_EXHAUSTED'],
+    [429, '{"error":{"message":"billing_hard_limit_reached"}}', 'OPENAI_QUOTA_EXHAUSTED'],
     [500, '{}', 'OPENAI_HTTP_ERROR'],
   ];
   for (const [status, body, expected] of cases) {
@@ -221,13 +223,21 @@ function xaiPayload({ sources = true, value = { brand: 'Nintendo', notes: 'from 
   };
 }
 
-function routedFetch({ openAiStatus = 200, xaiOk = true, xaiSources = true, counters }) {
+function routedFetch({
+  openAiStatus = 200,
+  openAiBody = '{}',
+  xaiOk = true,
+  xaiStatus = 500,
+  xaiBody = '{}',
+  xaiSources = true,
+  counters,
+}) {
   return async (url, init = {}) => {
     const target = String(url);
     if (target.includes('openai.com')) {
       counters.openai += 1;
       if (openAiStatus !== 200) {
-        return { ok: false, status: openAiStatus, json: async () => ({}), text: async () => '{}' };
+        return { ok: false, status: openAiStatus, headers: { get: () => null }, json: async () => JSON.parse(openAiBody), text: async () => openAiBody };
       }
       return { ok: true, status: 200, json: async () => responsePayload(), text: async () => '' };
     }
@@ -238,7 +248,7 @@ function routedFetch({ openAiStatus = 200, xaiOk = true, xaiSources = true, coun
     assert.deepEqual(body.tools, [{ type: 'web_search' }]);
     assert.deepEqual(body.include, ['no_inline_citations']);
     assert.equal(body.store, false);
-    if (!xaiOk) return { ok: false, status: 500, headers: { get: () => null }, json: async () => ({}), text: async () => '{}' };
+    if (!xaiOk) return { ok: false, status: xaiStatus, headers: { get: () => null }, json: async () => JSON.parse(xaiBody), text: async () => xaiBody };
     return {
       ok: true,
       status: 200,
@@ -267,6 +277,60 @@ for (const [label, openAiStatus] of [['rate limit', 429], ['server error', 500],
     assert.equal(meta.groundedSources[0].domain, 'www.nintendo.com');
     assert.equal(counters.openai, 1, 'exactly one OpenAI attempt');
     assert.equal(counters.xai, 1, 'exactly one xAI attempt');
+  });
+}
+
+const fastOpenAiFailoverCases = [
+  {
+    label: 'insufficient quota',
+    openAiStatus: 429,
+    openAiBody: '{"error":{"code":"insufficient_quota"}}',
+    expectedPrimaryCode: 'OPENAI_QUOTA_EXHAUSTED',
+  },
+  {
+    label: 'temporary 429',
+    openAiStatus: 429,
+    openAiBody: '{"error":{"type":"rate_limit_exceeded"}}',
+    expectedPrimaryCode: 'OPENAI_RATE_LIMIT',
+  },
+  {
+    label: 'authentication failure',
+    openAiStatus: 401,
+    openAiBody: '{"error":{"type":"authentication_error"}}',
+    expectedPrimaryCode: 'OPENAI_AUTH_ERROR',
+  },
+  {
+    label: 'permission failure',
+    openAiStatus: 403,
+    openAiBody: '{"error":{"type":"permission_error"}}',
+    expectedPrimaryCode: 'OPENAI_AUTH_ERROR',
+  },
+  {
+    label: 'model unavailable',
+    openAiStatus: 404,
+    openAiBody: '{"error":{"code":"model_not_found"}}',
+    expectedPrimaryCode: 'OPENAI_MODEL_UNAVAILABLE',
+  },
+];
+
+for (const { label, openAiStatus, openAiBody, expectedPrimaryCode } of fastOpenAiFailoverCases) {
+  test(`fast OpenAI ${label} failover reaches xAI without waiting for provider timeout`, async () => {
+    const counters = { openai: 0, xai: 0 };
+    const started = Date.now();
+    const value = await callSmartLookupOpenAiAgeProvider(QUERY, {
+      env: ENV,
+      deadline: createDeadline({ totalMs: 32000 }),
+      openAiMaxMs: 13000,
+      xaiMaxMs: 18000,
+      fetchImpl: routedFetch({ openAiStatus, openAiBody, counters }),
+    });
+    const elapsed = Date.now() - started;
+    const meta = getSmartLookupProviderMetadata(value);
+    assert.equal(meta.provider, 'xai');
+    assert.equal(meta.primaryErrorCode, expectedPrimaryCode);
+    assert.equal(counters.openai, 1, 'no OpenAI retry loop');
+    assert.equal(counters.xai, 1, 'exactly one xAI fallback attempt');
+    assert.ok(elapsed < 500, `immediate HTTP failover should be millisecond-scale, took ${elapsed}ms`);
   });
 }
 
@@ -368,6 +432,67 @@ test('xAI rate limits preserve safe rate-limit headers', async () => {
   assert.equal(error.fallbackRateLimitHeaders['x-ratelimit-remaining-requests'], '0');
   assert.equal(error.fallbackRateLimitHeaders['retry-after'], '2');
 });
+
+const fastXaiFailureCases = [
+  {
+    label: 'insufficient quota',
+    xaiStatus: 429,
+    xaiBody: '{"error":{"code":"insufficient_quota"}}',
+    expectedFallbackCode: 'XAI_QUOTA_EXHAUSTED',
+  },
+  {
+    label: 'temporary 429',
+    xaiStatus: 429,
+    xaiBody: '{"error":{"type":"rate_limit_exceeded"}}',
+    expectedFallbackCode: 'XAI_RATE_LIMIT',
+  },
+  {
+    label: 'authentication failure',
+    xaiStatus: 401,
+    xaiBody: '{"error":{"type":"authentication_error"}}',
+    expectedFallbackCode: 'XAI_AUTH_ERROR',
+  },
+  {
+    label: 'permission failure',
+    xaiStatus: 403,
+    xaiBody: '{"error":{"type":"permission_error"}}',
+    expectedFallbackCode: 'XAI_AUTH_ERROR',
+  },
+  {
+    label: 'model unavailable',
+    xaiStatus: 404,
+    xaiBody: '{"error":{"message":"model not found"}}',
+    expectedFallbackCode: 'XAI_MODEL_UNAVAILABLE',
+  },
+];
+
+for (const { label, xaiStatus, xaiBody, expectedFallbackCode } of fastXaiFailureCases) {
+  test(`fast xAI ${label} failure does not wait for provider timeout`, async () => {
+    const counters = { openai: 0, xai: 0 };
+    const started = Date.now();
+    const error = await callSmartLookupOpenAiAgeProvider(QUERY, {
+      env: ENV,
+      deadline: createDeadline({ totalMs: 32000 }),
+      openAiMaxMs: 13000,
+      xaiMaxMs: 18000,
+      fetchImpl: routedFetch({
+        openAiStatus: 429,
+        openAiBody: '{"error":{"type":"rate_limit_exceeded"}}',
+        xaiOk: false,
+        xaiStatus,
+        xaiBody,
+        counters,
+      }),
+    }).catch((e) => e);
+    const elapsed = Date.now() - started;
+    assert.equal(error.code, 'PROVIDERS_UNAVAILABLE');
+    assert.equal(error.primaryErrorCode, 'OPENAI_RATE_LIMIT');
+    assert.equal(error.fallbackErrorCode, expectedFallbackCode);
+    assert.equal(counters.openai, 1, 'no OpenAI retry loop');
+    assert.equal(counters.xai, 1, 'no xAI retry loop');
+    assert.ok(elapsed < 500, `immediate xAI HTTP failure should be millisecond-scale, took ${elapsed}ms`);
+  });
+}
 
 test('xAI model unavailable maps to a safe fallback diagnostic', async () => {
   const error = await callSmartLookupOpenAiAgeProvider(QUERY, {
