@@ -32,19 +32,22 @@ import {
 import { buildDeterministicBroadResult, buildExactModelReserveResult } from '../lib/smart-lookup/static-results.js';
 import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
 
-const TOTAL_BUDGET_MS = 16000;
+const TOTAL_BUDGET_MS = 32000;
 // OpenAI-primary budgets, set from measured live preview latency rather than
 // guessed: OpenAI web research took 8.7s (Nintendo Switch 2), 8.8s (Sony
 // X90L), 9.3s (LG WM3900HWA), 12.9s and 15.6s (the two Miele H4080BM
 // phrasings). A 5s stage timed out 100% of the time, so 13s covers the
 // measured median and most of the tail while still leaving a real xAI
-// window -- the thing the old grounded Gemini stage never did.
+// window -- the thing the old grounded Gemini stage never did. Live xAI
+// Preview validation with grok-4.3 web_search took ~13.5-15.8s for useful
+// forced-fallback results, so the route budget must reserve a materially
+// larger fallback window than the earlier 2.5s Groq placeholder.
 //
 // NOTE: this exceeds the original ~8.1s route target. That target predates
 // the measurement and is not achievable with web-search research; the old
 // 8.1s path returned nothing at all. See the PR discussion.
 const OPENAI_STAGE_BUDGET_MS = DEFAULT_OPENAI_STAGE_MAX_MS;
-const XAI_FALLBACK_MAX_MS = 2500;
+const XAI_FALLBACK_MAX_MS = 18000;
 const PROVIDER_BUDGET_MS = 6500;
 const REDIS_PHASE_BUDGET_MS = 500;
 const REDIS_CALL_BUDGET_MS = 250;
