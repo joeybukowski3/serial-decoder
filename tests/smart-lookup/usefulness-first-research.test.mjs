@@ -52,11 +52,21 @@ test('representative product queries all reach research', () => {
   }
 });
 
-// The counterweight: usefulness-first must not become "call the provider for
-// everything". A bare brand or bare category names no product to research, so
-// it keeps its instant deterministic card and spends no provider budget.
-test('bare brand, bare category, and meaningless input never reach research', () => {
-  for (const query of ['Whirlpool', 'refrigerator', 'washer', 'gaming laptop', '', '   ', '!!!!', 'asdkjhasd']) {
+// General-search-first: local classification is a speed/confidence hint, not
+// an eligibility gate. A bare recognized brand or bare recognized category
+// now reaches research too (there is still a useful brand/category-history
+// answer to give, and the deterministic card remains the fallback if
+// research fails) -- only genuinely unusable/empty input is withheld.
+test('a bare brand or bare category now reaches research', () => {
+  for (const query of ['Whirlpool', 'refrigerator', 'washer', 'gaming laptop']) {
+    const r = classifySmartLookupQuery(query);
+    assert.equal(r.researchEligible, true, `${JSON.stringify(query)} must reach research`);
+    assert.equal(r.providerEligible, true, `${JSON.stringify(query)} must be provider eligible`);
+  }
+});
+
+test('empty and meaningless input never reach research', () => {
+  for (const query of ['', '   ', '!!!!', 'asdkjhqwe']) {
     const r = classifySmartLookupQuery(query);
     assert.equal(r.researchEligible, false, `${JSON.stringify(query)} must not reach research`);
     assert.equal(r.providerEligible, false, `${JSON.stringify(query)} must not be provider eligible`);

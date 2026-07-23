@@ -129,8 +129,11 @@ test('mandatory broad product examples classify into useful progressive tiers', 
     ['Nintendo Switch', 'product-family', true],
     ['PlayStation', 'product-family', true],
     ['Whirlpool refrigerator', 'brand-category', true],
-    ['LG', 'brand-only', false],
-    ['television', 'category-only', false],
+    // General-search-first: a bare recognized brand or bare recognized
+    // category is no longer excluded from research -- only genuinely
+    // unusable input is.
+    ['LG', 'brand-only', true],
+    ['television', 'category-only', true],
     ['random nonsense', 'unusable', false],
   ];
   for (const [query, tier, providerEligible] of cases) {
@@ -178,37 +181,71 @@ test('LG TV returns researched brand/category historical context and asks for mo
   assert.equal(out.payload.sources.length, 1);
 });
 
-test('LG alone stays brand-only and does not falsely claim television history', async () => {
+// General-search-first: a bare recognized brand with nothing else is now
+// research-eligible (local classification is a hint, not a gate) -- it must
+// reach the provider, and the response still must not fabricate a category
+// or model that was never given.
+test('LG alone now reaches research and still does not falsely claim television history', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
     ...BASE_DEPS,
     openAiEnabled: true,
-    openAiProviderLookup: async () => { calls += 1; return withMetadata({}, { provider: 'openai' }); },
+    openAiProviderLookup: async () => {
+      calls += 1;
+      return withMetadata({
+        brand: 'LG',
+        specificityLevel: 'brand-only',
+        historicalContext: 'LG produces many electronics product categories; no single category or model was specified in this query.',
+        contextConfidence: 'medium',
+        refinementNeeded: true,
+        refinementSuggestion: 'Enter the product category and model number for more specific timing.',
+        evidence: [{ detail: 'Brand-only query, no category or model given.', source: 'Query analysis' }],
+      }, { provider: 'openai', fallbackUsed: false, grounded: true, webSearchUsed: true, groundedSources: [], searchQueryCount: 1 });
+    },
   });
   const out = res();
   await handler(req('LG'), out);
   assert.equal(out.statusCode, 200);
-  assert.equal(calls, 0);
+  assert.equal(calls, 1);
+  assert.equal(out.payload.brand, 'LG');
   assert.equal(out.payload.querySpecificity, 'brand-only');
-  assert.equal(out.payload.contextLevel, null);
-  assert.doesNotMatch(out.payload.notes, /television/i);
+  assert.doesNotMatch(out.payload.notes || '', /television/i);
 });
 
-test('television returns category history without pretending to identify a unit', async () => {
+// General-search-first: a bare recognized category with nothing else is now
+// research-eligible too -- it must reach the provider, and the response must
+// still distinguish category history from a claimed unit-specific date.
+test('television now reaches research for category history without pretending to identify a unit', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
     ...BASE_DEPS,
     openAiEnabled: true,
-    openAiProviderLookup: async () => { calls += 1; return withMetadata({}, { provider: 'openai' }); },
+    openAiProviderLookup: async () => {
+      calls += 1;
+      return withMetadata({
+        specificityLevel: 'generic',
+        contextLevel: 'category-history',
+        historicalContext: 'Television has been a mass-market home product category since the mid-20th century; individual brands and models vary widely, so no single introduction year applies.',
+        categoryEntryYear: 1927,
+        contextConfidence: 'medium',
+        refinementNeeded: true,
+        refinementSuggestion: 'Enter the brand and model number for more specific timing.',
+        evidence: [{ detail: 'General television category history.', source: 'General industry history' }],
+      }, {
+        provider: 'openai', fallbackUsed: false, grounded: true, webSearchUsed: true,
+        groundedSources: [{ title: 'Television history', domain: 'example.com', uri: 'https://example.com/tv-history' }],
+        searchQueryCount: 1,
+      });
+    },
   });
   const out = res();
   await handler(req('television'), out);
   assert.equal(out.statusCode, 200);
-  assert.equal(calls, 0);
+  assert.equal(calls, 1);
   assert.equal(out.payload.querySpecificity, 'category-only');
   assert.equal(out.payload.contextLevel, 'category-history');
   assert.match(out.payload.historicalContext, /television/i);
-  assert.equal(out.payload.yearContext, null);
+  assert.equal(out.payload.yearContext.isExactUnitDate, false);
 });
 
 test('Dell XPS 15 returns model-line context instead of a dead-end clarification', async () => {
@@ -370,28 +407,44 @@ test('Whirlpool top-load washer: grounded/provider failure degrades to determini
   assert.match(out.payload.notes, /Whirlpool|washer/i);
 });
 
-// ── Regression case 4: refrigerator (category-only) stays deterministic ────
+// ── Regression case 4: refrigerator (category-only) now reaches research ───
 
-test('refrigerator (category-only) reserves no provider budget by default and returns general guidance only', async () => {
+test('refrigerator (category-only) now reaches research and returns useful category guidance', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
     ...BASE_DEPS,
     providerLookup: async () => { calls += 1; return withMetadata({}, { provider: 'gemini' }); },
-    groundedProviderLookup: async () => { calls += 1; return withMetadata({}, { provider: 'gemini' }); },
+    groundedProviderLookup: async () => {
+      calls += 1;
+      return withMetadata({
+        specificityLevel: 'generic',
+        contextLevel: 'category-history',
+        historicalContext: 'Refrigerators have been a common home-appliance category for decades; brand and model determine specific timing.',
+        contextConfidence: 'medium',
+        refinementNeeded: true,
+        refinementSuggestion: 'Enter the brand and model number for more specific timing.',
+        evidence: [{ detail: 'General refrigerator category history.', source: 'General industry history' }],
+      }, {
+        provider: 'gemini', fallbackUsed: false, grounded: true,
+        groundedSources: [{ title: 'Refrigerator history', domain: 'example.com', uri: 'https://example.com/fridge-history' }],
+        searchQueryCount: 1,
+      });
+    },
   });
   const out = res();
   await handler(req('refrigerator'), out);
-  assert.equal(calls, 0);
+  assert.equal(calls, 1);
   assert.equal(out.statusCode, 200);
   assert.equal(out.payload.querySpecificity, 'category-only');
-  assert.equal(out.payload.fallbackKind, 'none');
+  assert.equal(out.payload.contextLevel, 'category-history');
+  assert.match(out.payload.historicalContext, /refrigerator/i);
 });
 
-test('a bare brand with no category ("Whirlpool" alone) is not meaningful enough for grounded research', () => {
+test('a bare brand with no category ("Whirlpool" alone) now reaches research', () => {
   const info = classifySmartLookupQuery('Whirlpool');
   assert.equal(info.querySpecificity, 'brand-only');
-  assert.equal(info.groundedEligible, false);
-  assert.equal(info.providerEligible, false);
+  assert.equal(info.groundedEligible, true);
+  assert.equal(info.providerEligible, true);
 });
 
 // ── Regression case 5: meaningless input -> no provider call, clarification

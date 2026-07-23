@@ -232,19 +232,19 @@ for (const query of ['Whirlpool top-load washer', 'Rheem gas water heater', 'Sam
 }
 
 for (const query of ['refrigerator', 'gaming laptop', 'washer', 'television', 'appliance']) {
-  test(`bare category-only query stays deterministic and reserves no provider budget: "${query}"`, () => {
+  test(`bare category-only query now reaches research (local classification is a hint, not a gate): "${query}"`, () => {
     const r = classifySmartLookupQuery(query);
     assert.equal(r.querySpecificity, 'category-only');
-    assert.equal(r.providerEligible, false);
-    assert.equal(r.groundedEligible, false);
+    assert.equal(r.providerEligible, true);
+    assert.equal(r.groundedEligible, true);
   });
 }
 
-test('a bare recognized brand with no category is not "meaningful" enough for grounded research', () => {
+test('a bare recognized brand with no category still reaches research', () => {
   const r = classifySmartLookupQuery('Whirlpool');
   assert.equal(r.querySpecificity, 'brand-only');
-  assert.equal(r.groundedEligible, false);
-  assert.equal(r.providerEligible, false);
+  assert.equal(r.groundedEligible, true);
+  assert.equal(r.providerEligible, true);
 });
 
 test('the deterministic brand-category result carries broad-range precision and concrete refinement identifiers', () => {
