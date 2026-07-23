@@ -301,6 +301,8 @@
 
   function hasUsableAgeInfo(data) {
     if (!data) return false;
+    if (data.serialDetected && data.serialDetected.action === 'use-decoder') return true;
+    if (Array.isArray(data.manufactureYearCandidates) && data.manufactureYearCandidates.length) return true;
     if (data.historicalContext || data.inventionSummary) return true;
     var context = data.yearContext;
     if (context && context.type !== 'unknown') {
@@ -608,15 +610,36 @@
     return '<details class="determination-details smart-lookup-sources"><summary>Web sources consulted</summary><ul>' + items + '</ul></details>';
   }
 
+  function renderSerialDetected(data) {
+    var detected = data && data.serialDetected;
+    if (!detected || detected.action !== 'use-decoder' || !detected.token) return '';
+    var href = '/index.html?serial=' + encodeURIComponent(detected.token) + '#decoder-tool';
+    return '<div class="info-block smart-lookup-serial-notice">' +
+      '<h4>Serial number detected</h4>' +
+      '<p>Use the Serial Number Decoder for unit-specific manufacture-date decoding. ' +
+      '<a href="' + escapeHtml(href) + '">Open Serial Number Decoder</a></p>' +
+      '</div>';
+  }
+
   function renderAge(data) {
     var context = getYearContext(data);
     var primaryYear = formatYearContext(context);
     var yearLabel = context && context.label ? context.label : 'Year context';
-    var manufactureMessage = context && context.isExactUnitDate
-      ? primaryYear
-      : (data && data.productFamily
-        ? 'Not available without serial or exact unit evidence'
-        : 'Individual manufacture date requires serial number');
+    var manufactureCandidates = Array.isArray(data && data.manufactureYearCandidates)
+      ? data.manufactureYearCandidates
+      : [];
+    var manufactureAmbiguous = Boolean(data && data.manufactureDateAmbiguous && manufactureCandidates.length);
+    if (manufactureAmbiguous) {
+      primaryYear = manufactureCandidates.join(' or ');
+      yearLabel = 'Ambiguous manufacture-year candidates';
+    }
+    var manufactureMessage = manufactureAmbiguous
+      ? 'Ambiguous; model-era evidence is required to choose a candidate year'
+      : (context && context.isExactUnitDate
+        ? primaryYear
+        : (data && data.productFamily
+          ? 'Not available without serial or exact unit evidence'
+          : 'Individual manufacture date requires serial number'));
     var exactModel = data && data.exactModel
       ? data.exactModel
       : (data && !data.productFamily && data.model ? data.model : 'Not provided');
@@ -663,6 +686,7 @@
     var qualifierHtml = qualifier
       ? '<p class="smart-lookup-source-note">' + escapeHtml(qualifier) + '</p>'
       : '';
+    var serialDetectedHtml = renderSerialDetected(data);
     // Precision badge + plain-language "why is this broad" line -- shown
     // whenever the result is anything less than an exact model match.
     // Suppress the broad-guidance badge and note once research has actually
@@ -742,6 +766,7 @@
       : '';
     return '<div class="smart-age-result smart-year-context-result">' +
       '<h3>' + escapeHtml(resultHeading(data)) + '</h3>' +
+      serialDetectedHtml +
       conflictNote +
       bestAvailableHtml +
       canonicalNote +

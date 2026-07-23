@@ -92,6 +92,7 @@ function normalizeLegacyResult(raw, queryInfo, options = {}) {
     timings: options.timings,
     errorCode: options.errorCode || null,
     allowIndividualManufactureYear: Boolean(options.allowIndividualManufactureYear),
+    allowSerialEvidence: Boolean(options.allowSerialEvidence),
     currentYear: options.currentYear,
   });
 }
@@ -471,14 +472,14 @@ export function createAgeLookupHandler(dependencies = {}) {
         }
       }
 
-      const hvacQuick = decodeHvacSerial(queryInfo.query, queryInfo.normalizedQuery, queryInfo);
+      const hvacQuick = decodeHvacSerial(queryInfo.query, queryInfo.normalizedQuery, queryInfo, { currentYear });
       if (hvacQuick) {
         const result = finalizeTimings(normalizeLegacyResult(hvacQuick, queryInfo, {
           source: 'static',
           evidenceSource: 'heuristic',
           timings,
           currentYear,
-          allowIndividualManufactureYear: true,
+          allowSerialEvidence: true,
         }), timings, deadline);
         logResult(logger, requestId, queryInfo, result);
         return res.status(200).json(result);

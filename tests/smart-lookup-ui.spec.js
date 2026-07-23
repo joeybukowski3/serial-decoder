@@ -726,6 +726,30 @@ test.describe('Smart Lookup controller', () => {
     expect(panelText).not.toMatch(/XAI_SCHEMA_INVALID|stack trace|gemini|xai|grok/i);
   });
 
+  test('detected serial renders a prefilled handoff to the deterministic decoder', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: {
+        brand: 'GE',
+        model: 'GFW850SPN0DG',
+        introductionYear: 2019,
+        individualManufactureYear: null,
+        serialDetected: { token: 'FR31424IN', action: 'use-decoder' },
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('serial FR31424IN model GFW850SPN0DG');
+    await page.locator('#smartLookupBtn').click();
+
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('Serial number detected');
+    await expect(panel).toContainText('Use the Serial Number Decoder for unit-specific manufacture-date decoding.');
+    await expect(panel.getByRole('link', { name: 'Open Serial Number Decoder' })).toHaveAttribute(
+      'href',
+      '/index.html?serial=FR31424IN#decoder-tool'
+    );
+    await expect(panel).not.toContainText('serial has been decoded');
+  });
+
   test('LG C3 and C2 family searches render prominent model-year context from the mocked API', async ({ page }) => {
     const interceptedQueries = await mockYearContextAgeLookup(page);
     await page.goto('http://localhost:3001/smart-lookup.html');

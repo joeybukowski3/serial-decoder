@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSmartAgeCacheKey } from '../../lib/smart-lookup/cache.js';
+import { buildSmartAgeCacheKey, prepareResultForCache } from '../../lib/smart-lookup/cache.js';
 import { createDeadline } from '../../lib/smart-lookup/deadline.js';
 import { classifySmartLookupQuery } from '../../lib/smart-lookup/normalize.js';
 import { boundedRedisGet, boundedRateLimit } from '../../lib/smart-lookup/redis.js';
@@ -74,6 +74,41 @@ test('broad era hints do not override exact model evidence', () => {
   const hinted = applyEraHints(base, 'samsung qn65q80a vrt');
   assert.equal(hinted.introductionYear, 2020);
   assert.deepEqual(hinted.productionRange, base.productionRange);
+});
+
+test('serial handoff metadata is server-derived and provider serial fields are stripped', () => {
+  const queryInfo = classifySmartLookupQuery('serial FR31424IN model GFW850SPN0DG');
+  const result = normalizeSmartAgeResult({
+    brand: 'GE',
+    model: 'GFW850SPN0DG',
+    individualManufactureYear: 2014,
+    serialDetected: { token: 'SPOOFED', action: 'decoded' },
+    serialRule: 'Provider-invented serial rule',
+    serialLocation: 'Provider-invented location',
+    yearContext: {
+      value: 2014,
+      type: 'manufacture-year',
+      source: 'serial',
+      isExactUnitDate: true,
+    },
+  }, { queryInfo, source: 'gemini', evidenceSource: 'gemini-ungrounded' });
+
+  assert.deepEqual(result.serialDetected, { token: 'FR31424IN', action: 'use-decoder' });
+  assert.equal(result.individualManufactureYear, null);
+  assert.equal(result.yearContext, null);
+  assert.equal(result.serialRule, null);
+  assert.equal(result.serialLocation, null);
+});
+
+test('cached age payload omits request-specific serial metadata', () => {
+  const cached = prepareResultForCache({
+    brand: 'GE',
+    model: 'GFW850SPN0DG',
+    serialDetected: { token: 'FR31424IN', action: 'use-decoder' },
+    source: 'gemini',
+  });
+  assert.equal(cached.serialDetected, undefined);
+  assert.doesNotMatch(JSON.stringify(cached), /FR31424IN/);
 });
 
 test('deadline returns when Redis ignores AbortController', async () => {

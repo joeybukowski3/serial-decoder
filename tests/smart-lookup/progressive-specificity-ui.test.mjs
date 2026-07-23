@@ -104,6 +104,35 @@ test('exact-model result UI remains unchanged (no precision badge, single refine
   assert.match(html, /Use the serial number for unit-specific manufacture dating\./);
 });
 
+test('serial metadata renders a prefilled deterministic-decoder handoff without claiming a decode', () => {
+  const html = api.renderAge({
+    brand: 'GE',
+    model: 'GFW850SPN0DG',
+    querySpecificity: 'exact-model',
+    serialDetected: { token: 'FR31424IN', action: 'use-decoder' },
+    yearContext: { type: 'market-introduction', value: 2019, label: 'Marketplace introduction year', isExactUnitDate: false },
+  });
+  assert.match(html, /Serial number detected/);
+  assert.match(html, /Use the Serial Number Decoder for unit-specific manufacture-date decoding/);
+  assert.match(html, /\/index\.html\?serial=FR31424IN#decoder-tool/);
+  assert.doesNotMatch(html, /serial (?:was|has been) decoded/i);
+});
+
+test('HVAC serial candidates render as ambiguous rather than one exact manufacture year', () => {
+  const html = api.renderAge({
+    brand: 'Trane',
+    serialDetected: { token: '2027', action: 'use-decoder' },
+    manufactureDateAmbiguous: true,
+    manufactureYearCandidates: [1927, 2027],
+    yearContext: { type: 'unknown', label: 'Ambiguous manufacture year', source: 'serial', isExactUnitDate: false },
+    refinementSuggestion: 'Enter the complete model number to resolve the candidate year.',
+  });
+  assert.match(html, /1927 or 2027/);
+  assert.match(html, /Ambiguous manufacture-year candidates/);
+  assert.match(html, /model-era evidence is required/);
+  assert.doesNotMatch(html, /Manufacture year<\/span>/i);
+});
+
 test('brand-category query gets dedicated broad-guidance copy instead of a generic "more details" card', () => {
   const data = {
     brand: 'Whirlpool',
