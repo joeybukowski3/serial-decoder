@@ -7,6 +7,7 @@ const representativePages = [
   { route: '/dryer-serial-number.html', category: 'appliances' },
   { route: '/range-oven-serial-number.html', category: 'appliances' },
   { route: '/whirlpool-serial-number-lookup.html', category: 'appliances' },
+  { route: '/ge-serial-number-lookup.html', category: 'appliances' },
   { route: '/maytag-serial-number-lookup.html', category: 'appliances' },
   { route: '/kenmore-serial-number-lookup.html', category: 'appliances' },
   { route: '/trane-serial-number-lookup.html', category: 'hvac' },

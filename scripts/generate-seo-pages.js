@@ -1246,7 +1246,8 @@ function renderPage(page) {
         <span class="bp-badge" style="color:${cat.color};border-color:${cat.color}30;background:${cat.color}10;">
           ${page.badge || cat.label}
         </span>
-
+${page.wordmark ? `
+        <div class="bp-hero-wordmark" style="font-family:Arial, Helvetica, sans-serif;font-weight:800;font-size:26px;letter-spacing:1px;color:#00382d;background:${cat.color};border-radius:8px;padding:4px 14px;display:inline-block;margin-bottom:14px;">${page.wordmark}</div>` : ''}
         <h1 class="bp-hero-title">${page.h1}</h1>
         <p class="bp-hero-sub">${page.intro}</p>
 
@@ -2305,6 +2306,7 @@ const pages = [
     metaDescriptionOverride: 'Decode GE serial numbers to find manufacture date and appliance age. Supports GE refrigerators, dishwashers, ranges, washers, and ovens. Also works for GE Profile, Monogram, and Cafe.',
     h1: 'GE Serial Number Decoder',
     badge: 'Brand decoder',
+    wordmark: 'GE',
     category: 'appliances',
     brandValue: 'ge',
     intro: 'Use this GE serial number decoder when you already know the brand and want a faster supported age path for GE-family appliances.',
@@ -2318,22 +2320,54 @@ const pages = [
     preGridSections: [
       {
         type: 'copy-block',
+        id: 'ge-supported-products',
+        title: 'What this decoder currently supports for GE',
+        body: [
+          'This decoder currently supports GE-family serial numbers for <strong>refrigerators, washers, dryers, dishwashers, ranges, ovens, and microwaves</strong>, using the same opening month/year letter pattern across all of them. The same rule set is also applied on this site to brands within the GE Appliances portfolio &mdash; Caf&eacute;, GE Profile, GE Monogram, and the US Hotpoint brand. RCA-branded appliances have historically shared this same serial-decoding logic on this site, though RCA is not a brand in GE Appliances\' current portfolio.',
+          'GE-branded water heaters may use a different serial format that is not covered by this appliance decoder.',
+          'The Hotpoint brand sold in the United Kingdom and Europe has separate, unrelated ownership (Whirlpool, via the former Indesit business) and is not covered by this page.'
+        ]
+      },
+      {
+        type: 'copy-block',
         id: 'why-multiple-years',
         title: 'Why does GE show multiple possible years?',
         body: [
-          'GE-family serial numbers (including Cafe, GE Profile, GE Monogram, Hotpoint, and RCA appliances) use a 12-year repeating letter cycle for the year code. Because the same letter comes back around every 12 years, a single opening letter can correctly match several different years, and the decoder is designed to show all of them rather than guess at just one.',
-          'The model number, product styling, documentation, or install-date context can narrow a repeating GE result to a single year when that evidence is available. Without it, every candidate year the letter maps to is equally valid from the serial alone, and the honest result is the full list rather than a single picked year.'
+          'GE-family serial numbers (including Caf&eacute;, GE Profile, GE Monogram, and Hotpoint appliances, and historically RCA-branded appliances) use a 12-year repeating letter cycle for the year code. Because the same letter comes back around every 12 years, a single opening letter can correctly match several different years, and the decoder is designed to show all of them rather than guess at just one.',
+          'The model number, product styling, documentation, or install-date context can narrow a repeating GE result to a single year when that evidence is available. Without that additional evidence, the serial characters alone do not determine which of the candidate years is correct, so the honest result is the full list rather than a single picked year.'
+        ]
+      },
+      {
+        type: 'table',
+        id: 'ge-worked-example-straightforward',
+        title: 'Worked example 1: straightforward decode confirmed by model evidence',
+        intro: 'This example shows a case where the serial\'s repeating year letter is narrowed to one confirmed year because the model number is recognized in this site\'s model-evidence data.',
+        rows: [
+          { field: 'Character 1 of RZ825479', meaning: 'Month code "R"', why: 'Resolves to August.' },
+          { field: 'Character 2 of RZ825479', meaning: 'Year code "Z"', why: 'The serial alone returns four candidate years: 1988, 2000, 2012, and 2024.' },
+          { field: 'Model GTH18GBCDCRBB', meaning: 'Recognized in this site\'s model-evidence data as a GE GTH top-mount refrigerator', why: 'The documented production window for this model family narrows the four candidate years to 2012.' }
         ]
       },
       {
         type: 'table',
         id: 'ge-worked-example',
-        title: 'Worked example: serial AA182127G with model GTWN8250D0WS',
+        title: 'Worked example 2: repeating-cycle ambiguous decode (serial AA182127G, model GTWN8250D0WS)',
         intro: 'This example shows what the current decoder logic determines from the serial alone, and what it does not.',
         rows: [
           { field: 'Character 1 of AA182127G', meaning: 'Month code "A"', why: 'Resolves to January.' },
           { field: 'Character 2 of AA182127G', meaning: 'Year code "A"', why: 'The current decoder returns candidate years 1977, 1989, 2001, 2013, and 2025 &mdash; every year this letter has matched across the 12-year cycle so far.' },
           { field: 'Model GTWN8250D0WS', meaning: 'Not currently in this site\'s model-evidence data', why: 'The model number cannot narrow the candidate years for this example today. What additional evidence would help: a documented model-year introduction date, a dated manual or nameplate photo, or another independently known install date.' }
+        ]
+      },
+      {
+        type: 'table',
+        id: 'ge-worked-example-unsupported',
+        title: 'Worked example 3: historical code not yet supported by this decoder',
+        intro: 'This example shows a serial that matches GE\'s general shape (two letters followed by digits) but falls outside the era this decoder currently resolves.',
+        rows: [
+          { field: 'Character 1 of AB123456', meaning: 'Month code "A"', why: 'Resolves to January.' },
+          { field: 'Character 2 of AB123456', meaning: 'Year code "B"', why: 'GE\'s own manufacture-date documentation records "B" as the historical year 1945. This site\'s decoder currently covers GE\'s documented 1977-present rotation and does not yet include that earlier era, so no year is returned here &mdash; this is a coverage limitation of this decoder, not a sign that "B" is undocumented by GE.' },
+          { field: 'Model number (if available)', meaning: 'Only useful if recognized in this site\'s model-evidence data', why: 'Model evidence cannot substitute for an era this decoder does not yet cover. For a pre-1977 GE serial, GE\'s own manufacture-date reference or Smart Lookup may help instead.' }
         ]
       }
     ],
@@ -2355,7 +2389,8 @@ const pages = [
     locations: [
       { title: 'Refrigerators', items: ['Inside the fresh-food section side wall', 'Behind a drawer or on upper interior trim in some models'] },
       { title: 'Laundry products', items: ['Washer lid opening or underside of the lid', 'Dryer door opening or rear cabinet label'] },
-      { title: 'Ranges and dishwashers', items: ['Range frame behind the oven door or drawer opening', 'Dishwasher inner door frame or tub edge'] }
+      { title: 'Ranges and dishwashers', items: ['Range frame behind the oven door or drawer opening', 'Dishwasher inner door frame or tub edge'] },
+      { title: 'Microwaves', items: ['Interior cavity frame edge', 'Rear or side exterior panel, depending on over-the-range or countertop mount'] }
     ],
     problemSectionTitle: 'If the serial number does not decode',
     problems: [
@@ -2376,7 +2411,9 @@ const pages = [
       ['What manufacture date does a GE serial number show?', 'A GE serial resolves to a month from the first character and one or more candidate years from the second character. When the year letter has repeated more than once, more than one year can be correct.'],
       ['Why do GE serial year codes repeat?', 'GE-family serials use a 12-year repeating letter cycle. The same letter reappears every 12 years, so it can validly represent several different years rather than exactly one.'],
       ['Can the model number narrow multiple GE candidate years?', 'Sometimes. If the model is recognized in this site\'s model data with a known production window, the candidates can narrow to a single year. If the model is not recognized, the full list of candidate years remains the honest result.'],
-      ['What if my GE serial number is unsupported?', 'Confirm the full serial was entered exactly as printed, check that the opening two characters are letters rather than digits, and try Smart Lookup if the format still does not resolve.']
+      ['What if my GE serial number is unsupported?', 'Confirm the full serial was entered exactly as printed, check that the opening two characters are letters rather than digits, and try Smart Lookup if the format still does not resolve.'],
+      ['Who owns GE Appliances now?', 'GE Appliances has been owned by Qingdao Haier since a 2016 acquisition, though it continues operating under the GE Appliances name from Louisville, Kentucky under a long-term brand license. This ownership history does not change the serial-decoding rule used above.'],
+      ['When was General Electric founded?', 'General Electric was formed in 1892 from the merger of the Edison General Electric Company and the Thomson-Houston Electric Company. This is background information and is separate from the technical serial-number rule documented on this page.']
     ],
     relatedLinks: [
       ['how-old-is-my-appliance', 'How Old Is My Appliance?'],
@@ -2386,7 +2423,102 @@ const pages = [
       ['serial-number-location-guide', 'Serial Number Location Guide'],
       ['methodology', 'Methodology']
     ],
-    linkGroups: baseLinkGroups()
+    linkGroups: baseLinkGroups(),
+    postGridSections: [
+      {
+        type: 'raw',
+        html: `
+    <div class="bp-section-card bp-full-width" id="ge-appliance-categories">
+      <div class="bp-section-card-head">
+        <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">category</span>
+        <h2>Decoding GE appliances by product type</h2>
+      </div>
+      <div class="fmt-cards-grid">
+        <div class="fmt-card"><div class="fmt-card-top"><span class="fmt-label">Refrigerators</span></div><p class="fmt-meaning">Same opening month/year letter pattern. Label is typically inside the fresh-food compartment.</p></div>
+        <div class="fmt-card"><div class="fmt-card-top"><span class="fmt-label">Washers &amp; dryers</span></div><p class="fmt-meaning">Same opening month/year letter pattern. Label is on the lid opening or door frame.</p></div>
+        <div class="fmt-card"><div class="fmt-card-top"><span class="fmt-label">Dishwashers</span></div><p class="fmt-meaning">Same opening month/year letter pattern. Label is on the inner door frame or tub edge.</p></div>
+        <div class="fmt-card"><div class="fmt-card-top"><span class="fmt-label">Ranges &amp; ovens</span></div><p class="fmt-meaning">Same opening month/year letter pattern. Label is behind the oven door or drawer opening.</p></div>
+        <div class="fmt-card"><div class="fmt-card-top"><span class="fmt-label">Microwaves</span></div><p class="fmt-meaning">Same opening month/year letter pattern. Label location varies by mount type; check the interior cavity frame or rear panel first.</p></div>
+      </div>
+      <p style="margin-top:12px;">The current decoder uses one shared GE-family rule set across every category above rather than a separate rule per appliance type. If a future update adds a category-specific exception, it will be reflected in the format tables and in the decoder logic together.</p>
+    </div>`
+      },
+      {
+        type: 'raw',
+        html: `
+    <div class="bp-section-card bp-full-width" id="ge-decoding-eras">
+      <div class="bp-section-card-head">
+        <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">history</span>
+        <h2>Important GE decoding eras</h2>
+      </div>
+      <ul class="bp-check-list">
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span><strong>Before 1977 (documented by GE, not yet supported by this decoder):</strong> GE's own manufacture-date reference documents historical year codes back to 1944, reusing many of the same letters that later repeat through the 1977-2025 rotation this decoder returns. This site currently limits its repeating-cycle results to that modern 1977-present rotation and does not yet represent the older historical codes &mdash; that is a coverage limitation of this decoder, not a boundary in GE's own documentation.</span></li>
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span><strong>1977&ndash;2016 (GE-owned manufacturing):</strong> the opening-letter month/year pattern this decoder covers was used across GE's own appliance manufacturing, including Appliance Park in Louisville, Kentucky.</span></li>
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span><strong>2016&ndash;present (Haier ownership):</strong> GE Appliances was sold to Qingdao Haier in 2016. Serials produced since the sale continue using the same opening-letter pattern under the long-term GE Appliances brand license; this decoder does not currently distinguish pre- and post-2016 units beyond the shared candidate-year list.</span></li>
+      </ul>
+    </div>`
+      },
+      {
+        type: 'copy-block',
+        id: 'ge-history',
+        title: 'GE company history and ownership',
+        body: [
+          'This section covers GE\'s corporate history. It is included for background only and is not used as evidence for any serial-decoding rule on this page.',
+          'General Electric was formed on April 15, 1892, through the merger of the Edison General Electric Company and the Thomson-Houston Electric Company. Edison General Electric traced back to Thomas Edison\'s electric-light and generating businesses, which he consolidated under that name around 1889&ndash;1890. Thomson-Houston had grown out of an earlier company founded by inventors Elihu Thomson and Edwin Houston, and was led by Charles A. Coffin, who became the first president of the merged General Electric Company. Edison served briefly on the new company\'s board before stepping away from day-to-day involvement, though he continued to hold GE patents and act as a consultant.',
+          'GE\'s major-appliance manufacturing became centered at Appliance Park, a purpose-built industrial campus in Louisville, Kentucky. Ground was broken in 1951, and the first products (a shipment of automatic dryers) left the plant in February 1953. The campus grew to house multiple appliance factories and remains the headquarters of GE Appliances today.',
+          'GE expanded into related appliance brands over the following decades. In 1918, the Hotpoint Electric Heating Company combined with GE\'s heating-device business to form the Edison Electric Appliance Company, and GE purchased Hotpoint outright in 1927 &mdash; which is why the US Hotpoint brand shares GE\'s appliance manufacturing lineage and, on this site, the same serial-decoding rules. The Hotpoint brand sold in the United Kingdom and Europe today has separate, unrelated ownership under Whirlpool and is not covered by this page.',
+          'In January 2016, GE announced the sale of its appliance division to Qingdao Haier Co., Ltd. for $5.4 billion; the sale closed in June 2016. GE Appliances, including the GE, Cafe, GE Profile, and GE Monogram brand names, continued operating under a long-term brand license from GE to Haier, still headquartered at Appliance Park in Louisville.'
+        ]
+      },
+      {
+        type: 'raw',
+        html: `
+    <div class="bp-section-card bp-full-width" id="ge-limitations">
+      <div class="bp-section-card-head">
+        <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">block</span>
+        <h2>Unsupported formats and limitations</h2>
+      </div>
+      <ul class="bp-check-list">
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span>Only twelve letters (A, D, F, G, H, L, M, R, S, T, V, Z) currently carry a recognized year code. A second character outside that set, as in Worked Example 3 above, does not decode.</span></li>
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span>This site's decoder currently limits its repeating-cycle results to GE's documented 1977-present rotation. GE's own manufacture-date reference documents historical codes back to 1944 that are not yet represented in this rule set &mdash; a coverage limitation here, not a gap in GE's documentation.</span></li>
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span>GE-branded water heaters may use a different serial format that is not covered by this appliance decoder.</span></li>
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span>This decoder does not resolve exact day of manufacture, only month and one or more candidate years.</span></li>
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span>Model-based narrowing only works for models already present in this site's model-evidence data; an unrecognized model cannot narrow a repeating-cycle result.</span></li>
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span>UK/European Hotpoint appliances are a separate, unrelated brand (Whirlpool ownership) and are not covered by this page.</span></li>
+      </ul>
+    </div>`
+      },
+      {
+        type: 'raw',
+        html: `
+    <div class="bp-section-card bp-full-width" id="ge-evidence-sources">
+      <div class="bp-section-card-head">
+        <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">fact_check</span>
+        <h2>Evidence and sources</h2>
+      </div>
+      <p>Technical serial-decoding claims and historical/company-background claims on this page come from separate source sets and are not used to support one another.</p>
+      <h3>Technical sources for the serial-decoding rule</h3>
+      <ul class="bp-check-list">
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span><a href="https://products.geappliances.com/appliance/gea-support-search-content?contentId=16195" rel="noopener nofollow">GE Appliance &mdash; How to Determine the Age or Manufacture Date (official manufacture-date chart; primary source for the month/year letter pattern)</a></span></li>
+      </ul>
+      <h3>Historical and ownership sources</h3>
+      <p><strong>Primary/institutional sources</strong></p>
+      <ul class="bp-check-list">
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span><a href="https://edison.rutgers.edu/life-of-edison/companies/company-details/electric-light,-domestic/edison-general-electric-company" rel="noopener nofollow">Thomas A. Edison Papers, Rutgers University &mdash; Edison General Electric Company</a></span></li>
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span><a href="https://pressroom.geappliances.com/news/qingdao-haier-acquires-ge-appliances" rel="noopener nofollow">GE Appliances Pressroom &mdash; Qingdao Haier Acquires GE Appliances (2016 sale, continued GE Appliances branding, Louisville headquarters)</a></span></li>
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span><a href="https://pressroom.geappliances.com/news/ge-appliances-celebrates-70-years-of-innovation-for-american-homes-from-its-headquarters-in-louisville-kentucky" rel="noopener nofollow">GE Appliances Pressroom &mdash; GE Appliances Celebrates 70 Years of Innovation (Appliance Park's 1951 groundbreaking and February 1953 first shipment)</a></span></li>
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span><a href="https://pressroom.geappliances.com/news/ge-appliances-corporate-fact-sheet" rel="noopener nofollow">GE Appliances Corporate Fact Sheet (current brand portfolio; confirms RCA is not a current GE Appliances brand)</a></span></li>
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span><a href="https://www.hotpoint.com/hotpoint-history/" rel="noopener nofollow">Hotpoint official brand history (1918 merger with General Electric)</a></span></li>
+      </ul>
+      <p style="margin-top:10px;"><strong>Supplemental background (not principal evidence)</strong></p>
+      <ul class="bp-check-list">
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span><a href="https://en.wikipedia.org/wiki/Thomson-Houston_Electric_Company" rel="noopener nofollow">Thomson-Houston Electric Company, supplemental background for the 1892 merger</a></span></li>
+        <li class="bp-check-item"><span class="material-symbols-outlined bp-check-icon">check_circle</span><span><a href="https://en.wikipedia.org/wiki/Hotpoint" rel="noopener nofollow">Hotpoint, supplemental background for the 1927 outright GE acquisition and the separate UK/European ownership</a></span></li>
+      </ul>
+      <p style="margin-top:10px;"><em>Last reviewed: July 24, 2026.</em></p>
+    </div>`
+      }
+    ]
   },
   {
     slug: 'samsung-serial-number-lookup',
