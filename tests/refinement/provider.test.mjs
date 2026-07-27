@@ -110,6 +110,52 @@ test('grounded provider does not trust an official label from an unrelated sourc
   assert.equal(result.evidence[0].quality, 'strong-secondary');
 });
 
+test('grounded provider grants official quality to a genuine 2-letter brand match', async () => {
+  const fetchImpl = async () => ({
+    ok: true,
+    json: async () => ({ candidates: [{
+      content: { parts: [{ text: JSON.stringify({ evidence: [{
+        type: 'manufacturer', title: 'GE product page', sourceName: 'GE Appliances', sourceIndex: 0,
+        productionStart: 2020, productionEnd: 2026, quality: 'official',
+      }] }) }] },
+      groundingMetadata: {
+        groundingChunks: [{
+          web: {
+            uri: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQH5RfFN',
+            title: 'geappliances.com',
+          },
+        }],
+      },
+    }] }),
+  });
+  const result = await callGeminiGroundedSearch({ brand: 'GE', model: 'JGB735SP1SS', candidateYears: [2018, 2022] }, { apiKey: 'test', fetchImpl });
+  assert.equal(result.evidence[0].quality, 'official');
+});
+
+test('a 2-letter brand does not spuriously match noise inside the redirect URL', async () => {
+  const fetchImpl = async () => ({
+    ok: true,
+    json: async () => ({ candidates: [{
+      content: { parts: [{ text: JSON.stringify({ evidence: [{
+        type: 'manufacturer', title: 'Unrelated retailer copy', sourceName: 'Unrelated Retailer', sourceIndex: 0,
+        productionStart: 2020, productionEnd: 2026, quality: 'official',
+      }] }) }] },
+      groundingMetadata: {
+        groundingChunks: [{
+          web: {
+            // Deliberately contains "ge" inside the noisy redirect token, but the
+            // clean chunk title is unrelated to the "GE" brand.
+            uri: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGeXYZ',
+            title: 'unrelated-retailer.example',
+          },
+        }],
+      },
+    }] }),
+  });
+  const result = await callGeminiGroundedSearch({ brand: 'GE', model: 'JGB735SP1SS', candidateYears: [2018, 2022] }, { apiKey: 'test', fetchImpl });
+  assert.equal(result.evidence[0].quality, 'strong-secondary');
+});
+
 test('grounded provider request avoids incompatible structured-output mode for Gemini 2.5', async () => {
   let requestBody;
   const fetchImpl = async (_url, options) => {
