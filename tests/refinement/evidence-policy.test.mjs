@@ -82,6 +82,35 @@ test('heuristic-only evidence is displayable but not sufficient to resolve', () 
   assert.equal(result.evidence.length, 1);
 });
 
+test('should narrow candidates with two independent secondary-quality sources', () => {
+  const result = evaluateEvidencePolicy([
+    {
+      type: 'review',
+      title: 'Lowe\'s Product Page',
+      sourceName: 'Lowe\'s',
+      sourceUrl: 'https://www.lowes.com/example',
+      productionStart: 2020,
+      productionEnd: 2024,
+      quality: 'secondary',
+      verified: true,
+    },
+    {
+      type: 'manual',
+      title: 'User Manual GE JGB735SP1SS',
+      sourceName: 'GE Support',
+      sourceUrl: 'https://www.ge.com/appliances/support/manual',
+      productionStart: 2020,
+      productionEnd: 2024,
+      quality: 'secondary',
+      verified: true,
+    },
+  ]);
+  assert.equal(result.sufficient, true);
+  assert.equal(result.confidence, 'medium');
+  assert.deepEqual(result.range, { start: 2020, end: 2024, conflict: false });
+  assert.equal(result.reason, 'independent-secondary-evidence');
+});
+
 test('manual publication date is used only as an availability boundary supplied by evidence', () => {
   const result = evaluateEvidencePolicy([{
     type: 'manual',
