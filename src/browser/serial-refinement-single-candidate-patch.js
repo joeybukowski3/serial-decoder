@@ -52,10 +52,13 @@
         (item.supports ? '<br><span>' + escapeHtml(item.supports) + '</span>' : '') + '</li>';
     }).join('') + '</ul></details>';
   }
-  function renderChecking() {
+  function renderChecking(slow) {
     panel();
     var output = document.getElementById('narrowDateOutput');
-    if (output) output.innerHTML = '<div class="info-block refinement serial-refinement-status serial-refinement-status--checking"><h4>Checking model-era evidence</h4><p>Serial decoded. Verifying the model against the decoded year…</p></div>';
+    var message = slow
+      ? 'Still verifying the model against the decoded year… this can take up to 20 seconds for less common models.'
+      : 'Serial decoded. Verifying the model against the decoded year…';
+    if (output) output.innerHTML = '<div class="info-block refinement serial-refinement-status serial-refinement-status--checking"><h4>Checking model-era evidence</h4><p>' + message + '</p></div>';
   }
   function render(response, originalYear) {
     panel();
@@ -78,8 +81,12 @@
     if (active && active.controller) active.controller.abort();
     var controller = new AbortController();
     var localSequence = ++sequence;
-    renderChecking();
-    var timeout = setTimeout(function () { controller.abort(); }, 9000);
+    renderChecking(false);
+    var timeout = setTimeout(function () { controller.abort(); }, 25000);
+    var slowNoticeTimeout = setTimeout(function () {
+      if (!active || active.sequence !== localSequence) return;
+      renderChecking(true);
+    }, 5000);
     var promise = fetch('/api/refine-serial-date', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal,
       body: JSON.stringify(current),
@@ -100,6 +107,7 @@
       return null;
     }).finally(function () {
       clearTimeout(timeout);
+      clearTimeout(slowNoticeTimeout);
       if (active && active.sequence === localSequence) active = null;
     });
     active = { key: key, controller: controller, sequence: localSequence, promise: promise };

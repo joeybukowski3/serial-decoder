@@ -37,6 +37,40 @@ test('two independent strong secondary sources are sufficient', () => {
   assert.deepEqual(result.range, { start: 2019, end: 2020, conflict: false });
 });
 
+test('two distinct Gemini grounding sources sharing the same redirect host still count as independent', () => {
+  const result = evaluateEvidencePolicy([
+    {
+      type: 'retailer', title: 'Listing at Lowe\'s', sourceName: 'Lowe\'s',
+      sourceUrl: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/AAA',
+      quality: 'strong-secondary', availabilityStart: 2018, availabilityEnd: 2020,
+    },
+    {
+      type: 'manual', title: 'User manual', sourceName: 'manua.ls',
+      sourceUrl: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/BBB',
+      quality: 'strong-secondary', availabilityStart: 2019, availabilityEnd: 2021,
+    },
+  ]);
+  assert.equal(result.sufficient, true);
+  assert.equal(result.confidence, 'medium');
+  assert.deepEqual(result.range, { start: 2019, end: 2020, conflict: false });
+});
+
+test('two grounding sources with the same sourceName are still treated as one source', () => {
+  const result = evaluateEvidencePolicy([
+    {
+      type: 'retailer', title: 'Listing A', sourceName: 'Lowe\'s',
+      sourceUrl: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/AAA',
+      quality: 'strong-secondary', availabilityStart: 2018, availabilityEnd: 2020,
+    },
+    {
+      type: 'retailer', title: 'Listing B', sourceName: 'Lowe\'s',
+      sourceUrl: 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/BBB',
+      quality: 'strong-secondary', availabilityStart: 2019, availabilityEnd: 2021,
+    },
+  ]);
+  assert.equal(result.sufficient, false);
+});
+
 test('heuristic-only evidence is displayable but not sufficient to resolve', () => {
   const result = evaluateEvidencePolicy([{
     type: 'heuristic',

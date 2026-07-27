@@ -2,7 +2,8 @@
   'use strict';
 
   var API_URL = '/api/refine-serial-date';
-  var BROWSER_TIMEOUT_MS = 9000;
+  var BROWSER_TIMEOUT_MS = 25000;
+  var SLOW_CHECKING_NOTICE_MS = 5000;
   var installAttempts = 0;
   var legacyDecodeSerial = null;
   var legacySetLoadingSuccess = null;
@@ -127,12 +128,14 @@
       escapeHtml(alternative.value || '') + ' (' + escapeHtml(alternative.change || '') + ').</p>';
   }
 
-  function renderRefinementOutput(response, checking) {
+  function renderRefinementOutput(response, checking, slowChecking) {
     var output = document.getElementById('narrowDateOutput');
     if (!output) return;
     var status = checking ? 'checking' : safeText(response && response.status || 'unavailable');
     var summary = checking
-      ? 'Serial decoded. Checking model-era evidence\u2026'
+      ? (slowChecking
+        ? 'Still checking model-era evidence\u2026 this can take up to 20 seconds for less common models.'
+        : 'Serial decoded. Checking model-era evidence\u2026')
       : safeText(response && response.summary || 'Model evidence could not be checked.');
     var chosen = !checking && response && response.chosenYear
       ? '<p><strong>Resolved manufacture year:</strong> ' + escapeHtml(String(response.chosenYear)) + '</p>'
@@ -164,13 +167,14 @@
     if (!currentRefinementView) return;
     var panel = revealRefinementPanel();
     if (!panel) return;
-    renderRefinementOutput(currentRefinementView.response, currentRefinementView.checking);
+    renderRefinementOutput(currentRefinementView.response, currentRefinementView.checking, currentRefinementView.slowChecking);
   }
 
-  function renderVisibleRefinement(response, checking, sequence) {
+  function renderVisibleRefinement(response, checking, sequence, slowChecking) {
     currentRefinementView = {
       response: response || null,
       checking: Boolean(checking),
+      slowChecking: Boolean(slowChecking),
       sequence: sequence == null ? requestSequence : sequence,
     };
     if (typeof window.renderSerialSummaryLayer === 'function') {
@@ -278,6 +282,11 @@
     var sequence = ++requestSequence;
     var controller = new AbortController();
     var timeoutId = setTimeout(function () { controller.abort(); }, BROWSER_TIMEOUT_MS);
+    var slowNoticeTimeoutId = setTimeout(function () {
+      if (sequence !== requestSequence) return;
+      if (!currentRefinementView || currentRefinementView.sequence !== sequence || !currentRefinementView.checking) return;
+      renderVisibleRefinement(null, true, sequence, true);
+    }, SLOW_CHECKING_NOTICE_MS);
     activeRequest = { fingerprint: key, controller: controller, sequence: sequence };
     currentRefinementView = null;
     showCheckingWhenReady(sequence);
@@ -315,6 +324,7 @@
       return data;
     }).finally(function () {
       clearTimeout(timeoutId);
+      clearTimeout(slowNoticeTimeoutId);
       delete inFlightByFingerprint[key];
       if (activeRequest && activeRequest.sequence === sequence) activeRequest = null;
     });

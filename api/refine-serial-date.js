@@ -7,8 +7,11 @@ import { findLocalRefinementEvidence } from '../lib/serial-refinement/local-evid
 import { callGeminiGroundedSearch } from '../lib/serial-refinement/provider.js';
 import { assertRefinementResponseInvariant, createRefinementResponse } from '../lib/serial-refinement/response-schema.js';
 
-const TOTAL_BUDGET_MS = 8000;
-const PROVIDER_BUDGET_MS = 6500;
+// Must exceed provider.js's DEFAULT_GROUNDED_BUDGET_MS (20000) plus its
+// smart-lookup fallback budget (2200) with margin, or this outer deadline
+// clips the grounded call before it can finish.
+const TOTAL_BUDGET_MS = 24000;
+const PROVIDER_BUDGET_MS = 23000;
 const OFFICIAL_TTL_SECONDS = 60 * 60 * 24 * 60;
 const SECONDARY_TTL_SECONDS = 60 * 60 * 24 * 10;
 const MAX_CANDIDATES = 12;
