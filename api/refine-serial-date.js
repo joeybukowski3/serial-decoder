@@ -4,13 +4,12 @@ import { buildSerialRefinementCacheKey, hashModelIdentifier } from '../lib/seria
 import { resolveCandidateIntersection, normalizeCandidateYears } from '../lib/serial-refinement/candidate-intersection.js';
 import { evaluateEvidencePolicy } from '../lib/serial-refinement/evidence-policy.js';
 import { findLocalRefinementEvidence } from '../lib/serial-refinement/local-evidence.js';
-import { callOpenAiRefinement } from '../lib/serial-refinement/openai-refine-provider.js';
+import { callGeminiGroundedSearch } from '../lib/serial-refinement/provider.js';
 import { assertRefinementResponseInvariant, createRefinementResponse } from '../lib/serial-refinement/response-schema.js';
-import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
 
-// Must exceed openai-refine-provider.js's default OpenAI stage budget
-// (20000ms) with margin, or this outer deadline clips the grounded call
-// before it can finish.
+// Must exceed provider.js's DEFAULT_GROUNDED_BUDGET_MS (20000) plus its
+// smart-lookup fallback budget (2200) with margin, or this outer deadline
+// clips the grounded call before it can finish.
 const TOTAL_BUDGET_MS = 24000;
 const PROVIDER_BUDGET_MS = 23000;
 const OFFICIAL_TTL_SECONDS = 60 * 60 * 24 * 60;
@@ -146,7 +145,7 @@ function logResult(logger, fields) {
 
 export function createRefineSerialDateHandler(dependencies = {}) {
   const localLookup = dependencies.localLookup || findLocalRefinementEvidence;
-  const providerLookup = dependencies.providerLookup || callOpenAiRefinement;
+  const providerLookup = dependencies.providerLookup || callGeminiGroundedSearch;
   const redisFactory = dependencies.redisFactory || createDefaultRedis;
   const rateLimitFactory = dependencies.rateLimitFactory || createDefaultRateLimiter;
   const logger = dependencies.logger || console;
@@ -291,16 +290,12 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         throw Object.assign(new Error(errorCode), { code: errorCode });
       }
 
-      // deadline.run() inside the provider (see openai-refine-provider.js)
-      // handles its own fetch abort/budget, matching Smart Lookup's pattern.
-      // This outer race is a separate, hard backstop: it guarantees the
-      // request returns on schedule even if a providerLookup implementation
-      // never touches the deadline at all (e.g. hangs completely).
-      const providerDeadline = createDeadline({ totalMs: remainingBudget, now: clock });
+      const providerController = new AbortController();
       const providerTimeoutMs = Math.max(25, Math.min(providerBudgetMs, remainingBudget - 10));
       let providerTimeout;
-      const backstopPromise = new Promise((_, reject) => {
+      const deadlinePromise = new Promise((_, reject) => {
         providerTimeout = setTimeout(() => {
+          providerController.abort();
           const timeoutError = new Error('REFINEMENT_TIMEOUT');
           timeoutError.name = 'AbortError';
           timeoutError.code = 'REFINEMENT_TIMEOUT';
@@ -311,22 +306,9 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       const providerStart = clock();
       try {
         grounded = await Promise.race([
-          providerLookup(input, {
-            deadline: providerDeadline,
-            openAiMaxMs: providerBudgetMs,
-            fetchImpl: dependencies.fetchImpl,
-            env: dependencies.env,
-          }),
-          backstopPromise,
+          providerLookup(input, { signal: providerController.signal }),
+          deadlinePromise,
         ]);
-      } catch (error) {
-        if (isTimeoutError(error)) {
-          const timeoutError = new Error('REFINEMENT_TIMEOUT');
-          timeoutError.name = 'AbortError';
-          timeoutError.code = 'REFINEMENT_TIMEOUT';
-          throw timeoutError;
-        }
-        throw error;
       } finally {
         clearTimeout(providerTimeout);
         timings.onlineLookupMs = Math.max(0, clock() - providerStart);
@@ -340,7 +322,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         evidenceAvailable: combinedEvidence.length > 0,
         evidenceSufficient: policy.sufficient,
       });
-      provider = 'openai-web-search';
+      provider = 'gemini-google-search';
       finalResponse = createRefinementResponse({
         ...decision,
         confidence: policy.confidence,
