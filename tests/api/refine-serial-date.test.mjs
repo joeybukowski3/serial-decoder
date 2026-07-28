@@ -261,7 +261,7 @@ test('Redis and rate-limit failures fail open to grounded provider', async () =>
   const res = createResponse();
   await handler(request(), res);
   assert.equal(res.payload.status, 'resolved');
-  assert.equal(res.payload.provider, 'gemini-google-search');
+  assert.equal(res.payload.provider, 'openai-web-search');
   assert.equal(providerCalls, 1);
 });
 
