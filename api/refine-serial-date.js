@@ -1,11 +1,26 @@
 import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
+import { lookupModelProduction } from '../lib/model-era-lookup.js';
 import { buildSerialRefinementCacheKey, hashModelIdentifier } from '../lib/serial-refinement/cache-key.js';
 import { resolveCandidateIntersection, normalizeCandidateYears } from '../lib/serial-refinement/candidate-intersection.js';
 import { evaluateEvidencePolicy } from '../lib/serial-refinement/evidence-policy.js';
 import { findLocalRefinementEvidence } from '../lib/serial-refinement/local-evidence.js';
+import { callDeterministicSerper } from '../lib/serial-refinement/deterministic-provider.js';
+import {
+  buildModelProductionSummary,
+  mergeLocalModelEvidence,
+  modelProductionDecision,
+  modelProductionEvidence,
+} from '../lib/serial-refinement/model-production.js';
 import { callGeminiGroundedSearch } from '../lib/serial-refinement/provider.js';
+import {
+  buildSummary,
+  createBestAvailableResult,
+  createDeterministicRefinementResult,
+} from '../lib/serial-refinement/response-mapping.js';
 import { assertRefinementResponseInvariant, createRefinementResponse } from '../lib/serial-refinement/response-schema.js';
+import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
+import { boundedRateLimit, boundedRedisGet, boundedRedisSet } from '../lib/smart-lookup/redis.js';
 
 // Must exceed provider.js's DEFAULT_GROUNDED_BUDGET_MS (20000) plus its
 // smart-lookup fallback budget (2200) with margin, or this outer deadline
@@ -17,13 +32,10 @@ const SECONDARY_TTL_SECONDS = 60 * 60 * 24 * 10;
 const MAX_CANDIDATES = 12;
 const GROUNDED_RATE_LIMIT_REQUESTS = 10;
 const GROUNDED_RATE_LIMIT_WINDOW = '1 m';
+const REFINEMENT_MODES = new Set(['legacy_gemini', 'deterministic_serper', 'local_only']);
 
 function nowMs() {
   return Date.now();
-}
-
-function elapsed(start) {
-  return Math.max(0, nowMs() - start);
 }
 
 function cleanString(value, maxLength) {
@@ -54,26 +66,15 @@ function validateRequestBody(body) {
   };
 }
 
-function buildSummary(result, basis, normalization) {
-  const alternativeNote = normalization?.usedValidatedAlternative && normalization?.validatedAlternative
-    ? ` The entered model was matched to validated alternative ${normalization.validatedAlternative.value} (${normalization.validatedAlternative.change}).`
-    : '';
-  if (result.status === 'resolved') {
-    return `Serial decoding produced ${result.candidateYears.join(', ')}. Model evidence eliminates the other serial-valid cycles and leaves ${result.chosenYear}.${alternativeNote}`;
-  }
-  if (result.status === 'ambiguous') {
-    return `Model evidence narrows the serial-valid years to ${result.remainingCandidateYears.join(', ')}, but does not establish one manufacture year.${alternativeNote}`;
-  }
-  if (result.status === 'conflict') {
-    return `The model evidence does not overlap the serial-valid candidate years. The original serial result is preserved for review.${alternativeNote}`;
-  }
-  return `Model evidence was unavailable or insufficient. The original serial-valid candidate years are preserved.${alternativeNote}`;
-}
-
 function chooseCacheTtl(policy) {
   if (policy.confidence === 'high') return OFFICIAL_TTL_SECONDS;
   if (policy.confidence === 'medium') return SECONDARY_TTL_SECONDS;
   return 0;
+}
+
+export function resolveModelRefinementMode(value) {
+  const mode = String(value || '').trim().toLowerCase();
+  return REFINEMENT_MODES.has(mode) ? mode : 'legacy_gemini';
 }
 
 function createDefaultRedis() {
@@ -104,24 +105,6 @@ function createDefaultRateLimiter(redis) {
   });
 }
 
-function createUnavailableResult({ input, timings, cacheStatus, errorCode, summary }) {
-  return assertRefinementResponseInvariant(createRefinementResponse({
-    status: 'unavailable',
-    candidateYears: input.candidateYears,
-    remainingCandidateYears: input.candidateYears,
-    chosenYear: null,
-    confidence: null,
-    resolutionBasis: 'serial-plus-model',
-    modelProductionRange: null,
-    evidence: [],
-    summary,
-    cacheStatus,
-    provider: 'none',
-    timings,
-    errorCode,
-  }));
-}
-
 function safeCachedResponse(value, candidateYears) {
   if (!value || typeof value !== 'object') return null;
   try {
@@ -145,13 +128,20 @@ function logResult(logger, fields) {
 
 export function createRefineSerialDateHandler(dependencies = {}) {
   const localLookup = dependencies.localLookup || findLocalRefinementEvidence;
-  const providerLookup = dependencies.providerLookup || callGeminiGroundedSearch;
+  const modelProductionLookup = dependencies.modelProductionLookup || lookupModelProduction;
+  const legacyProviderLookup = dependencies.legacyProviderLookup
+    || dependencies.providerLookup
+    || callGeminiGroundedSearch;
+  const deterministicProviderLookup = dependencies.deterministicProviderLookup || callDeterministicSerper;
   const redisFactory = dependencies.redisFactory || createDefaultRedis;
   const rateLimitFactory = dependencies.rateLimitFactory || createDefaultRateLimiter;
   const logger = dependencies.logger || console;
   const clock = dependencies.now || nowMs;
   const totalBudgetMs = dependencies.totalBudgetMs || TOTAL_BUDGET_MS;
   const providerBudgetMs = dependencies.providerBudgetMs || PROVIDER_BUDGET_MS;
+  const refinementMode = resolveModelRefinementMode(
+    dependencies.refinementMode ?? process.env.MODEL_REFINEMENT_MODE,
+  );
 
   return async function handler(req, res) {
     const requestStart = clock();
@@ -164,17 +154,63 @@ export function createRefineSerialDateHandler(dependencies = {}) {
     }
 
     const input = validation.value;
+    const deadline = createDeadline({ totalMs: totalBudgetMs, now: clock });
     const timings = { localMs: 0, cacheMs: 0, onlineLookupMs: 0, totalMs: 0 };
     let cacheStatus = 'bypass';
-    let provider = 'none';
-    let errorCode = null;
     let finalResponse = null;
+    let redis = null;
+    let local = null;
+    let localConfidence = null;
+    let localModelRange = null;
+    let localModelEvidence = null;
+    let localEvidence = [];
+    let workingCandidateYears = [...input.candidateYears];
+
+    function finish(response) {
+      timings.totalMs = Math.max(0, clock() - requestStart);
+      response.timings = timings;
+      const safeResponse = assertRefinementResponseInvariant(createRefinementResponse(response));
+      logResult(logger, {
+        requestId,
+        mode: refinementMode,
+        brand: input.brand.toLowerCase(),
+        category: input.category.toLowerCase(),
+        modelHash: hashModelIdentifier(input.model),
+        candidateCount: input.candidateYears.length,
+        remainingCandidateCount: safeResponse.remainingCandidateYears.length,
+        status: safeResponse.status,
+        cacheStatus: safeResponse.cacheStatus,
+        provider: safeResponse.provider,
+        ...timings,
+        errorCode: safeResponse.errorCode,
+      });
+      return res.status(200).json(safeResponse);
+    }
+
+    function bestAvailable(errorCode, summary, attemptedProvider = 'none', extraEvidence = []) {
+      return createBestAvailableResult({
+        input,
+        remainingCandidateYears: workingCandidateYears,
+        confidence: localConfidence,
+        modelProductionRange: localModelRange,
+        modelNormalization: local?.normalization || null,
+        evidence: [...localEvidence, ...extraEvidence],
+        timings,
+        cacheStatus,
+        provider: attemptedProvider === 'none'
+          ? (workingCandidateYears.length < input.candidateYears.length ? 'local-db' : 'none')
+          : attemptedProvider,
+        errorCode,
+        summary,
+      });
+    }
 
     try {
       const localStart = clock();
-      const local = await localLookup(input);
+      local = await localLookup(input);
       timings.localMs = Math.max(0, clock() - localStart);
       const localPolicy = evaluateEvidencePolicy(local?.evidence || []);
+      localEvidence = localPolicy.evidence || [];
       const localDecision = resolveCandidateIntersection({
         candidateYears: input.candidateYears,
         evidenceRange: localPolicy.range,
@@ -183,8 +219,6 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       });
 
       if (localPolicy.sufficient && ['resolved', 'conflict'].includes(localDecision.status)) {
-        provider = 'local-db';
-        timings.totalMs = Math.max(0, clock() - requestStart);
         finalResponse = assertRefinementResponseInvariant(createRefinementResponse({
           ...localDecision,
           confidence: localPolicy.confidence,
@@ -192,30 +226,100 @@ export function createRefineSerialDateHandler(dependencies = {}) {
           modelProductionRange: localPolicy.range ? { start: localPolicy.range.start, end: localPolicy.range.end } : null,
           modelNormalization: local?.normalization || null,
           evidence: localPolicy.evidence,
-          summary: buildSummary(localDecision, 'serial-plus-model', local?.normalization),
+          summary: buildSummary(localDecision, local?.normalization),
           cacheStatus: 'bypass',
-          provider,
+          provider: 'local-db',
           timings,
           errorCode: null,
         }));
-        logResult(logger, {
-          requestId,
-          brand: input.brand.toLowerCase(),
-          category: input.category.toLowerCase(),
-          modelHash: hashModelIdentifier(input.model),
-          candidateCount: input.candidateYears.length,
-          remainingCandidateCount: finalResponse.remainingCandidateYears.length,
-          status: finalResponse.status,
-          cacheStatus: finalResponse.cacheStatus,
-          provider: finalResponse.provider,
-          ...timings,
-          errorCode: null,
-        });
-        return res.status(200).json(finalResponse);
+        return finish(finalResponse);
       }
 
-      const cacheKey = buildSerialRefinementCacheKey(input);
-      let redis = null;
+      if (localPolicy.sufficient && localDecision.status === 'ambiguous'
+        && localDecision.remainingCandidateYears.length < workingCandidateYears.length) {
+        workingCandidateYears = localDecision.remainingCandidateYears;
+        localConfidence = localPolicy.confidence;
+        localModelRange = localPolicy.range
+          ? { start: localPolicy.range.start, end: localPolicy.range.end }
+          : null;
+        localModelEvidence = localPolicy.range
+          ? {
+              start: localPolicy.range.start,
+              end: localPolicy.range.end,
+              verifiedExact: localPolicy.confidence === 'high',
+            }
+          : null;
+      }
+
+      let modelProduction = null;
+      try {
+        modelProduction = await modelProductionLookup(input.brand, input.model, workingCandidateYears);
+      } catch (_) {
+        modelProduction = null;
+      }
+      timings.localMs = Math.max(0, clock() - localStart);
+      const modelDecision = modelProductionDecision(workingCandidateYears, modelProduction);
+      if (modelDecision?.status === 'resolved') {
+        const productionStartYear = Number.isInteger(modelProduction.productionStartYear)
+          ? modelProduction.productionStartYear
+          : null;
+        const evidence = [...localEvidence, modelProductionEvidence(input, modelProduction)];
+        finalResponse = assertRefinementResponseInvariant(createRefinementResponse({
+          ...modelDecision,
+          candidateYears: input.candidateYears,
+          confidence: ['high', 'medium', 'low'].includes(modelProduction.confidence)
+            ? modelProduction.confidence
+            : 'low',
+          resolutionBasis: 'serial-plus-model',
+          modelProductionRange: productionStartYear == null ? null : { start: productionStartYear, end: null },
+          modelNormalization: local?.normalization || null,
+          evidence,
+          summary: productionStartYear == null
+            ? buildSummary(modelDecision, local?.normalization)
+            : buildModelProductionSummary(modelDecision, modelProduction),
+          cacheStatus: 'bypass',
+          provider: 'local-db',
+          timings,
+          errorCode: null,
+        }));
+        return finish(finalResponse);
+      }
+
+      if (modelDecision?.status === 'ambiguous'
+        && modelDecision.remainingCandidateYears.length < workingCandidateYears.length) {
+        const productionStartYear = Number.isInteger(modelProduction.productionStartYear)
+          ? modelProduction.productionStartYear
+          : null;
+        workingCandidateYears = modelDecision.remainingCandidateYears;
+        localConfidence = ['high', 'medium', 'low'].includes(modelProduction.confidence)
+          ? modelProduction.confidence
+          : (localConfidence || 'low');
+        localModelRange = productionStartYear == null
+          ? localModelRange
+          : { start: productionStartYear, end: localModelRange?.end ?? null };
+        localEvidence = [...localEvidence, modelProductionEvidence(input, modelProduction)];
+        localModelEvidence = mergeLocalModelEvidence(localModelEvidence, productionStartYear == null
+          ? null
+          : {
+              start: productionStartYear - 1,
+              end: null,
+              verifiedExact: modelProduction.matchType === 'exact',
+            });
+      }
+
+      if (refinementMode === 'local_only') {
+        finalResponse = bestAvailable(
+          workingCandidateYears.length < input.candidateYears.length ? null : 'LOCAL_EVIDENCE_INSUFFICIENT',
+          null,
+          'none',
+        );
+        return finish(finalResponse);
+      }
+
+      const cacheKey = buildSerialRefinementCacheKey(input, {
+        mode: refinementMode,
+        effectiveCandidateYears: workingCandidateYears,
+      });
       try {
         redis = redisFactory();
       } catch (_) {
@@ -223,155 +327,152 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       }
       if (redis) {
         const cacheStart = clock();
-        try {
-          const cached = await redis.get(cacheKey);
-          timings.cacheMs = Math.max(0, clock() - cacheStart);
-          const cachedResponse = safeCachedResponse(cached, input.candidateYears);
-          if (cachedResponse) {
-            cachedResponse.timings = { ...cachedResponse.timings, cacheMs: timings.cacheMs, totalMs: Math.max(0, clock() - requestStart) };
-            logResult(logger, {
-              requestId,
-              brand: input.brand.toLowerCase(),
-              category: input.category.toLowerCase(),
-              modelHash: hashModelIdentifier(input.model),
-              candidateCount: input.candidateYears.length,
-              remainingCandidateCount: cachedResponse.remainingCandidateYears.length,
-              status: cachedResponse.status,
-              cacheStatus: 'hit',
-              provider: 'redis',
-              ...cachedResponse.timings,
-              errorCode: null,
-            });
-            return res.status(200).json(cachedResponse);
-          }
+        const cached = await boundedRedisGet(redis, cacheKey, deadline, {
+          stage: 'serial-refinement-final-cache-read',
+          maxMs: 250,
+          reserveMs: 500,
+        });
+        timings.cacheMs = Math.max(0, clock() - cacheStart);
+        const cachedResponse = safeCachedResponse(cached.value, input.candidateYears);
+        if (cached.status === 'hit' && cachedResponse) {
+          cachedResponse.timings = {
+            ...cachedResponse.timings,
+            cacheMs: timings.cacheMs,
+            totalMs: Math.max(0, clock() - requestStart),
+          };
+          return finish(cachedResponse);
+        }
+        if (cached.status === 'miss') {
           cacheStatus = 'miss';
-        } catch (_) {
-          timings.cacheMs = Math.max(0, clock() - cacheStart);
+        } else {
           cacheStatus = 'bypass';
         }
       }
 
+      let limiter = null;
       try {
-        const limiter = rateLimitFactory(redis);
-        if (limiter) {
-          const rateLimitResult = await limiter.limit(getClientIp(req));
-          if (!rateLimitResult?.success) {
-            timings.totalMs = Math.max(0, clock() - requestStart);
-            finalResponse = createUnavailableResult({
-              input,
-              timings,
-              cacheStatus,
-              errorCode: 'GROUNDING_RATE_LIMIT',
-              summary: 'Grounded model evidence is temporarily rate limited. The original serial-valid candidate years are preserved.',
-            });
-            logResult(logger, {
-              requestId,
-              brand: input.brand.toLowerCase(),
-              category: input.category.toLowerCase(),
-              modelHash: hashModelIdentifier(input.model),
-              candidateCount: input.candidateYears.length,
-              remainingCandidateCount: finalResponse.remainingCandidateYears.length,
-              status: finalResponse.status,
-              cacheStatus: finalResponse.cacheStatus,
-              provider: finalResponse.provider,
-              ...timings,
-              errorCode: finalResponse.errorCode,
-            });
-            return res.status(200).json(finalResponse);
-          }
-        }
-      } catch (_) {
-        // Rate limiting fails open so Redis outages do not block refinement.
-      }
-
-      const remainingBudget = totalBudgetMs - Math.max(0, clock() - requestStart);
-      if (remainingBudget < 500) {
-        errorCode = 'REFINEMENT_TIMEOUT';
-        throw Object.assign(new Error(errorCode), { code: errorCode });
-      }
-
-      const providerController = new AbortController();
-      const providerTimeoutMs = Math.max(25, Math.min(providerBudgetMs, remainingBudget - 10));
-      let providerTimeout;
-      const deadlinePromise = new Promise((_, reject) => {
-        providerTimeout = setTimeout(() => {
-          providerController.abort();
-          const timeoutError = new Error('REFINEMENT_TIMEOUT');
-          timeoutError.name = 'AbortError';
-          timeoutError.code = 'REFINEMENT_TIMEOUT';
-          reject(timeoutError);
-        }, providerTimeoutMs);
+        limiter = rateLimitFactory(redis);
+      } catch (_) {}
+      const rateLimitResult = await boundedRateLimit(limiter, getClientIp(req), deadline, {
+        stage: 'serial-refinement-provider-rate-limit',
+        maxMs: 250,
+        reserveMs: 500,
       });
-      let grounded;
+      if (!rateLimitResult.success) {
+        finalResponse = bestAvailable(
+          'GROUNDING_RATE_LIMIT',
+          workingCandidateYears.length < input.candidateYears.length
+            ? `Local model-era evidence narrows the serial-valid years to ${workingCandidateYears.join(', ')}, but online refinement is temporarily rate limited.`
+            : 'Online model evidence is temporarily rate limited. The original serial-valid candidate years are preserved.',
+          'none',
+        );
+        return finish(finalResponse);
+      }
+
+      if (!deadline.hasTime(500)) {
+        const timeoutError = new Error('REFINEMENT_TIMEOUT');
+        timeoutError.name = 'AbortError';
+        timeoutError.code = 'REFINEMENT_TIMEOUT';
+        throw timeoutError;
+      }
+
       const providerStart = clock();
       try {
-        grounded = await Promise.race([
-          providerLookup(input, { signal: providerController.signal }),
-          deadlinePromise,
-        ]);
+        if (refinementMode === 'legacy_gemini') {
+          const grounded = await deadline.run(
+            'serial-refinement-legacy-gemini',
+            ({ signal }) => legacyProviderLookup(
+              { ...input, candidateYears: workingCandidateYears },
+              { signal },
+            ),
+            { maxMs: providerBudgetMs, reserveMs: 10 },
+          );
+          const combinedEvidence = [...localEvidence, ...(grounded?.evidence || [])];
+          const policy = evaluateEvidencePolicy(combinedEvidence);
+          const decision = resolveCandidateIntersection({
+            candidateYears: workingCandidateYears,
+            evidenceRange: policy.range,
+            evidenceAvailable: combinedEvidence.length > 0,
+            evidenceSufficient: policy.sufficient,
+          });
+          finalResponse = createRefinementResponse({
+            ...decision,
+            candidateYears: input.candidateYears,
+            confidence: policy.confidence,
+            resolutionBasis: 'serial-plus-model',
+            modelProductionRange: policy.range
+              ? { start: policy.range.start, end: policy.range.end }
+              : localModelRange,
+            modelNormalization: local?.normalization || null,
+            evidence: policy.evidence,
+            summary: buildSummary(decision, local?.normalization),
+            cacheStatus,
+            provider: 'gemini-google-search',
+            timings,
+            errorCode: policy.sufficient ? null : 'INSUFFICIENT_EVIDENCE',
+          });
+        } else {
+          const deterministic = await deadline.run(
+            'serial-refinement-deterministic-serper',
+            ({ signal }) => deterministicProviderLookup(
+              { ...input, candidateYears: workingCandidateYears },
+              {
+                signal,
+                deadline,
+                redis,
+                localModelEvidence,
+                timeoutMs: Math.min(providerBudgetMs, deadline.remainingMs(10)),
+              },
+            ),
+            { maxMs: providerBudgetMs, reserveMs: 10 },
+          );
+          const deterministicEvidence = deterministic?.evidence || [];
+          finalResponse = createDeterministicRefinementResult({
+            input,
+            workingCandidateYears,
+            deterministic,
+            localEvidence,
+            localModelRange,
+            modelNormalization: local?.normalization || null,
+            cacheStatus,
+            timings,
+          });
+          if (!finalResponse) {
+            finalResponse = bestAvailable(
+              deterministic?.errorCode || 'DETERMINISTIC_INSUFFICIENT_EVIDENCE',
+              workingCandidateYears.length < input.candidateYears.length
+                ? `Local model-era evidence narrows the serial-valid years to ${workingCandidateYears.join(', ')}, but deterministic web evidence does not establish one manufacture year.`
+                : 'Deterministic web evidence was unavailable or insufficient. The original serial-valid candidate years are preserved.',
+              'deterministic-serper',
+              deterministicEvidence,
+            );
+          }
+        }
       } finally {
-        clearTimeout(providerTimeout);
         timings.onlineLookupMs = Math.max(0, clock() - providerStart);
       }
 
-      const combinedEvidence = [...(local?.evidence || []), ...(grounded?.evidence || [])];
-      const policy = evaluateEvidencePolicy(combinedEvidence);
-      const decision = resolveCandidateIntersection({
-        candidateYears: input.candidateYears,
-        evidenceRange: policy.range,
-        evidenceAvailable: combinedEvidence.length > 0,
-        evidenceSufficient: policy.sufficient,
-      });
-      provider = 'gemini-google-search';
-      finalResponse = createRefinementResponse({
-        ...decision,
-        confidence: policy.confidence,
-        resolutionBasis: 'serial-plus-model',
-        modelProductionRange: policy.range ? { start: policy.range.start, end: policy.range.end } : null,
-        modelNormalization: local?.normalization || null,
-        evidence: policy.evidence,
-        summary: buildSummary(decision, 'serial-plus-model', local?.normalization),
-        cacheStatus,
-        provider,
-        timings,
-        errorCode: policy.sufficient ? null : 'INSUFFICIENT_EVIDENCE',
-      });
-
-      const ttl = chooseCacheTtl(policy);
-      if (ttl > 0 && redis) {
-        try {
-          await redis.set(cacheKey, finalResponse, { ex: ttl });
-        } catch (_) {}
+      const ttl = finalResponse?.errorCode ? 0 : chooseCacheTtl(finalResponse);
+      if (ttl > 0 && redis && ['resolved', 'ambiguous'].includes(finalResponse.status)) {
+        const write = await boundedRedisSet(redis, cacheKey, finalResponse, ttl, deadline, {
+          stage: 'serial-refinement-final-cache-write',
+          maxMs: 200,
+        });
+        timings.cacheMs += write.elapsedMs || 0;
       }
     } catch (error) {
-      const timedOut = error?.name === 'AbortError' || /abort|timeout/i.test(String(error?.message || ''));
-      errorCode = timedOut ? 'REFINEMENT_TIMEOUT' : (error?.code || 'REFINEMENT_UNAVAILABLE');
-      finalResponse = createUnavailableResult({
-        input,
-        timings,
-        cacheStatus,
+      const timedOut = isTimeoutError(error) || /abort|timeout/i.test(String(error?.message || ''));
+      const errorCode = timedOut ? 'REFINEMENT_TIMEOUT' : (error?.code || 'REFINEMENT_UNAVAILABLE');
+      finalResponse = bestAvailable(
         errorCode,
-        summary: 'Model evidence could not be checked. The original serial-valid candidate years are preserved.',
-      });
+        workingCandidateYears.length < input.candidateYears.length
+          ? `Local model-era evidence narrows the serial-valid years to ${workingCandidateYears.join(', ')}, but online refinement could not be completed.`
+          : 'Model evidence could not be checked. The original serial-valid candidate years are preserved.',
+        refinementMode === 'deterministic_serper' ? 'deterministic-serper' : 'none',
+      );
     }
 
-    timings.totalMs = Math.max(0, clock() - requestStart);
-    finalResponse.timings = timings;
-    finalResponse = assertRefinementResponseInvariant(createRefinementResponse(finalResponse));
-    logResult(logger, {
-      requestId,
-      brand: input.brand.toLowerCase(),
-      category: input.category.toLowerCase(),
-      modelHash: hashModelIdentifier(input.model),
-      candidateCount: input.candidateYears.length,
-      remainingCandidateCount: finalResponse.remainingCandidateYears.length,
-      status: finalResponse.status,
-      cacheStatus: finalResponse.cacheStatus,
-      provider: finalResponse.provider,
-      ...timings,
-      errorCode: finalResponse.errorCode,
-    });
-    return res.status(200).json(finalResponse);
+    return finish(finalResponse);
   };
 }
 
