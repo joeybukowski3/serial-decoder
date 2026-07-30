@@ -138,7 +138,6 @@
       snapshot.serial.toUpperCase(),
       snapshot.model.toUpperCase(),
       snapshot.candidateYears.join(','),
-      snapshot.decodedMonth.toLowerCase(),
       snapshot.context.toLowerCase(),
     ].join('|');
   }
