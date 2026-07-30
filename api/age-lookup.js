@@ -1,5 +1,12 @@
 import { buildSmartAgeCacheKey, chooseSmartAgeTtl, hashCanonicalQuery, prepareResultForCache } from '../lib/smart-lookup/cache.js';
 import { providerAttemptCountFromMetadata, recordProviderAttemptMetrics, reserveProviderBudget } from '../lib/smart-lookup/budget.js';
+import { sharedEvidenceToSmartLookupInput } from '../lib/model-evidence/adapters.js';
+import { lookupModelEvidence } from '../lib/model-evidence/service.js';
+import {
+  isShadowModeEnabled,
+  observeSmartLookupShadow,
+  startShadowTask,
+} from '../lib/model-evidence/shadow.js';
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
 import { applyEraHints, decodeHvacSerial, findLocalModelAgeResult, findVerifiedExactEvidenceRecord } from '../lib/smart-lookup/age-legacy.js';
 import { classifySmartLookupQuery, getVerifiedModelKey, normalizeSmartLookupNotes, normalizeWhitespace, SMART_LOOKUP_NOTES_MAX_LENGTH } from '../lib/smart-lookup/normalize.js';
@@ -189,6 +196,17 @@ export function createAgeLookupHandler(dependencies = {}) {
   // enabled. It fully replaces the Gemini stages for the active sequence --
   // see the openAiEnabled branch below for why Gemini is not chained after it.
   const openAiProviderLookup = dependencies.openAiProviderLookup || callSmartLookupOpenAiAgeProvider;
+  const modelEvidenceLookup = dependencies.modelEvidenceLookup || lookupModelEvidence;
+  const sharedExactEnabled = dependencies.sharedExactEnabled
+    ?? ['1', 'true', 'yes', 'on'].includes(
+      String((dependencies.env || process.env).SMART_LOOKUP_SHARED_MODEL_EVIDENCE_ENABLED || '')
+        .trim()
+        .toLowerCase(),
+    );
+  const sharedEvidenceShadowEnabled = dependencies.sharedEvidenceShadowEnabled
+    ?? isShadowModeEnabled(
+      (dependencies.env || process.env).SMART_LOOKUP_SHARED_MODEL_EVIDENCE_SHADOW_ENABLED,
+    );
   const openAiEnabled = dependencies.openAiEnabled
     ?? (isOpenAiSmartLookupEnabled(dependencies.env || process.env)
       && Boolean((dependencies.env || process.env).OPENAI_API_KEY));
@@ -234,6 +252,22 @@ export function createAgeLookupHandler(dependencies = {}) {
     const currentYear = new Date().getFullYear();
     let redis = null;
     let cacheStatus = 'bypass';
+    let shadowTask = null;
+    let shadowObserved = false;
+
+    function logFinalResult(result, extra = {}) {
+      logResult(logger, requestId, queryInfo, result, extra);
+      if (shadowTask && !shadowObserved) {
+        shadowObserved = true;
+        observeSmartLookupShadow(shadowTask, {
+          requestId,
+          brand: queryInfo.brand,
+          model: queryInfo.exactModel || queryInfo.modelIdentity || queryInfo.model,
+          primary: result,
+          logger,
+        });
+      }
+    }
 
     // A recognized product-family/model-line/brand-category query always
     // has a safe, instant, deterministic answer ready as a fallback --
@@ -637,6 +671,75 @@ export function createAgeLookupHandler(dependencies = {}) {
             throw error;
           }
 
+          if (sharedExactEnabled
+            && queryInfo.querySpecificity === 'exact-model'
+            && queryInfo.brand
+            && (queryInfo.exactModel || queryInfo.modelIdentity || queryInfo.model)
+            && deadline.hasTime(500)) {
+            const sharedEvidence = await modelEvidenceLookup({
+              brand: queryInfo.brand,
+              model: queryInfo.exactModel || queryInfo.modelIdentity || queryInfo.model,
+              category: queryInfo.genericCategory || queryInfo.productType || null,
+              purpose: 'smart_lookup',
+              deadline,
+              requestContext: {
+                consumer: 'smart_lookup',
+                requestId,
+                scoringPath: 'shared-exact-model',
+              },
+            }, {
+              redis,
+              deadline,
+              localLookup: dependencies.modelEvidenceLocalLookup,
+              serperApiKey: dependencies.serperApiKey
+                || (dependencies.env || process.env).SERPER_API_KEY,
+              serperFetchImpl: dependencies.serperFetchImpl || dependencies.fetchImpl,
+              geminiApiKey: dependencies.geminiApiKey
+                || (dependencies.env || process.env).GEMINI_API_KEY,
+              geminiFetchImpl: dependencies.geminiFetchImpl || dependencies.fetchImpl,
+              logger,
+            });
+            const sharedResult = sharedEvidenceToSmartLookupInput(sharedEvidence, queryInfo);
+            if (sharedResult) return sharedResult;
+          }
+
+          if (sharedEvidenceShadowEnabled
+            && !sharedExactEnabled
+            && queryInfo.querySpecificity === 'exact-model'
+            && queryInfo.brand
+            && (queryInfo.exactModel || queryInfo.modelIdentity || queryInfo.model)
+            && deadline.hasTime(500)) {
+            shadowTask = startShadowTask(async () => {
+              const sharedEvidence = await modelEvidenceLookup({
+                brand: queryInfo.brand,
+                model: queryInfo.exactModel || queryInfo.modelIdentity || queryInfo.model,
+                category: queryInfo.genericCategory || queryInfo.productType || null,
+                purpose: 'smart_lookup_shadow',
+                deadline,
+                requestContext: {
+                  consumer: 'smart_lookup_shadow',
+                  requestId,
+                  scoringPath: 'shadow-shared-exact-model',
+                },
+              }, {
+                redis,
+                deadline,
+                localLookup: dependencies.modelEvidenceLocalLookup,
+                serperApiKey: dependencies.serperApiKey
+                  || (dependencies.env || process.env).SERPER_API_KEY,
+                serperFetchImpl: dependencies.serperFetchImpl || dependencies.fetchImpl,
+                geminiApiKey: dependencies.geminiApiKey
+                  || (dependencies.env || process.env).GEMINI_API_KEY,
+                geminiFetchImpl: dependencies.geminiFetchImpl || dependencies.fetchImpl,
+                logger,
+              });
+              return {
+                sharedEvidence,
+                result: sharedEvidenceToSmartLookupInput(sharedEvidence, queryInfo),
+              };
+            }, { now });
+          }
+
           // Active production sequence: OpenAI web research, then xAI Grok,
           // then the caller's deterministic reserve. Gemini is deliberately NOT
           // chained after OpenAI -- doing so would rebuild the measured
@@ -849,7 +952,7 @@ export function createAgeLookupHandler(dependencies = {}) {
         if (fallbackProviderStatus) result.fallbackProviderStatus = fallbackProviderStatus;
         if (fallbackProviderLatencyMs != null) result.fallbackProviderLatencyMs = fallbackProviderLatencyMs;
         if (fallbackProviderModel) result.fallbackProviderModel = fallbackProviderModel;
-        logResult(logger, requestId, queryInfo, result, {
+        logFinalResult(result, {
           timeoutStage: isTimeoutError(error) ? 'provider' : null,
           budgetStatus: error.budgetResult?.status || budgetResult?.status || null,
           logicalLookupCount: error.budgetResult?.logicalLookupCount ?? budgetResult?.logicalLookupCount ?? null,
@@ -890,7 +993,11 @@ export function createAgeLookupHandler(dependencies = {}) {
               ? (groundedWithSources ? 'openai-web' : 'openai-ungrounded')
               : (providerMetadata.provider === 'groq'
                 ? 'groq-ungrounded'
-                : (groundedWithSources ? 'gemini-grounded' : 'gemini-ungrounded'))),
+                : (providerMetadata.provider === 'serper'
+                  ? 'serper-extracted'
+                  : (providerMetadata.provider === 'local-db'
+                    ? 'local-db'
+                    : (groundedWithSources ? 'gemini-grounded' : 'gemini-ungrounded'))))),
           groundedSources: groundedWithSources ? providerMetadata.groundedSources : [],
           webSearchUsed: providerMetadata.webSearchUsed === true,
           retrievedAt: groundedWithSources ? new Date().toISOString() : null,
@@ -901,7 +1008,7 @@ export function createAgeLookupHandler(dependencies = {}) {
           // an ordinary (non-recovered) provider success.
           fallbackKind: groundedFallbackRecovered ? 'ungrounded-provider' : 'none',
           cacheStatus,
-          providerAttempted: true,
+          providerAttempted: providerAttemptCountFromMetadata(providerMetadata) > 0,
           fallbackUsed: providerMetadata.fallbackUsed,
           timings,
           currentYear,
@@ -930,7 +1037,7 @@ export function createAgeLookupHandler(dependencies = {}) {
               errorCode: error?.code || 'INVALID_PROVIDER_RESULT',
             });
         finalizeTimings(result, timings, deadline);
-        logResult(logger, requestId, queryInfo, result, {
+        logFinalResult(result, {
           budgetStatus: budgetResult?.status || null,
           logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
           actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? invalidAttempts,
@@ -961,7 +1068,7 @@ export function createAgeLookupHandler(dependencies = {}) {
       }
 
       finalizeTimings(result, timings, deadline);
-      logResult(logger, requestId, queryInfo, result, {
+      logFinalResult(result, {
         budgetStatus: budgetResult?.status || null,
         logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
         actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
@@ -980,7 +1087,7 @@ export function createAgeLookupHandler(dependencies = {}) {
             timings,
             errorCode: isTimeoutError(error) ? 'TOTAL_DEADLINE' : 'INTERNAL_ERROR',
           }), timings, deadline);
-      logResult(logger, requestId, queryInfo, result, { timeoutStage: isTimeoutError(error) ? error.stage || 'unknown' : null });
+      logFinalResult(result, { timeoutStage: isTimeoutError(error) ? error.stage || 'unknown' : null });
       return res.status(200).json(result);
     }
   };

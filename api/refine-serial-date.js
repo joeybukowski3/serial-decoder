@@ -1,6 +1,11 @@
 import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
 import { lookupModelProduction } from '../lib/model-era-lookup.js';
+import {
+  isShadowModeEnabled,
+  observeRefinementShadow,
+  startShadowTask,
+} from '../lib/model-evidence/shadow.js';
 import { buildSerialRefinementCacheKey, hashModelIdentifier } from '../lib/serial-refinement/cache-key.js';
 import { resolveCandidateIntersection, normalizeCandidateYears } from '../lib/serial-refinement/candidate-intersection.js';
 import { evaluateEvidencePolicy } from '../lib/serial-refinement/evidence-policy.js';
@@ -12,10 +17,7 @@ import {
   modelProductionDecision,
   modelProductionEvidence,
 } from '../lib/serial-refinement/model-production.js';
-import {
-  callGeminiGroundedSearch,
-  callSmartLookupModelEvidence,
-} from '../lib/serial-refinement/provider.js';
+import { callGeminiGroundedSearch } from '../lib/serial-refinement/provider.js';
 import {
   buildSummary,
   createBestAvailableResult,
@@ -136,7 +138,6 @@ export function createRefineSerialDateHandler(dependencies = {}) {
     || dependencies.providerLookup
     || callGeminiGroundedSearch;
   const deterministicProviderLookup = dependencies.deterministicProviderLookup || callDeterministicSerper;
-  const sharedModelEvidenceLookup = dependencies.sharedModelEvidenceLookup || callSmartLookupModelEvidence;
   const redisFactory = dependencies.redisFactory || createDefaultRedis;
   const rateLimitFactory = dependencies.rateLimitFactory || createDefaultRateLimiter;
   const logger = dependencies.logger || console;
@@ -146,6 +147,10 @@ export function createRefineSerialDateHandler(dependencies = {}) {
   const refinementMode = resolveModelRefinementMode(
     dependencies.refinementMode ?? process.env.MODEL_REFINEMENT_MODE,
   );
+  const sharedEvidenceShadowEnabled = dependencies.sharedEvidenceShadowEnabled
+    ?? isShadowModeEnabled(
+      (dependencies.env || process.env).MODEL_REFINEMENT_SHARED_EVIDENCE_SHADOW_ENABLED,
+    );
 
   return async function handler(req, res) {
     const requestStart = clock();
@@ -169,6 +174,8 @@ export function createRefineSerialDateHandler(dependencies = {}) {
     let localModelEvidence = null;
     let localEvidence = [];
     let workingCandidateYears = [...input.candidateYears];
+    let shadowTask = null;
+    let shadowObserved = false;
 
     function finish(response) {
       timings.totalMs = Math.max(0, clock() - requestStart);
@@ -188,6 +195,17 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         ...timings,
         errorCode: safeResponse.errorCode,
       });
+      if (shadowTask && !shadowObserved) {
+        shadowObserved = true;
+        observeRefinementShadow(shadowTask, {
+          requestId,
+          brand: input.brand,
+          model: input.model,
+          candidateYears: input.candidateYears,
+          primary: safeResponse,
+          logger,
+        });
+      }
       return res.status(200).json(safeResponse);
     }
 
@@ -380,6 +398,33 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         throw timeoutError;
       }
 
+      if (sharedEvidenceShadowEnabled && refinementMode === 'legacy_gemini') {
+        shadowTask = startShadowTask(async () => {
+          const deterministic = await deterministicProviderLookup(
+            { ...input, candidateYears: workingCandidateYears },
+            {
+              deadline,
+              redis,
+              localModelEvidence,
+              timeoutMs: Math.min(providerBudgetMs, deadline.remainingMs(10)),
+              requestId,
+              logger,
+              purpose: 'model_refinement_shadow',
+              consumer: 'model_refinement_shadow',
+              scoringPath: 'shadow-phase1-deterministic-evaluator',
+              serperApiKey: dependencies.serperApiKey,
+              serperFetchImpl: dependencies.serperFetchImpl || dependencies.fetchImpl,
+              geminiApiKey: dependencies.geminiApiKey,
+              geminiFetchImpl: dependencies.geminiFetchImpl || dependencies.fetchImpl,
+            },
+          );
+          return {
+            deterministic,
+            sharedEvidence: deterministic?.sharedEvidence || null,
+          };
+        }, { now: clock });
+      }
+
       const providerStart = clock();
       try {
         if (refinementMode === 'legacy_gemini') {
@@ -426,6 +471,12 @@ export function createRefineSerialDateHandler(dependencies = {}) {
                 redis,
                 localModelEvidence,
                 timeoutMs: Math.min(providerBudgetMs, deadline.remainingMs(10)),
+                requestId,
+                logger,
+                serperApiKey: dependencies.serperApiKey,
+                serperFetchImpl: dependencies.serperFetchImpl || dependencies.fetchImpl,
+                geminiApiKey: dependencies.geminiApiKey,
+                geminiFetchImpl: dependencies.geminiFetchImpl || dependencies.fetchImpl,
               },
             ),
             { maxMs: providerBudgetMs, reserveMs: 10 },
@@ -441,60 +492,6 @@ export function createRefineSerialDateHandler(dependencies = {}) {
             cacheStatus,
             timings,
           });
-          if (!finalResponse && deadline.hasTime(500)) {
-            let sharedEvidence = null;
-            try {
-              sharedEvidence = await deadline.run(
-                'serial-refinement-shared-model-evidence',
-                ({ signal }) => sharedModelEvidenceLookup(
-                  { ...input, candidateYears: workingCandidateYears },
-                  {
-                    signal,
-                    deadline,
-                    smartLookupBudgetMs: Math.max(250, deadline.remainingMs(10)),
-                    fetchImpl: dependencies.fetchImpl,
-                    env: dependencies.env || process.env,
-                    openAiProviderLookup: dependencies.openAiProviderLookup,
-                    smartProviderLookup: dependencies.smartProviderLookup,
-                    smartLocalLookup: dependencies.smartLocalLookup,
-                  },
-                ),
-                { maxMs: deadline.remainingMs(10), reserveMs: 10 },
-              );
-            } catch (_) {
-              sharedEvidence = null;
-            }
-            const combinedEvidence = [
-              ...localEvidence,
-              ...deterministicEvidence,
-              ...(sharedEvidence?.evidence || []),
-            ];
-            const sharedPolicy = evaluateEvidencePolicy(combinedEvidence);
-            const sharedDecision = resolveCandidateIntersection({
-              candidateYears: workingCandidateYears,
-              evidenceRange: sharedPolicy.range,
-              evidenceAvailable: combinedEvidence.length > 0,
-              evidenceSufficient: sharedPolicy.sufficient,
-            });
-            if (sharedPolicy.sufficient && sharedDecision.status !== 'unavailable') {
-              finalResponse = createRefinementResponse({
-                ...sharedDecision,
-                candidateYears: input.candidateYears,
-                confidence: sharedPolicy.confidence,
-                resolutionBasis: 'serial-plus-model',
-                modelProductionRange: sharedPolicy.range
-                  ? { start: sharedPolicy.range.start, end: sharedPolicy.range.end }
-                  : localModelRange,
-                modelNormalization: local?.normalization || null,
-                evidence: sharedPolicy.evidence,
-                summary: buildSummary(sharedDecision, local?.normalization),
-                cacheStatus,
-                provider: sharedEvidence?.provider || 'none',
-                timings,
-                errorCode: null,
-              });
-            }
-          }
           if (!finalResponse) {
             finalResponse = bestAvailable(
               deterministic?.errorCode || 'DETERMINISTIC_INSUFFICIENT_EVIDENCE',

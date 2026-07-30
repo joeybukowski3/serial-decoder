@@ -132,7 +132,7 @@ test('production deterministic provider searches, extracts once, and resolves on
   assert.equal(geminiCalls, 1);
 });
 
-test('raw Serper and extracted-fact caches avoid repeat provider calls', async () => {
+test('shared normalized evidence cache avoids repeat provider calls', async () => {
   const redis = createRedis();
   let serperCalls = 0;
   let geminiCalls = 0;
@@ -158,8 +158,8 @@ test('raw Serper and extracted-fact caches avoid repeat provider calls', async (
   assert.equal(second.output.bestEstimateYear, 2024);
   assert.equal(serperCalls, 1);
   assert.equal(geminiCalls, 1);
-  assert.equal(second.cacheStats.rawHits, 1);
-  assert.equal(second.cacheStats.factsHits, 1);
+  assert.equal(second.cacheStats.evidenceHits, 1);
+  assert.equal(second.timings.serperRequestCount, 0);
 });
 
 test('missing Serper configuration returns insufficient evidence without calling Gemini', async () => {
@@ -178,4 +178,58 @@ test('missing Serper configuration returns insufficient evidence without calling
   assert.equal(result.errorCode, 'DETERMINISTIC_SERPER_ERROR');
   assert.equal(result.output.resolutionType, 'unchanged');
   assert.equal(geminiCalls, 0);
+});
+
+test('Gemini cannot upgrade a suffix variant to an exact-model match', async () => {
+  const variantInput = {
+    brand: 'Samsung',
+    model: 'RF28R7351SR/AA',
+    category: 'refrigerator',
+    candidateYears: [2006, 2016, 2026],
+  };
+  const variantSearch = {
+    organic: [{
+      position: 1,
+      title: 'Samsung RF28R7351SR refrigerator introduced in 2024',
+      link: 'https://www.samsung.com/support/RF28R7351SR',
+      snippet: 'Support for the RF28R7351SR model family.',
+      date: '2024-01-01',
+    }],
+  };
+  const llmClaimsExact = {
+    candidates: [{
+      finishReason: 'STOP',
+      content: {
+        parts: [{
+          text: JSON.stringify({
+            extractedEvidence: [{
+              resultIndex: 0,
+              exactModelMatch: true,
+              sourceType: 'manufacturer',
+              approximateYear: 2024,
+              dateMeaning: 'product_launch',
+              ownershipAgeYears: null,
+              explicitlyNewProduct: true,
+              explicitlyDiscontinued: false,
+              claimText: 'Model introduced in 2024',
+            }],
+          }),
+        }],
+      },
+    }],
+  };
+
+  const result = await callDeterministicSerper(variantInput, {
+    redis: null,
+    serperApiKey: 'serper-test-key',
+    geminiApiKey: 'gemini-test-key',
+    serperFetchImpl: async () => response(variantSearch),
+    geminiFetchImpl: async () => response(llmClaimsExact),
+    currentYear: 2026,
+  });
+
+  assert.equal(result.extractedFacts[0].llmExactModelMatch, true);
+  assert.equal(result.extractedFacts[0].modelMatchType, 'variant');
+  assert.equal(result.extractedFacts[0].exactModelMatch, false);
+  assert.equal(result.output.bestEstimateYear, null);
 });

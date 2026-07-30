@@ -7,6 +7,7 @@ function fact(overrides) {
     resultIndex: 0,
     domain: 'example.com',
     normalizedDateYear: null,
+    modelMatchType: 'exact',
     exactModelMatch: true,
     sourceType: 'other',
     approximateYear: null,
@@ -53,7 +54,7 @@ test('a page_updated date contributes nothing (recent page update does not prove
   assert.equal(result.resolutionType, 'unchanged');
 });
 
-test('a review published date establishes an upper bound and penalizes later candidates', () => {
+test('a review publication date is non-directional and does not penalize later candidates', () => {
   const result = evaluateCandidates({
     candidateYears: [2006, 2016, 2026],
     evidenceFacts: [
@@ -61,10 +62,60 @@ test('a review published date establishes an upper bound and penalizes later can
     ],
     localModelEvidence: null,
   });
-  // 2026 should be contradicted (review predates it); 2016 is nearest at-or-before.
   const scoreOf = (y) => result.candidateScores.find((c) => c.year === y).score;
-  assert.ok(scoreOf(2026) < 0, 'future candidate should be penalized');
-  assert.ok(scoreOf(2016) > scoreOf(2006), 'nearest at-or-before candidate should score highest among non-penalized');
+  assert.equal(scoreOf(2006), 0);
+  assert.equal(scoreOf(2016), 0);
+  assert.equal(scoreOf(2026), 0, 'publication does not establish a production upper bound');
+  assert.equal(result.bestEstimateYear, null);
+});
+
+test('publication-like dates never become production upper bounds', () => {
+  const meanings = [
+    'publication_date',
+    'listing_publication',
+    'manual_published',
+    'review_published',
+    'troubleshooting_date',
+  ];
+
+  for (const dateMeaning of meanings) {
+    const result = evaluateCandidates({
+      candidateYears: [2016, 2026],
+      evidenceFacts: [
+        fact({
+          sourceType: 'manufacturer',
+          normalizedDateYear: 2020,
+          dateMeaning,
+          explicitlyDiscontinued: true,
+        }),
+      ],
+      localModelEvidence: null,
+    });
+    const later = result.candidateScores.find((candidate) => candidate.year === 2026);
+    assert.equal(later.explicitScore, 0, `${dateMeaning} must not penalize a later manufacture candidate`);
+  }
+});
+
+test('new or discontinued booleans cannot turn an unknown date into a lifecycle boundary', () => {
+  for (const flags of [
+    { explicitlyNewProduct: true },
+    { explicitlyDiscontinued: true },
+  ]) {
+    const result = evaluateCandidates({
+      candidateYears: [2016, 2026],
+      evidenceFacts: [
+        fact({
+          sourceType: 'manufacturer',
+          normalizedDateYear: 2020,
+          dateMeaning: 'unknown',
+          ...flags,
+        }),
+      ],
+      localModelEvidence: null,
+    });
+    assert.equal(result.bestEstimateYear, null);
+    assert.ok(result.candidateScores.every((candidate) => candidate.score === 0));
+  }
 });
 
 test('ownership-age statement can resolve decade-separated candidates', () => {
@@ -107,7 +158,7 @@ test('close-together candidates cap confidence at low even when resolved', () =>
   }
 });
 
-test('multiple independent sources clustering around one era can resolve without an exact match', () => {
+test('publication and troubleshooting dates cannot form an era cluster without lifecycle evidence', () => {
   const result = evaluateCandidates({
     candidateYears: [2006, 2016, 2026],
     evidenceFacts: [
@@ -116,7 +167,8 @@ test('multiple independent sources clustering around one era can resolve without
     ],
     localModelEvidence: null,
   });
-  assert.equal(result.bestEstimateYear, 2016);
+  assert.equal(result.bestEstimateYear, null);
+  assert.equal(result.estimatedModelEra.centerYear, null);
 });
 
 test('local model database agreement contributes to scoring', () => {
@@ -147,7 +199,7 @@ test('result is identical regardless of candidateYears array order', () => {
   assert.deepEqual(original.plausibleYears, reversed.plausibleYears);
 });
 
-test('duplicate/mirrored domains do not inflate a candidate score beyond one contribution', () => {
+test('duplicate/mirrored availability domains cannot activate era clustering', () => {
   const evidenceFacts = [
     fact({ resultIndex: 0, domain: 'parts.com', normalizedDateYear: 2016, dateMeaning: 'product_available', claimText: 'Listing 1' }),
     fact({ resultIndex: 1, domain: 'parts.com', normalizedDateYear: 2016, dateMeaning: 'product_available', claimText: 'Listing 2 (mirrored)' }),
@@ -155,8 +207,8 @@ test('duplicate/mirrored domains do not inflate a candidate score beyond one con
   ];
   const result = evaluateCandidates({ candidateYears: [2006, 2016, 2026], evidenceFacts, localModelEvidence: null });
   const scoreOf = (y) => result.candidateScores.find((c) => c.year === y).score;
-  // Only one ANCHOR_EXACT contribution should count (same domain, deduped).
-  assert.equal(scoreOf(2016), 4);
+  assert.equal(scoreOf(2016), 0);
+  assert.equal(result.bestEstimateYear, null);
 });
 
 test('a manufacturer-stated production-window launch date resolves the candidate INSIDE that window, not just at the start year (regression: explicitlyDiscontinued must not override a product_launch dateMeaning)', () => {
@@ -185,7 +237,7 @@ test('a manufacturer-stated production-window launch date resolves the candidate
   assert.ok(scoreOf(2016) > 0, 'candidate at/after the launch date should NOT be contradicted');
 });
 
-test('a launch/availability date does not contradict later candidates (lower bound, not upper bound)', () => {
+test('an availability date does not contradict later candidates (existence evidence, not an upper bound)', () => {
   const result = evaluateCandidates({
     candidateYears: [2010, 2020],
     evidenceFacts: [
@@ -229,14 +281,7 @@ test('resolveEffectiveYear prefers Gemini extraction over the date field for pro
   assert.equal(resolveEffectiveYear(launch), 2005);
 });
 
-test('era-anchor clustering resolves a case explicit scoring alone leaves too thin (single weak upper-bound source, wide-spaced candidates)', () => {
-  // A single review_published fact only earns explicit's weak
-  // UPPERBOUND_NEAREST (+1) bonus with no contradiction penalty here (the
-  // review predates neither candidate enough to trigger one), so explicit
-  // alone has margin 1 < MIN_MARGIN_TO_RESOLVE. The era-cluster median
-  // (2023, from this same fact) sits within NEAR range of 2024, adding
-  // enough combined score/margin to resolve — demonstrating the era-cluster
-  // path fires exactly where explicit alone would leave the case thin.
+test('a single dated source cannot activate era clustering', () => {
   const result = evaluateCandidates({
     candidateYears: [2004, 2024],
     evidenceFacts: [
@@ -244,9 +289,24 @@ test('era-anchor clustering resolves a case explicit scoring alone leaves too th
     ],
     localModelEvidence: null,
   });
+  assert.equal(result.bestEstimateYear, null);
+  assert.equal(result.resolvedVia, null);
+  assert.equal(result.estimatedModelEra.centerYear, null);
+});
+
+test('two independent exact-model sources including lifecycle evidence can activate era clustering', () => {
+  const result = evaluateCandidates({
+    candidateYears: [2004, 2014, 2024],
+    evidenceFacts: [
+      fact({ resultIndex: 0, domain: 'review.example', sourceType: 'review', dateMeaning: 'review_published', approximateYear: 2023 }),
+      fact({ resultIndex: 1, domain: 'retailer.example', sourceType: 'retailer', dateMeaning: 'product_available', approximateYear: 2024 }),
+    ],
+    localModelEvidence: null,
+  });
+
   assert.equal(result.bestEstimateYear, 2024);
   assert.equal(result.resolvedVia, 'eraCluster');
-  assert.equal(result.confidence, 'moderate', 'era-cluster resolution must never reach high confidence');
+  assert.equal(result.confidence, 'moderate');
 });
 
 test('era-anchor clustering does not resolve when candidates are closer than the minimum spacing', () => {
@@ -254,7 +314,7 @@ test('era-anchor clustering does not resolve when candidates are closer than the
     candidateYears: [2020, 2024],
     evidenceFacts: [
       fact({ resultIndex: 0, domain: 'a.com', sourceType: 'youtube', dateMeaning: 'review_published', approximateYear: 2023, claimText: 'Review' }),
-      fact({ resultIndex: 1, domain: 'b.com', sourceType: 'retailer', dateMeaning: 'review_published', approximateYear: 2023, claimText: 'Retailer listing' }),
+      fact({ resultIndex: 1, domain: 'b.com', sourceType: 'retailer', dateMeaning: 'product_available', approximateYear: 2023, claimText: 'Available in 2023' }),
     ],
     localModelEvidence: null,
   });
@@ -301,7 +361,7 @@ test('era clustering respects the marketplace exclusion (still cannot decide alo
 test('era-cluster result stays order-independent across candidate permutations', () => {
   const evidenceFacts = [
     fact({ resultIndex: 0, domain: 'a.com', sourceType: 'youtube', dateMeaning: 'review_published', approximateYear: 2023, claimText: 'Review A' }),
-    fact({ resultIndex: 1, domain: 'b.com', sourceType: 'retailer', dateMeaning: 'review_published', approximateYear: 2024, claimText: 'Review B' }),
+    fact({ resultIndex: 1, domain: 'b.com', sourceType: 'retailer', dateMeaning: 'product_available', approximateYear: 2024, claimText: 'Available B' }),
   ];
   const a = evaluateCandidates({ candidateYears: [2004, 2014, 2024], evidenceFacts, localModelEvidence: null });
   const b = evaluateCandidates({ candidateYears: [2024, 2004, 2014], evidenceFacts, localModelEvidence: null });
@@ -323,4 +383,77 @@ test('estimatedModelEra is derived from evidence and separate from the final dec
   });
   assert.equal(result.estimatedModelEra.startYear, 2015);
   assert.equal(result.estimatedModelEra.endYear, 2020);
+});
+
+test('a recent troubleshooting post cannot pull an old exact model toward a recent serial candidate', () => {
+  const result = evaluateCandidates({
+    candidateYears: [2006, 2016, 2026],
+    evidenceFacts: [
+      fact({
+        resultIndex: 0,
+        domain: 'repair.example',
+        sourceType: 'reddit-forum',
+        normalizedDateYear: 2025,
+        dateMeaning: 'troubleshooting_date',
+        claimText: 'Troubleshooting post from 2025',
+      }),
+    ],
+    localModelEvidence: null,
+  });
+
+  assert.equal(result.bestEstimateYear, null);
+  assert.ok(result.candidateScores.every((candidate) => candidate.score === 0));
+});
+
+test('an explicit production end can penalize later candidates', () => {
+  const result = evaluateCandidates({
+    candidateYears: [2006, 2016, 2026],
+    evidenceFacts: [
+      fact({
+        domain: 'manufacturer.example',
+        sourceType: 'manufacturer',
+        approximateYear: 2019,
+        dateMeaning: 'production_end',
+        claimText: 'Production ended in 2019',
+      }),
+    ],
+    localModelEvidence: null,
+  });
+
+  const scoreOf = (year) => result.candidateScores.find((candidate) => candidate.year === year).score;
+  assert.ok(scoreOf(2026) < 0);
+  assert.ok(scoreOf(2016) > scoreOf(2006));
+});
+
+test('variant and family facts never enter candidate scoring', () => {
+  for (const modelMatchType of ['variant', 'family', 'mismatch']) {
+    const result = evaluateCandidates({
+      candidateYears: [2006, 2016, 2026],
+      evidenceFacts: [
+        fact({
+          modelMatchType,
+          exactModelMatch: true,
+          sourceType: 'manufacturer',
+          approximateYear: 2024,
+          dateMeaning: 'product_launch',
+        }),
+      ],
+      localModelEvidence: null,
+    });
+    assert.equal(result.bestEstimateYear, null);
+    assert.ok(result.candidateScores.every((candidate) => candidate.score === 0));
+  }
+});
+
+test('every selected year remains one of the supplied serial candidates', () => {
+  const candidateYears = [2004, 2014, 2024];
+  const result = evaluateCandidates({
+    candidateYears,
+    evidenceFacts: [
+      fact({ sourceType: 'manufacturer', approximateYear: 2023, dateMeaning: 'product_launch' }),
+    ],
+    localModelEvidence: null,
+  });
+
+  assert.ok(result.bestEstimateYear === null || candidateYears.includes(result.bestEstimateYear));
 });

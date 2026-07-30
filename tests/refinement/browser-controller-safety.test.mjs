@@ -51,7 +51,7 @@ test('browser controller recognizes the documented common GE serial shape', () =
   assert.equal(controller.matchesCommonGeSerialPattern('GDF650SYV0FS'), false);
 });
 
-test('refinement fingerprint changes when context or decoded period changes', () => {
+test('refinement fingerprint ignores render-time month changes but preserves context identity', () => {
   const controller = loadController();
   const base = {
     category: 'appliances',
@@ -63,5 +63,5 @@ test('refinement fingerprint changes when context or decoded period changes', ()
     context: '',
   };
   assert.notEqual(controller.fingerprint(base), controller.fingerprint({ ...base, context: 'stainless finish' }));
-  assert.notEqual(controller.fingerprint(base), controller.fingerprint({ ...base, decodedMonth: 'June' }));
+  assert.equal(controller.fingerprint(base), controller.fingerprint({ ...base, decodedMonth: 'June' }));
 });

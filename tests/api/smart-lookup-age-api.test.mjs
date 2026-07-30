@@ -22,6 +22,82 @@ function withProviderMetadata(value, metadata) {
   return value;
 }
 
+function shadowSharedEvidence() {
+  return {
+    evidenceVersion: '1',
+    requestedIdentity: {
+      brand: 'Samsung',
+      model: 'ZXCV1234',
+      normalizedBrand: 'samsung',
+      normalizedModel: 'ZXCV1234',
+    },
+    matchedIdentity: {
+      model: 'ZXCV1234',
+      normalizedModel: 'ZXCV1234',
+      matchType: 'exact',
+      deterministicExact: true,
+    },
+    facts: [{
+      source: {
+        url: 'https://manufacturer.example/ZXCV1234',
+        domain: 'manufacturer.example',
+        title: 'ZXCV1234 production history',
+        sourceType: 'manufacturer',
+        resultIndex: 0,
+      },
+      fact: {
+        eventType: 'production_start',
+        year: 2021,
+        precision: 'year',
+        target: 'model_lifecycle',
+        claim: 'Production began in 2021.',
+      },
+      identity: {
+        deterministicMatchType: 'exact',
+        suggestedMatchType: 'exact',
+        effectiveMatchType: 'exact',
+      },
+      extraction: { provider: 'gemini', model: 'test-model', confidence: 'high' },
+    }, {
+      source: {
+        url: 'https://manufacturer.example/ZXCV1234-end',
+        domain: 'manufacturer.example',
+        title: 'ZXCV1234 production end',
+        sourceType: 'manufacturer',
+        resultIndex: 1,
+      },
+      fact: {
+        eventType: 'production_end',
+        year: 2022,
+        precision: 'year',
+        target: 'model_lifecycle',
+        claim: 'Production ended in 2022.',
+      },
+      identity: {
+        deterministicMatchType: 'exact',
+        suggestedMatchType: 'exact',
+        effectiveMatchType: 'exact',
+      },
+      extraction: { provider: 'gemini', model: 'test-model', confidence: 'high' },
+    }],
+    lifecycle: {
+      supportedProductionStartYear: 2021,
+      supportedProductionEndYear: 2022,
+      supportedDiscontinuationYear: null,
+    },
+    status: 'success',
+    failureCategory: null,
+    cacheStatus: 'miss',
+    providerSummary: {
+      localUsed: false,
+      serperUsed: true,
+      extractorUsed: true,
+      searchCount: 1,
+    },
+    timings: { localMs: 0, searchMs: 1, extractionMs: 1, totalMs: 2 },
+  };
+}
+
 test('local results bypass cache, provider, and rate limit', async () => {
   const handler = createAgeLookupHandler({
     localLookup: async () => ({ brand: 'LG', model: 'WM4000HWA', introductionYear: 2019, productionRange: { start: 2019, end: 2024 } }),
@@ -47,18 +123,275 @@ test('local age result does not consume provider budget', async () => {
   assert.equal(budgetCalls, 0);
 });
 
+test('exact-model Smart Lookup consumes the shared normalized evidence service', async () => {
+  let sharedCalls = 0;
+  let broadProviderCalls = 0;
+  const handler = createAgeLookupHandler({
+    localLookup: async () => null,
+    sharedExactEnabled: true,
+    modelEvidenceLookup: async ({ purpose }) => {
+      sharedCalls += 1;
+      assert.equal(purpose, 'smart_lookup');
+      return {
+        evidenceVersion: '1',
+        requestedIdentity: {
+          brand: 'Samsung',
+          model: 'ZXCV1234',
+          normalizedBrand: 'samsung',
+          normalizedModel: 'ZXCV1234',
+        },
+        matchedIdentity: {
+          model: 'ZXCV1234',
+          normalizedModel: 'ZXCV1234',
+          matchType: 'exact',
+          deterministicExact: true,
+        },
+        facts: [{
+          source: {
+            url: 'https://manufacturer.example/ZXCV1234',
+            domain: 'manufacturer.example',
+            title: 'ZXCV1234 production history',
+            sourceType: 'manufacturer',
+            resultIndex: 0,
+          },
+          fact: {
+            eventType: 'production_start',
+            year: 2019,
+            precision: 'year',
+            target: 'model_lifecycle',
+            claim: 'Production began in 2019.',
+          },
+          identity: {
+            deterministicMatchType: 'exact',
+            suggestedMatchType: 'exact',
+            effectiveMatchType: 'exact',
+          },
+          extraction: { provider: 'gemini', model: 'test-model', confidence: 'high' },
+        }, {
+          source: {
+            url: 'https://manufacturer.example/ZXCV1234-end',
+            domain: 'manufacturer.example',
+            title: 'ZXCV1234 production end',
+            sourceType: 'manufacturer',
+            resultIndex: 1,
+          },
+          fact: {
+            eventType: 'production_end',
+            year: 2022,
+            precision: 'year',
+            target: 'model_lifecycle',
+            claim: 'Production ended in 2022.',
+          },
+          identity: {
+            deterministicMatchType: 'exact',
+            suggestedMatchType: 'exact',
+            effectiveMatchType: 'exact',
+          },
+          extraction: { provider: 'gemini', model: 'test-model', confidence: 'high' },
+        }],
+        lifecycle: {
+          supportedProductionStartYear: 2019,
+          supportedProductionEndYear: 2022,
+          supportedDiscontinuationYear: null,
+        },
+        status: 'success',
+        failureCategory: null,
+        providerSummary: {
+          localUsed: false,
+          serperUsed: true,
+          extractorUsed: true,
+          searchCount: 1,
+        },
+        timings: { localMs: 0, searchMs: 1, extractionMs: 1, totalMs: 2 },
+      };
+    },
+    providerLookup: async () => {
+      broadProviderCalls += 1;
+      throw new Error('broad provider should not run');
+    },
+    redisFactory: () => redisMiss,
+    rateLimiterFactory: () => ({ limit: async () => ({ success: true }) }),
+    reserveProviderBudget: async () => ({ allowed: true, status: 'allowed' }),
+    recordProviderAttemptMetrics: async () => ({ status: 'recorded', actualProviderAttemptCount: 2 }),
+  });
+  const out = res();
+
+  await handler(req('Samsung ZXCV1234 refrigerator'), out);
+
+  assert.equal(out.statusCode, 200);
+  assert.equal(sharedCalls, 1);
+  assert.equal(broadProviderCalls, 0);
+  assert.equal(out.payload.source, 'serper');
+  assert.equal(out.payload.evidenceSource, 'serper-extracted');
+  assert.deepEqual(out.payload.productionRange, {
+    start: 2019,
+    end: 2022,
+    basis: 'exact-model-lifecycle-evidence',
+  });
+  assert.equal(out.payload.individualManufactureYear, null);
+});
+
+test('shared exact-model Serper research remains disabled by default', async () => {
+  let sharedCalls = 0;
+  let providerCalls = 0;
+  const handler = createAgeLookupHandler({
+    env: {
+      SERPER_API_KEY: 'configured-but-not-enabled',
+      GEMINI_API_KEY: 'configured-but-not-enabled',
+    },
+    localLookup: async () => null,
+    modelEvidenceLookup: async () => {
+      sharedCalls += 1;
+      throw new Error('shared evidence should stay disabled');
+    },
+    providerLookup: async () => {
+      providerCalls += 1;
+      return {
+        brand: 'Samsung',
+        model: 'ZXCV1234',
+        specificityLevel: 'specific',
+        introductionYear: 2019,
+      };
+    },
+    redisFactory: () => redisMiss,
+    rateLimiterFactory: () => ({ limit: async () => ({ success: true }) }),
+    reserveProviderBudget: async () => ({ allowed: true, status: 'allowed' }),
+    recordProviderAttemptMetrics: async () => ({ status: 'recorded', actualProviderAttemptCount: 1 }),
+  });
+  const out = res();
+
+  await handler(req('Samsung ZXCV1234 refrigerator'), out);
+
+  assert.equal(out.statusCode, 200);
+  assert.equal(sharedCalls, 0);
+  assert.equal(providerCalls, 1);
+});
+
+test('Smart Lookup exact-model shadow compares shared evidence without replacing the primary response', async () => {
+  const logs = [];
+  let sharedCalls = 0;
+  let providerCalls = 0;
+  const handler = createAgeLookupHandler({
+    env: { SMART_LOOKUP_SHARED_MODEL_EVIDENCE_SHADOW_ENABLED: 'true' },
+    localLookup: async () => null,
+    modelEvidenceLookup: async (input) => {
+      sharedCalls += 1;
+      assert.equal(input.purpose, 'smart_lookup_shadow');
+      assert.equal(input.requestContext.consumer, 'smart_lookup_shadow');
+      assert.equal(Object.hasOwn(input, 'candidateYears'), false);
+      assert.ok(input.deadline.remainingMs() > 0);
+      return shadowSharedEvidence();
+    },
+    providerLookup: async () => {
+      providerCalls += 1;
+      return {
+        brand: 'Samsung',
+        model: 'ZXCV1234',
+        specificityLevel: 'specific',
+        introductionYear: 2019,
+        productionRange: { start: 2019, end: 2020 },
+      };
+    },
+    redisFactory: () => redisMiss,
+    rateLimiterFactory: () => ({ limit: async () => ({ success: true }) }),
+    reserveProviderBudget: async () => ({ allowed: true, status: 'allowed' }),
+    recordProviderAttemptMetrics: async () => ({ status: 'recorded', actualProviderAttemptCount: 1 }),
+    logger: { info: (line) => logs.push(line), warn() {}, error() {} },
+  });
+  const out = res();
+
+  await handler(req('Samsung ZXCV1234 refrigerator'), out);
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(sharedCalls, 1);
+  assert.equal(providerCalls, 1);
+  assert.equal(out.payload.source, 'gemini');
+  assert.deepEqual(out.payload.productionRange, {
+    start: 2019,
+    end: 2020,
+    basis: 'model-availability',
+  });
+  const shadowLog = logs.map((line) => JSON.parse(line))
+    .find((entry) => entry.event === 'model_evidence_shadow_comparison');
+  assert.equal(shadowLog.consumer, 'smart_lookup');
+  assert.equal(shadowLog.agreement, 'range_disjoint');
+  assert.equal(shadowLog.shadowExactModelAccepted, true);
+  assert.equal(shadowLog.modelHash.length, 16);
+  assert.doesNotMatch(JSON.stringify(shadowLog), /ZXCV1234|manufacturer\.example/i);
+});
+
+test('Smart Lookup shadow failures do not alter the primary exact-model result', async () => {
+  const logs = [];
+  const handler = createAgeLookupHandler({
+    sharedEvidenceShadowEnabled: true,
+    localLookup: async () => null,
+    modelEvidenceLookup: async () => {
+      const error = new Error('raw Serper response must not escape');
+      error.code = 'SERPER_PROVIDER_ERROR';
+      throw error;
+    },
+    providerLookup: async () => ({
+      brand: 'Samsung',
+      model: 'ZXCV1234',
+      specificityLevel: 'specific',
+      introductionYear: 2019,
+    }),
+    redisFactory: () => redisMiss,
+    rateLimiterFactory: () => ({ limit: async () => ({ success: true }) }),
+    reserveProviderBudget: async () => ({ allowed: true, status: 'allowed' }),
+    recordProviderAttemptMetrics: async () => ({ status: 'recorded', actualProviderAttemptCount: 1 }),
+    logger: { info: (line) => logs.push(line), warn() {}, error() {} },
+  });
+  const out = res();
+
+  await handler(req('Samsung ZXCV1234 refrigerator'), out);
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(out.statusCode, 200);
+  assert.equal(out.payload.source, 'gemini');
+  assert.equal(out.payload.introductionYear, 2019);
+  const shadowLog = logs.map((line) => JSON.parse(line))
+    .find((entry) => entry.event === 'model_evidence_shadow_comparison');
+  assert.equal(shadowLog.shadowOutcome, 'error');
+  assert.equal(shadowLog.shadowFailureCategory, 'SERPER_PROVIDER_ERROR');
+  assert.doesNotMatch(JSON.stringify(shadowLog), /raw Serper response/i);
+});
+
+test('Smart Lookup shared-evidence shadow bypasses non-exact research', async () => {
+  let sharedCalls = 0;
+  const handler = createAgeLookupHandler({
+    sharedEvidenceShadowEnabled: true,
+    localLookup: async () => null,
+    modelEvidenceLookup: async () => {
+      sharedCalls += 1;
+      throw new Error('family research must not enter exact-model shadow');
+    },
+    redisFactory: () => redisMiss,
+  });
+  const out = res();
+
+  await handler(req('LG C3 TV'), out);
+
+  assert.equal(out.payload.querySpecificity, 'product-family');
+  assert.equal(sharedCalls, 0);
+});
+
 test('cache hit bypasses provider and limiter', async () => {
   let limiterCalls = 0;
+  let shadowCalls = 0;
   const cached = { brand: 'Samsung', model: 'QN65Q80A', specificityLevel: 'specific', introductionYear: 2020, productionRange: { start: 2021, end: 2021 } };
   const handler = createAgeLookupHandler({
+    sharedEvidenceShadowEnabled: true,
     localLookup: async () => null,
     redisFactory: () => ({ get: async (key) => String(key).startsWith('smart-age:') ? cached : null, set: async () => {} }),
     rateLimiterFactory: () => ({ limit: async () => { limiterCalls += 1; return { success: true }; } }),
+    modelEvidenceLookup: async () => { shadowCalls += 1; throw new Error('shadow should not run'); },
     providerLookup: async () => { throw new Error('provider should not run'); },
   });
   const out = res();
   await handler(req('Samsung QN65-Q80A'), out);
   assert.equal(out.payload.cacheStatus, 'hit');
+  assert.equal(shadowCalls, 0);
   assert.equal(limiterCalls, 0);
 });
 

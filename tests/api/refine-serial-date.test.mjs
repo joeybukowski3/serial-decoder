@@ -123,6 +123,112 @@ test('model production miss or load failure falls back to Gemini unchanged', asy
   }
 });
 
+test('Model Refinement shared-evidence shadow mode is disabled by default', async () => {
+  let shadowCalls = 0;
+  const handler = createRefineSerialDateHandler({
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => null,
+    legacyProviderLookup: async () => ({ evidence: officialEvidence(2023, 2025) }),
+    deterministicProviderLookup: async () => {
+      shadowCalls += 1;
+      throw new Error('shadow provider must remain disabled');
+    },
+    redisFactory: () => null,
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+
+  await handler(request(), res);
+
+  assert.equal(res.payload.provider, 'gemini-google-search');
+  assert.equal(res.payload.chosenYear, 2024);
+  assert.equal(shadowCalls, 0);
+});
+
+test('Model Refinement shadow comparison cannot replace the legacy response or escape serial candidates', async () => {
+  const logs = [];
+  let shadowCalls = 0;
+  const handler = createRefineSerialDateHandler({
+    env: { MODEL_REFINEMENT_SHARED_EVIDENCE_SHADOW_ENABLED: 'true' },
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => null,
+    legacyProviderLookup: async () => ({ evidence: officialEvidence(2023, 2025) }),
+    deterministicProviderLookup: async (input, options) => {
+      shadowCalls += 1;
+      assert.deepEqual(input.candidateYears, [1994, 2024]);
+      assert.equal(options.consumer, 'model_refinement_shadow');
+      assert.equal(options.scoringPath, 'shadow-phase1-deterministic-evaluator');
+      assert.ok(options.deadline.remainingMs() > 0);
+      return {
+        output: {
+          resolutionType: 'resolved-single',
+          bestEstimateYear: 1994,
+          plausibleYears: [1994],
+        },
+        sharedEvidence: {
+          requestedIdentity: { normalizedBrand: 'whirlpool', normalizedModel: 'WMH31017HS12' },
+          matchedIdentity: { matchType: 'exact' },
+          facts: [{
+            fact: { target: 'model_lifecycle' },
+          }],
+          status: 'success',
+          failureCategory: null,
+          cacheStatus: 'miss',
+          providerSummary: { searchCount: 1, extractorUsed: true },
+        },
+      };
+    },
+    redisFactory: () => null,
+    logger: { info: (line) => logs.push(line), error() {}, warn() {} },
+  });
+  const res = createResponse();
+
+  await handler(request(), res);
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(shadowCalls, 1);
+  assert.equal(res.payload.provider, 'gemini-google-search');
+  assert.equal(res.payload.chosenYear, 2024);
+  assert.ok(res.payload.candidateYears.includes(res.payload.chosenYear));
+  const shadowLog = logs.map((line) => JSON.parse(line))
+    .find((entry) => entry.event === 'model_evidence_shadow_comparison');
+  assert.equal(shadowLog.consumer, 'model_refinement');
+  assert.equal(shadowLog.agreement, 'selected_year_mismatch');
+  assert.equal(shadowLog.shadowCandidateInvariant, true);
+  assert.equal(shadowLog.modelHash.length, 16);
+  assert.doesNotMatch(JSON.stringify(shadowLog), /TRD3481274|WMH31017HS12|test-request/i);
+});
+
+test('Model Refinement shadow failures are telemetry-only', async () => {
+  const logs = [];
+  const handler = createRefineSerialDateHandler({
+    sharedEvidenceShadowEnabled: true,
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => null,
+    legacyProviderLookup: async () => ({ evidence: officialEvidence(2023, 2025) }),
+    deterministicProviderLookup: async () => {
+      const error = new Error('raw provider body must not be logged');
+      error.code = 'SERPER_TIMEOUT';
+      throw error;
+    },
+    redisFactory: () => null,
+    logger: { info: (line) => logs.push(line), error() {}, warn() {} },
+  });
+  const res = createResponse();
+
+  await handler(request(), res);
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(res.payload.provider, 'gemini-google-search');
+  assert.equal(res.payload.chosenYear, 2024);
+  const shadowLog = logs.map((line) => JSON.parse(line))
+    .find((entry) => entry.event === 'model_evidence_shadow_comparison');
+  assert.equal(shadowLog.shadowOutcome, 'error');
+  assert.equal(shadowLog.shadowFailureCategory, 'SERPER_TIMEOUT');
+  assert.equal(shadowLog.agreement, 'shadow_error');
+  assert.doesNotMatch(JSON.stringify(shadowLog), /raw provider body/i);
+});
+
 test('deterministic mode passes partial local narrowing into web refinement and maps the resolved result', async () => {
   let legacyCalls = 0;
   let deterministicCalls = 0;
@@ -407,6 +513,7 @@ test('local family heuristic cannot resolve an exact year', async () => {
 
 test('Redis hit bypasses provider and provider rate limit', async () => {
   let providerCalls = 0;
+  let shadowCalls = 0;
   let rateLimitFactoryCalls = 0;
   const cached = {
     status: 'resolved',
@@ -424,8 +531,10 @@ test('Redis hit bypasses provider and provider rate limit', async () => {
     errorCode: null,
   };
   const handler = createRefineSerialDateHandler({
+    sharedEvidenceShadowEnabled: true,
     localLookup: async () => ({ evidence: [], normalization: null }),
     providerLookup: async () => { providerCalls += 1; throw new Error('provider should not run'); },
+    deterministicProviderLookup: async () => { shadowCalls += 1; throw new Error('shadow should not run'); },
     redisFactory: () => ({ get: async () => cached, set: async () => {} }),
     rateLimitFactory: () => { rateLimitFactoryCalls += 1; throw new Error('rate limit should not run'); },
     logger: silentLogger(),
@@ -436,6 +545,7 @@ test('Redis hit bypasses provider and provider rate limit', async () => {
   assert.equal(res.payload.cacheStatus, 'hit');
   assert.equal(res.payload.provider, 'redis');
   assert.equal(providerCalls, 0);
+  assert.equal(shadowCalls, 0);
   assert.equal(rateLimitFactoryCalls, 0);
 });
 
@@ -617,7 +727,7 @@ test('input validation rejects malformed candidates and oversized context', asyn
   assert.equal(res2.statusCode, 400);
 });
 
-test('shared model-era evidence narrows the reported GE case only to a serial-valid year', async () => {
+test('deterministic mode does not start the broad shared-provider fallback after insufficient evidence', async () => {
   let sharedCalls = 0;
   const handler = createRefineSerialDateHandler({
     refinementMode: 'deterministic_serper',
@@ -657,12 +767,11 @@ test('shared model-era evidence narrows the reported GE case only to a serial-va
     decodedMonth: 'May',
   }), res);
 
-  assert.equal(sharedCalls, 1);
-  assert.equal(res.payload.status, 'resolved');
-  assert.equal(res.payload.chosenYear, 2026);
-  assert.equal(res.payload.candidateYears.includes(res.payload.chosenYear), true);
-  assert.deepEqual(res.payload.remainingCandidateYears, [2026]);
-  assert.equal(res.payload.provider, 'smart-lookup-openai');
+  assert.equal(sharedCalls, 0);
+  assert.equal(res.payload.status, 'unavailable');
+  assert.equal(res.payload.chosenYear, null);
+  assert.deepEqual(res.payload.remainingCandidateYears, [1978, 1990, 2002, 2014, 2026]);
+  assert.equal(res.payload.provider, 'deterministic-serper');
 });
 
 test('cached refinement cannot inject a year outside the current serial candidates', async () => {
