@@ -43,3 +43,18 @@ test('normalizeExtractedEvidence ignores non-array input', () => {
   assert.deepEqual(normalizeExtractedEvidence({}, 5), []);
   assert.deepEqual(normalizeExtractedEvidence(null, 5), []);
 });
+
+test('normalizeExtractedEvidence accepts explicit lifecycle and listing date meanings', () => {
+  const normalized = normalizeExtractedEvidence({
+    extractedEvidence: [
+      { resultIndex: 0, dateMeaning: 'listing_publication' },
+      { resultIndex: 1, dateMeaning: 'production_start' },
+      { resultIndex: 2, dateMeaning: 'production_end' },
+      { resultIndex: 3, dateMeaning: 'discontinuation' },
+    ],
+  }, 4);
+  assert.deepEqual(
+    normalized.map((fact) => fact.dateMeaning),
+    ['listing_publication', 'production_start', 'production_end', 'discontinuation'],
+  );
+});
