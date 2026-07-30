@@ -14,6 +14,7 @@
   var lastRefinementOptions = null;
   var serialDecodeActive = false;
   var currentRefinementView = null;
+  var GE_DATE_CODE_LETTERS = 'ADFGHLMRSTVZ';
 
   function safeText(value) {
     return String(value == null ? '' : value);
@@ -38,6 +39,70 @@
         return true;
       })
       .sort(function (a, b) { return a - b; });
+  }
+
+  function matchesCommonGeSerialPattern(value) {
+    var compact = safeText(value).trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    var pattern = new RegExp('^[' + GE_DATE_CODE_LETTERS + ']{2}\\d{6}[A-Z0-9]{0,2}$');
+    return pattern.test(compact);
+  }
+
+  function geEntryWarningHtml() {
+    var brandEl = document.getElementById('brand');
+    var serialEl = document.getElementById('serial');
+    var mainModelEl = document.getElementById('modelNumber');
+    var narrowModelEl = document.getElementById('narrowModelInput');
+    var brand = safeText(brandEl && brandEl.value).trim().toLowerCase();
+    var model = safeText((narrowModelEl && narrowModelEl.value) || (mainModelEl && mainModelEl.value)).trim();
+    var serial = safeText(serialEl && serialEl.value).trim();
+    var geFamily = brand === 'ge' || brand === 'cafe' || brand === 'ge_caf'
+      || brand === 'ge_profile' || brand === 'ge_monogram' || brand === 'hotpoint';
+    if (!geFamily || !model || matchesCommonGeSerialPattern(serial) || !matchesCommonGeSerialPattern(model)) return '';
+    return '<div class="info-block warning serial-refinement-entry-warning" role="status">' +
+      '<h4>Double-check the serial and model entries</h4>' +
+      '<p>This decoder expects common GE appliance serials to begin with two date-code letters, followed by six digits and up to two suffix characters. The value entered as the model matches that serial pattern, while the serial entry does not. Older or uncommon formats can differ. The entries were not swapped.</p>' +
+      '</div>';
+  }
+
+  function constrainResponseToSerialCandidates(response, candidates) {
+    var original = normalizeCandidates(candidates);
+    var allowed = Object.create(null);
+    original.forEach(function (year) { allowed[year] = true; });
+    var next = Object.assign({}, response || {});
+    var remaining = normalizeCandidates(next.remainingCandidateYears || [])
+      .filter(function (year) { return Boolean(allowed[year]); });
+    var chosen = Number(next.chosenYear);
+    var resolvedIsValid = next.status === 'resolved'
+      && Number.isInteger(chosen)
+      && Boolean(allowed[chosen])
+      && remaining.length === 1
+      && remaining[0] === chosen;
+    var ambiguousIsValid = next.status === 'ambiguous' && remaining.length > 1;
+
+    next.candidateYears = original.slice();
+    next.chosenYear = null;
+    next.remainingCandidateYears = original.slice();
+
+    if (resolvedIsValid) {
+      next.chosenYear = chosen;
+      next.remainingCandidateYears = [chosen];
+      return next;
+    }
+    if (ambiguousIsValid) {
+      next.remainingCandidateYears = remaining;
+      return next;
+    }
+    if (next.status === 'conflict') {
+      next.remainingCandidateYears = [];
+      return next;
+    }
+    if (next.status === 'resolved' || next.status === 'ambiguous') {
+      next.status = 'unavailable';
+      next.confidence = null;
+      next.errorCode = 'INVALID_REFINEMENT_CANDIDATE';
+      next.summary = 'Model evidence returned a year outside the serial-decoded candidates. The original serial result is preserved.';
+    }
+    return next;
   }
 
   function currentInputSnapshot(candidates, options) {
@@ -73,11 +138,16 @@
       snapshot.serial.toUpperCase(),
       snapshot.model.toUpperCase(),
       snapshot.candidateYears.join(','),
+      snapshot.decodedMonth.toLowerCase(),
+      snapshot.context.toLowerCase(),
     ].join('|');
   }
 
   function invalidateActiveRequest() {
     requestSequence += 1;
+    if (activeRequest && activeRequest.fingerprint) {
+      delete inFlightByFingerprint[activeRequest.fingerprint];
+    }
     if (activeRequest && activeRequest.controller) {
       try { activeRequest.controller.abort(); } catch (_) {}
     }
@@ -143,7 +213,8 @@
     var retry = !checking && response && response.status === 'unavailable'
       ? '<button type="button" class="decode-btn serial-refinement-retry" data-serial-refinement-retry="1">Retry</button>'
       : '';
-    output.innerHTML = '<div class="info-block refinement serial-refinement-status serial-refinement-status--' + escapeHtml(status) + '">' +
+    output.innerHTML = geEntryWarningHtml() +
+      '<div class="info-block refinement serial-refinement-status serial-refinement-status--' + escapeHtml(status) + '">' +
       '<h4>' + escapeHtml(statusHeading(status)) + '</h4>' +
       '<p>' + escapeHtml(summary) + '</p>' +
       chosen +
@@ -216,13 +287,14 @@
     var current = currentInputSnapshot(snapshot.candidateYears, snapshot);
     if (fingerprint(current) !== fingerprint(snapshot)) return;
 
+    var originalCandidates = getOriginalCandidates(snapshot.candidateYears);
+    response = constrainResponseToSerialCandidates(response, originalCandidates);
     var yearEl = document.getElementById('resultYear');
     if (!yearEl) {
       setTimeout(function () { applyResponse(response, sequence, snapshot); }, 25);
       return;
     }
 
-    var originalCandidates = getOriginalCandidates(response.candidateYears || snapshot.candidateYears);
     if (response.status === 'resolved' && response.chosenYear) {
       yearEl.textContent = String(response.chosenYear);
       if (typeof window.setEstimatedAgeVisibility === 'function' && typeof window.computeEstimatedAge === 'function') {
@@ -325,7 +397,7 @@
     }).finally(function () {
       clearTimeout(timeoutId);
       clearTimeout(slowNoticeTimeoutId);
-      delete inFlightByFingerprint[key];
+      if (inFlightByFingerprint[key] === promise) delete inFlightByFingerprint[key];
       if (activeRequest && activeRequest.sequence === sequence) activeRequest = null;
     });
 
@@ -478,6 +550,8 @@
       start: startBackgroundRefinement,
       invalidate: invalidateActiveRequest,
       fingerprint: fingerprint,
+      matchesCommonGeSerialPattern: matchesCommonGeSerialPattern,
+      constrainResponseToSerialCandidates: constrainResponseToSerialCandidates,
       version: '2.0.0',
     };
   }

@@ -616,3 +616,87 @@ test('input validation rejects malformed candidates and oversized context', asyn
   await handler(request({ context: 'x'.repeat(301) }), res2);
   assert.equal(res2.statusCode, 400);
 });
+
+test('shared model-era evidence narrows the reported GE case only to a serial-valid year', async () => {
+  let sharedCalls = 0;
+  const handler = createRefineSerialDateHandler({
+    refinementMode: 'deterministic_serper',
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => null,
+    deterministicProviderLookup: async () => ({
+      status: 'insufficient',
+      evidence: [],
+      extractedFacts: [],
+      output: null,
+      errorCode: 'DETERMINISTIC_INSUFFICIENT_EVIDENCE',
+    }),
+    sharedModelEvidenceLookup: async () => {
+      sharedCalls += 1;
+      return {
+        provider: 'smart-lookup-openai',
+        evidence: [{
+          type: 'smart-lookup-model-range',
+          title: 'GE GDF650 model era',
+          quality: 'model-intelligence',
+          productionStart: 2022,
+          productionEnd: null,
+          supports: 'Model introduction lower bound only.',
+        }],
+      };
+    },
+    redisFactory: () => null,
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+
+  await handler(request({
+    brand: 'GE',
+    serial: 'HV907351B',
+    model: 'GDF650SYV0FS',
+    candidateYears: [1978, 1990, 2002, 2014, 2026],
+    decodedMonth: 'May',
+  }), res);
+
+  assert.equal(sharedCalls, 1);
+  assert.equal(res.payload.status, 'resolved');
+  assert.equal(res.payload.chosenYear, 2026);
+  assert.equal(res.payload.candidateYears.includes(res.payload.chosenYear), true);
+  assert.deepEqual(res.payload.remainingCandidateYears, [2026]);
+  assert.equal(res.payload.provider, 'smart-lookup-openai');
+});
+
+test('cached refinement cannot inject a year outside the current serial candidates', async () => {
+  let providerCalls = 0;
+  const handler = createRefineSerialDateHandler({
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => null,
+    providerLookup: async () => {
+      providerCalls += 1;
+      return { evidence: [] };
+    },
+    redisFactory: () => ({
+      get: async () => ({
+        status: 'resolved',
+        candidateYears: [1978, 1990, 2002, 2014, 2026],
+        remainingCandidateYears: [2023],
+        chosenYear: 2023,
+        provider: 'gemini-google-search',
+      }),
+      set: async () => {},
+    }),
+    rateLimitFactory: () => null,
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+
+  await handler(request({
+    brand: 'GE',
+    serial: 'HV907351B',
+    model: 'GDF650SYV0FS',
+    candidateYears: [1978, 1990, 2002, 2014, 2026],
+  }), res);
+
+  assert.equal(providerCalls, 1);
+  assert.equal(res.payload.chosenYear, null);
+  assert.deepEqual(res.payload.remainingCandidateYears, [1978, 1990, 2002, 2014, 2026]);
+});

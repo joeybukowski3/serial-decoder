@@ -12,7 +12,10 @@ import {
   modelProductionDecision,
   modelProductionEvidence,
 } from '../lib/serial-refinement/model-production.js';
-import { callGeminiGroundedSearch } from '../lib/serial-refinement/provider.js';
+import {
+  callGeminiGroundedSearch,
+  callSmartLookupModelEvidence,
+} from '../lib/serial-refinement/provider.js';
 import {
   buildSummary,
   createBestAvailableResult,
@@ -22,8 +25,8 @@ import { assertRefinementResponseInvariant, createRefinementResponse } from '../
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
 import { boundedRateLimit, boundedRedisGet, boundedRedisSet } from '../lib/smart-lookup/redis.js';
 
-// Must exceed provider.js's DEFAULT_GROUNDED_BUDGET_MS (20000) plus its
-// smart-lookup fallback budget (2200) with margin, or this outer deadline
+// Must exceed provider.js's grounded stage plus its shared Smart Lookup
+// fallback budget with margin, or this outer deadline
 // clips the grounded call before it can finish.
 const TOTAL_BUDGET_MS = 24000;
 const PROVIDER_BUDGET_MS = 23000;
@@ -133,6 +136,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
     || dependencies.providerLookup
     || callGeminiGroundedSearch;
   const deterministicProviderLookup = dependencies.deterministicProviderLookup || callDeterministicSerper;
+  const sharedModelEvidenceLookup = dependencies.sharedModelEvidenceLookup || callSmartLookupModelEvidence;
   const redisFactory = dependencies.redisFactory || createDefaultRedis;
   const rateLimitFactory = dependencies.rateLimitFactory || createDefaultRateLimiter;
   const logger = dependencies.logger || console;
@@ -437,6 +441,60 @@ export function createRefineSerialDateHandler(dependencies = {}) {
             cacheStatus,
             timings,
           });
+          if (!finalResponse && deadline.hasTime(500)) {
+            let sharedEvidence = null;
+            try {
+              sharedEvidence = await deadline.run(
+                'serial-refinement-shared-model-evidence',
+                ({ signal }) => sharedModelEvidenceLookup(
+                  { ...input, candidateYears: workingCandidateYears },
+                  {
+                    signal,
+                    deadline,
+                    smartLookupBudgetMs: Math.max(250, deadline.remainingMs(10)),
+                    fetchImpl: dependencies.fetchImpl,
+                    env: dependencies.env || process.env,
+                    openAiProviderLookup: dependencies.openAiProviderLookup,
+                    smartProviderLookup: dependencies.smartProviderLookup,
+                    smartLocalLookup: dependencies.smartLocalLookup,
+                  },
+                ),
+                { maxMs: deadline.remainingMs(10), reserveMs: 10 },
+              );
+            } catch (_) {
+              sharedEvidence = null;
+            }
+            const combinedEvidence = [
+              ...localEvidence,
+              ...deterministicEvidence,
+              ...(sharedEvidence?.evidence || []),
+            ];
+            const sharedPolicy = evaluateEvidencePolicy(combinedEvidence);
+            const sharedDecision = resolveCandidateIntersection({
+              candidateYears: workingCandidateYears,
+              evidenceRange: sharedPolicy.range,
+              evidenceAvailable: combinedEvidence.length > 0,
+              evidenceSufficient: sharedPolicy.sufficient,
+            });
+            if (sharedPolicy.sufficient && sharedDecision.status !== 'unavailable') {
+              finalResponse = createRefinementResponse({
+                ...sharedDecision,
+                candidateYears: input.candidateYears,
+                confidence: sharedPolicy.confidence,
+                resolutionBasis: 'serial-plus-model',
+                modelProductionRange: sharedPolicy.range
+                  ? { start: sharedPolicy.range.start, end: sharedPolicy.range.end }
+                  : localModelRange,
+                modelNormalization: local?.normalization || null,
+                evidence: sharedPolicy.evidence,
+                summary: buildSummary(sharedDecision, local?.normalization),
+                cacheStatus,
+                provider: sharedEvidence?.provider || 'none',
+                timings,
+                errorCode: null,
+              });
+            }
+          }
           if (!finalResponse) {
             finalResponse = bestAvailable(
               deterministic?.errorCode || 'DETERMINISTIC_INSUFFICIENT_EVIDENCE',

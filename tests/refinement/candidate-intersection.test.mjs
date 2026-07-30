@@ -66,3 +66,15 @@ test('insufficient evidence preserves original candidates', () => {
 test('future years are retained unless evidence actually excludes them', () => {
   assert.deepEqual(intersectCandidateYears([2027, 1997], { start: 1990, end: null }), [1997, 2027]);
 });
+
+test('model introduction evidence can only eliminate serial candidates', () => {
+  const decision = resolveCandidateIntersection({
+    candidateYears: [1978, 1990, 2002, 2014, 2026],
+    evidenceRange: { start: 2022, end: null },
+    evidenceAvailable: true,
+    evidenceSufficient: true,
+  });
+  assert.equal(decision.status, 'resolved');
+  assert.equal(decision.chosenYear, 2026);
+  assert.deepEqual(decision.remainingCandidateYears, [2026]);
+});
