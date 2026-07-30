@@ -465,3 +465,68 @@ test('conflict refinement preserves original candidates and remains visible', as
     await browser.close();
   }
 });
+
+test('browser rejects a resolved year outside the original serial candidates', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  await page.route('**/api/refine-serial-date', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        status: 'resolved',
+        candidateYears: [2004, 2014, 2024],
+        remainingCandidateYears: [2023],
+        chosenYear: 2023,
+        summary: 'Model research found 2023.',
+        provider: 'smart-lookup-openai',
+      })),
+    });
+  });
+  try {
+    await fillDecode(page, 'lg', '412TATG1H105', 'WM3470HWA');
+    await page.click('#decodeBtn');
+
+    await expect(page.locator('#resultYear')).toHaveText('2004/2014/2024');
+    await expect(page.locator('#narrowDateOutput')).toContainText('outside the serial-decoded candidates');
+    await expect(page.locator('#narrowDateOutput')).not.toContainText('Resolved manufacture year');
+    await expect(page.locator('#resultEstimatedAge')).toHaveText(/^(|—)$/);
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
+
+test('GE field-pattern warning is informational and never swaps entries', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  await page.route('**/api/refine-serial-date', async (route) => {
+    const body = route.request().postDataJSON();
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        status: 'unavailable',
+        candidateYears: body.candidateYears,
+        remainingCandidateYears: body.candidateYears,
+        chosenYear: null,
+        confidence: null,
+        summary: 'Model evidence was unavailable.',
+        provider: 'none',
+      })),
+    });
+  });
+  try {
+    await fillDecode(page, 'ge', 'GDF650SYV0FS', 'HV907351B');
+    await page.click('#decodeBtn');
+
+    await expect(page.locator('.serial-refinement-entry-warning')).toBeVisible();
+    await expect(page.locator('.serial-refinement-entry-warning')).toContainText('two date-code letters');
+    await expect(page.locator('.serial-refinement-entry-warning')).toContainText('entries were not swapped');
+    await expect(page.locator('#serial')).toHaveValue('GDF650SYV0FS');
+    await expect(page.locator('#modelNumber')).toHaveValue('HV907351B');
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});

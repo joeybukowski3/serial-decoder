@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildGroundedRefinementPrompt, callGeminiGroundedSearch } from '../../lib/serial-refinement/provider.js';
+import {
+  buildGroundedRefinementPrompt,
+  callGeminiGroundedSearch,
+  callSmartLookupModelEvidence,
+} from '../../lib/serial-refinement/provider.js';
+import { attachProviderMetadata } from '../../lib/smart-lookup/provider.js';
 
 const request = {
   brand: 'Whirlpool',
@@ -171,4 +176,38 @@ test('grounded provider request avoids incompatible structured-output mode for G
   await callGeminiGroundedSearch({ brand: 'Whirlpool', model: 'WMH31017HS12', candidateYears: [1994, 2024] }, { apiKey: 'test', fetchImpl });
   assert.equal(requestBody.tools[0].google_search != null, true);
   assert.equal(Object.hasOwn(requestBody.generationConfig, 'responseMimeType'), false);
+});
+
+test('shared Smart Lookup evidence is a lower bound, not a manufacture year', async () => {
+  let providerCalls = 0;
+  const raw = attachProviderMetadata({
+    brand: 'GE',
+    model: 'GDF650SYV0FS',
+    category: 'Dishwasher',
+    productionRange: { start: 2023, end: 2025 },
+    notes: 'Model-family evidence places introduction around 2023.',
+  }, {
+    provider: 'openai',
+    fallbackUsed: false,
+    primaryProvider: 'openai',
+  });
+
+  const result = await callSmartLookupModelEvidence({
+    brand: 'GE',
+    model: 'GDF650SYV0FS',
+    category: 'appliances',
+  }, {
+    env: { SMART_LOOKUP_OPENAI_ENABLED: '1', OPENAI_API_KEY: 'configured' },
+    smartLocalLookup: async () => null,
+    openAiProviderLookup: async () => {
+      providerCalls += 1;
+      return raw;
+    },
+  });
+
+  assert.equal(providerCalls, 1);
+  assert.equal(result.provider, 'smart-lookup-openai');
+  assert.equal(result.evidence[0].productionStart, 2022);
+  assert.equal(result.evidence[0].productionEnd, null);
+  assert.match(result.evidence[0].supports, /only to exclude earlier serial cycles/i);
 });

@@ -66,6 +66,203 @@ test('local exact model evidence bypasses cache, provider, and provider rate lim
   assert.equal(rateLimitFactoryCalls, 0);
 });
 
+test('model production lookup narrows candidates before cache and Gemini', async () => {
+  let providerCalls = 0;
+  let redisFactoryCalls = 0;
+  const handler = createRefineSerialDateHandler({
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => ({
+      narrowedYears: [2024],
+      confidence: 'low',
+      source: 'ENERGY STAR certified listing',
+      sourceUrl: 'https://data.energystar.gov/',
+      productionStartYear: 2023,
+      matchedModel: 'WMH31017HS**',
+      matchType: 'model-family',
+    }),
+    providerLookup: async () => { providerCalls += 1; return { evidence: [] }; },
+    redisFactory: () => { redisFactoryCalls += 1; return null; },
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+  await handler(request(), res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.payload.status, 'resolved');
+  assert.equal(res.payload.chosenYear, 2024);
+  assert.equal(res.payload.confidence, 'low');
+  assert.equal(res.payload.provider, 'local-db');
+  assert.equal(res.payload.evidence[0].sourceUrl, 'https://data.energystar.gov/');
+  assert.equal(providerCalls, 0);
+  assert.equal(redisFactoryCalls, 0);
+});
+
+test('model production miss or load failure falls back to Gemini unchanged', async () => {
+  for (const modelProductionLookup of [
+    async () => null,
+    async () => { throw new Error('database unavailable'); },
+  ]) {
+    let providerCalls = 0;
+    const handler = createRefineSerialDateHandler({
+      localLookup: async () => ({ evidence: [], normalization: null }),
+      modelProductionLookup,
+      providerLookup: async () => {
+        providerCalls += 1;
+        return { evidence: officialEvidence(2023, 2025) };
+      },
+      redisFactory: () => null,
+      logger: silentLogger(),
+    });
+    const res = createResponse();
+    await handler(request(), res);
+
+    assert.equal(res.payload.status, 'resolved');
+    assert.equal(res.payload.chosenYear, 2024);
+    assert.equal(res.payload.provider, 'gemini-google-search');
+    assert.equal(providerCalls, 1);
+  }
+});
+
+test('deterministic mode passes partial local narrowing into web refinement and maps the resolved result', async () => {
+  let legacyCalls = 0;
+  let deterministicCalls = 0;
+  const handler = createRefineSerialDateHandler({
+    refinementMode: 'deterministic_serper',
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => ({
+      narrowedYears: [2014, 2024],
+      confidence: 'low',
+      source: 'Local model production database',
+      sourceUrl: 'https://example.com/model-record',
+      productionStartYear: 2014,
+      matchedModel: 'WMH31017HS**',
+      matchType: 'model-family',
+    }),
+    legacyProviderLookup: async () => { legacyCalls += 1; throw new Error('legacy provider must not run'); },
+    deterministicProviderLookup: async (input, options) => {
+      deterministicCalls += 1;
+      assert.deepEqual(input.candidateYears, [2014, 2024]);
+      assert.deepEqual(options.deadline.remainingMs() > 0, true);
+      assert.deepEqual(options.localModelEvidence, {
+        start: 2013,
+        end: null,
+        verifiedExact: false,
+      });
+      return {
+        status: 'success',
+        errorCode: null,
+        gemini: { status: 'success' },
+        extractedFacts: [{
+          resultIndex: 0,
+          exactModelMatch: true,
+          dateMeaning: 'product_available',
+          approximateYear: 2023,
+          absoluteDate: null,
+          normalizedDateYear: 2023,
+        }],
+        evidence: [{
+          type: 'manufacturer',
+          title: 'Official current model page',
+          sourceUrl: 'https://manufacturer.example/model',
+          productionStart: null,
+          productionEnd: null,
+          supports: 'Exact model was available in 2023.',
+          quality: 'official',
+          verified: false,
+        }],
+        output: {
+          resolutionType: 'resolved-single',
+          bestEstimateYear: 2024,
+          plausibleYears: [2024],
+          confidence: 'moderate',
+          estimatedModelEra: { startYear: 2023, endYear: 2023, centerYear: 2023 },
+        },
+      };
+    },
+    redisFactory: () => null,
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+  await handler(request({ candidateYears: [2004, 2014, 2024] }), res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.payload.status, 'resolved');
+  assert.equal(res.payload.chosenYear, 2024);
+  assert.deepEqual(res.payload.candidateYears, [2004, 2014, 2024]);
+  assert.deepEqual(res.payload.remainingCandidateYears, [2024]);
+  assert.equal(res.payload.confidence, 'medium');
+  assert.equal(res.payload.provider, 'deterministic-serper');
+  assert.equal(deterministicCalls, 1);
+  assert.equal(legacyCalls, 0);
+  assert.match(res.payload.evidence[0].supports, /lower bound, not proof/i);
+});
+
+test('deterministic provider failure preserves partial local narrowing without legacy fallback', async () => {
+  let legacyCalls = 0;
+  const handler = createRefineSerialDateHandler({
+    refinementMode: 'deterministic_serper',
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => ({
+      narrowedYears: [2014, 2024],
+      confidence: 'low',
+      source: 'Local model production database',
+      sourceUrl: null,
+      productionStartYear: 2014,
+      matchedModel: 'WMH31017HS**',
+      matchType: 'model-family',
+    }),
+    legacyProviderLookup: async () => { legacyCalls += 1; throw new Error('legacy provider must not run'); },
+    deterministicProviderLookup: async () => {
+      const error = new Error('Serper provider failed');
+      error.code = 'DETERMINISTIC_SERPER_ERROR';
+      throw error;
+    },
+    redisFactory: () => null,
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+  await handler(request({ candidateYears: [2004, 2014, 2024] }), res);
+
+  assert.equal(res.payload.status, 'ambiguous');
+  assert.deepEqual(res.payload.remainingCandidateYears, [2014, 2024]);
+  assert.equal(res.payload.chosenYear, null);
+  assert.equal(res.payload.provider, 'deterministic-serper');
+  assert.equal(res.payload.errorCode, 'DETERMINISTIC_SERPER_ERROR');
+  assert.equal(legacyCalls, 0);
+});
+
+test('local_only returns partial local narrowing without Redis or either online provider', async () => {
+  let legacyCalls = 0;
+  let deterministicCalls = 0;
+  let redisCalls = 0;
+  const handler = createRefineSerialDateHandler({
+    refinementMode: 'local_only',
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => ({
+      narrowedYears: [2014, 2024],
+      confidence: 'low',
+      source: 'Local model production database',
+      productionStartYear: 2014,
+      matchedModel: 'WMH31017HS**',
+      matchType: 'model-family',
+    }),
+    legacyProviderLookup: async () => { legacyCalls += 1; },
+    deterministicProviderLookup: async () => { deterministicCalls += 1; },
+    redisFactory: () => { redisCalls += 1; return null; },
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+  await handler(request({ candidateYears: [2004, 2014, 2024] }), res);
+
+  assert.equal(res.payload.status, 'ambiguous');
+  assert.deepEqual(res.payload.remainingCandidateYears, [2014, 2024]);
+  assert.equal(res.payload.provider, 'local-db');
+  assert.equal(res.payload.errorCode, null);
+  assert.equal(legacyCalls, 0);
+  assert.equal(deterministicCalls, 0);
+  assert.equal(redisCalls, 0);
+});
+
 test('GE PFD87 label and base models resolve the A-code cycle to 2025', async () => {
   for (const model of ['PFD87ESPV0RS', 'PFD87ESPVRS', '  pfd87espvrs  ']) {
     let providerCalls = 0;
@@ -418,4 +615,88 @@ test('input validation rejects malformed candidates and oversized context', asyn
   const res2 = createResponse();
   await handler(request({ context: 'x'.repeat(301) }), res2);
   assert.equal(res2.statusCode, 400);
+});
+
+test('shared model-era evidence narrows the reported GE case only to a serial-valid year', async () => {
+  let sharedCalls = 0;
+  const handler = createRefineSerialDateHandler({
+    refinementMode: 'deterministic_serper',
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => null,
+    deterministicProviderLookup: async () => ({
+      status: 'insufficient',
+      evidence: [],
+      extractedFacts: [],
+      output: null,
+      errorCode: 'DETERMINISTIC_INSUFFICIENT_EVIDENCE',
+    }),
+    sharedModelEvidenceLookup: async () => {
+      sharedCalls += 1;
+      return {
+        provider: 'smart-lookup-openai',
+        evidence: [{
+          type: 'smart-lookup-model-range',
+          title: 'GE GDF650 model era',
+          quality: 'model-intelligence',
+          productionStart: 2022,
+          productionEnd: null,
+          supports: 'Model introduction lower bound only.',
+        }],
+      };
+    },
+    redisFactory: () => null,
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+
+  await handler(request({
+    brand: 'GE',
+    serial: 'HV907351B',
+    model: 'GDF650SYV0FS',
+    candidateYears: [1978, 1990, 2002, 2014, 2026],
+    decodedMonth: 'May',
+  }), res);
+
+  assert.equal(sharedCalls, 1);
+  assert.equal(res.payload.status, 'resolved');
+  assert.equal(res.payload.chosenYear, 2026);
+  assert.equal(res.payload.candidateYears.includes(res.payload.chosenYear), true);
+  assert.deepEqual(res.payload.remainingCandidateYears, [2026]);
+  assert.equal(res.payload.provider, 'smart-lookup-openai');
+});
+
+test('cached refinement cannot inject a year outside the current serial candidates', async () => {
+  let providerCalls = 0;
+  const handler = createRefineSerialDateHandler({
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => null,
+    providerLookup: async () => {
+      providerCalls += 1;
+      return { evidence: [] };
+    },
+    redisFactory: () => ({
+      get: async () => ({
+        status: 'resolved',
+        candidateYears: [1978, 1990, 2002, 2014, 2026],
+        remainingCandidateYears: [2023],
+        chosenYear: 2023,
+        provider: 'gemini-google-search',
+      }),
+      set: async () => {},
+    }),
+    rateLimitFactory: () => null,
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+
+  await handler(request({
+    brand: 'GE',
+    serial: 'HV907351B',
+    model: 'GDF650SYV0FS',
+    candidateYears: [1978, 1990, 2002, 2014, 2026],
+  }), res);
+
+  assert.equal(providerCalls, 1);
+  assert.equal(res.payload.chosenYear, null);
+  assert.deepEqual(res.payload.remainingCandidateYears, [1978, 1990, 2002, 2014, 2026]);
 });

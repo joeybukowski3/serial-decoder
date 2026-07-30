@@ -20,3 +20,22 @@ test('cache key changes for model suffix, candidates, and decoded period', () =>
   assert.notEqual(key, buildSerialRefinementCacheKey({ ...base, candidateYears: [1995, 2007, 2019] }));
   assert.notEqual(key, buildSerialRefinementCacheKey({ ...base, decodedMonth: 'May' }));
 });
+
+test('cache key separates provider modes and effective locally narrowed candidates', () => {
+  const base = {
+    brand: 'KitchenAid',
+    category: 'refrigerator',
+    model: 'KRFF305ESS',
+    candidateYears: [2006, 2016, 2026],
+    decodedMonth: 'Serial cycle',
+  };
+  const legacy = buildSerialRefinementCacheKey(base, { mode: 'legacy_gemini' });
+  const deterministic = buildSerialRefinementCacheKey(base, { mode: 'deterministic_serper' });
+  const narrowed = buildSerialRefinementCacheKey(base, {
+    mode: 'deterministic_serper',
+    effectiveCandidateYears: [2016, 2026],
+  });
+
+  assert.notEqual(legacy, deterministic);
+  assert.notEqual(deterministic, narrowed);
+});

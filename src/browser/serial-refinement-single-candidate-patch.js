@@ -97,6 +97,10 @@
       });
     }).then(function (data) {
       if (localSequence !== sequence || fingerprint(snapshot(options, candidates)) !== key) return data;
+      if (window.SerialRefinementController
+        && typeof window.SerialRefinementController.constrainResponseToSerialCandidates === 'function') {
+        data = window.SerialRefinementController.constrainResponseToSerialCandidates(data, candidates);
+      }
       render(data, candidates[0]);
       if (window.lastSerialResolutionState) window.lastSerialResolutionState.refinementResponse = data;
       return data;
