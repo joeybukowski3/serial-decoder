@@ -617,7 +617,7 @@ test('input validation rejects malformed candidates and oversized context', asyn
   assert.equal(res2.statusCode, 400);
 });
 
-test('shared model-era evidence narrows the reported GE case only to a serial-valid year', async () => {
+test('deterministic mode does not start the broad shared-provider fallback after insufficient evidence', async () => {
   let sharedCalls = 0;
   const handler = createRefineSerialDateHandler({
     refinementMode: 'deterministic_serper',
@@ -657,12 +657,11 @@ test('shared model-era evidence narrows the reported GE case only to a serial-va
     decodedMonth: 'May',
   }), res);
 
-  assert.equal(sharedCalls, 1);
-  assert.equal(res.payload.status, 'resolved');
-  assert.equal(res.payload.chosenYear, 2026);
-  assert.equal(res.payload.candidateYears.includes(res.payload.chosenYear), true);
-  assert.deepEqual(res.payload.remainingCandidateYears, [2026]);
-  assert.equal(res.payload.provider, 'smart-lookup-openai');
+  assert.equal(sharedCalls, 0);
+  assert.equal(res.payload.status, 'unavailable');
+  assert.equal(res.payload.chosenYear, null);
+  assert.deepEqual(res.payload.remainingCandidateYears, [1978, 1990, 2002, 2014, 2026]);
+  assert.equal(res.payload.provider, 'deterministic-serper');
 });
 
 test('cached refinement cannot inject a year outside the current serial candidates', async () => {

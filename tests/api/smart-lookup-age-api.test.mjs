@@ -47,6 +47,150 @@ test('local age result does not consume provider budget', async () => {
   assert.equal(budgetCalls, 0);
 });
 
+test('exact-model Smart Lookup consumes the shared normalized evidence service', async () => {
+  let sharedCalls = 0;
+  let broadProviderCalls = 0;
+  const handler = createAgeLookupHandler({
+    localLookup: async () => null,
+    sharedExactEnabled: true,
+    modelEvidenceLookup: async ({ purpose }) => {
+      sharedCalls += 1;
+      assert.equal(purpose, 'smart_lookup');
+      return {
+        evidenceVersion: '1',
+        requestedIdentity: {
+          brand: 'Samsung',
+          model: 'ZXCV1234',
+          normalizedBrand: 'samsung',
+          normalizedModel: 'ZXCV1234',
+        },
+        matchedIdentity: {
+          model: 'ZXCV1234',
+          normalizedModel: 'ZXCV1234',
+          matchType: 'exact',
+          deterministicExact: true,
+        },
+        facts: [{
+          source: {
+            url: 'https://manufacturer.example/ZXCV1234',
+            domain: 'manufacturer.example',
+            title: 'ZXCV1234 production history',
+            sourceType: 'manufacturer',
+            resultIndex: 0,
+          },
+          fact: {
+            eventType: 'production_start',
+            year: 2019,
+            precision: 'year',
+            target: 'model_lifecycle',
+            claim: 'Production began in 2019.',
+          },
+          identity: {
+            deterministicMatchType: 'exact',
+            suggestedMatchType: 'exact',
+            effectiveMatchType: 'exact',
+          },
+          extraction: { provider: 'gemini', model: 'test-model', confidence: 'high' },
+        }, {
+          source: {
+            url: 'https://manufacturer.example/ZXCV1234-end',
+            domain: 'manufacturer.example',
+            title: 'ZXCV1234 production end',
+            sourceType: 'manufacturer',
+            resultIndex: 1,
+          },
+          fact: {
+            eventType: 'production_end',
+            year: 2022,
+            precision: 'year',
+            target: 'model_lifecycle',
+            claim: 'Production ended in 2022.',
+          },
+          identity: {
+            deterministicMatchType: 'exact',
+            suggestedMatchType: 'exact',
+            effectiveMatchType: 'exact',
+          },
+          extraction: { provider: 'gemini', model: 'test-model', confidence: 'high' },
+        }],
+        lifecycle: {
+          supportedProductionStartYear: 2019,
+          supportedProductionEndYear: 2022,
+          supportedDiscontinuationYear: null,
+        },
+        status: 'success',
+        failureCategory: null,
+        providerSummary: {
+          localUsed: false,
+          serperUsed: true,
+          extractorUsed: true,
+          searchCount: 1,
+        },
+        timings: { localMs: 0, searchMs: 1, extractionMs: 1, totalMs: 2 },
+      };
+    },
+    providerLookup: async () => {
+      broadProviderCalls += 1;
+      throw new Error('broad provider should not run');
+    },
+    redisFactory: () => redisMiss,
+    rateLimiterFactory: () => ({ limit: async () => ({ success: true }) }),
+    reserveProviderBudget: async () => ({ allowed: true, status: 'allowed' }),
+    recordProviderAttemptMetrics: async () => ({ status: 'recorded', actualProviderAttemptCount: 2 }),
+  });
+  const out = res();
+
+  await handler(req('Samsung ZXCV1234 refrigerator'), out);
+
+  assert.equal(out.statusCode, 200);
+  assert.equal(sharedCalls, 1);
+  assert.equal(broadProviderCalls, 0);
+  assert.equal(out.payload.source, 'serper');
+  assert.equal(out.payload.evidenceSource, 'serper-extracted');
+  assert.deepEqual(out.payload.productionRange, {
+    start: 2019,
+    end: 2022,
+    basis: 'exact-model-lifecycle-evidence',
+  });
+  assert.equal(out.payload.individualManufactureYear, null);
+});
+
+test('shared exact-model Serper research remains disabled by default', async () => {
+  let sharedCalls = 0;
+  let providerCalls = 0;
+  const handler = createAgeLookupHandler({
+    env: {
+      SERPER_API_KEY: 'configured-but-not-enabled',
+      GEMINI_API_KEY: 'configured-but-not-enabled',
+    },
+    localLookup: async () => null,
+    modelEvidenceLookup: async () => {
+      sharedCalls += 1;
+      throw new Error('shared evidence should stay disabled');
+    },
+    providerLookup: async () => {
+      providerCalls += 1;
+      return {
+        brand: 'Samsung',
+        model: 'ZXCV1234',
+        specificityLevel: 'specific',
+        introductionYear: 2019,
+      };
+    },
+    redisFactory: () => redisMiss,
+    rateLimiterFactory: () => ({ limit: async () => ({ success: true }) }),
+    reserveProviderBudget: async () => ({ allowed: true, status: 'allowed' }),
+    recordProviderAttemptMetrics: async () => ({ status: 'recorded', actualProviderAttemptCount: 1 }),
+  });
+  const out = res();
+
+  await handler(req('Samsung ZXCV1234 refrigerator'), out);
+
+  assert.equal(out.statusCode, 200);
+  assert.equal(sharedCalls, 0);
+  assert.equal(providerCalls, 1);
+});
+
 test('cache hit bypasses provider and limiter', async () => {
   let limiterCalls = 0;
   const cached = { brand: 'Samsung', model: 'QN65Q80A', specificityLevel: 'specific', introductionYear: 2020, productionRange: { start: 2021, end: 2021 } };

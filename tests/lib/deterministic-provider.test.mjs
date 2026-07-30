@@ -132,7 +132,7 @@ test('production deterministic provider searches, extracts once, and resolves on
   assert.equal(geminiCalls, 1);
 });
 
-test('raw Serper and extracted-fact caches avoid repeat provider calls', async () => {
+test('shared normalized evidence cache avoids repeat provider calls', async () => {
   const redis = createRedis();
   let serperCalls = 0;
   let geminiCalls = 0;
@@ -158,8 +158,8 @@ test('raw Serper and extracted-fact caches avoid repeat provider calls', async (
   assert.equal(second.output.bestEstimateYear, 2024);
   assert.equal(serperCalls, 1);
   assert.equal(geminiCalls, 1);
-  assert.equal(second.cacheStats.rawHits, 1);
-  assert.equal(second.cacheStats.factsHits, 1);
+  assert.equal(second.cacheStats.evidenceHits, 1);
+  assert.equal(second.timings.serperRequestCount, 0);
 });
 
 test('missing Serper configuration returns insufficient evidence without calling Gemini', async () => {
