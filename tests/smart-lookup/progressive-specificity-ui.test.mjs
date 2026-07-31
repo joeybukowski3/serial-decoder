@@ -338,6 +338,8 @@ test('deterministic-family, deterministic-model-line, and deterministic-brand-ca
   assert.match(familyText, /product family/i);
   assert.match(modelLineText, /model line/i);
   assert.match(brandCategoryText, /brand and category/i);
+  assert.match(familyText, /Live research did not finish in time/i);
+  assert.match(modelLineText, /broader product-generation information/i);
 
   assert.notEqual(familyText, modelLineText);
   assert.notEqual(familyText, brandCategoryText);
@@ -347,6 +349,7 @@ test('deterministic-family, deterministic-model-line, and deterministic-brand-ca
   for (const text of [familyText, modelLineText, brandCategoryText]) {
     assert.doesNotMatch(text, /AI-assisted/i);
     assert.doesNotMatch(text, /grounded in live web search/i);
+    assert.doesNotMatch(text, /stopped before guessing/i);
   }
 });
 

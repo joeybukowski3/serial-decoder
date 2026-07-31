@@ -179,10 +179,23 @@ test('serial-only-no-brand copy suggests adding brand and item type', () => {
   assert.match(copy.tryNext, /item type/i);
 });
 
-test('timeout copy says it stopped rather than "not found", and does not choose a year', () => {
+test('timeout copy explains research did not finish rather than "not found", and does not choose a year', () => {
   const copy = api.copyForAgeOutcome('timeout', {});
-  assert.match(copy.body, /took too long/i);
+  assert.match(copy.body, /did not finish|took too long/i);
   assert.doesNotMatch(copy.body, /not found/i);
+  assert.doesNotMatch(copy.body, /stopped before guessing/i);
+});
+
+test('a timeout errorCode with usable estimate still classifies as success (estimate-first)', () => {
+  const data = {
+    brand: 'Lenovo',
+    productFamily: 'ThinkSystem ST50',
+    yearContext: { startYear: 2018, endYear: 2023, type: 'production-range', isExactUnitDate: false },
+    errorCode: 'PROVIDER_TIMEOUT',
+    fallbackKind: 'deterministic-model-line',
+  };
+  assert.equal(api.classifyAgeOutcome(data), 'success');
+  assert.doesNotMatch(JSON.stringify(api.copyForAgeOutcome('timeout', {})), /stopped before guessing/i);
 });
 
 test('malformed copy explains unreliability without technical/error language', () => {
