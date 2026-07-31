@@ -21,7 +21,10 @@
     "test:smart-api": "node --test tests/api/smart-lookup-*.test.mjs",
     "test:smart-benchmark": "node --test tests/benchmarks/smart-lookup-benchmark.test.mjs",
     "test:vizio-benchmark": "node --test tests/benchmarks/vizio-generation-benchmark.test.mjs",
-    "test:smart-playwright": "npx playwright test -c tests/smart-lookup-playwright.config.mjs"
+    "test:smart-playwright": "npx playwright test -c tests/smart-lookup-playwright.config.mjs",
+    "test:lookup-canary": "node --test tests/canary/lookup-canary.test.mjs",
+    "test:parity": "node --test tests/lib/cross-workflow-parity.test.mjs",
+    "test:refinement-hardening": "node --test tests/lib/failure-taxonomy.test.mjs tests/lib/refinement-telemetry-budgets.test.mjs tests/lib/cross-workflow-parity.test.mjs tests/api/refinement-mode-parity.test.mjs tests/canary/lookup-canary.test.mjs"
   },
   "dependencies": {
     "@upstash/ratelimit": "^2.0.8",

@@ -7,11 +7,15 @@ import {
   startShadowTask,
 } from '../lib/model-evidence/shadow.js';
 import { buildSharedModelIdentity } from '../lib/model-evidence/shared-model-identity.js';
+import { classifyLookupFailure } from '../lib/lookup-failure-taxonomy.js';
+import { budgetsForRefinementMode } from '../lib/serial-refinement/budgets.js';
+import { chooseRefinementCacheTtl } from '../lib/serial-refinement/cache-policy.js';
 import { buildSerialRefinementCacheKey, hashModelIdentifier } from '../lib/serial-refinement/cache-key.js';
 import { resolveCandidateIntersection, normalizeCandidateYears } from '../lib/serial-refinement/candidate-intersection.js';
 import { evaluateEvidencePolicy } from '../lib/serial-refinement/evidence-policy.js';
 import { findLocalRefinementEvidence } from '../lib/serial-refinement/local-evidence.js';
 import { callDeterministicSerper } from '../lib/serial-refinement/deterministic-provider.js';
+import { runSharedInflight } from '../lib/serial-refinement/inflight.js';
 import {
   buildModelProductionSummary,
   mergeLocalModelEvidence,
@@ -26,16 +30,13 @@ import {
   rankCandidatesByModelLowerBound,
 } from '../lib/serial-refinement/response-mapping.js';
 import { assertRefinementResponseInvariant, createRefinementResponse } from '../lib/serial-refinement/response-schema.js';
+import {
+  buildCostProxy,
+  logRefinementTelemetry,
+} from '../lib/serial-refinement/telemetry.js';
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
 import { boundedRateLimit, boundedRedisGet, boundedRedisSet } from '../lib/smart-lookup/redis.js';
 
-// Must exceed provider.js's grounded stage plus its shared Smart Lookup
-// fallback budget with margin, or this outer deadline
-// clips the grounded call before it can finish.
-const TOTAL_BUDGET_MS = 24000;
-const PROVIDER_BUDGET_MS = 23000;
-const OFFICIAL_TTL_SECONDS = 60 * 60 * 24 * 60;
-const SECONDARY_TTL_SECONDS = 60 * 60 * 24 * 10;
 const MAX_CANDIDATES = 12;
 const GROUNDED_RATE_LIMIT_REQUESTS = 10;
 const GROUNDED_RATE_LIMIT_WINDOW = '1 m';
@@ -73,12 +74,6 @@ function validateRequestBody(body) {
   };
 }
 
-function chooseCacheTtl(policy) {
-  if (policy.confidence === 'high') return OFFICIAL_TTL_SECONDS;
-  if (policy.confidence === 'medium') return SECONDARY_TTL_SECONDS;
-  return 0;
-}
-
 export function resolveModelRefinementMode(value) {
   const mode = String(value || '').trim().toLowerCase();
   return REFINEMENT_MODES.has(mode) ? mode : 'legacy_gemini';
@@ -91,7 +86,6 @@ function createDefaultRedis() {
     token: process.env.UPSTASH_REDIS_REST_TOKEN,
   });
 }
-
 
 function getClientIp(req) {
   const forwarded = req.headers?.['x-forwarded-for'];
@@ -127,10 +121,19 @@ function safeCachedResponse(value, candidateYears) {
   }
 }
 
-function logResult(logger, fields) {
-  try {
-    logger.info(JSON.stringify({ event: 'serial_refinement', ...fields }));
-  } catch (_) {}
+function attachFailureFields(response, errorCode, failureStage, failureCategory = null) {
+  const classified = classifyLookupFailure({
+    errorCode,
+    failureStage,
+    failureCategory: failureCategory || response?.failureCategory,
+  });
+  return {
+    ...response,
+    errorCode: errorCode || response?.errorCode || null,
+    failureCode: classified.failureCode || errorCode || response?.failureCode || null,
+    failureStage: classified.failureStage || failureStage || response?.failureStage || null,
+    failureCategory: classified.failureCategory || response?.failureCategory || null,
+  };
 }
 
 export function createRefineSerialDateHandler(dependencies = {}) {
@@ -144,11 +147,15 @@ export function createRefineSerialDateHandler(dependencies = {}) {
   const rateLimitFactory = dependencies.rateLimitFactory || createDefaultRateLimiter;
   const logger = dependencies.logger || console;
   const clock = dependencies.now || nowMs;
-  const totalBudgetMs = dependencies.totalBudgetMs || TOTAL_BUDGET_MS;
-  const providerBudgetMs = dependencies.providerBudgetMs || PROVIDER_BUDGET_MS;
   const refinementMode = resolveModelRefinementMode(
     dependencies.refinementMode ?? process.env.MODEL_REFINEMENT_MODE,
   );
+  const modeBudgets = budgetsForRefinementMode(refinementMode);
+  const totalBudgetMs = dependencies.totalBudgetMs || modeBudgets.apiTotalMs;
+  const providerBudgetMs = dependencies.providerBudgetMs || modeBudgets.providerMaxMs;
+  const completionReserveMs = dependencies.completionReserveMs
+    || modeBudgets.deterministicCompletionReserveMs;
+  const inflightStore = dependencies.inflightStore || null;
   const sharedEvidenceShadowEnabled = dependencies.sharedEvidenceShadowEnabled
     ?? isShadowModeEnabled(
       (dependencies.env || process.env).MODEL_REFINEMENT_SHARED_EVIDENCE_SHADOW_ENABLED,
@@ -161,7 +168,13 @@ export function createRefineSerialDateHandler(dependencies = {}) {
 
     const validation = validateRequestBody(req.body || {});
     if (validation.error) {
-      return res.status(400).json({ error: 'Invalid refinement request', errorCode: validation.error });
+      return res.status(400).json({
+        error: 'Invalid refinement request',
+        errorCode: validation.error,
+        failureCategory: 'input_unusable',
+        failureCode: validation.error,
+        failureStage: 'validation',
+      });
     }
 
     const input = validation.value;
@@ -171,7 +184,14 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       category: input.category,
     });
     const deadline = createDeadline({ totalMs: totalBudgetMs, now: clock });
-    const timings = { localMs: 0, cacheMs: 0, onlineLookupMs: 0, totalMs: 0 };
+    const timings = {
+      localMs: 0,
+      cacheMs: 0,
+      onlineLookupMs: 0,
+      serperMs: 0,
+      geminiMs: 0,
+      totalMs: 0,
+    };
     let cacheStatus = 'bypass';
     let finalResponse = null;
     let redis = null;
@@ -180,23 +200,44 @@ export function createRefineSerialDateHandler(dependencies = {}) {
     let localModelRange = null;
     let localModelEvidence = null;
     let localEvidence = [];
+    let localEvidenceHit = false;
+    let productionDatabaseHit = false;
     let workingCandidateYears = [...input.candidateYears];
     let shadowTask = null;
     let shadowObserved = false;
+    let inflightShared = false;
+    let sharedEvidenceAttempted = false;
+    let sharedEvidenceAccepted = false;
+    let searchQueryCount = 0;
+    let serperCallCount = 0;
+    let geminiExtractionRan = false;
+    let geminiGroundedRan = false;
+    let searchResultCount = null;
+    let evidenceFactCount = null;
+    let providerAttemptCount = 0;
+    let costSnapshot = null;
 
     function finish(response) {
       timings.totalMs = Math.max(0, clock() - requestStart);
-      response.timings = timings;
+      response.timings = { ...timings, ...(response.timings || {}) };
       if (!response.modelIdentity) response.modelIdentity = modelIdentity;
       if (!response.searchedModels) response.searchedModels = modelIdentity.searchModels;
+      costSnapshot = response.cost || buildCostProxy({
+        searchQueryCount,
+        serperCallCount,
+        geminiExtractionRan,
+        geminiGroundedRan,
+        cacheHit: (response.cacheStatus || cacheStatus) === 'hit',
+        providerAttemptCount,
+      });
+      response.cost = costSnapshot;
       const safeResponse = assertRefinementResponseInvariant(createRefinementResponse(response));
-      // Per-request telemetry only (not cumulative counters).
-      logResult(logger, {
+      logRefinementTelemetry(logger, {
         requestId,
+        refinementMode,
         mode: refinementMode,
+        enteredBrand: input.brand.toLowerCase(),
         brand: input.brand.toLowerCase(),
-        category: input.category.toLowerCase(),
-        modelHash: hashModelIdentifier(input.model),
         enteredModel: modelIdentity.enteredModel,
         canonicalModel: modelIdentity.canonicalModel,
         searchedModels: safeResponse.searchedModels || modelIdentity.searchModels,
@@ -204,25 +245,44 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         equivalenceReason: modelIdentity.equivalenceReason,
         identityMatchType: safeResponse.identityMatchType || modelIdentity.matchedBy,
         identityConfidence: safeResponse.identityConfidence || modelIdentity.identityConfidence,
+        localEvidenceHit,
+        productionDatabaseHit,
+        cacheStatus: safeResponse.cacheStatus,
+        sharedEvidenceAttempted,
+        sharedEvidenceAccepted,
+        searchResultCount,
+        evidenceFactCount: evidenceFactCount
+          ?? (Array.isArray(safeResponse.evidence) ? safeResponse.evidence.length : null),
         evidenceMatchModel: safeResponse.evidenceMatchModel || null,
         evidenceMatchType: safeResponse.evidenceMatchType || null,
-        refinementResultTier: safeResponse.refinementResultTier || safeResponse.status,
+        serialCandidateYears: input.candidateYears,
         preferredCandidateYear: safeResponse.preferredCandidateYear,
         remainingCandidateYears: safeResponse.remainingCandidateYears,
+        candidatesPreserved: true,
         modelEraStart: safeResponse.modelProductionRange?.start ?? null,
         modelEraEnd: safeResponse.modelProductionRange?.end ?? null,
-        candidateCount: input.candidateYears.length,
-        remainingCandidateCount: safeResponse.remainingCandidateYears.length,
+        refinementResultTier: safeResponse.refinementResultTier || safeResponse.status,
         status: safeResponse.status,
-        cacheStatus: safeResponse.cacheStatus,
         provider: safeResponse.provider,
-        providerAttempted: safeResponse.provider !== 'none' && safeResponse.provider !== 'local-db',
-        providerDurationMs: timings.onlineLookupMs,
-        deterministicFallbackUsed: Boolean(safeResponse.deterministicFallbackUsed),
+        failureCategory: safeResponse.failureCategory,
         failureStage: safeResponse.failureStage || null,
-        failureCode: safeResponse.errorCode,
-        ...timings,
+        failureCode: safeResponse.failureCode || safeResponse.errorCode,
         errorCode: safeResponse.errorCode,
+        deterministicFallbackUsed: Boolean(safeResponse.deterministicFallbackUsed),
+        serperDurationMs: timings.serperMs,
+        geminiDurationMs: timings.geminiMs,
+        providerDurationMs: timings.onlineLookupMs,
+        localMs: timings.localMs,
+        cacheMs: timings.cacheMs,
+        onlineLookupMs: timings.onlineLookupMs,
+        totalMs: timings.totalMs,
+        inflightShared,
+        searchQueryCount,
+        serperCallCount,
+        geminiExtractionRan,
+        geminiGroundedRan,
+        providerAttemptCount,
+        cost: costSnapshot,
       });
       if (shadowTask && !shadowObserved) {
         shadowObserved = true;
@@ -256,7 +316,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         }
       }
 
-      return createBestAvailableResult({
+      const base = createBestAvailableResult({
         input,
         remainingCandidateYears: remaining,
         confidence: localConfidence,
@@ -281,6 +341,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         searchedModels: modelIdentity.searchModels,
         deterministicFallbackUsed: true,
       });
+      return attachFailureFields(base, errorCode, extra.failureStage, extra.failureCategory);
     }
 
     try {
@@ -289,6 +350,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       timings.localMs = Math.max(0, clock() - localStart);
       const localPolicy = evaluateEvidencePolicy(local?.evidence || []);
       localEvidence = localPolicy.evidence || [];
+      localEvidenceHit = Boolean((local?.evidence || []).length);
       const localDecision = resolveCandidateIntersection({
         candidateYears: input.candidateYears,
         evidenceRange: localPolicy.range,
@@ -341,6 +403,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         modelProduction = null;
       }
       timings.localMs = Math.max(0, clock() - localStart);
+      productionDatabaseHit = Boolean(modelProduction?.productionStartYear || modelProduction?.narrowedYears?.length);
       const modelDecision = modelProductionDecision(workingCandidateYears, modelProduction);
       if (modelDecision?.status === 'resolved') {
         const productionStartYear = Number.isInteger(modelProduction.productionStartYear)
@@ -406,7 +469,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
           null,
           'none',
           [],
-          { failureStage: 'local_only' },
+          { failureStage: 'local_only', failureCategory: 'local_evidence_miss' },
         );
         return finish(finalResponse);
       }
@@ -414,6 +477,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       const cacheKey = buildSerialRefinementCacheKey(input, {
         mode: refinementMode,
         effectiveCandidateYears: workingCandidateYears,
+        canonicalModel: modelIdentity.canonicalModel,
       });
       try {
         redis = redisFactory();
@@ -422,24 +486,29 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       }
       if (redis) {
         const cacheStart = clock();
-        const cached = await boundedRedisGet(redis, cacheKey, deadline, {
-          stage: 'serial-refinement-final-cache-read',
-          maxMs: 250,
-          reserveMs: 500,
-        });
-        timings.cacheMs = Math.max(0, clock() - cacheStart);
-        const cachedResponse = safeCachedResponse(cached.value, input.candidateYears);
-        if (cached.status === 'hit' && cachedResponse) {
-          cachedResponse.timings = {
-            ...cachedResponse.timings,
-            cacheMs: timings.cacheMs,
-            totalMs: Math.max(0, clock() - requestStart),
-          };
-          return finish(cachedResponse);
-        }
-        if (cached.status === 'miss') {
-          cacheStatus = 'miss';
-        } else {
+        try {
+          const cached = await boundedRedisGet(redis, cacheKey, deadline, {
+            stage: 'serial-refinement-final-cache-read',
+            maxMs: modeBudgets.redisReadMaxMs,
+            reserveMs: modeBudgets.providerStartReserveMs,
+          });
+          timings.cacheMs = Math.max(0, clock() - cacheStart);
+          const cachedResponse = safeCachedResponse(cached.value, input.candidateYears);
+          if (cached.status === 'hit' && cachedResponse) {
+            cachedResponse.timings = {
+              ...cachedResponse.timings,
+              cacheMs: timings.cacheMs,
+              totalMs: Math.max(0, clock() - requestStart),
+            };
+            return finish(cachedResponse);
+          }
+          if (cached.status === 'miss') {
+            cacheStatus = 'miss';
+          } else {
+            cacheStatus = 'bypass';
+          }
+        } catch (_) {
+          timings.cacheMs = Math.max(0, clock() - cacheStart);
           cacheStatus = 'bypass';
         }
       }
@@ -450,8 +519,8 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       } catch (_) {}
       const rateLimitResult = await boundedRateLimit(limiter, getClientIp(req), deadline, {
         stage: 'serial-refinement-provider-rate-limit',
-        maxMs: 250,
-        reserveMs: 500,
+        maxMs: modeBudgets.rateLimitMaxMs,
+        reserveMs: modeBudgets.providerStartReserveMs,
       });
       if (!rateLimitResult.success) {
         finalResponse = bestAvailable(
@@ -461,12 +530,12 @@ export function createRefineSerialDateHandler(dependencies = {}) {
             : 'Online model evidence is temporarily rate limited. The original serial-valid candidate years are preserved.',
           'none',
           [],
-          { failureStage: 'rate_limit' },
+          { failureStage: 'rate_limit', failureCategory: 'search_rate_limited' },
         );
         return finish(finalResponse);
       }
 
-      if (!deadline.hasTime(500)) {
+      if (!deadline.hasTime(modeBudgets.providerStartReserveMs, completionReserveMs)) {
         const timeoutError = new Error('REFINEMENT_TIMEOUT');
         timeoutError.name = 'AbortError';
         timeoutError.code = 'REFINEMENT_TIMEOUT';
@@ -481,7 +550,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
               deadline,
               redis,
               localModelEvidence,
-              timeoutMs: Math.min(providerBudgetMs, deadline.remainingMs(10)),
+              timeoutMs: Math.min(providerBudgetMs, deadline.remainingMs(completionReserveMs)),
               requestId,
               logger,
               purpose: 'model_refinement_shadow',
@@ -502,62 +571,71 @@ export function createRefineSerialDateHandler(dependencies = {}) {
 
       const providerStart = clock();
       try {
-        if (refinementMode === 'legacy_gemini') {
-          const grounded = await deadline.run(
-            'serial-refinement-legacy-gemini',
-            ({ signal }) => legacyProviderLookup(
-              { ...input, candidateYears: workingCandidateYears },
-              { signal },
-            ),
-            { maxMs: providerBudgetMs, reserveMs: 10 },
-          );
-          const combinedEvidence = [...localEvidence, ...(grounded?.evidence || [])];
-          const policy = evaluateEvidencePolicy(combinedEvidence);
-          const decision = resolveCandidateIntersection({
-            candidateYears: workingCandidateYears,
-            evidenceRange: policy.range,
-            evidenceAvailable: combinedEvidence.length > 0,
-            evidenceSufficient: policy.sufficient,
-          });
-          const range = policy.range
-            ? { start: policy.range.start, end: policy.range.end }
-            : localModelRange;
-          if (policy.sufficient) {
-            finalResponse = createRefinementResponse({
-              ...decision,
-              candidateYears: input.candidateYears,
-              confidence: policy.confidence,
-              resolutionBasis: 'serial-plus-model',
-              modelProductionRange: range,
-              modelNormalization: local?.normalization || null,
-              modelIdentity,
-              evidence: policy.evidence,
-              summary: buildSummary(decision, local?.normalization, modelIdentity),
-              refinementResultTier: decision.status,
-              searchedModels: modelIdentity.searchModels,
-              cacheStatus,
-              provider: 'gemini-google-search',
-              timings,
-              errorCode: null,
+        const providerWork = async () => {
+          if (refinementMode === 'legacy_gemini') {
+            providerAttemptCount += 1;
+            geminiGroundedRan = true;
+            const grounded = await deadline.run(
+              'serial-refinement-legacy-gemini',
+              ({ signal }) => legacyProviderLookup(
+                { ...input, candidateYears: workingCandidateYears },
+                { signal },
+              ),
+              { maxMs: providerBudgetMs, reserveMs: completionReserveMs },
+            );
+            const combinedEvidence = [...localEvidence, ...(grounded?.evidence || [])];
+            const policy = evaluateEvidencePolicy(combinedEvidence);
+            const decision = resolveCandidateIntersection({
+              candidateYears: workingCandidateYears,
+              evidenceRange: policy.range,
+              evidenceAvailable: combinedEvidence.length > 0,
+              evidenceSufficient: policy.sufficient,
             });
-          } else {
+            const range = policy.range
+              ? { start: policy.range.start, end: policy.range.end }
+              : localModelRange;
+            if (policy.sufficient) {
+              return createRefinementResponse({
+                ...decision,
+                candidateYears: input.candidateYears,
+                confidence: policy.confidence,
+                resolutionBasis: 'serial-plus-model',
+                modelProductionRange: range,
+                modelNormalization: local?.normalization || null,
+                modelIdentity,
+                evidence: policy.evidence,
+                summary: buildSummary(decision, local?.normalization, modelIdentity),
+                refinementResultTier: decision.status,
+                searchedModels: modelIdentity.searchModels,
+                identityMatchType: modelIdentity.matchedBy,
+                identityConfidence: modelIdentity.identityConfidence,
+                cacheStatus,
+                provider: 'gemini-google-search',
+                timings,
+                errorCode: null,
+              });
+            }
             // Prefer ranked/era degradation over bare unavailable when any
             // model window or partial local narrowing is available.
-            finalResponse = bestAvailable(
+            let degraded = bestAvailable(
               'INSUFFICIENT_EVIDENCE',
               null,
               'gemini-google-search',
               policy.evidence || [],
               {
                 failureStage: 'legacy_gemini_insufficient',
+                failureCategory: 'extraction_no_usable_facts',
                 estimateBasis: range ? 'model-era-from-grounded-or-local' : null,
               },
             );
-            if (range && !finalResponse.modelProductionRange) {
-              finalResponse.modelProductionRange = range;
+            if (range && !degraded.modelProductionRange) {
+              degraded = { ...degraded, modelProductionRange: range };
             }
+            return degraded;
           }
-        } else {
+
+          sharedEvidenceAttempted = true;
+          providerAttemptCount += 1;
           const deterministic = await deadline.run(
             'serial-refinement-deterministic-serper',
             ({ signal }) => deterministicProviderLookup(
@@ -568,20 +646,36 @@ export function createRefineSerialDateHandler(dependencies = {}) {
                 redis,
                 localModelEvidence,
                 modelIdentity,
-                timeoutMs: Math.min(providerBudgetMs, deadline.remainingMs(10)),
+                timeoutMs: Math.min(providerBudgetMs, deadline.remainingMs(completionReserveMs)),
                 requestId,
                 logger,
+                geminiTimeoutMs: modeBudgets.geminiExtractionMs,
                 serperApiKey: dependencies.serperApiKey,
                 serperFetchImpl: dependencies.serperFetchImpl || dependencies.fetchImpl,
                 geminiApiKey: dependencies.geminiApiKey,
                 geminiFetchImpl: dependencies.geminiFetchImpl || dependencies.fetchImpl,
               },
             ),
-            { maxMs: providerBudgetMs, reserveMs: 10 },
+            { maxMs: providerBudgetMs, reserveMs: completionReserveMs },
           );
           const deterministicEvidence = deterministic?.evidence || [];
-          // Prefer lifecycle lower bound from shared evidence when evaluator
-          // output alone is thin.
+          timings.serperMs = Number(deterministic?.timings?.serperMs || 0);
+          timings.geminiMs = Number(deterministic?.timings?.geminiMs || 0);
+          searchQueryCount = Number(deterministic?.timings?.serperRequestCount || 0);
+          serperCallCount = searchQueryCount;
+          geminiExtractionRan = Boolean(
+            deterministic?.gemini?.status === 'success'
+            || deterministic?.sharedEvidence?.providerSummary?.extractorUsed,
+          );
+          searchResultCount = Number.isFinite(deterministic?.sharedEvidence?.providerSummary?.searchResultCount)
+            ? deterministic.sharedEvidence.providerSummary.searchResultCount
+            : null;
+          evidenceFactCount = Array.isArray(deterministic?.extractedFacts)
+            ? deterministic.extractedFacts.length
+            : null;
+          sharedEvidenceAccepted = ['success', 'partial'].includes(deterministic?.sharedEvidence?.status)
+            || Boolean(deterministicEvidence.length);
+
           if (Number.isInteger(deterministic?.lifecycle?.supportedProductionStartYear)
             && !localModelRange) {
             localModelRange = {
@@ -589,7 +683,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
               end: deterministic.lifecycle.supportedProductionEndYear ?? null,
             };
           }
-          finalResponse = createDeterministicRefinementResult({
+          let mapped = createDeterministicRefinementResult({
             input,
             workingCandidateYears,
             deterministic,
@@ -600,8 +694,8 @@ export function createRefineSerialDateHandler(dependencies = {}) {
             cacheStatus,
             timings,
           });
-          if (!finalResponse) {
-            finalResponse = bestAvailable(
+          if (!mapped) {
+            mapped = bestAvailable(
               deterministic?.errorCode || 'DETERMINISTIC_INSUFFICIENT_EVIDENCE',
               workingCandidateYears.length < input.candidateYears.length
                 ? `Local model-era evidence narrows the serial-valid years to ${workingCandidateYears.join(', ')}, but deterministic web evidence does not establish one manufacture year.`
@@ -610,34 +704,54 @@ export function createRefineSerialDateHandler(dependencies = {}) {
               deterministicEvidence,
               {
                 failureStage: deterministic?.failureCategory || 'deterministic_insufficient',
+                failureCategory: classifyLookupFailure({
+                  errorCode: deterministic?.errorCode,
+                  failureStage: deterministic?.failureCategory || 'deterministic_insufficient',
+                  sharedFailureCategory: deterministic?.failureCategory,
+                }).failureCategory,
                 estimateBasis: localModelRange ? 'shared-or-local-model-era' : null,
               },
             );
           }
-        }
+          return mapped;
+        };
+
+        const shared = await runSharedInflight(cacheKey, providerWork, { store: inflightStore });
+        inflightShared = Boolean(shared.shared);
+        finalResponse = shared.value;
       } finally {
         timings.onlineLookupMs = Math.max(0, clock() - providerStart);
       }
 
-      const ttl = finalResponse?.errorCode ? 0 : chooseCacheTtl(finalResponse);
-      if (ttl > 0 && redis && ['resolved', 'ranked', 'ambiguous', 'ambiguous_with_era'].includes(finalResponse.status)) {
-        const write = await boundedRedisSet(redis, cacheKey, finalResponse, ttl, deadline, {
-          stage: 'serial-refinement-final-cache-write',
-          maxMs: 200,
-        });
-        timings.cacheMs += write.elapsedMs || 0;
+      const ttl = chooseRefinementCacheTtl(finalResponse || {});
+      if (ttl > 0 && redis && finalResponse
+        && ['resolved', 'ranked', 'ambiguous', 'ambiguous_with_era'].includes(finalResponse.status)) {
+        try {
+          const write = await boundedRedisSet(redis, cacheKey, finalResponse, ttl, deadline, {
+            stage: 'serial-refinement-final-cache-write',
+            maxMs: modeBudgets.redisWriteMaxMs,
+          });
+          timings.cacheMs += write.elapsedMs || 0;
+        } catch (_) {
+          // Cache write failures must not erase useful deterministic results.
+        }
       }
     } catch (error) {
       const timedOut = isTimeoutError(error) || /abort|timeout/i.test(String(error?.message || ''));
       const errorCode = timedOut ? 'REFINEMENT_TIMEOUT' : (error?.code || 'REFINEMENT_UNAVAILABLE');
       finalResponse = bestAvailable(
         errorCode,
-        workingCandidateYears.length < input.candidateYears.length
-          ? `Local model-era evidence narrows the serial-valid years to ${workingCandidateYears.join(', ')}, but online refinement could not be completed.`
+        workingCandidateYears.length < input.candidateYears.length || localModelRange
+          ? (workingCandidateYears.length < input.candidateYears.length
+            ? `Local model-era evidence narrows the serial-valid years to ${workingCandidateYears.join(', ')}, but online refinement could not be completed. Broader serial and model-era context is shown instead.`
+            : 'Online refinement timed out. Serial-valid candidates and any available model-era context are preserved.')
           : null,
         refinementMode === 'deterministic_serper' ? 'deterministic-serper' : 'none',
         [],
-        { failureStage: timedOut ? 'timeout' : 'provider_error' },
+        {
+          failureStage: timedOut ? 'timeout' : 'provider_error',
+          failureCategory: timedOut ? 'global_deadline' : 'provider_unavailable',
+        },
       );
     }
 

@@ -2,6 +2,8 @@
 
 Serial Date Refinement v2 narrows repeating serial-year cycles without replacing the rule-based serial decoder. The browser always renders the serial decoder's valid candidates first. Model evidence is then evaluated in the background and may eliminate impossible cycles, but it may never invent a manufacture year.
 
+> **Phase 2 production hardening:** see [serial-refinement-production-hardening.md](./serial-refinement-production-hardening.md) for mode routing (`deterministic_serper` preferred), budgets, failure taxonomy, cache TTLs, canary commands, and the production mode-switch / rollback runbook.
+
 ## Deterministic exact-year rule
 
 ```text

@@ -716,7 +716,10 @@ test('strict chosenYear invariant holds for every non-resolved status', async ()
   await handler(request(), res);
   assert.notEqual(res.payload.status, 'resolved');
   assert.equal(res.payload.chosenYear, null);
-  assert.deepEqual(Object.keys(res.payload.timings).sort(), ['cacheMs', 'localMs', 'onlineLookupMs', 'totalMs'].sort());
+  assert.deepEqual(
+    Object.keys(res.payload.timings).sort(),
+    ['cacheMs', 'geminiMs', 'localMs', 'onlineLookupMs', 'serperMs', 'totalMs'].sort(),
+  );
 });
 
 test('input validation rejects malformed candidates and oversized context', async () => {

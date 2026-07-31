@@ -1,0 +1,131 @@
+[
+  {
+    "id": "whirlpool-wed4850hwo",
+    "brand": "Whirlpool",
+    "category": "appliances",
+    "enteredModel": "WED4850HWO",
+    "expectCanonicalEqualsEntered": false,
+    "expectedSearchModelsInclude": ["WED4850HWO", "WED4850HW0"],
+    "expectedNormalizationApplied": true,
+    "expectedSearchCategory": "dryer",
+    "supported": true,
+    "serialRefinement": {
+      "serial": "MB1930745",
+      "candidateYears": [1992, 2022]
+    }
+  },
+  {
+    "id": "whirlpool-wed4850hw0",
+    "brand": "Whirlpool",
+    "category": "appliances",
+    "enteredModel": "WED4850HW0",
+    "expectCanonicalCompact": "WED4850HW0",
+    "expectedSearchModelsInclude": ["WED4850HW0"],
+    "expectedSearchCategory": "dryer",
+    "supported": true,
+    "serialRefinement": {
+      "serial": "MB1930745",
+      "candidateYears": [1992, 2022]
+    }
+  },
+  {
+    "id": "vizio-m321i-a2",
+    "brand": "VIZIO",
+    "category": "electronics",
+    "enteredModel": "M321i-A2",
+    "expectCanonicalCompact": "M321IA2",
+    "expectedSearchModelsIncludeCompact": ["M321IA2", "M321I-A2", "M321i-A2"],
+    "supported": true,
+    "serialRefinement": {
+      "serial": "LTAQVBCN4123456",
+      "candidateYears": [2013, 2014]
+    }
+  },
+  {
+    "id": "vizio-m321I-a2-case",
+    "brand": "VIZIO",
+    "category": "electronics",
+    "enteredModel": "M321I-A2",
+    "expectCanonicalCompact": "M321IA2",
+    "supported": true,
+    "serialRefinement": {
+      "serial": "LTAQVBCN4123456",
+      "candidateYears": [2013, 2014]
+    }
+  },
+  {
+    "id": "lenovo-thinksystem-st50",
+    "brand": "Lenovo",
+    "category": "electronics",
+    "enteredModel": "Lenovo ThinkSystem ST50",
+    "preserveEnteredForm": true,
+    "supported": true,
+    "serialRefinement": {
+      "serial": "PF123456789",
+      "candidateYears": [2018, 2019, 2020, 2021, 2022, 2023]
+    }
+  },
+  {
+    "id": "lenovo-7y48",
+    "brand": "Lenovo",
+    "category": "electronics",
+    "enteredModel": "Lenovo 7Y48",
+    "preserveEnteredForm": true,
+    "supported": true,
+    "serialRefinement": {
+      "serial": "PF123456789",
+      "candidateYears": [2018, 2019, 2020, 2021, 2022, 2023]
+    }
+  },
+  {
+    "id": "nintendo-switch-2",
+    "brand": "Nintendo",
+    "category": "electronics",
+    "enteredModel": "Nintendo Switch 2",
+    "preserveEnteredForm": true,
+    "supported": true,
+    "serialRefinement": {
+      "serial": "XAW10000000000",
+      "candidateYears": [2025]
+    }
+  },
+  {
+    "id": "sony-bravia",
+    "brand": "Sony",
+    "category": "electronics",
+    "enteredModel": "Sony Bravia",
+    "preserveEnteredForm": true,
+    "supported": true,
+    "serialRefinement": {
+      "serial": "1234567890",
+      "candidateYears": [2015, 2016, 2017, 2018, 2019, 2020]
+    }
+  },
+  {
+    "id": "i1-ambiguity",
+    "brand": "TestBrand",
+    "category": "appliances",
+    "enteredModel": "ABC1I2345",
+    "expectedSearchModelsMax": 2,
+    "expectedSearchModelsInclude": ["ABC1I2345"],
+    "supported": true,
+    "notes": "I/1 ambiguity must stay bounded",
+    "serialRefinement": {
+      "serial": "TESTSERIAL01",
+      "candidateYears": [2010, 2020]
+    }
+  },
+  {
+    "id": "unsupported-model-like-token",
+    "brand": "Unknown",
+    "category": "unknown",
+    "enteredModel": "ZZZ-NOT-A-REAL-MODEL-999",
+    "preserveEnteredForm": true,
+    "expectedSearchModelsMax": 2,
+    "supported": false,
+    "serialRefinement": {
+      "serial": "NOSERIAL01",
+      "candidateYears": [2000, 2010, 2020]
+    }
+  }
+]

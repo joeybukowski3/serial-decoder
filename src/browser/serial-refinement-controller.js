@@ -2,7 +2,8 @@
   'use strict';
 
   var API_URL = '/api/refine-serial-date';
-  var BROWSER_TIMEOUT_MS = 25000;
+  // Keep under/near API global budget (12–14s) so the UI never waits past policy.
+  var BROWSER_TIMEOUT_MS = 15000;
   var SLOW_CHECKING_NOTICE_MS = 5000;
   var installAttempts = 0;
   var legacyDecodeSerial = null;
@@ -266,7 +267,7 @@
     var status = checking ? 'checking' : safeText(response && response.status || 'unavailable');
     var summary = checking
       ? (slowChecking
-        ? 'Still checking model-era evidence\u2026 this can take up to 20 seconds for less common models.'
+        ? 'Still checking model-era evidence\u2026 this can take up to 15 seconds for less common models.'
         : 'Serial decoded. Checking model-era evidence\u2026')
       : safeText(response && response.summary || 'Model evidence could not be checked.');
     var chosen = !checking && response && response.chosenYear

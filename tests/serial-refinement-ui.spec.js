@@ -528,3 +528,230 @@ test('GE field-pattern warning is informational and never swaps entries', async 
     await browser.close();
   }
 });
+
+test('ranked result shows preferred year prominently with alternatives and identity disclosure', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  await page.route('**/api/refine-serial-date', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        status: 'ranked',
+        candidateYears: [1992, 2022],
+        remainingCandidateYears: [1992, 2022],
+        chosenYear: null,
+        preferredCandidateYear: 2022,
+        confidence: 'medium',
+        modelProductionRange: { start: 2019, end: null },
+        modelIdentity: {
+          enteredModel: 'WED4850HWO',
+          canonicalModel: 'WED4850HW0',
+          equivalenceReason: 'terminal-o-zero-transcription',
+          searchModels: ['WED4850HWO', 'WED4850HW0'],
+        },
+        rankingExplanation: 'Model evidence places this product in a modern production period (about 2019 or later).',
+        summary: 'Most likely manufacture year: 2022. Other serial-valid candidates: 1992. Model entered as WED4850HWO; recognized form WED4850HW0 (terminal-o-zero-transcription).',
+        evidence: [{
+          type: 'manufacturer',
+          title: 'Whirlpool WED4850HW0 model page',
+          quality: 'official',
+          supports: 'Model introduced around 2019.',
+          sourceUrl: 'https://example.com/wed4850',
+        }],
+        provider: 'deterministic-serper',
+        refinementResultTier: 'ranked',
+      })),
+    });
+  });
+  try {
+    await fillDecode(page, 'whirlpool', 'MB1930745', 'WED4850HWO');
+    await page.click('#decodeBtn');
+    await expect(page.locator('#resultYear')).toHaveText('2022/1992');
+    await expect(page.locator('.serial-refinement-status--ranked')).toBeVisible();
+    await expect(page.locator('#narrowDateOutput')).toContainText('Most likely');
+    await expect(page.locator('#narrowDateOutput')).toContainText('2022');
+    await expect(page.locator('#narrowDateOutput')).toContainText('1992');
+    await expect(page.locator('#narrowDateOutput')).toContainText('medium');
+    await expect(page.locator('#narrowDateOutput')).toContainText('modern production period');
+    await expect(page.locator('.serial-refinement-normalization')).toContainText('WED4850HWO');
+    await expect(page.locator('.serial-refinement-normalization')).toContainText('WED4850HW0');
+    await expect(page.locator('.serial-refinement-evidence summary')).toHaveText('Evidence used');
+    await expect(page.locator('[data-serial-refinement-retry="1"]')).toHaveCount(0);
+    await expect(page.locator('#narrowDateOutput')).not.toContainText(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s*20\d{2}\b/);
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
+
+test('ambiguous_with_era keeps all serial candidates and distinguishes model era', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  await page.route('**/api/refine-serial-date', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        status: 'ambiguous_with_era',
+        candidateYears: [2004, 2014, 2024],
+        remainingCandidateYears: [2014, 2024],
+        chosenYear: null,
+        preferredCandidateYear: null,
+        confidence: 'low',
+        modelProductionRange: { start: 2013, end: 2020 },
+        summary: 'Serial candidates remain 2014 or 2024. Model evidence supports 2013-2020 but does not fully resolve the individual unit year.',
+        provider: 'deterministic-serper',
+        refinementResultTier: 'ambiguous_with_era',
+      })),
+    });
+  });
+  try {
+    await fillDecode(page, 'lg', '412TATG1H105', 'WM3470HWA');
+    await page.click('#decodeBtn');
+    await expect(page.locator('#resultYear')).toHaveText('2014/2024');
+    await expect(page.locator('.serial-refinement-status--ambiguous_with_era')).toBeVisible();
+    await expect(page.locator('#narrowDateOutput')).toContainText('Serial candidates');
+    await expect(page.locator('#narrowDateOutput')).toContainText('Model era');
+    await expect(page.locator('#narrowDateOutput')).toContainText('2013');
+    await expect(page.locator('#narrowDateOutput')).toContainText('does not fully resolve the individual unit year');
+    await expect(page.locator('#narrowDateOutput')).not.toContainText('Model evidence unavailable');
+    await expect(page.locator('[data-serial-refinement-retry="1"]')).toHaveCount(0);
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
+
+test('timeout degradation keeps serial candidates and explains broader evidence', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  await page.route('**/api/refine-serial-date', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        status: 'ranked',
+        candidateYears: [1992, 2022],
+        remainingCandidateYears: [1992, 2022],
+        chosenYear: null,
+        preferredCandidateYear: 2022,
+        confidence: 'low',
+        modelProductionRange: { start: 2019, end: null },
+        summary: 'Online refinement timed out. Serial-valid candidates and any available model-era context are preserved. Most likely manufacture year: 2022.',
+        rankingExplanation: 'Model-era evidence places introduction around 2019 or later, so older serial cycles are unlikely.',
+        provider: 'deterministic-serper',
+        errorCode: 'REFINEMENT_TIMEOUT',
+        failureCategory: 'global_deadline',
+        failureStage: 'timeout',
+        failureCode: 'REFINEMENT_TIMEOUT',
+        deterministicFallbackUsed: true,
+        refinementResultTier: 'ranked',
+      })),
+    });
+  });
+  try {
+    await fillDecode(page, 'whirlpool', 'MB1930745', 'WED4850HWO');
+    await page.click('#decodeBtn');
+    await expect(page.locator('#resultYear')).toHaveText('2022/1992');
+    await expect(page.locator('#narrowDateOutput')).toContainText('2022');
+    await expect(page.locator('#narrowDateOutput')).toContainText('1992');
+    await expect(page.locator('#narrowDateOutput')).toContainText(/timed out|model-era|preserved|Most likely/i);
+    await expect(page.locator('[data-serial-refinement-retry="1"]')).toHaveCount(0);
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
+
+test('conflict keeps serial candidates visible with clarification guidance', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  await page.route('**/api/refine-serial-date', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        status: 'conflict',
+        candidateYears: [1994, 2024],
+        remainingCandidateYears: [],
+        chosenYear: null,
+        confidence: null,
+        modelProductionRange: { start: 2010, end: 2012 },
+        evidence: [{
+          type: 'manufacturer',
+          title: 'Model era 2010-2012',
+          quality: 'official',
+          supports: 'Production ended 2012.',
+          sourceUrl: 'https://example.com/conflict',
+        }],
+        summary: 'The model evidence does not overlap the serial-valid candidate years. The original serial result is preserved for review.',
+        provider: 'deterministic-serper',
+        refinementResultTier: 'conflict',
+      })),
+    });
+  });
+  try {
+    await fillDecode(page, 'whirlpool', 'TRD3481274', 'WMH31017HS12');
+    await page.click('#decodeBtn');
+    await expect(page.locator('#resultYear')).toHaveText('1994/2024');
+    await expect(page.locator('.serial-refinement-status--conflict')).toBeVisible();
+    await expect(page.locator('#narrowDateOutput')).toContainText(/conflict|does not overlap|preserved for review/i);
+    await expect(page.locator('.serial-refinement-evidence summary')).toHaveText('Evidence used');
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
+
+test('mobile ranked result has no horizontal overflow and readable targets', async () => {
+  const { browser, context, page, diagnostics } = await openPage({ width: 390, height: 844 });
+  await page.route('**/api/refine-serial-date', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        status: 'ranked',
+        candidateYears: [1992, 2022],
+        remainingCandidateYears: [1992, 2022],
+        chosenYear: null,
+        preferredCandidateYear: 2022,
+        confidence: 'medium',
+        modelIdentity: {
+          enteredModel: 'WED4850HWO-VERY-LONG-SUFFIX-EXTRA',
+          canonicalModel: 'WED4850HW0',
+          equivalenceReason: 'terminal-o-zero-transcription',
+          searchModels: ['WED4850HWO-VERY-LONG-SUFFIX-EXTRA', 'WED4850HW0'],
+        },
+        rankingExplanation: 'Model evidence places this product in a modern production period.',
+        summary: 'Most likely manufacture year: 2022. Other serial-valid candidates: 1992.',
+        provider: 'deterministic-serper',
+      })),
+    });
+  });
+  try {
+    await fillDecode(page, 'whirlpool', 'MB1930745', 'WED4850HWO-VERY-LONG-SUFFIX-EXTRA');
+    await page.click('#decodeBtn');
+    await expect(page.locator('.serial-refinement-status--ranked')).toBeVisible();
+    const overflow = await page.evaluate(() => {
+      const doc = document.documentElement;
+      return doc.scrollWidth > doc.clientWidth + 1;
+    });
+    expect(overflow).toBe(false);
+    const panelBox = await page.locator('#narrowDateOutput').boundingBox();
+    expect(panelBox).toBeTruthy();
+    expect(panelBox.width).toBeLessThanOrEqual(390);
+    // On some mobile layouts the year span can be aria-hidden/CSS-hidden while
+    // still carrying the ranked text; assert content + refinement panel instead.
+    await expect(page.locator('#resultYear')).toHaveText('2022/1992');
+    await expect(page.locator('#narrowDateOutput')).toContainText('2022');
+    await expect(page.locator('.serial-refinement-status--ranked')).toBeVisible();
+    const rankedBox = await page.locator('.serial-refinement-status--ranked').boundingBox();
+    expect(rankedBox).toBeTruthy();
+    expect(rankedBox.height).toBeGreaterThanOrEqual(44);
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
