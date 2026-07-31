@@ -69,8 +69,8 @@
     },
     timeout: {
       heading: 'Taking longer than expected',
-      body: 'The lookup took too long, so we stopped before guessing.',
-      tryNext: 'Try again, or add more item details.',
+      body: 'Live research did not finish in time. Try again, or add more item details so we can narrow the estimate.',
+      tryNext: 'Try again, or add the model number, machine type, or serial number from the product label.',
     },
     'rate-limited': {
       heading: 'Temporarily at capacity',
@@ -319,11 +319,15 @@
   function classifyAgeOutcome(data) {
     if (!data) return 'network-error';
     var code = data.errorCode || null;
+    // Estimate-first: a payload that already carries a defensible age estimate
+    // (including a deterministic reserve substituted after a timeout) must be
+    // treated as a successful result card. Timeout/error codes stay on the
+    // payload for telemetry, but they must not erase useful product timing.
+    if (hasUsableAgeInfo(data)) return 'success';
     if (code === 'RATE_LIMIT') return 'rate-limited';
     if (code === 'PROVIDER_TIMEOUT' || code === 'TOTAL_DEADLINE') return 'timeout';
     if (code === 'INTRODUCTION_AFTER_RANGE' || code === 'REVERSED_RANGE') return 'conflict';
     if (code && MALFORMED_AGE_ERROR_CODES[code]) return 'malformed';
-    if (hasUsableAgeInfo(data)) return 'success';
     if (data.querySpecificity === 'unusable') return 'unusable-query';
     if (data.productFamily && data.yearContext && data.yearContext.type === 'unknown') return 'product-year-unverified';
     if (data.productFamily && data.exactModel) return 'exact-model-insufficient';
@@ -550,14 +554,14 @@
   // data was substituted after a provider attempt failed or timed out. This
   // must never be worded as "AI-assisted" or "research completed".
   var DETERMINISTIC_DEGRADED_WORDING = {
-    'deterministic-model-line': 'We recognized this model line, but live research did not finish. This broad timeframe is based on model-line-level information rather than a source-verified exact-model lookup.',
-    'deterministic-family': 'We recognized this product family, but live research did not finish. This broad timeframe is based on family-level information rather than a source-verified exact-model lookup.',
-    'deterministic-brand-category': 'We recognized this brand and category, but live research did not finish. This broad guidance is based on general brand/category information rather than a source-verified lookup.',
-    'deterministic-broad': 'Live research did not finish. This broad guidance is based on deterministic product-category information rather than a source-verified lookup.',
+    'deterministic-model-line': 'Live research did not finish in time, so this result uses the broader product-generation information available for this model line rather than a source-verified exact-model lookup.',
+    'deterministic-family': 'Live research did not finish in time, so this result uses the broader product-generation information available for this product family rather than a source-verified exact-model lookup.',
+    'deterministic-brand-category': 'Live research did not finish in time, so this result uses broader brand and category information rather than a source-verified lookup.',
+    'deterministic-broad': 'Live research did not finish in time, so this result uses broader deterministic product information rather than a source-verified lookup.',
     // Exact-model reserve: identity is confirmed deterministically, but no
     // production-range evidence exists and research did not finish. This must
     // never read as an age estimate -- no year is claimed in this result.
-    'deterministic-exact-model': 'We recognized this exact model number, but live research did not finish and no verified production range is on file for it. No manufacture year is estimated here; enter the serial number for a unit-specific date.',
+    'deterministic-exact-model': 'We recognized this exact model number, but live research did not finish in time and no verified production range is on file for it. No manufacture year is estimated here; enter the serial number for a unit-specific date.',
   };
 
   function isDeterministicDegradedResult(data) {
