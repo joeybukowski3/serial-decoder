@@ -20,6 +20,7 @@
     "test:smart-unit": "node --test tests/smart-lookup/*.test.mjs",
     "test:smart-api": "node --test tests/api/smart-lookup-*.test.mjs",
     "test:smart-benchmark": "node --test tests/benchmarks/smart-lookup-benchmark.test.mjs",
+    "test:vizio-benchmark": "node --test tests/benchmarks/vizio-generation-benchmark.test.mjs",
     "test:smart-playwright": "npx playwright test -c tests/smart-lookup-playwright.config.mjs"
   },
   "dependencies": {

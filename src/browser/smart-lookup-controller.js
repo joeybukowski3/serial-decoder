@@ -494,6 +494,16 @@
     return '';
   }
 
+  function estimateBasisLabel(value) {
+    var labels = {
+      'verified-model-generation': 'Verified exact-model generation',
+      'verified-lineup-generation': 'Verified official-lineup generation',
+      'serial-decode': 'Serial-number decode',
+      'manufacturing-label': 'Manufacturing label',
+    };
+    return labels[value] || String(value || '').replace(/-/g, ' ').replace(/^\w/, function (letter) { return letter.toUpperCase(); });
+  }
+
   function isGroundedProviderResult(data) {
     var evidence = data ? String(data.evidenceSource || '').toLowerCase() : '';
     return Boolean(data)
@@ -785,9 +795,11 @@
       (data && data.evidenceConflict && data.recognizedBrand ? '<div class="result-row"><span class="result-label">Recognized model brand</span><span class="result-value">' + escapeHtml(data.recognizedBrand) + '</span></div>' : '') +
       (data && data.productFamily ? '<div class="result-row"><span class="result-label">Product family</span><span class="result-value">' + escapeHtml(productFamily) + '</span></div>' : '') +
       '<div class="result-row"><span class="result-label">Exact model</span><span class="result-value">' + escapeHtml(exactModel) + '</span></div>' +
+      (data && (data.series || data.recognizedSeries || data.seriesLine) ? '<div class="result-row"><span class="result-label">Series</span><span class="result-value">' + escapeHtml(data.series || data.recognizedSeries || data.seriesLine) + '</span></div>' : '') +
       (data && data.screenSize ? '<div class="result-row"><span class="result-label">Screen size</span><span class="result-value">' + escapeHtml(data.screenSize) + ' inches</span></div>' : '') +
       (data && data.productionRange ? '<div class="result-row"><span class="result-label">Known production/availability</span><span class="result-value">' + escapeHtml(formatRange(data.productionRange, data.yearRange)) + '</span></div>' : '') +
       (data && data.bestEstimateYear ? '<div class="result-row"><span class="result-label">Best estimate</span><span class="result-value">Approximately ' + escapeHtml(data.bestEstimateYear) + '</span></div>' : '') +
+      (data && data.estimateBasis ? '<div class="result-row"><span class="result-label">Estimate basis</span><span class="result-value">' + escapeHtml(estimateBasisLabel(data.estimateBasis)) + '</span></div>' : '') +
       (data && data.identityConfidence ? '<div class="result-row"><span class="result-label">Model generation confidence</span><span class="result-value">' + escapeHtml(data.identityConfidence.charAt(0).toUpperCase() + data.identityConfidence.slice(1)) + '</span></div>' : '') +
       (data && data.timingConfidence ? '<div class="result-row"><span class="result-label">Individual unit timing confidence</span><span class="result-value">' + escapeHtml(data.timingConfidence.charAt(0).toUpperCase() + data.timingConfidence.slice(1)) + '</span></div>' : '') +
       '<div class="result-row"><span class="result-label">Individual manufacture date</span><span class="result-value">' + escapeHtml(manufactureMessage) + '</span></div>' +

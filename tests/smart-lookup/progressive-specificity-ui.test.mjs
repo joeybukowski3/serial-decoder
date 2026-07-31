@@ -427,6 +427,7 @@ test('VIZIO model-generation result renders estimate, conflict, confidence, and 
   const html = api.renderAge({
     brand: 'LG', enteredBrand: 'LG', recognizedBrand: 'VIZIO',
     model: 'M321IA2', exactModel: 'M321i-A2', canonicalModel: 'M321i-A2', enteredModel: 'M321i-A2',
+    series: 'M-Series', recognizedSeries: 'M-Series', estimateBasis: 'verified-model-generation',
     likelyProduct: 'VIZIO M321i-A2 television',
     productionRange: { start: 2013, end: 2014 },
     bestEstimateYear: 2013,
@@ -440,6 +441,8 @@ test('VIZIO model-generation result renders estimate, conflict, confidence, and 
   assert.match(html, /VIZIO M321i-A2/);
   assert.match(html, /2013–2014/);
   assert.match(html, /Approximately 2013/);
+  assert.match(html, /Series[\s\S]*M-Series/);
+  assert.match(html, /Estimate basis[\s\S]*Verified exact-model generation/);
   assert.match(html, /Model generation confidence[\s\S]*High/);
   assert.match(html, /Individual unit timing confidence[\s\S]*Medium/);
   assert.match(html, /entered brand was LG/i);

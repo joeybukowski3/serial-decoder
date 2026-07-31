@@ -96,8 +96,45 @@ test('VIZIO model label ambiguity canonicalizes only verified exact variants', a
 });
 
 test('unsupported VIZIO suffixes do not inherit the M321i-A2 generation', async () => {
-  for (const model of ['M321i-Z9', 'M321i-A9', 'M322i-B1']) {
+  for (const model of ['M321i-Z9', 'M321i-A9', 'M322i-B9', 'M801i-B3']) {
     assert.equal(await findLocalModelAgeResult(`VIZIO ${model}`), null, model);
+  }
+});
+
+test('official VIZIO generations resolve locally without Redis or providers', async () => {
+  const models = [
+    ['M401i-A3', 2013], ['M801d-A3', 2013],
+    ['M322i-B1', 2014], ['M492i-B2', 2014], ['M602i-B3', 2014],
+    ['M801i-A3', 2014], ['D55u-D1', 2015], ['P65-C1', 2016],
+    ['M65-F0', 2018], ['V505-G9', 2019], ['M558-G1', 2019],
+    ['OLED65-H1', 2021], ['M65Q7-J01', 2022], ['VQP75C-84', 2023],
+  ];
+  for (const [model, year] of models) {
+    const calls = { redis: 0, gemini: 0, serperGemini: 0, openai: 0, xai: 0 };
+    const out = res();
+    await localOnlyHandler(calls)(req(`Brand: VIZIO | Model: ${model}`), out);
+    assert.equal(out.statusCode, 200, model);
+    assert.equal(out.payload.canonicalModel, model, model);
+    assert.equal(out.payload.bestEstimateYear, year, model);
+    assert.equal(out.payload.individualManufactureYear, null, model);
+    assert.equal(out.payload.providerAttempted, false, model);
+    assert.deepEqual(calls, { redis: 0, gemini: 0, serperGemini: 0, openai: 0, xai: 0 }, model);
+  }
+});
+
+test('LG, Samsung, and unknown entered brands preserve VIZIO conflicts and estimates', async () => {
+  for (const enteredBrand of ['LG', 'Samsung', 'Acme']) {
+    const calls = { redis: 0, gemini: 0, serperGemini: 0, openai: 0, xai: 0 };
+    const out = res();
+    await localOnlyHandler(calls)(req(`Brand: ${enteredBrand} | Model: M801i-A3`), out);
+    assert.equal(out.payload.brand, enteredBrand);
+    assert.equal(out.payload.enteredBrand, enteredBrand);
+    assert.equal(out.payload.recognizedBrand, 'VIZIO');
+    assert.equal(out.payload.canonicalModel, 'M801i-A3');
+    assert.equal(out.payload.bestEstimateYear, 2014);
+    assert.equal(out.payload.evidenceConflict, true);
+    assert.equal(out.payload.providerAttempted, false);
+    assert.deepEqual(calls, { redis: 0, gemini: 0, serperGemini: 0, openai: 0, xai: 0 });
   }
 });
 

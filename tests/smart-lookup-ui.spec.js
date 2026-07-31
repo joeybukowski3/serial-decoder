@@ -116,6 +116,7 @@ test.describe('Smart Lookup controller', () => {
       await route.fulfill({ json: {
         brand: 'LG', enteredBrand: 'LG', recognizedBrand: 'VIZIO',
         model: 'M321IA2', exactModel: 'M321i-A2', canonicalModel: 'M321i-A2', enteredModel: 'M321i-A2',
+        series: 'M-Series', recognizedSeries: 'M-Series',
         likelyProduct: 'VIZIO M321i-A2 television', itemCategory: 'television', category: 'television',
         productionRange: { start: 2013, end: 2014, basis: 'verified-model-generation' },
         estimatedRange: { start: 2013, end: 2014, basis: 'verified-model-generation' },
@@ -138,6 +139,8 @@ test.describe('Smart Lookup controller', () => {
     await expect(agePanel).toContainText('VIZIO M321i-A2 television');
     await expect(agePanel).toContainText('2013–2014');
     await expect(agePanel).toContainText('Approximately 2013');
+    await expect(agePanel).toContainText('M-Series');
+    await expect(agePanel).toContainText('Verified exact-model generation');
     await expect(agePanel).toContainText('Recognized model brand');
     await expect(agePanel).toContainText('entered brand was LG');
     await expect(agePanel).toContainText('Individual manufacture date requires serial number');
