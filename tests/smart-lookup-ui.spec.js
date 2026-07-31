@@ -108,6 +108,43 @@ test.describe('Smart Lookup controller', () => {
     await expect(page.locator('#smart-lookup-replacement-panel')).toContainText('Samsung Q80C');
   });
 
+  test('VIZIO model-generation estimate renders despite an entered LG brand conflict', async ({ page }) => {
+    let ageCalls = 0;
+    await page.unroute('**/api/age-lookup');
+    await page.route('**/api/age-lookup', async (route) => {
+      ageCalls += 1;
+      await route.fulfill({ json: {
+        brand: 'LG', enteredBrand: 'LG', recognizedBrand: 'VIZIO',
+        model: 'M321IA2', exactModel: 'M321i-A2', canonicalModel: 'M321i-A2', enteredModel: 'M321i-A2',
+        likelyProduct: 'VIZIO M321i-A2 television', itemCategory: 'television', category: 'television',
+        productionRange: { start: 2013, end: 2014, basis: 'verified-model-generation' },
+        estimatedRange: { start: 2013, end: 2014, basis: 'verified-model-generation' },
+        bestEstimateYear: 2013, estimatedYearType: 'model-production', individualManufactureYear: null,
+        estimateBasis: 'verified-model-generation', identityConfidence: 'high', timingConfidence: 'medium',
+        yearContext: { type: 'production-range', startYear: 2013, endYear: 2014, label: 'Estimated production period', confidence: 'medium', source: 'local-model-evidence', isExactUnitDate: false },
+        evidenceConflict: true, evidenceConflictKind: 'brand', providerAttempted: false,
+        notes: 'The M321i-A2 belongs to VIZIO\'s 2013 M-Series generation. This does not establish the individual unit manufacture date.',
+        refinementSuggestion: 'Confirm the brand and serial number on the television label.',
+        evidence: [{ detail: 'Verified VIZIO M321i-A2 model-generation record.', source: 'Local model age database' }],
+      } });
+    });
+
+    await page.goto('http://localhost:3001/index.html?mode=smart#panel-smart');
+    await page.locator('#include-replacement-comparisons').uncheck();
+    await page.locator('#smart-lookup-input').fill('Brand: LG | Serial: LWJ20PAP1801284 | Model: M321i-A2');
+    await page.locator('[data-smart-lookup-submit="1"]').click();
+
+    const agePanel = page.locator('#smart-lookup-age-panel');
+    await expect(agePanel).toContainText('VIZIO M321i-A2 television');
+    await expect(agePanel).toContainText('2013–2014');
+    await expect(agePanel).toContainText('Approximately 2013');
+    await expect(agePanel).toContainText('Recognized model brand');
+    await expect(agePanel).toContainText('entered brand was LG');
+    await expect(agePanel).toContainText('Individual manufacture date requires serial number');
+    await expect(agePanel).not.toContainText('Incomplete Result');
+    expect(ageCalls).toBe(1);
+  });
+
   test('replacement failure preserves age and retry control', async ({ page }) => {
     await page.route('**/api/lkq-lookup', async (route) => route.fulfill({ status: 502, json: { error: 'down' } }));
     await page.goto('http://localhost:3001/smart-lookup.html');

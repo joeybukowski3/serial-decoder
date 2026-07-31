@@ -497,6 +497,51 @@ export function createAgeLookupHandler(dependencies = {}) {
         } catch (_) { conflictEvidence = null; }
         const conflictBrand = conflictEvidence?.record?.brand || '';
         if (conflictBrand && conflictBrand.toLowerCase() !== queryInfo.brand.toLowerCase()) {
+          const verifiedModel = conflictEvidence.localResult || {};
+          if (verifiedModel.estimateBasis === 'verified-model-generation' && verifiedModel.productionRange) {
+            const recognizedProduct = [conflictBrand, conflictEvidence.record.model, conflictEvidence.record.category]
+            .filter(Boolean)
+            .join(' ');
+            const conflictWarning = `The entered brand was ${queryInfo.brand}, but the model number matches ${recognizedProduct}. The entered values were preserved and were not silently changed.`;
+            const result = finalizeTimings(normalizeLegacyResult({
+              ...verifiedModel,
+              // The normalized brand remains what the user entered so the
+              // schema's anti-rewrite guard stays intact. recognizedBrand is
+              // the independently verified model identity shown alongside it.
+              brand: queryInfo.brand,
+              model: conflictEvidence.enteredModel || queryInfo.modelIdentity || null,
+              specificityLevel: 'specific',
+              exactModel: conflictEvidence.record.model || null,
+              recognizedBrand: conflictBrand,
+              recognizedCategory: conflictEvidence.record.category || verifiedModel.category || null,
+              recognizedModel: conflictEvidence.record.model || null,
+              likelyProduct: recognizedProduct,
+              refinementNeeded: true,
+              refinementSuggestion: 'Confirm the brand and serial number on the product label. A supported serial decode or dated manufacturing label may narrow the individual unit date.',
+              notes: [verifiedModel.notes, conflictWarning].filter(Boolean).join(' '),
+              evidence: [
+                ...(Array.isArray(verifiedModel.evidence) ? verifiedModel.evidence : []),
+                {
+                  detail: `Model number matches a verified ${conflictBrand} record, which conflicts with the entered brand (${queryInfo.brand}).`,
+                  source: 'Decode My Item verified local model evidence',
+                },
+              ],
+            }, queryInfo, {
+              source: 'local-db', evidenceSource: 'local-db', timings, currentYear,
+            }), timings, deadline);
+            result.enteredBrand = queryInfo.brand;
+            result.recognizedBrand = conflictBrand;
+            result.enteredModel = conflictEvidence.enteredModel || null;
+            result.canonicalModel = conflictEvidence.record.model || null;
+            result.matchedBy = conflictEvidence.matchedBy || null;
+            result.evidenceConflict = true;
+            result.evidenceConflictKind = 'brand';
+            result.refinementNeeded = true;
+            result.localEvidenceHit = true;
+            logResult(logger, requestId, queryInfo, result);
+            return res.status(200).json(result);
+          }
+
           const result = finalizeTimings(normalizeLegacyResult({
             brand: queryInfo.brand,
             model: conflictEvidence.enteredModel || queryInfo.modelIdentity || null,

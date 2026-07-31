@@ -563,6 +563,59 @@
       ]
     },
     {
+      "brand": "VIZIO",
+      "model": "M321i-A2",
+      "normalizedBrand": "vizio",
+      "normalizedModel": "m321ia2",
+      "category": "television",
+      "modelYear": 2013,
+      "yearStart": 2013,
+      "yearEnd": 2014,
+      "productionRange": "2013-2014",
+      "productionRangeObject": {
+        "start": 2013,
+        "end": 2014,
+        "basis": "verified-model-generation"
+      },
+      "estimateBasis": "verified-model-generation",
+      "estimatedYearType": "model-production",
+      "rangeLabel": "Approximately 2013-2014",
+      "confidence": "high",
+      "identityConfidence": "high",
+      "timingConfidence": "medium",
+      "likelyProduct": "VIZIO M321i-A2 television",
+      "serialNeededForExactUnitDate": true,
+      "source": "VIZIO 2013 M-Series announcement and official M321i-A2 documentation",
+      "sources": [
+        "https://www.vizio.com/en/press/2013/may/new-vizio-m-series-delivers-faster-smarter-all-led-hdtvs",
+        "https://cdn.vizio.com/manuals/kb/m321ia2manual.pdf",
+        "https://cdn.vizio.com/documents/downloads/hdtv/M322iB1/DS_M322iB1.pdf"
+      ],
+      "notes": "The M321i-A2 is an exact VIZIO television model from the 2013 M-Series generation. A 2014 VIZIO M-Series document identifies M322i-B1 as the succeeding 32-inch generation, supporting an estimated M321i-A2 production period of 2013-2014. This model evidence does not establish the manufacture date of an individual unit.",
+      "exactAliases": [
+        "M32li-A2"
+      ],
+      "aliases": [
+        "M321IA2",
+        "M321i A2",
+        "VIZIO M321i-A2"
+      ],
+      "recordType": "exact-model",
+      "refinementEvidence": [
+        {
+          "type": "local-db",
+          "title": "VIZIO 2013 M-Series M321i announcement",
+          "sourceName": "VIZIO",
+          "sourceUrl": "https://www.vizio.com/en/press/2013/may/new-vizio-m-series-delivers-faster-smarter-all-led-hdtvs",
+          "productionStart": 2013,
+          "productionEnd": 2014,
+          "supports": "VIZIO's May 2013 announcement lists M321i in the new 2013 M-Series; official M321i-A2 documentation confirms the complete model identity, while the official M322i-B1 sheet identifies the replacement as the 2014 M-Series generation.",
+          "quality": "official",
+          "verified": true
+        }
+      ]
+    },
+    {
       "brand": "Vizio",
       "model": "VW32L HDTV10A",
       "normalizedBrand": "vizio",
