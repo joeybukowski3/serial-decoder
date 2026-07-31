@@ -212,7 +212,7 @@ test('provider timeout returns verified local evidence as the best available res
   assert.ok(['SERPER_TIMEOUT', 'GLOBAL_BUDGET_EXHAUSTED'].includes(result.failureCategory));
 });
 
-test('invalid extractor output is classified and cannot be cached as successful evidence', async () => {
+test('invalid extractor output is classified and receives only short negative caching', async () => {
   const result = await lookupModelEvidence({
     brand: 'Test Brand',
     model: 'ABCD1234LONG',
@@ -232,13 +232,14 @@ test('invalid extractor output is classified and cannot be cached as successful 
   let writes = 0;
   const cache = createDeterministicCache({
     redis: { set: async () => { writes += 1; } },
+    deadline: createDeadline(2_000),
   });
   await cache.setSharedEvidence({
     brand: 'Test Brand',
     model: 'ABCD1234LONG',
     category: 'appliance',
   }, result);
-  assert.equal(writes, 0);
+  assert.equal(writes, 1);
 });
 
 test('shared cache identity excludes consumer purpose and serial candidate ordering', () => {

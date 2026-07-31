@@ -483,9 +483,10 @@ test('cache keys distinguish exact-model, model-line, product-family, and brand-
   assert.equal(keys.size, 4);
 });
 
-test('a degraded (deterministic-family) result is never cached, regardless of fallbackKind', async () => {
+test('a degraded deterministic-family result is short-cached after provider failure', async () => {
   let setCalls = 0;
-  const redis = { ...redisMiss, set: async () => { setCalls += 1; } };
+  let cacheOptions = null;
+  const redis = { ...redisMiss, set: async (_key, _value, options) => { setCalls += 1; cacheOptions = options; } };
   const handler = createAgeLookupHandler({
     ...BASE_DEPS,
     redisFactory: () => redis,
@@ -497,7 +498,8 @@ test('a degraded (deterministic-family) result is never cached, regardless of fa
   assert.equal(out.statusCode, 200);
   assert.equal(out.payload.fallbackKind, 'deterministic-family');
   await new Promise((r) => setTimeout(r, 10));
-  assert.equal(setCalls, 0);
+  assert.equal(setCalls, 1);
+  assert.equal(cacheOptions.ex, 15 * 60);
 });
 
 test('a real ungrounded-provider recovery result IS eligible for caching and is labeled distinctly from a deterministic fallback', async () => {
