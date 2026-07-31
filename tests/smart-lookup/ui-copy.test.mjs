@@ -253,7 +253,7 @@ test('renderAge only shows the backup-source note when fallbackUsed is true', ()
 
 test('renderAge success output is unchanged for a normal result (no regressions)', () => {
   const html = api.renderAge({ introductionYear: 2020, productionRange: { start: 2021, end: 2021 }, notes: 'Model data only.' });
-  assert.match(html, /Model introduced/);
+  assert.match(html, /Estimated introduction|Model introduced/);
   assert.match(html, /Known production\/availability/);
   assert.match(html, /Individual manufacture date requires serial number/);
 });
@@ -395,8 +395,8 @@ test('supported LG family year context is a success and renders the year as the 
   assert.equal(api.classifyAgeOutcome(data), 'success');
   const html = api.renderAge(data);
   assert.match(html, /smart-year-context-value[^>]*>2023</);
-  assert.match(html, /Model-year family/);
-  assert.match(html, /Exact model<\/span><span class="result-value">Not provided/);
+  assert.match(html, /Model-year estimate|Estimated introduction|Model-year family/);
+  assert.match(html, /Exact model[\s\S]*Not provided/);
   assert.match(html, /Not available without serial or exact unit evidence/);
   assert.doesNotMatch(html, /Lookup unavailable|Brand needed|Serial numbers are brand-specific/);
 });

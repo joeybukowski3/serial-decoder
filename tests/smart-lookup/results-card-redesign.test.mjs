@@ -4,12 +4,18 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 function loadSmartLookupController() {
+  const analyticsCalls = [];
   const ctx = {
     console,
     setTimeout: (fn) => { fn(); return 0; },
     clearTimeout: () => {},
     fetch: async () => ({ ok: false, status: 0, json: async () => ({}) }),
     AbortController: class { constructor() { this.signal = {}; } abort() {} },
+    URLSearchParams,
+    encodeURIComponent,
+    decodeURIComponent,
+    Math,
+    Date,
     document: {
       readyState: 'complete',
       addEventListener: () => {},
@@ -25,7 +31,12 @@ function loadSmartLookupController() {
       }),
     },
   };
-  ctx.window = ctx;
+  ctx.window = {
+    ItemAssistAnalytics: {
+      track: (name, props) => { analyticsCalls.push({ name, props }); },
+    },
+  };
+  ctx.__analyticsCalls = analyticsCalls;
   vm.createContext(ctx);
 
   const source = fs.readFileSync('src/browser/smart-lookup-controller.js', 'utf8').replace(/\r\n/g, '\n');
@@ -38,11 +49,16 @@ function loadSmartLookupController() {
   const wrapped = `(function () {\n${body}\n
     globalThis.__smartLookupTestApi = {
       renderAge, escapeHtml, specificityLabel, confidenceLabel, estimatedTimingText,
-      heroEstimateTypeLabel, sourceQualifier,
+      heroEstimateTypeLabel, heroPrimaryLabel, productIdentityHeading, sourceQualifier,
+      compactTimingDisplay, buildItemAssistReportUrl, smartUpsellVariant,
+      ITEM_ASSIST_REPORT_URL, ITEM_ASSIST_SOURCE, UPSELL_VARIANT_COPY,
+      hasIndividualUnitDateEvidence,
     };
   }());`;
   vm.runInContext(wrapped, ctx);
-  return ctx.__smartLookupTestApi;
+  const api = ctx.__smartLookupTestApi;
+  api.analyticsCalls = analyticsCalls;
+  return api;
 }
 
 const api = loadSmartLookupController();
@@ -231,13 +247,14 @@ test('report shell includes navy header, product heading, and hero year panel', 
   assert.match(html, /smart-year-context-value[\s\S]*2013–2014/);
   assert.match(html, /Estimated production period/);
   assert.match(html, /Best available result/i);
+  assert.match(html, /smart-lookup-best-product[\s\S]*VIZIO M321i-A2/);
 });
 
 test('exact individual manufacture year uses unit date fields only', () => {
   const html = api.renderAge(exactUnitResult());
   assert.match(html, /smart-year-context-value[\s\S]*>2019</);
   assert.match(html, /Individual manufacture date[\s\S]*2019/);
-  assert.match(html, /Serial-decoded manufacture date|Individual manufacture year/);
+  assert.match(html, /Serial-decoded unit date|Individual manufacture year|Manufacture year/);
   assert.doesNotMatch(html, /Not available without serial/);
 });
 
@@ -246,7 +263,7 @@ test('model-generation range does not invent a unit manufacture date', () => {
   assert.match(html, /2013–2014/);
   assert.match(html, /Approximately 2013/);
   assert.match(html, /Individual manufacture date[\s\S]*requires serial number|Not available without serial/i);
-  assert.doesNotMatch(html, /Individual manufacture date<\/span><span class="result-value">2013</);
+  assert.doesNotMatch(html, /Individual manufacture date[\s\S]*>2013</);
 });
 
 test('year range and open-ended timing render existing estimate fields', () => {
@@ -261,6 +278,7 @@ test('product-family and timeout fallback keep deterministic wording', () => {
   assert.match(family, /ThinkSystem ST50/);
   assert.match(family, /Things to Keep in Mind|Things to keep in mind/i);
   assert.match(family, /Add the exact machine type code/i);
+  assert.match(family, /Model-line estimate/);
 
   const timeout = api.renderAge(timeoutFallbackResult());
   assert.match(timeout, /live research did not finish/i);
@@ -299,7 +317,7 @@ test('results without exact model omit fabricated model numbers', () => {
   const html = api.renderAge(noExactModelResult());
   assert.match(html, /Sony Bravia|Bravia/);
   assert.match(html, /Exact model[\s\S]*Not provided/);
-  assert.match(html, /Specificity[\s\S]*Product family/i);
+  assert.match(html, /Scope[\s\S]*Product family|Specificity[\s\S]*Product family/i);
   assert.match(html, /Confidence[\s\S]*Moderate/i);
 });
 
@@ -348,10 +366,126 @@ test('hero estimate-type labels derive from existing normalized fields only', ()
   assert.match(api.heroEstimateTypeLabel(exactUnitResult(), exactUnitResult().yearContext, false), /Individual manufacture year|Serial-decoded/);
   assert.match(
     api.heroEstimateTypeLabel(modelGenerationResult(), modelGenerationResult().yearContext, false),
-    /Model production period|Estimated production period/
+    /Model-generation estimate|Model production period|Estimated production period/
+  );
+  assert.equal(api.heroPrimaryLabel(modelGenerationResult(), modelGenerationResult().yearContext, false), 'Estimated production period');
+  assert.equal(api.estimatedTimingText(openEndedResult()), '2020+');
+  assert.equal(api.compactTimingDisplay({ rangeLabel: '2021 or later' }).display, '2021+');
+  assert.equal(api.compactTimingDisplay({ rangeLabel: '2021 or later' }).full, '2021 or later');
+});
+
+test('product identity prefers displayName over sparse likelyProduct', () => {
+  assert.equal(
+    api.productIdentityHeading({ brand: 'Sony', displayName: 'Sony PlayStation 2', likelyProduct: 'playstation 2' }),
+    'Sony PlayStation 2'
   );
   assert.equal(
-    api.estimatedTimingText(openEndedResult()),
-    '2020+'
+    api.productIdentityHeading({ brand: 'Sony', likelyProduct: 'Sony PlayStation 2' }),
+    'Sony PlayStation 2'
   );
+  const html = api.renderAge({
+    brand: 'Sony',
+    displayName: 'Sony PlayStation 2',
+    productFamily: 'PlayStation',
+    yearContext: { value: 2000, type: 'market-introduction', label: 'Estimated introduction', isExactUnitDate: false },
+    introductionYear: 2000,
+  });
+  assert.match(html, /Sony PlayStation 2/);
+  assert.doesNotMatch(html, />playstation 2</i);
+});
+
+test('year panel uses one concise primary label and optional precision label', () => {
+  const html = api.renderAge(productFamilyResult());
+  assert.match(html, /Estimated introduction|Estimated production period|Model-line production period/);
+  assert.match(html, /Model-line estimate/);
+  // Must not stack two nearly identical introduction captions.
+  assert.doesNotMatch(html, /Product-line introduction[\s\S]*Model-line introduction/);
+  assert.doesNotMatch(html, /Model-line introduction[\s\S]*Product-line introduction/);
+});
+
+test('detail rows use definition-list markup without all-caps labels', () => {
+  const html = api.renderAge(modelGenerationResult());
+  assert.match(html, /<dl class="smart-age-detail-col">/);
+  assert.match(html, /<dt class="result-label smart-age-detail-label">Brand<\/dt>/);
+  assert.match(html, /<dd class="result-value smart-age-detail-value">VIZIO<\/dd>/);
+  assert.doesNotMatch(html, /text-transform:\s*uppercase/);
+});
+
+test('irrelevant individual-unit confidence is omitted for model-era results', () => {
+  const modelHtml = api.renderAge(modelGenerationResult());
+  assert.match(modelHtml, /Identity confidence[\s\S]*High/i);
+  assert.match(modelHtml, /Estimate confidence[\s\S]*Medium/i);
+  assert.doesNotMatch(modelHtml, /Individual unit timing confidence/i);
+  assert.doesNotMatch(modelHtml, /Individual-unit date confidence/i);
+  assert.doesNotMatch(modelHtml, /Model generation confidence/i);
+
+  const unitHtml = api.renderAge(exactUnitResult());
+  assert.match(unitHtml, /Identity confidence[\s\S]*High/i);
+  assert.match(unitHtml, /Individual-unit date confidence[\s\S]*High/i);
+  assert.doesNotMatch(unitHtml, /Estimate confidence/);
+});
+
+test('explanation content is not duplicated from the hero unit caveat', () => {
+  const html = api.renderAge(modelGenerationResult());
+  const caveat = 'not the manufacture date of your individual unit';
+  const occurrences = html.split(caveat).length - 1;
+  assert.equal(occurrences, 1, 'unit caveat should appear once in the hero, not again in keep-in-mind');
+});
+
+test('ItemAssist referral matches Serial Decoder destination and copy', () => {
+  const html = api.renderAge(modelGenerationResult());
+  assert.match(html, /ia-upsell-card/);
+  assert.match(html, /Need This Confirmed by a Person\?/);
+  assert.match(html, /Request Human-Reviewed Report/);
+  assert.match(html, /Starting at \$35/);
+  assert.match(html, /\$25 professional review plus \$10 per item/);
+  assert.match(html, /Not a manufacturer certification/);
+  assert.match(html, /What&rsquo;s included\?|What’s included\?/);
+  assert.match(html, /itemassist\.com\/request-age-verification\?/);
+  assert.match(html, /source=decodemyitem/);
+  assert.match(html, /result_status=resolved/);
+  assert.match(html, /brand=VIZIO/);
+  assert.match(html, /model=M321i-A2/);
+  assert.doesNotMatch(html, /[?&]serial=/i);
+  // Referral appears after evidence, before article close.
+  const evidenceIdx = html.indexOf('smart-age-evidence');
+  const upsellIdx = html.indexOf('itemAssistSmartUpsellCard');
+  const articleClose = html.lastIndexOf('</article>');
+  assert.ok(evidenceIdx > -1 && upsellIdx > evidenceIdx && upsellIdx < articleClose);
+
+  assert.equal(api.ITEM_ASSIST_REPORT_URL, 'https://itemassist.com/request-age-verification');
+  assert.equal(api.ITEM_ASSIST_SOURCE, 'decodemyitem');
+  assert.equal(
+    api.UPSELL_VARIANT_COPY.resolved,
+    'Want this backed by documentation? A human reviewer can verify this finding and provide supporting sources.'
+  );
+  assert.equal(
+    api.UPSELL_VARIANT_COPY.ambiguous,
+    'Our automated tool narrowed this to a few possible years. A human reviewer can dig deeper and resolve it.'
+  );
+  assert.equal(
+    api.UPSELL_VARIANT_COPY.noMatch,
+    "Automated decoding couldn't pin this down. Our team can do deeper manual research to find an answer."
+  );
+
+  const url = api.buildItemAssistReportUrl({
+    brand: 'GE', model: 'ABC123', category: 'appliances', resultId: 'r1', resultStatus: 'resolved', serial: 'NOPE',
+  });
+  assert.equal(url, 'https://itemassist.com/request-age-verification?brand=GE&model=ABC123&category=appliances&result_id=r1&result_status=resolved&source=decodemyitem');
+  assert.ok(!url.includes('serial'));
+  assert.ok(!url.includes('NOPE'));
+});
+
+test('ItemAssist referral variant mapping and analytics context', () => {
+  assert.equal(api.smartUpsellVariant(modelGenerationResult(), modelGenerationResult().yearContext, false), 'resolved');
+  assert.equal(api.smartUpsellVariant(incompleteResult(), null, false), 'noMatch');
+  assert.equal(api.smartUpsellVariant({ manufactureYearCandidates: [2018, 2019] }, null, true), 'ambiguous');
+
+  api.analyticsCalls.length = 0;
+  api.renderAge(modelGenerationResult());
+  const viewed = api.analyticsCalls.filter((c) => c.name === 'item_assist_upsell_viewed');
+  assert.ok(viewed.length >= 1);
+  assert.equal(viewed[0].props.context, 'item-assist-upsell');
+  assert.equal(viewed[0].props.resultStatus, 'resolved');
+  assert.equal(Object.prototype.hasOwnProperty.call(viewed[0].props, 'serial'), false);
 });

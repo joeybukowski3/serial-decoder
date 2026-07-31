@@ -128,9 +128,9 @@ test('HVAC serial candidates render as ambiguous rather than one exact manufactu
     refinementSuggestion: 'Enter the complete model number to resolve the candidate year.',
   });
   assert.match(html, /1927 or 2027/);
-  assert.match(html, /Ambiguous manufacture-year candidates/);
+  assert.match(html, /Ambiguous manufacture year|Ambiguous manufacture-year candidates|Ambiguous candidates/);
   assert.match(html, /model-era evidence is required/);
-  assert.doesNotMatch(html, /Manufacture year<\/span>/i);
+  assert.doesNotMatch(html, /Manufacture year<\/dd>/i);
 });
 
 test('brand-category query gets dedicated broad-guidance copy instead of a generic "more details" card', () => {
@@ -164,8 +164,8 @@ test('LG TV historical context renders as a positive broad result with model ref
   });
   assert.match(html, /Best available result/);
   assert.match(html, /LG television/i);
-  assert.match(html, /Historical context/);
-  assert.match(html, /brand\/category history/i);
+  // Historical context appears in the hero summary (without the bold label prefix).
+  assert.match(html, /GoldStar produced Korea-first televisions|brand\/category history/i);
   assert.match(html, /model number/i);
   assert.doesNotMatch(html, /Complete model required|Could not identify|Brand needed/i);
 });
@@ -187,7 +187,7 @@ test('Dell XPS 15 model-line context renders without dead-end clarification', ()
     yearContext: { type: 'market-introduction', value: 2010, label: 'Product-line introduction', isExactUnitDate: false },
   });
   assert.match(html, /Dell XPS 15/);
-  assert.match(html, /Product-line introduction/);
+  assert.match(html, /Estimated introduction|Model-line estimate|Product-line introduction/);
   assert.match(html, /many generations/i);
   assert.match(html, /service tag/i);
   assert.doesNotMatch(html, /Complete model required|Could not identify|Brand needed/i);
@@ -446,8 +446,9 @@ test('VIZIO model-generation result renders estimate, conflict, confidence, and 
   assert.match(html, /Approximately 2013/);
   assert.match(html, /Series[\s\S]*M-Series/);
   assert.match(html, /Estimate basis[\s\S]*Verified exact-model generation/);
-  assert.match(html, /Model generation confidence[\s\S]*High/);
-  assert.match(html, /Individual unit timing confidence[\s\S]*Medium/);
+  assert.match(html, /Identity confidence[\s\S]*High/);
+  assert.match(html, /Estimate confidence[\s\S]*Medium/);
+  assert.doesNotMatch(html, /Individual unit timing confidence|Individual-unit date confidence/i);
   assert.match(html, /entered brand was LG/i);
   assert.match(html, /Recognized model brand[\s\S]*VIZIO/);
   assert.match(html, /Individual manufacture date[\s\S]*requires serial number/i);

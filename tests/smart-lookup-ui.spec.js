@@ -101,7 +101,7 @@ test.describe('Smart Lookup controller', () => {
       page.locator('[data-smart-lookup-submit="1"]').click(),
     ]);
     const agePanel = page.locator('#smart-lookup-age-panel');
-    await expect(agePanel.locator('.smart-year-context-label')).toHaveText('Model introduced');
+    await expect(agePanel.locator('.smart-year-context-label')).toHaveText('Estimated introduction');
     await expect(agePanel).toContainText('Known production/availability');
     await expect(agePanel).toContainText('Individual manufacture date requires serial number');
     await expect(agePanel).not.toContainText('midpoint');
@@ -154,7 +154,7 @@ test.describe('Smart Lookup controller', () => {
     await page.locator('#include-replacement-comparisons').check();
     await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
     await page.locator('#smartLookupBtn').click();
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Estimated introduction');
     await expect(page.locator('[data-smart-lookup-retry="replacement"]')).toBeVisible();
   });
 
@@ -193,7 +193,7 @@ test.describe('Smart Lookup controller', () => {
     await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
     await page.locator('#lookup-notes').fill('  Label says\nparts were replaced   ');
     await page.locator('#smartLookupBtn').click();
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Estimated introduction');
     expect(ageBodies).toEqual([{ query: 'Samsung QN65-Q80A', notes: 'Label says parts were replaced' }]);
     expect(replacementBodies).toEqual([{ query: 'Samsung QN65-Q80A', notes: 'Label says parts were replaced' }]);
   });
@@ -214,9 +214,9 @@ test.describe('Smart Lookup controller', () => {
     await page.locator('#include-replacement-comparisons').check();
     await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
     await page.locator('#smartLookupBtn').click();
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Estimated introduction');
     await expect(page.locator('#smart-lookup-replacement-panel')).toContainText('Checking replacement guidance');
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Estimated introduction');
   });
 
   test('grounded LKQ success renders relationship, compatibility, pricing, and sources independently of age', async ({ page }) => {
@@ -333,7 +333,7 @@ test.describe('Smart Lookup controller', () => {
     await page.locator('#include-replacement-comparisons').check();
     await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
     await page.locator('#smartLookupBtn').click();
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Estimated introduction');
     await expect(page.locator('[data-smart-lookup-retry="replacement"]')).toBeVisible();
   });
 
@@ -402,7 +402,7 @@ test.describe('Smart Lookup controller', () => {
     await expect(submit).toBeDisabled();
     await expect(submit).toHaveAttribute('aria-busy', 'true');
     await input.press('Enter');
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Estimated introduction');
     await expect(submit).toBeEnabled();
     await expect(submit).toHaveAttribute('aria-busy', 'false');
     expect(ageCalls).toBe(1);
@@ -473,7 +473,7 @@ test.describe('Smart Lookup controller', () => {
     await page.goto('http://localhost:3001/smart-lookup.html');
     await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
     await page.locator('#smartLookupBtn').click();
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Estimated introduction');
     expect(errors).toEqual([]);
   });
 
@@ -502,7 +502,7 @@ test.describe('Smart Lookup controller', () => {
     // Once the response actually arrives, the real fallbackUsed metadata
     // should confirm the backup-provider note truthfully -- not the time-based
     // guess shown while waiting.
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Estimated introduction');
     await expect(page.locator('#smart-lookup-age-panel')).toContainText('backup provider');
   });
 
@@ -513,7 +513,7 @@ test.describe('Smart Lookup controller', () => {
     await page.goto('http://localhost:3001/smart-lookup.html');
     await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
     await page.locator('#smartLookupBtn').click();
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Estimated introduction');
     await expect(page.locator('#smart-lookup-age-panel')).not.toContainText('backup provider');
   });
 
@@ -734,7 +734,7 @@ test.describe('Smart Lookup controller', () => {
     await page.locator('#include-replacement-comparisons').check();
     await page.locator('#smart-lookup-input').fill('Samsung QN65-Q80A');
     await page.locator('#smartLookupBtn').click();
-    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model introduced');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Estimated introduction');
     await expect(page.locator('#smart-lookup-replacement-panel')).toContainText('Replacement match unavailable');
     await expect(page.locator('#smart-lookup-replacement-panel')).toContainText('Try adding the full model number');
     await expect(page.locator('[data-smart-lookup-retry="replacement"]')).toBeVisible();
@@ -799,7 +799,7 @@ test.describe('Smart Lookup controller', () => {
       const panel = page.locator('#smart-lookup-age-panel');
       await expect(panel).toContainText(heading);
       await expect(panel.locator('.smart-year-context-value')).toHaveText(year);
-      await expect(panel).toContainText('Model-year family');
+      await expect(panel).toContainText(/Model-year estimate|Estimated introduction|Model-year family/);
       await expect(panel).toContainText('Exact model');
       await expect(panel).toContainText('Not provided');
       await expect(panel).toContainText('Not available without serial or exact unit evidence');
@@ -821,7 +821,7 @@ test.describe('Smart Lookup controller', () => {
     const panel = page.locator('#smart-lookup-age-panel');
     await expect(panel).toContainText('LG OLED65C3PUA');
     await expect(panel.locator('.smart-year-context-value')).toHaveText('2023');
-    await expect(panel).toContainText('Model-year family');
+    await expect(panel).toContainText(/Model-year estimate|Estimated introduction|Model-year family/);
     await expect(panel).toContainText('Screen size');
     await expect(panel).toContainText('65 inches');
     await expect(panel).toContainText('Not available without serial or exact unit evidence');
@@ -845,7 +845,7 @@ test.describe('Smart Lookup controller', () => {
     await page.locator('#smart-lookup-input').fill('Samsung Q60A 65 inch TV');
     await page.locator('#smartLookupBtn').click();
     await expect(panel.locator('.smart-year-context-value')).toHaveText('2021');
-    await expect(panel).toContainText('Model-year family');
+    await expect(panel).toContainText(/Model-year estimate|Estimated introduction|Model-year family/);
     await expect(panel).not.toContainText('manufacture year is 2021');
     await expect.poll(() => interceptedQueries.filter((value) => value === 'Samsung Q60A 65 inch TV').length, {
       message: 'Expected the /api/age-lookup mock to intercept Samsung Q60A 65 inch TV',
@@ -900,12 +900,30 @@ test.describe('Smart Lookup controller', () => {
     await expect(report.locator('.smart-age-report__title')).toHaveText('Smart Lookup Results');
     await expect(report.locator('.smart-age-hero')).toBeVisible();
     await expect(report.locator('.smart-year-context-value')).toHaveText('2013–2014');
+    await expect(report.locator('.smart-year-context-label')).toHaveText('Estimated production period');
+    await expect(report.locator('.smart-lookup-best-product')).toContainText(/VIZIO M321i-A2/i);
     await expect(report).toContainText('What This Year Means');
     await expect(report).toContainText('Things to Keep in Mind');
     await expect(report).toContainText('Check the brand on the label');
     await expect(report.locator('.smart-age-detail-grid')).toBeVisible();
+    await expect(report.locator('dl.smart-age-detail-col').first()).toBeVisible();
+    await expect(report).toContainText('Identity confidence');
+    await expect(report).not.toContainText('Individual-unit date confidence');
+    await expect(report).not.toContainText('Individual unit timing confidence');
 
-    const evidence = report.locator('details.determination-details').first();
+    // ItemAssist referral reuses Serial Decoder markup/destination.
+    const upsell = report.locator('#itemAssistSmartUpsellCard');
+    await expect(upsell).toBeVisible();
+    await expect(upsell).toContainText('Need This Confirmed by a Person?');
+    await expect(upsell.locator('#itemAssistSmartUpsellCta')).toHaveAttribute(
+      'href',
+      /https:\/\/itemassist\.com\/request-age-verification\?.*source=decodemyitem/
+    );
+    await expect(upsell.locator('#itemAssistSmartUpsellCta')).toHaveText('Request Human-Reviewed Report');
+    await expect(upsell).toContainText('Starting at $35');
+    await expect(upsell).toContainText('Not a manufacturer certification');
+    // Positioned after evidence, before page footer actions.
+    const evidence = report.locator('.smart-age-evidence details.determination-details').first();
     await expect(evidence).toBeVisible();
     await expect(evidence.locator('summary')).toHaveAttribute('aria-expanded', 'false');
     await evidence.locator('summary').click();
@@ -917,15 +935,26 @@ test.describe('Smart Lookup controller', () => {
     const footer = page.locator('#ageResults .results-footer');
     await expect(footer.getByRole('button', { name: /Decode Another Item/i })).toBeVisible();
     await expect(footer.getByRole('button', { name: /Possible Error/i })).toBeVisible();
+    const upsellBox = await upsell.boundingBox();
+    const footerBox = await footer.boundingBox();
+    expect(upsellBox.y).toBeLessThan(footerBox.y);
 
     const desktopBox = await report.boundingBox();
     expect(desktopBox.width).toBeGreaterThan(500);
     expect(desktopBox.width).toBeLessThanOrEqual(1280);
 
+    // Metric values should not wrap awkwardly at desktop widths.
+    const timingWrap = await report.locator('.smart-age-metric-timing').evaluate((el) => {
+      const style = window.getComputedStyle(el);
+      return { whiteSpace: style.whiteSpace, height: el.getBoundingClientRect().height };
+    });
+    expect(timingWrap.whiteSpace).toBe('nowrap');
+
     await page.setViewportSize({ width: 375, height: 812 });
     const mobileBox = await report.boundingBox();
     expect(mobileBox.width).toBeLessThanOrEqual(375);
     await expect(report.locator('.smart-year-context-value')).toBeVisible();
+    await expect(upsell.locator('#itemAssistSmartUpsellCta')).toBeVisible();
     const overflow = await page.evaluate(() => {
       const el = document.querySelector('#smart-lookup-age-panel .smart-age-report');
       if (!el) return true;
