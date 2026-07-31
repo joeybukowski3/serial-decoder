@@ -403,20 +403,50 @@ test('a brand conflict is disclosed rather than silently corrected', () => {
   const html = api.renderAge(exactAliasResult({
     brand: 'Samsung', source: 'static', evidenceSource: 'heuristic',
     localEvidenceHit: false, evidenceConflict: true, evidenceConflictKind: 'brand',
+    enteredBrand: 'Samsung', recognizedBrand: 'GE',
     canonicalModel: null, enteredModel: null, yearRange: null, productionRange: null,
     notes: 'The entered brand (Samsung) does not match the brand on the verified record for this model number (GE).',
   }));
   assert.match(html, /Check the brand on the label/i);
-  assert.match(html, /does not match/i);
+  assert.match(html, /entered brand was Samsung/i);
+  assert.match(html, /matches GE/i);
   // The user's entry is not overwritten with GE.
   assert.doesNotMatch(html, /verified label variant/i);
 });
 
 test('provider-authored text in the conflict note is escaped', () => {
   const html = api.renderAge(exactAliasResult({
-    evidenceConflict: true, evidenceConflictKind: 'brand',
+    evidenceConflict: true, evidenceConflictKind: 'category',
     notes: '<img src=x onerror=alert(1)>',
   }));
   assert.doesNotMatch(html, /<img /);
   assert.match(html, /&lt;img /);
+});
+
+test('VIZIO model-generation result renders estimate, conflict, confidence, and unit-date caveat', () => {
+  const html = api.renderAge({
+    brand: 'LG', enteredBrand: 'LG', recognizedBrand: 'VIZIO',
+    model: 'M321IA2', exactModel: 'M321i-A2', canonicalModel: 'M321i-A2', enteredModel: 'M321i-A2',
+    series: 'M-Series', recognizedSeries: 'M-Series', estimateBasis: 'verified-model-generation',
+    likelyProduct: 'VIZIO M321i-A2 television',
+    productionRange: { start: 2013, end: 2014 },
+    bestEstimateYear: 2013,
+    yearContext: { type: 'production-range', startYear: 2013, endYear: 2014, label: 'Estimated production period', isExactUnitDate: false },
+    identityConfidence: 'high', timingConfidence: 'medium',
+    evidenceConflict: true, evidenceConflictKind: 'brand',
+    refinementSuggestion: 'Confirm the brand and serial number on the television label.',
+    notes: 'The model generation supports 2013-2014, not an exact individual manufacture date.',
+  });
+
+  assert.match(html, /VIZIO M321i-A2/);
+  assert.match(html, /2013–2014/);
+  assert.match(html, /Approximately 2013/);
+  assert.match(html, /Series[\s\S]*M-Series/);
+  assert.match(html, /Estimate basis[\s\S]*Verified exact-model generation/);
+  assert.match(html, /Model generation confidence[\s\S]*High/);
+  assert.match(html, /Individual unit timing confidence[\s\S]*Medium/);
+  assert.match(html, /entered brand was LG/i);
+  assert.match(html, /Recognized model brand[\s\S]*VIZIO/);
+  assert.match(html, /Individual manufacture date[\s\S]*requires serial number/i);
+  assert.doesNotMatch(html, /Incomplete Result/i);
 });

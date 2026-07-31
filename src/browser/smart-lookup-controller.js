@@ -468,7 +468,9 @@
   }
 
   function resultHeading(data) {
-    var brand = data && data.brand && data.brand !== 'Unknown' ? data.brand : '';
+    var brand = data && data.evidenceConflict && data.recognizedBrand
+      ? data.recognizedBrand
+      : (data && data.brand && data.brand !== 'Unknown' ? data.brand : '');
     if (data && data.exactModel) return [brand, data.exactModel].filter(Boolean).join(' ');
     if (data && data.displayName) return data.displayName;
     if (data && data.productFamily) {
@@ -490,6 +492,16 @@
     if (source === 'groq' || source === 'groq-ungrounded') return 'Groq';
     if (source === 'gemini' || source === 'gemini-ungrounded') return 'Gemini';
     return '';
+  }
+
+  function estimateBasisLabel(value) {
+    var labels = {
+      'verified-model-generation': 'Verified exact-model generation',
+      'verified-lineup-generation': 'Verified official-lineup generation',
+      'serial-decode': 'Serial-number decode',
+      'manufacturing-label': 'Manufacturing label',
+    };
+    return labels[value] || String(value || '').replace(/-/g, ' ').replace(/^\w/, function (letter) { return letter.toUpperCase(); });
   }
 
   function isGroundedProviderResult(data) {
@@ -665,10 +677,14 @@
     // A brand/category conflict is disclosed, never silently corrected.
     var conflictNote = '';
     if (data && data.evidenceConflict) {
+      var enteredBrand = data.enteredBrand || data.brand || 'the entered brand';
+      var recognizedBrand = data.recognizedBrand || 'a different brand';
       conflictNote = '<div class="info-block smart-lookup-evidence-conflict"><h4>Check the '
         + (data.evidenceConflictKind === 'category' ? 'product type' : 'brand')
         + ' on the label</h4><p>'
-        + escapeHtml(data.notes || 'The entered details conflict with a verified record for this model number.')
+        + escapeHtml(data.evidenceConflictKind === 'brand'
+          ? 'The entered brand was ' + enteredBrand + ', but this model number matches ' + recognizedBrand + '. The entered values were preserved and were not silently changed.'
+          : (data.notes || 'The entered details conflict with a verified record for this model number.'))
         + '</p></div>';
     }
     var evidence = Array.isArray(data && data.evidence) ? data.evidence.slice(0, 4) : [];
@@ -776,10 +792,16 @@
       qualifierHtml +
       '<div class="smart-year-context-primary" style="display:grid;gap:2px;margin:12px 0 8px;padding:18px;border:1px solid #bfdbfe;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#f8fafc)"><span class="smart-year-context-value" style="font:800 clamp(2.3rem,8vw,3.6rem)/1 JetBrains Mono,monospace;color:#1d4ed8">' + escapeHtml(primaryYear) + '</span><span class="smart-year-context-label" style="font-size:.9rem;font-weight:800;color:#334155">' + escapeHtml(yearLabel) + '</span></div>' +
       '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + escapeHtml(data && data.brand && data.brand !== 'Unknown' ? data.brand : 'Not identified') + '</span></div>' +
+      (data && data.evidenceConflict && data.recognizedBrand ? '<div class="result-row"><span class="result-label">Recognized model brand</span><span class="result-value">' + escapeHtml(data.recognizedBrand) + '</span></div>' : '') +
       (data && data.productFamily ? '<div class="result-row"><span class="result-label">Product family</span><span class="result-value">' + escapeHtml(productFamily) + '</span></div>' : '') +
       '<div class="result-row"><span class="result-label">Exact model</span><span class="result-value">' + escapeHtml(exactModel) + '</span></div>' +
+      (data && (data.series || data.recognizedSeries || data.seriesLine) ? '<div class="result-row"><span class="result-label">Series</span><span class="result-value">' + escapeHtml(data.series || data.recognizedSeries || data.seriesLine) + '</span></div>' : '') +
       (data && data.screenSize ? '<div class="result-row"><span class="result-label">Screen size</span><span class="result-value">' + escapeHtml(data.screenSize) + ' inches</span></div>' : '') +
       (data && data.productionRange ? '<div class="result-row"><span class="result-label">Known production/availability</span><span class="result-value">' + escapeHtml(formatRange(data.productionRange, data.yearRange)) + '</span></div>' : '') +
+      (data && data.bestEstimateYear ? '<div class="result-row"><span class="result-label">Best estimate</span><span class="result-value">Approximately ' + escapeHtml(data.bestEstimateYear) + '</span></div>' : '') +
+      (data && data.estimateBasis ? '<div class="result-row"><span class="result-label">Estimate basis</span><span class="result-value">' + escapeHtml(estimateBasisLabel(data.estimateBasis)) + '</span></div>' : '') +
+      (data && data.identityConfidence ? '<div class="result-row"><span class="result-label">Model generation confidence</span><span class="result-value">' + escapeHtml(data.identityConfidence.charAt(0).toUpperCase() + data.identityConfidence.slice(1)) + '</span></div>' : '') +
+      (data && data.timingConfidence ? '<div class="result-row"><span class="result-label">Individual unit timing confidence</span><span class="result-value">' + escapeHtml(data.timingConfidence.charAt(0).toUpperCase() + data.timingConfidence.slice(1)) + '</span></div>' : '') +
       '<div class="result-row"><span class="result-label">Individual manufacture date</span><span class="result-value">' + escapeHtml(manufactureMessage) + '</span></div>' +
       variantsHtml +
       (data && data.notes ? '<div class="info-block notes"><h4>What this year means</h4><p>' + escapeHtml(data.notes) + '</p></div>' : '') +

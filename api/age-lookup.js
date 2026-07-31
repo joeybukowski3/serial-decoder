@@ -422,6 +422,18 @@ export function createAgeLookupHandler(dependencies = {}) {
       }
       timings.localLookupMs = Math.max(0, now() - localStart);
 
+      if (!localResult && String(queryInfo.brand || queryInfo.enteredBrand || '').toLowerCase() === 'vizio'
+        && queryInfo.modelIdentity) {
+        logSmartLookup(logger, {
+          event: 'smart_age_vizio_registry_miss',
+          requestId,
+          canonicalQuery: queryInfo.canonicalQuery,
+          specificityLevel: queryInfo.specificityLevel,
+          source: 'local-vizio-registry',
+          timings,
+        });
+      }
+
       if (localResult) {
         // A UNIQUE verified exact-evidence hit (canonical model or a verified
         // exactAlias) is the strongest identity signal available, and it is
@@ -473,6 +485,9 @@ export function createAgeLookupHandler(dependencies = {}) {
         result.enteredModel = localResult.enteredModel || null;
         result.canonicalModel = localResult.canonicalModel || null;
         result.matchedBy = localResult.matchedBy || null;
+        result.normalizationApplied = Array.isArray(localResult.normalizationApplied)
+          ? localResult.normalizationApplied
+          : [];
         result.localEvidenceHit = true;
         result.evidenceConflict = evidenceConflict || false;
         if (evidenceConflict) {
@@ -488,7 +503,8 @@ export function createAgeLookupHandler(dependencies = {}) {
       // a contradictory identity would waste a paid call and could return a
       // confident answer for a product that does not exist. The user's brand is
       // preserved and the conflict is disclosed rather than silently corrected.
-      if (queryInfo.brand) {
+      const enteredConflictBrand = queryInfo.enteredBrand || queryInfo.brand;
+      if (enteredConflictBrand) {
         let conflictEvidence = null;
         try {
           conflictEvidence = await deadline.run('local-evidence-conflict-check', () => findVerifiedExactEvidenceRecord(queryInfo.query), {
@@ -496,15 +512,64 @@ export function createAgeLookupHandler(dependencies = {}) {
           });
         } catch (_) { conflictEvidence = null; }
         const conflictBrand = conflictEvidence?.record?.brand || '';
-        if (conflictBrand && conflictBrand.toLowerCase() !== queryInfo.brand.toLowerCase()) {
+        if (conflictBrand && conflictBrand.toLowerCase() !== enteredConflictBrand.toLowerCase()) {
+          const verifiedModel = conflictEvidence.localResult || {};
+          if (['verified-model-generation', 'verified-lineup-generation'].includes(verifiedModel.estimateBasis)
+            && verifiedModel.productionRange) {
+            const recognizedProduct = [conflictBrand, conflictEvidence.record.model, conflictEvidence.record.category]
+            .filter(Boolean)
+            .join(' ');
+            const conflictWarning = `The entered brand was ${enteredConflictBrand}, but the model number matches ${recognizedProduct}. The entered values were preserved and were not silently changed.`;
+            const result = finalizeTimings(normalizeLegacyResult({
+              ...verifiedModel,
+              // The normalized brand remains what the user entered so the
+              // schema's anti-rewrite guard stays intact. recognizedBrand is
+              // the independently verified model identity shown alongside it.
+              brand: enteredConflictBrand,
+              model: conflictEvidence.enteredModel || queryInfo.modelIdentity || null,
+              specificityLevel: 'specific',
+              exactModel: conflictEvidence.record.model || null,
+              recognizedBrand: conflictBrand,
+              recognizedCategory: conflictEvidence.record.category || verifiedModel.category || null,
+              recognizedModel: conflictEvidence.record.model || null,
+              likelyProduct: recognizedProduct,
+              refinementNeeded: true,
+              refinementSuggestion: 'Confirm the brand and serial number on the product label. A supported serial decode or dated manufacturing label may narrow the individual unit date.',
+              notes: [verifiedModel.notes, conflictWarning].filter(Boolean).join(' '),
+              evidence: [
+                ...(Array.isArray(verifiedModel.evidence) ? verifiedModel.evidence : []),
+                {
+                  detail: `Model number matches a verified ${conflictBrand} record, which conflicts with the entered brand (${enteredConflictBrand}).`,
+                  source: 'Decode My Item verified local model evidence',
+                },
+              ],
+            }, queryInfo, {
+              source: 'local-db', evidenceSource: 'local-db', timings, currentYear,
+            }), timings, deadline);
+            result.enteredBrand = enteredConflictBrand;
+            result.recognizedBrand = conflictBrand;
+            result.enteredModel = conflictEvidence.enteredModel || null;
+            result.canonicalModel = conflictEvidence.record.model || null;
+            result.matchedBy = conflictEvidence.matchedBy || null;
+            result.normalizationApplied = Array.isArray(verifiedModel.normalizationApplied)
+              ? verifiedModel.normalizationApplied
+              : [];
+            result.evidenceConflict = true;
+            result.evidenceConflictKind = 'brand';
+            result.refinementNeeded = true;
+            result.localEvidenceHit = true;
+            logResult(logger, requestId, queryInfo, result);
+            return res.status(200).json(result);
+          }
+
           const result = finalizeTimings(normalizeLegacyResult({
-            brand: queryInfo.brand,
+            brand: enteredConflictBrand,
             model: conflictEvidence.enteredModel || queryInfo.modelIdentity || null,
             itemCategory: null,
             category: null,
             specificityLevel: 'partial',
             refinementSuggestion: `Confirm the brand on the product label. This model number matches a verified ${conflictBrand} record.`,
-            notes: `The entered brand (${queryInfo.brand}) does not match the brand on the verified record for this model number (${conflictBrand}). No age estimate is given, because the brand and model number describe different products. The entered values were not changed.`,
+            notes: `The entered brand (${enteredConflictBrand}) does not match the brand on the verified record for this model number (${conflictBrand}). No age estimate is given, because the brand and model number describe different products. The entered values were not changed.`,
             evidence: [{
               detail: `Model number matches a verified ${conflictBrand} record, which conflicts with the entered brand.`,
               source: 'Decode My Item verified local model evidence',
