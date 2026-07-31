@@ -851,4 +851,86 @@ test.describe('Smart Lookup controller', () => {
       message: 'Expected the /api/age-lookup mock to intercept Samsung Q60A 65 inch TV',
     }).toBe(1);
   });
+
+  test('redesigned age report card layout, accordion, and footer actions work on desktop and mobile', async ({ page }) => {
+    await page.unroute('**/api/age-lookup');
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({
+        json: {
+          brand: 'VIZIO',
+          exactModel: 'M321i-A2',
+          series: 'M-Series',
+          category: 'television',
+          productionRange: { start: 2013, end: 2014 },
+          bestEstimateYear: 2013,
+          estimateBasis: 'verified-model-generation',
+          identityConfidence: 'high',
+          timingConfidence: 'medium',
+          yearContext: {
+            type: 'production-range',
+            startYear: 2013,
+            endYear: 2014,
+            label: 'Estimated production period',
+            confidence: 'medium',
+            isExactUnitDate: false,
+          },
+          notes: 'Model-generation evidence supports a 2013-2014 production window.',
+          evidence: [{ detail: 'Verified VIZIO model-generation record.' }],
+          source: 'local-db',
+          evidenceSource: 'local-db',
+          evidenceConflict: true,
+          evidenceConflictKind: 'brand',
+          enteredBrand: 'LG',
+          recognizedBrand: 'VIZIO',
+          enteredModel: 'M321i-A2',
+          canonicalModel: 'M321i-A2',
+        },
+      });
+    });
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('http://localhost:3001/index.html?mode=smart#panel-smart');
+    await page.locator('#include-replacement-comparisons').uncheck();
+    await page.locator('#smart-lookup-input').fill('LG M321i-A2');
+    await page.locator('[data-smart-lookup-submit="1"]').click();
+
+    const panel = page.locator('#smart-lookup-age-panel');
+    const report = panel.locator('.smart-age-report');
+    await expect(report).toBeVisible();
+    await expect(report.locator('.smart-age-report__title')).toHaveText('Smart Lookup Results');
+    await expect(report.locator('.smart-age-hero')).toBeVisible();
+    await expect(report.locator('.smart-year-context-value')).toHaveText('2013–2014');
+    await expect(report).toContainText('What This Year Means');
+    await expect(report).toContainText('Things to Keep in Mind');
+    await expect(report).toContainText('Check the brand on the label');
+    await expect(report.locator('.smart-age-detail-grid')).toBeVisible();
+
+    const evidence = report.locator('details.determination-details').first();
+    await expect(evidence).toBeVisible();
+    await expect(evidence.locator('summary')).toHaveAttribute('aria-expanded', 'false');
+    await evidence.locator('summary').click();
+    await expect(evidence).toHaveAttribute('open', '');
+    await expect(evidence.locator('summary')).toHaveAttribute('aria-expanded', 'true');
+    await evidence.locator('summary').press('Enter');
+    await expect(evidence).not.toHaveAttribute('open', '');
+
+    const footer = page.locator('#ageResults .results-footer');
+    await expect(footer.getByRole('button', { name: /Decode Another Item/i })).toBeVisible();
+    await expect(footer.getByRole('button', { name: /Possible Error/i })).toBeVisible();
+
+    const desktopBox = await report.boundingBox();
+    expect(desktopBox.width).toBeGreaterThan(500);
+    expect(desktopBox.width).toBeLessThanOrEqual(1280);
+
+    await page.setViewportSize({ width: 375, height: 812 });
+    const mobileBox = await report.boundingBox();
+    expect(mobileBox.width).toBeLessThanOrEqual(375);
+    await expect(report.locator('.smart-year-context-value')).toBeVisible();
+    const overflow = await page.evaluate(() => {
+      const el = document.querySelector('#smart-lookup-age-panel .smart-age-report');
+      if (!el) return true;
+      return el.scrollWidth > el.clientWidth + 1;
+    });
+    expect(overflow).toBe(false);
+  });
 });

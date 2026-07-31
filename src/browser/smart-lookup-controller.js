@@ -508,6 +508,100 @@
     return labels[value] || String(value || '').replace(/-/g, ' ').replace(/^\w/, function (letter) { return letter.toUpperCase(); });
   }
 
+  function capitalizeLabel(value) {
+    var text = normalize(value);
+    if (!text) return '';
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  function specificityLabel(data) {
+    var raw = data && (data.contextLevel || data.querySpecificity || data.precisionLevel) || '';
+    var labels = {
+      exact: 'Exact model',
+      'exact-model': 'Exact model',
+      'narrow-range': 'Exact model',
+      'model-line': 'Model line',
+      'model-line-range': 'Model line',
+      'product-family': 'Product family',
+      'family-range': 'Product family',
+      'brand-category': 'Brand/category',
+      'broad-range': 'Brand/category',
+      'category-history': 'Brand/category',
+      'general-guidance': 'General guidance',
+      unusable: 'General guidance',
+    };
+    if (labels[raw]) return labels[raw];
+    if (!raw) return '';
+    return String(raw).replace(/-/g, ' ');
+  }
+
+  function confidenceLabel(data) {
+    var raw = data && (data.contextConfidence || data.identityConfidence || data.confidenceLevel || (data.yearContext && data.yearContext.confidence)) || '';
+    if (!raw) return '';
+    var normalized = String(raw).toLowerCase();
+    if (normalized === 'high') return 'High';
+    if (normalized === 'medium' || normalized === 'moderate' || normalized === 'partial') return 'Moderate';
+    if (normalized === 'low') return 'Low';
+    if (normalized === 'unknown') return 'Unknown';
+    return capitalizeLabel(normalized);
+  }
+
+  function estimatedTimingText(data) {
+    if (!data) return 'Not established';
+    if (data.rangeLabel) return String(data.rangeLabel);
+    if (data.estimatedRange && (data.estimatedRange.start || data.estimatedRange.end)) {
+      return formatRange(data.estimatedRange, '');
+    }
+    if (data.bestEstimateYear) return 'Approximately ' + data.bestEstimateYear;
+    if (data.releaseDate) return String(data.releaseDate);
+    if (data.estimatedEra) return String(data.estimatedEra);
+    if (data.generationRange) return String(data.generationRange);
+    if (data.lineIntroductionYear) return String(data.lineIntroductionYear);
+    if (data.familyIntroductionYear) return String(data.familyIntroductionYear);
+    if (data.categoryEntryYear) return String(data.categoryEntryYear);
+    if (data.introductionYear) return String(data.introductionYear);
+    if (data.productionRange) return formatRange(data.productionRange, data.yearRange);
+    if (data.yearRange) return String(data.yearRange);
+    var context = getYearContext(data);
+    if (context) return formatYearContext(context);
+    return 'Not established';
+  }
+
+  function heroEstimateTypeLabel(data, context, manufactureAmbiguous) {
+    if (manufactureAmbiguous) return 'Ambiguous manufacture-year candidates';
+    if (context && context.isExactUnitDate) return 'Individual manufacture year';
+    if (data && data.estimateBasis === 'serial-decode') return 'Serial-decoded manufacture date';
+    if (data && data.estimatedYearType === 'model-production') return 'Model production period';
+    if (data && (data.estimatedYearType === 'model-year' || (context && context.type === 'model-year-family'))) {
+      return 'Estimated model year';
+    }
+    if (data && data.precisionLevel === 'model-line-range') return 'Model-line introduction';
+    if (data && data.precisionLevel === 'family-range') return 'Product-family introduction';
+    if (data && (data.precisionLevel === 'broad-range' || data.contextLevel === 'brand-category' || data.contextLevel === 'category-history')) {
+      return 'Broad category era';
+    }
+    if (context && context.label) return context.label;
+    if (data && data.introductionYear) return 'Estimated model year';
+    return 'Estimated timing';
+  }
+
+  function detailMetaRow(label, value) {
+    if (value == null || value === '') return '';
+    return '<div class="result-row smart-age-detail-row"><span class="result-label">'
+      + escapeHtml(label)
+      + '</span><span class="result-value">'
+      + escapeHtml(value)
+      + '</span></div>';
+  }
+
+  function searchIconHtml() {
+    return '<span class="smart-age-report__icon" aria-hidden="true">'
+      + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">'
+      + '<circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"/>'
+      + '<path d="M16.2 16.2L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
+      + '</svg></span>';
+  }
+
   function isGroundedProviderResult(data) {
     var evidence = data ? String(data.evidenceSource || '').toLowerCase() : '';
     return Boolean(data)
@@ -623,14 +717,16 @@
       return '<li>' + label + '</li>';
     }).filter(Boolean).join('');
     if (!items) return '';
-    return '<details class="determination-details smart-lookup-sources"><summary>Web sources consulted</summary><ul>' + items + '</ul></details>';
+    return '<details class="determination-details smart-lookup-sources smart-age-accordion">'
+      + '<summary aria-expanded="false">Web sources consulted</summary>'
+      + '<ul>' + items + '</ul></details>';
   }
 
   function renderSerialDetected(data) {
     var detected = data && data.serialDetected;
     if (!detected || detected.action !== 'use-decoder' || !detected.token) return '';
     var href = '/index.html?serial=' + encodeURIComponent(detected.token) + '#decoder-tool';
-    return '<div class="info-block smart-lookup-serial-notice">' +
+    return '<div class="info-block smart-lookup-serial-notice smart-age-notice smart-age-notice--info">' +
       '<h4>Serial number detected</h4>' +
       '<p>Use the Serial Number Decoder for unit-specific manufacture-date decoding. ' +
       '<a href="' + escapeHtml(href) + '">Open Serial Number Decoder</a></p>' +
@@ -656,23 +752,30 @@
         : (data && data.productFamily
           ? 'Not available without serial or exact unit evidence'
           : 'Individual manufacture date requires serial number'));
-    var exactModel = data && data.exactModel
+    var exactModelDisplay = data && data.exactModel
       ? data.exactModel
-      : (data && !data.productFamily && data.model ? data.model : 'Not provided');
+      : (data && !data.productFamily && data.model ? data.model : '');
+    var exactModel = exactModelDisplay || 'Not provided';
     var productFamily = data && data.productFamily
       ? (data.brand === 'LG' && /^OLED\b/i.test(data.seriesLine || '') ? data.productFamily + ' OLED TV' : data.productFamily)
-      : 'Not identified';
+      : '';
+    var seriesValue = data && (data.series || data.recognizedSeries || data.seriesLine) || '';
+    var brandValue = data && data.brand && data.brand !== 'Unknown' ? data.brand : '';
+    var categoryValue = data && (data.category || data.itemCategory || data.productType) || '';
     var variants = Array.isArray(data && data.yearVariants) ? data.yearVariants : [];
     var variantsHtml = variants.length
-      ? '<div class="smart-year-variants" style="margin-top:14px;padding:14px 16px;border:1px solid #dbeafe;border-radius:12px;background:#f8fbff"><h4>Model-year variants</h4><ul style="margin:8px 0 0;padding-left:20px">' + variants.map(function (item) {
+      ? '<div class="smart-year-variants"><h4>Model-year variants</h4><ul>' + variants.map(function (item) {
           return '<li><strong>' + escapeHtml(item.name) + ':</strong> ' + escapeHtml(item.year) + ' model-year family</li>';
         }).join('') + '</ul></div>'
       : '';
     // A verified exact-alias hit resolved the entered value to a different
     // canonical model. Show both so the input never appears silently rewritten.
     var canonicalNote = '';
-    if (data && data.canonicalModel && data.enteredModel
-      && String(data.canonicalModel).toUpperCase() !== String(data.enteredModel).toUpperCase()) {
+    var enteredDiffersFromCanonical = Boolean(
+      data && data.canonicalModel && data.enteredModel
+      && String(data.canonicalModel).toUpperCase() !== String(data.enteredModel).toUpperCase()
+    );
+    if (enteredDiffersFromCanonical) {
       canonicalNote = '<p class="smart-lookup-canonical-note">Entered model <strong>'
         + escapeHtml(data.enteredModel)
         + '</strong> is a verified label variant of canonical model <strong>'
@@ -683,7 +786,8 @@
     if (data && data.evidenceConflict) {
       var enteredBrand = data.enteredBrand || data.brand || 'the entered brand';
       var recognizedBrand = data.recognizedBrand || 'a different brand';
-      conflictNote = '<div class="info-block smart-lookup-evidence-conflict"><h4>Check the '
+      conflictNote = '<div class="info-block smart-lookup-evidence-conflict smart-age-notice smart-age-notice--warning" role="status">'
+        + '<h4>Check the '
         + (data.evidenceConflictKind === 'category' ? 'product type' : 'brand')
         + ' on the label</h4><p>'
         + escapeHtml(data.evidenceConflictKind === 'brand'
@@ -693,18 +797,22 @@
     }
     var evidence = Array.isArray(data && data.evidence) ? data.evidence.slice(0, 4) : [];
     var evidenceHtml = evidence.length
-      ? '<details class="determination-details"><summary>' + escapeHtml(evidenceHeading(data)) + '</summary><ul>' + evidence.map(function (item) {
+      ? '<details class="determination-details smart-age-accordion"><summary aria-expanded="false">'
+        + escapeHtml(evidenceHeading(data))
+        + '</summary><ul>'
+        + evidence.map(function (item) {
           return '<li>' + escapeHtml(item.detail || item.source || 'Evidence') + '</li>';
-        }).join('') + '</ul></details>'
+        }).join('')
+        + '</ul></details>'
       : '';
     // fallbackUsed is real API metadata (which provider actually served this
     // result), not a guess -- safe to state plainly here.
     var fallbackNote = data && data.fallbackUsed
-      ? '<p class="smart-lookup-fallback-note">A backup provider helped produce this result.</p>'
+      ? '<p class="smart-lookup-fallback-note smart-age-notice-line">A backup provider helped produce this result.</p>'
       : '';
     var qualifier = sourceQualifier(data);
     var qualifierHtml = qualifier
-      ? '<p class="smart-lookup-source-note">' + escapeHtml(qualifier) + '</p>'
+      ? '<p class="smart-lookup-source-note smart-age-notice-line">' + escapeHtml(qualifier) + '</p>'
       : '';
     var serialDetectedHtml = renderSerialDetected(data);
     // Precision badge + plain-language "why is this broad" line -- shown
@@ -720,11 +828,12 @@
     var broadHistoricalTitle = !identifiedProduct && data && (data.historicalContext || data.inventionSummary)
       ? resultHeading(data)
       : '';
+    var productHeading = identifiedProduct || resultHeading(data);
     var precisionLabel = data && !identifiedProduct && PRECISION_HEADINGS[data.precisionLevel];
     var precisionBadgeHtml = precisionLabel
       ? '<p class="smart-lookup-precision-badge">' + escapeHtml(precisionLabel) + '</p>'
       : '';
-    var precisionNote = identifiedProduct ? "" : precisionExplanation(data);
+    var precisionNote = identifiedProduct ? '' : precisionExplanation(data);
     var precisionNoteHtml = precisionNote
       ? '<p class="smart-lookup-precision-note">' + escapeHtml(precisionNote) + '</p>'
       : '';
@@ -742,36 +851,61 @@
     // Usefulness-first "best available result" block. Leads with WHAT the
     // product is when research identified one, so a researched identification
     // is never buried under a "complete model required" clarification.
-    // identifiedProduct is computed above, ahead of the precision badge.
+    var timingText = estimatedTimingText(data);
+    var confidenceText = confidenceLabel(data);
+    var specificityText = specificityLabel(data);
+    var contextText = data && (data.historicalContext || data.inventionSummary) || '';
     var bestAvailableHtml = '';
-    if (identifiedProduct || broadHistoricalTitle) {
-      var timingText = data.releaseDate || data.estimatedEra
-        || data.generationRange
-        || (data.lineIntroductionYear ? String(data.lineIntroductionYear) : '')
-        || (data.familyIntroductionYear ? String(data.familyIntroductionYear) : '')
-        || (data.categoryEntryYear ? String(data.categoryEntryYear) : '')
-        || (data.introductionYear ? String(data.introductionYear) : '')
-        || formatRange(data.productionRange, data.yearRange) || 'Not established';
-      var confidenceText = data.contextConfidence || data.identityConfidence || data.confidenceLevel || '';
-      var specificityText = data.contextLevel || data.querySpecificity || '';
-      var contextText = data.historicalContext || data.inventionSummary || '';
-      bestAvailableHtml = '<div class="info-block smart-lookup-best-result">' +
-        '<h4>Best available result</h4>' +
-        '<p class="smart-lookup-best-product"><strong>' + escapeHtml(identifiedProduct || broadHistoricalTitle) + '</strong></p>' +
-        (data.productType ? '<p class="smart-lookup-best-type">' + escapeHtml(data.productType) + '</p>' : '') +
-        '<div class="result-row"><span class="result-label">' + escapeHtml(identifiedProduct ? 'Estimated model timing' : 'Historical timing') + '</span><span class="result-value">' + escapeHtml(timingText) + '</span></div>' +
-        (specificityText ? '<div class="result-row"><span class="result-label">Specificity</span><span class="result-value">' + escapeHtml(specificityText.replace(/-/g, ' ')) + '</span></div>' : '') +
-        (confidenceText ? '<div class="result-row"><span class="result-label">Confidence</span><span class="result-value">' + escapeHtml(confidenceText.charAt(0).toUpperCase() + confidenceText.slice(1)) + '</span></div>' : '') +
-        (contextText ? '<p><strong>Historical context:</strong> ' + escapeHtml(contextText) + '</p>' : '') +
-        '<p class="smart-lookup-unit-caveat"><strong>Important:</strong> This describes ' + escapeHtml(identifiedProduct ? 'the product/model era' : 'historical context') + ', not the manufacture date of your individual unit.' +
-        (data.serialNeededForExactUnitDate ? ' Enter the serial number to narrow it to your unit.' : '') +
-        '</p>' +
-        '</div>';
+    if (identifiedProduct || broadHistoricalTitle || exactModelDisplay || productFamily || brandValue) {
+      bestAvailableHtml = '<div class="info-block smart-lookup-best-result smart-age-summary-panel">'
+        + '<div class="smart-age-summary-main">'
+        + '<p class="smart-age-eyebrow">Best available result</p>'
+        + '<h4 class="smart-lookup-best-product">' + escapeHtml(identifiedProduct || broadHistoricalTitle || productHeading) + '</h4>'
+        + (categoryValue ? '<p class="smart-lookup-best-type">' + escapeHtml(categoryValue) + '</p>' : (data && data.productType ? '<p class="smart-lookup-best-type">' + escapeHtml(data.productType) + '</p>' : ''))
+        + (contextText ? '<p class="smart-age-summary-context"><strong>Historical context:</strong> ' + escapeHtml(contextText) + '</p>' : '')
+        + '<p class="smart-lookup-unit-caveat"><strong>Important:</strong> This describes '
+        + escapeHtml(identifiedProduct || exactModelDisplay ? 'the product/model era' : 'historical context')
+        + ', not the manufacture date of your individual unit.'
+        + (data && data.serialNeededForExactUnitDate ? ' Enter the serial number to narrow it to your unit.' : '')
+        + '</p>'
+        + '</div>'
+        + '<div class="smart-age-summary-metrics">'
+        + '<div class="result-row"><span class="result-label">'
+        + escapeHtml(identifiedProduct || exactModelDisplay ? 'Estimated model timing' : 'Historical timing')
+        + '</span><span class="result-value">' + escapeHtml(timingText) + '</span></div>'
+        + (specificityText ? '<div class="result-row"><span class="result-label">Specificity</span><span class="result-value">' + escapeHtml(specificityText) + '</span></div>' : '')
+        + (confidenceText ? '<div class="result-row"><span class="result-label">Confidence</span><span class="result-value smart-age-confidence smart-age-confidence--' + escapeHtml(String(confidenceText).toLowerCase()) + '">' + escapeHtml(confidenceText) + '</span></div>' : '')
+        + '</div>'
+        + '</div>';
     }
     var caveats = Array.isArray(data && data.caveats) ? data.caveats.slice(0, 3) : [];
-    var caveatsHtml = caveats.length
-      ? '<div class="info-block smart-lookup-caveats"><h4>Things to keep in mind</h4><ul>' +
-        caveats.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul></div>'
+    var keepInMindItems = caveats.slice();
+    if (data && data.refinementSuggestion && !recommendedIdentifiers.length) {
+      keepInMindItems.push(data.refinementSuggestion);
+    }
+    if (data && data.evidenceConflict && data.evidenceConflictKind === 'brand') {
+      keepInMindItems.push('Your original entry was preserved. Confirm the brand and model printed on the product label.');
+    }
+    if (context && !context.isExactUnitDate && manufactureMessage) {
+      // Prefer the unit-date caveat in Things to Keep in Mind when no caveats
+      // were supplied and the hero already covers model timing.
+      if (!keepInMindItems.length && !contextText) {
+        keepInMindItems.push(manufactureMessage);
+      }
+    }
+    // Deduplicate against notes content so explanation cards do not echo the
+    // same paragraph twice when notes already cover the caveat.
+    var notesText = data && data.notes ? normalize(data.notes) : '';
+    keepInMindItems = keepInMindItems.filter(function (item, index, list) {
+      if (!item) return false;
+      var normalizedItem = normalize(item);
+      if (notesText && normalizedItem === notesText) return false;
+      return list.findIndex(function (other) { return normalize(other) === normalizedItem; }) === index;
+    }).slice(0, 5);
+    var keepInMindHtml = keepInMindItems.length
+      ? '<div class="info-block smart-lookup-caveats smart-age-explain-card"><h4>Things to Keep in Mind</h4><ul>'
+        + keepInMindItems.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('')
+        + '</ul></div>'
       : '';
     // Candidates instead of a dead end when identity is genuinely ambiguous.
     var alternatives = Array.isArray(data && data.alternativeMatches) ? data.alternativeMatches.slice(0, 3) : [];
@@ -784,37 +918,99 @@
             + '</li>';
         }).join('') + '</ul></div>'
       : '';
-    return '<div class="smart-age-result smart-year-context-result">' +
-      '<h3>' + escapeHtml(resultHeading(data)) + '</h3>' +
-      serialDetectedHtml +
-      conflictNote +
-      bestAvailableHtml +
-      canonicalNote +
-      precisionBadgeHtml +
-      precisionNoteHtml +
-      fallbackNote +
-      qualifierHtml +
-      '<div class="smart-year-context-primary" style="display:grid;gap:2px;margin:12px 0 8px;padding:18px;border:1px solid #bfdbfe;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#f8fafc)"><span class="smart-year-context-value" style="font:800 clamp(2.3rem,8vw,3.6rem)/1 JetBrains Mono,monospace;color:#1d4ed8">' + escapeHtml(primaryYear) + '</span><span class="smart-year-context-label" style="font-size:.9rem;font-weight:800;color:#334155">' + escapeHtml(yearLabel) + '</span></div>' +
-      '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + escapeHtml(data && data.brand && data.brand !== 'Unknown' ? data.brand : 'Not identified') + '</span></div>' +
-      (data && data.evidenceConflict && data.recognizedBrand ? '<div class="result-row"><span class="result-label">Recognized model brand</span><span class="result-value">' + escapeHtml(data.recognizedBrand) + '</span></div>' : '') +
-      (data && data.productFamily ? '<div class="result-row"><span class="result-label">Product family</span><span class="result-value">' + escapeHtml(productFamily) + '</span></div>' : '') +
-      '<div class="result-row"><span class="result-label">Exact model</span><span class="result-value">' + escapeHtml(exactModel) + '</span></div>' +
-      (data && (data.series || data.recognizedSeries || data.seriesLine) ? '<div class="result-row"><span class="result-label">Series</span><span class="result-value">' + escapeHtml(data.series || data.recognizedSeries || data.seriesLine) + '</span></div>' : '') +
-      (data && data.screenSize ? '<div class="result-row"><span class="result-label">Screen size</span><span class="result-value">' + escapeHtml(data.screenSize) + ' inches</span></div>' : '') +
-      (data && data.productionRange ? '<div class="result-row"><span class="result-label">Known production/availability</span><span class="result-value">' + escapeHtml(formatRange(data.productionRange, data.yearRange)) + '</span></div>' : '') +
-      (data && data.bestEstimateYear ? '<div class="result-row"><span class="result-label">Best estimate</span><span class="result-value">Approximately ' + escapeHtml(data.bestEstimateYear) + '</span></div>' : '') +
-      (data && data.estimateBasis ? '<div class="result-row"><span class="result-label">Estimate basis</span><span class="result-value">' + escapeHtml(estimateBasisLabel(data.estimateBasis)) + '</span></div>' : '') +
-      (data && data.identityConfidence ? '<div class="result-row"><span class="result-label">Model generation confidence</span><span class="result-value">' + escapeHtml(data.identityConfidence.charAt(0).toUpperCase() + data.identityConfidence.slice(1)) + '</span></div>' : '') +
-      (data && data.timingConfidence ? '<div class="result-row"><span class="result-label">Individual unit timing confidence</span><span class="result-value">' + escapeHtml(data.timingConfidence.charAt(0).toUpperCase() + data.timingConfidence.slice(1)) + '</span></div>' : '') +
-      '<div class="result-row"><span class="result-label">Individual manufacture date</span><span class="result-value">' + escapeHtml(manufactureMessage) + '</span></div>' +
-      variantsHtml +
-      (data && data.notes ? '<div class="info-block notes"><h4>What this year means</h4><p>' + escapeHtml(data.notes) + '</p></div>' : '') +
-      caveatsHtml +
-      alternativesHtml +
-      refinementHtml +
-      evidenceHtml +
-      renderGroundedSources(data) +
-      '</div>';
+
+    var meansParts = [];
+    if (data && data.notes) meansParts.push('<p>' + escapeHtml(data.notes) + '</p>');
+    if (contextText && !(data && data.notes && normalize(data.notes) === normalize(contextText))) {
+      meansParts.push('<p>' + escapeHtml(contextText) + '</p>');
+    }
+    if (precisionNote && !(data && data.notes && normalize(data.notes).indexOf(normalize(precisionNote)) !== -1)) {
+      meansParts.push('<p>' + escapeHtml(precisionNote) + '</p>');
+    }
+    var whatYearMeansHtml = meansParts.length
+      ? '<div class="info-block notes smart-age-explain-card"><h4>What This Year Means</h4>' + meansParts.join('') + '</div>'
+      : '';
+
+    var evidenceSourceLabel = '';
+    if (data && data.evidenceSource) {
+      if (isGroundedProviderResult(data)) evidenceSourceLabel = 'Live web research';
+      else if (data.source === 'cache' || data.cacheStatus === 'hit') evidenceSourceLabel = 'Cached result';
+      else if (data.source === 'decoder-verified' || data.evidenceSource === 'user-verified') evidenceSourceLabel = 'Verified local model evidence';
+      else if (data.source === 'static' || data.evidenceSource === 'heuristic' || data.evidenceSource === 'local-db' || data.source === 'local-db') {
+        evidenceSourceLabel = 'Local model evidence';
+      } else if (isUngroundedProviderResult(data)) {
+        evidenceSourceLabel = 'AI-assisted analysis';
+      } else {
+        evidenceSourceLabel = estimateBasisLabel(data.evidenceSource);
+      }
+    } else if (data && data.source === 'cache') {
+      evidenceSourceLabel = 'Cached result';
+    }
+
+    var leftDetailRows = [
+      detailMetaRow('Brand', brandValue || 'Not identified'),
+      productFamily ? detailMetaRow('Product family', productFamily) : '',
+      detailMetaRow('Exact model', exactModel),
+      seriesValue ? detailMetaRow('Series', seriesValue) : '',
+      categoryValue ? detailMetaRow('Category', categoryValue) : '',
+      data && data.screenSize ? detailMetaRow('Screen size', data.screenSize + ' inches') : '',
+    ].join('');
+
+    var rightDetailRows = [
+      data && data.productionRange ? detailMetaRow('Known production/availability', formatRange(data.productionRange, data.yearRange)) : '',
+      data && data.bestEstimateYear ? detailMetaRow('Best estimate', 'Approximately ' + data.bestEstimateYear) : '',
+      detailMetaRow('Individual manufacture date', manufactureMessage),
+      data && data.estimateBasis ? detailMetaRow('Estimate basis', estimateBasisLabel(data.estimateBasis)) : '',
+      evidenceSourceLabel ? detailMetaRow('Evidence source', evidenceSourceLabel) : '',
+      data && data.identityConfidence ? detailMetaRow('Model generation confidence', capitalizeLabel(data.identityConfidence)) : '',
+      data && data.timingConfidence ? detailMetaRow('Individual unit timing confidence', capitalizeLabel(data.timingConfidence)) : '',
+      enteredDiffersFromCanonical ? detailMetaRow('Entered model', data.enteredModel) : '',
+      enteredDiffersFromCanonical ? detailMetaRow('Canonical model', data.canonicalModel) : '',
+      data && data.evidenceConflict && data.recognizedBrand ? detailMetaRow('Recognized model brand', data.recognizedBrand) : '',
+    ].join('');
+
+    var estimateTypeLabel = heroEstimateTypeLabel(data, context, manufactureAmbiguous);
+    // Precision explanation is shown in the "What This Year Means" card when
+    // available; the badge remains a concise notice so broad results stay clear.
+    var noticesHtml = [conflictNote, fallbackNote, qualifierHtml, precisionBadgeHtml, canonicalNote]
+      .filter(Boolean)
+      .join('');
+
+    return '<article class="smart-age-result smart-year-context-result smart-age-report">'
+      + '<header class="smart-age-report__header">'
+      + searchIconHtml()
+      + '<h2 class="smart-age-report__title">Smart Lookup Results</h2>'
+      + '</header>'
+      + '<div class="smart-age-report__body">'
+      + '<h3 class="smart-age-report__product">' + escapeHtml(productHeading) + '</h3>'
+      + serialDetectedHtml
+      + '<div class="smart-age-hero">'
+      + '<div class="smart-year-context-primary smart-age-hero__year" aria-label="' + escapeHtml(yearLabel + ': ' + primaryYear) + '">'
+      + '<span class="smart-year-context-value">' + escapeHtml(primaryYear) + '</span>'
+      + '<span class="smart-year-context-label">' + escapeHtml(yearLabel) + '</span>'
+      + (estimateTypeLabel && estimateTypeLabel !== yearLabel
+        ? '<span class="smart-age-estimate-type">' + escapeHtml(estimateTypeLabel) + '</span>'
+        : '')
+      + '</div>'
+      + (bestAvailableHtml || '<div class="smart-age-summary-panel smart-age-summary-panel--empty"></div>')
+      + '</div>'
+      + (noticesHtml ? '<div class="smart-age-notices">' + noticesHtml + '</div>' : '')
+      + '<div class="smart-age-detail-grid" role="group" aria-label="Result details">'
+      + '<div class="smart-age-detail-col">' + leftDetailRows + '</div>'
+      + '<div class="smart-age-detail-col">' + rightDetailRows + '</div>'
+      + '</div>'
+      + variantsHtml
+      + ((whatYearMeansHtml || keepInMindHtml)
+        ? '<div class="smart-age-explain-grid">' + whatYearMeansHtml + keepInMindHtml + '</div>'
+        : '')
+      + alternativesHtml
+      + (recommendedIdentifiers.length ? refinementHtml : '')
+      + '<div class="smart-age-evidence">'
+      + evidenceHtml
+      + renderGroundedSources(data)
+      + '</div>'
+      + '</div>'
+      + '</article>';
   }
 
   var LKQ_RELATIONSHIP_LABELS = {
@@ -1269,6 +1465,16 @@
           if (searchInput.select) searchInput.select();
         }
       }
+    }, true);
+
+    // Keep aria-expanded in sync for native <details> accordions in the
+    // redesigned age card (and any replacement details that use the same class).
+    document.addEventListener('toggle', function (event) {
+      var details = event.target;
+      if (!details || details.tagName !== 'DETAILS') return;
+      if (!details.classList || !details.classList.contains('determination-details')) return;
+      var summary = details.querySelector('summary');
+      if (summary) summary.setAttribute('aria-expanded', details.open ? 'true' : 'false');
     }, true);
   }
 

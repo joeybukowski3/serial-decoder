@@ -1,0 +1,648 @@
+/* Smart Lookup age results report card — presentation only */
+
+.smart-age-report {
+  --sl-navy: #0b1326;
+  --sl-navy-mid: #0f172a;
+  --sl-blue: #2563eb;
+  --sl-blue-deep: #1d4ed8;
+  --sl-blue-soft: #dbeafe;
+  --sl-border: #d7e3f4;
+  --sl-border-soft: #e8eef7;
+  --sl-text: #0f172a;
+  --sl-muted: #64748b;
+  --sl-body: #334155;
+  --sl-card: #ffffff;
+  --sl-amber-bg: #fff7ed;
+  --sl-amber-border: #fdba74;
+  --sl-amber-text: #9a3412;
+  --sl-info-bg: #eff6ff;
+  --sl-info-border: #93c5fd;
+  background: var(--sl-card);
+  border: 1px solid #1e3a5f;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(11, 19, 38, 0.14);
+  color: var(--sl-text);
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.smart-age-report__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: linear-gradient(180deg, #0f172a 0%, #0b1326 100%);
+  color: #fff;
+}
+
+.smart-age-report__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--sl-blue);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.smart-age-report__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.smart-age-report__body {
+  padding: 20px 22px 22px;
+  background: #fff;
+}
+
+.smart-age-report__product {
+  margin: 0 0 16px;
+  font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--sl-navy);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Hero: year panel + summary */
+.smart-age-hero {
+  display: grid;
+  grid-template-columns: minmax(140px, 210px) minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+  align-items: stretch;
+}
+
+.smart-age-hero__year,
+.smart-year-context-primary.smart-age-hero__year {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 148px;
+  padding: 22px 18px;
+  border-radius: 18px;
+  border: 1px solid #60a5fa;
+  background: linear-gradient(145deg, #2563eb 0%, #1d4ed8 55%, #1e40af 100%);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.smart-age-hero__year .smart-year-context-value,
+.smart-year-context-primary.smart-age-hero__year .smart-year-context-value {
+  font: 800 clamp(2.1rem, 6vw, 3.1rem) / 1 "JetBrains Mono", ui-monospace, monospace;
+  color: #fff;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+.smart-age-hero__year .smart-year-context-label,
+.smart-year-context-primary.smart-age-hero__year .smart-year-context-label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.smart-age-estimate-type {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(239, 246, 255, 0.88);
+  margin-top: 2px;
+}
+
+.smart-age-summary-panel {
+  border: 1px solid var(--sl-border);
+  border-radius: 16px;
+  background: #f8fbff;
+  padding: 14px 16px;
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(140px, 0.9fr);
+  gap: 12px 18px;
+  min-height: 148px;
+}
+
+.smart-age-summary-panel--empty {
+  display: none;
+}
+
+.smart-age-eyebrow,
+.smart-age-summary-panel > h4,
+.smart-lookup-best-result > h4 {
+  margin: 0 0 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sl-blue-deep);
+}
+
+.smart-age-summary-panel .smart-age-eyebrow {
+  margin-bottom: 4px;
+}
+
+.smart-lookup-best-product,
+.smart-age-summary-panel h4.smart-lookup-best-product {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--sl-navy);
+  text-transform: none;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.smart-lookup-best-type {
+  margin: 0 0 8px;
+  font-size: 0.88rem;
+  color: var(--sl-muted);
+  text-transform: capitalize;
+}
+
+.smart-age-summary-context {
+  margin: 0 0 8px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--sl-body);
+}
+
+.smart-lookup-unit-caveat {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--sl-body);
+}
+
+.smart-age-summary-metrics {
+  display: grid;
+  gap: 0;
+  align-content: start;
+  border-left: 1px solid var(--sl-border-soft);
+  padding-left: 14px;
+}
+
+.smart-age-summary-metrics .result-row {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--sl-border-soft);
+  gap: 8px;
+}
+
+.smart-age-summary-metrics .result-row:last-child {
+  border-bottom: none;
+}
+
+.smart-age-confidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.smart-age-confidence::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #94a3b8;
+  flex-shrink: 0;
+}
+
+.smart-age-confidence--high::before { background: #2563eb; }
+.smart-age-confidence--moderate::before,
+.smart-age-confidence--medium::before { background: #3b82f6; }
+.smart-age-confidence--low::before { background: #f59e0b; }
+
+/* Notices */
+.smart-age-notices {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.smart-age-notice-line,
+.smart-lookup-fallback-note,
+.smart-lookup-source-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--sl-border-soft);
+  background: #f8fafc;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--sl-body);
+}
+
+.smart-lookup-fallback-note {
+  border-color: #99f6e4;
+  background: #f0fdfa;
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.smart-lookup-precision-badge {
+  display: inline-flex;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.smart-lookup-precision-note {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--sl-body);
+}
+
+.smart-lookup-canonical-note {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--sl-body);
+}
+
+.smart-age-notice {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+
+.smart-age-notice--warning,
+.smart-lookup-evidence-conflict {
+  background: var(--sl-amber-bg);
+  border: 1px solid var(--sl-amber-border);
+  color: var(--sl-amber-text);
+}
+
+.smart-age-notice--warning h4,
+.smart-lookup-evidence-conflict h4 {
+  margin: 0 0 4px;
+  color: #9a3412;
+  font-size: 0.92rem;
+}
+
+.smart-age-notice--warning p,
+.smart-lookup-evidence-conflict p {
+  margin: 0;
+  color: #9a3412;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.smart-age-notice--info,
+.smart-lookup-serial-notice {
+  background: var(--sl-info-bg);
+  border: 1px solid var(--sl-info-border);
+  color: #1e3a8a;
+}
+
+.smart-lookup-serial-notice h4 {
+  margin: 0 0 4px;
+  color: #1e3a8a;
+}
+
+.smart-lookup-serial-notice p {
+  margin: 0;
+  color: #1e40af;
+}
+
+/* Detail grid */
+.smart-age-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 28px;
+  margin: 0 0 16px;
+  padding: 4px 2px 2px;
+}
+
+.smart-age-detail-col .result-row,
+.smart-age-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--sl-border-soft);
+  font-size: 0.9rem;
+}
+
+.smart-age-detail-col .result-row:last-child,
+.smart-age-detail-row:last-child {
+  border-bottom: none;
+}
+
+.smart-age-report .result-label {
+  color: var(--sl-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex: 0 1 46%;
+}
+
+.smart-age-report .result-value {
+  color: var(--sl-navy);
+  font-weight: 700;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.88rem;
+  text-align: right;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  flex: 1 1 54%;
+}
+
+/* Explanation cards */
+.smart-age-explain-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.smart-age-explain-card,
+.smart-age-report .info-block.notes,
+.smart-age-report .smart-lookup-caveats {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--sl-border);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.smart-age-explain-card h4,
+.smart-age-report .info-block.notes h4,
+.smart-age-report .smart-lookup-caveats h4 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--sl-navy);
+}
+
+.smart-age-explain-card p,
+.smart-age-report .info-block.notes p,
+.smart-age-report .smart-lookup-caveats li {
+  margin: 0 0 8px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--sl-body);
+}
+
+.smart-age-explain-card p:last-child,
+.smart-age-report .info-block.notes p:last-child {
+  margin-bottom: 0;
+}
+
+.smart-age-report .smart-lookup-caveats ul,
+.smart-age-report .smart-lookup-alternatives ul,
+.smart-age-report .smart-lookup-refinement ul,
+.smart-age-report .determination-details ul,
+.smart-year-variants ul {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--sl-body);
+}
+
+.smart-year-variants {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--sl-blue-soft);
+  border-radius: 14px;
+  background: #f8fbff;
+}
+
+.smart-year-variants h4 {
+  margin: 0 0 8px;
+  color: var(--sl-navy);
+  font-size: 0.92rem;
+}
+
+.smart-lookup-alternatives,
+.smart-lookup-refinement {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--sl-border-soft);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.smart-lookup-try-next {
+  margin: 0 0 6px;
+  color: var(--sl-body);
+  font-size: 0.88rem;
+}
+
+/* Evidence accordions */
+.smart-age-evidence {
+  display: grid;
+  gap: 10px;
+}
+
+.smart-age-report .determination-details,
+.smart-age-accordion {
+  margin: 0;
+  border: 1px solid var(--sl-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.smart-age-report .determination-details summary,
+.smart-age-accordion summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 12px 16px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--sl-navy);
+  background: #f8fafc;
+}
+
+.smart-age-report .determination-details summary::-webkit-details-marker,
+.smart-age-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.smart-age-report .determination-details summary::after,
+.smart-age-accordion summary::after {
+  content: "▾";
+  color: var(--sl-muted);
+  font-size: 0.85rem;
+  transition: transform 0.15s ease;
+}
+
+.smart-age-report .determination-details[open] summary::after,
+.smart-age-accordion[open] summary::after {
+  transform: rotate(-180deg);
+}
+
+.smart-age-report .determination-details summary:focus-visible,
+.smart-age-accordion summary:focus-visible,
+.smart-age-report a:focus-visible {
+  outline: 2px solid var(--sl-blue);
+  outline-offset: 2px;
+}
+
+.smart-age-report .determination-details ul,
+.smart-age-accordion ul {
+  margin: 0;
+  padding: 12px 16px 14px 2rem;
+  border-top: 1px solid var(--sl-border-soft);
+  background: #fff;
+}
+
+.smart-age-report .determination-details li,
+.smart-age-accordion li {
+  margin: 0 0 6px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--sl-body);
+  overflow-wrap: anywhere;
+}
+
+.smart-age-report .determination-details a,
+.smart-lookup-sources a {
+  color: var(--sl-blue-deep);
+  word-break: break-word;
+}
+
+/* Outer shell integration (index / brand pages with results-card) */
+#ageResults.results-card:has(.smart-age-report) {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+  max-width: 860px;
+}
+
+#ageResults.results-card:has(.smart-age-report) > .results-header {
+  display: none;
+}
+
+#ageResults.results-card:has(.smart-age-report) > .results-body {
+  padding: 0;
+  background: transparent;
+}
+
+#ageResults.results-card:has(.smart-age-report) > .results-footer {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin-top: 0;
+  padding: 16px 4px 4px;
+  border-top: none;
+  background: transparent;
+}
+
+#ageResults.results-card:has(.smart-age-report) > .results-footer .decode-again-btn,
+#ageResults.results-card:has(.smart-age-report) > .results-footer .error-btn {
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 11px 18px;
+  font-weight: 700;
+}
+
+/* Dedicated Smart Lookup page container */
+#ageResults:has(.smart-age-report) {
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Loading / no-result cards stay readable inside the shell */
+.smart-lookup-status {
+  background: #fff;
+  border: 1px solid var(--sl-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 18px 20px;
+  color: var(--sl-text, #1a202c);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .smart-age-hero {
+    grid-template-columns: minmax(130px, 180px) minmax(0, 1fr);
+  }
+
+  .smart-age-summary-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .smart-age-summary-metrics {
+    border-left: none;
+    border-top: 1px solid var(--sl-border-soft);
+    padding-left: 0;
+    padding-top: 10px;
+  }
+}
+
+@media (max-width: 720px) {
+  .smart-age-report {
+    border-radius: 18px;
+  }
+
+  .smart-age-report__body {
+    padding: 16px;
+  }
+
+  .smart-age-hero,
+  .smart-age-detail-grid,
+  .smart-age-explain-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .smart-age-hero__year,
+  .smart-year-context-primary.smart-age-hero__year {
+    min-height: 120px;
+    align-items: center;
+    text-align: center;
+  }
+
+  .smart-age-hero__year .smart-year-context-value {
+    width: 100%;
+    text-align: center;
+  }
+
+  .smart-age-hero__year .smart-year-context-label,
+  .smart-age-estimate-type {
+    width: 100%;
+    text-align: center;
+  }
+
+  .smart-age-detail-col .result-row,
+  .smart-age-detail-row,
+  .smart-age-summary-metrics .result-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .smart-age-report .result-value {
+    text-align: left;
+  }
+
+  #ageResults.results-card:has(.smart-age-report) > .results-footer {
+    flex-direction: column;
+  }
+
+  #ageResults.results-card:has(.smart-age-report) > .results-footer .decode-again-btn,
+  #ageResults.results-card:has(.smart-age-report) > .results-footer .error-btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
