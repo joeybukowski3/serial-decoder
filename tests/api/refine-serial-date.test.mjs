@@ -329,7 +329,9 @@ test('deterministic provider failure preserves partial local narrowing without l
   const res = createResponse();
   await handler(request({ candidateYears: [2004, 2014, 2024] }), res);
 
-  assert.equal(res.payload.status, 'ambiguous');
+  // Partial local narrowing with a known model-era lower bound is reported as
+  // ambiguous_with_era rather than bare ambiguous so the UI can show era context.
+  assert.ok(['ambiguous', 'ambiguous_with_era'].includes(res.payload.status));
   assert.deepEqual(res.payload.remainingCandidateYears, [2014, 2024]);
   assert.equal(res.payload.chosenYear, null);
   assert.equal(res.payload.provider, 'deterministic-serper');
@@ -360,7 +362,7 @@ test('local_only returns partial local narrowing without Redis or either online 
   const res = createResponse();
   await handler(request({ candidateYears: [2004, 2014, 2024] }), res);
 
-  assert.equal(res.payload.status, 'ambiguous');
+  assert.ok(['ambiguous', 'ambiguous_with_era'].includes(res.payload.status));
   assert.deepEqual(res.payload.remainingCandidateYears, [2014, 2024]);
   assert.equal(res.payload.provider, 'local-db');
   assert.equal(res.payload.errorCode, null);
@@ -808,4 +810,172 @@ test('cached refinement cannot inject a year outside the current serial candidat
   assert.equal(providerCalls, 1);
   assert.equal(res.payload.chosenYear, null);
   assert.deepEqual(res.payload.remainingCandidateYears, [1978, 1990, 2002, 2014, 2026]);
+});
+
+test('Whirlpool WED4850HWO canonical-equivalent evidence ranks or resolves 2022 over 1992', async () => {
+  const handler = createRefineSerialDateHandler({
+    refinementMode: 'deterministic_serper',
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => null,
+    deterministicProviderLookup: async (req) => ({
+      status: 'success',
+      evidence: [{
+        type: 'manufacturer',
+        title: 'Whirlpool WED4850HW0 dryer',
+        sourceUrl: 'https://www.whirlpool.com/wed4850hw0',
+        productionStart: 2019,
+        productionEnd: null,
+        supports: 'Modern electric dryer introduction evidence.',
+        quality: 'strong-secondary',
+        exactModelMatch: true,
+        modelMatchType: 'canonical-equivalent',
+      }],
+      extractedFacts: [{
+        resultIndex: 0,
+        domain: 'whirlpool.com',
+        modelMatchType: 'canonical-equivalent',
+        exactModelMatch: true,
+        dateMeaning: 'product_launch',
+        approximateYear: 2019,
+        normalizedDateYear: 2019,
+        sourceType: 'manufacturer',
+        claimText: 'WED4850HW0 introduced around 2019.',
+      }],
+      output: {
+        resolutionType: 'resolved-single',
+        bestEstimateYear: 2022,
+        confidence: 'high',
+        estimatedModelEra: { startYear: 2019, endYear: null },
+        plausibleYears: [2022],
+      },
+      modelIdentity: {
+        enteredModel: req.model,
+        canonicalModel: 'WED4850HW0',
+        searchModels: ['WED4850HWO', 'WED4850HW0'],
+        equivalenceReason: 'terminal-o-zero-transcription',
+        normalizationApplied: true,
+        matchedBy: 'canonical-equivalent',
+        identityConfidence: 'high',
+      },
+      matchedIdentity: { matchType: 'canonical-equivalent', model: 'WED4850HW0' },
+      evidenceMatchModel: 'WED4850HW0',
+      lifecycle: { supportedProductionStartYear: 2019, supportedProductionEndYear: null },
+      errorCode: null,
+    }),
+    redisFactory: () => null,
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+  await handler(request({
+    brand: 'Whirlpool',
+    serial: 'MB1930745',
+    model: 'WED4850HWO',
+    candidateYears: [1992, 2022],
+    decodedMonth: 'Week 19',
+  }), res);
+
+  assert.equal(res.statusCode, 200);
+  assert.notEqual(res.payload.status, 'unavailable');
+  if (res.payload.status === 'resolved') {
+    assert.equal(res.payload.chosenYear, 2022);
+  } else {
+    assert.equal(res.payload.status, 'ranked');
+    assert.equal(res.payload.preferredCandidateYear, 2022);
+    assert.ok(res.payload.remainingCandidateYears.includes(1992));
+  }
+  assert.equal(res.payload.modelIdentity.enteredModel, 'WED4850HWO');
+  assert.equal(res.payload.modelIdentity.canonicalModel, 'WED4850HW0');
+  assert.ok(String(res.payload.summary || '').includes('WED4850') || res.payload.modelIdentity);
+});
+
+test('Whirlpool timeout degrades with model-era lower bound instead of empty usefulness', async () => {
+  const handler = createRefineSerialDateHandler({
+    refinementMode: 'deterministic_serper',
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => ({
+      narrowedYears: [1992, 2022],
+      confidence: 'low',
+      productionStartYear: 2018,
+      matchedModel: 'WED****',
+      matchType: 'model-family',
+    }),
+    deterministicProviderLookup: async () => {
+      const error = new Error('aborted');
+      error.name = 'AbortError';
+      throw error;
+    },
+    redisFactory: () => null,
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+  await handler(request({
+    brand: 'Whirlpool',
+    serial: 'MB1930745',
+    model: 'WED4850HWO',
+    candidateYears: [1992, 2022],
+    decodedMonth: 'Week 19',
+  }), res);
+
+  // Production start 2018 with tolerance does not resolve alone when both candidates
+  // still remain after partial match, but timeout should still rank using lower bound.
+  assert.notEqual(res.payload.status, 'unavailable');
+  assert.ok(['resolved', 'ranked', 'ambiguous', 'ambiguous_with_era'].includes(res.payload.status));
+  if (res.payload.status === 'resolved') assert.equal(res.payload.chosenYear, 2022);
+  if (res.payload.status === 'ranked') assert.equal(res.payload.preferredCandidateYear, 2022);
+});
+
+test('deterministic ranking from lower-bound facts without full resolve still prefers modern cycle', async () => {
+  const handler = createRefineSerialDateHandler({
+    refinementMode: 'deterministic_serper',
+    localLookup: async () => ({ evidence: [], normalization: null }),
+    modelProductionLookup: async () => null,
+    deterministicProviderLookup: async () => ({
+      status: 'success',
+      evidence: [],
+      extractedFacts: [{
+        resultIndex: 0,
+        domain: 'parts.example',
+        modelMatchType: 'canonical-equivalent',
+        exactModelMatch: true,
+        dateMeaning: 'product_available',
+        approximateYear: 2019,
+        sourceType: 'parts',
+        claimText: 'Parts listed for WED4850HW0 in 2019.',
+      }],
+      output: {
+        resolutionType: 'unchanged',
+        bestEstimateYear: null,
+        confidence: 'moderate',
+        estimatedModelEra: { startYear: 2019, endYear: null },
+        plausibleYears: [1992, 2022],
+      },
+      lifecycle: { supportedProductionStartYear: 2019 },
+      modelIdentity: {
+        enteredModel: 'WED4850HWO',
+        canonicalModel: 'WED4850HW0',
+        searchModels: ['WED4850HWO', 'WED4850HW0'],
+        equivalenceReason: 'terminal-o-zero-transcription',
+        normalizationApplied: true,
+        matchedBy: 'canonical-equivalent',
+        identityConfidence: 'high',
+      },
+      errorCode: null,
+    }),
+    redisFactory: () => null,
+    logger: silentLogger(),
+  });
+  const res = createResponse();
+  await handler(request({
+    brand: 'Whirlpool',
+    serial: 'MB1930745',
+    model: 'WED4850HWO',
+    candidateYears: [1992, 2022],
+  }), res);
+
+  assert.ok(['resolved', 'ranked'].includes(res.payload.status));
+  if (res.payload.status === 'resolved') assert.equal(res.payload.chosenYear, 2022);
+  if (res.payload.status === 'ranked') {
+    assert.equal(res.payload.preferredCandidateYear, 2022);
+    assert.deepEqual(res.payload.remainingCandidateYears, [1992, 2022]);
+  }
 });

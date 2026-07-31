@@ -65,3 +65,33 @@ test('refinement fingerprint ignores render-time month changes but preserves con
   assert.notEqual(controller.fingerprint(base), controller.fingerprint({ ...base, context: 'stainless finish' }));
   assert.equal(controller.fingerprint(base), controller.fingerprint({ ...base, decodedMonth: 'June' }));
 });
+
+test('browser controller preserves ranked preferred year inside serial candidates', () => {
+  const controller = loadController();
+  const result = controller.constrainResponseToSerialCandidates({
+    status: 'ranked',
+    candidateYears: [1992, 2022],
+    remainingCandidateYears: [1992, 2022],
+    preferredCandidateYear: 2022,
+    chosenYear: null,
+    summary: 'Most likely 2022',
+  }, [1992, 2022]);
+
+  assert.equal(result.status, 'ranked');
+  assert.equal(result.preferredCandidateYear, 2022);
+  assert.deepEqual(Array.from(result.remainingCandidateYears), [1992, 2022]);
+  assert.equal(result.chosenYear, null);
+});
+
+test('browser controller preserves ambiguous_with_era remaining candidates', () => {
+  const controller = loadController();
+  const result = controller.constrainResponseToSerialCandidates({
+    status: 'ambiguous_with_era',
+    candidateYears: [1992, 2022],
+    remainingCandidateYears: [1992, 2022],
+    modelProductionRange: { start: 2019, end: null },
+  }, [1992, 2022]);
+
+  assert.equal(result.status, 'ambiguous_with_era');
+  assert.deepEqual(Array.from(result.remainingCandidateYears), [1992, 2022]);
+});
