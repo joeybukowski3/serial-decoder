@@ -20,8 +20,8 @@ import {
 import {
   callSmartLookupOpenAiAgeProvider,
   isOpenAiSmartLookupEnabled,
-  DEFAULT_OPENAI_STAGE_MAX_MS,
 } from '../lib/smart-lookup/openai-provider.js';
+import { callSmartLookupXaiAgeProvider, isXaiSmartLookupEnabled } from '../lib/smart-lookup/xai-provider.js';
 import {
   createSmartLookupTimings,
   createUnavailableSmartAgeResult,
@@ -39,22 +39,8 @@ import {
 import { buildDeterministicBroadResult, buildExactModelReserveResult } from '../lib/smart-lookup/static-results.js';
 import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
 
-const TOTAL_BUDGET_MS = 32000;
-// OpenAI-primary budgets, set from measured live preview latency rather than
-// guessed: OpenAI web research took 8.7s (Nintendo Switch 2), 8.8s (Sony
-// X90L), 9.3s (LG WM3900HWA), 12.9s and 15.6s (the two Miele H4080BM
-// phrasings). A 5s stage timed out 100% of the time, so 13s covers the
-// measured median and most of the tail while still leaving a real xAI
-// window -- the thing the old grounded Gemini stage never did. Live xAI
-// Preview validation with grok-4.3 web_search took ~13.5-15.8s for useful
-// forced-fallback results, so the route budget must reserve a materially
-// larger fallback window than the earlier 2.5s Groq placeholder.
-//
-// NOTE: this exceeds the original ~8.1s route target. That target predates
-// the measurement and is not achievable with web-search research; the old
-// 8.1s path returned nothing at all. See the PR discussion.
-const OPENAI_STAGE_BUDGET_MS = DEFAULT_OPENAI_STAGE_MAX_MS;
-const XAI_FALLBACK_MAX_MS = 18000;
+const TOTAL_BUDGET_MS = 15000;
+const HEAVY_PROVIDER_STAGE_BUDGET_MS = 6500;
 const PROVIDER_BUDGET_MS = 6500;
 const REDIS_PHASE_BUDGET_MS = 500;
 const REDIS_CALL_BUDGET_MS = 250;
@@ -140,6 +126,7 @@ function finalizeTimings(result, timings, deadline) {
 
 function logResult(logger, requestId, queryInfo, result, extra = {}) {
   const grounded = extra.groundedTelemetry || {};
+  const routing = extra.routingTelemetry || {};
   logSmartLookup(logger, {
     event: 'smart_age_lookup',
     requestId,
@@ -176,6 +163,18 @@ function logResult(logger, requestId, queryInfo, result, extra = {}) {
     budgetStatus: extra.budgetStatus || result?.budgetStatus || null,
     logicalLookupCount: extra.logicalLookupCount ?? result?.logicalLookupCount ?? null,
     actualProviderAttemptCount: extra.actualProviderAttemptCount ?? result?.actualProviderAttemptCount ?? null,
+    sharedEvidenceAttempted: routing.sharedEvidenceAttempted || false,
+    sharedEvidenceAccepted: routing.sharedEvidenceAccepted || false,
+    sharedEvidenceFailureCode: routing.sharedEvidenceFailureCode || null,
+    sharedEvidenceDurationMs: routing.sharedEvidenceDurationMs ?? null,
+    serperDurationMs: routing.serperDurationMs ?? null,
+    geminiDurationMs: routing.geminiDurationMs ?? null,
+    heavyProviderSelected: routing.heavyProviderSelected || null,
+    heavyProviderAttempted: routing.heavyProviderAttempted || false,
+    heavyProviderDurationMs: routing.heavyProviderDurationMs ?? null,
+    secondaryHeavyProviderSkipped: routing.secondaryHeavyProviderSkipped || false,
+    estimateBasis: result?.estimateBasis || null,
+    estimatePrecision: result?.precisionLevel || null,
     timings: result?.timings,
   });
 }
@@ -192,12 +191,13 @@ export function createAgeLookupHandler(dependencies = {}) {
   const localLookup = dependencies.localLookup || findLocalModelAgeResult;
   const providerLookup = dependencies.providerLookup || callGeminiAgeProvider;
   const groundedProviderLookup = dependencies.groundedProviderLookup || callSmartLookupGroundedAgeProvider;
-  // OpenAI (Responses API + web_search) is the primary research provider when
-  // enabled. It fully replaces the Gemini stages for the active sequence --
-  // see the openAiEnabled branch below for why Gemini is not chained after it.
+  // OpenAI is the default heavyweight provider; xAI can be selected directly.
+  // The normal route never chains one after the other.
   const openAiProviderLookup = dependencies.openAiProviderLookup || callSmartLookupOpenAiAgeProvider;
+  const xaiProviderLookup = dependencies.xaiProviderLookup || callSmartLookupXaiAgeProvider;
   const modelEvidenceLookup = dependencies.modelEvidenceLookup || lookupModelEvidence;
-  const sharedExactEnabled = dependencies.sharedExactEnabled
+  const sharedEvidenceEnabled = dependencies.sharedEvidenceEnabled
+    ?? dependencies.sharedExactEnabled
     ?? ['1', 'true', 'yes', 'on'].includes(
       String((dependencies.env || process.env).SMART_LOOKUP_SHARED_MODEL_EVIDENCE_ENABLED || '')
         .trim()
@@ -210,6 +210,9 @@ export function createAgeLookupHandler(dependencies = {}) {
   const openAiEnabled = dependencies.openAiEnabled
     ?? (isOpenAiSmartLookupEnabled(dependencies.env || process.env)
       && Boolean((dependencies.env || process.env).OPENAI_API_KEY));
+  const xaiEnabled = dependencies.xaiEnabled
+    ?? (isXaiSmartLookupEnabled(dependencies.env || process.env)
+      && Boolean((dependencies.env || process.env).XAI_API_KEY));
   const groundedEnabled = dependencies.groundedEnabled ?? isGroundedAgeEnabled(dependencies.env);
   const reserveBudget = dependencies.reserveProviderBudget || reserveProviderBudget;
   const recordAttempts = dependencies.recordProviderAttemptMetrics || recordProviderAttemptMetrics;
@@ -254,9 +257,21 @@ export function createAgeLookupHandler(dependencies = {}) {
     let cacheStatus = 'bypass';
     let shadowTask = null;
     let shadowObserved = false;
+    const routingTelemetry = {
+      sharedEvidenceAttempted: false,
+      sharedEvidenceAccepted: false,
+      sharedEvidenceFailureCode: null,
+      sharedEvidenceDurationMs: null,
+      serperDurationMs: null,
+      geminiDurationMs: null,
+      heavyProviderSelected: null,
+      heavyProviderAttempted: false,
+      heavyProviderDurationMs: null,
+      secondaryHeavyProviderSkipped: false,
+    };
 
     function logFinalResult(result, extra = {}) {
-      logResult(logger, requestId, queryInfo, result, extra);
+      logResult(logger, requestId, queryInfo, result, { routingTelemetry, ...extra });
       if (shadowTask && !shadowObserved) {
         shadowObserved = true;
         observeSmartLookupShadow(shadowTask, {
@@ -548,6 +563,17 @@ export function createAgeLookupHandler(dependencies = {}) {
         && queryInfo.providerEligible
         && queryInfo.groundedEligible;
       const cacheKey = buildSmartAgeCacheKey(queryInfo, { grounded: useGrounded });
+      const scheduleAgeCacheWrite = (result) => {
+        const ttlSeconds = chooseSmartAgeTtl(result);
+        if (ttlSeconds <= 0 || !deadline.hasTime(50)) return;
+        const cachePayload = prepareResultForCache(result);
+        boundedRedisSet(redis, cacheKey, cachePayload, ttlSeconds, deadline, {
+          stage: 'age-cache-write',
+          maxMs: CACHE_WRITE_BUDGET_MS,
+        }).then((writeResult) => {
+          timings.cacheWriteMs = writeResult.elapsedMs || 0;
+        }).catch(() => {});
+      };
       const verifiedKey = getVerifiedModelKey(queryInfo);
       let cacheRead = { status: 'unavailable', value: null, elapsedMs: 0 };
       let verifiedRead = { status: 'unavailable', value: null, elapsedMs: 0 };
@@ -671,21 +697,37 @@ export function createAgeLookupHandler(dependencies = {}) {
             throw error;
           }
 
-          if (sharedExactEnabled
-            && queryInfo.querySpecificity === 'exact-model'
-            && queryInfo.brand
-            && (queryInfo.exactModel || queryInfo.modelIdentity || queryInfo.model)
-            && deadline.hasTime(500)) {
+          const sharedResearchTerm = queryInfo.querySpecificity === 'exact-model'
+            ? (queryInfo.exactModel || queryInfo.modelIdentity || queryInfo.model)
+            : (queryInfo.querySpecificity === 'model-line'
+              ? (queryInfo.modelLineName || queryInfo.modelIdentity || queryInfo.productFamily)
+              : (queryInfo.brand
+                ? (queryInfo.providerQuery.toLowerCase().startsWith(`${queryInfo.brand.toLowerCase()} `)
+                  ? queryInfo.providerQuery.slice(queryInfo.brand.length).trim()
+                  : queryInfo.providerQuery)
+                : (queryInfo.modelIdentity || queryInfo.providerQuery)));
+          const sharedTierEligible = ['exact-model', 'model-line', 'product-family'].includes(queryInfo.querySpecificity)
+            || Boolean(queryInfo.modelIdentity);
+          const sharedEvidenceEligible = sharedEvidenceEnabled
+            && queryInfo.researchEligible
+            && sharedTierEligible
+            && Boolean(sharedResearchTerm)
+            && deadline.hasTime(500);
+
+          if (sharedEvidenceEligible) {
+            routingTelemetry.sharedEvidenceAttempted = true;
+            const sharedStart = now();
             const sharedEvidence = await modelEvidenceLookup({
               brand: queryInfo.brand,
-              model: queryInfo.exactModel || queryInfo.modelIdentity || queryInfo.model,
+              model: sharedResearchTerm,
               category: queryInfo.genericCategory || queryInfo.productType || null,
+              querySpecificity: queryInfo.querySpecificity,
               purpose: 'smart_lookup',
               deadline,
               requestContext: {
                 consumer: 'smart_lookup',
                 requestId,
-                scoringPath: 'shared-exact-model',
+                scoringPath: `shared-${queryInfo.querySpecificity}`,
               },
             }, {
               redis,
@@ -697,14 +739,23 @@ export function createAgeLookupHandler(dependencies = {}) {
               geminiApiKey: dependencies.geminiApiKey
                 || (dependencies.env || process.env).GEMINI_API_KEY,
               geminiFetchImpl: dependencies.geminiFetchImpl || dependencies.fetchImpl,
+              geminiTimeoutMs: dependencies.sharedGeminiBudgetMs || 4000,
+              serperTotalBudgetMs: dependencies.sharedSerperBudgetMs || 3000,
               logger,
             });
             const sharedResult = sharedEvidenceToSmartLookupInput(sharedEvidence, queryInfo);
+            routingTelemetry.sharedEvidenceDurationMs = Math.max(0, now() - sharedStart);
+            routingTelemetry.serperDurationMs = sharedEvidence?.timings?.searchMs ?? null;
+            routingTelemetry.geminiDurationMs = sharedEvidence?.timings?.extractionMs ?? null;
+            routingTelemetry.sharedEvidenceAccepted = Boolean(sharedResult);
+            routingTelemetry.sharedEvidenceFailureCode = sharedResult
+              ? null
+              : (sharedEvidence?.failureCategory || 'EVIDENCE_INSUFFICIENT');
             if (sharedResult) return sharedResult;
           }
 
           if (sharedEvidenceShadowEnabled
-            && !sharedExactEnabled
+            && !sharedEvidenceEnabled
             && queryInfo.querySpecificity === 'exact-model'
             && queryInfo.brand
             && (queryInfo.exactModel || queryInfo.modelIdentity || queryInfo.model)
@@ -740,34 +791,57 @@ export function createAgeLookupHandler(dependencies = {}) {
             }, { now });
           }
 
-          // Active production sequence: OpenAI web research, then xAI Grok,
-          // then the caller's deterministic reserve. Gemini is deliberately NOT
-          // chained after OpenAI -- doing so would rebuild the measured
-          // failure where grounded (~4.2s) plus closed-book (~3.9s) consumed
-          // the entire route budget and starved every fallback. The Gemini
-          // branches below remain reachable only when OpenAI is disabled, so
-          // the provider stays available for benchmarking and re-enablement.
-          if (openAiEnabled) {
+          // Ordinary requests select exactly one heavyweight web provider.
+          // A timeout or schema failure degrades directly to the deterministic
+          // reserve; the other heavyweight provider is selected on a future
+          // request/configuration change, never chained after a full attempt.
+          const configuredHeavyProvider = String(
+            (dependencies.env || process.env).SMART_LOOKUP_HEAVY_PROVIDER || 'openai',
+          ).trim().toLowerCase();
+          const heavyProviderSelected = configuredHeavyProvider === 'xai' && xaiEnabled
+            ? 'xai'
+            : (openAiEnabled ? 'openai' : (xaiEnabled ? 'xai' : null));
+          routingTelemetry.heavyProviderSelected = heavyProviderSelected;
+          routingTelemetry.secondaryHeavyProviderSkipped = Boolean(heavyProviderSelected && openAiEnabled && xaiEnabled);
+          if (heavyProviderSelected) {
             groundedTelemetry.attempted = true;
-            const openAiStart = now();
+            routingTelemetry.heavyProviderAttempted = true;
+            const heavyStart = now();
             try {
-              const value = await openAiProviderLookup(queryInfo, {
+              const commonOptions = {
                 deadline,
-                openAiMaxMs: Math.min(OPENAI_STAGE_BUDGET_MS, deadline.remainingMs(350)),
-                xaiMaxMs: XAI_FALLBACK_MAX_MS,
                 reserveMs: 350,
                 fetchImpl: dependencies.fetchImpl,
                 env: dependencies.env || process.env,
-              });
-              groundedTelemetry.durationMs = Math.max(0, now() - openAiStart);
+                enableXaiFallback: false,
+              };
+              const value = heavyProviderSelected === 'xai'
+                ? await xaiProviderLookup(queryInfo, {
+                    ...commonOptions,
+                    xaiMaxMs: Math.min(HEAVY_PROVIDER_STAGE_BUDGET_MS, deadline.remainingMs(350)),
+                  })
+                : await openAiProviderLookup(queryInfo, {
+                    ...commonOptions,
+                    openAiMaxMs: Math.min(HEAVY_PROVIDER_STAGE_BUDGET_MS, deadline.remainingMs(350)),
+                  });
+              routingTelemetry.heavyProviderDurationMs = Math.max(0, now() - heavyStart);
+              groundedTelemetry.durationMs = routingTelemetry.heavyProviderDurationMs;
               return value;
-            } catch (openAiError) {
-              groundedTelemetry.durationMs = Math.max(0, now() - openAiStart);
-              groundedTelemetry.failureCode = isTimeoutError(openAiError)
+            } catch (heavyError) {
+              routingTelemetry.heavyProviderDurationMs = Math.max(0, now() - heavyStart);
+              groundedTelemetry.durationMs = routingTelemetry.heavyProviderDurationMs;
+              groundedTelemetry.failureCode = isTimeoutError(heavyError)
                 ? 'STAGE_TIMEOUT'
-                : (openAiError instanceof SmartLookupProviderError ? openAiError.code : 'PROVIDER_UNAVAILABLE');
-              throw openAiError;
+                : (heavyError instanceof SmartLookupProviderError ? heavyError.code : 'PROVIDER_UNAVAILABLE');
+              throw heavyError;
             }
+          }
+
+          if (sharedEvidenceEnabled) {
+            throw new SmartLookupProviderError(
+              'PROVIDERS_UNAVAILABLE',
+              'No heavyweight Smart Lookup provider is configured.',
+            );
           }
 
           if (!useGrounded) {
@@ -952,6 +1026,7 @@ export function createAgeLookupHandler(dependencies = {}) {
         if (fallbackProviderStatus) result.fallbackProviderStatus = fallbackProviderStatus;
         if (fallbackProviderLatencyMs != null) result.fallbackProviderLatencyMs = fallbackProviderLatencyMs;
         if (fallbackProviderModel) result.fallbackProviderModel = fallbackProviderModel;
+        scheduleAgeCacheWrite(result);
         logFinalResult(result, {
           timeoutStage: isTimeoutError(error) ? 'provider' : null,
           budgetStatus: error.budgetResult?.status || budgetResult?.status || null,
@@ -1037,6 +1112,7 @@ export function createAgeLookupHandler(dependencies = {}) {
               errorCode: error?.code || 'INVALID_PROVIDER_RESULT',
             });
         finalizeTimings(result, timings, deadline);
+        scheduleAgeCacheWrite(result);
         logFinalResult(result, {
           budgetStatus: budgetResult?.status || null,
           logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
@@ -1056,16 +1132,7 @@ export function createAgeLookupHandler(dependencies = {}) {
         now,
       });
 
-      const ttlSeconds = chooseSmartAgeTtl(result);
-      if (ttlSeconds > 0 && deadline.hasTime(50)) {
-        const cachePayload = prepareResultForCache(result);
-        boundedRedisSet(redis, cacheKey, cachePayload, ttlSeconds, deadline, {
-          stage: 'age-cache-write',
-          maxMs: CACHE_WRITE_BUDGET_MS,
-        }).then((writeResult) => {
-          timings.cacheWriteMs = writeResult.elapsedMs || 0;
-        }).catch(() => {});
-      }
+      scheduleAgeCacheWrite(result);
 
       finalizeTimings(result, timings, deadline);
       logFinalResult(result, {
