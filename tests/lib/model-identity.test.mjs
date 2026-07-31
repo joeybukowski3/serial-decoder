@@ -35,6 +35,27 @@ test('classifies a missing or different regional suffix as a variant, not exact'
   assert.equal(differentSuffix.matchType, 'variant');
 });
 
+test('classifies safe terminal O/0 transcription as canonical-equivalent, not mere variant', () => {
+  const result = classifyModelIdentity({
+    model: 'WED4850HWO',
+    title: 'Whirlpool WED4850HW0 Electric Dryer',
+    snippet: 'Parts for WED4850HW0',
+    searchModels: ['WED4850HWO', 'WED4850HW0'],
+  });
+  assert.equal(result.matchType, 'canonical-equivalent');
+  assert.equal(result.matchedToken, 'WED4850HW0');
+});
+
+test('does not treat arbitrary multi-character differences as canonical-equivalent', () => {
+  const result = classifyModelIdentity({
+    model: 'WED4850HWO',
+    title: 'Whirlpool WED4950HW0 Electric Dryer',
+    snippet: '',
+  });
+  assert.notEqual(result.matchType, 'canonical-equivalent');
+  assert.notEqual(result.matchType, 'exact');
+});
+
 test('classifies a related model line as family and an unrelated model as mismatch', () => {
   const family = classifyModelIdentity({
     model: 'RF28R7351SR',

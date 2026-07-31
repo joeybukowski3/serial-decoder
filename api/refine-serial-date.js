@@ -6,6 +6,7 @@ import {
   observeRefinementShadow,
   startShadowTask,
 } from '../lib/model-evidence/shadow.js';
+import { buildSharedModelIdentity } from '../lib/model-evidence/shared-model-identity.js';
 import { buildSerialRefinementCacheKey, hashModelIdentifier } from '../lib/serial-refinement/cache-key.js';
 import { resolveCandidateIntersection, normalizeCandidateYears } from '../lib/serial-refinement/candidate-intersection.js';
 import { evaluateEvidencePolicy } from '../lib/serial-refinement/evidence-policy.js';
@@ -22,6 +23,7 @@ import {
   buildSummary,
   createBestAvailableResult,
   createDeterministicRefinementResult,
+  rankCandidatesByModelLowerBound,
 } from '../lib/serial-refinement/response-mapping.js';
 import { assertRefinementResponseInvariant, createRefinementResponse } from '../lib/serial-refinement/response-schema.js';
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
@@ -163,6 +165,11 @@ export function createRefineSerialDateHandler(dependencies = {}) {
     }
 
     const input = validation.value;
+    const modelIdentity = buildSharedModelIdentity({
+      brand: input.brand,
+      model: input.model,
+      category: input.category,
+    });
     const deadline = createDeadline({ totalMs: totalBudgetMs, now: clock });
     const timings = { localMs: 0, cacheMs: 0, onlineLookupMs: 0, totalMs: 0 };
     let cacheStatus = 'bypass';
@@ -180,18 +187,40 @@ export function createRefineSerialDateHandler(dependencies = {}) {
     function finish(response) {
       timings.totalMs = Math.max(0, clock() - requestStart);
       response.timings = timings;
+      if (!response.modelIdentity) response.modelIdentity = modelIdentity;
+      if (!response.searchedModels) response.searchedModels = modelIdentity.searchModels;
       const safeResponse = assertRefinementResponseInvariant(createRefinementResponse(response));
+      // Per-request telemetry only (not cumulative counters).
       logResult(logger, {
         requestId,
         mode: refinementMode,
         brand: input.brand.toLowerCase(),
         category: input.category.toLowerCase(),
         modelHash: hashModelIdentifier(input.model),
+        enteredModel: modelIdentity.enteredModel,
+        canonicalModel: modelIdentity.canonicalModel,
+        searchedModels: safeResponse.searchedModels || modelIdentity.searchModels,
+        normalizationApplied: Boolean(modelIdentity.normalizationApplied),
+        equivalenceReason: modelIdentity.equivalenceReason,
+        identityMatchType: safeResponse.identityMatchType || modelIdentity.matchedBy,
+        identityConfidence: safeResponse.identityConfidence || modelIdentity.identityConfidence,
+        evidenceMatchModel: safeResponse.evidenceMatchModel || null,
+        evidenceMatchType: safeResponse.evidenceMatchType || null,
+        refinementResultTier: safeResponse.refinementResultTier || safeResponse.status,
+        preferredCandidateYear: safeResponse.preferredCandidateYear,
+        remainingCandidateYears: safeResponse.remainingCandidateYears,
+        modelEraStart: safeResponse.modelProductionRange?.start ?? null,
+        modelEraEnd: safeResponse.modelProductionRange?.end ?? null,
         candidateCount: input.candidateYears.length,
         remainingCandidateCount: safeResponse.remainingCandidateYears.length,
         status: safeResponse.status,
         cacheStatus: safeResponse.cacheStatus,
         provider: safeResponse.provider,
+        providerAttempted: safeResponse.provider !== 'none' && safeResponse.provider !== 'local-db',
+        providerDurationMs: timings.onlineLookupMs,
+        deterministicFallbackUsed: Boolean(safeResponse.deterministicFallbackUsed),
+        failureStage: safeResponse.failureStage || null,
+        failureCode: safeResponse.errorCode,
         ...timings,
         errorCode: safeResponse.errorCode,
       });
@@ -209,21 +238,48 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       return res.status(200).json(safeResponse);
     }
 
-    function bestAvailable(errorCode, summary, attemptedProvider = 'none', extraEvidence = []) {
+    function bestAvailable(errorCode, summary, attemptedProvider = 'none', extraEvidence = [], extra = {}) {
+      const lowerBound = Number.isInteger(localModelRange?.start) ? localModelRange.start : null;
+      let preferredCandidateYear = extra.preferredCandidateYear ?? null;
+      let remaining = workingCandidateYears;
+      let rankingExplanation = extra.rankingExplanation || null;
+
+      if (!Number.isInteger(preferredCandidateYear) && Number.isInteger(lowerBound)) {
+        const ranked = rankCandidatesByModelLowerBound(workingCandidateYears, lowerBound);
+        if (ranked?.status === 'resolved') {
+          remaining = ranked.remainingCandidateYears;
+        } else if (ranked?.status === 'ranked') {
+          preferredCandidateYear = ranked.preferredCandidateYear;
+          remaining = ranked.remainingCandidateYears;
+          rankingExplanation = rankingExplanation
+            || `Model-era evidence places introduction around ${lowerBound} or later, so older serial cycles are unlikely.`;
+        }
+      }
+
       return createBestAvailableResult({
         input,
-        remainingCandidateYears: workingCandidateYears,
+        remainingCandidateYears: remaining,
         confidence: localConfidence,
         modelProductionRange: localModelRange,
         modelNormalization: local?.normalization || null,
+        modelIdentity,
         evidence: [...localEvidence, ...extraEvidence],
         timings,
         cacheStatus,
         provider: attemptedProvider === 'none'
-          ? (workingCandidateYears.length < input.candidateYears.length ? 'local-db' : 'none')
+          ? (remaining.length < input.candidateYears.length || localModelRange ? 'local-db' : 'none')
           : attemptedProvider,
         errorCode,
         summary,
+        failureStage: extra.failureStage || null,
+        preferredCandidateYear,
+        rankingExplanation,
+        estimateBasis: extra.estimateBasis || (localModelRange ? 'local-model-era' : null),
+        identityMatchType: modelIdentity.matchedBy,
+        identityConfidence: modelIdentity.identityConfidence,
+        evidenceMatchModel: modelIdentity.canonicalModel,
+        searchedModels: modelIdentity.searchModels,
+        deterministicFallbackUsed: true,
       });
     }
 
@@ -247,8 +303,13 @@ export function createRefineSerialDateHandler(dependencies = {}) {
           resolutionBasis: 'serial-plus-model',
           modelProductionRange: localPolicy.range ? { start: localPolicy.range.start, end: localPolicy.range.end } : null,
           modelNormalization: local?.normalization || null,
+          modelIdentity,
           evidence: localPolicy.evidence,
-          summary: buildSummary(localDecision, local?.normalization),
+          summary: buildSummary(localDecision, local?.normalization, modelIdentity),
+          refinementResultTier: localDecision.status,
+          searchedModels: modelIdentity.searchModels,
+          identityMatchType: modelIdentity.matchedBy,
+          identityConfidence: modelIdentity.identityConfidence,
           cacheStatus: 'bypass',
           provider: 'local-db',
           timings,
@@ -295,10 +356,17 @@ export function createRefineSerialDateHandler(dependencies = {}) {
           resolutionBasis: 'serial-plus-model',
           modelProductionRange: productionStartYear == null ? null : { start: productionStartYear, end: null },
           modelNormalization: local?.normalization || null,
+          modelIdentity,
           evidence,
           summary: productionStartYear == null
-            ? buildSummary(modelDecision, local?.normalization)
+            ? buildSummary(modelDecision, local?.normalization, modelIdentity)
             : buildModelProductionSummary(modelDecision, modelProduction),
+          refinementResultTier: modelDecision.status,
+          estimateBasis: 'local-model-production-database',
+          searchedModels: modelIdentity.searchModels,
+          identityMatchType: modelIdentity.matchedBy,
+          identityConfidence: modelIdentity.identityConfidence,
+          evidenceMatchModel: modelProduction.matchedModel || modelIdentity.canonicalModel,
           cacheStatus: 'bypass',
           provider: 'local-db',
           timings,
@@ -307,12 +375,13 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         return finish(finalResponse);
       }
 
-      if (modelDecision?.status === 'ambiguous'
-        && modelDecision.remainingCandidateYears.length < workingCandidateYears.length) {
+      if (modelDecision?.status === 'ambiguous') {
         const productionStartYear = Number.isInteger(modelProduction.productionStartYear)
           ? modelProduction.productionStartYear
           : null;
-        workingCandidateYears = modelDecision.remainingCandidateYears;
+        if (modelDecision.remainingCandidateYears.length < workingCandidateYears.length) {
+          workingCandidateYears = modelDecision.remainingCandidateYears;
+        }
         localConfidence = ['high', 'medium', 'low'].includes(modelProduction.confidence)
           ? modelProduction.confidence
           : (localConfidence || 'low');
@@ -331,9 +400,13 @@ export function createRefineSerialDateHandler(dependencies = {}) {
 
       if (refinementMode === 'local_only') {
         finalResponse = bestAvailable(
-          workingCandidateYears.length < input.candidateYears.length ? null : 'LOCAL_EVIDENCE_INSUFFICIENT',
+          workingCandidateYears.length < input.candidateYears.length || localModelRange
+            ? null
+            : 'LOCAL_EVIDENCE_INSUFFICIENT',
           null,
           'none',
+          [],
+          { failureStage: 'local_only' },
         );
         return finish(finalResponse);
       }
@@ -387,6 +460,8 @@ export function createRefineSerialDateHandler(dependencies = {}) {
             ? `Local model-era evidence narrows the serial-valid years to ${workingCandidateYears.join(', ')}, but online refinement is temporarily rate limited.`
             : 'Online model evidence is temporarily rate limited. The original serial-valid candidate years are preserved.',
           'none',
+          [],
+          { failureStage: 'rate_limit' },
         );
         return finish(finalResponse);
       }
@@ -444,22 +519,44 @@ export function createRefineSerialDateHandler(dependencies = {}) {
             evidenceAvailable: combinedEvidence.length > 0,
             evidenceSufficient: policy.sufficient,
           });
-          finalResponse = createRefinementResponse({
-            ...decision,
-            candidateYears: input.candidateYears,
-            confidence: policy.confidence,
-            resolutionBasis: 'serial-plus-model',
-            modelProductionRange: policy.range
-              ? { start: policy.range.start, end: policy.range.end }
-              : localModelRange,
-            modelNormalization: local?.normalization || null,
-            evidence: policy.evidence,
-            summary: buildSummary(decision, local?.normalization),
-            cacheStatus,
-            provider: 'gemini-google-search',
-            timings,
-            errorCode: policy.sufficient ? null : 'INSUFFICIENT_EVIDENCE',
-          });
+          const range = policy.range
+            ? { start: policy.range.start, end: policy.range.end }
+            : localModelRange;
+          if (policy.sufficient) {
+            finalResponse = createRefinementResponse({
+              ...decision,
+              candidateYears: input.candidateYears,
+              confidence: policy.confidence,
+              resolutionBasis: 'serial-plus-model',
+              modelProductionRange: range,
+              modelNormalization: local?.normalization || null,
+              modelIdentity,
+              evidence: policy.evidence,
+              summary: buildSummary(decision, local?.normalization, modelIdentity),
+              refinementResultTier: decision.status,
+              searchedModels: modelIdentity.searchModels,
+              cacheStatus,
+              provider: 'gemini-google-search',
+              timings,
+              errorCode: null,
+            });
+          } else {
+            // Prefer ranked/era degradation over bare unavailable when any
+            // model window or partial local narrowing is available.
+            finalResponse = bestAvailable(
+              'INSUFFICIENT_EVIDENCE',
+              null,
+              'gemini-google-search',
+              policy.evidence || [],
+              {
+                failureStage: 'legacy_gemini_insufficient',
+                estimateBasis: range ? 'model-era-from-grounded-or-local' : null,
+              },
+            );
+            if (range && !finalResponse.modelProductionRange) {
+              finalResponse.modelProductionRange = range;
+            }
+          }
         } else {
           const deterministic = await deadline.run(
             'serial-refinement-deterministic-serper',
@@ -470,6 +567,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
                 deadline,
                 redis,
                 localModelEvidence,
+                modelIdentity,
                 timeoutMs: Math.min(providerBudgetMs, deadline.remainingMs(10)),
                 requestId,
                 logger,
@@ -482,6 +580,15 @@ export function createRefineSerialDateHandler(dependencies = {}) {
             { maxMs: providerBudgetMs, reserveMs: 10 },
           );
           const deterministicEvidence = deterministic?.evidence || [];
+          // Prefer lifecycle lower bound from shared evidence when evaluator
+          // output alone is thin.
+          if (Number.isInteger(deterministic?.lifecycle?.supportedProductionStartYear)
+            && !localModelRange) {
+            localModelRange = {
+              start: deterministic.lifecycle.supportedProductionStartYear,
+              end: deterministic.lifecycle.supportedProductionEndYear ?? null,
+            };
+          }
           finalResponse = createDeterministicRefinementResult({
             input,
             workingCandidateYears,
@@ -489,6 +596,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
             localEvidence,
             localModelRange,
             modelNormalization: local?.normalization || null,
+            modelIdentity: deterministic?.modelIdentity || modelIdentity,
             cacheStatus,
             timings,
           });
@@ -497,9 +605,13 @@ export function createRefineSerialDateHandler(dependencies = {}) {
               deterministic?.errorCode || 'DETERMINISTIC_INSUFFICIENT_EVIDENCE',
               workingCandidateYears.length < input.candidateYears.length
                 ? `Local model-era evidence narrows the serial-valid years to ${workingCandidateYears.join(', ')}, but deterministic web evidence does not establish one manufacture year.`
-                : 'Deterministic web evidence was unavailable or insufficient. The original serial-valid candidate years are preserved.',
+                : null,
               'deterministic-serper',
               deterministicEvidence,
+              {
+                failureStage: deterministic?.failureCategory || 'deterministic_insufficient',
+                estimateBasis: localModelRange ? 'shared-or-local-model-era' : null,
+              },
             );
           }
         }
@@ -508,7 +620,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       }
 
       const ttl = finalResponse?.errorCode ? 0 : chooseCacheTtl(finalResponse);
-      if (ttl > 0 && redis && ['resolved', 'ambiguous'].includes(finalResponse.status)) {
+      if (ttl > 0 && redis && ['resolved', 'ranked', 'ambiguous', 'ambiguous_with_era'].includes(finalResponse.status)) {
         const write = await boundedRedisSet(redis, cacheKey, finalResponse, ttl, deadline, {
           stage: 'serial-refinement-final-cache-write',
           maxMs: 200,
@@ -522,8 +634,10 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         errorCode,
         workingCandidateYears.length < input.candidateYears.length
           ? `Local model-era evidence narrows the serial-valid years to ${workingCandidateYears.join(', ')}, but online refinement could not be completed.`
-          : 'Model evidence could not be checked. The original serial-valid candidate years are preserved.',
+          : null,
         refinementMode === 'deterministic_serper' ? 'deterministic-serper' : 'none',
+        [],
+        { failureStage: timedOut ? 'timeout' : 'provider_error' },
       );
     }
 

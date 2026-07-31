@@ -72,20 +72,33 @@
     var remaining = normalizeCandidates(next.remainingCandidateYears || [])
       .filter(function (year) { return Boolean(allowed[year]); });
     var chosen = Number(next.chosenYear);
+    var preferred = Number(next.preferredCandidateYear);
     var resolvedIsValid = next.status === 'resolved'
       && Number.isInteger(chosen)
       && Boolean(allowed[chosen])
       && remaining.length === 1
       && remaining[0] === chosen;
-    var ambiguousIsValid = next.status === 'ambiguous' && remaining.length > 1;
+    var ambiguousIsValid = (next.status === 'ambiguous' || next.status === 'ambiguous_with_era')
+      && remaining.length > 1;
+    var rankedIsValid = next.status === 'ranked'
+      && Number.isInteger(preferred)
+      && Boolean(allowed[preferred])
+      && remaining.length > 1
+      && remaining.indexOf(preferred) !== -1;
 
     next.candidateYears = original.slice();
     next.chosenYear = null;
+    next.preferredCandidateYear = null;
     next.remainingCandidateYears = original.slice();
 
     if (resolvedIsValid) {
       next.chosenYear = chosen;
       next.remainingCandidateYears = [chosen];
+      return next;
+    }
+    if (rankedIsValid) {
+      next.preferredCandidateYear = preferred;
+      next.remainingCandidateYears = remaining;
       return next;
     }
     if (ambiguousIsValid) {
@@ -96,7 +109,7 @@
       next.remainingCandidateYears = [];
       return next;
     }
-    if (next.status === 'resolved' || next.status === 'ambiguous') {
+    if (next.status === 'resolved' || next.status === 'ambiguous' || next.status === 'ranked' || next.status === 'ambiguous_with_era') {
       next.status = 'unavailable';
       next.confidence = null;
       next.errorCode = 'INVALID_REFINEMENT_CANDIDATE';
@@ -164,8 +177,11 @@
 
   function statusHeading(status) {
     if (status === 'resolved') return 'Model evidence resolved the date';
+    if (status === 'ranked') return 'Most likely manufacture year';
+    if (status === 'ambiguous_with_era') return 'Serial candidates with model era';
     if (status === 'ambiguous') return 'Date remains ambiguous';
     if (status === 'conflict') return 'Model and serial evidence conflict';
+    if (status === 'clarification') return 'More information needed';
     if (status === 'checking') return 'Checking model-era evidence';
     return 'Model evidence unavailable';
   }
@@ -189,12 +205,59 @@
     return '<details class="serial-refinement-evidence"><summary>Evidence used</summary><ul>' + rows + '</ul></details>';
   }
 
-  function normalizationHtml(normalization) {
-    if (!normalization || !normalization.usedValidatedAlternative || !normalization.validatedAlternative) return '';
-    var alternative = normalization.validatedAlternative;
-    return '<p class="serial-refinement-normalization"><strong>Model transcription checked:</strong> ' +
-      escapeHtml(normalization.canonical || '') + ' matched validated alternative ' +
-      escapeHtml(alternative.value || '') + ' (' + escapeHtml(alternative.change || '') + ').</p>';
+  function identityDisclosureHtml(response) {
+    var identity = response && response.modelIdentity;
+    var normalization = response && response.modelNormalization;
+    var entered = identity && identity.enteredModel
+      ? identity.enteredModel
+      : (normalization && normalization.canonical ? normalization.canonical : '');
+    var recognized = identity && identity.canonicalModel
+      ? identity.canonicalModel
+      : (normalization && normalization.usedValidatedAlternative && normalization.validatedAlternative
+        ? normalization.validatedAlternative.value
+        : '');
+    if (!entered && !recognized) return '';
+    if (entered && recognized && String(entered).toUpperCase() !== String(recognized).toUpperCase()) {
+      var reason = (identity && identity.equivalenceReason)
+        || (normalization && normalization.validatedAlternative && normalization.validatedAlternative.change)
+        || 'transcription check';
+      return '<p class="serial-refinement-normalization"><strong>Model entered:</strong> ' +
+        escapeHtml(entered) + '<br><strong>Recognized model:</strong> ' +
+        escapeHtml(recognized) + ' <span>(' + escapeHtml(reason) + ')</span></p>';
+    }
+    if (normalization && normalization.usedValidatedAlternative && normalization.validatedAlternative) {
+      var alternative = normalization.validatedAlternative;
+      return '<p class="serial-refinement-normalization"><strong>Model transcription checked:</strong> ' +
+        escapeHtml(normalization.canonical || '') + ' matched validated alternative ' +
+        escapeHtml(alternative.value || '') + ' (' + escapeHtml(alternative.change || '') + ').</p>';
+    }
+    return entered
+      ? '<p class="serial-refinement-normalization"><strong>Model entered:</strong> ' + escapeHtml(entered) + '</p>'
+      : '';
+  }
+
+  function rankedDetailsHtml(response) {
+    if (!response || response.status !== 'ranked' || !response.preferredCandidateYear) return '';
+    var others = normalizeCandidates(response.remainingCandidateYears || [])
+      .filter(function (year) { return year !== response.preferredCandidateYear; });
+    var confidence = response.confidence ? String(response.confidence) : 'medium';
+    var why = response.rankingExplanation || response.summary || '';
+    return '<p><strong>Most likely:</strong> ' + escapeHtml(String(response.preferredCandidateYear)) + '</p>' +
+      (why ? '<p><strong>Why:</strong> ' + escapeHtml(why) + '</p>' : '') +
+      (others.length ? '<p><strong>Other serial-valid candidate' + (others.length === 1 ? '' : 's') + ':</strong> ' +
+        escapeHtml(others.join(', ')) + '</p>' : '') +
+      '<p><strong>Confidence:</strong> ' + escapeHtml(confidence) + '</p>';
+  }
+
+  function eraDetailsHtml(response) {
+    if (!response || response.status !== 'ambiguous_with_era') return '';
+    var range = response.modelProductionRange || {};
+    var eraText = range.start != null
+      ? (range.end != null ? String(range.start) + '\u2013' + String(range.end) : String(range.start) + ' or later')
+      : 'Modern production period';
+    var candidates = normalizeCandidates(response.remainingCandidateYears || response.candidateYears || []);
+    return '<p><strong>Serial candidates:</strong> ' + escapeHtml(candidates.join(' or ')) + '</p>' +
+      '<p><strong>Model era:</strong> ' + escapeHtml(eraText) + '</p>';
   }
 
   function renderRefinementOutput(response, checking, slowChecking) {
@@ -215,9 +278,14 @@
     output.innerHTML = geEntryWarningHtml() +
       '<div class="info-block refinement serial-refinement-status serial-refinement-status--' + escapeHtml(status) + '">' +
       '<h4>' + escapeHtml(statusHeading(status)) + '</h4>' +
-      '<p>' + escapeHtml(summary) + '</p>' +
+      (!checking && status === 'ranked' ? rankedDetailsHtml(response) : '') +
+      (!checking && status === 'ambiguous_with_era' ? eraDetailsHtml(response) : '') +
+      (status === 'ranked' || status === 'ambiguous_with_era' ? '' : '<p>' + escapeHtml(summary) + '</p>') +
+      (status === 'ranked' || status === 'ambiguous_with_era'
+        ? '<p class="serial-refinement-summary-detail">' + escapeHtml(summary) + '</p>'
+        : '') +
       chosen +
-      normalizationHtml(response && response.modelNormalization) +
+      identityDisclosureHtml(response) +
       (!checking ? evidenceHtml(response && response.evidence) : '') +
       retry +
       '</div>';
@@ -299,7 +367,17 @@
       if (typeof window.setEstimatedAgeVisibility === 'function' && typeof window.computeEstimatedAge === 'function') {
         window.setEstimatedAgeVisibility(true, window.computeEstimatedAge(String(response.chosenYear)));
       }
-    } else if (response.status === 'ambiguous' && Array.isArray(response.remainingCandidateYears) && response.remainingCandidateYears.length) {
+    } else if (response.status === 'ranked' && response.preferredCandidateYear) {
+      // Show preferred first without dropping the other serial-valid cycle.
+      var rankedYears = [response.preferredCandidateYear].concat(
+        normalizeCandidates(response.remainingCandidateYears || []).filter(function (year) {
+          return year !== response.preferredCandidateYear;
+        }),
+      );
+      yearEl.textContent = rankedYears.join('/');
+      if (typeof window.setEstimatedAgeVisibility === 'function') window.setEstimatedAgeVisibility(false, '');
+    } else if ((response.status === 'ambiguous' || response.status === 'ambiguous_with_era')
+      && Array.isArray(response.remainingCandidateYears) && response.remainingCandidateYears.length) {
       yearEl.textContent = normalizeCandidates(response.remainingCandidateYears).join('/');
       if (typeof window.setEstimatedAgeVisibility === 'function') window.setEstimatedAgeVisibility(false, '');
     } else {
