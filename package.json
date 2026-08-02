@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run build:decoders && npm run build:browser && npm run build:smart-browser && npm run build:inject",
     "dev": "npx vercel dev",
-    "test": "npm run test:decoder && npm run test:unit && npm run test:api",
+    "test": "npm run test:decoder && npm run test:unit && npm run test:api && npm run test:evidence-store",
     "refresh-pricebook": "node scripts/refresh-pricebook.js",
     "build:decoders": "node scripts/split-decoder-data.js",
     "build:browser": "node scripts/build-serial-refinement-browser.js",
@@ -24,11 +24,15 @@
     "test:smart-playwright": "npx playwright test -c tests/smart-lookup-playwright.config.mjs",
     "test:lookup-canary": "node --test tests/canary/lookup-canary.test.mjs",
     "test:parity": "node --test tests/lib/cross-workflow-parity.test.mjs",
-    "test:refinement-hardening": "node --test tests/lib/failure-taxonomy.test.mjs tests/lib/refinement-telemetry-budgets.test.mjs tests/lib/cross-workflow-parity.test.mjs tests/api/refinement-mode-parity.test.mjs tests/canary/lookup-canary.test.mjs"
+    "test:refinement-hardening": "node --test tests/lib/failure-taxonomy.test.mjs tests/lib/refinement-telemetry-budgets.test.mjs tests/lib/cross-workflow-parity.test.mjs tests/api/refinement-mode-parity.test.mjs tests/canary/lookup-canary.test.mjs",
+    "test:evidence-store": "node --test --test-concurrency=1 tests/model-evidence-store/*.test.mjs",
+    "db:migrate:evidence-store": "node scripts/model-evidence-store-migrate.mjs",
+    "db:verify:evidence-store": "node scripts/model-evidence-store-migrate.mjs --verify"
   },
   "dependencies": {
     "@upstash/ratelimit": "^2.0.8",
-    "@upstash/redis": "^1.36.2"
+    "@upstash/redis": "^1.36.2",
+    "postgres": "^3.4.9"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
