@@ -23,6 +23,10 @@ import {
 } from '../lib/smart-lookup/openai-provider.js';
 import { callSmartLookupXaiAgeProvider, isXaiSmartLookupEnabled } from '../lib/smart-lookup/xai-provider.js';
 import {
+  callGeminiSearchProvider,
+  GeminiSearchProviderError,
+} from '../lib/smart-lookup/gemini-search-provider.js';
+import {
   createSmartLookupTimings,
   createUnavailableSmartAgeResult,
   normalizeCachedSmartAgeResult,
@@ -53,6 +57,133 @@ const PROVIDER_RATE_LIMIT_REQUESTS = 15;
 const GROUNDED_STAGE_BUDGET_MS = 4200;
 const GROUNDED_FALLBACK_MIN_REMAINING_MS = 1200;
 const GROUNDED_FALLBACK_RESERVE_MS = 300;
+const NATIVE_GEMINI_SEARCH_RESULT = Symbol('native-gemini-search-result');
+
+function isNativeGeminiSearchEnabled(env = process.env) {
+  return ['1', 'true', 'yes', 'on'].includes(
+    String(env?.SMART_LOOKUP_NATIVE_GEMINI_SEARCH_ENABLED || 'false').trim().toLowerCase(),
+  );
+}
+
+function nativePrecisionMapping(precision) {
+  return ({
+    individual_unit: {
+      querySpecificity: 'exact-model', specificityLevel: 'specific', precisionLevel: 'exact',
+      contextLevel: 'exact-model', estimateBasis: 'manufacturing-label',
+    },
+    exact_model: {
+      querySpecificity: 'exact-model', specificityLevel: 'specific', precisionLevel: 'exact',
+      contextLevel: 'exact-model', estimateBasis: 'model-introduction',
+    },
+    model_line: {
+      querySpecificity: 'model-line', specificityLevel: 'partial', precisionLevel: 'model-line-range',
+      contextLevel: 'model-line', estimateBasis: 'model-line-generation',
+    },
+    generation: {
+      querySpecificity: 'model-line', specificityLevel: 'partial', precisionLevel: 'narrow-range',
+      contextLevel: 'model-line', estimateBasis: 'model-line-generation',
+    },
+    product_family: {
+      querySpecificity: 'product-family', specificityLevel: 'partial', precisionLevel: 'family-range',
+      contextLevel: 'product-family', estimateBasis: 'product-family-introduction',
+    },
+    category_era: {
+      querySpecificity: 'brand-category', specificityLevel: 'brand-only', precisionLevel: 'broad-range',
+      contextLevel: 'category-history', estimateBasis: 'category-era',
+    },
+  })[precision];
+}
+
+function nativeGroundingSources(sources) {
+  return (Array.isArray(sources) ? sources : []).map((source) => {
+    let domain = '';
+    try { domain = new URL(source.url).hostname; } catch (_) {}
+    if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(source.title || '')) domain = source.title.toLowerCase();
+    return { title: source.title, domain, uri: source.url };
+  });
+}
+
+function mapNativeGeminiSearchResult(nativeResult, queryInfo, options = {}) {
+  const mapping = nativePrecisionMapping(nativeResult.precision);
+  const range = nativeResult.estimatedRange || {};
+  const hasCompleteRange = Number.isInteger(range.startYear) && Number.isInteger(range.endYear);
+  const groundedSources = nativeGroundingSources(nativeResult.sources);
+  const bestEstimateYear = nativeResult.bestEstimateYear;
+  const isIndividualUnitDate = nativeResult.isIndividualUnitDate === true;
+  const raw = {
+    brand: nativeResult.brand,
+    model: nativeResult.model,
+    category: nativeResult.category,
+    itemCategory: nativeResult.category,
+    likelyProduct: nativeResult.product,
+    displayName: nativeResult.product,
+    specificityLevel: mapping.specificityLevel,
+    querySpecificity: mapping.querySpecificity,
+    precisionLevel: mapping.precisionLevel,
+    confidence: nativeResult.confidence,
+    confidenceLevel: nativeResult.confidence,
+    identityConfidence: nativeResult.confidence,
+    timingConfidence: nativeResult.confidence,
+    contextLevel: mapping.contextLevel,
+    estimateBasis: hasCompleteRange && nativeResult.precision === 'exact_model'
+      ? 'production-range'
+      : mapping.estimateBasis,
+    bestEstimateYear,
+    estimatedRange: {
+      start: range.startYear,
+      end: range.endYear,
+      current: false,
+      basis: mapping.estimateBasis,
+    },
+    productionRange: hasCompleteRange
+      ? { start: range.startYear, end: range.endYear, basis: mapping.estimateBasis }
+      : null,
+    summary: nativeResult.summary,
+    notes: nativeResult.estimateBasis,
+    caveats: nativeResult.caveats,
+    serialNeededForExactUnitDate: !isIndividualUnitDate,
+  };
+
+  if (isIndividualUnitDate) {
+    raw.individualManufactureYear = bestEstimateYear;
+    raw.estimatedYear = bestEstimateYear;
+    raw.estimatedYearType = 'individual-manufacture';
+  } else if (nativeResult.precision === 'model_line' || nativeResult.precision === 'generation') {
+    raw.lineIntroductionYear = bestEstimateYear;
+    raw.modelLineRange = raw.estimatedRange;
+  } else if (nativeResult.precision === 'product_family') {
+    raw.familyIntroductionYear = bestEstimateYear;
+    raw.familyRange = raw.estimatedRange;
+  } else if (nativeResult.precision === 'category_era') {
+    raw.categoryEntryYear = bestEstimateYear;
+  } else {
+    raw.introductionYear = bestEstimateYear;
+  }
+
+  const nativeQueryInfo = {
+    ...queryInfo,
+    brand: nativeResult.brand || queryInfo.brand,
+    specificityLevel: mapping.specificityLevel,
+    querySpecificity: mapping.querySpecificity,
+    modelIdentity: mapping.querySpecificity === 'exact-model' ? nativeResult.model : queryInfo.modelIdentity,
+    exactModel: mapping.querySpecificity === 'exact-model' ? nativeResult.model : queryInfo.exactModel,
+  };
+  return normalizeSmartAgeResult(raw, {
+    queryInfo: nativeQueryInfo,
+    source: 'gemini',
+    originSource: 'gemini',
+    evidenceSource: groundedSources.length ? 'gemini-grounded' : 'gemini-ungrounded',
+    groundedSources,
+    webSearchUsed: groundedSources.length > 0,
+    retrievedAt: groundedSources.length ? new Date().toISOString() : null,
+    cacheStatus: options.cacheStatus,
+    providerAttempted: true,
+    fallbackUsed: false,
+    timings: options.timings,
+    currentYear: options.currentYear,
+    allowIndividualManufactureYear: isIndividualUnitDate,
+  });
+}
 
 function validateRequestBody(body) {
   const query = normalizeWhitespace(body?.query);
@@ -191,6 +322,7 @@ export function createAgeLookupHandler(dependencies = {}) {
   const localLookup = dependencies.localLookup || findLocalModelAgeResult;
   const providerLookup = dependencies.providerLookup || callGeminiAgeProvider;
   const groundedProviderLookup = dependencies.groundedProviderLookup || callSmartLookupGroundedAgeProvider;
+  const nativeGeminiSearchLookup = dependencies.nativeGeminiSearchLookup || callGeminiSearchProvider;
   // OpenAI is the default heavyweight provider; xAI can be selected directly.
   // The normal route never chains one after the other.
   const openAiProviderLookup = dependencies.openAiProviderLookup || callSmartLookupOpenAiAgeProvider;
@@ -214,6 +346,8 @@ export function createAgeLookupHandler(dependencies = {}) {
     ?? (isXaiSmartLookupEnabled(dependencies.env || process.env)
       && Boolean((dependencies.env || process.env).XAI_API_KEY));
   const groundedEnabled = dependencies.groundedEnabled ?? isGroundedAgeEnabled(dependencies.env);
+  const nativeGeminiSearchEnabled = dependencies.nativeGeminiSearchEnabled
+    ?? isNativeGeminiSearchEnabled(dependencies.env || process.env);
   const reserveBudget = dependencies.reserveProviderBudget || reserveProviderBudget;
   const recordAttempts = dependencies.recordProviderAttemptMetrics || recordProviderAttemptMetrics;
   const redisFactory = dependencies.redisFactory || createRedisClient;
@@ -627,7 +761,7 @@ export function createAgeLookupHandler(dependencies = {}) {
       const useGrounded = groundedEnabled
         && queryInfo.providerEligible
         && queryInfo.groundedEligible;
-      const cacheKey = buildSmartAgeCacheKey(queryInfo, { grounded: useGrounded });
+      const cacheKey = buildSmartAgeCacheKey(queryInfo, { grounded: useGrounded || nativeGeminiSearchEnabled });
       const scheduleAgeCacheWrite = (result) => {
         const ttlSeconds = chooseSmartAgeTtl(result);
         if (ttlSeconds <= 0 || !deadline.hasTime(50)) return;
@@ -755,11 +889,45 @@ export function createAgeLookupHandler(dependencies = {}) {
             now,
             env: dependencies.env,
           });
-          if (!budgetResult.allowed) {
+          const allowNativeOnBudgetStoreUnavailable = !budgetResult.allowed
+            && nativeGeminiSearchEnabled
+            && budgetResult.errorCode === 'BUDGET_STORE_UNAVAILABLE';
+          if (!budgetResult.allowed && !allowNativeOnBudgetStoreUnavailable) {
             const error = new Error(budgetResult.errorCode || 'BUDGET_STORE_UNAVAILABLE');
             error.code = budgetResult.errorCode || 'BUDGET_STORE_UNAVAILABLE';
             error.budgetResult = budgetResult;
             throw error;
+          }
+
+          if (nativeGeminiSearchEnabled) {
+            const nativeStart = now();
+            groundedTelemetry.attempted = true;
+            try {
+              const nativeResult = await nativeGeminiSearchLookup(
+                queryInfo.providerQuery || queryInfo.query,
+                {
+                  apiKey: dependencies.nativeGeminiApiKey
+                    || dependencies.geminiApiKey
+                    || dependencies.apiKey
+                    || (dependencies.env || process.env).GEMINI_API_KEY,
+                  fetchImpl: dependencies.nativeGeminiFetchImpl || dependencies.fetchImpl,
+                  timeoutMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
+                },
+              );
+              groundedTelemetry.durationMs = Math.max(0, now() - nativeStart);
+              groundedTelemetry.succeeded = Array.isArray(nativeResult.sources) && nativeResult.sources.length > 0;
+              return { [NATIVE_GEMINI_SEARCH_RESULT]: nativeResult };
+            } catch (nativeError) {
+              groundedTelemetry.durationMs = Math.max(0, now() - nativeStart);
+              groundedTelemetry.failureCode = nativeError?.code || null;
+              if (allowNativeOnBudgetStoreUnavailable) {
+                const error = new Error('BUDGET_STORE_UNAVAILABLE');
+                error.code = 'BUDGET_STORE_UNAVAILABLE';
+                error.budgetResult = budgetResult;
+                throw error;
+              }
+              if (!(nativeError instanceof GeminiSearchProviderError)) throw nativeError;
+            }
           }
 
           const sharedResearchTerm = queryInfo.querySpecificity === 'exact-model'
@@ -1022,7 +1190,7 @@ export function createAgeLookupHandler(dependencies = {}) {
         // exhausted, the inner stages' own deadline.run calls (and this
         // outer wait, now watching the same remaining time) time out at
         // that same real boundary either way.
-        const providerWaitMaxMs = useGrounded
+        const providerWaitMaxMs = useGrounded || nativeGeminiSearchEnabled
           ? deadline.remainingMs(300)
           : Math.min(providerBudgetMs, deadline.remainingMs(300));
         rawProvider = await deadline.run('provider-result-wait', () => providerPromise, {
@@ -1103,6 +1271,30 @@ export function createAgeLookupHandler(dependencies = {}) {
         return res.status(degraded ? 200 : (errorCode === 'RATE_LIMIT' ? 429 : 200)).json(result);
       }
       timings.providerMs = Math.max(0, now() - providerStart);
+
+      const nativeResult = rawProvider?.[NATIVE_GEMINI_SEARCH_RESULT];
+      if (nativeResult) {
+        const postStart = now();
+        const result = mapNativeGeminiSearchResult(nativeResult, queryInfo, {
+          cacheStatus,
+          timings,
+          currentYear,
+        });
+        timings.postProcessMs = Math.max(0, now() - postStart);
+        const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', 1, deadline, {
+          stage: 'age-provider-attempt-metrics',
+          maxMs: CACHE_WRITE_BUDGET_MS,
+          now,
+        });
+        scheduleAgeCacheWrite(result);
+        finalizeTimings(result, timings, deadline);
+        logFinalResult(result, {
+          actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? 1,
+          groundedTelemetry,
+          inFlightShared,
+        });
+        return res.status(200).json(result);
+      }
 
       const postStart = now();
       let result;
