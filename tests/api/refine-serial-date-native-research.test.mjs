@@ -143,11 +143,11 @@ test('GE GFDS350GL1WW lower bound ranks 2011 and keeps 2023 visible as serial-va
   assert.equal(res.payload.confidence, 'high');
   assert.deepEqual(res.payload.remainingCandidateYears, [2011, 2023]);
   assert.deepEqual(res.payload.candidateYears, [2011, 2023]);
-  assert.match(res.payload.rankingExplanation, /closest serial-valid year/i);
+  assert.match(res.payload.rankingExplanation, /earliest serial-valid year/i);
   assert.ok(!JSON.stringify(res.payload).includes('bestEstimateYear'));
 });
 
-test('similarly close exact-model candidates remain ambiguous', async () => {
+test('closely-spaced candidates still rank (no minimum-lead gate over the alternate)', async () => {
   const handler = nativeHandler(async (request, options) => researchModelTiming(request, {
     ...options,
     providerLookup: async () => nativeResult({
@@ -158,9 +158,9 @@ test('similarly close exact-model candidates remain ambiguous', async () => {
   const res = createResponse();
   await handler(geRequest({ candidateYears: [2011, 2013] }), res);
 
-  assert.equal(res.payload.status, 'ambiguous_with_era');
-  assert.equal(res.payload.preferredCandidateYear, null);
-  assert.notEqual(res.payload.confidence, 'high');
+  assert.equal(res.payload.status, 'ranked');
+  assert.equal(res.payload.preferredCandidateYear, 2011);
+  assert.equal(res.payload.confidence, 'high');
   assert.deepEqual(res.payload.candidateYears, [2011, 2013]);
   assert.deepEqual(res.payload.remainingCandidateYears, [2011, 2013]);
 });
@@ -198,7 +198,7 @@ test('no candidate inside the range returns conflict and preserves candidateYear
   assert.deepEqual(res.payload.candidateYears, [1987, 1999, 2011, 2023]);
 });
 
-test('family-level research never applies an upper bound', async () => {
+test('family-level research never applies an upper bound, but still ranks by lower bound', async () => {
   const handler = nativeHandler(async (request, options) => researchModelTiming(request, {
     ...options,
     providerLookup: async () => nativeResult({
@@ -211,14 +211,19 @@ test('family-level research never applies an upper bound', async () => {
   const res = createResponse();
   await handler(geRequest(), res);
 
-  // Lower bound only: 1987 and 1999 are excluded, 2023 survives.
-  assert.equal(res.payload.status, 'ambiguous_with_era');
+  // Lower bound only (never an upper-bound resolve): 1987 and 1999 are
+  // eliminated by hard candidate-intersection, but a usable era start plus
+  // remaining serial-valid candidates is enough to rank a Best Estimate
+  // even though the evidence is weak (family-level, low confidence).
+  assert.equal(res.payload.status, 'ranked');
+  assert.equal(res.payload.preferredCandidateYear, 2011);
+  assert.equal(res.payload.confidence, 'low');
   assert.deepEqual(res.payload.remainingCandidateYears, [2011, 2023]);
   assert.equal(res.payload.modelProductionRange.end, null);
   assert.equal(res.payload.estimateBasis, 'native-model-lower-bound');
 });
 
-test('low-confidence exact-model timing never produces high ranking confidence', async () => {
+test('low-confidence exact-model timing still ranks a Best Estimate, but never at high confidence', async () => {
   const handler = nativeHandler(async (request, options) => researchModelTiming(request, {
     ...options,
     providerLookup: async () => nativeResult({
@@ -230,8 +235,10 @@ test('low-confidence exact-model timing never produces high ranking confidence',
   const res = createResponse();
   await handler(geRequest(), res);
 
+  assert.equal(res.payload.status, 'ranked');
+  assert.equal(res.payload.preferredCandidateYear, 2011);
   assert.notEqual(res.payload.confidence, 'high');
-  assert.equal(res.payload.preferredCandidateYear, null);
+  assert.equal(res.payload.confidence, 'low');
   assert.deepEqual(res.payload.candidateYears, [1987, 1999, 2011, 2023]);
 });
 

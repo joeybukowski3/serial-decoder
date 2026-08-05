@@ -184,6 +184,75 @@ test('GE dryer label and base model forms refine the serial result to June 2025'
   }
 });
 
+test('GE PSC26NSWC / DR420690: entering the model before Decode Serial Number ranks the same Best Estimate the manual Refine Result path would', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  const requestedPayloads = [];
+  await page.route('**/api/refine-serial-date', async (route) => {
+    const body = route.request().postDataJSON();
+    requestedPayloads.push(body);
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        status: 'ranked',
+        candidateYears: [1984, 1996, 2008, 2020],
+        // 1984 and 1996 predate the model-era start (~2002) and are
+        // hard-eliminated; only 2008 (Best Estimate) and 2020 (Alternate)
+        // remain visible.
+        remainingCandidateYears: [2008, 2020],
+        preferredCandidateYear: 2008,
+        chosenYear: null,
+        confidence: 'medium',
+        modelProductionRange: { start: 2002, end: null },
+        rankingExplanation: "Based on the model's estimated production era beginning around 2002, "
+          + '2008 is the earliest serial-valid year after that point and is therefore the best estimate.',
+        evidence: [{
+          type: 'local-db',
+          title: 'GE PSC26NSWC model-era record',
+          quality: 'official',
+          supports: 'Model production began around 2002.',
+        }],
+        summary: 'Serial decoding produced 1984, 1996, 2008, 2020. 2008 is the earliest serial-valid year at or after the model-era start.',
+      })),
+    });
+  });
+  try {
+    // The model is already present in #modelNumber before the very first
+    // click of Decode Serial Number — this must invoke the same effective
+    // refinement path as a later, manual Refine Result click, not a weaker
+    // one that dead-ends on "Model evidence unavailable".
+    await fillDecode(page, 'ge', 'DR420690', 'PSC26NSWC');
+    await page.click('#decodeBtn');
+
+    await expect(page.locator('#resultYear')).toHaveText('2008');
+    await expect(page.locator('#resultMonth')).toHaveText('February');
+    await expect(page.locator('.serial-refinement-result-label')).toHaveText('Best Estimate');
+    await expect(page.locator('.serial-refinement-result-date')).toHaveText('February 2008');
+    await expect(page.locator('.serial-refinement-confidence')).toHaveText(/MEDIUM CONFIDENCE/i);
+    await expect(page.locator('.serial-refinement-ranking-reason')).toContainText('2008 is the earliest serial-valid year');
+    await expect(page.locator('.serial-refinement-alternative-label')).toHaveText('Alternate');
+    await expect(page.locator('.serial-refinement-alternate-entry')).toContainText('February 2020');
+    await expect(page.locator('.serial-refinement-alternate-entry')).toContainText('technically possible based on the serial pattern');
+    await expect(page.locator('#narrowDateOutput')).not.toContainText('Model evidence unavailable');
+
+    // Exactly one refinement request — the initial decode did not fire a
+    // weaker request first and require a second manual click to succeed.
+    expect(requestedPayloads.length).toBe(1);
+    // The request-body ordering bug: #resultMonth was read for the request
+    // snapshot before it had been set from the decoded result, so the very
+    // first refinement request of a session sent decodedMonth: '' and the
+    // real API rejected it (INVALID_DECODED_MONTH). Pin that it is populated.
+    expect(requestedPayloads[0].decodedMonth).toBeTruthy();
+    expect(requestedPayloads[0].model).toBe('PSC26NSWC');
+    expect(requestedPayloads[0].candidateYears).toEqual([1984, 1996, 2008, 2020]);
+
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
+
 test('GE GFW850 label and family model forms refine FR31424IN to March 2020', async () => {
   const { browser, context, page, diagnostics } = await openPage();
   const requestedModels = [];
@@ -568,7 +637,7 @@ test('ranked result shows preferred year prominently with alternatives and ident
     await page.click('#decodeBtn');
     await expect(page.locator('#resultYear')).toHaveText('2022');
     await expect(page.locator('.serial-refinement-status--ranked')).toBeVisible();
-    await expect(page.locator('.serial-refinement-result-label')).toHaveText('Most Likely Manufacture Date');
+    await expect(page.locator('.serial-refinement-result-label')).toHaveText('Best Estimate');
     await expect(page.locator('.serial-refinement-result-date')).toContainText('2022');
     await expect(page.locator('.serial-refinement-alternative-years')).toHaveText('1992');
     await expect(page.locator('.serial-refinement-confidence')).toHaveText('MEDIUM CONFIDENCE');
@@ -652,10 +721,14 @@ test('timeout degradation keeps serial candidates and explains broader evidence'
   try {
     await fillDecode(page, 'whirlpool', 'MB1930745', 'WED4850HWO');
     await page.click('#decodeBtn');
-    await expect(page.locator('#resultYear')).toHaveText('2022/1992');
+    // Even a low-confidence ranked result still gets the primary Best
+    // Estimate treatment: one focal year, with the alternate shown in its
+    // own card rather than joined into #resultYear.
+    await expect(page.locator('#resultYear')).toHaveText('2022');
+    await expect(page.locator('.serial-refinement-confidence')).toHaveText(/LOW CONFIDENCE/i);
     await expect(page.locator('#narrowDateOutput')).toContainText('2022');
-    await expect(page.locator('#narrowDateOutput')).toContainText('1992');
-    await expect(page.locator('#narrowDateOutput')).toContainText(/timed out|model-era|preserved|Most likely/i);
+    await expect(page.locator('.serial-refinement-alternate-entry')).toContainText('1992');
+    await expect(page.locator('#narrowDateOutput')).toContainText(/timed out|model-era|preserved|earliest serial-valid/i);
     await expect(page.locator('[data-serial-refinement-retry="1"]')).toHaveCount(0);
     expectCleanDiagnostics(diagnostics);
   } finally {

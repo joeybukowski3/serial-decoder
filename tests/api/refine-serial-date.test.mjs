@@ -292,6 +292,9 @@ test('deterministic mode passes partial local narrowing into web refinement and 
   await handler(request({ candidateYears: [2004, 2014, 2024] }), res);
 
   assert.equal(res.statusCode, 200);
+  // A usable model-era lower bound (2023) leaves only 2024 at or after it —
+  // a unit could not have been made before the model existed, so 2014 is
+  // hard-eliminated and 2024 resolves outright.
   assert.equal(res.payload.status, 'resolved');
   assert.equal(res.payload.chosenYear, 2024);
   assert.deepEqual(res.payload.candidateYears, [2004, 2014, 2024]);
@@ -303,7 +306,7 @@ test('deterministic mode passes partial local narrowing into web refinement and 
   assert.match(res.payload.evidence[0].supports, /lower bound, not proof/i);
 });
 
-test('deterministic provider failure preserves partial local narrowing without legacy fallback', async () => {
+test('deterministic provider failure still ranks a best estimate from partial local narrowing, without legacy fallback', async () => {
   let legacyCalls = 0;
   const handler = createRefineSerialDateHandler({
     refinementMode: 'deterministic_serper',
@@ -329,17 +332,20 @@ test('deterministic provider failure preserves partial local narrowing without l
   const res = createResponse();
   await handler(request({ candidateYears: [2004, 2014, 2024] }), res);
 
-  // Partial local narrowing with a known model-era lower bound is reported as
-  // ambiguous_with_era rather than bare ambiguous so the UI can show era context.
-  assert.ok(['ambiguous', 'ambiguous_with_era'].includes(res.payload.status));
+  // Partial local narrowing with a known model-era lower bound (2014) leaves
+  // both remaining candidates at or after it, so 2014 (the earliest) ranks
+  // as the Best Estimate while 2024 remains a visible alternate.
+  assert.equal(res.payload.status, 'ranked');
+  assert.equal(res.payload.preferredCandidateYear, 2014);
   assert.deepEqual(res.payload.remainingCandidateYears, [2014, 2024]);
   assert.equal(res.payload.chosenYear, null);
+  assert.equal(res.payload.confidence, 'low');
   assert.equal(res.payload.provider, 'deterministic-serper');
   assert.equal(res.payload.errorCode, 'DETERMINISTIC_SERPER_ERROR');
   assert.equal(legacyCalls, 0);
 });
 
-test('local_only returns partial local narrowing without Redis or either online provider', async () => {
+test('local_only ranks a best estimate from partial local narrowing without Redis or either online provider', async () => {
   let legacyCalls = 0;
   let deterministicCalls = 0;
   let redisCalls = 0;
@@ -362,7 +368,8 @@ test('local_only returns partial local narrowing without Redis or either online 
   const res = createResponse();
   await handler(request({ candidateYears: [2004, 2014, 2024] }), res);
 
-  assert.ok(['ambiguous', 'ambiguous_with_era'].includes(res.payload.status));
+  assert.equal(res.payload.status, 'ranked');
+  assert.equal(res.payload.preferredCandidateYear, 2014);
   assert.deepEqual(res.payload.remainingCandidateYears, [2014, 2024]);
   assert.equal(res.payload.provider, 'local-db');
   assert.equal(res.payload.errorCode, null);

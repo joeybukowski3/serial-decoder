@@ -39,6 +39,11 @@
   color: #854d0e;
 }
 
+.serial-refinement-confidence--low {
+  background: #e2e8f0;
+  color: #475569;
+}
+
 .serial-refinement-ranking-reason {
   margin: .7rem 0 0;
   color: #334155;
@@ -58,6 +63,12 @@
   color: #1f2937;
   font-size: 1.12rem;
   font-weight: 800;
+}
+
+.serial-refinement-alternate-entry + .serial-refinement-alternate-entry {
+  margin-top: .6rem;
+  padding-top: .6rem;
+  border-top: 1px solid #e5e9f0;
 }
 
 .serial-refinement-alternatives p {

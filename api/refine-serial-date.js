@@ -33,6 +33,7 @@ import {
   createBestAvailableResult,
   createDeterministicRefinementResult,
   createNativeResearchRefinementResult,
+  lowerBoundRankingExplanation,
   rankCandidatesByModelLowerBound,
 } from '../lib/serial-refinement/response-mapping.js';
 import { assertRefinementResponseInvariant, createRefinementResponse } from '../lib/serial-refinement/response-schema.js';
@@ -321,19 +322,26 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       let remaining = workingCandidateYears;
       let rankingExplanation = extra.rankingExplanation || null;
       let rankingConfidence = null;
-      const canRankLocalEvidence = localModelEvidence?.verifiedExact === true
-        && ['high', 'medium'].includes(localConfidence);
 
-      if (!Number.isInteger(preferredCandidateYear) && Number.isInteger(lowerBound) && canRankLocalEvidence) {
+      // A usable model-era start year plus at least one serial-valid
+      // candidate at or after it is enough to produce a Best Estimate — this
+      // no longer requires exact-model or high-confidence local evidence.
+      // Confidence (below) still reflects how strong that evidence is.
+      if (!Number.isInteger(preferredCandidateYear) && Number.isInteger(lowerBound) && workingCandidateYears.length > 1) {
         const ranked = rankCandidatesByModelLowerBound(workingCandidateYears, lowerBound);
         if (ranked?.status === 'resolved') {
+          // Exactly one candidate remains at/after the model-era start; the
+          // rest are hard-eliminated the same way createBestAvailableResult
+          // already resolves a single remaining candidate.
           remaining = ranked.remainingCandidateYears;
         } else if (ranked?.status === 'ranked') {
           preferredCandidateYear = ranked.preferredCandidateYear;
           remaining = ranked.remainingCandidateYears;
-          rankingConfidence = ranked.distanceFromStart <= 4 ? 'high' : 'medium';
+          rankingConfidence = localModelEvidence?.verifiedExact === true
+            ? (localConfidence || 'medium')
+            : (localConfidence === 'high' ? 'medium' : (localConfidence || 'low'));
           rankingExplanation = rankingExplanation
-            || `Model research places this model around ${lowerBound} or later. ${ranked.preferredCandidateYear} is the closest serial-valid year after the model's introduction period.`;
+            || lowerBoundRankingExplanation(lowerBound, ranked.preferredCandidateYear);
         }
       }
 
