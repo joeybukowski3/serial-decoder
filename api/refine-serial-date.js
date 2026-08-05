@@ -7,6 +7,11 @@ import {
   startShadowTask,
 } from '../lib/model-evidence/shadow.js';
 import { buildSharedModelIdentity } from '../lib/model-evidence/shared-model-identity.js';
+import {
+  NATIVE_MODEL_RESEARCH_MODEL,
+  isNativeModelResearchEnabled,
+  researchModelTiming,
+} from '../lib/model-evidence/native-model-research.js';
 import { classifyLookupFailure } from '../lib/lookup-failure-taxonomy.js';
 import { budgetsForRefinementMode } from '../lib/serial-refinement/budgets.js';
 import { chooseRefinementCacheTtl } from '../lib/serial-refinement/cache-policy.js';
@@ -27,6 +32,7 @@ import {
   buildSummary,
   createBestAvailableResult,
   createDeterministicRefinementResult,
+  createNativeResearchRefinementResult,
   rankCandidatesByModelLowerBound,
 } from '../lib/serial-refinement/response-mapping.js';
 import { assertRefinementResponseInvariant, createRefinementResponse } from '../lib/serial-refinement/response-schema.js';
@@ -143,6 +149,11 @@ export function createRefineSerialDateHandler(dependencies = {}) {
     || dependencies.providerLookup
     || callGeminiGroundedSearch;
   const deterministicProviderLookup = dependencies.deterministicProviderLookup || callDeterministicSerper;
+  // Native Gemini + Google Search is the PRIMARY live model-research path and
+  // matches Smart Lookup. Every legacy path below is now a fallback.
+  const nativeModelResearchLookup = dependencies.nativeModelResearchLookup || researchModelTiming;
+  const nativeModelResearchEnabled = dependencies.nativeModelResearchEnabled
+    ?? isNativeModelResearchEnabled(dependencies.env || process.env);
   const redisFactory = dependencies.redisFactory || createDefaultRedis;
   const rateLimitFactory = dependencies.rateLimitFactory || createDefaultRateLimiter;
   const logger = dependencies.logger || console;
@@ -216,6 +227,9 @@ export function createRefineSerialDateHandler(dependencies = {}) {
     let evidenceFactCount = null;
     let providerAttemptCount = 0;
     let costSnapshot = null;
+    let nativeResearchAttempted = false;
+    let nativeResearchAccepted = false;
+    let nativeResearchFailureCode = null;
 
     function finish(response) {
       timings.totalMs = Math.max(0, clock() - requestStart);
@@ -250,6 +264,9 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         cacheStatus: safeResponse.cacheStatus,
         sharedEvidenceAttempted,
         sharedEvidenceAccepted,
+        nativeResearchAttempted,
+        nativeResearchAccepted,
+        nativeResearchFailureCode,
         searchResultCount,
         evidenceFactCount: evidenceFactCount
           ?? (Array.isArray(safeResponse.evidence) ? safeResponse.evidence.length : null),
@@ -571,7 +588,77 @@ export function createRefineSerialDateHandler(dependencies = {}) {
 
       const providerStart = clock();
       try {
+        // PRIMARY research path: native Gemini + Google Search, identical to
+        // Smart Lookup. Returns null on any failure, on research that yields
+        // no defensible range, and on research that narrows nothing — all of
+        // which fall through to the previous research paths below.
+        const runNativeResearch = async () => {
+          nativeResearchAttempted = true;
+          providerAttemptCount += 1;
+          geminiGroundedRan = true;
+          const nativeStart = clock();
+          try {
+            const research = await deadline.run(
+              'serial-refinement-native-gemini-research',
+              ({ budgetMs }) => nativeModelResearchLookup(
+                {
+                  brand: input.brand,
+                  model: modelIdentity.canonicalModel || input.model,
+                  category: input.category,
+                },
+                {
+                  apiKey: dependencies.nativeGeminiApiKey
+                    || dependencies.geminiApiKey
+                    || (dependencies.env || process.env).GEMINI_API_KEY,
+                  fetchImpl: dependencies.nativeGeminiFetchImpl || dependencies.fetchImpl,
+                  model: dependencies.nativeGeminiModel || NATIVE_MODEL_RESEARCH_MODEL,
+                  timeoutMs: budgetMs,
+                },
+              ),
+              {
+                maxMs: modeBudgets.nativeResearchMaxMs,
+                reserveMs: modeBudgets.nativeResearchFallbackReserveMs,
+              },
+            );
+            timings.geminiMs += Math.max(0, clock() - nativeStart);
+            if (!research?.usable) {
+              nativeResearchFailureCode = 'NATIVE_RESEARCH_INSUFFICIENT';
+              return null;
+            }
+            const mapped = createNativeResearchRefinementResult({
+              input,
+              workingCandidateYears,
+              research,
+              evidence: [...localEvidence, ...(research.evidence || [])],
+              modelNormalization: local?.normalization || null,
+              modelIdentity,
+              cacheStatus,
+              timings,
+            });
+            if (!mapped) {
+              nativeResearchFailureCode = 'NATIVE_RESEARCH_NO_NARROWING';
+              return null;
+            }
+            nativeResearchAccepted = true;
+            return mapped;
+          } catch (nativeError) {
+            timings.geminiMs += Math.max(0, clock() - nativeStart);
+            nativeResearchFailureCode = nativeError?.code
+              || (isTimeoutError(nativeError) ? 'NATIVE_RESEARCH_TIMEOUT' : 'NATIVE_RESEARCH_ERROR');
+            return null;
+          }
+        };
+
         const providerWork = async () => {
+          if (nativeModelResearchEnabled
+            && deadline.hasTime(
+              modeBudgets.providerStartReserveMs,
+              modeBudgets.nativeResearchFallbackReserveMs,
+            )) {
+            const native = await runNativeResearch();
+            if (native) return native;
+          }
+
           if (refinementMode === 'legacy_gemini') {
             providerAttemptCount += 1;
             geminiGroundedRan = true;
