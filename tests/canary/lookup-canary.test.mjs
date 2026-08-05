@@ -96,7 +96,7 @@ test('canary: Whirlpool WED4850HWO ranks modern cycle without inventing exact da
     decodedMonth: 'Serial cycle',
   });
   assert.equal(res.payload.status, 'ranked');
-  assert.equal(res.payload.preferredCandidateYear, 2022);
+  assert.equal(res.payload.preferredCandidateYear, 2012);
   assert.equal(res.payload.modelIdentity.canonicalModel, identity.canonicalModel);
   assert.equal(res.payload.chosenYear, null);
   assert.equal(serperCalls, 1);
@@ -123,7 +123,7 @@ test('canary: Whirlpool WED4850HW0 same canonical identity', async () => {
   });
   assert.equal(res.payload.modelIdentity.canonicalModel, 'WED4850HW0');
   assert.equal(res.payload.status, 'ranked');
-  assert.equal(res.payload.preferredCandidateYear, 2022);
+  assert.equal(res.payload.preferredCandidateYear, 2012);
 });
 
 test('canary: VIZIO M321i-A2 preserves identity', async () => {

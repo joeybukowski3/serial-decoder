@@ -187,6 +187,20 @@
     return 'Model evidence unavailable';
   }
 
+  function isStrongRankedResponse(response) {
+    return Boolean(response
+      && response.status === 'ranked'
+      && response.preferredCandidateYear
+      && (response.confidence === 'high' || response.confidence === 'medium'));
+  }
+
+  function rankedDateLabel(year) {
+    var monthEl = document.getElementById('resultMonth');
+    var month = safeText(monthEl && monthEl.textContent).trim();
+    var monthMatch = month.match(/^(January|February|March|April|May|June|July|August|September|October|November|December)\b/i);
+    return (monthMatch ? monthMatch[1] + ' ' : '') + String(year);
+  }
+
   function evidenceHtml(evidence) {
     if (!Array.isArray(evidence) || !evidence.length) return '';
     var rows = evidence.map(function (item) {
@@ -243,11 +257,26 @@
       .filter(function (year) { return year !== response.preferredCandidateYear; });
     var confidence = response.confidence ? String(response.confidence) : 'medium';
     var why = response.rankingExplanation || response.summary || '';
-    return '<p><strong>Most likely:</strong> ' + escapeHtml(String(response.preferredCandidateYear)) + '</p>' +
-      (why ? '<p><strong>Why:</strong> ' + escapeHtml(why) + '</p>' : '') +
-      (others.length ? '<p><strong>Other serial-valid candidate' + (others.length === 1 ? '' : 's') + ':</strong> ' +
-        escapeHtml(others.join(', ')) + '</p>' : '') +
-      '<p><strong>Confidence:</strong> ' + escapeHtml(confidence) + '</p>';
+    if (!isStrongRankedResponse(response)) {
+      return '<p><strong>Most likely:</strong> ' + escapeHtml(String(response.preferredCandidateYear)) + '</p>' +
+        (why ? '<p><strong>Why:</strong> ' + escapeHtml(why) + '</p>' : '') +
+        (others.length ? '<p><strong>Other serial-valid candidate' + (others.length === 1 ? '' : 's') + ':</strong> ' +
+          escapeHtml(others.join(', ')) + '</p>' : '') +
+        '<p><strong>Confidence:</strong> ' + escapeHtml(confidence) + '</p>';
+    }
+    return '<div class="serial-refinement-primary-result">' +
+      '<div class="serial-refinement-result-label">Most Likely Manufacture Date</div>' +
+      '<div class="serial-refinement-result-date">' + escapeHtml(rankedDateLabel(response.preferredCandidateYear)) + '</div>' +
+      '<span class="serial-refinement-confidence serial-refinement-confidence--' + escapeHtml(confidence) + '">' +
+        escapeHtml(confidence.toUpperCase()) + ' CONFIDENCE</span>' +
+      (why ? '<p class="serial-refinement-ranking-reason">' + escapeHtml(why) + '</p>' : '') +
+      '</div>' +
+      (others.length ? '<div class="serial-refinement-alternatives">' +
+        '<div class="serial-refinement-alternative-label">Alternative Serial-Valid Year' + (others.length === 1 ? '' : 's') + '</div>' +
+        '<div class="serial-refinement-alternative-years">' + escapeHtml(others.join(', ')) + '</div>' +
+        '<p>Still technically possible from the serial pattern, but less likely because ' +
+          (others.length === 1 ? 'it is' : 'they are') + ' farther from the known model era.</p>' +
+        '</div>' : '');
   }
 
   function eraDetailsHtml(response) {
@@ -278,11 +307,11 @@
       : '';
     output.innerHTML = geEntryWarningHtml() +
       '<div class="info-block refinement serial-refinement-status serial-refinement-status--' + escapeHtml(status) + '">' +
-      '<h4>' + escapeHtml(statusHeading(status)) + '</h4>' +
+      (isStrongRankedResponse(response) && !checking ? '' : '<h4>' + escapeHtml(statusHeading(status)) + '</h4>') +
       (!checking && status === 'ranked' ? rankedDetailsHtml(response) : '') +
       (!checking && status === 'ambiguous_with_era' ? eraDetailsHtml(response) : '') +
       (status === 'ranked' || status === 'ambiguous_with_era' ? '' : '<p>' + escapeHtml(summary) + '</p>') +
-      (status === 'ranked' || status === 'ambiguous_with_era'
+      (status === 'ambiguous_with_era'
         ? '<p class="serial-refinement-summary-detail">' + escapeHtml(summary) + '</p>'
         : '') +
       chosen +
@@ -369,13 +398,18 @@
         window.setEstimatedAgeVisibility(true, window.computeEstimatedAge(String(response.chosenYear)));
       }
     } else if (response.status === 'ranked' && response.preferredCandidateYear) {
-      // Show preferred first without dropping the other serial-valid cycle.
-      var rankedYears = [response.preferredCandidateYear].concat(
-        normalizeCandidates(response.remainingCandidateYears || []).filter(function (year) {
-          return year !== response.preferredCandidateYear;
-        }),
-      );
-      yearEl.textContent = rankedYears.join('/');
+      // Strong ranking gets one focal year; alternatives remain visible in the
+      // refinement card and in the preserved response candidate arrays.
+      if (isStrongRankedResponse(response)) {
+        yearEl.textContent = String(response.preferredCandidateYear);
+      } else {
+        var rankedYears = [response.preferredCandidateYear].concat(
+          normalizeCandidates(response.remainingCandidateYears || []).filter(function (year) {
+            return year !== response.preferredCandidateYear;
+          }),
+        );
+        yearEl.textContent = rankedYears.join('/');
+      }
       if (typeof window.setEstimatedAgeVisibility === 'function') window.setEstimatedAgeVisibility(false, '');
     } else if ((response.status === 'ambiguous' || response.status === 'ambiguous_with_era')
       && Array.isArray(response.remainingCandidateYears) && response.remainingCandidateYears.length) {
@@ -599,6 +633,14 @@
     }
 
     legacyDecodeSerial = window.decodeSerial;
+    if (document.head && typeof document.querySelector === 'function'
+      && !document.querySelector('link[data-serial-refinement-styles]')) {
+      var styleLink = document.createElement('link');
+      styleLink.rel = 'stylesheet';
+      styleLink.href = '/serial-refinement.css';
+      styleLink.setAttribute('data-serial-refinement-styles', '1');
+      document.head.appendChild(styleLink);
+    }
     legacySetLoadingSuccess = typeof window.setLoadingSuccess === 'function' ? window.setLoadingSuccess : null;
     legacyRenderSerialSummaryLayer = typeof window.renderSerialSummaryLayer === 'function'
       ? window.renderSerialSummaryLayer
@@ -630,6 +672,7 @@
       fingerprint: fingerprint,
       matchesCommonGeSerialPattern: matchesCommonGeSerialPattern,
       constrainResponseToSerialCandidates: constrainResponseToSerialCandidates,
+      isStrongRankedResponse: isStrongRankedResponse,
       version: '2.0.0',
     };
   }

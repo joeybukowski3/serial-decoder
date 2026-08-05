@@ -566,12 +566,12 @@ test('ranked result shows preferred year prominently with alternatives and ident
   try {
     await fillDecode(page, 'whirlpool', 'MB1930745', 'WED4850HWO');
     await page.click('#decodeBtn');
-    await expect(page.locator('#resultYear')).toHaveText('2022/1992');
+    await expect(page.locator('#resultYear')).toHaveText('2022');
     await expect(page.locator('.serial-refinement-status--ranked')).toBeVisible();
-    await expect(page.locator('#narrowDateOutput')).toContainText('Most likely');
-    await expect(page.locator('#narrowDateOutput')).toContainText('2022');
-    await expect(page.locator('#narrowDateOutput')).toContainText('1992');
-    await expect(page.locator('#narrowDateOutput')).toContainText('medium');
+    await expect(page.locator('.serial-refinement-result-label')).toHaveText('Most Likely Manufacture Date');
+    await expect(page.locator('.serial-refinement-result-date')).toContainText('2022');
+    await expect(page.locator('.serial-refinement-alternative-years')).toHaveText('1992');
+    await expect(page.locator('.serial-refinement-confidence')).toHaveText('MEDIUM CONFIDENCE');
     await expect(page.locator('#narrowDateOutput')).toContainText('modern production period');
     await expect(page.locator('.serial-refinement-normalization')).toContainText('WED4850HWO');
     await expect(page.locator('.serial-refinement-normalization')).toContainText('WED4850HW0');
@@ -743,9 +743,11 @@ test('mobile ranked result has no horizontal overflow and readable targets', asy
     expect(panelBox.width).toBeLessThanOrEqual(390);
     // On some mobile layouts the year span can be aria-hidden/CSS-hidden while
     // still carrying the ranked text; assert content + refinement panel instead.
-    await expect(page.locator('#resultYear')).toHaveText('2022/1992');
+    await expect(page.locator('#resultYear')).toHaveText('2022');
     await expect(page.locator('#narrowDateOutput')).toContainText('2022');
     await expect(page.locator('.serial-refinement-status--ranked')).toBeVisible();
+    await expect(page.locator('.serial-refinement-alternative-years')).toBeVisible();
+    await expect(page.locator('.serial-refinement-alternative-years')).toHaveText('1992');
     const rankedBox = await page.locator('.serial-refinement-status--ranked').boundingBox();
     expect(rankedBox).toBeTruthy();
     expect(rankedBox.height).toBeGreaterThanOrEqual(44);

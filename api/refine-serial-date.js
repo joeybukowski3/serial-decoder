@@ -320,23 +320,27 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       let preferredCandidateYear = extra.preferredCandidateYear ?? null;
       let remaining = workingCandidateYears;
       let rankingExplanation = extra.rankingExplanation || null;
+      let rankingConfidence = null;
+      const canRankLocalEvidence = localModelEvidence?.verifiedExact === true
+        && ['high', 'medium'].includes(localConfidence);
 
-      if (!Number.isInteger(preferredCandidateYear) && Number.isInteger(lowerBound)) {
+      if (!Number.isInteger(preferredCandidateYear) && Number.isInteger(lowerBound) && canRankLocalEvidence) {
         const ranked = rankCandidatesByModelLowerBound(workingCandidateYears, lowerBound);
         if (ranked?.status === 'resolved') {
           remaining = ranked.remainingCandidateYears;
         } else if (ranked?.status === 'ranked') {
           preferredCandidateYear = ranked.preferredCandidateYear;
           remaining = ranked.remainingCandidateYears;
+          rankingConfidence = ranked.distanceFromStart <= 4 ? 'high' : 'medium';
           rankingExplanation = rankingExplanation
-            || `Model-era evidence places introduction around ${lowerBound} or later, so older serial cycles are unlikely.`;
+            || `Model research places this model around ${lowerBound} or later. ${ranked.preferredCandidateYear} is the closest serial-valid year after the model's introduction period.`;
         }
       }
 
       const base = createBestAvailableResult({
         input,
         remainingCandidateYears: remaining,
-        confidence: localConfidence,
+        confidence: rankingConfidence || localConfidence,
         modelProductionRange: localModelRange,
         modelNormalization: local?.normalization || null,
         modelIdentity,

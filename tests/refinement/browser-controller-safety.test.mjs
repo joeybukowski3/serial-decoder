@@ -83,6 +83,19 @@ test('browser controller preserves ranked preferred year inside serial candidate
   assert.equal(result.chosenYear, null);
 });
 
+test('browser controller treats only medium/high ranked responses as focal results', () => {
+  const controller = loadController();
+  assert.equal(controller.isStrongRankedResponse({
+    status: 'ranked', preferredCandidateYear: 2011, confidence: 'high',
+  }), true);
+  assert.equal(controller.isStrongRankedResponse({
+    status: 'ranked', preferredCandidateYear: 2011, confidence: 'medium',
+  }), true);
+  assert.equal(controller.isStrongRankedResponse({
+    status: 'ranked', preferredCandidateYear: 2011, confidence: 'low',
+  }), false);
+});
+
 test('browser controller preserves ambiguous_with_era remaining candidates', () => {
   const controller = loadController();
   const result = controller.constrainResponseToSerialCandidates({

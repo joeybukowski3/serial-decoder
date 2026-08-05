@@ -182,7 +182,9 @@ test('deterministic_serper supports ranked result tier', async () => {
   const res = createResponse();
   await handler(request({ candidateYears: [1992, 2012, 2022] }), res);
   assert.equal(res.payload.status, 'ranked');
-  assert.equal(res.payload.preferredCandidateYear, 2022);
+  // Lower-bound ranking prefers the serial-valid year closest to the
+  // model's introduction year (2010), not merely the newest candidate.
+  assert.equal(res.payload.preferredCandidateYear, 2012);
   assert.deepEqual(res.payload.remainingCandidateYears, [1992, 2012, 2022]);
   assert.equal(res.payload.refinementResultTier, 'ranked');
 });
@@ -349,5 +351,7 @@ test('redis failure does not erase deterministic ranked results', async () => {
   const res = createResponse();
   await handler(request({ candidateYears: [1992, 2012, 2022] }), res);
   assert.equal(res.payload.status, 'ranked');
-  assert.equal(res.payload.preferredCandidateYear, 2022);
+  // Lower-bound ranking prefers the serial-valid year closest to the
+  // model's introduction year (2010), not merely the newest candidate.
+  assert.equal(res.payload.preferredCandidateYear, 2012);
 });
