@@ -26,6 +26,12 @@ import {
   callGeminiSearchProvider,
   GeminiSearchProviderError,
 } from '../lib/smart-lookup/gemini-search-provider.js';
+// Shared with Serial Refinement so both features enable, and address, the
+// native research provider through one definition.
+import {
+  NATIVE_MODEL_RESEARCH_MODEL,
+  isNativeModelResearchEnabled,
+} from '../lib/model-evidence/native-model-research.js';
 import {
   createSmartLookupTimings,
   createUnavailableSmartAgeResult,
@@ -59,11 +65,7 @@ const GROUNDED_FALLBACK_MIN_REMAINING_MS = 1200;
 const GROUNDED_FALLBACK_RESERVE_MS = 300;
 const NATIVE_GEMINI_SEARCH_RESULT = Symbol('native-gemini-search-result');
 
-function isNativeGeminiSearchEnabled(env = process.env) {
-  return ['1', 'true', 'yes', 'on'].includes(
-    String(env?.SMART_LOOKUP_NATIVE_GEMINI_SEARCH_ENABLED || 'false').trim().toLowerCase(),
-  );
-}
+const isNativeGeminiSearchEnabled = isNativeModelResearchEnabled;
 
 function nativePrecisionMapping(precision) {
   return ({
@@ -911,6 +913,7 @@ export function createAgeLookupHandler(dependencies = {}) {
                     || dependencies.apiKey
                     || (dependencies.env || process.env).GEMINI_API_KEY,
                   fetchImpl: dependencies.nativeGeminiFetchImpl || dependencies.fetchImpl,
+                  model: dependencies.nativeGeminiModel || NATIVE_MODEL_RESEARCH_MODEL,
                   timeoutMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
                 },
               );
