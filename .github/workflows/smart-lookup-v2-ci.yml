@@ -70,4 +70,12 @@ jobs:
           echo $! > /tmp/smart-lookup-v2-http.pid
           sleep 2
       - name: Run existing browser suites
-        run: npm run test:playwright -- --reporter=line
+        # This step chains after the Smart Lookup browser suite in the same
+        # job, and both hit a single-threaded `python3 -m http.server`. Under
+        # that cumulative load the shared static server intermittently drops
+        # a resource request (net::ERR_SOCKET_NOT_CONNECTED / timeout) with
+        # no application-level cause — confirmed locally by reproducing the
+        # same flake via concurrent Playwright workers against the same
+        # server. Retries absorb that CI-only contention without masking a
+        # real failure, since a genuine regression will fail on retry too.
+        run: npm run test:playwright -- --reporter=line --retries=2
