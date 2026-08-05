@@ -1,0 +1,87 @@
+.serial-refinement-primary-result {
+  padding: 1rem;
+  border: 1px solid #cfe3f8;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.serial-refinement-result-label,
+.serial-refinement-alternative-label {
+  color: #475569;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.serial-refinement-result-date {
+  margin: .15rem 0 .45rem;
+  color: #0f172a;
+  font-size: clamp(1.55rem, 5vw, 2rem);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.serial-refinement-confidence {
+  display: inline-flex;
+  align-items: center;
+  padding: .24rem .6rem;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .05em;
+}
+
+.serial-refinement-confidence--medium {
+  background: #fef3c7;
+  color: #854d0e;
+}
+
+.serial-refinement-ranking-reason {
+  margin: .7rem 0 0;
+  color: #334155;
+  line-height: 1.55;
+}
+
+.serial-refinement-alternatives {
+  margin-top: .7rem;
+  padding: .75rem 1rem;
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.serial-refinement-alternative-years {
+  margin: .1rem 0 .25rem;
+  color: #1f2937;
+  font-size: 1.12rem;
+  font-weight: 800;
+}
+
+.serial-refinement-alternatives p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.serial-refinement-status--ranked {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .serial-refinement-primary-result,
+  .serial-refinement-alternatives {
+    padding: .8rem;
+  }
+
+  .serial-refinement-result-date {
+    font-size: 1.55rem;
+  }
+
+  .serial-refinement-ranking-reason,
+  .serial-refinement-alternatives p {
+    font-size: .84rem;
+  }
+}
