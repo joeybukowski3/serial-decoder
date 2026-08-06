@@ -42,7 +42,7 @@ test('resolved: GE clean serial shows the resolved-variant card', async ({}, tes
   await decode(page, 'ge', 'LA208110G');
   const card = page.locator('#itemAssistUpsellCard');
   await expect(card).toBeVisible();
-  await expect(card.locator('h4')).toHaveText('Need This Confirmed by a Person?');
+  await expect(card.locator('h4')).toHaveText('Advanced Research by a Field Expert');
   const cta = card.locator('#itemAssistUpsellCta');
   const href = await cta.getAttribute('href');
   expect(href).toContain('https://itemassist.com/request-age-verification');

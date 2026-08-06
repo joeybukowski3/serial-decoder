@@ -246,16 +246,62 @@
     });
   }
 
+  // Shares the same result-shell layout classes (.rs-search-summary,
+  // .rs-primary-row, .rs-supporting-grid) as the Serial Decoder results so
+  // both tools present the same hierarchy: a compact search summary, the
+  // primary result beside Item Assist, then supporting content below.
+  // #smart-lookup-age-panel / #smart-lookup-replacement-panel keep their
+  // existing ids/classes unchanged — only their parent wrappers changed —
+  // so tests/smart-lookup-ui.spec.js (which locates them by id) still pass.
   function ensureShell() {
     var root = resultsRoot();
     if (!root) return null;
     if (!root.querySelector('[data-smart-lookup-controller="1"]')) {
-      root.innerHTML = '<div class="smart-lookup-controller" data-smart-lookup-controller="1">' +
-        '<section class="sl-progressive-card sl-progressive-card--age" id="smart-lookup-age-panel" aria-live="polite"></section>' +
-        '<section class="sl-progressive-card sl-progressive-card--lkq" id="smart-lookup-replacement-panel" aria-live="polite"></section>' +
+      root.innerHTML = '<div class="rs-search-summary" id="smartLookupSearchSummary"></div>' +
+        '<div class="rs-primary-row">' +
+          '<div class="smart-lookup-controller" data-smart-lookup-controller="1">' +
+            '<section class="sl-progressive-card sl-progressive-card--age rs-primary-card" id="smart-lookup-age-panel" aria-live="polite"></section>' +
+          '</div>' +
+          '<div id="smartLookupItemAssistMount"></div>' +
+        '</div>' +
+        '<div class="rs-supporting-grid rs-supporting-grid--smart-lookup">' +
+          '<section class="sl-progressive-card sl-progressive-card--lkq" id="smart-lookup-replacement-panel" aria-live="polite"></section>' +
         '</div>';
     }
     return root.querySelector('[data-smart-lookup-controller="1"]');
+  }
+
+  function updateSearchSummary(query) {
+    var el = $('smartLookupSearchSummary');
+    if (!el) return;
+    el.innerHTML = query
+      ? '<div class="rs-search-summary-item"><span class="rs-search-summary-label">Query</span><span class="rs-search-summary-value">' + escapeHtml(query) + '</span></div>'
+      : '';
+  }
+
+  var lastUpsellSignature = '';
+  // Mounts the same Item Assist escalation card used by the Serial Decoder,
+  // in the same top-level position (beside the primary result), once the
+  // age lookup has settled. UI-only: does not affect lookup/research logic.
+  function mountUpsell(query, ageState) {
+    if (typeof window.renderUpsellCard !== 'function' || !query) return;
+    var data = ageState.data || {};
+    var variant = ageState.status === 'success' ? 'resolved' : 'noMatch';
+    var signature = variant + '|' + query;
+    if (lastUpsellSignature === signature) return;
+    lastUpsellSignature = signature;
+    window.renderUpsellCard(variant, {
+      brand: data.brand || '',
+      model: data.exactModel || data.model || '',
+      category: data.itemCategory || data.productFamily || '',
+      resultId: typeof window.generateDecodeResultId === 'function' ? window.generateDecodeResultId() : String(Date.now()),
+    }, {
+      resultsContainerId: 'ageResults',
+      mountId: 'smartLookupItemAssistMount',
+      cardId: 'smartLookupItemAssistCard',
+      bodyId: 'smartLookupItemAssistBody',
+      ctaId: 'smartLookupItemAssistCta',
+    });
   }
 
   function showResults() {
@@ -1115,9 +1161,11 @@
 
   function render(query, includeReplacementState) {
     ensureShell();
+    updateSearchSummary(query);
     if (state.age.status === 'loading') setPanel('age', loadingCard(currentAgeStageMessage()));
     if (state.age.status === 'success') setPanel('age', renderAge(state.age.data));
     if (state.age.status === 'error') setPanel('age', noResultCard(state.age.copy, 'age'));
+    if (state.age.status === 'success' || state.age.status === 'error') mountUpsell(query, state.age);
 
     if (!includeReplacementState) {
       setPanel('replacement', '');
