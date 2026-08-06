@@ -123,6 +123,11 @@
   gap: 16px;
   align-items: stretch;
   margin-bottom: 16px;
+  min-width: 0;
+}
+
+.sl-top-summary-layer {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .rs-primary-row > * {
@@ -304,6 +309,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   align-items: stretch;
+  min-width: 0;
 }
 
 .rs-supporting-grid > * {
