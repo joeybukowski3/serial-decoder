@@ -1,0 +1,812 @@
+/* ============================================================
+   Result Shell — shared dark result design system
+   Used by: Serial Decoder results (#serialResults) and
+   Smart Lookup results (#ageResults). Loaded after shared.css
+   and any page-local inline <style> block so these rules win
+   the cascade for shared class names (.results-card, .info-block,
+   .result-row, .sl-summary-card, .copy-btn, .decode-again-btn,
+   .ia-upsell-card, .serial-result-*, .serial-refinement-*).
+   ============================================================ */
+
+:root {
+  --rs-navy: var(--navy, #0b1326);
+  --rs-navy-mid: var(--navy-mid, #131b2e);
+  --rs-navy-light: var(--navy-light, #222a3d);
+  --rs-card-bg: var(--card-bg, #112236);
+  --rs-border: #26344c;
+  --rs-teal: var(--teal, #44e5c2);
+  --rs-amber: #f6a94a;
+  --rs-amber-strong: #f59e0b;
+  --rs-purple: #a78bfa;
+  --rs-purple-bg: rgba(167, 139, 250, 0.12);
+  --rs-purple-border: rgba(167, 139, 250, 0.35);
+  --rs-text: #e7ecf7;
+  --rs-text-mid: #aab4c8;
+  --rs-text-dim: #7c879e;
+  --rs-radius: 14px;
+  --rs-radius-sm: 10px;
+}
+
+/* ─── Shell containers ─── */
+
+.results-card {
+  background: var(--rs-card-bg) !important;
+  border: 1px solid var(--rs-border) !important;
+  border-radius: 16px !important;
+  color: var(--rs-text) !important;
+  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.55) !important;
+}
+
+.results-card .results-header {
+  background: var(--rs-navy) !important;
+  border-bottom: 1px solid var(--rs-border) !important;
+}
+
+.results-card,
+.results-card p,
+.results-card li,
+.results-card dd,
+.results-card dt {
+  color: var(--rs-text) !important;
+}
+
+.results-card .results-footer {
+  background: var(--rs-navy-mid) !important;
+  border-top: 1px solid var(--rs-border) !important;
+}
+
+/* ─── Search summary bar ─── */
+
+.rs-search-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  background: var(--rs-navy);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.rs-search-summary-item {
+  flex: 1 1 200px;
+  padding: 4px 18px;
+  border-left: 1px solid var(--rs-border);
+  min-width: 0;
+}
+
+.rs-search-summary-item:first-child {
+  border-left: none;
+  padding-left: 0;
+}
+
+.rs-search-summary-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--rs-text-dim);
+  margin-bottom: 3px;
+}
+
+.rs-search-summary-value {
+  display: block;
+  font-size: 13px;
+  color: var(--rs-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rs-search-summary-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(68, 229, 194, 0.12);
+  border: 1px solid rgba(68, 229, 194, 0.35);
+  color: var(--rs-teal);
+  font-size: 12px;
+  font-weight: 800;
+  margin-left: auto;
+}
+
+/* ─── Primary row: result card + Item Assist side by side ─── */
+
+.rs-primary-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 16px;
+  min-width: 0;
+}
+
+.sl-top-summary-layer {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rs-primary-row > * {
+  min-width: 0;
+}
+
+/* ─── Primary result card ─── */
+
+.serial-result-hero,
+.rs-primary-card {
+  background: var(--rs-navy-mid) !important;
+  border: 1px solid var(--rs-border) !important;
+  border-radius: var(--rs-radius) !important;
+  padding: 20px !important;
+  box-shadow: none !important;
+}
+
+.rs-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--rs-teal);
+  margin-bottom: 14px;
+}
+
+.rs-card-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(68, 229, 194, 0.12);
+  color: var(--rs-teal);
+  font-size: 14px;
+  flex: 0 0 auto;
+}
+
+.serial-result-eyebrow {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: var(--rs-text-dim) !important;
+  margin-bottom: 6px !important;
+}
+
+.rs-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--rs-purple-bg);
+  border: 1px solid var(--rs-purple-border);
+  color: #d9cffb;
+  border-radius: var(--rs-radius-sm);
+  padding: 9px 13px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+
+.rs-notice-icon {
+  flex: 0 0 auto;
+}
+
+.rs-years-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rs-text-dim);
+  margin-bottom: 8px;
+}
+
+.serial-result-main,
+.rs-years {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: baseline !important;
+  font-size: clamp(1.5rem, 4vw, 2.4rem) !important;
+  line-height: 1.1 !important;
+  font-weight: 900 !important;
+  color: var(--rs-text) !important;
+  letter-spacing: -0.02em !important;
+}
+
+.rs-year-token {
+  white-space: nowrap;
+}
+
+.rs-years-sep {
+  color: var(--rs-teal);
+  font-weight: 700;
+  margin: 0 0.22em;
+}
+
+.serial-result-subline {
+  margin-top: 12px !important;
+  font-size: 13px !important;
+  color: var(--rs-text-mid) !important;
+}
+
+.rs-metadata-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rs-border);
+}
+
+.serial-hero-rows,
+.rs-metadata-row {
+  border-top: 1px solid var(--rs-border) !important;
+}
+
+.serial-hero-row,
+.rs-metadata-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-bottom: none !important;
+  padding: 0 !important;
+}
+
+.serial-hero-row-label,
+.rs-metadata-label {
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: var(--rs-text-dim) !important;
+}
+
+.serial-hero-row-value,
+.rs-metadata-value {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: var(--rs-text) !important;
+}
+
+.rs-method-line {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rs-border);
+  background: var(--rs-navy);
+  border-radius: var(--rs-radius-sm);
+  padding: 14px;
+}
+
+.rs-method-line h4 {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--rs-text-dim);
+  margin: 0 0 6px;
+}
+
+.rs-method-line p {
+  font-size: 12.5px;
+  color: var(--rs-text-mid);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.rs-method-line .rs-notes-line {
+  margin-top: 6px;
+  color: var(--rs-text-dim);
+  font-size: 12px;
+}
+
+/* ─── Supporting 3-column grid ─── */
+
+.rs-supporting-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.rs-supporting-grid > * {
+  min-width: 0;
+}
+
+.sl-summary-card,
+.rs-card {
+  background: var(--rs-navy-mid) !important;
+  border: 1px solid var(--rs-border) !important;
+  border-radius: var(--rs-radius) !important;
+  padding: 16px !important;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.sl-summary-card h4 {
+  color: var(--rs-text) !important;
+}
+
+.sl-summary-card .sl-panel-copy,
+.rs-card p {
+  color: var(--rs-text-mid) !important;
+}
+
+.rs-methodology-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--rs-teal);
+  text-decoration: none;
+}
+
+.rs-methodology-link:hover {
+  text-decoration: underline;
+}
+
+/* Refine the date panel, restyled as a supporting-grid card */
+.serial-summary-layer .narrow-date-panel,
+.rs-supporting-grid .narrow-date-panel {
+  background: var(--rs-navy-mid) !important;
+  border: 1px solid var(--rs-border) !important;
+  border-radius: var(--rs-radius) !important;
+  box-shadow: none !important;
+}
+
+.narrow-date-panel h4 {
+  color: var(--rs-text) !important;
+}
+
+.narrow-date-note {
+  color: var(--rs-text-mid) !important;
+  font-size: 12px !important;
+}
+
+.narrow-date-fields .form-input,
+#narrowModelInput,
+#narrowContextInput {
+  background: var(--rs-navy) !important;
+  border: 1px solid var(--rs-border) !important;
+  color: var(--rs-text) !important;
+}
+
+.narrow-date-fields .decode-btn,
+.results-card .decode-btn {
+  background: var(--rs-teal) !important;
+  color: #04241d !important;
+  border: none !important;
+  font-weight: 800 !important;
+}
+
+.narrow-date-fields .decode-btn:hover,
+.results-card .decode-btn:hover {
+  filter: brightness(1.06);
+}
+
+/* Model Evidence card */
+.rs-evidence-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.rs-evidence-unavailable {
+  background: var(--rs-purple-bg);
+  border: 1px solid var(--rs-purple-border);
+  border-radius: var(--rs-radius-sm);
+  padding: 12px 14px;
+  color: #d9cffb;
+}
+
+.rs-evidence-unavailable strong {
+  display: block;
+  color: var(--rs-purple);
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.rs-evidence-unavailable p {
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 0 0 8px;
+  color: #d9cffb !important;
+}
+
+.rs-evidence-link {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--rs-purple);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ─── Refinement Best Estimate / Alternate — dark restyle ─── */
+
+.serial-refinement-status {
+  background: var(--rs-navy) !important;
+  border: 1px solid var(--rs-border) !important;
+  border-radius: var(--rs-radius-sm) !important;
+  color: var(--rs-text) !important;
+}
+
+.serial-refinement-primary-result {
+  border-bottom: 1px solid var(--rs-border) !important;
+}
+
+.serial-refinement-result-label,
+.serial-refinement-alternative-label {
+  color: var(--rs-text-dim) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 800 !important;
+  font-size: 11px !important;
+}
+
+.serial-refinement-result-date {
+  color: var(--rs-text) !important;
+  font-weight: 900 !important;
+}
+
+.serial-refinement-confidence {
+  background: rgba(68, 229, 194, 0.14) !important;
+  color: var(--rs-teal) !important;
+  border: 1px solid rgba(68, 229, 194, 0.35) !important;
+}
+
+.serial-refinement-confidence--medium {
+  background: rgba(246, 169, 74, 0.14) !important;
+  color: var(--rs-amber) !important;
+  border: 1px solid rgba(246, 169, 74, 0.35) !important;
+}
+
+.serial-refinement-confidence--low {
+  background: rgba(239, 68, 68, 0.14) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+}
+
+.serial-refinement-ranking-reason {
+  color: var(--rs-text-mid) !important;
+}
+
+.serial-refinement-alternate-entry {
+  border-color: var(--rs-border) !important;
+}
+
+.serial-refinement-alternative-years {
+  color: var(--rs-text) !important;
+  font-weight: 700 !important;
+}
+
+.serial-refinement-evidence,
+.serial-refinement-normalization {
+  color: var(--rs-text-mid) !important;
+  border-color: var(--rs-border) !important;
+}
+
+.serial-refinement-evidence summary {
+  color: var(--rs-teal) !important;
+}
+
+/* ─── Item Assist ─── */
+
+.ia-upsell-card {
+  background: linear-gradient(180deg, rgba(246, 169, 74, 0.08), var(--rs-navy-mid)) !important;
+  border: 1px solid rgba(246, 169, 74, 0.4) !important;
+  border-left: 4px solid var(--rs-amber-strong) !important;
+  border-radius: var(--rs-radius) !important;
+  padding: 18px !important;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.ia-upsell-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.ia-upsell-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(246, 169, 74, 0.16);
+  color: var(--rs-amber-strong);
+  font-size: 16px;
+}
+
+.ia-upsell-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rs-amber-strong);
+  margin-bottom: 3px;
+}
+
+.ia-upsell-card h4 {
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  color: var(--rs-text) !important;
+  margin: 0 !important;
+}
+
+.ia-upsell-intro,
+.ia-upsell-card > p {
+  font-size: 13px !important;
+  color: var(--rs-text-mid) !important;
+  line-height: 1.55 !important;
+}
+
+.ia-upsell-cta {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--rs-amber-strong), #f97316) !important;
+  color: #1a0f02 !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  padding: 13px 20px !important;
+  border-radius: 12px !important;
+  text-decoration: none !important;
+  box-shadow: 0 10px 24px rgba(249, 115, 22, 0.28);
+  margin: 4px 0 12px !important;
+}
+
+.ia-upsell-cta:hover {
+  filter: brightness(1.04);
+  opacity: 1 !important;
+}
+
+.ia-upsell-card .determination-details {
+  margin-top: auto;
+  border-top: 1px solid rgba(246, 169, 74, 0.25);
+  padding-top: 10px;
+}
+
+.ia-upsell-card .determination-details summary {
+  color: var(--rs-text) !important;
+  font-weight: 700 !important;
+}
+
+.ia-upsell-card .determination-body {
+  color: var(--rs-text-mid) !important;
+  background: transparent !important;
+  border-top-color: rgba(246, 169, 74, 0.25) !important;
+}
+
+.ia-upsell-pricing {
+  font-weight: 700 !important;
+  color: var(--rs-text) !important;
+  margin-bottom: 8px !important;
+}
+
+.ia-upsell-trust {
+  font-size: 11px !important;
+  color: var(--rs-text-dim) !important;
+  margin-top: 10px !important;
+}
+
+/* ─── Bottom action bar ─── */
+
+.results-footer {
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  align-items: stretch !important;
+}
+
+.results-footer .copy-btn,
+.results-footer .decode-again-btn,
+.results-footer .error-btn {
+  flex: 1 1 180px;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-btn {
+  background: rgba(68, 229, 194, 0.1) !important;
+  border: 1px solid rgba(68, 229, 194, 0.4) !important;
+  color: var(--rs-teal) !important;
+}
+
+.copy-btn:hover {
+  background: rgba(68, 229, 194, 0.18) !important;
+}
+
+.decode-again-btn {
+  background: linear-gradient(135deg, var(--rs-amber-strong), #f97316) !important;
+  color: #1a0f02 !important;
+}
+
+.decode-again-btn.btn-teal {
+  background: transparent !important;
+  border: 1px solid rgba(0, 201, 255, 0.5) !important;
+  color: #6fd3ff !important;
+  box-shadow: none !important;
+}
+
+.decode-again-btn.btn-teal:hover {
+  background: rgba(0, 201, 255, 0.1) !important;
+}
+
+.error-btn {
+  flex: 1 1 220px;
+  background: transparent !important;
+  border: 1px solid var(--rs-border) !important;
+  color: var(--rs-text-dim) !important;
+}
+
+/* ─── Shared Smart Lookup component reuse ───
+   Scoped to .results-card so these generic, reused class names
+   (.info-block, .result-row, .determination-details, etc.) don't leak
+   into unrelated reuses elsewhere on the same pages — e.g. the FAQ
+   accordions on brand pages (ge.html and others) also use
+   .determination-details/.determination-body outside any results card. */
+
+.results-card .info-block {
+  background: var(--rs-navy) !important;
+  border: 1px solid var(--rs-border) !important;
+  color: var(--rs-text-mid) !important;
+}
+
+.results-card .info-block h4 {
+  color: var(--rs-text) !important;
+}
+
+.results-card .result-row {
+  border-bottom: 1px solid var(--rs-border) !important;
+}
+
+.results-card .result-label {
+  color: var(--rs-text-dim) !important;
+}
+
+.results-card .result-value {
+  color: var(--rs-teal) !important;
+}
+
+.results-card .determination-details summary {
+  color: var(--rs-text-mid) !important;
+  background: transparent !important;
+  padding: 6px 0 !important;
+}
+
+.results-card .determination-body {
+  color: var(--rs-text-mid) !important;
+}
+
+.ia-upsell-card .determination-details summary {
+  color: var(--rs-text) !important;
+}
+
+/* ─── Smart Lookup: neutralize legacy light-card overrides ───
+   index.html (and the other host pages) carry a legacy rule —
+   "#smart-lookup-results, #smart-lookup-results * { color: #1a1a2e !important }"
+   — written for the old white result cards. Its ID + !important beats
+   any class-based override, including result-shell.css's, at equal
+   specificity. These rules match it with an ID of their own
+   (#smart-lookup-results.results-body) so the dark redesign's text
+   colors actually win inside Smart Lookup results. */
+#smart-lookup-results.results-body * {
+  color: var(--rs-text) !important;
+}
+
+#smart-lookup-results.results-body .result-label,
+#smart-lookup-results.results-body .rs-search-summary-label,
+#smart-lookup-results.results-body .rs-metadata-label {
+  color: var(--rs-text-dim) !important;
+}
+
+#smart-lookup-results.results-body p,
+#smart-lookup-results.results-body .sl-panel-copy,
+#smart-lookup-results.results-body .smart-general-subtitle {
+  color: var(--rs-text-mid) !important;
+}
+
+#smart-lookup-results.results-body .result-value,
+#smart-lookup-results.results-body a {
+  color: var(--rs-teal) !important;
+}
+
+#smart-lookup-results.results-body .ia-upsell-eyebrow {
+  color: var(--rs-amber-strong) !important;
+}
+
+#smart-lookup-results.results-body .ia-upsell-cta {
+  color: #1a0f02 !important;
+}
+
+#smart-lookup-results.results-body .ia-upsell-trust {
+  color: var(--rs-text-dim) !important;
+}
+
+/* The year-context hero and best-available-result blocks ship their own
+   inline light-theme styles (background/color) from the render template
+   in src/browser/smart-lookup-controller.js — presentation only, not
+   research logic. Overridden here instead of editing that template, to
+   keep the visual system in one shared place. */
+#smart-lookup-results .smart-year-context-primary {
+  background: var(--rs-navy) !important;
+  border-color: var(--rs-border) !important;
+}
+
+#smart-lookup-results .smart-year-context-value {
+  color: var(--rs-text) !important;
+}
+
+#smart-lookup-results .smart-year-context-label {
+  color: var(--rs-text-dim) !important;
+}
+
+.rs-search-summary:empty {
+  display: none;
+}
+
+/* Smart Lookup's supporting area only ever holds one card (the
+   replacement/LKQ panel) by default, unlike the Serial Decoder's 3-card
+   grid, so it stays single-column instead of leaving empty grid tracks. */
+.rs-supporting-grid--smart-lookup {
+  grid-template-columns: 1fr;
+}
+
+/* ─── Responsive behavior ─── */
+
+@media (max-width: 900px) {
+  .rs-primary-row {
+    grid-template-columns: 1fr;
+  }
+
+  .rs-supporting-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .rs-supporting-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rs-search-summary {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rs-search-summary-item {
+    border-left: none;
+    border-top: 1px solid var(--rs-border);
+    padding: 8px 0 0;
+  }
+
+  .rs-search-summary-item:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .rs-search-summary-badge {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+
+  .results-footer .copy-btn,
+  .results-footer .decode-again-btn,
+  .results-footer .error-btn {
+    flex: 1 1 100%;
+  }
+}

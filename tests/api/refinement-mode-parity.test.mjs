@@ -182,10 +182,13 @@ test('deterministic_serper supports ranked result tier', async () => {
   const res = createResponse();
   await handler(request({ candidateYears: [1992, 2012, 2022] }), res);
   assert.equal(res.payload.status, 'ranked');
-  // Lower-bound ranking prefers the serial-valid year closest to the
-  // model's introduction year (2010), not merely the newest candidate.
+  // Deterministic lifecycle ranking: the earliest serial-valid year at or
+  // after the model-era start (2010) is the Best Estimate. 1992 predates the
+  // model's introduction, so it is hard-eliminated rather than shown as an
+  // alternate; 2022 remains the only alternate.
   assert.equal(res.payload.preferredCandidateYear, 2012);
-  assert.deepEqual(res.payload.remainingCandidateYears, [1992, 2012, 2022]);
+  assert.deepEqual(res.payload.remainingCandidateYears, [2012, 2022]);
+  assert.deepEqual(res.payload.candidateYears, [1992, 2012, 2022]);
   assert.equal(res.payload.refinementResultTier, 'ranked');
 });
 

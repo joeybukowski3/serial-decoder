@@ -187,11 +187,11 @@
     return 'Model evidence unavailable';
   }
 
+  // The deterministic lifecycle ranking rule always produces a primary Best
+  // Estimate whenever it fires; confidence describes evidence strength only
+  // and no longer gates whether this primary layout is used.
   function isStrongRankedResponse(response) {
-    return Boolean(response
-      && response.status === 'ranked'
-      && response.preferredCandidateYear
-      && (response.confidence === 'high' || response.confidence === 'medium'));
+    return Boolean(response && response.status === 'ranked' && response.preferredCandidateYear);
   }
 
   function rankedDateLabel(year) {
@@ -257,25 +257,22 @@
       .filter(function (year) { return year !== response.preferredCandidateYear; });
     var confidence = response.confidence ? String(response.confidence) : 'medium';
     var why = response.rankingExplanation || response.summary || '';
-    if (!isStrongRankedResponse(response)) {
-      return '<p><strong>Most likely:</strong> ' + escapeHtml(String(response.preferredCandidateYear)) + '</p>' +
-        (why ? '<p><strong>Why:</strong> ' + escapeHtml(why) + '</p>' : '') +
-        (others.length ? '<p><strong>Other serial-valid candidate' + (others.length === 1 ? '' : 's') + ':</strong> ' +
-          escapeHtml(others.join(', ')) + '</p>' : '') +
-        '<p><strong>Confidence:</strong> ' + escapeHtml(confidence) + '</p>';
-    }
+    var alternateEntries = others.map(function (year) {
+      return '<div class="serial-refinement-alternate-entry">' +
+        '<div class="serial-refinement-alternative-years">' + escapeHtml(rankedDateLabel(year)) + '</div>' +
+        '<p>This year remains technically possible based on the serial pattern.</p>' +
+        '</div>';
+    }).join('');
     return '<div class="serial-refinement-primary-result">' +
-      '<div class="serial-refinement-result-label">Most Likely Manufacture Date</div>' +
+      '<div class="serial-refinement-result-label">Best Estimate</div>' +
       '<div class="serial-refinement-result-date">' + escapeHtml(rankedDateLabel(response.preferredCandidateYear)) + '</div>' +
       '<span class="serial-refinement-confidence serial-refinement-confidence--' + escapeHtml(confidence) + '">' +
         escapeHtml(confidence.toUpperCase()) + ' CONFIDENCE</span>' +
       (why ? '<p class="serial-refinement-ranking-reason">' + escapeHtml(why) + '</p>' : '') +
       '</div>' +
       (others.length ? '<div class="serial-refinement-alternatives">' +
-        '<div class="serial-refinement-alternative-label">Alternative Serial-Valid Year' + (others.length === 1 ? '' : 's') + '</div>' +
-        '<div class="serial-refinement-alternative-years">' + escapeHtml(others.join(', ')) + '</div>' +
-        '<p>Still technically possible from the serial pattern, but less likely because ' +
-          (others.length === 1 ? 'it is' : 'they are') + ' farther from the known model era.</p>' +
+        '<div class="serial-refinement-alternative-label">Alternate' + (others.length === 1 ? '' : 's') + '</div>' +
+        alternateEntries +
         '</div>' : '');
   }
 
@@ -398,18 +395,9 @@
         window.setEstimatedAgeVisibility(true, window.computeEstimatedAge(String(response.chosenYear)));
       }
     } else if (response.status === 'ranked' && response.preferredCandidateYear) {
-      // Strong ranking gets one focal year; alternatives remain visible in the
-      // refinement card and in the preserved response candidate arrays.
-      if (isStrongRankedResponse(response)) {
-        yearEl.textContent = String(response.preferredCandidateYear);
-      } else {
-        var rankedYears = [response.preferredCandidateYear].concat(
-          normalizeCandidates(response.remainingCandidateYears || []).filter(function (year) {
-            return year !== response.preferredCandidateYear;
-          }),
-        );
-        yearEl.textContent = rankedYears.join('/');
-      }
+      // The Best Estimate gets one focal year; alternatives remain visible in
+      // the refinement card and in the preserved response candidate arrays.
+      yearEl.textContent = String(response.preferredCandidateYear);
       if (typeof window.setEstimatedAgeVisibility === 'function') window.setEstimatedAgeVisibility(false, '');
     } else if ((response.status === 'ambiguous' || response.status === 'ambiguous_with_era')
       && Array.isArray(response.remainingCandidateYears) && response.remainingCandidateYears.length) {
