@@ -636,6 +636,7 @@
     if (legacyRenderSerialSummaryLayer) {
       window.renderSerialSummaryLayer = function () {
         var result = legacyRenderSerialSummaryLayer.apply(this, arguments);
+        if (typeof window.reattachItemAssistCard === 'function') window.reattachItemAssistCard();
         restoreCurrentRefinementView();
         return result;
       };
