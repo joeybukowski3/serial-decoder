@@ -415,6 +415,73 @@
   color: #d9cffb !important;
 }
 
+/* Populated Model Evidence — restrained teal treatment (evidence found,
+   not a status/warning) rather than the purple "unavailable" state. */
+.rs-evidence-available {
+  background: var(--rs-navy);
+  border: 1px solid rgba(68, 229, 194, 0.3);
+  border-radius: var(--rs-radius-sm);
+  padding: 12px 14px;
+}
+
+.rs-evidence-available strong {
+  display: block;
+  color: var(--rs-teal);
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.rs-evidence-available p {
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 0 0 8px;
+  color: var(--rs-text-mid) !important;
+}
+
+.rs-evidence-sources {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+}
+
+.rs-evidence-sources li {
+  padding: 4px 0;
+  border-top: 1px solid var(--rs-border);
+}
+
+.rs-evidence-sources li:first-child {
+  border-top: none;
+}
+
+.rs-evidence-sources a {
+  color: var(--rs-teal);
+  text-decoration: none;
+}
+
+.rs-evidence-sources a:hover {
+  text-decoration: underline;
+}
+
+/* Refine the date — recommended-next-action treatment, shown only while
+   multiple serial years remain (toggled via .rs-refine-recommended on the
+   supporting-grid mount). Teal to match the Refine Result primary button. */
+.rs-refine-recommended .narrow-date-panel {
+  border-color: var(--rs-teal) !important;
+  box-shadow: inset 0 0 0 1px rgba(68, 229, 194, 0.25);
+}
+
+.rs-refine-recommended .narrow-date-panel::before {
+  content: "Recommended Next Step";
+  display: block;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rs-teal);
+  margin-bottom: 6px;
+}
+
 .rs-evidence-link {
   font-size: 12px;
   font-weight: 700;
@@ -435,7 +502,12 @@
   color: var(--rs-text) !important;
 }
 
+/* serial-refinement.css (loaded separately, after this stylesheet) ships a
+   light-theme card background/text for these selectors. Only the specific
+   properties below are overridden here (rather than resetting via a single
+   catch-all rule) so serial-refinement.css keeps owning layout/spacing. */
 .serial-refinement-primary-result {
+  background: var(--rs-navy) !important;
   border-bottom: 1px solid var(--rs-border) !important;
 }
 
@@ -475,8 +547,21 @@
   color: var(--rs-text-mid) !important;
 }
 
+.serial-refinement-alternatives {
+  background: var(--rs-navy) !important;
+  border-color: var(--rs-border) !important;
+}
+
+.serial-refinement-alternatives p {
+  color: var(--rs-text-mid) !important;
+}
+
 .serial-refinement-alternate-entry {
   border-color: var(--rs-border) !important;
+}
+
+.serial-refinement-alternate-entry + .serial-refinement-alternate-entry {
+  border-top-color: var(--rs-border) !important;
 }
 
 .serial-refinement-alternative-years {
@@ -492,6 +577,18 @@
 
 .serial-refinement-evidence summary {
   color: var(--rs-teal) !important;
+}
+
+/* The model entered/recognized line is the clearest signal of what evidence
+   actually drove the Best Estimate, so it gets its own emphasis rather than
+   blending into the surrounding muted text. */
+.serial-refinement-normalization strong {
+  color: var(--rs-text) !important;
+  font-weight: 800 !important;
+}
+
+.serial-refinement-normalization span {
+  color: var(--rs-text-dim) !important;
 }
 
 /* ─── Item Assist ─── */
