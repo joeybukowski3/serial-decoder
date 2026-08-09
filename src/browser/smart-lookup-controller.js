@@ -316,7 +316,26 @@
   function setPanel(which, html) {
     ensureShell();
     var panel = $(which === 'age' ? 'smart-lookup-age-panel' : 'smart-lookup-replacement-panel');
-    if (panel) panel.innerHTML = html;
+    if (panel) {
+      panel.innerHTML = html;
+      bindSmartLookupLogoFallback(panel);
+    }
+  }
+
+  function bindSmartLookupLogoFallback(root) {
+    if (!root || !root.querySelectorAll) return;
+    Array.prototype.forEach.call(root.querySelectorAll('[data-smart-lookup-brand-logo="1"]'), function (image) {
+      if (image.getAttribute('data-logo-fallback-bound') === '1') return;
+      image.setAttribute('data-logo-fallback-bound', '1');
+      image.addEventListener('load', function () {
+        image.classList.add('is-loaded');
+      }, { once: true });
+      image.addEventListener('error', function () {
+        if (image.parentNode) image.parentNode.removeChild(image);
+      }, { once: true });
+      if (image.complete && image.naturalWidth) image.classList.add('is-loaded');
+      else if (image.complete && image.parentNode) image.parentNode.removeChild(image);
+    });
   }
 
   function editSearchButton() {
@@ -554,6 +573,24 @@
     return labels[value] || String(value || '').replace(/-/g, ' ').replace(/^\w/, function (letter) { return letter.toUpperCase(); });
   }
 
+  function usableBrandLogoUrl(data) {
+    var value = data && (data.brandLogoUrl || data.logoUrl || data.brandLogo);
+    if (typeof value !== 'string') return '';
+    value = value.trim();
+    if (!value || /^\/\//.test(value)) return '';
+    if (/^https:\/\/[^\s]+$/i.test(value)) return value;
+    if (/^\/(?!\/)[^\s]*$/.test(value)) return value;
+    return '';
+  }
+
+  function heroClassification(data) {
+    if (!data) return 'Smart Lookup result';
+    if (data.source === 'static' || data.evidenceSource === 'heuristic') return 'Deterministic \u2022 model-family logic';
+    var basis = data.estimateBasis ? estimateBasisLabel(data.estimateBasis) : '';
+    var precision = data.precisionLevel ? String(data.precisionLevel).replace(/-/g, ' ') : '';
+    return [basis, precision].filter(Boolean).join(' \u2022 ') || 'Smart Lookup result';
+  }
+
   function isGroundedProviderResult(data) {
     var evidence = data ? String(data.evidenceSource || '').toLowerCase() : '';
     return Boolean(data)
@@ -779,11 +816,11 @@
     // sentence when the API supplied specific identifiers to ask for.
     var recommendedIdentifiers = Array.isArray(data && data.recommendedIdentifiers) ? data.recommendedIdentifiers : [];
     var refinementHtml = recommendedIdentifiers.length
-      ? '<div class="smart-lookup-refinement"><p class="smart-lookup-try-next"><strong>To narrow this result:</strong></p><ul>' +
+      ? '<div class="smart-result-info-panel smart-result-next-panel smart-lookup-refinement"><div class="smart-result-panel-icon" aria-hidden="true">\u21e2</div><div><h4>Try this next</h4><p class="smart-lookup-try-next">To narrow this result:</p><ul>' +
         recommendedIdentifiers.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') +
-        '</ul></div>'
+        '</ul></div></div>'
       : (data && data.refinementSuggestion
-        ? '<p class="smart-lookup-try-next"><strong>Try this next:</strong> ' + escapeHtml(data.refinementSuggestion) + '</p>'
+        ? '<div class="smart-result-info-panel smart-result-next-panel"><div class="smart-result-panel-icon" aria-hidden="true">\u21e2</div><div><h4>Try this next</h4><p class="smart-lookup-try-next">' + escapeHtml(data.refinementSuggestion) + '</p></div></div>'
         : '');
     // Usefulness-first "best available result" block. Leads with WHAT the
     // product is when research identified one, so a researched identification
@@ -830,8 +867,22 @@
             + '</li>';
         }).join('') + '</ul></div>'
       : '';
-    return '<div class="smart-age-result smart-year-context-result">' +
-      '<h3>' + escapeHtml(resultHeading(data)) + '</h3>' +
+    var displayBrand = data && data.brand && data.brand !== 'Unknown' ? data.brand : 'Not identified';
+    var displayCategory = data && (data.category || data.itemCategory || data.productType) || '';
+    var logoUrl = usableBrandLogoUrl(data);
+    var logoHtml = logoUrl
+      ? '<img class="smart-result-brand-logo" data-smart-lookup-brand-logo="1" src="' + escapeHtml(logoUrl) + '" alt="">'
+      : '';
+    var notesHtml = data && data.notes
+      ? '<div class="smart-result-info-panel smart-result-year-panel"><div class="smart-result-panel-icon" aria-hidden="true">i</div><div><h4>What this year means</h4><p>' + escapeHtml(data.notes) + '</p></div></div>'
+      : '';
+    return '<div class="smart-age-result smart-year-context-result smart-result-card">' +
+      '<div class="smart-result-hero">' +
+        '<div class="smart-year-context-primary"><span class="smart-year-context-value">' + escapeHtml(primaryYear) + '</span><span class="smart-year-context-label">' + escapeHtml(yearLabel) + '</span></div>' +
+        '<div class="smart-result-hero-divider" aria-hidden="true"></div>' +
+        '<div class="smart-result-identity"><h3>' + escapeHtml(resultHeading(data)) + '</h3><p>' + escapeHtml(heroClassification(data)) + '</p></div>' +
+        '<div class="smart-result-brand">' + logoHtml + '<strong>' + escapeHtml(displayBrand) + '</strong>' + (displayCategory ? '<span aria-hidden="true">\u2022</span><span>' + escapeHtml(displayCategory) + '</span>' : '') + '</div>' +
+      '</div>' +
       serialDetectedHtml +
       conflictNote +
       bestAvailableHtml +
@@ -840,11 +891,11 @@
       precisionNoteHtml +
       fallbackNote +
       qualifierHtml +
-      '<div class="smart-year-context-primary" style="display:grid;gap:2px;margin:12px 0 8px;padding:18px;border:1px solid #bfdbfe;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#f8fafc)"><span class="smart-year-context-value" style="font:800 clamp(2.3rem,8vw,3.6rem)/1 JetBrains Mono,monospace;color:#1d4ed8">' + escapeHtml(primaryYear) + '</span><span class="smart-year-context-label" style="font-size:.9rem;font-weight:800;color:#334155">' + escapeHtml(yearLabel) + '</span></div>' +
-      '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + escapeHtml(data && data.brand && data.brand !== 'Unknown' ? data.brand : 'Not identified') + '</span></div>' +
+      '<div class="smart-result-metadata">' +
+      '<div class="result-row' + (displayBrand === 'Not identified' ? ' smart-result-row-muted' : '') + '"><span class="result-label">Brand</span><span class="result-value">' + escapeHtml(displayBrand) + '</span></div>' +
       (data && data.evidenceConflict && data.recognizedBrand ? '<div class="result-row"><span class="result-label">Recognized model brand</span><span class="result-value">' + escapeHtml(data.recognizedBrand) + '</span></div>' : '') +
       (data && data.productFamily ? '<div class="result-row"><span class="result-label">Product family</span><span class="result-value">' + escapeHtml(productFamily) + '</span></div>' : '') +
-      '<div class="result-row"><span class="result-label">Exact model</span><span class="result-value">' + escapeHtml(exactModel) + '</span></div>' +
+      '<div class="result-row' + (exactModel === 'Not provided' ? ' smart-result-row-muted' : '') + '"><span class="result-label">Exact model</span><span class="result-value">' + escapeHtml(exactModel) + '</span></div>' +
       (data && (data.series || data.recognizedSeries || data.seriesLine) ? '<div class="result-row"><span class="result-label">Series</span><span class="result-value">' + escapeHtml(data.series || data.recognizedSeries || data.seriesLine) + '</span></div>' : '') +
       (data && data.screenSize ? '<div class="result-row"><span class="result-label">Screen size</span><span class="result-value">' + escapeHtml(data.screenSize) + ' inches</span></div>' : '') +
       (data && data.productionRange ? '<div class="result-row"><span class="result-label">Known production/availability</span><span class="result-value">' + escapeHtml(formatRange(data.productionRange, data.yearRange)) + '</span></div>' : '') +
@@ -852,9 +903,10 @@
       (data && data.estimateBasis ? '<div class="result-row"><span class="result-label">Estimate basis</span><span class="result-value">' + escapeHtml(estimateBasisLabel(data.estimateBasis)) + '</span></div>' : '') +
       (data && data.identityConfidence ? '<div class="result-row"><span class="result-label">Model generation confidence</span><span class="result-value">' + escapeHtml(data.identityConfidence.charAt(0).toUpperCase() + data.identityConfidence.slice(1)) + '</span></div>' : '') +
       (data && data.timingConfidence ? '<div class="result-row"><span class="result-label">Individual unit timing confidence</span><span class="result-value">' + escapeHtml(data.timingConfidence.charAt(0).toUpperCase() + data.timingConfidence.slice(1)) + '</span></div>' : '') +
-      '<div class="result-row"><span class="result-label">Individual manufacture date</span><span class="result-value">' + escapeHtml(manufactureMessage) + '</span></div>' +
+      '<div class="result-row' + (context && context.isExactUnitDate ? '' : ' smart-result-row-muted') + '"><span class="result-label">Individual manufacture date</span><span class="result-value">' + escapeHtml(manufactureMessage) + '</span></div>' +
+      '</div>' +
       variantsHtml +
-      (data && data.notes ? '<div class="info-block notes"><h4>What this year means</h4><p>' + escapeHtml(data.notes) + '</p></div>' : '') +
+      notesHtml +
       caveatsHtml +
       alternativesHtml +
       refinementHtml +

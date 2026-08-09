@@ -851,4 +851,79 @@ test.describe('Smart Lookup controller', () => {
       message: 'Expected the /api/age-lookup mock to intercept Samsung Q60A 65 inch TV',
     }).toBe(1);
   });
+
+  test('brand identity stays aligned with valid, absent, unknown, and failed logos at narrow width', async ({ page }) => {
+    const runtimeErrors = [];
+    const consoleErrors = [];
+    page.on('pageerror', (error) => runtimeErrors.push(error.message));
+    page.on('console', (message) => {
+      if (message.type() === 'error') consoleErrors.push(message.text());
+    });
+
+    const fixtures = {
+      'LG logo test': {
+        brand: 'LG', displayName: 'LG C3 OLED TV', category: 'television', productFamily: 'C3 OLED TV',
+        brandLogoUrl: '/test-lg-logo.svg', yearContext: modelYearContext(2023), notes: 'Model-family result.',
+      },
+      'Acer long title test': {
+        brand: 'Acer', displayName: 'Acer Nitro High Performance Gaming Laptop Product Family With Extended Configuration Name',
+        category: 'computer', productFamily: 'Nitro High Performance Gaming Laptop Product Family With Extended Configuration Name',
+        yearContext: modelYearContext(2022),
+      },
+      'Unknown brand test': {
+        brand: 'Unknown', model: 'Mystery Model', category: 'electronics', yearContext: modelYearContext(2021),
+      },
+      'Failed logo test': {
+        brand: 'Example Brand', model: 'Example Model', category: 'appliance', brandLogoUrl: '/broken-brand-logo.png',
+        yearContext: modelYearContext(2020),
+      },
+    };
+
+    await page.unroute('**/api/age-lookup');
+    await page.route('**/api/age-lookup', async (route) => {
+      const query = route.request().postDataJSON()?.query;
+      await route.fulfill({ json: fixtures[query] });
+    });
+    await page.route('**/test-lg-logo.svg', async (route) => {
+      await route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><rect width="40" height="20" fill="#fff"/></svg>' });
+    });
+    await page.route('**/broken-brand-logo.png', async (route) => {
+      await route.fulfill({ contentType: 'image/png', body: 'not-an-image' });
+    });
+
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#include-replacement-comparisons').uncheck();
+    const panel = page.locator('#smart-lookup-age-panel');
+    const search = async (query) => {
+      await page.locator('#smart-lookup-input').fill(query);
+      await page.locator('#smartLookupBtn').click();
+      await expect(panel.locator('.smart-year-context-value')).toBeVisible();
+    };
+
+    await search('LG logo test');
+    await expect(panel.locator('.smart-result-brand-logo')).toBeVisible();
+    await expect(panel.locator('.smart-result-brand')).toContainText('LG');
+
+    await search('Acer long title test');
+    await expect(panel.locator('.smart-result-brand-logo')).toHaveCount(0);
+    await expect(panel.locator('.smart-result-identity h3')).toContainText('Extended Configuration Name');
+    await expect(panel).toContainText('Not provided');
+
+    await search('Unknown brand test');
+    await expect(panel.locator('.smart-result-brand-logo')).toHaveCount(0);
+    await expect(panel.locator('.smart-result-brand')).toContainText('Not identified');
+    await expect(panel).not.toContainText('undefined');
+    await expect(panel).not.toContainText('null');
+
+    await search('Failed logo test');
+    await expect(panel.locator('.smart-result-brand-logo')).toHaveCount(0);
+    await expect(panel.locator('.smart-result-brand')).toContainText('Example Brand');
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(panel.locator('.smart-year-context-value')).toBeVisible();
+    const hasHorizontalOverflow = await panel.evaluate((element) => element.scrollWidth > element.clientWidth);
+    expect(hasHorizontalOverflow).toBe(false);
+    expect(runtimeErrors).toEqual([]);
+    expect(consoleErrors).toEqual([]);
+  });
 });
