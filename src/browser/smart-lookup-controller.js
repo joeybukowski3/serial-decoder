@@ -710,7 +710,7 @@
       : 'Not identified';
     var variants = Array.isArray(data && data.yearVariants) ? data.yearVariants : [];
     var variantsHtml = variants.length
-      ? '<div class="smart-year-variants" style="margin-top:14px;padding:14px 16px;border:1px solid #dbeafe;border-radius:12px;background:#f8fbff"><h4>Model-year variants</h4><ul style="margin:8px 0 0;padding-left:20px">' + variants.map(function (item) {
+      ? '<div class="smart-year-variants"><h4>Model-year variants</h4><ul>' + variants.map(function (item) {
           return '<li><strong>' + escapeHtml(item.name) + ':</strong> ' + escapeHtml(item.year) + ' model-year family</li>';
         }).join('') + '</ul></div>'
       : '';
@@ -831,16 +831,19 @@
         }).join('') + '</ul></div>'
       : '';
     return '<div class="smart-age-result smart-year-context-result">' +
-      '<h3>' + escapeHtml(resultHeading(data)) + '</h3>' +
+      '<div class="smart-result-identity">' +
+        '<span class="smart-result-kicker">Smart Lookup result</span>' +
+        '<h3>' + escapeHtml(resultHeading(data)) + '</h3>' +
+        precisionBadgeHtml +
+        qualifierHtml +
+      '</div>' +
+      '<div class="smart-year-context-primary"><span class="smart-year-context-value">' + escapeHtml(primaryYear) + '</span><span class="smart-year-context-label">' + escapeHtml(yearLabel) + '</span></div>' +
       serialDetectedHtml +
       conflictNote +
-      bestAvailableHtml +
       canonicalNote +
-      precisionBadgeHtml +
       precisionNoteHtml +
       fallbackNote +
-      qualifierHtml +
-      '<div class="smart-year-context-primary" style="display:grid;gap:2px;margin:12px 0 8px;padding:18px;border:1px solid #bfdbfe;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#f8fafc)"><span class="smart-year-context-value" style="font:800 clamp(2.3rem,8vw,3.6rem)/1 JetBrains Mono,monospace;color:#1d4ed8">' + escapeHtml(primaryYear) + '</span><span class="smart-year-context-label" style="font-size:.9rem;font-weight:800;color:#334155">' + escapeHtml(yearLabel) + '</span></div>' +
+      '<div class="smart-result-specs" aria-label="Result details">' +
       '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + escapeHtml(data && data.brand && data.brand !== 'Unknown' ? data.brand : 'Not identified') + '</span></div>' +
       (data && data.evidenceConflict && data.recognizedBrand ? '<div class="result-row"><span class="result-label">Recognized model brand</span><span class="result-value">' + escapeHtml(data.recognizedBrand) + '</span></div>' : '') +
       (data && data.productFamily ? '<div class="result-row"><span class="result-label">Product family</span><span class="result-value">' + escapeHtml(productFamily) + '</span></div>' : '') +
@@ -853,7 +856,9 @@
       (data && data.identityConfidence ? '<div class="result-row"><span class="result-label">Model generation confidence</span><span class="result-value">' + escapeHtml(data.identityConfidence.charAt(0).toUpperCase() + data.identityConfidence.slice(1)) + '</span></div>' : '') +
       (data && data.timingConfidence ? '<div class="result-row"><span class="result-label">Individual unit timing confidence</span><span class="result-value">' + escapeHtml(data.timingConfidence.charAt(0).toUpperCase() + data.timingConfidence.slice(1)) + '</span></div>' : '') +
       '<div class="result-row"><span class="result-label">Individual manufacture date</span><span class="result-value">' + escapeHtml(manufactureMessage) + '</span></div>' +
+      '</div>' +
       variantsHtml +
+      bestAvailableHtml +
       (data && data.notes ? '<div class="info-block notes"><h4>What this year means</h4><p>' + escapeHtml(data.notes) + '</p></div>' : '') +
       caveatsHtml +
       alternativesHtml +
