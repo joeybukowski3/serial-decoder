@@ -270,10 +270,6 @@
       "destination": "/hp.html"
     },
     {
-      "source": "/asus",
-      "destination": "/asus.html"
-    },
-    {
       "source": "/google-pixel",
       "destination": "/google-pixel.html"
     },
