@@ -190,6 +190,39 @@
       box-shadow: 0 0 0 3px rgba(68, 229, 194, 0.1);
     }
 
+    /* The site-wide `input[type=text], select, textarea { color: #1a2d42;
+       background: #eef2f6 }` rule in shared.css is more specific than a
+       single-class `.lld-input` selector, so it wins the cascade and the
+       brand search text quietly inherits the light-theme dark-navy color.
+       That's invisible once :focus flips this input's background back to
+       dark navy. Pin every state on the two-class selector, which beats
+       shared.css's specificity outright regardless of source order. */
+    input.lld-input.lld-brand-input,
+    input.lld-input.lld-brand-input:hover {
+      background: #1e3352;
+      color: #e8edf8;
+    }
+
+    input.lld-input.lld-brand-input::placeholder {
+      color: #6b8ab8;
+      opacity: 1;
+    }
+
+    input.lld-input.lld-brand-input:focus {
+      background: #243d60;
+      color: #e8edf8;
+    }
+
+    input.lld-input.lld-brand-input:-webkit-autofill,
+    input.lld-input.lld-brand-input:-webkit-autofill:hover,
+    input.lld-input.lld-brand-input:-webkit-autofill:focus {
+      -webkit-text-fill-color: #e8edf8;
+      caret-color: #e8edf8;
+      -webkit-box-shadow: 0 0 0 1000px #1e3352 inset;
+      box-shadow: 0 0 0 1000px #1e3352 inset;
+      transition: background-color 9999s ease-in-out 0s;
+    }
+
     .sr-only {
       position: absolute;
       width: 1px;
@@ -225,8 +258,10 @@
       border: 1px solid rgba(68, 229, 194, 0.4);
       border-radius: 8px;
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
-      max-height: 260px;
+      max-height: min(360px, 60vh);
       overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
       font-family: 'Sora', sans-serif;
       font-size: 14px;
     }
@@ -768,8 +803,31 @@
             this.closeBrandListbox();
           }
         });
-        window.addEventListener('scroll', () => this.closeBrandListbox(), true);
+        // capture:true so this also sees scrolling inside ancestors like the
+        // table wrapper. handleWindowScroll is responsible for ignoring
+        // scroll events that originate from the listbox itself.
+        window.addEventListener('scroll', (e) => this.handleWindowScroll(e), true);
         window.addEventListener('resize', () => this.closeBrandListbox());
+      },
+
+      // A scroll event on the listbox reaches window during the capture
+      // phase even though `scroll` doesn't bubble, because capture-phase
+      // propagation happens regardless of an event's bubbling flag. Without
+      // this guard, every attempt to scroll the open list would immediately
+      // close it (the original report: "listbox cannot be scrolled").
+      handleWindowScroll(e) {
+        const listbox = this.getBrandListboxEl();
+        if (listbox && (e.target === listbox || listbox.contains(e.target))) {
+          return;
+        }
+        if (this.activeBrandRowId) {
+          const inputEl = document.getElementById(`brand-input-${this.activeBrandRowId}`);
+          if (inputEl) {
+            this.positionBrandListbox(inputEl);
+            return;
+          }
+        }
+        this.closeBrandListbox();
       },
 
       // ---- Canonical brand registry (same source as the main Serial Number Decoder) ----
