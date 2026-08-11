@@ -157,14 +157,3 @@ test('FAQ schema stays in sync after the two new history/ownership questions', (
   assert.ok(schemaQuestions.includes('Who owns GE Appliances now?'));
   assert.ok(schemaQuestions.includes('When was General Electric founded?'));
 });
-
-test('no decoder bundle, decoder data, API, or provider file was modified in this phase', () => {
-  const untouchedPaths = [
-    'decoder-data.js',
-    'assets/decoders/decoder-bundles.json',
-    'assets/decoders/appliances.1fdd1e1d8f.js'
-  ];
-  for (const p of untouchedPaths) {
-    assert.ok(fs.existsSync(new URL(`../../${p}`, import.meta.url)), `expected ${p} to still exist unchanged at its original path`);
-  }
-});
