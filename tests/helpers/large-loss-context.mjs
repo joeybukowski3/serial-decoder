@@ -27,10 +27,10 @@ function extractLldSource(html) {
   return `globalThis.LLD = ${objectLiteral};`;
 }
 
-function createMockElement(tag) {
+function createMockElement(tag, idRegistry) {
   const el = {
     tagName: String(tag || 'div').toUpperCase(),
-    id: '',
+    _id: '',
     className: '',
     _html: '',
     _value: '',
@@ -60,6 +60,12 @@ function createMockElement(tag) {
     closest() { return null; },
     focus() {},
     scrollIntoView() {},
+    // Shallow containment check over the mock's own appendChild children --
+    // sufficient for tests that only need "is X a descendant of this node".
+    contains(node) {
+      if (node === this) return true;
+      return this.children.some((child) => child === node || (child.contains && child.contains(node)));
+    },
     getBoundingClientRect() { return { left: 0, top: 0, bottom: 0, right: 0, width: 0, height: 0 }; },
   };
   Object.defineProperty(el, 'innerHTML', {
@@ -74,10 +80,22 @@ function createMockElement(tag) {
     get() { return this._hidden; },
     set(v) { this._hidden = v; },
   });
+  // A real DOM's document.getElementById finds whatever element currently
+  // owns that id. Registering on assignment (as production code does right
+  // after createElement) keeps getElementById returning the SAME node
+  // instead of a fresh throwaway mock every call.
+  Object.defineProperty(el, 'id', {
+    get() { return this._id; },
+    set(v) {
+      this._id = v;
+      if (idRegistry && v) idRegistry.set(v, el);
+    },
+  });
   return el;
 }
 
 export function loadLargeLossContext() {
+  const idRegistry = new Map();
   const ctx = {
     console,
     setTimeout: (fn) => { fn(); return 0; },
@@ -101,8 +119,8 @@ export function loadLargeLossContext() {
       removeEventListener: () => {},
       querySelector: () => null,
       querySelectorAll: () => [],
-      getElementById: () => createMockElement('div'),
-      createElement: (tag) => createMockElement(tag),
+      getElementById: (id) => idRegistry.get(id) || null,
+      createElement: (tag) => createMockElement(tag, idRegistry),
     },
     navigator: { clipboard: { writeText: async () => {} } },
   };
@@ -113,10 +131,20 @@ export function loadLargeLossContext() {
   vm.runInContext('globalThis.__decoderData = decoderData;', ctx);
   vm.runInContext(fs.readFileSync('script.js', 'utf8'), ctx);
 
+  // Stand-in for the real <tbody id="tableBody"> that renderRow() appends
+  // rows into.
+  const tableBody = createMockElement('tbody', idRegistry);
+  tableBody.id = 'tableBody';
+
   const html = fs.readFileSync('large-loss-decoder.html', 'utf8');
   vm.runInContext(extractLldSource(html), ctx);
 
-  return { LLD: ctx.LLD, ctx };
+  // Mirrors the one-time DOM setup init() does in the browser (creating the
+  // shared floating listbox) without running the rest of init()'s
+  // DOMContentLoaded-only side effects (addRow x5, global listeners).
+  ctx.LLD.ensureBrandListbox();
+
+  return { LLD: ctx.LLD, ctx, idRegistry };
 }
 
 export { extractLldSource };
