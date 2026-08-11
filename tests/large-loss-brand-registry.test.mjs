@@ -160,6 +160,73 @@ test('an unselected brand yields a clear error instead of a silent/broken decode
   assert.equal(result.error, 'Please select a brand');
 });
 
+test('Large Loss rejects unsupported, invalid, and unknown decoder outcomes as row errors', () => {
+  const { LLD } = loadLargeLossContext();
+
+  const unsupported = LLD.buildDecodeResult({
+    category: 'hvac',
+    brand: 'carrier',
+    brandLabel: 'Carrier',
+    era: '',
+    serial: 'AB1234567',
+    model: '',
+  });
+  assert.ok(unsupported.error, 'unsupported serial must not succeed');
+  assert.match(String(unsupported.error), /No result from decoder|Decoding failed|Sanity check/i);
+
+  const impossibleFuture = LLD.buildDecodeResult({
+    category: 'hvac',
+    brand: 'carrier',
+    brandLabel: 'Carrier',
+    era: '',
+    // Week 12 / year code 34 → 2034; rejected by Carrier and/or sanitizer.
+    serial: '1234567890',
+    model: '',
+  });
+  assert.ok(impossibleFuture.error, 'impossible future year must be a row error');
+
+  const unknownMonth = LLD.buildDecodeResult({
+    category: 'waterHeaters',
+    brand: 'richmond',
+    brandLabel: 'Richmond',
+    era: '',
+    // Force a classified incomplete outcome by stubbing decode after brand resolve
+    // is not practical; instead use a known incomplete classifier payload path
+    // through a serial that fails format rather than inventing success ages.
+    serial: 'ZZZZZZZZ',
+    model: '',
+  });
+  assert.ok(unknownMonth.error, 'unknown/unsupported Richmond serial must be a row error');
+});
+
+test('Large Loss still surfaces complete successes and multi-year ambiguous ages', () => {
+  const { LLD } = loadLargeLossContext();
+
+  const complete = LLD.buildDecodeResult({
+    category: 'hvac',
+    brand: 'carrier',
+    brandLabel: 'Carrier',
+    era: '',
+    serial: '1419XXXXX',
+    model: '',
+  });
+  assert.equal(complete.error, undefined);
+  assert.equal(complete.year, '2019');
+  assert.equal(complete.month, 'Week 14');
+  assert.equal(complete.classification, 'complete_success');
+
+  const ambiguous = LLD.buildDecodeResult({
+    category: 'appliances',
+    brand: 'ge',
+    brandLabel: 'GE',
+    era: '',
+    serial: 'GM028928Q',
+    model: '',
+  });
+  assert.equal(ambiguous.error, undefined, 'ambiguous multi-year ages remain displayable');
+  assert.match(String(ambiguous.year), /\//);
+});
+
 test('keyboard navigation (ArrowDown then Enter) selects a brand and stores its canonical id', () => {
   const { LLD } = loadLargeLossContext();
   LLD.addRow();
@@ -352,17 +419,34 @@ test('selecting a valid Kenmore prefix routes to the expected underlying OEM dec
   assert.equal(result.brandDisplay, 'Kenmore (OEM: Whirlpool)');
 });
 
-test('a different Kenmore prefix on the same serial routes to a different OEM decoder', () => {
+test('a different Kenmore prefix routes to a different OEM decoder', () => {
   const { LLD } = loadLargeLossContext();
   LLD.addRow();
   const row = LLD.rows[0];
   LLD.selectBrand(row.id, 'kenmore', 'Kenmore');
-  row.serial = '5K0752357';
+  // LG-format serial (year digit + MM month). Whirlpool-format serials used with
+  // the LG prefix classify as incomplete/unknown and are correctly rejected by
+  // the shared sanitizer rather than shown as successful ages.
+  row.serial = '401KR12345';
   row.kenmorePrefix = '795'; // LG-built Kenmore
 
   const result = LLD.buildDecodeResult(row);
   assert.equal(result.error, undefined);
   assert.equal(result.brandDisplay, 'Kenmore (OEM: LG)');
+  assert.match(String(result.year), /2004|2014|2024/);
+});
+
+test('Kenmore LG-prefix with a non-LG serial is a row error, not a fake age', () => {
+  const { LLD } = loadLargeLossContext();
+  LLD.addRow();
+  const row = LLD.rows[0];
+  LLD.selectBrand(row.id, 'kenmore', 'Kenmore');
+  row.serial = '5K0752357'; // Whirlpool-format serial
+  row.kenmorePrefix = '795'; // LG-built Kenmore
+
+  const result = LLD.buildDecodeResult(row);
+  assert.ok(result.error, 'unknown/incomplete LG decode must surface as a row error');
+  assert.match(String(result.error), /incomplete|unknown|No result|Sanity|Decoding failed/i);
 });
 
 test('Kenmore prefix state is independent per row', () => {

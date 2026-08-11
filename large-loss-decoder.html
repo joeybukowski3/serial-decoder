@@ -970,9 +970,43 @@
           if (typeof collapseImpossibleFutureYears === 'function') {
             rawResult = collapseImpossibleFutureYears(rawResult);
           }
-          if (!rawResult || rawResult.error) {
-            return { error: (rawResult && rawResult.error) || 'Decoding failed' };
+
+          // Reuse the main decoder's sanitization/classification so Large Loss
+          // never presents invalid, unsupported, unknown, or impossible-future
+          // payloads as successful ages.
+          let classification = null;
+          if (typeof classifyDecodeResult === 'function') {
+            classification = classifyDecodeResult(rawResult, decoder);
+          } else if (typeof sanitizeDecodeResult === 'function') {
+            const sanitized = sanitizeDecodeResult(rawResult);
+            classification = sanitized && sanitized.valid
+              ? { status: 'complete_success', complete: true }
+              : { status: 'invalid', complete: false, reason: (sanitized && sanitized.reason) || 'Sanity check failed' };
+          } else {
+            classification = rawResult
+              ? { status: 'complete_success', complete: true }
+              : { status: 'unsupported', complete: false, reason: 'No result from decoder' };
           }
+
+          const isRejected =
+            !rawResult ||
+            !!rawResult.error ||
+            classification.status === 'unsupported' ||
+            classification.status === 'invalid' ||
+            classification.status === 'decoder_error' ||
+            // Incomplete dates (unknown codes, non-date sentinels) are row
+            // errors. Ambiguous multi-year candidates remain displayable ages,
+            // matching the main decoder's multi-cycle UX.
+            (classification.status === 'incomplete' && !classification.ambiguousYears);
+
+          if (isRejected) {
+            return {
+              error: (rawResult && rawResult.error) ||
+                classification.reason ||
+                'Decoding failed'
+            };
+          }
+
           const brandDisplay = kenmoreResolution && typeof getResultBrandDisplayName === 'function'
             ? getResultBrandDisplayName(rowData.brand, decoder.name, kenmoreResolution)
             : (rowData.brandLabel || rowData.brand);
@@ -983,7 +1017,8 @@
             month: rawResult.month,
             decodingMethod: rawResult.method || decoder.serialLengthNote || 'Serial Format',
             confidence: 0.95,
-            brandDisplay
+            brandDisplay,
+            classification: classification.status
           };
         } catch (err) {
           return { error: err && err.message ? err.message : 'Decoding failed' };
@@ -1359,7 +1394,11 @@
           try {
             const result = await this.decodeSerial(row);
             row.result = result;
-            this.updateRowStatus(row.id, 'success');
+            if (result && result.error) {
+              this.updateRowStatus(row.id, 'error');
+            } else {
+              this.updateRowStatus(row.id, 'success');
+            }
             this.displayResult(row);
           } catch (err) {
             row.result = { error: err.message || 'Decoding failed' };

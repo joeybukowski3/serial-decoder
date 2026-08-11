@@ -47,3 +47,51 @@ test('legacy redirect definitions remain in place with canonical destinations', 
       `Missing redirect from ${source} to ${destination}`);
   }
 });
+
+test('/asus permanent redirect takes precedence without a competing rewrite', () => {
+  const asusRedirects = vercel.redirects.filter((rule) => rule.source === '/asus');
+  assert.deepEqual(asusRedirects, [{
+    source: '/asus',
+    destination: '/asus-serial-number-decoder',
+    permanent: true
+  }]);
+  assert.equal(
+    vercel.rewrites.some((rule) => rule.source === '/asus'),
+    false,
+    'obsolete /asus → asus.html rewrite must be removed'
+  );
+  assert.ok(
+    vercel.rewrites.some((rule) =>
+      rule.source === '/asus-serial-number-decoder' &&
+      rule.destination === '/asus-serial-number-decoder.html'
+    ),
+    'canonical ASUS decoder rewrite must remain'
+  );
+});
+
+test('static brand/support pages do not reference missing DecodeMyItem social assets', () => {
+  const pages = [
+    'about.html',
+    'brands.html',
+    'disclaimer.html',
+    'find-model-serial-number.html',
+    'privacy-policy.html'
+  ];
+  const missingNames = [
+    'decode-my-item-banner.png',
+    'decode-my-item-logo.png'
+  ];
+  for (const file of pages) {
+    const html = fs.readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
+    for (const missing of missingNames) {
+      assert.equal(html.includes(missing), false, `${file} still references missing ${missing}`);
+    }
+    assert.match(html, /assets\/decodemyitem-logo\.png/);
+    assert.doesNotMatch(
+      html,
+      /assets\/item-assist-(?:banner|logo)\.png/,
+      `${file} must not substitute Item Assist branding for DecodeMyItem social/logo images`
+    );
+  }
+  assert.equal(fs.existsSync(new URL('../../assets/decodemyitem-logo.png', import.meta.url)), true);
+});

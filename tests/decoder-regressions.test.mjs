@@ -1119,6 +1119,18 @@ test('Carrier year code 27 returns 2027 not 1927', () => {
   assert.equal(out.year, '2027');
 });
 
+test('Carrier WWYY success displays production week instead of discarding it', () => {
+  const carrier = api.decoderData.hvac.decoders.carrier;
+  const out = carrier.decode('1419XXXXX');
+  assert.ok(out);
+  assert.equal(out.year, '2019');
+  assert.equal(out.month, 'Week 14');
+  assert.equal(out.weekDigits, '14');
+  // Year-selection rules stay unchanged: invalid weeks still reject.
+  assert.equal(carrier.decode('0019XXXXX'), null);
+  assert.equal(carrier.decode('5419XXXXX'), null);
+});
+
 test('Bryant year code 27 in WWYY position returns 2027', () => {
   const bryant = api.decoderData.hvac.decoders.bryant;
   const out = bryant.decode('0127XXXXX');
