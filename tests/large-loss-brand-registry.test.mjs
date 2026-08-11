@@ -200,20 +200,37 @@ test('Escape closes the listbox without changing the row brand', () => {
   assert.equal(row.brand, 'alliance', 'Escape must not clear an already-committed selection');
 });
 
-test('the brand input has a specificity-safe color rule for every state (idle, hover, focus, autofill)', () => {
+test('every Large Loss text input has a specificity-safe color rule for every state (idle, hover, focus, autofill)', () => {
   // shared.css ships a site-wide `input[type=text], select, textarea { color:
   // #1a2d42 }` rule whose specificity (0,1,1) beats a single-class
   // `.lld-input` selector (0,1,0). The visible symptom: once :focus flips the
   // background back to dark navy, the still-dark-navy text becomes
-  // unreadable. The fix must out-specify shared.css on the two-class
-  // selector `input.lld-input.lld-brand-input` (0,2,0), not just add another
-  // single-class rule that would tie (and lose on source order fragility).
+  // unreadable. This affects EVERY .lld-input text field (brand search,
+  // serial, model), not just brand, so the fix is centralized on
+  // `input.lld-input[type="text"]` (0,2,1), which out-specifies shared.css
+  // regardless of source order and covers all three fields with one rule.
   const styleBlock = HTML_SOURCE.slice(HTML_SOURCE.indexOf('<style>'), HTML_SOURCE.indexOf('</style>'));
 
-  assert.match(styleBlock, /input\.lld-input\.lld-brand-input\s*(,|\{)/, 'expected a two-class selector strong enough to beat shared.css');
-  assert.match(styleBlock, /input\.lld-input\.lld-brand-input:focus\s*\{[^}]*color\s*:/s, 'focused brand input must explicitly set color');
-  assert.match(styleBlock, /input\.lld-input\.lld-brand-input::placeholder\s*\{[^}]*color\s*:/s, 'placeholder must be styled separately from typed/selected text');
-  assert.match(styleBlock, /input\.lld-input\.lld-brand-input:-webkit-autofill/, 'autofill state must be handled so Chrome cannot silently darken the text');
+  const selector = /input\.lld-input\[type="text"\]/;
+  assert.match(styleBlock, selector, 'expected a centralized, specificity-safe selector strong enough to beat shared.css');
+  assert.match(styleBlock, /input\.lld-input\[type="text"\]:focus\s*\{[^}]*color\s*:/s, 'focused text inputs must explicitly set color');
+  assert.match(styleBlock, /input\.lld-input\[type="text"\]::placeholder\s*\{[^}]*color\s*:/s, 'placeholder must be styled separately from typed/selected text');
+  assert.match(styleBlock, /input\.lld-input\[type="text"\]:-webkit-autofill/, 'autofill state must be handled so Chrome cannot silently darken the text');
+
+  // The centralized rule must actually apply to all three fields, not just
+  // brand: confirm the markup gives serial/model/brand the classes+type the
+  // CSS selector targets.
+  assert.match(HTML_SOURCE, /id="serial-\$\{rowData\.id\}"/, 'serial input markup not found');
+  assert.match(HTML_SOURCE, /id="model-\$\{rowData\.id\}"/, 'model input markup not found');
+  for (const idPrefix of ['serial-', 'model-', 'brand-input-']) {
+    const idx = HTML_SOURCE.indexOf(`id="${idPrefix}\${rowData.id}"`);
+    assert.ok(idx > -1, `${idPrefix} input markup not found`);
+    const tagStart = HTML_SOURCE.lastIndexOf('<input', idx);
+    const tagEnd = HTML_SOURCE.indexOf('>', idx);
+    const tag = HTML_SOURCE.slice(tagStart, tagEnd);
+    assert.match(tag, /type="text"/, `${idPrefix} input must be type="text" for the centralized selector to apply`);
+    assert.match(tag, /class="[^"]*\blld-input\b/, `${idPrefix} input must carry the lld-input class`);
+  }
 });
 
 test('the floating brand listbox has a bounded height with vertical scroll enabled', () => {
@@ -263,4 +280,132 @@ test('scrolling the page (not the listbox) repositions rather than silently brea
   LLD.handleWindowScroll({ target: pageScrollTarget });
 
   assert.equal(listbox.hidden, false, 'a page scroll while a row is active should reposition, not close, the listbox');
+});
+
+// ---- Kenmore manufacturer-prefix routing ----
+// large-loss-decoder.html must NOT declare its own prefix table -- everything
+// below is reused from script.js's canonical KENMORE_PREFIX_TO_DECODER /
+// getKenmorePrefixDropdownOptions / resolveKenmoreDecoderFromPrefix, the same
+// source the main Serial Number Decoder uses.
+
+test('large-loss-decoder.html does not declare a second Kenmore prefix table', () => {
+  assert.equal(/KENMORE_PREFIX_TO_DECODER\s*=\s*\{/.test(HTML_SOURCE), false, 'Large Loss must reuse script.js\'s table, not declare its own');
+});
+
+test('Kenmore prefix options come from the canonical getKenmorePrefixDropdownOptions() source', () => {
+  const { LLD, ctx } = loadLargeLossContext();
+  const lldOptions = LLD.getKenmorePrefixOptions();
+  const canonicalOptions = ctx.getKenmorePrefixDropdownOptions();
+  assert.deepEqual(lldOptions, canonicalOptions);
+  assert.ok(lldOptions.length > 5, 'expected the real multi-manufacturer prefix table, not a stub');
+  assert.ok(lldOptions.some(o => o.value === '110' && /Whirlpool/.test(o.label)));
+});
+
+test('selecting Kenmore reveals per-row prefix requirement; other brands do not need one', () => {
+  const { LLD } = loadLargeLossContext();
+  LLD.addRow();
+  const row = LLD.rows[0];
+
+  assert.equal(LLD.isKenmoreBrand('kenmore'), true);
+  assert.equal(LLD.isKenmoreBrand('ge'), false);
+
+  LLD.selectBrand(row.id, 'kenmore', 'Kenmore');
+  assert.equal(row.brand, 'kenmore');
+  assert.equal(row.kenmorePrefix, '', 'prefix starts unset until the user picks one');
+});
+
+test('decoding Kenmore without a prefix fails with a clear validation message instead of an ambiguous/broken result', () => {
+  const { LLD } = loadLargeLossContext();
+  LLD.addRow();
+  const row = LLD.rows[0];
+  LLD.selectBrand(row.id, 'kenmore', 'Kenmore');
+  row.serial = '5K0752357';
+
+  const result = LLD.buildDecodeResult(row);
+  assert.match(result.error, /manufacturer prefix/i);
+  assert.match(result.error, /Kenmore/i);
+});
+
+test('decoding Kenmore with an unrecognized prefix value is also rejected (no silent default)', () => {
+  const { LLD } = loadLargeLossContext();
+  LLD.addRow();
+  const row = LLD.rows[0];
+  LLD.selectBrand(row.id, 'kenmore', 'Kenmore');
+  row.serial = '5K0752357';
+  row.kenmorePrefix = '999'; // not a real entry in KENMORE_PREFIX_TO_DECODER
+
+  const result = LLD.buildDecodeResult(row);
+  assert.match(result.error, /manufacturer prefix/i);
+});
+
+test('selecting a valid Kenmore prefix routes to the expected underlying OEM decoder (regression: serial 5K0752357)', () => {
+  const { LLD } = loadLargeLossContext();
+  LLD.addRow();
+  const row = LLD.rows[0];
+  LLD.selectBrand(row.id, 'kenmore', 'Kenmore');
+  row.serial = '5K0752357';
+  row.kenmorePrefix = '110'; // Whirlpool-built Kenmore
+
+  const result = LLD.buildDecodeResult(row);
+  assert.equal(result.error, undefined);
+  assert.equal(result.year, '2000');
+  assert.equal(result.brandDisplay, 'Kenmore (OEM: Whirlpool)');
+});
+
+test('a different Kenmore prefix on the same serial routes to a different OEM decoder', () => {
+  const { LLD } = loadLargeLossContext();
+  LLD.addRow();
+  const row = LLD.rows[0];
+  LLD.selectBrand(row.id, 'kenmore', 'Kenmore');
+  row.serial = '5K0752357';
+  row.kenmorePrefix = '795'; // LG-built Kenmore
+
+  const result = LLD.buildDecodeResult(row);
+  assert.equal(result.error, undefined);
+  assert.equal(result.brandDisplay, 'Kenmore (OEM: LG)');
+});
+
+test('Kenmore prefix state is independent per row', () => {
+  const { LLD } = loadLargeLossContext();
+  LLD.addRow();
+  LLD.addRow();
+  const [rowA, rowB] = LLD.rows;
+
+  LLD.selectBrand(rowA.id, 'kenmore', 'Kenmore');
+  rowA.kenmorePrefix = '110';
+  LLD.selectBrand(rowB.id, 'kenmore', 'Kenmore');
+  rowB.kenmorePrefix = '795';
+
+  assert.equal(rowA.kenmorePrefix, '110');
+  assert.equal(rowB.kenmorePrefix, '795', 'row B must not have been affected by row A\'s prefix');
+});
+
+test('changing a Kenmore row to a different brand clears its stale prefix', () => {
+  const { LLD } = loadLargeLossContext();
+  LLD.addRow();
+  const row = LLD.rows[0];
+  LLD.selectBrand(row.id, 'kenmore', 'Kenmore');
+  row.kenmorePrefix = '110';
+
+  LLD.selectBrand(row.id, 'ge', 'GE');
+  assert.equal(row.brand, 'ge');
+  assert.equal(row.kenmorePrefix, '', 'prefix must not linger once the brand is no longer Kenmore');
+});
+
+test('newly added rows behave identically for Kenmore prefix handling', () => {
+  const { LLD } = loadLargeLossContext();
+  LLD.addRow();
+  LLD.addRow();
+  const [firstRow, secondRow] = LLD.rows;
+
+  LLD.selectBrand(firstRow.id, 'kenmore', 'Kenmore');
+  LLD.selectBrand(secondRow.id, 'kenmore', 'Kenmore');
+  firstRow.serial = '5K0752357';
+  secondRow.serial = '5K0752357';
+  firstRow.kenmorePrefix = '110';
+  secondRow.kenmorePrefix = '110';
+
+  const resultA = LLD.buildDecodeResult(firstRow);
+  const resultB = LLD.buildDecodeResult(secondRow);
+  assert.deepEqual(resultA, resultB);
 });
