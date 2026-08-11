@@ -147,7 +147,9 @@ test('Samsung electronics labels are not narrower than what their decoders cover
 });
 
 test('dropdown option counts hold steady per category', () => {
-  assert.equal(dropdownIds('appliances').length, 52);
+  // Appliances went from 52 to 53 when Alliance was added as its own
+  // canonical brand (previously only Speed Queen existed as a decoder).
+  assert.equal(dropdownIds('appliances').length, 53);
   assert.equal(dropdownIds('hvac').length, 11);
   assert.equal(dropdownIds('waterHeaters').length, 18);
   assert.equal(dropdownIds('electronics').length, 10);
