@@ -1147,11 +1147,115 @@ test('Trane year code 27 returns 2027 not 1927', () => {
   assert.equal(out.year, '2027');
 });
 
-test('Lennox year code 27 returns 2027', () => {
+test('Lennox modern PPYYM decodes plant/year/month and never returns a week', () => {
   const lennox = api.decoderData.hvac.decoders.lennox;
-  const out = lennox.decode('0127XXXXX');
-  assert.ok(out);
-  assert.equal(out.year, '2027');
+
+  const aug2012 = lennox.decode('1912H09467');
+  assert.ok(aug2012);
+  assert.equal(aug2012.year, '2012');
+  assert.equal(aug2012.month, 'August');
+  assert.equal(aug2012.plantCode, '19');
+  assert.equal(aug2012.decodeStyle, 'Lennox modern PPYYM');
+  assert.equal(String(aug2012.month).toLowerCase().includes('week'), false);
+
+  const spaced = lennox.decode('1912H 09467');
+  assert.ok(spaced);
+  assert.equal(spaced.year, '2012');
+  assert.equal(spaced.month, 'August');
+
+  const jan1996 = lennox.decode('5896A36571');
+  assert.ok(jan1996);
+  assert.equal(jan1996.year, '1996');
+  assert.equal(jan1996.month, 'January');
+  assert.equal(jan1996.plantCode, '58');
+
+  const may2023 = lennox.decode('1923E15670');
+  assert.ok(may2023);
+  assert.equal(may2023.year, '2023');
+  assert.equal(may2023.month, 'May');
+
+  const feb2006 = lennox.decode('1606B13871');
+  assert.ok(feb2006);
+  assert.equal(feb2006.year, '2006');
+  assert.equal(feb2006.month, 'February');
+});
+
+test('Lennox rejects WWYY-shaped numerics, invalid month I, and short inputs', () => {
+  const lennox = api.decoderData.hvac.decoders.lennox;
+  assert.equal(lennox.decode('4519XXXX'), null);
+  assert.equal(lennox.decode('0127XXXXX'), null);
+  assert.equal(lennox.decode('1912I09467'), null);
+  assert.equal(lennox.decode('1912'), null);
+  assert.equal(lennox.decode('72'), null);
+});
+
+test('York modern L-D-L-D decodes year from positions 2+4 and month from position 3', () => {
+  const york = api.decoderData.hvac.decoders.york;
+
+  const nov2017 = york.decode('W1M7317723');
+  assert.ok(nov2017);
+  assert.equal(nov2017.year, '2017');
+  assert.equal(nov2017.month, 'November');
+  assert.equal(nov2017.yearCode, '17');
+  assert.equal(nov2017.decodeStyle, 'York modern L-D-L-D');
+  assert.equal(String(nov2017.month).toLowerCase().includes('week'), false);
+
+  const jan2009 = york.decode('W0A9123456');
+  assert.ok(jan2009);
+  assert.equal(jan2009.year, '2009');
+  assert.equal(jan2009.month, 'January');
+
+  const oct2004 = york.decode('N0L4123456');
+  assert.ok(oct2004);
+  assert.equal(oct2004.year, '2004');
+  assert.equal(oct2004.month, 'October');
+
+  const sep2005 = york.decode('W0K5896070');
+  assert.ok(sep2005);
+  assert.equal(sep2005.year, '2005');
+  assert.equal(sep2005.month, 'September');
+});
+
+test('York modern rejects excluded month letters I/J and pre-2004 modern years', () => {
+  const york = api.decoderData.hvac.decoders.york;
+  assert.equal(york.decode('W1J7317723'), null);
+  assert.equal(york.decode('W1I7317723'), null);
+  assert.equal(york.decode('W0A3123456'), null);
+});
+
+test('York legacy four-letter serials return all supported candidate years', () => {
+  const york = api.decoderData.hvac.decoders.york;
+
+  const amb = york.decode('EFBM210830');
+  assert.ok(amb);
+  assert.equal(amb.year, '1972/1993');
+  assert.equal(amb.month, 'June');
+  assert.equal(amb.decodeStyle, 'York legacy letter year (ambiguous)');
+  assert.deepEqual(Array.from(api.parseCandidateYears(amb.year)), [1972, 1993]);
+
+  const prefixed = york.decode('(S)EGGM255175');
+  assert.ok(prefixed);
+  assert.equal(prefixed.year, '1977/1998');
+  assert.equal(prefixed.month, 'July');
+  assert.deepEqual(Array.from(api.parseCandidateYears(prefixed.year)), [1977, 1998]);
+
+  const style2 = york.decode('WAKM011379');
+  assert.ok(style2);
+  assert.equal(style2.year, '1980/2001');
+  assert.equal(style2.month, 'January');
+
+  const single = york.decode('WAPR123456');
+  assert.ok(single);
+  assert.equal(single.year, '1984');
+  assert.equal(single.month, 'January');
+  assert.equal(single.decodeStyle, 'York legacy letter year');
+});
+
+test('York rejects Carrier-style numeric WWYY inputs', () => {
+  const york = api.decoderData.hvac.decoders.york;
+  assert.equal(york.decode('4519XXXX'), null);
+  assert.equal(york.decode('0127XXXXX'), null);
+  assert.equal(york.decode('1419XXXX'), null);
 });
 
 test('Goodman 2019 August still decodes correctly after threshold fix', () => {
