@@ -191,31 +191,34 @@
     }
 
     /* The site-wide `input[type=text], select, textarea { color: #1a2d42;
-       background: #eef2f6 }` rule in shared.css is more specific than a
-       single-class `.lld-input` selector, so it wins the cascade and the
-       brand search text quietly inherits the light-theme dark-navy color.
-       That's invisible once :focus flips this input's background back to
-       dark navy. Pin every state on the two-class selector, which beats
-       shared.css's specificity outright regardless of source order. */
-    input.lld-input.lld-brand-input,
-    input.lld-input.lld-brand-input:hover {
+       background: #eef2f6 }` rule in shared.css is more specific (0,1,1)
+       than a single-class `.lld-input` selector (0,1,0), so it silently
+       wins the cascade for EVERY Large Loss text field -- brand search,
+       serial number, and model number alike -- not just brand. That's
+       invisible once :focus flips a field's background back to dark navy
+       while the still-shared.css-dark-navy text goes unchanged.
+       `input.lld-input[type="text"]` (0,2,1) beats shared.css outright
+       regardless of source order, so pin every state here once instead of
+       repeating this fix per field. */
+    input.lld-input[type="text"],
+    input.lld-input[type="text"]:hover {
       background: #1e3352;
       color: #e8edf8;
     }
 
-    input.lld-input.lld-brand-input::placeholder {
+    input.lld-input[type="text"]::placeholder {
       color: #6b8ab8;
       opacity: 1;
     }
 
-    input.lld-input.lld-brand-input:focus {
+    input.lld-input[type="text"]:focus {
       background: #243d60;
       color: #e8edf8;
     }
 
-    input.lld-input.lld-brand-input:-webkit-autofill,
-    input.lld-input.lld-brand-input:-webkit-autofill:hover,
-    input.lld-input.lld-brand-input:-webkit-autofill:focus {
+    input.lld-input[type="text"]:-webkit-autofill,
+    input.lld-input[type="text"]:-webkit-autofill:hover,
+    input.lld-input[type="text"]:-webkit-autofill:focus {
       -webkit-text-fill-color: #e8edf8;
       caret-color: #e8edf8;
       -webkit-box-shadow: 0 0 0 1000px #1e3352 inset;
@@ -239,12 +242,16 @@
       position: relative;
     }
 
-    .lld-era-select {
+    /* Shared by the era-select (era-split brands like Maytag) and the
+       Kenmore manufacturer-prefix select: a compact secondary control that
+       only appears under the brand search box when the selected brand
+       needs it. */
+    .lld-inline-select {
       margin-top: 6px;
       display: none;
     }
 
-    .lld-era-select.visible {
+    .lld-inline-select.visible {
       display: block;
     }
 
@@ -859,6 +866,30 @@
         return !!(mapping && mapping.type === 'split');
       },
 
+      isKenmoreBrand(brandId) {
+        const normalized = typeof normalizeBrandId === 'function' ? normalizeBrandId(brandId) : brandId;
+        return normalized === 'kenmore';
+      },
+
+      // Reuses the main decoder's canonical KENMORE_PREFIX_TO_DECODER table
+      // via getKenmorePrefixDropdownOptions() -- no second prefix map here.
+      getKenmorePrefixOptions() {
+        if (!this._kenmorePrefixOptionsCache) {
+          this._kenmorePrefixOptionsCache = typeof getKenmorePrefixDropdownOptions === 'function'
+            ? getKenmorePrefixDropdownOptions()
+            : [];
+        }
+        return this._kenmorePrefixOptionsCache;
+      },
+
+      buildKenmorePrefixOptionsHtml(selectedPrefix) {
+        const options = this.getKenmorePrefixOptions();
+        const optionsHtml = options.map(opt =>
+          `<option value="${this.escapeHtml(opt.value)}" ${opt.value === selectedPrefix ? 'selected' : ''}>${this.escapeHtml(opt.label)}</option>`
+        ).join('');
+        return `<option value="">Select Kenmore prefix…</option>${optionsHtml}`;
+      },
+
       // Mirrors the main decoder's resolveDecoderId() routing (brand id -> decoder
       // id via CYCLING_BRANDS / the normalized brand catalog), but takes category
       // and era explicitly instead of reading the main page's single global
@@ -901,10 +932,31 @@
           if (!categoryData) {
             return { error: 'Category decoder data not loaded' };
           }
-          const decoderId = this.resolveDecoderId(categoryKey, rowData.brand, rowData.era);
+          let decoderId = this.resolveDecoderId(categoryKey, rowData.brand, rowData.era);
           if (decoderId === null) {
             return { error: 'Please select the manufacture era for this brand' };
           }
+
+          let kenmoreResolution = null;
+          if (this.isKenmoreBrand(rowData.brand)) {
+            // Kenmore products are OEM-manufactured; the serial format (and
+            // therefore the decoder) depends entirely on which manufacturer
+            // built that specific model. Without a prefix the routing is
+            // ambiguous, so -- unlike the main decoder's silent Whirlpool
+            // default -- Large Loss requires an explicit prefix before
+            // attempting a batch decode.
+            if (!rowData.kenmorePrefix) {
+              return { error: 'Kenmore requires the manufacturer prefix. Select the Kenmore Prefix for this row before decoding.' };
+            }
+            kenmoreResolution = typeof resolveKenmoreDecoderFromPrefix === 'function'
+              ? resolveKenmoreDecoderFromPrefix(rowData.kenmorePrefix)
+              : null;
+            if (!kenmoreResolution || kenmoreResolution.usedDefault) {
+              return { error: 'Kenmore requires a recognized manufacturer prefix. Select a valid Kenmore Prefix for this row before decoding.' };
+            }
+            decoderId = kenmoreResolution.decoderId;
+          }
+
           const decoder = decoderId ? categoryData.decoders[decoderId] : null;
           if (!decoder) {
             return { error: 'Brand decoder not found' };
@@ -921,13 +973,17 @@
           if (!rawResult || rawResult.error) {
             return { error: (rawResult && rawResult.error) || 'Decoding failed' };
           }
+          const brandDisplay = kenmoreResolution && typeof getResultBrandDisplayName === 'function'
+            ? getResultBrandDisplayName(rowData.brand, decoder.name, kenmoreResolution)
+            : (rowData.brandLabel || rowData.brand);
           return {
             ...rawResult,
             estimatedYear: rawResult.year,
             yearCode: rawResult.year,
             month: rawResult.month,
             decodingMethod: rawResult.method || decoder.serialLengthNote || 'Serial Format',
-            confidence: 0.95
+            confidence: 0.95,
+            brandDisplay
           };
         } catch (err) {
           return { error: err && err.message ? err.message : 'Decoding failed' };
@@ -950,6 +1006,7 @@
           brand: '',
           brandLabel: '',
           era: '',
+          kenmorePrefix: '',
           serial: '',
           model: '',
           status: 'pending',
@@ -991,10 +1048,13 @@
                      onkeydown="LLD.onBrandKeydown('${rowData.id}', event)"
                      onfocus="LLD.onBrandFocus('${rowData.id}', this)"
                      onblur="LLD.onBrandBlur('${rowData.id}')">
-              <select class="lld-select lld-era-select" data-field="era" aria-label="Manufacture era for row ${rowData.rowNum}" onchange="LLD.setEra('${rowData.id}', this.value)">
+              <select class="lld-select lld-inline-select" data-field="era" aria-label="Manufacture era for row ${rowData.rowNum}" onchange="LLD.setEra('${rowData.id}', this.value)">
                 <option value="">Select era…</option>
                 <option value="pre">Pre-2006</option>
                 <option value="post">Post-2006</option>
+              </select>
+              <select class="lld-select lld-inline-select" data-field="kenmorePrefix" id="kenmore-prefix-${rowData.id}" aria-label="Kenmore Prefix for row ${rowData.rowNum}" onchange="LLD.setKenmorePrefix('${rowData.id}', this.value)">
+                ${this.buildKenmorePrefixOptionsHtml(rowData.kenmorePrefix)}
               </select>
             </div>
           </td>
@@ -1208,9 +1268,13 @@
         if (!this.isEraSplitBrand(row.category, brandId)) {
           row.era = '';
         }
+        if (!this.isKenmoreBrand(brandId)) {
+          row.kenmorePrefix = '';
+        }
         const inputEl = document.getElementById(`brand-input-${rowId}`);
         if (inputEl) inputEl.value = brandName;
         this.updateEraVisibility(rowId);
+        this.updateKenmorePrefixVisibility(rowId);
         this.closeBrandListbox();
       },
 
@@ -1224,15 +1288,22 @@
           row.brand = '';
           row.brandLabel = '';
           row.era = '';
+          row.kenmorePrefix = '';
           const inputEl = document.getElementById(`brand-input-${rowId}`);
           if (inputEl) inputEl.value = '';
         }
         this.updateEraVisibility(rowId);
+        this.updateKenmorePrefixVisibility(rowId);
       },
 
       setEra(rowId, era) {
         const row = this.rows.find(r => r.id === rowId);
         if (row) row.era = era;
+      },
+
+      setKenmorePrefix(rowId, prefix) {
+        const row = this.rows.find(r => r.id === rowId);
+        if (row) row.kenmorePrefix = prefix;
       },
 
       updateEraVisibility(rowId) {
@@ -1245,6 +1316,21 @@
         if (!needsEra) {
           eraSelect.value = '';
           row.era = '';
+        }
+      },
+
+      updateKenmorePrefixVisibility(rowId) {
+        const row = this.rows.find(r => r.id === rowId);
+        if (!row) return;
+        const prefixSelect = document.querySelector(`#${rowId} [data-field="kenmorePrefix"]`);
+        if (!prefixSelect) return;
+        const needsPrefix = !!(row.brand && this.isKenmoreBrand(row.brand));
+        prefixSelect.classList.toggle('visible', needsPrefix);
+        if (!needsPrefix) {
+          prefixSelect.value = '';
+          row.kenmorePrefix = '';
+        } else {
+          prefixSelect.value = row.kenmorePrefix || '';
         }
       },
 
@@ -1316,6 +1402,7 @@
           ageCell.style.color = '#f87171';
         } else {
           ageCell.textContent = rowData.result.estimatedYear || rowData.result.year || 'Unknown';
+          ageCell.style.color = '';
         }
         const explainBtn = row.querySelector('.lld-action-btn');
         explainBtn.disabled = false;
@@ -1345,7 +1432,7 @@
           { label: 'Estimated Age', value: result.estimatedYear || 'Unknown' },
           { label: 'Year Code', value: result.yearCode || 'Unknown' },
           { label: 'Month / Period', value: result.month || 'Unknown' },
-          { label: 'Brand', value: rowData.brandLabel || rowData.brand },
+          { label: 'Brand', value: result.brandDisplay || rowData.brandLabel || rowData.brand },
           { label: 'Serial Number', value: rowData.serial },
           { label: 'Model Number', value: rowData.model || 'N/A' },
           { label: 'Decoding Method', value: result.decodingMethod || 'Unknown' },
