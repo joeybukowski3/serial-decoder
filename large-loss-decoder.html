@@ -190,6 +190,77 @@
       box-shadow: 0 0 0 3px rgba(68, 229, 194, 0.1);
     }
 
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .lld-combobox {
+      position: relative;
+    }
+
+    .lld-era-select {
+      margin-top: 6px;
+      display: none;
+    }
+
+    .lld-era-select.visible {
+      display: block;
+    }
+
+    .lld-brand-listbox {
+      position: fixed;
+      z-index: 1000;
+      list-style: none;
+      margin: 0;
+      padding: 4px;
+      background: #1e3352;
+      border: 1px solid rgba(68, 229, 194, 0.4);
+      border-radius: 8px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+      max-height: 260px;
+      overflow-y: auto;
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+    }
+
+    .lld-brand-listbox[hidden] {
+      display: none;
+    }
+
+    .lld-brand-listbox li {
+      padding: 9px 12px;
+      border-radius: 5px;
+      color: #e8edf8;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lld-brand-listbox li.active,
+    .lld-brand-listbox li:hover {
+      background: rgba(68, 229, 194, 0.18);
+      color: var(--primary);
+    }
+
+    .lld-brand-listbox li.empty {
+      color: var(--text-muted);
+      cursor: default;
+    }
+
+    .lld-brand-listbox li.empty:hover {
+      background: transparent;
+      color: var(--text-muted);
+    }
+
     .lld-result {
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
@@ -662,6 +733,7 @@
   </div>
 </footer>
 
+  <script defer src="decoder-data.js"></script>
   <script defer src="voice-input.js"></script>
   <script defer src="shared.js"></script>
   <script defer src="script.js"></script>
@@ -670,7 +742,15 @@
       rowCounter: 0,
       rows: [],
       decoding: false,
-      
+
+      // Combobox state for whichever row's brand search is currently open.
+      // A single floating listbox (appended to <body>) is shared across all
+      // rows so it can never be clipped by a table cell's overflow.
+      activeBrandRowId: null,
+      activeBrandOptions: [],
+      activeBrandIndex: -1,
+      _brandOptionsCache: {},
+
       categories: [
         { value: 'appliances', label: 'Appliances' },
         { value: 'waterHeaters', label: 'Water Heaters' },
@@ -678,17 +758,128 @@
         { value: 'electronics', label: 'Electronics' }
       ],
 
-      brandsByCategory: {
-        appliances: ['Samsung', 'LG', 'Whirlpool', 'GE', 'Kenmore', 'Maytag', 'Frigidaire', 'Bosch'],
-        waterHeaters: ['Rheem', 'Trane', 'Goodman', 'American Water Heater', 'State', 'Bradford White'],
-        hvac: ['Carrier', 'Trane', 'Goodman', 'Rheem', 'Lennox', 'York'],
-        electronics: ['Apple', 'ASUS', 'HP', 'Sony', 'Panasonic', 'Google Pixel']
-      },
-
       init() {
+        this.ensureBrandListbox();
         for (let i = 0; i < 5; i++) {
           this.addRow();
         }
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.lld-combobox') && !e.target.closest('#lldBrandListbox')) {
+            this.closeBrandListbox();
+          }
+        });
+        window.addEventListener('scroll', () => this.closeBrandListbox(), true);
+        window.addEventListener('resize', () => this.closeBrandListbox());
+      },
+
+      // ---- Canonical brand registry (same source as the main Serial Number Decoder) ----
+
+      getBrandOptions(category) {
+        const categoryKey = typeof normalizeDecoderCategory === 'function'
+          ? normalizeDecoderCategory(category)
+          : category;
+        if (!this._brandOptionsCache[categoryKey]) {
+          this._brandOptionsCache[categoryKey] = typeof getCategoryDropdownBrands === 'function'
+            ? getCategoryDropdownBrands(categoryKey)
+            : [];
+        }
+        return this._brandOptionsCache[categoryKey];
+      },
+
+      filterBrandOptions(options, query) {
+        const q = String(query || '').trim().toLowerCase();
+        if (!q) return options;
+        return options.filter(opt => String(opt.name || '').toLowerCase().includes(q));
+      },
+
+      isEraSplitBrand(category, brandId) {
+        const categoryKey = typeof normalizeDecoderCategory === 'function'
+          ? normalizeDecoderCategory(category)
+          : category;
+        const cyclingConfig = (typeof CYCLING_BRANDS !== 'undefined' && CYCLING_BRANDS[categoryKey]) || {};
+        const mapping = cyclingConfig[brandId];
+        return !!(mapping && mapping.type === 'split');
+      },
+
+      // Mirrors the main decoder's resolveDecoderId() routing (brand id -> decoder
+      // id via CYCLING_BRANDS / the normalized brand catalog), but takes category
+      // and era explicitly instead of reading the main page's single global
+      // currentCategory / #eraSelect element, since each Large Loss row is
+      // independent.
+      resolveDecoderId(category, brandId, era) {
+        const categoryKey = typeof normalizeDecoderCategory === 'function'
+          ? normalizeDecoderCategory(category)
+          : category;
+        const cyclingConfig = (typeof CYCLING_BRANDS !== 'undefined' && CYCLING_BRANDS[categoryKey]) || {};
+        let mapping = cyclingConfig[brandId];
+        const entry = typeof getNormalizedBrandEntry === 'function'
+          ? getNormalizedBrandEntry(categoryKey, brandId)
+          : null;
+        const primary = entry && entry.primaryDecoderId ? entry.primaryDecoderId : '';
+        if (!mapping) {
+          if (primary) return primary;
+          const normalized = typeof normalizeBrandId === 'function' ? normalizeBrandId(brandId) : brandId;
+          mapping = cyclingConfig[normalized];
+          if (!mapping) return normalized;
+        }
+        if (mapping.type === 'split') {
+          return era === 'post' ? mapping.post : era === 'pre' ? mapping.pre : null;
+        }
+        return primary || mapping.single;
+      },
+
+      buildDecodeResult(rowData) {
+        try {
+          if (typeof window.decoderData === 'undefined') {
+            return { error: 'Decoder data not loaded' };
+          }
+          if (!rowData.brand) {
+            return { error: 'Please select a brand' };
+          }
+          const categoryKey = typeof normalizeDecoderCategory === 'function'
+            ? normalizeDecoderCategory(rowData.category)
+            : rowData.category;
+          const categoryData = window.decoderData[categoryKey];
+          if (!categoryData) {
+            return { error: 'Category decoder data not loaded' };
+          }
+          const decoderId = this.resolveDecoderId(categoryKey, rowData.brand, rowData.era);
+          if (decoderId === null) {
+            return { error: 'Please select the manufacture era for this brand' };
+          }
+          const decoder = decoderId ? categoryData.decoders[decoderId] : null;
+          if (!decoder) {
+            return { error: 'Brand decoder not found' };
+          }
+          const serialDigits = String(rowData.serial || '').replace(/[^A-Za-z0-9]/g, '');
+          if (!serialDigits) {
+            return { error: 'Serial number is required' };
+          }
+          const modelValue = rowData.model || '';
+          let rawResult = decoder.decode(serialDigits, modelValue);
+          if (typeof collapseImpossibleFutureYears === 'function') {
+            rawResult = collapseImpossibleFutureYears(rawResult);
+          }
+          if (!rawResult || rawResult.error) {
+            return { error: (rawResult && rawResult.error) || 'Decoding failed' };
+          }
+          return {
+            ...rawResult,
+            estimatedYear: rawResult.year,
+            yearCode: rawResult.year,
+            month: rawResult.month,
+            decodingMethod: rawResult.method || decoder.serialLengthNote || 'Serial Format',
+            confidence: 0.95
+          };
+        } catch (err) {
+          return { error: err && err.message ? err.message : 'Decoding failed' };
+        }
+      },
+
+      escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, (c) => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
       },
 
       addRow() {
@@ -699,6 +890,8 @@
           rowNum,
           category: 'appliances',
           brand: '',
+          brandLabel: '',
+          era: '',
           serial: '',
           model: '',
           status: 'pending',
@@ -725,22 +918,35 @@
         tr.innerHTML = `
           <td><span class="row-num">${rowData.rowNum}</span></td>
           <td>
-            <select class="lld-select" onchange="LLD.updateField('${rowData.id}', 'category', this.value); LLD.updateBrandDropdown('${rowData.id}')">
+            <select class="lld-select" data-field="category" onchange="LLD.setCategory('${rowData.id}', this.value)">
               ${this.categories.map(c => `<option value="${c.value}" ${c.value === rowData.category ? 'selected' : ''}>${c.label}</option>`).join('')}
             </select>
           </td>
           <td>
-            <select class="lld-select" data-field="brand" onchange="LLD.updateField('${rowData.id}', 'brand', this.value)">
-              <option value="">-- Select Brand --</option>
-            </select>
+            <div class="lld-combobox">
+              <label class="sr-only" for="brand-input-${rowData.id}">Brand for row ${rowData.rowNum}</label>
+              <input type="text" class="lld-input lld-brand-input" id="brand-input-${rowData.id}"
+                     role="combobox" aria-expanded="false" aria-autocomplete="list"
+                     aria-controls="lldBrandListbox" autocomplete="off" spellcheck="false"
+                     placeholder="Search brand..." value="${this.escapeHtml(rowData.brandLabel)}"
+                     oninput="LLD.onBrandInput('${rowData.id}', this)"
+                     onkeydown="LLD.onBrandKeydown('${rowData.id}', event)"
+                     onfocus="LLD.onBrandFocus('${rowData.id}', this)"
+                     onblur="LLD.onBrandBlur('${rowData.id}')">
+              <select class="lld-select lld-era-select" data-field="era" aria-label="Manufacture era for row ${rowData.rowNum}" onchange="LLD.setEra('${rowData.id}', this.value)">
+                <option value="">Select era…</option>
+                <option value="pre">Pre-2006</option>
+                <option value="post">Post-2006</option>
+              </select>
+            </div>
           </td>
           <td>
-            <input type="text" class="lld-input" id="serial-${rowData.id}" placeholder="Enter serial..." 
+            <input type="text" class="lld-input" id="serial-${rowData.id}" placeholder="Enter serial..."
                    onchange="LLD.updateField('${rowData.id}', 'serial', this.value)"
                    oninput="LLD.updateField('${rowData.id}', 'serial', this.value)">
           </td>
           <td>
-            <input type="text" class="lld-input" id="model-${rowData.id}" placeholder="Optional" 
+            <input type="text" class="lld-input" id="model-${rowData.id}" placeholder="Optional"
                    onchange="LLD.updateField('${rowData.id}', 'model', this.value)"
                    oninput="LLD.updateField('${rowData.id}', 'model', this.value)">
           </td>
@@ -752,7 +958,6 @@
         `;
 
         tbody.appendChild(tr);
-        this.updateBrandDropdown(rowData.id);
 
         const expTr = document.createElement('tr');
         expTr.id = `expansion-${rowData.id}`;
@@ -761,28 +966,234 @@
         tbody.appendChild(expTr);
       },
 
-      updateBrandDropdown(rowId) {
+      // ---- Brand combobox (searchable, keyboard-navigable) ----
+
+      ensureBrandListbox() {
+        if (document.getElementById('lldBrandListbox')) return;
+        const ul = document.createElement('ul');
+        ul.id = 'lldBrandListbox';
+        ul.className = 'lld-brand-listbox';
+        ul.setAttribute('role', 'listbox');
+        ul.hidden = true;
+        ul.addEventListener('mousedown', (e) => {
+          const li = e.target.closest('li[data-index]');
+          if (!li) return;
+          e.preventDefault();
+          const idx = Number(li.getAttribute('data-index'));
+          const opt = this.activeBrandOptions[idx];
+          if (opt && this.activeBrandRowId) {
+            this.selectBrand(this.activeBrandRowId, opt.id, opt.name);
+          }
+        });
+        ul.addEventListener('mousemove', (e) => {
+          const li = e.target.closest('li[data-index]');
+          if (!li) return;
+          const idx = Number(li.getAttribute('data-index'));
+          if (idx !== this.activeBrandIndex) {
+            this.activeBrandIndex = idx;
+            this.updateBrandActiveDescendant();
+          }
+        });
+        document.body.appendChild(ul);
+      },
+
+      getBrandListboxEl() {
+        return document.getElementById('lldBrandListbox');
+      },
+
+      onBrandFocus(rowId, inputEl) {
         const row = this.rows.find(r => r.id === rowId);
         if (!row) return;
-        const selectEl = document.querySelector(`#${rowId} [data-field="brand"]`);
-        const brands = this.brandsByCategory[row.category] || [];
-        selectEl.innerHTML = '<option value="">-- Select Brand --</option>';
-        brands.forEach(brand => {
-          const opt = document.createElement('option');
-          opt.value = brand;
-          opt.textContent = brand;
-          selectEl.appendChild(opt);
+        this.openBrandListbox(rowId, inputEl, inputEl.value);
+      },
+
+      onBrandInput(rowId, inputEl) {
+        const row = this.rows.find(r => r.id === rowId);
+        if (!row) return;
+        // Typing invalidates the previously committed selection until the user
+        // picks a new option from the list.
+        if (row.brandLabel !== inputEl.value) {
+          row.brand = '';
+        }
+        this.openBrandListbox(rowId, inputEl, inputEl.value);
+      },
+
+      onBrandKeydown(rowId, event) {
+        const listbox = this.getBrandListboxEl();
+        const isOpen = !!(listbox && !listbox.hidden && this.activeBrandRowId === rowId);
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          if (!isOpen) {
+            this.openBrandListbox(rowId, event.target, event.target.value);
+          } else {
+            this.moveBrandActiveIndex(1);
+          }
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          if (isOpen) this.moveBrandActiveIndex(-1);
+        } else if (event.key === 'Enter') {
+          if (isOpen && this.activeBrandIndex > -1) {
+            event.preventDefault();
+            const opt = this.activeBrandOptions[this.activeBrandIndex];
+            if (opt) this.selectBrand(rowId, opt.id, opt.name);
+          }
+        } else if (event.key === 'Escape') {
+          if (isOpen) {
+            event.preventDefault();
+            this.closeBrandListbox();
+          }
+        }
+      },
+
+      onBrandBlur(rowId) {
+        // Defer so a mousedown selection on the listbox can run before blur
+        // reverts an uncommitted, partially-typed value.
+        setTimeout(() => {
+          if (this.activeBrandRowId !== rowId) return;
+          const row = this.rows.find(r => r.id === rowId);
+          const inputEl = document.getElementById(`brand-input-${rowId}`);
+          if (row && inputEl && !row.brand) {
+            inputEl.value = row.brandLabel || '';
+          }
+          this.closeBrandListbox();
+        }, 150);
+      },
+
+      openBrandListbox(rowId, inputEl, query) {
+        const row = this.rows.find(r => r.id === rowId);
+        if (!row) return;
+        const options = this.filterBrandOptions(this.getBrandOptions(row.category), query);
+        this.activeBrandRowId = rowId;
+        this.activeBrandOptions = options;
+        this.activeBrandIndex = -1;
+        this.renderBrandListboxOptions(options);
+        this.positionBrandListbox(inputEl);
+        const listbox = this.getBrandListboxEl();
+        if (listbox) listbox.hidden = false;
+        inputEl.setAttribute('aria-expanded', 'true');
+      },
+
+      closeBrandListbox() {
+        const listbox = this.getBrandListboxEl();
+        if (listbox) listbox.hidden = true;
+        if (this.activeBrandRowId) {
+          const inputEl = document.getElementById(`brand-input-${this.activeBrandRowId}`);
+          if (inputEl) {
+            inputEl.setAttribute('aria-expanded', 'false');
+            inputEl.removeAttribute('aria-activedescendant');
+          }
+        }
+        this.activeBrandRowId = null;
+        this.activeBrandOptions = [];
+        this.activeBrandIndex = -1;
+      },
+
+      renderBrandListboxOptions(options) {
+        const listbox = this.getBrandListboxEl();
+        if (!listbox) return;
+        if (options.length === 0) {
+          listbox.innerHTML = '<li class="empty">No matching brands</li>';
+          return;
+        }
+        listbox.innerHTML = options.map((opt, i) =>
+          `<li role="option" id="lld-brand-opt-${i}" data-index="${i}">${this.escapeHtml(opt.name)}</li>`
+        ).join('');
+      },
+
+      positionBrandListbox(inputEl) {
+        const listbox = this.getBrandListboxEl();
+        if (!listbox || !inputEl || !inputEl.getBoundingClientRect) return;
+        const rect = inputEl.getBoundingClientRect();
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const spaceBelow = viewportHeight - rect.bottom;
+        listbox.style.left = `${rect.left}px`;
+        listbox.style.width = `${rect.width}px`;
+        if (spaceBelow < 220 && rect.top > spaceBelow) {
+          listbox.style.top = 'auto';
+          listbox.style.bottom = `${viewportHeight - rect.top}px`;
+        } else {
+          listbox.style.bottom = 'auto';
+          listbox.style.top = `${rect.bottom + 4}px`;
+        }
+      },
+
+      moveBrandActiveIndex(delta) {
+        const count = this.activeBrandOptions.length;
+        if (!count) return;
+        this.activeBrandIndex = (this.activeBrandIndex + delta + count) % count;
+        this.updateBrandActiveDescendant();
+      },
+
+      updateBrandActiveDescendant() {
+        const listbox = this.getBrandListboxEl();
+        if (!listbox || !listbox.children) return;
+        Array.from(listbox.children).forEach((li, i) => {
+          li.classList.toggle('active', i === this.activeBrandIndex);
         });
+        const activeLi = listbox.children[this.activeBrandIndex];
+        const inputEl = this.activeBrandRowId ? document.getElementById(`brand-input-${this.activeBrandRowId}`) : null;
+        if (inputEl) {
+          if (activeLi && activeLi.id) {
+            inputEl.setAttribute('aria-activedescendant', activeLi.id);
+            if (activeLi.scrollIntoView) activeLi.scrollIntoView({ block: 'nearest' });
+          } else {
+            inputEl.removeAttribute('aria-activedescendant');
+          }
+        }
+      },
+
+      selectBrand(rowId, brandId, brandName) {
+        const row = this.rows.find(r => r.id === rowId);
+        if (!row) return;
+        row.brand = brandId;
+        row.brandLabel = brandName;
+        if (!this.isEraSplitBrand(row.category, brandId)) {
+          row.era = '';
+        }
+        const inputEl = document.getElementById(`brand-input-${rowId}`);
+        if (inputEl) inputEl.value = brandName;
+        this.updateEraVisibility(rowId);
+        this.closeBrandListbox();
+      },
+
+      setCategory(rowId, category) {
+        const row = this.rows.find(r => r.id === rowId);
+        if (!row) return;
+        row.category = category;
+        const validOptions = this.getBrandOptions(category);
+        const stillValid = row.brand && validOptions.some(opt => opt.id === row.brand);
+        if (!stillValid) {
+          row.brand = '';
+          row.brandLabel = '';
+          row.era = '';
+          const inputEl = document.getElementById(`brand-input-${rowId}`);
+          if (inputEl) inputEl.value = '';
+        }
+        this.updateEraVisibility(rowId);
+      },
+
+      setEra(rowId, era) {
+        const row = this.rows.find(r => r.id === rowId);
+        if (row) row.era = era;
+      },
+
+      updateEraVisibility(rowId) {
+        const row = this.rows.find(r => r.id === rowId);
+        if (!row) return;
+        const eraSelect = document.querySelector(`#${rowId} [data-field="era"]`);
+        if (!eraSelect) return;
+        const needsEra = !!(row.brand && this.isEraSplitBrand(row.category, row.brand));
+        eraSelect.classList.toggle('visible', needsEra);
+        if (!needsEra) {
+          eraSelect.value = '';
+          row.era = '';
+        }
       },
 
       updateField(rowId, field, value) {
         const row = this.rows.find(r => r.id === rowId);
         if (row) {
           row[field] = value;
-          if (field === 'category') {
-            row.brand = '';
-            this.updateBrandDropdown(rowId);
-          }
         }
       },
 
@@ -835,30 +1246,7 @@
       },
 
       async decodeSerial(rowData) {
-        return new Promise((resolve) => {
-          try {
-            const decoderFunc = window.decoders?.[rowData.brand];
-            if (!decoderFunc) {
-              resolve({ error: 'Brand decoder not found' });
-              return;
-            }
-            const result = decoderFunc(rowData.serial, rowData.model || '');
-            if (result.error) {
-              resolve({ error: result.error });
-            } else {
-              resolve({
-                ...result,
-                estimatedYear: result.year,
-                yearCode: result.year,
-                month: result.month,
-                decodingMethod: result.method || 'Serial Format',
-                confidence: 0.95
-              });
-            }
-          } catch (err) {
-            resolve({ error: err.message || 'Decoding failed' });
-          }
-        });
+        return Promise.resolve(this.buildDecodeResult(rowData));
       },
 
       displayResult(rowData) {
@@ -899,7 +1287,7 @@
           { label: 'Estimated Age', value: result.estimatedYear || 'Unknown' },
           { label: 'Year Code', value: result.yearCode || 'Unknown' },
           { label: 'Month / Period', value: result.month || 'Unknown' },
-          { label: 'Brand', value: rowData.brand },
+          { label: 'Brand', value: rowData.brandLabel || rowData.brand },
           { label: 'Serial Number', value: rowData.serial },
           { label: 'Model Number', value: rowData.model || 'N/A' },
           { label: 'Decoding Method', value: result.decodingMethod || 'Unknown' },
