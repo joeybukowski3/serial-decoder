@@ -6,7 +6,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { findExactLocalModelAgeMatch, loadLocalModelAgeDb, normalizeModelNumber } from '../lib/model-age-db.js';
 import { buildDecoderBundles } from '../scripts/split-decoder-data.js';
-import { loadDecoderContext } from './helpers/decoder-context.mjs';
+import { loadDecoderContext, setCurrentCategory } from './helpers/decoder-context.mjs';
 
 
 function loadSplitDecoderData(bundleFiles) {
@@ -1476,6 +1476,111 @@ test('Pre-2006 Maytag family still decodes a mapped year letter', () => {
   assert.ok(out);
   assert.equal(out.year, '1999/2023');
   assert.equal(out.month, 'January');
+});
+
+test('resolveDecoderId routes both the Alliance and Speed Queen dropdown selections to their respective decoders', () => {
+  setCurrentCategory(ctx, 'appliances');
+  assert.equal(api.resolveDecoderId('alliance'), 'alliance');
+  assert.equal(api.resolveDecoderId('speed_queen'), 'speed_queen');
+  assert.equal(
+    api.decoderData.appliances.decoders[api.resolveDecoderId('alliance')],
+    api.decoderData.appliances.decoders[api.resolveDecoderId('speed_queen')]
+  );
+});
+
+test('Alliance is a distinct dropdown brand that shares the exact Speed Queen decoder object', () => {
+  const brands = api.decoderData.appliances.brands.map((b) => b.id);
+  assert.ok(brands.includes('speed_queen'));
+  assert.ok(brands.includes('alliance'));
+
+  const alliance = api.decoderData.appliances.decoders.alliance;
+  const speedQueen = api.decoderData.appliances.decoders.speed_queen;
+  assert.ok(alliance);
+  assert.equal(alliance, speedQueen, 'Alliance must not be a duplicated copy of the Speed Queen decoder');
+});
+
+test('Alliance brand-text aliases normalize to the Alliance decoder id', () => {
+  for (const alias of ['Alliance', 'Alliance Laundry', 'Alliance Laundry Systems', 'Alliance Laundry Systems LLC']) {
+    assert.equal(api.normalizeBrandId(alias), 'alliance', alias + ' should normalize to "alliance"');
+  }
+});
+
+test('Speed Queen brand-text aliases normalize to the Speed Queen decoder id', () => {
+  for (const alias of ['Speed Queen', 'SpeedQueen', 'speed_queen']) {
+    assert.equal(api.normalizeBrandId(alias), 'speed_queen', alias + ' should normalize to "speed_queen"');
+  }
+});
+
+test('Real-world Alliance Laundry Systems LLC washer (AWN63RSN115TW01, serial 1804053488) decodes to April 2018 via the modern numeric YYMM rule under any accepted alias', () => {
+  // This is a genuine product-label example. Alliance Laundry Systems official
+  // Installation/Operation/Maintenance manuals (e.g. Part No. 70457901ENR15, and
+  // the D2288EN product information insert's serial-number date scheme) document
+  // that modern 10-digit all-numeric Alliance/Speed Queen serials encode the
+  // manufacture year in digits 1-2 and the manufacture month in digits 3-4.
+  // 1804053488 -> "18" = 2018, "04" = April.
+  const serial = '1804053488';
+  const model = 'AWN63RSN115TW01';
+
+  for (const brandInput of ['Alliance', 'Alliance Laundry Systems', 'Speed Queen']) {
+    const decoderId = api.normalizeBrandId(brandInput);
+    const decoder = api.decoderData.appliances.decoders[decoderId];
+    assert.ok(decoder, brandInput + ' should resolve to a known decoder');
+    const result = decoder.decode(serial, model);
+    assert.ok(result, brandInput + ' should decode this modern numeric serial');
+    assert.equal(result.year, '2018', brandInput + ' should resolve year 2018');
+    assert.equal(result.month, 'April', brandInput + ' should resolve month April');
+  }
+
+  // All three inputs must route through the identical underlying decoder object.
+  const allianceDecoder = api.decoderData.appliances.decoders[api.normalizeBrandId('Alliance Laundry Systems')];
+  const speedQueenDecoder = api.decoderData.appliances.decoders[api.normalizeBrandId('Speed Queen')];
+  assert.equal(allianceDecoder, speedQueenDecoder);
+});
+
+test('Modern Alliance Laundry numeric serial decodes a different valid month (September 2020)', () => {
+  const speedQueen = api.decoderData.appliances.decoders.speed_queen;
+  const result = speedQueen.decode('2009000001');
+  assert.ok(result);
+  assert.equal(result.year, '2020');
+  assert.equal(result.month, 'September');
+});
+
+test('Modern Alliance Laundry numeric serial year validation is not pinned to an unsupported 2005 branding boundary', () => {
+  // The evidence (Alliance Laundry Systems IOM manual, Part No. 70457901ENR15) only supports
+  // "first two digits = year, third/fourth digits = month" for a structurally valid 10-digit
+  // numeric serial. It does not say the format itself began in any particular year, so a
+  // structurally valid serial with YY < 05 (e.g. year 2001) must still decode rather than being
+  // arbitrarily rejected on a corporate-branding-history boundary.
+  const speedQueen = api.decoderData.appliances.decoders.speed_queen;
+  const result = speedQueen.decode('0104000001');
+  assert.ok(result, 'a structurally valid YY=01 serial must not be rejected');
+  assert.equal(result.year, '2001');
+  assert.equal(result.month, 'April');
+});
+
+test('Modern Alliance Laundry numeric serial with month 00 is rejected, not fabricated', () => {
+  const speedQueen = api.decoderData.appliances.decoders.speed_queen;
+  assert.equal(speedQueen.decode('1800000001'), null);
+});
+
+test('Modern Alliance Laundry numeric serial with month 13 is rejected, not fabricated', () => {
+  const speedQueen = api.decoderData.appliances.decoders.speed_queen;
+  assert.equal(speedQueen.decode('1813000001'), null);
+});
+
+test('Malformed numeric Alliance Laundry serials (wrong length, non-digit characters) are rejected', () => {
+  const speedQueen = api.decoderData.appliances.decoders.speed_queen;
+  assert.equal(speedQueen.decode('180405348'), null); // 9 digits, one short
+  assert.equal(speedQueen.decode('18040534888'), null); // 11 digits, one long
+  assert.equal(speedQueen.decode('180405348A'), null); // trailing letter
+});
+
+test('Existing legacy Speed Queen pre-2006 letter-code fixtures are unaffected by the modern numeric routing', () => {
+  const speedQueen = api.decoderData.appliances.decoders.speed_queen;
+  const out = speedQueen.decode('2192NC');
+  assert.ok(out);
+  assert.equal(out.year, '1984/2008');
+  assert.equal(out.month, 'February');
 });
 
 test('ASUS rejects short or non-alphanumeric garbage instead of returning 2010', () => {
