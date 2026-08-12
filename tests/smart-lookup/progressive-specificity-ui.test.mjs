@@ -91,6 +91,51 @@ test('a supported range renders (2017) rather than a fabricated midpoint/end yea
   assert.match(html, />2017</);
 });
 
+test('an inclusive four-calendar-year production range becomes the primary result', () => {
+  const html = api.renderAge(familyResult({
+    productionRange: { start: 2020, end: 2023 },
+    bestEstimateYear: 2022,
+    yearContext: { type: 'market-introduction', value: 2022, label: 'Estimated year', isExactUnitDate: false },
+  }));
+  assert.match(html, /smart-year-context-value[^>]*>2020–2023</);
+  assert.match(html, /smart-year-context-label[^>]*>PRODUCT FAMILY PRODUCTION RANGE</);
+});
+
+test('a promoted production range retains the unchanged estimated year in details', () => {
+  const html = api.renderAge(familyResult({
+    productionRange: { start: 1973, end: 1994 },
+    bestEstimateYear: 1984,
+    yearContext: { type: 'market-introduction', value: 1984, label: 'Estimated year', isExactUnitDate: false },
+  }));
+  assert.match(html, /smart-year-context-value[^>]*>1973–1994</);
+  assert.match(html, /result-label">Estimated year<\/span><span class="result-value">Approximately 1984/);
+});
+
+test('a production range shorter than four calendar years preserves the current primary-year presentation', () => {
+  const html = api.renderAge(familyResult({
+    productionRange: { start: 2021, end: 2023 },
+    bestEstimateYear: 2022,
+    yearContext: { type: 'market-introduction', value: 2022, label: 'Estimated year', isExactUnitDate: false },
+  }));
+  assert.match(html, /smart-year-context-value[^>]*>2022</);
+  assert.match(html, /smart-year-context-label[^>]*>Estimated year</);
+  assert.doesNotMatch(html, /PRODUCT FAMILY PRODUCTION RANGE/);
+});
+
+test('missing or invalid production ranges preserve the current primary-year presentation', () => {
+  const cases = [
+    familyResult({ bestEstimateYear: 2020, yearContext: { type: 'market-introduction', value: 2020, label: 'Estimated year', isExactUnitDate: false } }),
+    familyResult({ productionRange: { start: 2024, end: 2020 }, bestEstimateYear: 2022, yearContext: { type: 'market-introduction', value: 2022, label: 'Estimated year', isExactUnitDate: false } }),
+    familyResult({ productionRange: { start: '1973', end: '1994' }, bestEstimateYear: 1984, yearContext: { type: 'market-introduction', value: 1984, label: 'Estimated year', isExactUnitDate: false } }),
+  ];
+  for (const html of cases.map((data) => api.renderAge(data))) {
+    assert.doesNotMatch(html, /PRODUCT FAMILY PRODUCTION RANGE/);
+  }
+  assert.match(api.renderAge(cases[0]), /smart-year-context-value[^>]*>2020</);
+  assert.match(api.renderAge(cases[1]), /smart-year-context-value[^>]*>2022</);
+  assert.match(api.renderAge(cases[2]), /smart-year-context-value[^>]*>1984</);
+});
+
 test('exact-model result UI remains unchanged (no precision badge, single refinementSuggestion line)', () => {
   const html = api.renderAge({
     brand: 'Acer',

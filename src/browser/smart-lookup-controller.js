@@ -441,6 +441,22 @@
     return 'Not established';
   }
 
+  function primaryProductionRange(data) {
+    var range = data && data.productionRange;
+    var startYear = range && range.start;
+    var endYear = range && range.end;
+    var validRange = typeof startYear === 'number'
+      && typeof endYear === 'number'
+      && isFinite(startYear)
+      && isFinite(endYear)
+      && Math.floor(startYear) === startYear
+      && Math.floor(endYear) === endYear
+      && startYear > 0
+      && endYear >= startYear;
+    if (!validRange || endYear - startYear + 1 < 4) return null;
+    return startYear + '–' + endYear;
+  }
+
   function resultHeading(data) {
     var brand = data && data.evidenceConflict && data.recognizedBrand
       ? data.recognizedBrand
@@ -611,6 +627,10 @@
     var context = getYearContext(data);
     var primaryYear = formatYearContext(context);
     var yearLabel = context && context.label ? context.label : 'Year context';
+    var promotedProductionRange = primaryProductionRange(data);
+    var estimatedYearForDetails = data && data.bestEstimateYear
+      ? data.bestEstimateYear
+      : (context && context.value ? context.value : null);
     var manufactureCandidates = Array.isArray(data && data.manufactureYearCandidates)
       ? data.manufactureYearCandidates
       : [];
@@ -626,6 +646,10 @@
         : (data && data.productFamily
           ? 'Not available without serial or exact unit evidence'
           : 'Individual manufacture date requires serial number'));
+    if (promotedProductionRange) {
+      primaryYear = promotedProductionRange;
+      yearLabel = 'PRODUCT FAMILY PRODUCTION RANGE';
+    }
     var exactModel = data && data.exactModel
       ? data.exactModel
       : (data && !data.productFamily && data.model ? data.model : 'Not provided');
@@ -775,7 +799,7 @@
       (data && (data.series || data.recognizedSeries || data.seriesLine) ? '<div class="result-row"><span class="result-label">Series</span><span class="result-value">' + escapeHtml(data.series || data.recognizedSeries || data.seriesLine) + '</span></div>' : '') +
       (data && data.screenSize ? '<div class="result-row"><span class="result-label">Screen size</span><span class="result-value">' + escapeHtml(data.screenSize) + ' inches</span></div>' : '') +
       (data && data.productionRange ? '<div class="result-row"><span class="result-label">Known production/availability</span><span class="result-value">' + escapeHtml(formatRange(data.productionRange, data.yearRange)) + '</span></div>' : '') +
-      (data && data.bestEstimateYear ? '<div class="result-row"><span class="result-label">Best estimate</span><span class="result-value">Approximately ' + escapeHtml(data.bestEstimateYear) + '</span></div>' : '') +
+      (promotedProductionRange && estimatedYearForDetails ? '<div class="result-row"><span class="result-label">Estimated year</span><span class="result-value">Approximately ' + escapeHtml(estimatedYearForDetails) + '</span></div>' : (data && data.bestEstimateYear ? '<div class="result-row"><span class="result-label">Best estimate</span><span class="result-value">Approximately ' + escapeHtml(data.bestEstimateYear) + '</span></div>' : '')) +
       (data && data.estimateBasis ? '<div class="result-row"><span class="result-label">Estimate basis</span><span class="result-value">' + escapeHtml(estimateBasisLabel(data.estimateBasis)) + '</span></div>' : '') +
       (data && data.identityConfidence ? '<div class="result-row"><span class="result-label">Model generation confidence</span><span class="result-value">' + escapeHtml(data.identityConfidence.charAt(0).toUpperCase() + data.identityConfidence.slice(1)) + '</span></div>' : '') +
       (data && data.timingConfidence ? '<div class="result-row"><span class="result-label">Individual unit timing confidence</span><span class="result-value">' + escapeHtml(data.timingConfidence.charAt(0).toUpperCase() + data.timingConfidence.slice(1)) + '</span></div>' : '') +
