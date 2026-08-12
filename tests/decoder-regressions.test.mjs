@@ -2159,3 +2159,111 @@ test('decode pipeline emits sanitized analytics events (no raw serial/query to G
   // events must never carry the serial value itself
   assert.doesNotMatch(src, /trackAnalyticsEvent\("decode_(start|success|fail)",\{[^}]*serial:/);
 });
+
+// ── Guided unsupported appliance brand identity routing ────────
+const GUIDED_EIGHT = ['norcold','hampton_bay','conquest','coolerator','crystal_tips','partners_plus','jordan','sinkguard'];
+
+test('guided appliance brands no longer use second-letter Whirlpool year extraction', () => {
+  for (const id of GUIDED_EIGHT) {
+    const decoder = api.decoderData.appliances.decoders[id];
+    assert.ok(decoder, id + ' decoder exists');
+    const src = Function.prototype.toString.call(decoder.decode);
+    assert.equal(src.includes('match(/[A-Za-z]/g)'), false, id + ' must not extract second alphabetic year');
+    assert.equal(src.includes('match(/[A-Z]/g)'), false, id + ' must not use letter-list year fallback as primary path');
+  }
+});
+
+test('Conquest routes through verified Whirlpool length decoder', () => {
+  const conquest = api.decoderData.appliances.decoders.conquest;
+  const whirlpool = api.decoderData.appliances.decoders.whirlpool;
+  assert.equal(conquest.identityMode, 'whirlpool_series');
+  assert.equal(conquest.redirectDecoderId, 'whirlpool');
+  assert.match(String(conquest.notes || conquest.decodeNotes || ''), /Whirlpool/i);
+  assert.equal(String(conquest.exampleSerial || ''), 'C60842986');
+  assert.notEqual(String(conquest.exampleSerial || ''), 'CB2501800');
+
+  const serial9 = 'C60842986';
+  const fromConquest = plain(conquest.decode(serial9));
+  const fromWhirlpool = plain(whirlpool.decode(serial9));
+  assert.deepEqual(fromConquest, fromWhirlpool);
+  assert.equal(fromConquest.year, '2016/2046');
+  assert.equal(fromConquest.month, 'Week 08');
+
+  const serial10 = 'MX06404786';
+  assert.deepEqual(plain(conquest.decode(serial10)), plain(whirlpool.decode(serial10)));
+});
+
+test('Whirlpool verified decoding remains unchanged after guided brand work', () => {
+  const whirlpool = api.decoderData.appliances.decoders.whirlpool;
+  const result = whirlpool.decode('CB2501800');
+  assert.equal(result.year, '1992/2022');
+  assert.equal(result.month, 'Week 25');
+  assert.equal(result.yearCode, 'B');
+});
+
+test('guided research brands never return a manufactured year from decode()', () => {
+  const researchIds = ['norcold','hampton_bay','coolerator','crystal_tips','partners_plus','jordan','sinkguard'];
+  for (const id of researchIds) {
+    const decoder = api.decoderData.appliances.decoders[id];
+    assert.equal(decoder.identityMode === 'guided_research' || decoder.identityMode === 'product_type_guided', true, id);
+    assert.equal(decoder.decode('CB2501800'), null, id + ' CB2501800');
+    assert.equal(decoder.decode('AB1234567'), null, id + ' AB1234567');
+    assert.equal(decoder.decode('XY9999999', 'MODEL1'), null, id + ' with model');
+    const classified = api.classifyDecodeResult(decoder.decode('CB2501800'), decoder);
+    assert.equal(classified.status, 'unsupported');
+    // Metadata must not claim Whirlpool family 1A for these
+    assert.notEqual(decoder.groupId, '1A', id);
+    assert.equal(String(decoder.exampleSerial || ''), '', id + ' borrowed example cleared');
+  }
+});
+
+test('Norcold is classified as RV refrigerator guided research with production-range hook', () => {
+  const norcold = api.decoderData.appliances.decoders.norcold;
+  assert.equal(norcold.productCategory, 'rv_refrigerator');
+  assert.equal(norcold.productionRangeLookupReady, true);
+  assert.equal(norcold.requiresModel, true);
+  assert.match(String(norcold.products || ''), /RV refrigerator/i);
+  assert.match(String(norcold.decodeMethod || norcold.method || ''), /not universally date-encoded|Guided research/i);
+});
+
+test('Hampton Bay requires product type and does not auto-year', () => {
+  const hb = api.decoderData.appliances.decoders.hampton_bay;
+  assert.equal(hb.requiresProductType, true);
+  assert.equal(hb.identityMode, 'product_type_guided');
+  assert.equal(hb.decode('ANYSERIAL123'), null);
+  setCurrentCategory(ctx, 'appliances');
+  const profile = api.getGuidedApplianceProfile('hampton_bay');
+  assert.ok(profile);
+  assert.equal(profile.requiresProductType, true);
+  const cfg = api.getSupplementalModelConfig('appliances', 'hampton_bay');
+  assert.equal(cfg.required, true);
+  assert.ok(api.HAMPTON_BAY_PRODUCT_TYPES.some((o) => o.value === 'ceiling_fan'));
+  assert.ok(api.HAMPTON_BAY_PRODUCT_TYPES.some((o) => o.value === 'lighting'));
+  assert.ok(api.HAMPTON_BAY_PRODUCT_TYPES.some((o) => o.value === 'cabinetry'));
+  assert.ok(api.HAMPTON_BAY_PRODUCT_TYPES.some((o) => o.value === 'patio_outdoor'));
+  assert.ok(api.HAMPTON_BAY_PRODUCT_TYPES.some((o) => o.value === 'other'));
+});
+
+test('guided brand profiles expose Smart Lookup next-action href builder', () => {
+  setCurrentCategory(ctx, 'appliances');
+  const norcold = api.getGuidedApplianceProfile('norcold');
+  assert.equal(norcold.identityMode, 'guided_research');
+  const href = api.buildGuidedSmartLookupHref(norcold, '8114660', 'N641', {});
+  assert.match(href, /^\/smart-lookup\.html\?q=/);
+  assert.match(decodeURIComponent(href), /Norcold/i);
+  assert.match(decodeURIComponent(href), /N641/);
+  assert.match(decodeURIComponent(href), /8114660/);
+
+  const conquest = api.getGuidedApplianceProfile('conquest');
+  assert.equal(conquest.identityMode, 'whirlpool_series');
+  assert.equal(conquest.redirectDecoderId, 'whirlpool');
+});
+
+test('Crystal Tips / SinkGuard / Coolerator product categories are identity-correct', () => {
+  assert.equal(api.decoderData.appliances.decoders.crystal_tips.productCategory, 'commercial_ice_machine');
+  assert.equal(api.decoderData.appliances.decoders.sinkguard.productCategory, 'garbage_disposal');
+  assert.equal(api.decoderData.appliances.decoders.coolerator.productCategory, 'vintage_refrigeration');
+  assert.equal(api.decoderData.appliances.decoders.partners_plus.productCategory, 'unverified_brand');
+  assert.equal(api.decoderData.appliances.decoders.jordan.productCategory, 'unverified_brand');
+});
+

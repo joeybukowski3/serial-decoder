@@ -50,7 +50,13 @@ const API_EXPORTS = [
   'CYCLING_BRANDS',
   'MOST_COMMON_APPLIANCE_BRANDS',
   'BRAND_DROPDOWN_EXCLUSIONS',
-  'isBrandExcludedFromDropdown'
+  'isBrandExcludedFromDropdown',
+  'getGuidedApplianceProfile',
+  'isGuidedResearchBrand',
+  'GUIDED_APPLIANCE_BRAND_IDS',
+  'HAMPTON_BAY_PRODUCT_TYPES',
+  'buildGuidedSmartLookupHref',
+  'getHamptonBayProductTypeValue'
 ];
 
 function createMockElement() {
