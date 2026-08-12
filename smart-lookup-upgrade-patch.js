@@ -129,8 +129,7 @@
       }
       saveRecentSmartLookup(query);
       trackSmartLookupEvent('search_started', {
-        query: query,
-        includeComparisons: shouldIncludeSmartLookupComparisons()
+        query: query
       });
       return original.apply(this, arguments);
     };

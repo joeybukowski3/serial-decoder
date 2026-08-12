@@ -6,7 +6,6 @@
     fingerprint: '',
     controller: null,
     age: { status: 'idle', data: null, error: null, stageIndex: 0, copy: null },
-    replacement: { status: 'idle', data: null, error: null, copy: null },
     lastStartedAt: 0,
     ageStageTimers: [],
   };
@@ -24,7 +23,6 @@
     { atMs: 900, message: 'Searching trusted model evidence…' },
     { atMs: 3200, message: 'Still working — checking a backup source…' },
   ];
-  var REPLACEMENT_LOADING_MESSAGE = 'Checking replacement guidance…';
   var SMART_LOOKUP_NOTES_MAX_LENGTH = 300;
 
   // Copy for every non-success Smart Lookup age outcome. Each entry keeps a
@@ -141,12 +139,6 @@
     return '';
   }
 
-  var REPLACEMENT_UNAVAILABLE_COPY = {
-    heading: 'Replacement match unavailable',
-    body: 'We could not verify a reliable replacement match yet.',
-    tryNext: 'Try adding the full model number and item category.',
-  };
-
   // Validation/provider error codes that mean "we got a response, but it did
   // not pass our reliability checks" -- distinct from a timeout (took too
   // long) or a conflict (internally inconsistent data).
@@ -194,10 +186,9 @@
     return (hash >>> 0).toString(16);
   }
 
-  function fingerprint(query, includeReplacement, notes) {
+  function fingerprint(query, notes) {
     return JSON.stringify({
       query: normalize(query).toLowerCase(),
-      replacement: Boolean(includeReplacement),
       notesHash: normalizeNotes(notes) ? hashString(normalizeNotes(notes)) : '',
     });
   }
@@ -210,11 +201,6 @@
 
   function resultsRoot() {
     return $('smart-lookup-results');
-  }
-
-  function includeReplacement() {
-    var checkbox = $('include-replacement-comparisons');
-    return Boolean(checkbox && checkbox.checked);
   }
 
   function lookupNotes() {
@@ -246,13 +232,9 @@
     });
   }
 
-  // Shares the same result-shell layout classes (.rs-search-summary,
-  // .rs-primary-row, .rs-supporting-grid) as the Serial Decoder results so
-  // both tools present the same hierarchy: a compact search summary, the
-  // primary result beside Item Assist, then supporting content below.
-  // #smart-lookup-age-panel / #smart-lookup-replacement-panel keep their
-  // existing ids/classes unchanged — only their parent wrappers changed —
-  // so tests/smart-lookup-ui.spec.js (which locates them by id) still pass.
+  // Shares the same result-shell layout classes as the Serial Decoder results
+  // so both tools present a compact search summary and primary result beside
+  // Item Assist.
   function ensureShell() {
     var root = resultsRoot();
     if (!root) return null;
@@ -263,9 +245,6 @@
             '<section class="sl-progressive-card sl-progressive-card--age rs-primary-card" id="smart-lookup-age-panel" aria-live="polite"></section>' +
           '</div>' +
           '<div id="smartLookupItemAssistMount"></div>' +
-        '</div>' +
-        '<div class="rs-supporting-grid rs-supporting-grid--smart-lookup">' +
-          '<section class="sl-progressive-card sl-progressive-card--lkq" id="smart-lookup-replacement-panel" aria-live="polite"></section>' +
         '</div>';
     }
     return root.querySelector('[data-smart-lookup-controller="1"]');
@@ -313,9 +292,9 @@
     if (ageResults) ageResults.classList.remove('hidden');
   }
 
-  function setPanel(which, html) {
+  function setAgePanel(html) {
     ensureShell();
-    var panel = $(which === 'age' ? 'smart-lookup-age-panel' : 'smart-lookup-replacement-panel');
+    var panel = $('smart-lookup-age-panel');
     if (panel) panel.innerHTML = html;
   }
 
@@ -437,61 +416,6 @@
       return { heading: base.heading, body: data.notes, tryNext: base.tryNext };
     }
     return base;
-  }
-
-  // A recognized model-line/product-family/brand-category query can be
-  // genuinely useful even with no single named replacement (replacement:
-  // null, replacementRelationship: 'none-found') -- ranked candidates, a
-  // comparison checklist, known configuration variants, or refinement
-  // guidance are all still worth rendering instead of the generic
-  // "unavailable" card. See Phase 10 in docs/smart-lookup-architecture.md.
-  function hasProgressiveReplacementGuidance(data) {
-    if (!data) return false;
-    if (Array.isArray(data.replacementCandidates) && data.replacementCandidates.length) return true;
-    var precision = data.replacementPrecision;
-    // An exact-model/exact-configuration deterministic reserve carries a
-    // confirmed identity and comparison criteria but no candidates. Without
-    // this branch it fell through to the generic "unavailable" card, which is
-    // how a fully identified product (e.g. Samsung QN65Q60RAFXZA) rendered an
-    // empty replacement panel purely because live research timed out. Gated
-    // on isDeterministicLkqFallback so the ordinary exact-model provider
-    // rendering path is untouched.
-    if (precision === 'exact-model' || precision === 'exact-configuration') {
-      if (!isDeterministicLkqFallback(data)) return false;
-      return Boolean(
-        (Array.isArray(data.comparisonCriteria) && data.comparisonCriteria.length)
-        || (data.originalIdentity && (data.originalIdentity.brand || data.originalIdentity.model))
-        || (data.itemSummary && data.itemSummary.model)
-      );
-    }
-    if (precision !== 'model-line' && precision !== 'product-family' && precision !== 'brand-category') return false;
-    return Boolean(
-      (Array.isArray(data.comparisonCriteria) && data.comparisonCriteria.length)
-      || (Array.isArray(data.knownConfigurationVariants) && data.knownConfigurationVariants.length)
-      || (Array.isArray(data.recommendedIdentifiers) && data.recommendedIdentifiers.length)
-      || (data.originalIdentity && (data.originalIdentity.brand || data.originalIdentity.family || data.originalIdentity.modelLine))
-    );
-  }
-
-  function classifyReplacementOutcome(data) {
-    if (!data) return 'network-error';
-    if (Array.isArray(data.replacementOptions) && data.replacementOptions.length) return 'success';
-    if (data.replacementRelationship && data.replacementRelationship !== 'none-found' && data.replacement) return 'success';
-    if (hasProgressiveReplacementGuidance(data)) return 'success';
-    return 'unavailable';
-  }
-
-  function copyForReplacementOutcome(data) {
-    var summary = data && data.itemSummary;
-    var brand = summary && summary.brand && summary.brand !== 'Unknown' ? summary.brand : '';
-    var category = summary && summary.category ? summary.category : '';
-    var known = [brand, category].filter(Boolean).join(' ');
-    if (!known) return REPLACEMENT_UNAVAILABLE_COPY;
-    return {
-      heading: REPLACEMENT_UNAVAILABLE_COPY.heading,
-      body: 'We recognized this as a ' + known + ' item, but could not verify a reliable replacement match yet.',
-      tryNext: REPLACEMENT_UNAVAILABLE_COPY.tryNext,
-    };
   }
 
   function getYearContext(data) {
@@ -868,274 +792,6 @@
       '</div>';
   }
 
-  var LKQ_RELATIONSHIP_LABELS = {
-    'direct-successor': 'Direct manufacturer successor',
-    'same-series-successor': 'Same-series successor',
-    'functional-equivalent': 'Current functional equivalent',
-    'similar-alternative': 'Similar alternative',
-    'none-found': 'No defensible replacement found',
-  };
-
-  var LKQ_COMPATIBILITY_LABELS = {
-    'likely-compatible': 'Likely compatible',
-    'compatible-with-caveats': 'Compatible with caveats',
-    'not-directly-compatible': 'Not directly compatible',
-    unknown: 'Compatibility unknown',
-  };
-
-  function isGroundedLkqResult(data) {
-    return Boolean(data)
-      && (data.evidenceSource === 'manufacturer-grounded' || data.evidenceSource === 'retailer-grounded' || data.evidenceSource === 'mixed-grounded')
-      && Array.isArray(data.sources)
-      && data.sources.length > 0;
-  }
-
-  function isLkqTimeoutFallbackResult(data) {
-    return Boolean(data) && data.groundedFallback === true && !isGroundedLkqResult(data);
-  }
-
-  // A deterministic (Phase 8) replacement card was never produced by any
-  // provider call -- it must never be described as AI-assisted or grounded,
-  // even though it shares the same success/candidate rendering as a real
-  // provider result. Checked before every other qualifier below.
-  function isDeterministicLkqFallback(data) {
-    return Boolean(data) && data.deterministicFallbackUsed === true;
-  }
-
-  function lkqSourceQualifier(data) {
-    if (isDeterministicLkqFallback(data)) {
-      return 'Deterministic Decode My Item model-line/family guidance; live replacement research did not complete.';
-    }
-    if (isGroundedLkqResult(data)) {
-      var retrievedOn = data.retrievedAt ? String(data.retrievedAt).slice(0, 10) : '';
-      return 'Grounded in live Google Search results' + (retrievedOn ? ' retrieved ' + retrievedOn : '') + '; review the cited sources below.';
-    }
-    if (isLkqTimeoutFallbackResult(data)) {
-      return 'AI-assisted replacement research completed, but live web verification timed out. Review this as an estimate rather than a source-verified finding.';
-    }
-    return 'AI-assisted analysis based on the information entered; no live source was verified.';
-  }
-
-  var REPLACEMENT_PRECISION_LABELS = {
-    'exact-configuration': 'Exact configuration match',
-    'exact-model': 'Exact model result',
-    'model-line': 'Model-line guidance',
-    'product-family': 'Product-family guidance',
-    'brand-category': 'Broad brand/category guidance',
-    'category-guidance': 'General category guidance',
-  };
-
-  var REPLACEMENT_PRECISION_NOTES = {
-    'model-line': 'This result describes the recognized model line broadly -- the exact original configuration was not provided, so it may vary.',
-    'product-family': 'This result describes the recognized product family broadly, not one exact original model or configuration.',
-    'brand-category': 'This result describes the recognized brand and category broadly, not one specific product line.',
-  };
-
-  function renderOriginalIdentity(data) {
-    var identity = data && data.originalIdentity;
-    if (!identity || (!identity.brand && !identity.family && !identity.modelLine)) return '';
-    var rows = [
-      ['Brand', identity.brand],
-      ['Product family', identity.family],
-      ['Model line', identity.modelLine],
-      ['Category', identity.category],
-      ['Form factor', identity.formFactor],
-    ].filter(function (pair) { return pair[1]; });
-    if (!rows.length) return '';
-    var rowsHtml = rows.map(function (pair) {
-      return '<div class="result-row"><span class="result-label">' + escapeHtml(pair[0]) + '</span><span class="result-value">' + escapeHtml(pair[1]) + '</span></div>';
-    }).join('');
-    return '<div class="lkq-original-identity">' + rowsHtml + '</div>';
-  }
-
-  function renderStringListBlock(title, items) {
-    var list = Array.isArray(items) ? items.filter(Boolean) : [];
-    if (!list.length) return '';
-    return '<div class="info-block"><h4>' + escapeHtml(title) + '</h4><ul>' +
-      list.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul></div>';
-  }
-
-  function renderConfigurationVaries(data) {
-    if (!data || !data.configurationUnknown) return '';
-    return '<p class="smart-lookup-precision-note">Original configuration varies. No processor, RAM, storage, graphics, chassis size, power supply, port selection, or expansion capacity is assumed beyond what was provided.</p>';
-  }
-
-  function renderCandidateRelationship(value) {
-    return LKQ_RELATIONSHIP_LABELS[value] || value;
-  }
-
-  function renderReplacementCandidates(data) {
-    var candidates = Array.isArray(data && data.replacementCandidates) ? data.replacementCandidates : [];
-    if (!candidates.length) return '';
-    var items = candidates.map(function (candidate) {
-      var label = [candidate.brand, candidate.model || candidate.family].filter(Boolean).join(' ') || 'Candidate';
-      var specRows = candidate.specificationComparison && typeof candidate.specificationComparison === 'object'
-        ? Object.keys(candidate.specificationComparison).map(function (key) {
-            return '<div class="result-row"><span class="result-label">' + escapeHtml(key) + '</span><span class="result-value">' + escapeHtml(candidate.specificationComparison[key]) + '</span></div>';
-          }).join('')
-        : '';
-      var differences = Array.isArray(candidate.materialDifferences) && candidate.materialDifferences.length
-        ? '<ul>' + candidate.materialDifferences.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul>'
-        : '';
-      var compatibility = candidate.compatibilityStatus
-        ? '<p class="lkq-candidate-compatibility"><strong>Compatibility:</strong> ' + escapeHtml(LKQ_COMPATIBILITY_LABELS[candidate.compatibilityStatus] || candidate.compatibilityStatus) + '</p>'
-        : '';
-      var warnings = Array.isArray(candidate.compatibilityWarnings) && candidate.compatibilityWarnings.length
-        ? '<ul>' + candidate.compatibilityWarnings.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul>'
-        : '';
-      var pricing = Array.isArray(candidate.priceObservations) && candidate.priceObservations.length
-        ? '<ul>' + candidate.priceObservations.map(function (item) { return '<li>' + formatPriceObservation(item) + '</li>'; }).join('') + '</ul>'
-        : '';
-      return '<div class="lkq-candidate">' +
-        '<h4>#' + escapeHtml(candidate.rank) + ' ' + escapeHtml(label) + ' — ' + escapeHtml(renderCandidateRelationship(candidate.relationship)) + '</h4>' +
-        (candidate.category ? '<p class="lkq-candidate-category">' + escapeHtml(candidate.category) + '</p>' : '') +
-        (candidate.fitReason ? '<p>' + escapeHtml(candidate.fitReason) + '</p>' : '') +
-        specRows +
-        differences +
-        compatibility +
-        warnings +
-        pricing +
-        '</div>';
-    }).join('');
-    return '<div class="lkq-candidates"><h4>Ranked replacement candidates</h4>' + items + '</div>';
-  }
-
-  function renderLkqCompatibility(data) {
-    var status = data && data.compatibilityStatus;
-    if (!status) return '';
-    var warnings = Array.isArray(data.compatibilityWarnings) ? data.compatibilityWarnings : [];
-    var warningsHtml = warnings.length
-      ? '<ul>' + warnings.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul>'
-      : '';
-    return '<div class="lkq-compatibility"><h4>Compatibility: ' + escapeHtml(LKQ_COMPATIBILITY_LABELS[status] || status) + '</h4>' + warningsHtml + '</div>';
-  }
-
-  function formatPriceObservation(item) {
-    var priceText = '$' + Number(item.price).toFixed(2);
-    var typeText = item.priceType === 'sale' ? ' (sale price)' : '';
-    var conditionText = item.condition && item.condition !== 'new' ? ' (' + item.condition + ')' : '';
-    var stockText = item.stockStatus === 'out-of-stock' ? ' — out of stock' : '';
-    var dateText = item.observedAt ? ' as of ' + String(item.observedAt).slice(0, 10) : '';
-    return escapeHtml(item.seller) + ': ' + escapeHtml(priceText) + typeText + conditionText + stockText + dateText;
-  }
-
-  function renderLkqPricing(data) {
-    var observations = Array.isArray(data && data.priceObservations) ? data.priceObservations : [];
-    if (!observations.length) return '';
-    var rows = observations.map(function (item) { return '<li>' + formatPriceObservation(item) + '</li>'; }).join('');
-    var rangeHtml = '';
-    // A range only ever renders when the schema itself already computed one
-    // (>=2 qualifying observations or one manufacturer-labeled price); a
-    // single retailer observation is never presented as a market range.
-    if (data.replacementCostRange) {
-      var range = data.replacementCostRange;
-      var rangeText = range.low === range.high
-        ? '$' + Number(range.low).toFixed(2)
-        : '$' + Number(range.low).toFixed(2) + '–$' + Number(range.high).toFixed(2);
-      var basisText = range.basis === 'manufacturer-listed' ? 'manufacturer-listed price' : 'based on multiple current observations';
-      rangeHtml = '<p class="lkq-price-range"><strong>Replacement-cost guidance:</strong> ' + escapeHtml(rangeText) + ' (' + escapeHtml(basisText) + ')</p>';
-    }
-    return '<div class="lkq-pricing"><h4>Current price observations</h4>' + rangeHtml + '<ul>' + rows + '</ul></div>';
-  }
-
-  function renderLkqSources(data) {
-    if (!isGroundedLkqResult(data)) return '';
-    var items = data.sources.slice(0, 5).map(function (item) {
-      if (!item || !item.title) return '';
-      var label = escapeHtml(item.title);
-      if (item.uri && /^https:\/\//i.test(item.uri)) {
-        return '<li><a href="' + escapeHtml(item.uri) + '" target="_blank" rel="noopener nofollow">' + label + '</a></li>';
-      }
-      return '<li>' + label + '</li>';
-    }).filter(Boolean).join('');
-    if (!items) return '';
-    return '<details class="determination-details smart-lookup-sources"><summary>Sources consulted</summary><ul>' + items + '</ul></details>';
-  }
-
-  function renderReplacement(data) {
-    var legacyOptions = Array.isArray(data && data.replacementOptions) ? data.replacementOptions : [];
-    var relationship = data && data.replacementRelationship;
-    var replacement = data && data.replacement;
-    var hasGroundedResult = Boolean(relationship && relationship !== 'none-found' && replacement);
-    var hasProgressiveGuidance = hasProgressiveReplacementGuidance(data);
-
-    if (!hasGroundedResult && !legacyOptions.length && !hasProgressiveGuidance) {
-      return noResultCard(REPLACEMENT_UNAVAILABLE_COPY, 'replacement');
-    }
-
-    var html = '<div class="smart-replacement-result"><h3>Replacement Research</h3>';
-
-    // Every precision-badge/identity/configuration-varies addition below is
-    // gated to non-exact tiers only, so exact-model rendering (the existing,
-    // already-tested path) stays pixel-for-pixel unchanged.
-    var precision = data && data.replacementPrecision;
-    var isNonExactPrecision = precision === 'model-line' || precision === 'product-family'
-      || precision === 'brand-category' || precision === 'category-guidance';
-    if (isNonExactPrecision) {
-      var precisionLabel = REPLACEMENT_PRECISION_LABELS[precision];
-      if (precisionLabel) html += '<p class="smart-lookup-precision-badge">' + escapeHtml(precisionLabel) + '</p>';
-      var precisionNote = REPLACEMENT_PRECISION_NOTES[precision];
-      if (precisionNote) html += '<p class="smart-lookup-precision-note">' + escapeHtml(precisionNote) + '</p>';
-      html += renderOriginalIdentity(data);
-      html += renderConfigurationVaries(data);
-    }
-
-    if (relationship === 'none-found' && data.replacementRationale) {
-      // A deterministic reserve means research never completed -- saying we
-      // "found" nothing would misrepresent a timeout as an exhaustive search.
-      var noneFoundHeading = isDeterministicLkqFallback(data)
-        ? 'Replacement research did not complete'
-        : 'No single defensible replacement found';
-      html += '<div class="info-block"><h4>' + noneFoundHeading + '</h4><p>' + escapeHtml(data.replacementRationale) + '</p></div>';
-    }
-
-    if (hasGroundedResult) {
-      var replacementLabel = [replacement.brand, replacement.model || replacement.name].filter(Boolean).join(' ') || 'Replacement identified';
-      html += '<div class="lkq-best-match"><h4>' + escapeHtml(LKQ_RELATIONSHIP_LABELS[relationship] || relationship) + '</h4>' +
-        '<p class="smart-lookup-source-note">' + escapeHtml(lkqSourceQualifier(data)) + '</p>' +
-        '<p><strong>' + escapeHtml(replacementLabel) + '</strong></p>' +
-        (data.replacementRationale ? '<p>' + escapeHtml(data.replacementRationale) + '</p>' : '') +
-        '</div>';
-      var differences = Array.isArray(data.materialDifferences) ? data.materialDifferences : [];
-      if (differences.length) {
-        html += '<div class="lkq-differences"><h4>Important specification differences</h4><ul>' +
-          differences.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul></div>';
-      }
-      html += renderLkqCompatibility(data);
-      html += renderLkqPricing(data);
-      html += renderLkqSources(data);
-    } else if (hasProgressiveGuidance) {
-      // No single named replacement, but a recognized model-line/family/
-      // brand-category query still has useful broad guidance -- render it
-      // instead of falling through to the unavailable card.
-      html += '<p class="smart-lookup-source-note">' + escapeHtml(lkqSourceQualifier(data)) + '</p>';
-      html += renderReplacementCandidates(data);
-      html += renderStringListBlock('Known configuration variants', data.knownConfigurationVariants);
-      html += renderStringListBlock('Compare candidates on', data.comparisonCriteria);
-      html += renderStringListBlock('Recommended minimum specifications', data.recommendedMinimumSpecs);
-      html += renderStringListBlock('Assumptions', data.assumptions);
-      html += renderStringListBlock('Specifications not known from this query', data.unknownOriginalSpecs);
-      html += renderLkqSources(data);
-    }
-
-    if (isNonExactPrecision && Array.isArray(data.recommendedIdentifiers) && data.recommendedIdentifiers.length) {
-      html += '<div class="smart-lookup-refinement"><p class="smart-lookup-try-next"><strong>To narrow this result:</strong></p><ul>' +
-        data.recommendedIdentifiers.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul></div>';
-    }
-
-    if (legacyOptions.length) {
-      html += legacyOptions.map(function (item) {
-        return '<div class="lkq-option"><h4>' + escapeHtml(item.name || item.model || 'Replacement option') + '</h4>' +
-          '<p><strong>Rating:</strong> ' + escapeHtml(item.lkqRating || 'Review') + '</p>' +
-          '<p><strong>Model:</strong> ' + escapeHtml(item.model || 'Not verified') + '</p>' +
-          '<p><strong>Price:</strong> ' + escapeHtml(item.priceRange || 'Unavailable - unverified') + '</p>' +
-          '<p>' + escapeHtml(item.notes || '') + '</p></div>';
-      }).join('');
-    }
-
-    return html + '</div>';
-  }
-
   function currentAgeStageMessage() {
     var idx = state.age.stageIndex || 0;
     var stage = AGE_LOADING_STAGES[Math.min(idx, AGE_LOADING_STAGES.length - 1)];
@@ -1147,7 +803,7 @@
     state.ageStageTimers = [];
   }
 
-  function scheduleAgeStages(sequence, query, wantReplacement) {
+  function scheduleAgeStages(sequence, query) {
     clearAgeStageTimers();
     var timers = [];
     var stageIndex;
@@ -1156,7 +812,7 @@
         var id = setTimeout(function () {
           if (sequence !== state.sequence || state.age.status !== 'loading') return;
           state.age.stageIndex = index;
-          render(query, wantReplacement);
+          render(query);
         }, AGE_LOADING_STAGES[index].atMs);
         timers.push(id);
       }(stageIndex));
@@ -1164,21 +820,13 @@
     state.ageStageTimers = timers;
   }
 
-  function render(query, includeReplacementState) {
+  function render(query) {
     ensureShell();
     updateSearchSummary(query);
-    if (state.age.status === 'loading') setPanel('age', loadingCard(currentAgeStageMessage()));
-    if (state.age.status === 'success') setPanel('age', renderAge(state.age.data));
-    if (state.age.status === 'error') setPanel('age', noResultCard(state.age.copy, 'age'));
+    if (state.age.status === 'loading') setAgePanel(loadingCard(currentAgeStageMessage()));
+    if (state.age.status === 'success') setAgePanel(renderAge(state.age.data));
+    if (state.age.status === 'error') setAgePanel(noResultCard(state.age.copy, 'age'));
     if (state.age.status === 'success' || state.age.status === 'error') mountUpsell(query, state.age);
-
-    if (!includeReplacementState) {
-      setPanel('replacement', '');
-      return;
-    }
-    if (state.replacement.status === 'loading') setPanel('replacement', loadingCard(REPLACEMENT_LOADING_MESSAGE));
-    if (state.replacement.status === 'success') setPanel('replacement', renderReplacement(state.replacement.data));
-    if (state.replacement.status === 'error') setPanel('replacement', noResultCard(state.replacement.copy || REPLACEMENT_UNAVAILABLE_COPY, 'replacement'));
   }
 
   function fetchJson(url, body, signal) {
@@ -1211,22 +859,20 @@
   function run(requestedQuery, options) {
     var query = normalize(requestedQuery != null ? requestedQuery : ($('smart-lookup-input') || {}).value);
     var notes = normalizeNotes(options && options.notes != null ? options.notes : lookupNotes());
-    var wantReplacement = options && typeof options.includeReplacement === 'boolean' ? options.includeReplacement : includeReplacement();
     if (!query) {
       if (state.controller) state.controller.abort();
       state.sequence += 1;
       clearAgeStageTimers();
       state.fingerprint = '';
       state.age = { status: 'error', data: null, error: null, stageIndex: 0, copy: AGE_OUTCOME_COPY['missing-input'] };
-      state.replacement = { status: 'idle', data: null, error: null, copy: null };
       setBusy(false);
       showResults();
-      render('', false);
+      render('');
       var input = $('smart-lookup-input');
       if (input) input.focus();
       return;
     }
-    var nextFingerprint = fingerprint(query, wantReplacement, notes);
+    var nextFingerprint = fingerprint(query, notes);
     var now = Date.now();
     if (state.fingerprint === nextFingerprint && (state.age.status === 'loading' || now - state.lastStartedAt < 750)) return;
     state.sequence += 1;
@@ -1237,45 +883,25 @@
     state.controller = new AbortController();
     clearAgeStageTimers();
     state.age = { status: 'loading', data: null, error: null, stageIndex: 0, copy: null };
-    state.replacement = wantReplacement ? { status: 'loading', data: null, error: null, copy: null } : { status: 'idle', data: null, error: null, copy: null };
     setBusy(true);
     showResults();
-    render(query, wantReplacement);
-    scheduleAgeStages(sequence, query, wantReplacement);
+    render(query);
+    scheduleAgeStages(sequence, query);
 
-    var requests = [];
-    var ageRequest = fetchJson('/api/age-lookup', requestBody(query, notes), state.controller.signal).then(function (data) {
+    fetchJson('/api/age-lookup', requestBody(query, notes), state.controller.signal).then(function (data) {
       if (sequence !== state.sequence || state.fingerprint !== nextFingerprint) return;
       clearAgeStageTimers();
       var bucket = classifyAgeOutcome(data);
       state.age = bucket === 'success'
         ? { status: 'success', data: data, error: null, copy: null }
         : { status: 'error', data: null, error: null, copy: copyForAgeOutcome(bucket, data) };
-      render(query, wantReplacement);
+      render(query);
     }).catch(function (error) {
       if (sequence !== state.sequence || error.name === 'AbortError') return;
       clearAgeStageTimers();
       state.age = { status: 'error', data: null, error: null, copy: AGE_OUTCOME_COPY['network-error'] };
-      render(query, wantReplacement);
-    });
-    requests.push(ageRequest);
-
-    if (wantReplacement) {
-      var replacementRequest = fetchJson('/api/lkq-lookup', requestBody(query, notes), state.controller.signal).then(function (data) {
-        if (sequence !== state.sequence || state.fingerprint !== nextFingerprint) return;
-        var bucket = classifyReplacementOutcome(data);
-        state.replacement = bucket === 'success'
-          ? { status: 'success', data: data, error: null, copy: null }
-          : { status: 'error', data: null, error: null, copy: copyForReplacementOutcome(data) };
-        render(query, wantReplacement);
-      }).catch(function (error) {
-        if (sequence !== state.sequence || error.name === 'AbortError') return;
-        state.replacement = { status: 'error', data: null, error: null, copy: REPLACEMENT_UNAVAILABLE_COPY };
-        render(query, wantReplacement);
-      });
-      requests.push(replacementRequest);
-    }
-    Promise.allSettled(requests).then(function () {
+      render(query);
+    }).finally(function () {
       if (sequence === state.sequence && state.fingerprint === nextFingerprint) setBusy(false);
     });
   }
