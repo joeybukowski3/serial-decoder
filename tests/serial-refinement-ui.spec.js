@@ -33,6 +33,15 @@ async function openPage(viewport = { width: 1440, height: 1000 }) {
     }
   });
 
+  // Isolate browser checks from third-party Google Fonts flakiness (e.g. fonts.gstatic.com 404s).
+  await page.route('https://fonts.googleapis.com/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/css',
+      body: '/* test stub: external fonts disabled */\n',
+    });
+  });
+
   await page.goto('http://localhost:3001/index.html?cat=appliances', { waitUntil: 'networkidle' });
   return { browser, context, page, diagnostics };
 }
