@@ -1164,13 +1164,6 @@
   background: #10263c;
 }
 
-#smart-lookup-results #smart-lookup-replacement-panel:not(:empty) {
-  padding: 20px !important;
-  background: #0b1b2e !important;
-  border: 1px solid #263950 !important;
-  border-radius: 14px !important;
-}
-
 #smart-lookup-results .smart-replacement-result h3 {
   margin: 0 0 14px !important;
   color: #fff !important;
@@ -1234,9 +1227,6 @@
     text-align: left;
   }
 
-  #smart-lookup-results #smart-lookup-replacement-panel:not(:empty) {
-    padding: 16px !important;
-  }
 }
 
 .rs-search-summary:empty {

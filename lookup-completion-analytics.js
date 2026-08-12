@@ -29,7 +29,6 @@
       deterministic_fallback_used: 1,
       provider_attempted: 1,
       age_result_available: 1,
-      replacement_result_available: 1,
       clarification_recommended: 1,
       brand_category: 1,
       conflict_detected: 1,
@@ -134,7 +133,7 @@
   function smartPanelUseful(panel) {
     if (!panel || !panel.textContent || !panel.textContent.trim()) return false;
     if (panel.querySelector('.smart-lookup-status--loading')) return false;
-    if (panel.querySelector('.smart-age-result, .smart-replacement-result, .lkq-best-match, .lkq-candidates, .smart-lookup-precision-badge')) return true;
+    if (panel.querySelector('.smart-age-result, .smart-lookup-precision-badge')) return true;
     if (panel.querySelector('.result-row') && !panel.querySelector('.smart-lookup-status--noresult')) return true;
     return /conflicting information|product family recognized|exact model recognized|broad brand\/category guidance/i.test(panel.textContent);
   }
@@ -143,10 +142,8 @@
     var root = $('smart-lookup-results');
     if (!root || !isVisible($('ageResults'))) return null;
     var agePanel = $('smart-lookup-age-panel');
-    var replacementPanel = $('smart-lookup-replacement-panel');
     var ageAvailable = smartPanelUseful(agePanel);
-    var replacementAvailable = smartPanelUseful(replacementPanel);
-    if (!ageAvailable && !replacementAvailable) return null;
+    if (!ageAvailable) return null;
 
     var text = String(root.textContent || '');
     var classes = String(root.innerHTML || '');
@@ -162,7 +159,7 @@
     else if (/brand\/category|brand and category/i.test(text)) identityLevel = 'brand-category';
 
     var evidenceType = local ? 'local-db' : (grounded ? 'grounded' : (deterministic ? 'static' : 'unknown'));
-    var resultStatus = conflict ? 'conflict' : (deterministic ? 'fallback' : (ageAvailable && replacementAvailable ? 'resolved' : 'partial'));
+    var resultStatus = conflict ? 'conflict' : (deterministic ? 'fallback' : 'resolved');
 
     return {
       lookup_type: 'smart_lookup',
@@ -174,11 +171,10 @@
       deterministic_fallback_used: deterministic,
       provider_attempted: grounded || deterministic || timeout,
       age_result_available: ageAvailable,
-      replacement_result_available: replacementAvailable,
       clarification_recommended: /try this next|to narrow this result|edit your search/i.test(text),
       brand_category: 'unknown',
       conflict_detected: conflict,
-      timeout_with_useful_fallback: timeout && (ageAvailable || replacementAvailable),
+      timeout_with_useful_fallback: timeout && ageAvailable,
     };
   }
 

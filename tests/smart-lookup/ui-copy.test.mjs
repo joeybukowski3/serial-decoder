@@ -61,11 +61,8 @@ function loadSmartLookupController() {
   const wrapped = `(function () {\n${body}\n
     globalThis.__smartLookupTestApi = {
       classifyAgeOutcome,
-      classifyReplacementOutcome,
       copyForAgeOutcome,
-      copyForReplacementOutcome,
       AGE_OUTCOME_COPY,
-      REPLACEMENT_UNAVAILABLE_COPY,
       noResultCard,
       loadingCard,
       AGE_LOADING_STAGES,
@@ -134,14 +131,6 @@ test('classifyAgeOutcome: unrecognized error codes fall back to unavailable-gene
   assert.equal(api.classifyAgeOutcome({ errorCode: 'SOMETHING_NEW' }), 'unavailable-generic');
 });
 
-// ── classifyReplacementOutcome ───────────────────────────────────────────────
-
-test('classifyReplacementOutcome: options present is success, otherwise unavailable', () => {
-  assert.equal(api.classifyReplacementOutcome({ replacementOptions: [{ model: 'X' }] }), 'success');
-  assert.equal(api.classifyReplacementOutcome({ replacementOptions: [] }), 'unavailable');
-  assert.equal(api.classifyReplacementOutcome(null), 'network-error');
-});
-
 // ── copy content: one clear next action, no fabricated years ────────────────
 
 test('missing-input copy suggests adding brand/model/category/serial', () => {
@@ -208,12 +197,6 @@ test('conflict copy does not choose a year and says evidence disagrees', () => {
   const copy = api.copyForAgeOutcome('conflict', {});
   assert.match(copy.body, /does not agree/i);
   assert.match(copy.body, /not choosing a year/i);
-});
-
-test('replacement unavailable copy does not claim a verified replacement', () => {
-  const copy = api.REPLACEMENT_UNAVAILABLE_COPY;
-  assert.match(copy.body, /could not verify/i);
-  assert.doesNotMatch(copy.body, /verified replacement (found|match)\b/i);
 });
 
 test('rate-limited copy uses the server-provided notes when present, without inventing new claims', () => {
@@ -425,15 +408,4 @@ test('recognized product with unknown year support gets specific next-action cop
   const copy = api.copyForAgeOutcome('product-year-unverified', data);
   assert.equal(copy.heading, 'Product recognized, year not verified yet');
   assert.doesNotMatch(copy.body, /manufactur(?:e|ed) in (19|20)\d{2}/i);
-});
-
-test('replacement-unavailable copy preserves recognized brand/category instead of a generic message', () => {
-  const copy = api.copyForReplacementOutcome({ itemSummary: { brand: 'Samsung', category: 'television' }, replacementOptions: [] });
-  assert.match(copy.body, /Samsung television/);
-  assert.doesNotMatch(copy.body, /verified replacement (found|match)\b/i);
-});
-
-test('replacement-unavailable copy falls back to the generic message when nothing was recognized', () => {
-  const copy = api.copyForReplacementOutcome({ itemSummary: { brand: 'Unknown', category: null }, replacementOptions: [] });
-  assert.equal(copy, api.REPLACEMENT_UNAVAILABLE_COPY);
 });
