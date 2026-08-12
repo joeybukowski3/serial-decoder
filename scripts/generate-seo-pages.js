@@ -691,11 +691,15 @@ function renderWhereIsMySerialNumberPage(page, url, breadcrumbs, schema, presele
   <meta property="og:title" content="${pageSocialTitle(page)}">
   <meta property="og:description" content="${pageSocialDescription(page)}">
   <meta property="og:url" content="${url}">
-  <meta property="og:image" content="${siteUrl}/assets/item-assist-banner.png">
+  <meta property="og:image" content="${siteUrl}/assets/decodemyitem-social-preview.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Decode My Item — Serial Number Decoder &amp; Age Lookup">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${pageSocialTitle(page)}">
   <meta name="twitter:description" content="${pageSocialDescription(page)}">
-  <meta name="twitter:image" content="${siteUrl}/assets/item-assist-banner.png">
+  <meta name="twitter:image" content="${siteUrl}/assets/decodemyitem-social-preview.png">
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="responsive-navigation.css">
   <link rel="stylesheet" href="seo-landing.css">
@@ -1197,11 +1201,15 @@ function renderPage(page) {
   <meta property="og:title" content="${pageSocialTitle(page)}">
   <meta property="og:description" content="${pageSocialDescription(page)}">
   <meta property="og:url" content="${url}">
-  <meta property="og:image" content="${siteUrl}/assets/item-assist-banner.png">
+  <meta property="og:image" content="${siteUrl}/assets/decodemyitem-social-preview.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Decode My Item — Serial Number Decoder &amp; Age Lookup">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${pageSocialTitle(page)}">
   <meta name="twitter:description" content="${pageSocialDescription(page)}">
-  <meta name="twitter:image" content="${siteUrl}/assets/item-assist-banner.png">
+  <meta name="twitter:image" content="${siteUrl}/assets/decodemyitem-social-preview.png">
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="responsive-navigation.css">
   <link rel="stylesheet" href="seo-landing.css">

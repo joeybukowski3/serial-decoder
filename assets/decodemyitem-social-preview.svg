@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Decode My Item — Serial Number Decoder &amp; Age Lookup">
+  <title>Decode My Item social preview</title>
+  <defs>
+    <!-- Soft, restrained background treatment (not a heavy gradient wash) -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0b1326"/>
+      <stop offset="100%" stop-color="#0f1a30"/>
+    </linearGradient>
+    <linearGradient id="accentBar" x1="0" y1="0" x2="0" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#44e5c2"/>
+      <stop offset="100%" stop-color="#09f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Canvas -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Left teal accent bar -->
+  <rect x="0" y="0" width="8" height="630" fill="url(#accentBar)"/>
+
+  <!-- Subtle geometric frame (high-end tech, low clutter) -->
+  <rect x="48" y="48" width="1104" height="534" rx="20" fill="none" stroke="rgba(68,229,194,0.16)" stroke-width="1.5"/>
+  <circle cx="1080" cy="120" r="90" fill="none" stroke="rgba(68,229,194,0.08)" stroke-width="1"/>
+  <circle cx="1080" cy="120" r="54" fill="none" stroke="rgba(68,229,194,0.10)" stroke-width="1"/>
+
+  <!--
+    Logo is composited by the renderer (scripts/render-social-preview.mjs)
+    from assets/decodemyitem-logo.png without redrawing or distortion.
+    Approximate placement for template reference:
+  -->
+  <!-- Logo plate matches source logo background (#E5E5E5); PNG renderer embeds assets/decodemyitem-logo.png unchanged -->
+  <rect id="logo-slot" x="96" y="165" width="300" height="300" rx="28" fill="#e5e5e5" stroke="rgba(68,229,194,0.35)" stroke-width="1"/>
+
+  <!-- Typography (Sora matches site brand; renderer embeds web font) -->
+  <g font-family="Sora, 'Segoe UI', system-ui, sans-serif" fill="#dae2fd">
+    <text x="460" y="250" font-size="58" font-weight="800" letter-spacing="-1.5">Decode My Item</text>
+    <text x="460" y="320" font-size="30" font-weight="600" fill="#44e5c2">Serial Number Decoder &amp; Age Lookup</text>
+    <rect x="460" y="350" width="96" height="4" rx="2" fill="#44e5c2"/>
+    <text x="460" y="400" font-size="22" font-weight="500" fill="#bacac3">Appliances · HVAC · Electronics · Water Heaters</text>
+  </g>
+</svg>
