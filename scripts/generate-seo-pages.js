@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { ensureRcvAcvAssets } from '../lib/rcv-acv-asset-tags.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -115,7 +116,11 @@ function canonical(slug) {
 }
 
 function normalizeGeneratedHtml(html) {
-  return html.replace(/[ \t]+$/gm, '');
+  // ensureRcvAcvAssets is markup-gated and idempotent, and runs for every generated page
+  // so regenerating can never silently strip the RCV/ACV linkout assets back out. The
+  // hand-maintained pages get the identical treatment via
+  // scripts/inject-rcv-acv-linkout-assets.js, which shares this same helper.
+  return ensureRcvAcvAssets(html.replace(/[ \t]+$/gm, ''));
 }
 
 function scriptJson(obj) {
