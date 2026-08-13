@@ -319,7 +319,9 @@
   text-decoration: none;
   margin-top: 2px;
 }
-.calc-source-link:hover { text-decoration: underline; }
+.calc-source-link:hover,
+.calc-source-link:focus-visible { text-decoration: underline; }
+.calc-source-link:focus-visible { outline: 2px solid #44e5c2; outline-offset: 2px; border-radius: 2px; }
 
 .calc-source-list {
   list-style: none;
