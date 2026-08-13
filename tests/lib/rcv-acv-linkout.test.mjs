@@ -9,6 +9,7 @@ import {
   matchRcvAcvItemFromCategoryText,
   mapDecoderCategoryToItemId,
   buildRcvAcvUrl,
+  getRcvAcvSidebarCopy,
 } from '../../lib/rcv-acv-linkout-helpers.js';
 import { findRcvAcvItem } from '../../lib/calculators/rcv-acv-items.js';
 
@@ -164,4 +165,19 @@ test('buildRcvAcvUrl never includes a rate parameter — the annual rate is neve
   const url = buildRcvAcvUrl({ age: 8, item: RCV_ACV_ITEM_IDS.WASHER, source: 'smart-lookup', basis: 'estimated' });
   assert.equal(url.includes('rate'), false);
   assert.equal(url.includes('annualRate'), false);
+});
+
+// Sidebar card body copy — state-appropriate per basis.
+test('getRcvAcvSidebarCopy returns the deterministic-decoder copy for basis "deterministic"', () => {
+  assert.equal(getRcvAcvSidebarCopy('deterministic'), "Use this item's age to estimate depreciation and actual cash value.");
+});
+
+test('getRcvAcvSidebarCopy returns the Smart Lookup estimate copy for basis "estimated"', () => {
+  assert.equal(getRcvAcvSidebarCopy('estimated'), 'Use this estimated age to preview depreciation and actual cash value.');
+});
+
+test('getRcvAcvSidebarCopy returns the generic no-age copy for a null/unknown basis', () => {
+  assert.equal(getRcvAcvSidebarCopy(null), 'Estimate depreciation and actual cash value for this item.');
+  assert.equal(getRcvAcvSidebarCopy(undefined), 'Estimate depreciation and actual cash value for this item.');
+  assert.equal(getRcvAcvSidebarCopy('something-else'), 'Estimate depreciation and actual cash value for this item.');
 });

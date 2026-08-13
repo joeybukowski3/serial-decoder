@@ -1,39 +1,41 @@
-// Adds a secondary "Estimate RCV / ACV" link to successful Serial Decoder results,
-// deep-linking into /rcv-acv-calculator with a pre-filled item age (when one can be
-// determined responsibly) and, occasionally, a matching item type.
+// Adds an "RCV / ACV Calculator" sidebar card directly under the Item Assist card in the
+// Serial Decoder's right-side result column, deep-linking into /rcv-acv-calculator with a
+// pre-filled item age (when one can be determined responsibly) and, occasionally, a
+// matching item type.
 //
-// Smart Lookup's own equivalent linkout lives directly in
+// Smart Lookup's own equivalent sidebar card lives directly in
 // src/browser/smart-lookup-controller.js (mountRcvAcvLinkout), next to the actual
-// age-result renderer, rather than here — verified via live browser QA that
-// #smart-lookup-age-panel / mountUpsell() is the code path smart-lookup.html and
-// decoder-tool.html's embedded Smart Lookup actually use. The showAgeLookupResults patch
-// below is kept as an inert, try/catch-guarded fallback for script.js's separate
-// "age-only" render path (queryKind: "age-only") in case that path is ever the one that
-// fires instead; it has not been observed to run in the pages tested.
+// age-result renderer and its own Item Assist mount (#smartLookupItemAssistMount) — that
+// is the code path smart-lookup.html and decoder-tool.html's embedded Smart Lookup
+// actually use, confirmed via live browser QA.
 //
 // This file intentionally does not modify decoder logic, Smart Lookup scoring, or the
-// verified Claims Pages rate dataset. It only reads already-rendered result data. All
-// matching/age logic lives in lib/rcv-acv-linkout-helpers.js so it can be unit tested
-// without a DOM.
+// verified Claims Pages rate dataset. It only reads already-rendered result data and
+// appends a card. All matching/age/copy logic lives in lib/rcv-acv-linkout-helpers.js so
+// it can be unit tested without a DOM.
 import {
   hasSingleResolvedYear,
   parseCandidateYears,
   ageFromYear,
-  isCleanSingleYear,
-  matchRcvAcvItemFromCategoryText,
   mapDecoderCategoryToItemId,
   buildRcvAcvUrl,
+  getRcvAcvSidebarCopy,
 } from '/lib/rcv-acv-linkout-helpers.js';
 
-function buildRcvAcvCtaElement(url) {
-  const wrap = document.createElement('div');
-  wrap.className = 'rcv-acv-linkout';
-  const link = document.createElement('a');
-  link.className = 'rcv-acv-linkout-link';
-  link.href = url;
-  link.textContent = 'Estimate RCV / ACV →';
-  wrap.appendChild(link);
-  return wrap;
+function buildRcvAcvSidebarCard(url, basis) {
+  const card = document.createElement('div');
+  card.className = 'rcv-acv-sidebar-card';
+  card.innerHTML =
+    '<div class="rcv-acv-sidebar-header">' +
+      '<span class="rcv-acv-sidebar-icon" aria-hidden="true">🧮</span>' +
+      '<h4 class="rcv-acv-sidebar-title">RCV / ACV CALCULATOR</h4>' +
+    '</div>' +
+    `<p class="rcv-acv-sidebar-body"></p>` +
+    '<a class="rcv-acv-sidebar-cta">Estimate RCV / ACV</a>';
+  card.querySelector('.rcv-acv-sidebar-body').textContent = getRcvAcvSidebarCopy(basis);
+  const cta = card.querySelector('.rcv-acv-sidebar-cta');
+  cta.href = url;
+  return card;
 }
 
 // ─── Serial Decoder ───────────────────────────────────────────────────────────────
@@ -44,12 +46,18 @@ function getActiveDecoderCategory() {
 }
 
 function handleDecoderResult(summaryLayerNode) {
-  const existing = summaryLayerNode.querySelector('.rcv-acv-linkout');
+  // #itemAssistMount is the right-column mount (see .rs-primary-row in result-shell.css)
+  // that already holds the Item Assist card; the sidebar card is appended as its next
+  // sibling so it reads as "directly underneath" that card, not a separate location.
+  const mount = summaryLayerNode.querySelector('#itemAssistMount');
+  if (!mount) return;
+
+  const existing = mount.querySelector('.rcv-acv-sidebar-card');
   if (existing) existing.remove();
 
   const resultYearEl = document.getElementById('resultYear');
   const yearText = resultYearEl ? resultYearEl.textContent : '';
-  if (!yearText || !yearText.trim()) return; // no-match / fallback state — CTA would be misleading
+  if (!yearText || !yearText.trim()) return; // no-match / fallback state — card would be misleading
 
   let age = null;
   let basis = null;
@@ -61,18 +69,18 @@ function handleDecoderResult(summaryLayerNode) {
     }
   }
   // Ambiguous / repeating-cycle / multi-year results fall through with age left null —
-  // the CTA is still shown (still useful), just without a guessed age.
+  // the card is still shown (still useful), just without a guessed age.
 
   const itemId = mapDecoderCategoryToItemId(getActiveDecoderCategory());
   const url = buildRcvAcvUrl({ age, item: itemId, source: 'serial-decoder', basis });
 
-  summaryLayerNode.appendChild(buildRcvAcvCtaElement(url));
+  mount.appendChild(buildRcvAcvSidebarCard(url, basis));
 }
 
 // #serialSummaryLayer is a persistent node that the decoder repopulates via innerHTML on
 // every decode/refinement (it is not removed and re-added), so this observes that node's
 // own subtree directly rather than waiting for the node itself to appear. The
-// disconnect/reconnect pair around handleDecoderResult prevents the CTA we append from
+// disconnect/reconnect pair around handleDecoderResult prevents the card we append from
 // re-triggering this same observer.
 function initDecoderObserver() {
   const layer = document.getElementById('serialSummaryLayer');
@@ -89,61 +97,14 @@ function initDecoderObserver() {
     });
     observer.observe(layer, { childList: true, subtree: true });
   } catch {
-    // Never let CTA wiring break the decoder page.
+    // Never let card wiring break the decoder page.
   }
-}
-
-// ─── Smart Lookup ─────────────────────────────────────────────────────────────────
-
-function getSmartLookupResultsEl() {
-  return document.getElementById('smart-lookup-results') || document.getElementById('ageResultsBody');
-}
-
-function handleSmartLookupAgeResult(query, result) {
-  if (!result) return;
-  const container = getSmartLookupResultsEl();
-  if (!container) return;
-
-  let age = null;
-  let basis = null;
-  // Only ever use a directly-provided single estimated year. A production range
-  // (result.yearRange) never gets turned into a midpoint age here, even when it's the
-  // only year information available.
-  if (isCleanSingleYear(result.estimatedYear)) {
-    const computedAge = ageFromYear(parseInt(result.estimatedYear, 10));
-    if (computedAge !== null) {
-      age = computedAge;
-      basis = 'estimated';
-    }
-  }
-
-  const categoryText = result.itemCategory || result.productFamily || result.category || '';
-  const itemId = matchRcvAcvItemFromCategoryText(categoryText);
-
-  const url = buildRcvAcvUrl({ age, item: itemId, source: 'smart-lookup', basis });
-  container.appendChild(buildRcvAcvCtaElement(url));
-}
-
-function patchSmartLookupAgeRenderer() {
-  const original = window.showAgeLookupResults;
-  if (typeof original !== 'function' || original.__rcvAcvPatched) return;
-  window.showAgeLookupResults = function patchedShowAgeLookupResults(query, result) {
-    const returnValue = original.apply(this, arguments);
-    try {
-      handleSmartLookupAgeResult(query, result);
-    } catch {
-      // Never let CTA wiring break the Smart Lookup results renderer.
-    }
-    return returnValue;
-  };
-  window.showAgeLookupResults.__rcvAcvPatched = true;
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────────
 
 function init() {
   initDecoderObserver();
-  patchSmartLookupAgeRenderer();
 }
 
 if (document.readyState === 'loading') {
