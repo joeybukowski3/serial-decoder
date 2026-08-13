@@ -1,27 +1,106 @@
-/* Secondary "Estimate RCV / ACV" link appended to successful Serial Decoder and Smart
-   Lookup results. Deliberately lightweight — a link, not a card or button — so it stays
-   visually secondary to the primary decoding result. */
+/* "RCV / ACV Calculator" sidebar card appended directly under the Item Assist card in
+   the Serial Decoder and Smart Lookup right-side result column. Mirrors the visual
+   language of .ia-upsell-card / .ia-upsell-* in result-shell.css (dark card, left accent
+   border, icon + heading row, colorful CTA button) but in teal rather than amber, so the
+   two cards read as a matched pair rather than duplicates of each other. */
 
-.rcv-acv-linkout {
-  margin-top: 14px;
+/* The mount already holding the Item Assist card becomes a simple vertical stack once a
+   second card is appended into it. */
+#itemAssistMount,
+#smartLookupItemAssistMount {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.rcv-acv-linkout-link {
+.rcv-acv-sidebar-card {
+  background: linear-gradient(180deg, rgba(68, 229, 194, 0.08), var(--navy-mid, #131b2e));
+  border: 1px solid rgba(68, 229, 194, 0.4);
+  border-left: 4px solid #44e5c2;
+  border-radius: 14px;
+  padding: 18px;
+  box-sizing: border-box;
+}
+
+.rcv-acv-sidebar-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.rcv-acv-sidebar-icon {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(68, 229, 194, 0.16);
+  font-size: 16px;
+}
+
+/* Two-class-specific selectors + !important below are deliberate: result-shell.css is
+   injected into <head> at runtime by script.js (after this stylesheet's static <link>)
+   and carries broad !important text-color rules for .results-card p / a. A single-class
+   selector would lose that specificity fight regardless of load order, so every rule that
+   needs to win is scoped under .rcv-acv-sidebar-card to out-specify theirs. */
+.rcv-acv-sidebar-card .rcv-acv-sidebar-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #44e5c2 !important;
+  margin: 0;
+  align-self: center;
+}
+
+.rcv-acv-sidebar-card .rcv-acv-sidebar-body {
   font-size: 13px;
-  font-weight: 600;
-  color: #44e5c2;
-  text-decoration: none;
+  color: #aab4c8 !important;
+  line-height: 1.55;
+  margin: 0 0 14px;
 }
 
-.rcv-acv-linkout-link:hover,
-.rcv-acv-linkout-link:focus-visible {
-  text-decoration: underline;
+.rcv-acv-sidebar-card .rcv-acv-sidebar-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #44e5c2;
+  color: #00382d !important;
+  font-family: Sora, sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 13px 20px;
+  border-radius: 12px;
+  text-decoration: none !important;
+  box-shadow: 0 10px 24px rgba(68, 229, 194, 0.28);
 }
 
-.rcv-acv-linkout-link:focus-visible {
-  outline: 2px solid #44e5c2;
+.rcv-acv-sidebar-card .rcv-acv-sidebar-cta:hover,
+.rcv-acv-sidebar-card .rcv-acv-sidebar-cta:focus-visible {
+  filter: brightness(1.04);
+}
+
+.rcv-acv-sidebar-card .rcv-acv-sidebar-cta:focus-visible {
+  outline: 2px solid #ffffff;
   outline-offset: 2px;
-  border-radius: 2px;
+}
+
+/* #smart-lookup-results.results-body * {color:var(--rs-text)!important} in result-shell.css
+   is ID-scoped, which out-specifies the two-class rules above regardless of source order.
+   These re-assert the same colors with an ID of their own so the card looks identical
+   inside Smart Lookup's result shell as it does inside the Serial Decoder's. */
+#smart-lookup-results .rcv-acv-sidebar-card .rcv-acv-sidebar-title {
+  color: #44e5c2 !important;
+}
+
+#smart-lookup-results .rcv-acv-sidebar-card .rcv-acv-sidebar-body {
+  color: #aab4c8 !important;
+}
+
+#smart-lookup-results .rcv-acv-sidebar-card .rcv-acv-sidebar-cta {
+  color: #00382d !important;
 }

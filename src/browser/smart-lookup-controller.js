@@ -238,6 +238,14 @@
   function ensureShell() {
     var root = resultsRoot();
     if (!root) return null;
+    // ensureUpsellCard() (script.js) looks up its mount via
+    // document.getElementById(resultsContainerId).querySelector(".results-body") -- for
+    // the age flow that's #ageResults > ... > #smart-lookup-results. Without this class
+    // on #smart-lookup-results, that lookup always failed and the Item Assist card never
+    // mounted here at all. result-shell.css already has dormant, ID-scoped rules keyed off
+    // "#smart-lookup-results.results-body" (its dark-theme text-color overrides), so this
+    // also activates styling that was already written for this class, not new styling.
+    root.classList.add('results-body');
     if (!root.querySelector('[data-smart-lookup-controller="1"]')) {
       root.innerHTML = '<div class="rs-search-summary" id="smartLookupSearchSummary"></div>' +
         '<div class="rs-primary-row">' +
@@ -324,9 +332,21 @@
     return null;
   }
 
+  // State-appropriate body copy for the RCV/ACV sidebar card. Keep this in sync with
+  // getRcvAcvSidebarCopy in lib/rcv-acv-linkout-helpers.js (duplicated here because this
+  // file is built as a classic, non-module script).
+  function rcvAcvSidebarCopy(basis) {
+    if (basis === 'estimated') return 'Use this estimated age to preview depreciation and actual cash value.';
+    if (basis === 'deterministic') return "Use this item's age to estimate depreciation and actual cash value.";
+    return 'Estimate depreciation and actual cash value for this item.';
+  }
+
   var lastRcvAcvLinkoutSignature = '';
-  // Adds a secondary "Estimate RCV / ACV" link once an age lookup has succeeded. Age is
-  // only ever taken from data.individualManufactureYear (or an equivalent exact-unit
+  // Mounts an "RCV / ACV Calculator" sidebar card once an age lookup has succeeded,
+  // directly under the Item Assist card in the same right-column mount
+  // (#smartLookupItemAssistMount -- see .rs-primary-row in result-shell.css) so the two
+  // read as a matched pair rather than two separate, competing links. Age is only ever
+  // taken from data.individualManufactureYear (or an equivalent exact-unit
   // data.yearContext) -- never from introductionYear (product-family launch date, not
   // this unit's age) and never from a production range midpoint. See getYearContext()
   // above for the same distinction the results panel itself uses.
@@ -358,17 +378,20 @@
     if (basis) params.push('basis=' + encodeURIComponent(basis));
     var url = '/rcv-acv-calculator?' + params.join('&');
 
-    var mount = $('smartLookupRcvAcvMount');
-    if (!mount) {
-      // Appended inside the primary result card itself (sibling of the age panel), not
-      // beside the separate Item Assist upsell card, so it reads as secondary detail on
-      // the decoding result rather than a second competing offer.
-      var controllerEl = root.querySelector('[data-smart-lookup-controller="1"]');
-      mount = document.createElement('div');
-      mount.id = 'smartLookupRcvAcvMount';
-      (controllerEl || root).appendChild(mount);
+    var mount = $('smartLookupItemAssistMount');
+    if (!mount) return;
+    var card = mount.querySelector('.rcv-acv-sidebar-card');
+    if (!card) {
+      card = document.createElement('div');
+      card.className = 'rcv-acv-sidebar-card';
+      mount.appendChild(card);
     }
-    mount.innerHTML = '<div class="rcv-acv-linkout"><a class="rcv-acv-linkout-link" href="' + escapeHtml(url) + '">Estimate RCV / ACV →</a></div>';
+    card.innerHTML = '<div class="rcv-acv-sidebar-header">' +
+      '<span class="rcv-acv-sidebar-icon" aria-hidden="true">🧮</span>' +
+      '<h4 class="rcv-acv-sidebar-title">RCV / ACV CALCULATOR</h4>' +
+      '</div>' +
+      '<p class="rcv-acv-sidebar-body">' + escapeHtml(rcvAcvSidebarCopy(basis)) + '</p>' +
+      '<a class="rcv-acv-sidebar-cta" href="' + escapeHtml(url) + '">Estimate RCV / ACV</a>';
   }
 
   function showResults() {
