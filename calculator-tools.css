@@ -53,6 +53,11 @@
   line-height: 1.5;
 }
 
+.calc-prefill-note {
+  color: #44e5c2;
+  font-weight: 600;
+}
+
 .calc-input-wrap {
   position: relative;
   display: flex;

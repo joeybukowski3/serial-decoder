@@ -6,6 +6,18 @@ const NO_RATE_HINT = 'No verified insurance reference rate is available for this
 const CLAIMS_PAGES_RATE_LABEL = 'Claims Pages reference rate';
 const CUSTOM_RATE_LABEL = 'Custom rate';
 
+// Sanity bound for an age arriving via URL query parameter. This is a defensive guard on
+// untrusted input, not a change to the calculator's own age validation (calculateRcvAcv
+// itself accepts any non-negative finite age).
+const MAX_PREFILL_AGE_YEARS = 150;
+
+const PREFILL_SOURCES = new Set(['serial-decoder', 'smart-lookup']);
+
+const PREFILL_DISCLOSURE_TEXT = {
+  deterministic: 'Age pre-filled from your Decode My Item serial-number result.',
+  estimated: 'Age pre-filled from your Smart Lookup estimate. Review it before calculating.',
+};
+
 function formatCurrency(value) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 }
@@ -65,6 +77,7 @@ function initRcvAcvCalculator() {
     annualRateHint: document.getElementById('calcAnnualRateHint'),
     replacementCost: document.getElementById('calcReplacementCost'),
     ageYears: document.getElementById('calcAgeYears'),
+    agePrefillNote: document.getElementById('calcAgePrefillNote'),
     maxDepreciationSelect: document.getElementById('calcMaxDepreciation'),
     maxDepreciationCustom: document.getElementById('calcMaxDepreciationCustom'),
     manualAdjustment: document.getElementById('calcManualAdjustment'),
@@ -87,6 +100,20 @@ function initRcvAcvCalculator() {
 
   let hasCalculated = false;
   let currentRateLabel = 'Annual rate';
+  let prefilledAgeValue = null;
+
+  function hideAgePrefillNote() {
+    if (!els.agePrefillNote) return;
+    els.agePrefillNote.hidden = true;
+    els.agePrefillNote.textContent = '';
+    prefilledAgeValue = null;
+  }
+
+  function showAgePrefillNote(basis) {
+    if (!els.agePrefillNote) return;
+    els.agePrefillNote.textContent = PREFILL_DISCLOSURE_TEXT[basis] || PREFILL_DISCLOSURE_TEXT.estimated;
+    els.agePrefillNote.hidden = false;
+  }
 
   buildItemTypeOptions(els.itemType);
 
@@ -183,6 +210,10 @@ function initRcvAcvCalculator() {
     els.manualAdjustment.addEventListener(evt, renderIfCalculated);
   });
 
+  els.ageYears.addEventListener('input', () => {
+    if (prefilledAgeValue !== null && els.ageYears.value !== prefilledAgeValue) hideAgePrefillNote();
+  });
+
   els.maxDepreciationSelect.addEventListener('change', () => {
     syncCustomFieldVisibility();
     renderIfCalculated();
@@ -205,6 +236,7 @@ function initRcvAcvCalculator() {
     els.maxDepreciationCustom.value = '';
     els.manualAdjustment.value = '';
     syncCustomFieldVisibility();
+    hideAgePrefillNote();
     hasCalculated = false;
     els.emptyState.hidden = false;
     els.errorBox.hidden = true;
@@ -235,6 +267,52 @@ function initRcvAcvCalculator() {
   });
 
   syncCustomFieldVisibility();
+
+  applyQueryPrefill();
+
+  // Reads and validates ?age, ?item, ?source, ?basis from the URL (e.g. a link from a
+  // Serial Decoder or Smart Lookup result). Every value is validated against the
+  // calculator's own rules before use; unknown/invalid values are silently ignored.
+  // The annual rate is never read from the URL — it always comes from findRcvAcvItem()
+  // via applyItemType(), so a query string can never inject a rate for a confirmed item.
+  function applyQueryPrefill() {
+    let params;
+    try {
+      params = new URLSearchParams(window.location.search);
+    } catch {
+      return;
+    }
+
+    const source = params.get('source');
+    const basisParam = params.get('basis');
+    const basis = basisParam === 'estimated' ? 'estimated' : 'deterministic';
+
+    let ageWasApplied = false;
+
+    const ageParam = params.get('age');
+    if (ageParam !== null && ageParam !== '') {
+      const ageNum = Number(ageParam);
+      if (Number.isFinite(ageNum) && ageNum >= 0 && ageNum <= MAX_PREFILL_AGE_YEARS) {
+        const ageStr = String(ageNum);
+        els.ageYears.value = ageStr;
+        prefilledAgeValue = ageStr;
+        ageWasApplied = true;
+      }
+    }
+
+    const itemParam = params.get('item');
+    if (itemParam) {
+      const optionExists = Array.from(els.itemType.options).some((option) => option.value === itemParam);
+      if (optionExists) {
+        els.itemType.value = itemParam;
+        applyItemType();
+      }
+    }
+
+    if (ageWasApplied && PREFILL_SOURCES.has(source)) {
+      showAgePrefillNote(basis);
+    }
+  }
 }
 
 if (document.readyState === 'loading') {

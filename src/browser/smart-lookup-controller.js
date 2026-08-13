@@ -283,6 +283,94 @@
     });
   }
 
+  // Keyword→RCV/ACV-item-id matching for the "Estimate RCV / ACV" linkout below. Keep
+  // this in sync with matchRcvAcvItemFromCategoryText in lib/rcv-acv-linkout-helpers.js
+  // (duplicated here because this file is built as a classic, non-module script — see
+  // scripts/build-smart-lookup-browser.js). Word-boundary regexes so e.g. "washer" never
+  // matches inside "dishwasher". Every id here must exist as a CONFIRMED item in
+  // lib/calculators/rcv-acv-items.js; ambiguous categories (a bare "dryer", "air
+  // conditioner" with no "central" qualifier, etc.) are intentionally left unmapped.
+  var RCV_ACV_ITEM_IDS = {
+    REFRIGERATOR: 'kitchen-appliances-refrigerator',
+    DISHWASHER: 'kitchen-appliances-dishwasher',
+    WASHER: 'laundry-washing-machine',
+    ELECTRIC_DRYER: 'laundry-electric-dryer',
+    GAS_DRYER: 'laundry-gas-dryer',
+    MICROWAVE: 'kitchen-appliances-microwave-oven',
+    CENTRAL_AC: 'hvac-heating-cooling-central-air-conditioner',
+    HEAT_PUMP: 'hvac-heating-cooling-heat-pump-air-to-air',
+    WATER_HEATER: 'water-heaters-plumbing-water-heater-electric-gas-or-oil',
+    TANKLESS_WATER_HEATER: 'water-heaters-plumbing-tankless-water-heater',
+    GARBAGE_DISPOSAL: 'kitchen-appliances-garbage-disposal',
+  };
+
+  function matchRcvAcvItemFromCategoryText(text) {
+    var t = String(text || '').toLowerCase();
+    if (!t) return null;
+    if (/\btankless\b/.test(t) && /\bwater heaters?\b/.test(t)) return RCV_ACV_ITEM_IDS.TANKLESS_WATER_HEATER;
+    if (/\bwater heaters?\b/.test(t)) return RCV_ACV_ITEM_IDS.WATER_HEATER;
+    if (/\bdishwashers?\b/.test(t)) return RCV_ACV_ITEM_IDS.DISHWASHER;
+    if (/\bwashers?\b/.test(t) || /\bwashing machines?\b/.test(t)) return RCV_ACV_ITEM_IDS.WASHER;
+    if (/\belectric dryers?\b/.test(t)) return RCV_ACV_ITEM_IDS.ELECTRIC_DRYER;
+    if (/\bgas dryers?\b/.test(t)) return RCV_ACV_ITEM_IDS.GAS_DRYER;
+    if (/\bmicrowaves?\b/.test(t) && !/\bbuilt-?in\b/.test(t)) return RCV_ACV_ITEM_IDS.MICROWAVE;
+    if (/\bcentral\b/.test(t) && (/\bair conditioners?\b/.test(t) || /\bac\b/.test(t))) return RCV_ACV_ITEM_IDS.CENTRAL_AC;
+    if (/\bheat pumps?\b/.test(t)) return RCV_ACV_ITEM_IDS.HEAT_PUMP;
+    if (/\bgarbage disposals?\b/.test(t) || /\bdisposals?\b/.test(t)) return RCV_ACV_ITEM_IDS.GARBAGE_DISPOSAL;
+    if (/\brefrigerators?\b/.test(t) || /\bfridges?\b/.test(t)) {
+      if (/\bmini\b/.test(t) || /\bcompact\b/.test(t) || /\bbuilt-?in\b/.test(t) || /\bwine\b/.test(t)) return null;
+      return RCV_ACV_ITEM_IDS.REFRIGERATOR;
+    }
+    return null;
+  }
+
+  var lastRcvAcvLinkoutSignature = '';
+  // Adds a secondary "Estimate RCV / ACV" link once an age lookup has succeeded. Age is
+  // only ever taken from data.individualManufactureYear (or an equivalent exact-unit
+  // data.yearContext) -- never from introductionYear (product-family launch date, not
+  // this unit's age) and never from a production range midpoint. See getYearContext()
+  // above for the same distinction the results panel itself uses.
+  function mountRcvAcvLinkout(query, ageState) {
+    var root = resultsRoot();
+    if (!root || !query) return;
+    var data = (ageState && ageState.data) || {};
+
+    var context = getYearContext(data);
+    var age = null;
+    var basis = null;
+    if (context && context.isExactUnitDate && typeof context.value === 'number' && isFinite(context.value)) {
+      var computedAge = new Date().getFullYear() - context.value;
+      if (computedAge >= 0) {
+        age = computedAge;
+        basis = 'estimated';
+      }
+    }
+
+    var itemId = matchRcvAcvItemFromCategoryText(data.itemCategory || data.productFamily || '');
+    var signature = query + '|' + age + '|' + itemId;
+    if (lastRcvAcvLinkoutSignature === signature) return;
+    lastRcvAcvLinkoutSignature = signature;
+
+    var params = [];
+    if (age !== null) params.push('age=' + encodeURIComponent(String(age)));
+    if (itemId) params.push('item=' + encodeURIComponent(itemId));
+    params.push('source=smart-lookup');
+    if (basis) params.push('basis=' + encodeURIComponent(basis));
+    var url = '/rcv-acv-calculator?' + params.join('&');
+
+    var mount = $('smartLookupRcvAcvMount');
+    if (!mount) {
+      // Appended inside the primary result card itself (sibling of the age panel), not
+      // beside the separate Item Assist upsell card, so it reads as secondary detail on
+      // the decoding result rather than a second competing offer.
+      var controllerEl = root.querySelector('[data-smart-lookup-controller="1"]');
+      mount = document.createElement('div');
+      mount.id = 'smartLookupRcvAcvMount';
+      (controllerEl || root).appendChild(mount);
+    }
+    mount.innerHTML = '<div class="rcv-acv-linkout"><a class="rcv-acv-linkout-link" href="' + escapeHtml(url) + '">Estimate RCV / ACV →</a></div>';
+  }
+
   function showResults() {
     var loading = $('ageLoading');
     var ageResults = $('ageResults');
@@ -851,6 +939,9 @@
     if (state.age.status === 'success') setAgePanel(renderAge(state.age.data));
     if (state.age.status === 'error') setAgePanel(noResultCard(state.age.copy, 'age'));
     if (state.age.status === 'success' || state.age.status === 'error') mountUpsell(query, state.age);
+    // Excluded from the 'error' branch on purpose: a CTA to estimate depreciation would
+    // be misleading when Smart Lookup could not identify the item at all.
+    if (state.age.status === 'success') mountRcvAcvLinkout(query, state.age);
   }
 
   function fetchJson(url, body, signal) {

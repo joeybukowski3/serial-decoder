@@ -1,0 +1,27 @@
+/* Secondary "Estimate RCV / ACV" link appended to successful Serial Decoder and Smart
+   Lookup results. Deliberately lightweight — a link, not a card or button — so it stays
+   visually secondary to the primary decoding result. */
+
+.rcv-acv-linkout {
+  margin-top: 14px;
+}
+
+.rcv-acv-linkout-link {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #44e5c2;
+  text-decoration: none;
+}
+
+.rcv-acv-linkout-link:hover,
+.rcv-acv-linkout-link:focus-visible {
+  text-decoration: underline;
+}
+
+.rcv-acv-linkout-link:focus-visible {
+  outline: 2px solid #44e5c2;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
