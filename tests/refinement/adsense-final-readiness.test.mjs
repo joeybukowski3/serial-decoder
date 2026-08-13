@@ -30,6 +30,15 @@ const consolidatedFiles = [
   'whirlpool-dishwasher-serial-number-lookup.html'
 ];
 
+// Baseline approval-facing inventory locked in by the 2026-07 AdSense consolidation pass.
+// Growth beyond this baseline must be an explicit, reviewed addition below — not silent drift —
+// so this list is the record of every legitimate page added to the sitemap since that pass.
+const BASELINE_INDEXABLE_LOC_COUNT = 54;
+const approvedSitemapAdditions = [
+  '/rcv-acv-calculator',
+  '/sales-tax-decalculator'
+];
+
 function count(html, pattern) {
   return (html.match(pattern) || []).length;
 }
@@ -40,7 +49,14 @@ test('all eight weak-route dispositions are explicit and approval-facing invento
     assert.ok(decisions.includes(`| \`${route}\` |`), `${route} needs a recorded disposition`);
     assert.ok(!sitemap.includes(`<loc>https://www.decodemyitem.com${route}</loc>`), `${route} must be absent from sitemap`);
   }
-  assert.equal([...sitemap.matchAll(/<loc>/g)].length, 54);
+  for (const route of approvedSitemapAdditions) {
+    assert.ok(sitemap.includes(`<loc>https://www.decodemyitem.com${route}</loc>`), `${route} is a recorded approved addition and must be present in the sitemap`);
+  }
+  assert.equal(
+    [...sitemap.matchAll(/<loc>/g)].length,
+    BASELINE_INDEXABLE_LOC_COUNT + approvedSitemapAdditions.length,
+    'sitemap inventory must equal the baseline plus only the explicitly approved additions above — unexplained growth or shrinkage should fail this test'
+  );
 });
 
 test('public workflow utilities have one noindex policy, self-canonical, and minimal schema', () => {

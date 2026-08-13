@@ -1,0 +1,150 @@
+/* "RCV / ACV Calculator" sidebar card appended directly under the Item Assist card in
+   the Serial Decoder and Smart Lookup right-side result column. Mirrors the visual
+   language of .ia-upsell-card / .ia-upsell-* in result-shell.css (dark card, left accent
+   border, icon + heading row, colorful CTA button) but in teal rather than amber, so the
+   two cards read as a matched pair rather than duplicates of each other. */
+
+/* The mount already holding the Item Assist card becomes a simple vertical stack once a
+   second card is appended into it. */
+#itemAssistMount,
+#smartLookupItemAssistMount {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Both mounts are grid items of .rs-primary-row (result-shell.css), which stretches them
+   to the full row height, and .ia-upsell-card carries height:100% — written back when the
+   mount had exactly one child and had to fill that stretched cell. With a second card in
+   the column, Item Assist's flex base becomes the whole row height, the column is
+   over-subscribed, and flex-shrink resolves it by pinning this card's bottom edge exactly
+   to the row boundary — flush against the bottom action row instead of sitting in normal
+   flow directly under Item Assist. Sizing the column by its content instead leaves the
+   slack below the stack, where it belongs.
+
+   Scoped with :has() so the single-card states (no-match results, which never show this
+   card) keep their existing full-height Item Assist card untouched; browsers without
+   :has() simply fall back to the previous behavior. */
+#itemAssistMount:has(> .rcv-acv-sidebar-card),
+#smartLookupItemAssistMount:has(> .rcv-acv-sidebar-card) {
+  align-self: start;
+}
+
+#itemAssistMount:has(> .rcv-acv-sidebar-card) > .ia-upsell-card,
+#smartLookupItemAssistMount:has(> .rcv-acv-sidebar-card) > .ia-upsell-card {
+  height: auto;
+  flex: 0 0 auto;
+}
+
+#itemAssistMount > .rcv-acv-sidebar-card,
+#smartLookupItemAssistMount > .rcv-acv-sidebar-card {
+  flex: 0 0 auto;
+}
+
+.rcv-acv-sidebar-card {
+  background: linear-gradient(180deg, rgba(68, 229, 194, 0.08), var(--navy-mid, #131b2e));
+  border: 1px solid rgba(68, 229, 194, 0.4);
+  border-left: 4px solid #44e5c2;
+  border-radius: 14px;
+  padding: 18px;
+  box-sizing: border-box;
+  /* Same column layout .ia-upsell-card uses, so the CTA stretches to the card width the
+     way Item Assist's "Request Expert Review" button does rather than shrink-wrapping. */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.rcv-acv-sidebar-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.rcv-acv-sidebar-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(68, 229, 194, 0.16);
+  font-size: 16px;
+}
+
+/* Two-class-specific selectors + !important below are deliberate: result-shell.css is
+   injected into <head> at runtime by script.js (after this stylesheet's static <link>)
+   and carries broad !important text-color rules for .results-card p / a. A single-class
+   selector would lose that specificity fight regardless of load order, so every rule that
+   needs to win is scoped under .rcv-acv-sidebar-card to out-specify theirs. */
+.rcv-acv-sidebar-card .rcv-acv-sidebar-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #44e5c2 !important;
+  margin: 0;
+  align-self: center;
+}
+
+.rcv-acv-sidebar-card .rcv-acv-sidebar-body {
+  font-size: 13px;
+  color: #aab4c8 !important;
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
+
+.rcv-acv-sidebar-card .rcv-acv-sidebar-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #44e5c2;
+  color: #00382d !important;
+  font-family: Sora, sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 13px 20px;
+  border-radius: 12px;
+  text-decoration: none !important;
+  box-shadow: 0 10px 24px rgba(68, 229, 194, 0.28);
+}
+
+.rcv-acv-sidebar-card .rcv-acv-sidebar-cta:hover,
+.rcv-acv-sidebar-card .rcv-acv-sidebar-cta:focus-visible {
+  filter: brightness(1.04);
+}
+
+.rcv-acv-sidebar-card .rcv-acv-sidebar-cta:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* result-shell.css's "#smart-lookup-results .info-block { padding: 15px 16px !important;
+   border-radius: 10px !important }" out-specifies .ia-upsell-card's own 18px/14px, so the
+   Item Assist card renders tighter and less rounded inside Smart Lookup than it does on
+   the Serial Decoder. Match that geometry here so the two cards read as siblings on both
+   surfaces (the Serial Decoder keeps the 18px/14px above, where Item Assist is 18px/14px
+   too). */
+#smart-lookup-results .rcv-acv-sidebar-card {
+  padding: 15px 16px;
+  border-radius: 10px;
+}
+
+/* #smart-lookup-results.results-body * {color:var(--rs-text)!important} in result-shell.css
+   is ID-scoped, which out-specifies the two-class rules above regardless of source order.
+   These re-assert the same colors with an ID of their own so the card looks identical
+   inside Smart Lookup's result shell as it does inside the Serial Decoder's. */
+#smart-lookup-results .rcv-acv-sidebar-card .rcv-acv-sidebar-title {
+  color: #44e5c2 !important;
+}
+
+#smart-lookup-results .rcv-acv-sidebar-card .rcv-acv-sidebar-body {
+  color: #aab4c8 !important;
+}
+
+#smart-lookup-results .rcv-acv-sidebar-card .rcv-acv-sidebar-cta {
+  color: #00382d !important;
+}

@@ -422,6 +422,14 @@
       "destination": "/appliance-age-for-insurance-and-replacement.html"
     },
     {
+      "source": "/rcv-acv-calculator",
+      "destination": "/rcv-acv-calculator.html"
+    },
+    {
+      "source": "/sales-tax-decalculator",
+      "destination": "/sales-tax-decalculator.html"
+    },
+    {
       "source": "/refrigerator-serial-number",
       "destination": "/refrigerator-serial-number.html"
     },
