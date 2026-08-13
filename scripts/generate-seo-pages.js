@@ -4054,6 +4054,8 @@ const sitemapEntries = [
   ['/how-old-is-my-electronics', 'monthly', '0.9'],
   ['/serial-number-location-guide', 'monthly', '0.9'],
   ['/appliance-age-for-insurance-and-replacement', 'monthly', '0.8'],
+  ['/rcv-acv-calculator', 'monthly', '0.8'],
+  ['/sales-tax-decalculator', 'monthly', '0.8'],
   ['/how-to-find-hvac-age', 'monthly', '0.8'],
   ['/how-to-read-serial-number', 'monthly', '0.8'],
   ['/hvac-age-by-serial-number', 'monthly', '0.8'],
