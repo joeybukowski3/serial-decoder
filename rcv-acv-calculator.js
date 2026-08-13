@@ -1,4 +1,10 @@
 import { calculateRcvAcv } from '/lib/calculators/rcv-acv.js';
+import { CONFIRMED_ITEMS, UNDETERMINED_ITEMS, OTHER_CUSTOM_ITEM, findRcvAcvItem } from '/lib/calculators/rcv-acv-items.js';
+
+const DEFAULT_RATE_HINT = 'Select an Item Type above to load its reference rate, or enter a rate directly.';
+const NO_RATE_HINT = 'No verified insurance reference rate is available for this item. Enter the annual depreciation rate required by your claim or estimating methodology.';
+const CLAIMS_PAGES_RATE_LABEL = 'Claims Pages reference rate';
+const CUSTOM_RATE_LABEL = 'Custom rate';
 
 function formatCurrency(value) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
@@ -9,15 +15,62 @@ function formatPct(value) {
   return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}%`;
 }
 
+function buildItemTypeOptions(selectEl) {
+  const groups = [];
+  for (const item of CONFIRMED_ITEMS) {
+    let group = groups.find((g) => g.label === item.group);
+    if (!group) {
+      group = { label: item.group, items: [] };
+      groups.push(group);
+    }
+    group.items.push(item);
+  }
+
+  for (const group of groups) {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = group.label;
+    for (const item of group.items) {
+      const option = document.createElement('option');
+      option.value = item.id;
+      option.textContent = `${item.item} (${item.annualDepreciationRate.toFixed(2)}%/yr)`;
+      optgroup.appendChild(option);
+    }
+    selectEl.appendChild(optgroup);
+  }
+
+  const undeterminedGroup = document.createElement('optgroup');
+  undeterminedGroup.label = 'Not Yet Verified (Manual Rate Required)';
+  for (const item of UNDETERMINED_ITEMS) {
+    const option = document.createElement('option');
+    option.value = item.id;
+    option.textContent = item.item;
+    undeterminedGroup.appendChild(option);
+  }
+  selectEl.appendChild(undeterminedGroup);
+
+  const otherOption = document.createElement('option');
+  otherOption.value = OTHER_CUSTOM_ITEM.id;
+  otherOption.textContent = OTHER_CUSTOM_ITEM.item;
+  selectEl.appendChild(otherOption);
+}
+
 function initRcvAcvCalculator() {
   const els = {
+    itemType: document.getElementById('calcItemType'),
+    sourceDisplay: document.getElementById('calcSourceDisplay'),
+    sourceRateValue: document.getElementById('calcSourceRateValue'),
+    sourceNameValue: document.getElementById('calcSourceNameValue'),
+    sourceLink: document.getElementById('calcSourceLink'),
+    annualRate: document.getElementById('calcAnnualRate'),
+    annualRateHint: document.getElementById('calcAnnualRateHint'),
     replacementCost: document.getElementById('calcReplacementCost'),
     ageYears: document.getElementById('calcAgeYears'),
-    usefulLifeYears: document.getElementById('calcUsefulLife'),
     maxDepreciationSelect: document.getElementById('calcMaxDepreciation'),
     maxDepreciationCustom: document.getElementById('calcMaxDepreciationCustom'),
     manualAdjustment: document.getElementById('calcManualAdjustment'),
+    calculateBtn: document.getElementById('calcCalculateBtn'),
     resultsPanel: document.getElementById('calcResults'),
+    emptyState: document.getElementById('calcEmptyState'),
     errorBox: document.getElementById('calcError'),
     resultBody: document.getElementById('calcResultBody'),
     primaryValue: document.getElementById('calcPrimaryValue'),
@@ -32,6 +85,11 @@ function initRcvAcvCalculator() {
 
   if (!els.replacementCost) return; // not on this page
 
+  let hasCalculated = false;
+  let currentRateLabel = 'Annual rate';
+
+  buildItemTypeOptions(els.itemType);
+
   function getMaxDepreciationPct() {
     if (els.maxDepreciationSelect.value === 'custom') {
       return els.maxDepreciationCustom.value;
@@ -45,14 +103,44 @@ function initRcvAcvCalculator() {
     if (isCustom) els.maxDepreciationCustom.focus();
   }
 
+  function applyItemType() {
+    const item = findRcvAcvItem(els.itemType.value);
+
+    if (!item) {
+      els.sourceDisplay.hidden = true;
+      els.annualRateHint.textContent = DEFAULT_RATE_HINT;
+      currentRateLabel = 'Annual rate';
+      return;
+    }
+
+    if (item.confidence === 'CONFIRMED') {
+      els.annualRate.value = item.annualDepreciationRate;
+      els.sourceDisplay.hidden = false;
+      els.sourceRateValue.textContent = `${item.annualDepreciationRate.toFixed(2)}% per year`;
+      els.sourceNameValue.textContent = item.sourceName;
+      els.sourceLink.href = item.sourceUrl;
+      els.sourceLink.hidden = false;
+      els.annualRateHint.textContent = 'Loaded from Claims Pages. You can edit this rate if you have a reason to use a different one.';
+      currentRateLabel = CLAIMS_PAGES_RATE_LABEL;
+    } else {
+      els.annualRate.value = '';
+      els.sourceDisplay.hidden = true;
+      els.annualRateHint.textContent = NO_RATE_HINT;
+      currentRateLabel = CUSTOM_RATE_LABEL;
+    }
+  }
+
   function render() {
     const result = calculateRcvAcv({
       replacementCost: els.replacementCost.value,
       ageYears: els.ageYears.value,
-      usefulLifeYears: els.usefulLifeYears.value,
-      maxDepreciationPct: getMaxDepreciationPct(),
+      annualDepreciationRatePct: els.annualRate.value,
+      maxTotalDepreciationPct: getMaxDepreciationPct(),
       manualAdjustmentPct: els.manualAdjustment.value,
+      rateLabel: currentRateLabel,
     });
+
+    els.emptyState.hidden = true;
 
     if (!result.valid) {
       els.errorBox.textContent = result.error;
@@ -78,28 +166,51 @@ function initRcvAcvCalculator() {
     return result;
   }
 
+  function renderIfCalculated() {
+    if (hasCalculated) render();
+  }
+
+  els.itemType.addEventListener('change', () => {
+    applyItemType();
+    renderIfCalculated();
+  });
+
   ['input', 'change'].forEach((evt) => {
-    els.replacementCost.addEventListener(evt, render);
-    els.ageYears.addEventListener(evt, render);
-    els.usefulLifeYears.addEventListener(evt, render);
-    els.maxDepreciationCustom.addEventListener(evt, render);
-    els.manualAdjustment.addEventListener(evt, render);
+    els.annualRate.addEventListener(evt, renderIfCalculated);
+    els.replacementCost.addEventListener(evt, renderIfCalculated);
+    els.ageYears.addEventListener(evt, renderIfCalculated);
+    els.maxDepreciationCustom.addEventListener(evt, renderIfCalculated);
+    els.manualAdjustment.addEventListener(evt, renderIfCalculated);
   });
 
   els.maxDepreciationSelect.addEventListener('change', () => {
     syncCustomFieldVisibility();
+    renderIfCalculated();
+  });
+
+  els.calculateBtn.addEventListener('click', () => {
+    hasCalculated = true;
     render();
   });
 
   els.resetBtn.addEventListener('click', () => {
+    els.itemType.value = '';
+    els.sourceDisplay.hidden = true;
+    els.annualRateHint.textContent = DEFAULT_RATE_HINT;
+    currentRateLabel = 'Annual rate';
+    els.annualRate.value = '';
     els.replacementCost.value = '';
     els.ageYears.value = '';
-    els.usefulLifeYears.value = '';
-    els.maxDepreciationSelect.value = '25';
+    els.maxDepreciationSelect.value = '75';
     els.maxDepreciationCustom.value = '';
     els.manualAdjustment.value = '';
     syncCustomFieldVisibility();
-    render();
+    hasCalculated = false;
+    els.emptyState.hidden = false;
+    els.errorBox.hidden = true;
+    els.resultBody.hidden = true;
+    els.resultsPanel.classList.add('is-empty');
+    els.copyBtn.disabled = true;
     els.replacementCost.focus();
   });
 
@@ -124,7 +235,6 @@ function initRcvAcvCalculator() {
   });
 
   syncCustomFieldVisibility();
-  render();
 }
 
 if (document.readyState === 'loading') {

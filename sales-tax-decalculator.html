@@ -143,10 +143,12 @@
               <p class="calc-field-hint">Enter the rate manually &mdash; this tool doesn't look up rates by location.</p>
             </div>
 
+            <button type="button" class="calc-btn calc-btn-primary" id="calcCalculateBtn" style="width:100%;min-height:52px;font-size:15px;">Calculate Pre-Tax Amount</button>
           </div>
 
           <div class="calc-results is-empty" id="calcResults">
-            <div class="calc-error" id="calcError" hidden>Enter the tax-inclusive total and the sales tax rate to calculate.</div>
+            <div class="calc-empty-state" id="calcEmptyState">Enter the total and tax rate, then select <strong>Calculate Pre-Tax Amount</strong> to see your results here.</div>
+            <div class="calc-error" id="calcError" hidden></div>
             <div id="calcResultBody" hidden>
               <div class="calc-result-primary-label">Pre-Tax Amount</div>
               <div class="calc-result-primary-value" id="calcPrimaryValue">&mdash;</div>

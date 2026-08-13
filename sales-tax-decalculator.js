@@ -13,7 +13,9 @@ function initSalesTaxDecalculator() {
   const els = {
     total: document.getElementById('calcTotal'),
     rate: document.getElementById('calcRate'),
+    calculateBtn: document.getElementById('calcCalculateBtn'),
     resultsPanel: document.getElementById('calcResults'),
+    emptyState: document.getElementById('calcEmptyState'),
     errorBox: document.getElementById('calcError'),
     resultBody: document.getElementById('calcResultBody'),
     primaryValue: document.getElementById('calcPrimaryValue'),
@@ -26,11 +28,15 @@ function initSalesTaxDecalculator() {
 
   if (!els.total) return; // not on this page
 
+  let hasCalculated = false;
+
   function render() {
     const result = calculateSalesTaxDecalc({
       totalIncludingTax: els.total.value,
       taxRatePct: els.rate.value,
     });
+
+    els.emptyState.hidden = true;
 
     if (!result.valid) {
       els.errorBox.textContent = result.error;
@@ -54,15 +60,29 @@ function initSalesTaxDecalculator() {
     return result;
   }
 
+  function renderIfCalculated() {
+    if (hasCalculated) render();
+  }
+
   ['input', 'change'].forEach((evt) => {
-    els.total.addEventListener(evt, render);
-    els.rate.addEventListener(evt, render);
+    els.total.addEventListener(evt, renderIfCalculated);
+    els.rate.addEventListener(evt, renderIfCalculated);
+  });
+
+  els.calculateBtn.addEventListener('click', () => {
+    hasCalculated = true;
+    render();
   });
 
   els.resetBtn.addEventListener('click', () => {
     els.total.value = '';
     els.rate.value = '';
-    render();
+    hasCalculated = false;
+    els.emptyState.hidden = false;
+    els.errorBox.hidden = true;
+    els.resultBody.hidden = true;
+    els.resultsPanel.classList.add('is-empty');
+    els.copyBtn.disabled = true;
     els.total.focus();
   });
 
@@ -84,8 +104,6 @@ function initSalesTaxDecalculator() {
       // Clipboard API unavailable — silently ignore, the values remain visible on screen.
     }
   });
-
-  render();
 }
 
 if (document.readyState === 'loading') {

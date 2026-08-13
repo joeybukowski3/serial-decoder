@@ -1,6 +1,8 @@
 /* ═══ Shared calculator UI for RCV/ACV Depreciation Calculator & Sales Tax De-Calculator ═══ */
 /* Built on the existing bp-* design tokens (navy/teal, Sora + JetBrains Mono) — no new palette. */
 
+.calc-shell [hidden] { display: none !important; }
+
 .calc-shell {
   max-width: 1100px;
   margin: 0 auto;
@@ -64,12 +66,15 @@
   padding: 12px 16px;
   font-size: 17px !important;
   font-family: Sora, sans-serif;
+  font-weight: 600;
   border-radius: 10px;
-  border: 1px solid rgba(68, 229, 194, .22);
-  background: rgba(255, 255, 255, .04);
-  color: var(--white, #dae2fd);
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #16233a;
   transition: all .2s;
 }
+
+.calc-input::placeholder { color: #7c8ba1; font-weight: 500; opacity: 1; }
 
 .calc-input-wrap .calc-input.has-prefix { padding-left: 30px; }
 .calc-input-wrap .calc-input.has-suffix { padding-right: 40px; }
@@ -78,7 +83,7 @@
   position: absolute;
   font-size: 16px;
   font-weight: 600;
-  color: #7a8fa8;
+  color: #64748b;
   pointer-events: none;
 }
 .calc-affix-prefix { left: 14px; }
@@ -87,19 +92,30 @@
 .calc-input:focus,
 .calc-select:focus {
   outline: 0;
-  border-color: rgba(68, 229, 194, .65);
-  background: rgba(255, 255, 255, .07);
-  box-shadow: 0 0 0 3px rgba(68, 229, 194, .12);
+  border-color: #44e5c2;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(68, 229, 194, .28);
+}
+
+.calc-input:disabled,
+.calc-select:disabled,
+.calc-input[readonly] {
+  background: #eef1f5;
+  color: #7c8ba1;
+  border-color: #dde3ea;
+  cursor: not-allowed;
 }
 
 .calc-select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2344e5c2' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23334155' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 16px center;
   padding-right: 40px;
   cursor: pointer;
 }
+
+.calc-select option { background: #ffffff; color: #16233a; }
 
 /* Optional / secondary control (manual adjustment) — visually quieter than the primary fields */
 .calc-optional {
@@ -213,6 +229,17 @@
   padding: 12px 14px;
 }
 
+.calc-empty-state {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #8ea0b8;
+  background: rgba(255, 255, 255, .03);
+  border: 1px dashed rgba(255, 255, 255, .14);
+  border-radius: 10px;
+  padding: 20px 16px;
+  text-align: center;
+}
+
 .calc-result-actions {
   display: flex;
   gap: 10px;
@@ -251,6 +278,70 @@
 .calc-btn-outline:hover { border-color: #44e5c2; color: #44e5c2; }
 
 .calc-btn[disabled] { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.calc-source-box {
+  border-radius: 10px;
+  border: 1px solid rgba(68, 229, 194, .2);
+  background: rgba(68, 229, 194, .05);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.calc-source-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.calc-source-label {
+  color: #7a8fa8;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: .04em;
+  flex-shrink: 0;
+}
+
+.calc-source-value {
+  color: var(--white, #dae2fd);
+  font-weight: 700;
+  text-align: right;
+}
+
+.calc-source-link {
+  align-self: flex-start;
+  font-size: 12px;
+  color: #44e5c2;
+  text-decoration: none;
+  margin-top: 2px;
+}
+.calc-source-link:hover { text-decoration: underline; }
+
+.calc-source-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calc-source-list li {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #9fb0c2;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid rgba(255, 255, 255, .06);
+}
+
+.calc-source-list strong { color: #dae2fd; font-weight: 700; }
+.calc-source-list a { color: #44e5c2; }
 
 .calc-note-strip {
   margin-top: 16px;

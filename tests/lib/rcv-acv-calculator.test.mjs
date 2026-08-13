@@ -2,105 +2,138 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { calculateRcvAcv } from '../../lib/calculators/rcv-acv.js';
 
-test('standard straight-line calculation under the max', () => {
-  const result = calculateRcvAcv({ replacementCost: 1500, ageYears: 3, usefulLifeYears: 15, maxDepreciationPct: 25 });
+test('rate × age calculation below the cap', () => {
+  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 4, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 75 });
   assert.equal(result.valid, true);
-  assert.equal(result.straightLinePct, 20);
+  assert.equal(result.rawDepreciationPct, 40);
   assert.equal(result.cappedByMax, false);
-  assert.equal(result.depreciationPct, 20);
-  assert.equal(result.depreciationAmount, 300);
-  assert.equal(result.acv, 1200);
+  assert.equal(result.depreciationPct, 40);
+  assert.equal(result.depreciationAmount, 400);
+  assert.equal(result.acv, 600);
+  assert.equal(result.detailText, 'Annual rate: 10.00%/year × 4 years = 40% calculated depreciation.');
 });
 
-test('applies the 25% default maximum when straight-line exceeds it', () => {
-  const result = calculateRcvAcv({ replacementCost: 2000, ageYears: 10, usefulLifeYears: 15, maxDepreciationPct: 25 });
-  assert.equal(result.straightLinePct, 66.67);
+test('calculation exceeding the cap is limited to the selected maximum', () => {
+  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 9, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 75, rateLabel: 'Claims Pages reference rate' });
+  assert.equal(result.rawDepreciationPct, 90);
   assert.equal(result.cappedByMax, true);
-  assert.equal(result.depreciationPct, 25);
-  assert.equal(result.depreciationAmount, 500);
-  assert.equal(result.acv, 1500);
-  assert.match(result.detailText, /limited by the selected 25% maximum/);
+  assert.equal(result.depreciationPct, 75);
+  assert.equal(result.depreciationAmount, 750);
+  assert.equal(result.acv, 250);
+  assert.equal(result.detailText, 'Claims Pages reference rate: 10.00%/year × 9 years = 90% calculated depreciation; limited to the selected 75% maximum total depreciation.');
+});
+
+test('75% is the default Maximum Total Depreciation and leaves at least 25% of value', () => {
+  const result = calculateRcvAcv({ replacementCost: 2000, ageYears: 50, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 75 });
+  assert.equal(result.depreciationPct, 75);
+  assert.equal(result.acv, 500); // 25% of 2000
 });
 
 test('custom maximum changes the cap and result', () => {
-  const result = calculateRcvAcv({ replacementCost: 2000, ageYears: 10, usefulLifeYears: 15, maxDepreciationPct: 50 });
-  assert.equal(result.cappedByMax, true);
-  assert.equal(result.depreciationPct, 50);
-  assert.equal(result.acv, 1000);
+  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 9, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 90 });
+  assert.equal(result.cappedByMax, false);
+  assert.equal(result.depreciationPct, 90);
+  assert.equal(result.acv, 100);
 });
 
-test('manual adjustment shifts depreciation transparently', () => {
-  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 3, usefulLifeYears: 15, maxDepreciationPct: 25, manualAdjustmentPct: 5 });
-  assert.equal(result.straightLinePct, 20);
+test('positive manual adjustment increases depreciation before the cap', () => {
+  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 4, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 75, manualAdjustmentPct: 5 });
+  assert.equal(result.rawDepreciationPct, 40);
   assert.equal(result.manualAdjustmentApplied, true);
-  assert.equal(result.depreciationPct, 25);
-  assert.match(result.detailText, /manual adjustment of \+5/);
+  assert.equal(result.depreciationPct, 45);
+  assert.match(result.detailText, /manual adjustment of \+5 percentage points/);
 });
 
-test('manual adjustment is clamped so it cannot exceed the selected maximum', () => {
-  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 10, usefulLifeYears: 15, maxDepreciationPct: 25, manualAdjustmentPct: 20 });
-  assert.equal(result.depreciationPct, 25);
+test('negative manual adjustment decreases depreciation before the cap', () => {
+  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 4, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 75, manualAdjustmentPct: -5 });
+  assert.equal(result.depreciationPct, 35);
+  assert.match(result.detailText, /manual adjustment of -5 percentage points/);
+});
+
+test('manual adjustment plus cap: adjustment pushes past the max and is clamped', () => {
+  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 8, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 75, manualAdjustmentPct: 10 });
+  // raw 80 + 10 = 90, clamped to 75
+  assert.equal(result.rawDepreciationPct, 80);
   assert.equal(result.manualAdjustmentClamped, true);
+  assert.equal(result.depreciationPct, 75);
 });
 
 test('manual adjustment cannot push depreciation below 0%', () => {
-  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 1, usefulLifeYears: 15, maxDepreciationPct: 25, manualAdjustmentPct: -50 });
+  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 1, annualDepreciationRatePct: 5, maxTotalDepreciationPct: 75, manualAdjustmentPct: -50 });
   assert.equal(result.depreciationPct, 0);
   assert.equal(result.depreciationAmount, 0);
   assert.equal(result.acv, 1000);
   assert.equal(result.manualAdjustmentClamped, true);
 });
 
-test('age greater than useful life is capped, never runs away past the maximum', () => {
-  const result = calculateRcvAcv({ replacementCost: 800, ageYears: 40, usefulLifeYears: 10, maxDepreciationPct: 25 });
-  assert.equal(result.straightLinePct, 400);
-  assert.equal(result.cappedByMax, true);
-  assert.equal(result.depreciationPct, 25);
-  assert.equal(result.acv, 600);
+test('zero age is valid and produces zero depreciation', () => {
+  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 0, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 75 });
+  assert.equal(result.valid, true);
+  assert.equal(result.rawDepreciationPct, 0);
+  assert.equal(result.depreciationPct, 0);
+  assert.equal(result.acv, 1000);
 });
 
-test('zero useful life is rejected', () => {
-  const result = calculateRcvAcv({ replacementCost: 800, ageYears: 5, usefulLifeYears: 0, maxDepreciationPct: 25 });
-  assert.equal(result.valid, false);
-  assert.match(result.error, /useful life/i);
-});
-
-test('blank inputs are rejected', () => {
-  const result = calculateRcvAcv({ replacementCost: '', ageYears: '', usefulLifeYears: '', maxDepreciationPct: '' });
-  assert.equal(result.valid, false);
-});
-
-test('negative numbers are rejected', () => {
-  const result = calculateRcvAcv({ replacementCost: -100, ageYears: 5, usefulLifeYears: 10, maxDepreciationPct: 25 });
+test('invalid (negative) age is rejected', () => {
+  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: -2, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 75 });
   assert.equal(result.valid, false);
   assert.match(result.error, /negative/i);
 });
 
-test('NaN / non-numeric input is rejected', () => {
-  const result = calculateRcvAcv({ replacementCost: 'abc', ageYears: 5, usefulLifeYears: 10, maxDepreciationPct: 25 });
+test('invalid (non-numeric) age is rejected', () => {
+  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 'abc', annualDepreciationRatePct: 10, maxTotalDepreciationPct: 75 });
   assert.equal(result.valid, false);
 });
 
-test('maximum depreciation above 100% is rejected', () => {
-  const result = calculateRcvAcv({ replacementCost: 800, ageYears: 5, usefulLifeYears: 10, maxDepreciationPct: 150 });
+test('invalid (zero) replacement cost is rejected', () => {
+  const result = calculateRcvAcv({ replacementCost: 0, ageYears: 4, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 75 });
   assert.equal(result.valid, false);
 });
 
-test('replacement cost of zero is rejected', () => {
-  const result = calculateRcvAcv({ replacementCost: 0, ageYears: 5, usefulLifeYears: 10, maxDepreciationPct: 25 });
+test('invalid (negative) replacement cost is rejected', () => {
+  const result = calculateRcvAcv({ replacementCost: -500, ageYears: 4, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 75 });
   assert.equal(result.valid, false);
+  assert.match(result.error, /negative/i);
 });
 
-test('decimal age values are supported', () => {
-  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 2.5, usefulLifeYears: 10, maxDepreciationPct: 25 });
+test('undetermined / Other-Custom items require a manual rate — blank rate is rejected', () => {
+  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 4, annualDepreciationRatePct: '', maxTotalDepreciationPct: 75 });
+  assert.equal(result.valid, false);
+  assert.match(result.error, /annual depreciation rate/i);
+});
+
+test('a manually entered rate for an undetermined item calculates normally once provided', () => {
+  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 4, annualDepreciationRatePct: 12.5, maxTotalDepreciationPct: 75, rateLabel: 'Custom rate' });
   assert.equal(result.valid, true);
-  assert.equal(result.straightLinePct, 25);
-  assert.equal(result.depreciationPct, 25);
+  assert.equal(result.rawDepreciationPct, 50);
+  assert.match(result.detailText, /^Custom rate: 12\.50%\/year/);
 });
 
-test('100% maximum depreciation is allowed as an explicit custom choice', () => {
-  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 20, usefulLifeYears: 10, maxDepreciationPct: 100 });
-  assert.equal(result.valid, true);
-  assert.equal(result.depreciationPct, 100);
-  assert.equal(result.acv, 0);
+test('maximum total depreciation above 100% is rejected', () => {
+  const result = calculateRcvAcv({ replacementCost: 1000, ageYears: 4, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 150 });
+  assert.equal(result.valid, false);
+});
+
+test('blank inputs are rejected', () => {
+  const result = calculateRcvAcv({ replacementCost: '', ageYears: '', annualDepreciationRatePct: '', maxTotalDepreciationPct: '' });
+  assert.equal(result.valid, false);
+});
+
+test('no useful-life-derived calculation remains: an extraneous usefulLifeYears input is ignored entirely', () => {
+  const withUsefulLife = calculateRcvAcv({ replacementCost: 1000, ageYears: 4, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 75, usefulLifeYears: 5 });
+  const withoutUsefulLife = calculateRcvAcv({ replacementCost: 1000, ageYears: 4, annualDepreciationRatePct: 10, maxTotalDepreciationPct: 75 });
+  assert.deepEqual(withUsefulLife, withoutUsefulLife);
+  assert.equal('usefulLifeYears' in withUsefulLife, false);
+});
+
+test('known value: Dishwasher-equivalent rate (10.00%/yr) at 3 years', () => {
+  const result = calculateRcvAcv({ replacementCost: 800, ageYears: 3, annualDepreciationRatePct: 10.00, maxTotalDepreciationPct: 75 });
+  assert.equal(result.rawDepreciationPct, 30);
+});
+
+test('known value: Computer rate (25.00%/yr) reaches the default cap quickly', () => {
+  const result = calculateRcvAcv({ replacementCost: 1200, ageYears: 3, annualDepreciationRatePct: 25.00, maxTotalDepreciationPct: 75 });
+  assert.equal(result.rawDepreciationPct, 75);
+  assert.equal(result.cappedByMax, false); // exactly at the cap, not over it
+  assert.equal(result.depreciationPct, 75);
 });
