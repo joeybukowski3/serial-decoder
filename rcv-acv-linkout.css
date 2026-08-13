@@ -13,6 +13,34 @@
   gap: 12px;
 }
 
+/* Both mounts are grid items of .rs-primary-row (result-shell.css), which stretches them
+   to the full row height, and .ia-upsell-card carries height:100% — written back when the
+   mount had exactly one child and had to fill that stretched cell. With a second card in
+   the column, Item Assist's flex base becomes the whole row height, the column is
+   over-subscribed, and flex-shrink resolves it by pinning this card's bottom edge exactly
+   to the row boundary — flush against the bottom action row instead of sitting in normal
+   flow directly under Item Assist. Sizing the column by its content instead leaves the
+   slack below the stack, where it belongs.
+
+   Scoped with :has() so the single-card states (no-match results, which never show this
+   card) keep their existing full-height Item Assist card untouched; browsers without
+   :has() simply fall back to the previous behavior. */
+#itemAssistMount:has(> .rcv-acv-sidebar-card),
+#smartLookupItemAssistMount:has(> .rcv-acv-sidebar-card) {
+  align-self: start;
+}
+
+#itemAssistMount:has(> .rcv-acv-sidebar-card) > .ia-upsell-card,
+#smartLookupItemAssistMount:has(> .rcv-acv-sidebar-card) > .ia-upsell-card {
+  height: auto;
+  flex: 0 0 auto;
+}
+
+#itemAssistMount > .rcv-acv-sidebar-card,
+#smartLookupItemAssistMount > .rcv-acv-sidebar-card {
+  flex: 0 0 auto;
+}
+
 .rcv-acv-sidebar-card {
   background: linear-gradient(180deg, rgba(68, 229, 194, 0.08), var(--navy-mid, #131b2e));
   border: 1px solid rgba(68, 229, 194, 0.4);
@@ -20,6 +48,11 @@
   border-radius: 14px;
   padding: 18px;
   box-sizing: border-box;
+  /* Same column layout .ia-upsell-card uses, so the CTA stretches to the card width the
+     way Item Assist's "Request Expert Review" button does rather than shrink-wrapping. */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .rcv-acv-sidebar-header {
@@ -87,6 +120,17 @@
 .rcv-acv-sidebar-card .rcv-acv-sidebar-cta:focus-visible {
   outline: 2px solid #ffffff;
   outline-offset: 2px;
+}
+
+/* result-shell.css's "#smart-lookup-results .info-block { padding: 15px 16px !important;
+   border-radius: 10px !important }" out-specifies .ia-upsell-card's own 18px/14px, so the
+   Item Assist card renders tighter and less rounded inside Smart Lookup than it does on
+   the Serial Decoder. Match that geometry here so the two cards read as siblings on both
+   surfaces (the Serial Decoder keeps the 18px/14px above, where Item Assist is 18px/14px
+   too). */
+#smart-lookup-results .rcv-acv-sidebar-card {
+  padding: 15px 16px;
+  border-radius: 10px;
 }
 
 /* #smart-lookup-results.results-body * {color:var(--rs-text)!important} in result-shell.css
