@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/playwright.mjs';
 
 const widths = [320, 375, 430, 768, 1024, 1280, 1440];
 

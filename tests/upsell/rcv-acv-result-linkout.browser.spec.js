@@ -3,18 +3,18 @@
 // the desktop header links. Same convention as
 // tests/upsell/item-assist-upsell-card.browser.spec.js: run manually against a static
 // file server, not wired into package.json's test scripts.
-import { test, expect, chromium } from '@playwright/test';
+import { test, expect, chromium, createAnalyticsBlockingContext } from '../helpers/playwright.mjs';
 
 test.setTimeout(60000);
 
 const BASE_URL = process.env.UPSELL_BASE_URL || 'http://localhost:4173';
 
 function isIgnoredConsoleError(message) {
-  return /content security policy|err_name_not_resolved|adtrafficquality|googlesyndication|doubleclick|google-analytics|googletagmanager/i.test(String(message || ''));
+  return /content security policy|err_name_not_resolved|err_blocked_by_client|adtrafficquality|googlesyndication|doubleclick|google-analytics|googletagmanager/i.test(String(message || ''));
 }
 
 async function openPage(browser, url, viewport) {
-  const context = await browser.newContext({ viewport: viewport || { width: 1280, height: 1000 } });
+  const context = await createAnalyticsBlockingContext(browser, { viewport: viewport || { width: 1280, height: 1000 } });
   const page = await context.newPage();
   const consoleErrors = [];
   page.on('console', (msg) => {

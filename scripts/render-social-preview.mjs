@@ -9,6 +9,7 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createAnalyticsBlockingContext } from '../tests/helpers/analytics-blocking.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
@@ -173,10 +174,11 @@ const html = `<!DOCTYPE html>
 fs.mkdirSync(previewDir, { recursive: true });
 
 const browser = await chromium.launch();
-const page = await browser.newPage({
+const context = await createAnalyticsBlockingContext(browser, {
   viewport: { width: WIDTH, height: HEIGHT },
   deviceScaleFactor: 1,
 });
+const page = await context.newPage();
 
 await page.setContent(html, { waitUntil: 'networkidle' });
 await page.waitForFunction(() => document.body.dataset.ready === '1' || document.body.dataset.ready === 'error', null, {
@@ -205,7 +207,8 @@ fs.writeFileSync(path.join(previewDir, 'full-1200x630.png'), pngBuffer);
 // Small link-preview simulation (~480×252)
 {
   const b = await chromium.launch();
-  const p = await b.newPage({ viewport: { width: 480, height: 252 }, deviceScaleFactor: 1 });
+  const context = await createAnalyticsBlockingContext(b, { viewport: { width: 480, height: 252 }, deviceScaleFactor: 1 });
+  const p = await context.newPage();
   const dataUrl = `data:image/png;base64,${pngBuffer.toString('base64')}`;
   await p.setContent(`<!DOCTYPE html><html><body style="margin:0;background:#111">
     <img src="${dataUrl}" width="480" height="252" style="display:block;object-fit:cover" />

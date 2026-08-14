@@ -1,5 +1,6 @@
 import { defineConfig } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
+import { PLAYWRIGHT_CONTEXT_OPTIONS } from './helpers/analytics-blocking.mjs';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 
@@ -7,6 +8,7 @@ export default defineConfig({
   testDir: '.',
   testMatch: 'smart-lookup-ui.spec.js',
   use: {
+    ...PLAYWRIGHT_CONTEXT_OPTIONS,
     baseURL: 'http://127.0.0.1:3001',
   },
   webServer: {
