@@ -1,0 +1,136 @@
+/*
+ * Shared sitemap-footer styles for pages that do NOT load shared.css.
+ *
+ * A handful of pages (the "How old is my …" landing pages and the serial-number
+ * location guide) are fully self-contained: their whole design lives in an inline
+ * <style> block. When the site moved to the .footer-sitemap markup, those pages
+ * got the new markup but kept only the legacy .footer-grid / .footer-copy rules,
+ * so the sitemap footer rendered unstyled and pinned to the viewport's left edge.
+ *
+ * These rules mirror the canonical .footer-sitemap block in shared.css. Colour
+ * tokens carry literal fallbacks because the self-contained pages name their
+ * palette differently (--primary/--outline-var rather than --teal/--border);
+ * the fallbacks are the same values shared.css resolves to.
+ *
+ * Load this AFTER the page's inline <style> block so it wins the cascade against
+ * the legacy footer rules at equal specificity.
+ */
+
+.footer-sitemap {
+  display: block;
+  background: var(--surface-deep, #0d1a2e);
+  border-top: 1px solid var(--border, #3c4a45);
+  padding: 3rem 1.5rem 1.5rem;
+}
+
+.footer-sitemap-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2rem;
+  max-width: 1300px;
+  margin: 0 auto 2.5rem;
+}
+
+.footer-sitemap .footer-col-heading {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--teal, #44e5c2);
+  margin: 0 0 0.85rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.footer-sitemap .footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.footer-sitemap .footer-col ul li {
+  margin-bottom: 0;
+}
+
+.footer-sitemap .footer-col ul li a {
+  color: var(--text-muted, #64748b);
+  font-size: 0.82rem;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-sitemap .footer-col ul li a:hover {
+  color: var(--teal, #44e5c2);
+}
+
+.footer-bottom {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 1.25rem 0 0;
+  border-top: 1px solid var(--border, #3c4a45);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.footer-bottom-copy {
+  color: var(--text-muted, #64748b);
+  font-size: 0.78rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.footer-bottom-links {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.footer-bottom-links a {
+  color: var(--text-muted, #64748b);
+  font-size: 0.78rem;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-bottom-links a:hover {
+  color: var(--teal, #44e5c2);
+}
+
+@media (max-width: 1100px) {
+  .footer-sitemap-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .footer-sitemap-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .footer-sitemap { padding: 40px 16px 24px; }
+  .footer-sitemap .footer-col ul li a {
+    font-size: 14px;
+    padding: 2px 0;
+    display: inline-block;
+    min-height: 32px;
+  }
+}
+
+@media (max-width: 500px) {
+  .footer-sitemap-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 480px) {
+  .footer-sitemap { padding: 32px 14px 20px; }
+  .footer-sitemap-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 1.25rem; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .footer-bottom-copy { font-size: 10px; }
+  .footer-bottom-links a { font-size: 11px; }
+}
+
+@media (max-width: 360px) {
+  .footer-sitemap-grid { grid-template-columns: 1fr !important; }
+}
