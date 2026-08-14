@@ -1,5 +1,6 @@
 import { chromium } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
+import { createAnalyticsBlockingContext } from '../tests/helpers/analytics-blocking.mjs';
 
 const baseUrl = 'http://localhost:3001';
 const outputDir = 'artifacts/serial-refinement-preview';
@@ -45,12 +46,12 @@ async function fillDecode(page, brand, serial, model) {
 
 const browser = await chromium.launch({ channel: 'msedge', headless: true });
 try {
-  const desktop = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+  const desktop = await createAnalyticsBlockingContext(browser, { viewport: { width: 1440, height: 1100 } });
   const page = await desktop.newPage();
   const consoleErrors = [];
   const pageErrors = [];
   const providerRequests = [];
-  page.on('console', message => { if (message.type() === 'error' && !/ERR_NAME_NOT_RESOLVED|doubleclick|googlesyndication/i.test(message.text())) consoleErrors.push(message.text()); });
+  page.on('console', message => { if (message.type() === 'error' && !/ERR_NAME_NOT_RESOLVED|ERR_BLOCKED_BY_CLIENT|doubleclick|googlesyndication/i.test(message.text())) consoleErrors.push(message.text()); });
   page.on('pageerror', error => pageErrors.push(error.message));
   page.on('request', request => { if (/generativelanguage\.googleapis\.com|api\.groq\.com/i.test(request.url())) providerRequests.push(request.url()); });
 
@@ -127,7 +128,7 @@ try {
   await electronics.locator('#serialResults').waitFor({ state: 'visible' });
   if (!/2007/.test((await electronics.locator('#resultYear').textContent()) || '')) throw new Error('Vizio model-primary behavior did not remain available');
 
-  const mobile = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const mobile = await createAnalyticsBlockingContext(browser, { viewport: { width: 390, height: 844 } });
   const mobilePage = await mobile.newPage();
   await mobilePage.route('**/api/refine-serial-date', async route => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(response()) });

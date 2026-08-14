@@ -1,5 +1,6 @@
 import { chromium } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { createAnalyticsBlockingContext } from '../tests/helpers/analytics-blocking.mjs';
 
 const baseUrl = 'http://localhost:3001';
 const outputDir = 'artifacts/serial-refinement-preview';
@@ -56,13 +57,13 @@ function mark(value) {
 }
 
 try {
-  const desktop = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
+  const desktop = await createAnalyticsBlockingContext(browser, { viewport: { width: 1440, height: 1100 } });
   const page = await desktop.newPage();
   const consoleErrors = [];
   const pageErrors = [];
   const providerRequests = [];
   page.on('console', message => {
-    if (message.type() === 'error' && !/ERR_NAME_NOT_RESOLVED|doubleclick|googlesyndication|adtrafficquality/i.test(message.text())) consoleErrors.push(message.text());
+    if (message.type() === 'error' && !/ERR_NAME_NOT_RESOLVED|ERR_BLOCKED_BY_CLIENT|doubleclick|googlesyndication|adtrafficquality/i.test(message.text())) consoleErrors.push(message.text());
   });
   page.on('pageerror', error => pageErrors.push(error.message));
   page.on('request', request => {
@@ -146,7 +147,7 @@ try {
   await electronics.waitForFunction(() => /2007/.test(document.querySelector('#resultYear')?.textContent || ''));
   mark('Vizio model-primary behavior verified');
 
-  const mobile = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const mobile = await createAnalyticsBlockingContext(browser, { viewport: { width: 390, height: 844 } });
   const mobilePage = await mobile.newPage();
   await mobilePage.route('**/api/refine-serial-date', async route => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(response()) });

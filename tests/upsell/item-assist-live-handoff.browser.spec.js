@@ -5,7 +5,7 @@
 // never click #avr-submit-btn or otherwise submit the remote form -- doing
 // so would create a real work request in Item Assist's live intake pipeline
 // and send real emails. Ad-hoc validation only; not wired into package.json.
-import { test, expect, chromium } from '@playwright/test';
+import { test, expect, chromium, createAnalyticsBlockingContext } from '../helpers/playwright.mjs';
 
 test.setTimeout(60000);
 
@@ -15,11 +15,11 @@ const ITEM_ASSIST_PATH = '/request-age-verification';
 const ALLOWED_PARAMS = ['brand', 'model', 'category', 'result_id', 'source', 'result_status'];
 
 function isIgnoredConsoleError(message) {
-  return /content security policy|err_name_not_resolved|adtrafficquality|googlesyndication|doubleclick|google-analytics|googletagmanager/i.test(String(message || ''));
+  return /content security policy|err_name_not_resolved|err_blocked_by_client|adtrafficquality|googlesyndication|doubleclick|google-analytics|googletagmanager/i.test(String(message || ''));
 }
 
 async function openPage(browser, viewport) {
-  const context = await browser.newContext({ viewport });
+  const context = await createAnalyticsBlockingContext(browser, { viewport });
   const page = await context.newPage();
   const consoleErrors = [];
   page.on('console', (msg) => {
@@ -165,7 +165,8 @@ for (const [dmiCategory, expectedOption] of [
 ]) {
   test(`live destination: category=${dmiCategory} maps to "${expectedOption}"`, async () => {
     const browser = await chromium.launch();
-    const page = await browser.newPage();
+    const context = await createAnalyticsBlockingContext(browser);
+    const page = await context.newPage();
     const url = `${ITEM_ASSIST_ORIGIN}${ITEM_ASSIST_PATH}?source=decodemyitem&result_status=resolved&category=${encodeURIComponent(dmiCategory)}`;
     await page.goto(url, { waitUntil: 'domcontentloaded' });
 
@@ -179,7 +180,8 @@ for (const [dmiCategory, expectedOption] of [
 
 test('live destination: an unknown category key leaves the field unselected, not forced to a wrong value', async () => {
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const context = await createAnalyticsBlockingContext(browser);
+  const page = await context.newPage();
   const url = `${ITEM_ASSIST_ORIGIN}${ITEM_ASSIST_PATH}?source=decodemyitem&result_status=resolved&category=furniture`;
   await page.goto(url, { waitUntil: 'domcontentloaded' });
 
@@ -192,7 +194,8 @@ test('live destination: an unknown category key leaves the field unselected, not
 
 test('live destination: rejects/escapes hostile query param content instead of executing it', async () => {
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const context = await createAnalyticsBlockingContext(browser);
+  const page = await context.newPage();
   const consoleErrors = [];
   page.on('console', (msg) => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
   let dialogFired = false;

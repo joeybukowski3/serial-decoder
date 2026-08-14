@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/playwright.mjs';
 
 const recoveryRoutes = ['/', '/decoder-tool', '/smart-lookup', '/brands', '/serial-number-location-guide'];
 

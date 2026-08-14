@@ -64,6 +64,7 @@ These apply before and during every code change.
 ## Project: decodemyitem.com
 **Local dev:** always use `npx vercel dev` — not `npx serve .` (api/ routes won't work otherwise).
 **Local testing:** use explicit `.html` routes (`/index.html?cat=...`) — bare `/?...` URLs are unreliable locally.
+**Automated browsers:** All automated browser testing, screenshots, debugging, and visual verification must use the repository's Playwright analytics-blocking setup. Automated browser sessions must not send Google Analytics or Google Tag Manager traffic. Do not bypass or remove this protection.
 **Stack:** Vercel, `api/` routes, Gemini API, Upstash Redis.
 **Key files:** `index.html`, `script.js`, `api/lkq-lookup.js`, `api/smart-query-interpret`.
 **Deployment:** always confirm before pushing live — default assumption is changes are local only.

@@ -1,14 +1,14 @@
-import { test, expect, chromium } from '@playwright/test';
+import { test, expect, chromium, createAnalyticsBlockingContext } from './helpers/playwright.mjs';
 
 test.setTimeout(120000);
 
 function isIgnoredConsoleError(message) {
-  return /content security policy|err_name_not_resolved|adtrafficquality|googlesyndication|doubleclick|google-analytics/i.test(String(message || ''));
+  return /content security policy|err_name_not_resolved|err_blocked_by_client|adtrafficquality|googlesyndication|doubleclick|google-analytics/i.test(String(message || ''));
 }
 
 async function openPage(viewport = { width: 1440, height: 1000 }) {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const context = await browser.newContext({ viewport });
+  const context = await createAnalyticsBlockingContext(browser, { viewport });
   const page = await context.newPage();
   const diagnostics = {
     consoleErrors: [],

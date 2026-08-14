@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/playwright.mjs';
 
 const baseUrl = 'http://localhost:3001';
 const widths = [320, 375, 430, 768, 1024, 1140, 1141, 1440];

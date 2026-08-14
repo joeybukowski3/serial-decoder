@@ -1,10 +1,10 @@
-import { test, expect, chromium } from '@playwright/test';
+import { test, expect, chromium, createAnalyticsBlockingContext } from './helpers/playwright.mjs';
 
 test.setTimeout(120000);
 
 async function openDecoderPage(viewport) {
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
-  const context = await browser.newContext({
+  const context = await createAnalyticsBlockingContext(browser, {
     viewport: viewport || { width: 1440, height: 1100 }
   });
   const page = await context.newPage();
@@ -139,7 +139,7 @@ async function runRefine(page, model, contextText) {
 
 function filterRelevantConsoleErrors(errors) {
   return (errors || []).filter(message => {
-    return !/content security policy|err_name_not_resolved|adtrafficquality|googlesyndication|doubleclick|google-analytics/i.test(String(message || ''));
+    return !/content security policy|err_name_not_resolved|err_blocked_by_client|adtrafficquality|googlesyndication|doubleclick|google-analytics/i.test(String(message || ''));
   });
 }
 

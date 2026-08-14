@@ -2,7 +2,7 @@
 // against a static file server (see AGENT NOTES in the PR/report — this spec
 // is not wired into package.json's automated test scripts, per the request
 // that only the unit tests be added to the normal test command).
-import { test, expect, chromium } from '@playwright/test';
+import { test, expect, chromium, createAnalyticsBlockingContext } from '../helpers/playwright.mjs';
 
 test.setTimeout(60000);
 
@@ -12,11 +12,11 @@ const BASE_URL = process.env.UPSELL_BASE_URL || 'http://localhost:4173';
 // run has no real DNS for third-party ad/analytics hosts, which is expected
 // noise unrelated to the upsell card itself.
 function isIgnoredConsoleError(message) {
-  return /content security policy|err_name_not_resolved|adtrafficquality|googlesyndication|doubleclick|google-analytics|googletagmanager/i.test(String(message || ''));
+  return /content security policy|err_name_not_resolved|err_blocked_by_client|adtrafficquality|googlesyndication|doubleclick|google-analytics|googletagmanager/i.test(String(message || ''));
 }
 
 async function openPage(browser, viewport) {
-  const context = await browser.newContext({ viewport });
+  const context = await createAnalyticsBlockingContext(browser, { viewport });
   const page = await context.newPage();
   const consoleErrors = [];
   page.on('console', (msg) => {
