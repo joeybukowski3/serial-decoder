@@ -432,6 +432,66 @@
     });
   }
 
+  function unavailableResponse(candidates, error) {
+    return {
+      status: 'unavailable',
+      candidateYears: candidates,
+      remainingCandidateYears: candidates,
+      chosenYear: null,
+      confidence: null,
+      resolutionBasis: 'serial-plus-model',
+      modelProductionRange: null,
+      evidence: [],
+      summary: error && error.name === 'AbortError'
+        ? 'Model evidence lookup timed out. The original serial-valid candidate years are preserved.'
+        : 'Model evidence could not be checked. The original serial-valid candidate years are preserved.',
+      cacheStatus: 'bypass',
+      provider: 'none',
+      timings: { localMs: 0, cacheMs: 0, onlineLookupMs: 0, totalMs: 0 },
+      errorCode: error && error.name === 'AbortError' ? 'REFINEMENT_TIMEOUT' : 'REFINEMENT_UNAVAILABLE',
+    };
+  }
+
+  function requestRefinement(snapshot, signal) {
+    return fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: signal,
+      body: JSON.stringify(snapshot),
+    }).then(function (response) {
+      return parseJsonSafe(response).then(function (data) {
+        if (!response.ok || !data) throw new Error('REFINEMENT_REQUEST_FAILED');
+        return data;
+      });
+    });
+  }
+
+  async function refineSnapshot(options) {
+    var candidates = normalizeCandidates(options && (options.candidates || options.candidateYears));
+    var model = safeText(options && options.model).trim();
+    if (candidates.length <= 1 || !model) return null;
+
+    var snapshot = {
+      category: safeText(options && options.category || 'unknown').trim(),
+      brand: safeText(options && options.brand).trim(),
+      serial: safeText(options && options.serial).trim(),
+      model: model,
+      candidateYears: candidates,
+      decodedMonth: safeText(options && options.decodedMonth).trim(),
+      context: safeText(options && options.context).trim(),
+    };
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function () { controller.abort(); }, BROWSER_TIMEOUT_MS);
+    try {
+      var response = await requestRefinement(snapshot, controller.signal);
+      return constrainResponseToSerialCandidates(response, candidates);
+    } catch (error) {
+      return unavailableResponse(candidates, error);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   function startBackgroundRefinement(options, forceRetry) {
     var candidates = normalizeCandidates(options && options.candidates);
     var snapshot = currentInputSnapshot(candidates, options || {});
@@ -463,34 +523,8 @@
     currentRefinementView = null;
     showCheckingWhenReady(sequence);
 
-    var promise = fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal,
-      body: JSON.stringify(snapshot),
-    }).then(function (response) {
-      return parseJsonSafe(response).then(function (data) {
-        if (!response.ok || !data) throw new Error('REFINEMENT_REQUEST_FAILED');
-        return data;
-      });
-    }).catch(function (error) {
-      return {
-        status: 'unavailable',
-        candidateYears: candidates,
-        remainingCandidateYears: candidates,
-        chosenYear: null,
-        confidence: null,
-        resolutionBasis: 'serial-plus-model',
-        modelProductionRange: null,
-        evidence: [],
-        summary: error && error.name === 'AbortError'
-          ? 'Model evidence lookup timed out. The original serial-valid candidate years are preserved.'
-          : 'Model evidence could not be checked. The original serial-valid candidate years are preserved.',
-        cacheStatus: 'bypass',
-        provider: 'none',
-        timings: { localMs: 0, cacheMs: 0, onlineLookupMs: 0, totalMs: 0 },
-        errorCode: error && error.name === 'AbortError' ? 'REFINEMENT_TIMEOUT' : 'REFINEMENT_UNAVAILABLE',
-      };
+    var promise = requestRefinement(snapshot, controller.signal).catch(function (error) {
+      return unavailableResponse(candidates, error);
     }).then(function (data) {
       applyResponse(data, sequence, snapshot);
       return data;
@@ -657,6 +691,7 @@
     installEventSafety();
     window.SerialRefinementController = {
       start: startBackgroundRefinement,
+      refine: refineSnapshot,
       invalidate: invalidateActiveRequest,
       fingerprint: fingerprint,
       matchesCommonGeSerialPattern: matchesCommonGeSerialPattern,
