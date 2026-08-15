@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;600&display=swap">
   <link rel="stylesheet" href="shared.css">
   <link rel="stylesheet" href="responsive-navigation.css">
+  <link rel="stylesheet" href="seo-landing.css">
   <style>
     :root {
       --navy-darkest: #020616;
@@ -589,7 +590,7 @@
     }
   </style>
 </head>
-<body>
+<body data-page-kind="brand-page">
   <nav>
   <a href="/" class="logo" aria-label="Decode My Item home">
     <span class="material-symbols-outlined" style="color:#44e5c2;font-size:26px;flex-shrink:0;line-height:1;">qr_code_scanner</span>
@@ -649,7 +650,7 @@
   <section class="lld-container">
     <div class="lld-hero">
       <h1>Large Loss Decoder</h1>
-      <p>Decode multiple serial numbers at once for insurance claims, replacements, and bulk research. Process entire asset lists row-by-row with detailed age and model information.</p>
+      <p>Decode and organize multiple serial numbers in one workflow. The Large Loss Decoder is built for adjusters, contents professionals, restoration teams, and anyone researching multiple items from the same loss, inventory, or property. Add each item as a row, then process the batch while keeping the age result, model information, and decode status together.</p>
     </div>
 
     <div class="lld-controls">
@@ -690,6 +691,137 @@
       </table>
     </div>
   </section>
+
+  <div class="bp-content-wrap">
+
+    <div class="bp-section-card bp-full-width">
+      <div class="bp-section-card-head">
+        <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">list_alt</span>
+        <h2>How It Works</h2>
+      </div>
+      <ol class="bp-steps">
+        <li class="bp-step">
+          <span class="bp-step-num" style="background:#44e5c220;color:#44e5c2;">1</span>
+          <span>Add one row for each item you need to research.</span>
+        </li>
+        <li class="bp-step">
+          <span class="bp-step-num" style="background:#44e5c220;color:#44e5c2;">2</span>
+          <span>Enter category, brand, serial number, and model when available.</span>
+        </li>
+        <li class="bp-step">
+          <span class="bp-step-num" style="background:#44e5c220;color:#44e5c2;">3</span>
+          <span>Select Decode All to process the batch, then review each item independently.</span>
+        </li>
+      </ol>
+      <p>The Large Loss Decoder uses the same brand-specific serial-number decoding approach as the individual <a href="/decoder-tool">Serial Number Decoder</a>, but organizes multiple items into one batch workflow. Each row is evaluated independently, so one unsupported or ambiguous serial does not make the rest of the list unusable.</p>
+    </div>
+
+    <div class="bp-section-card bp-full-width">
+      <div class="bp-section-card-head">
+        <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">fact_check</span>
+        <h2>Understanding Batch Results</h2>
+      </div>
+      <p>Each row's <strong>Status</strong> column moves from Pending to Loading while the batch runs, then settles on either <strong>✓ Decoded</strong> or <strong>✗ Error</strong>. The <strong>Age/Year</strong> column shows the decoded result once available, and the <strong>Explain</strong> button opens a breakdown for that row &mdash; estimated age, year code, month or period, decoding method, and any notes on a successful row, or the specific reason a row could not be decoded.</p>
+      <p>If a serial number can represent more than one possible year, or the brand does not have a verified deterministic rule, Decode My Item should not invent a precise age. You'll see every candidate year the code matches rather than a single guessed date. Review the row individually, or use <a href="/smart-lookup">Smart Lookup</a> for additional product research on items the decoder can't resolve.</p>
+    </div>
+
+    <div class="bp-two-col">
+      <div class="bp-section-card">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">groups</span>
+          <h2>Who This Tool Is For</h2>
+        </div>
+        <ul class="bp-check-list">
+          <li class="bp-check-item">
+            <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+            <span>Large residential contents inventories</span>
+          </li>
+          <li class="bp-check-item">
+            <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+            <span>Multi-appliance replacement inventories</span>
+          </li>
+          <li class="bp-check-item">
+            <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+            <span>Restoration and mitigation documentation</span>
+          </li>
+          <li class="bp-check-item">
+            <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+            <span>Replacement-cost research preparation</span>
+          </li>
+          <li class="bp-check-item">
+            <span class="material-symbols-outlined bp-check-icon">check_circle</span>
+            <span>Property or multi-unit inventories</span>
+          </li>
+        </ul>
+      </div>
+      <div class="bp-section-card">
+        <div class="bp-section-card-head">
+          <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">layers</span>
+          <h2>Large Loss vs. One Item at a Time</h2>
+        </div>
+        <p>Researching many items one at a time in the <a href="/decoder-tool">Serial Number Decoder</a> works, but re-entering brand and category for every item adds up quickly on a large list. The Large Loss Decoder keeps every item's inputs and results in one table, so a full inventory can be built, decoded, and reviewed in a single pass instead of dozens of separate lookups.</p>
+      </div>
+    </div>
+
+    <div class="bp-section-card bp-full-width">
+      <div class="bp-section-card-head">
+        <span class="material-symbols-outlined bp-section-icon" style="color:#44e5c2;">compare_arrows</span>
+        <h2>Which Tool Should I Use?</h2>
+      </div>
+      <div class="fmt-cards-grid">
+        <div class="fmt-card">
+          <div class="fmt-card-top">
+            <span class="fmt-label">Large Loss Decoder</span>
+            <span class="conf-pill conf-high">This page</span>
+          </div>
+          <p class="fmt-meaning">Multiple items, one batch. Best when you're researching an inventory rather than a single serial number.</p>
+        </div>
+        <div class="fmt-card">
+          <div class="fmt-card-top">
+            <span class="fmt-label">Serial Number Decoder</span>
+            <span class="conf-pill conf-med">One item</span>
+          </div>
+          <p class="fmt-meaning">Direct, deterministic serial decoding for a single item. <a href="/decoder-tool">Open the decoder &rarr;</a></p>
+        </div>
+        <div class="fmt-card">
+          <div class="fmt-card-top">
+            <span class="fmt-label">Smart Lookup</span>
+            <span class="conf-pill conf-estimated">Estimated</span>
+          </div>
+          <p class="fmt-meaning">Model or product research when serial decoding is insufficient or unsupported. <a href="/smart-lookup">Open Smart Lookup &rarr;</a></p>
+        </div>
+        <div class="fmt-card">
+          <div class="fmt-card-top">
+            <span class="fmt-label">RCV / ACV Calculator</span>
+            <span class="conf-pill conf-med">Next step</span>
+          </div>
+          <p class="fmt-meaning">Use an established item age as part of a depreciation estimate. <a href="/rcv-acv-calculator">Open the calculator &rarr;</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bp-section-card bp-full-width" style="border-left:3px solid #ffc278;">
+      <div class="bp-section-card-head">
+        <span class="material-symbols-outlined bp-section-icon" style="color:#ffc278;">info</span>
+        <h2>Accuracy &amp; Methodology</h2>
+      </div>
+      <p>Results depend on the serial format supplied by the manufacturer. A deterministic decoded year is different from an estimated product age. Decode My Item does not force a year when the available serial data does not support one &mdash; see the full <a href="/methodology">methodology</a> for how decoder rules are researched, verified, and how ambiguous results are handled.</p>
+    </div>
+
+    <div class="bp-cta-card">
+      <span class="material-symbols-outlined" style="font-size:40px;color:#44e5c2;margin-bottom:12px;">manage_search</span>
+      <h2>Related Tools</h2>
+      <p>Continue your research or move a confirmed age into a depreciation estimate. For discontinued items or documentation beyond what these tools cover, Item Assist also offers human-reviewed Contents Research starting at $75.</p>
+      <div class="bp-cta-row">
+        <a href="/decoder-tool" class="bp-cta-btn" style="background:#44e5c2;color:#00382d;">
+          <span class="material-symbols-outlined" style="font-size:16px;">qr_code_scanner</span> Serial Number Decoder
+        </a>
+        <a href="/smart-lookup" class="bp-cta-btn-outline" style="border-color:#44e5c240;color:#44e5c2;">Smart Lookup</a>
+        <a href="/rcv-acv-calculator" class="bp-cta-btn-outline" style="border-color:#44e5c240;color:#44e5c2;">RCV / ACV Calculator</a>
+      </div>
+    </div>
+
+  </div>
 
   <footer class="footer-sitemap">
   <div class="footer-sitemap-grid">
