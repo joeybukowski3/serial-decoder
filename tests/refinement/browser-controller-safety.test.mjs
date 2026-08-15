@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-function loadController() {
+function loadController(fetchImpl) {
   const document = {
     readyState: 'complete',
     addEventListener() {},
@@ -18,7 +18,7 @@ function loadController() {
     clearTimeout,
     console,
     document,
-    fetch: async () => ({ ok: false, text: async () => '' }),
+    fetch: fetchImpl || (async () => ({ ok: false, text: async () => '' })),
     setTimeout,
     window,
   };
@@ -27,6 +27,44 @@ function loadController() {
   vm.runInContext(fs.readFileSync('src/browser/serial-refinement-controller.js', 'utf8'), context);
   return window.SerialRefinementController;
 }
+
+test('row-safe controller refinement uses explicit inputs and constrains the API response', async () => {
+  let request;
+  const controller = loadController(async (_url, options) => {
+    request = JSON.parse(options.body);
+    return {
+      ok: true,
+      text: async () => JSON.stringify({
+        status: 'resolved',
+        remainingCandidateYears: [2000],
+        chosenYear: 2000,
+        summary: 'Resolved by model evidence.',
+      }),
+    };
+  });
+
+  const result = await controller.refine({
+    category: 'appliances',
+    brand: 'GE',
+    serial: 'AZ777097B',
+    model: 'GSD5630D00WW',
+    candidates: [1988, 2000, 2012, 2024],
+    decodedMonth: 'January',
+  });
+
+  assert.deepEqual(request, {
+    category: 'appliances',
+    brand: 'GE',
+    serial: 'AZ777097B',
+    model: 'GSD5630D00WW',
+    candidateYears: [1988, 2000, 2012, 2024],
+    decodedMonth: 'January',
+    context: '',
+  });
+  assert.equal(result.status, 'resolved');
+  assert.equal(result.chosenYear, 2000);
+  assert.deepEqual(Array.from(result.remainingCandidateYears), [2000]);
+});
 
 test('browser controller preserves serial candidates when API selects an incompatible year', () => {
   const controller = loadController();

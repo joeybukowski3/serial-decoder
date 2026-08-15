@@ -917,6 +917,7 @@
   <script defer src="voice-input.js"></script>
   <script defer src="shared.js"></script>
   <script defer src="script.js"></script>
+  <script defer src="/serial-refinement-controller.js"></script>
   <script>
     const LLD = {
       rowCounter: 0,
@@ -1161,6 +1162,68 @@
         } catch (err) {
           return { error: err && err.message ? err.message : 'Decoding failed' };
         }
+      },
+
+      async refineDecodeResult(rowData, result) {
+        if (!result || result.error) return result;
+        const candidates = typeof parseCandidateYears === 'function'
+          ? parseCandidateYears(result.year)
+          : String(result.year || '').match(/\b(?:18|19|20|21|22)\d{2}\b/g)?.map(Number) || [];
+        const model = String(rowData.model || '').trim();
+        if (candidates.length <= 1 || !model) return result;
+        const controller = await this.getRefinementController();
+        if (!controller) return result;
+
+        const refinement = await controller.refine({
+          category: typeof normalizeDecoderCategory === 'function'
+            ? normalizeDecoderCategory(rowData.category)
+            : rowData.category,
+          brand: result.brandDisplay || rowData.brandLabel || rowData.brand,
+          serial: rowData.serial,
+          model,
+          candidates,
+          decodedMonth: result.month,
+          context: ''
+        });
+        if (!refinement) return result;
+
+        let refinedYear = candidates.join('/');
+        if (refinement.status === 'resolved' && refinement.chosenYear) {
+          refinedYear = String(refinement.chosenYear);
+        } else if (refinement.status === 'ranked' && refinement.preferredCandidateYear) {
+          refinedYear = String(refinement.preferredCandidateYear);
+        } else if (
+          (refinement.status === 'ambiguous' || refinement.status === 'ambiguous_with_era') &&
+          Array.isArray(refinement.remainingCandidateYears) &&
+          refinement.remainingCandidateYears.length
+        ) {
+          refinedYear = refinement.remainingCandidateYears.join('/');
+        }
+
+        const summary = String(refinement.summary || '').trim();
+        const baseNotes = String(result.notes || '').trim();
+        return {
+          ...result,
+          year: refinedYear,
+          estimatedYear: refinedYear,
+          notes: summary && !baseNotes.includes(summary)
+            ? `${summary}${baseNotes ? ` ${baseNotes}` : ''}`
+            : (baseNotes || summary),
+          refinementStatus: refinement.status,
+          refinementSummary: summary,
+          refinementConfidence: refinement.confidence || '',
+          refinementResponse: refinement,
+          serialCandidateYears: candidates.slice()
+        };
+      },
+
+      async getRefinementController() {
+        for (let attempt = 0; attempt < 50; attempt++) {
+          const controller = window.SerialRefinementController;
+          if (controller && typeof controller.refine === 'function') return controller;
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        return null;
       },
 
       escapeHtml(value) {
@@ -1567,7 +1630,8 @@
       },
 
       async decodeSerial(rowData) {
-        return Promise.resolve(this.buildDecodeResult(rowData));
+        const result = this.buildDecodeResult(rowData);
+        return this.refineDecodeResult(rowData, result);
       },
 
       displayResult(rowData) {
@@ -1616,6 +1680,9 @@
           { label: 'Confidence', value: result.confidence ? (result.confidence * 100).toFixed(0) + '%' : 'N/A' }
         ];
         if (result.notes) fields.push({ label: 'Notes', value: result.notes });
+        if (result.refinementSummary) {
+          fields.push({ label: 'Model Refinement', value: result.refinementSummary });
+        }
         container.innerHTML = fields.map(field => `
           <div class="expansion-field">
             <div class="expansion-field-label">${field.label}</div>
