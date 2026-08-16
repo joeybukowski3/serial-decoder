@@ -32,6 +32,11 @@
       letter-spacing: -0.025em; line-height: 1.15;
     }
     .ai-hero p { font-size: 0.95rem; color: #d8e3ee; line-height: 1.6; max-width: 640px; }
+    .ai-guardrail {
+      font-size: 0.82rem; color: #a9b8cc; margin-top: 8px; max-width: 640px;
+    }
+    .ai-guardrail a { color: #a78bfa; text-decoration: underline; text-underline-offset: 2px; }
+    .ai-guardrail a:hover { color: #c4b5fd; }
 
     /* USE CASE CHIPS */
     .use-cases {
@@ -241,23 +246,24 @@
 <!-- HERO -->
 <div class="ai-hero">
   <div class="ai-badge">&#129302; AI Assistant</div>
-  <h1>Ask Anything About Your Appliance or Device</h1>
-  <p>Get instant answers on appliance age, replacement guidance, serial decoding help, and product research &mdash; all in a natural conversation.</p>
+  <h1>Ask Questions About Your Decoder Results and Your Item</h1>
+  <p>Get help understanding a decoder result, deciding repair vs. replace, finding a label, or figuring out which DecodeMyItem tool fits your question &mdash; all in a natural conversation.</p>
+  <p class="ai-guardrail">For manufacture dates or exact production years, use the <a href="/decoder-tool">Serial Number Decoder</a> or <a href="/smart-lookup">Smart Lookup</a> &mdash; I can help you understand what they find.</p>
   <div class="use-cases">
-    <button class="use-case-chip" onclick="prefillChat('How old is my Whirlpool refrigerator with serial number XY2301234?')">
-      <span class="chip-icon">&#129695;</span> Age from serial number
+    <button class="use-case-chip" onclick="prefillChat('Can you help me understand what my decoder result means?')">
+      <span class="chip-icon">&#128172;</span> Explain my result
     </button>
     <button class="use-case-chip" onclick="prefillChat('What should I replace my 2009 GE Profile refrigerator with?')">
       <span class="chip-icon">&#128260;</span> Replacement options
     </button>
-    <button class="use-case-chip" onclick="prefillChat('How do I find the serial number on my LG washing machine?')">
-      <span class="chip-icon">&#128270;</span> Find serial number
+    <button class="use-case-chip" onclick="prefillChat('Where can I find the model or serial number label on my LG washing machine?')">
+      <span class="chip-icon">&#128270;</span> Find the label
     </button>
     <button class="use-case-chip" onclick="prefillChat('Is it worth repairing a 14 year old HVAC system or replace it?')">
       <span class="chip-icon">&#129520;</span> Repair vs replace
     </button>
-    <button class="use-case-chip" onclick="prefillChat('Decode this Goodman serial number: 1203456789')">
-      <span class="chip-icon">&#128202;</span> Decode a serial
+    <button class="use-case-chip" onclick="prefillChat('Which DecodeMyItem tool should I use for my appliance?')">
+      <span class="chip-icon">&#129517;</span> Which tool should I use?
     </button>
   </div>
 </div>
@@ -277,11 +283,12 @@
         <div class="msg-avatar">AI</div>
         <div class="msg-bubble">
           <p>Hi! I'm the Decode My Item AI Assistant. I can help you with:</p>
-          <p>&#9679; Decoding serial numbers &amp; finding manufacture dates<br>
-          &#9679; Estimating appliance age from model numbers or descriptions<br>
-          &#9679; Finding replacement options for old appliances<br>
+          <p>&#9679; Explaining a decoder or Smart Lookup result<br>
           &#9679; Repair vs. replace guidance<br>
-          &#9679; Locating serial &amp; model number labels on any appliance</p>
+          &#9679; Locating serial &amp; model number labels on any appliance<br>
+          &#9679; Finding replacement options for old appliances<br>
+          &#9679; Deciding which DecodeMyItem tool fits your question</p>
+          <p>For a manufacture date or exact production year, run the Serial Number Decoder or Smart Lookup first &mdash; I can help you make sense of what they return.</p>
           <p>What can I help you with today?</p>
         </div>
       </div>
@@ -291,7 +298,7 @@
       <textarea
         class="chat-input"
         id="chatInput"
-        placeholder="Ask about a serial number, model, appliance age..."
+        placeholder="Ask about a decoder result, a label location, repair vs. replace..."
         rows="1"
         onkeydown="handleChatKey(event)"
         oninput="autoResize(this)"
