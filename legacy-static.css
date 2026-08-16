@@ -1,0 +1,271 @@
+.legacy-static-page {
+  --primary: #44e5c2;
+  --bg-main: #0b1326;
+  --card-bg: #112236;
+  --text-main: #dae2fd;
+  --text-muted: #bacac3;
+  --border: #3c4a45;
+  --bg: var(--bg-main);
+  --bg2: #131b2e;
+  --accent: var(--primary);
+  --accent2: #38debb;
+  --card-border: var(--border);
+  --text-dark: var(--text-main);
+  --text-mid: var(--text-muted);
+  --text-light: #94a3b8;
+  font-family: Sora, sans-serif;
+  background: var(--bg-main);
+  color: var(--text-main);
+}
+
+.legacy-static-main {
+  width: min(1100px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 48px 0 72px;
+}
+
+.legacy-static-page .about-card,
+.legacy-static-page .static-card {
+  overflow: hidden;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+}
+
+.legacy-static-page .about-card-header,
+.legacy-static-page .static-card-header,
+.legacy-static-page .legacy-page-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 48px;
+  text-align: center;
+  background: var(--navy-mid, #131b2e);
+  border-bottom: 1px solid var(--border);
+}
+
+.legacy-static-page .about-card-header::before,
+.legacy-static-page .static-card-header::before,
+.legacy-static-page .legacy-page-hero::before {
+  position: absolute;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  background-image: linear-gradient(rgba(68, 229, 194, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(68, 229, 194, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black 20%, transparent 100%);
+}
+
+.legacy-static-page .about-card-header > *,
+.legacy-static-page .static-card-header > *,
+.legacy-static-page .legacy-page-hero > * {
+  position: relative;
+}
+
+.legacy-static-page .about-card-header h1,
+.legacy-static-page .static-card-header h1,
+.legacy-static-page .legacy-page-hero h1 {
+  color: var(--text-main);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem) !important;
+  margin: 0 0 12px !important;
+}
+
+.legacy-static-page .legacy-page-hero .accent {
+  color: var(--primary);
+}
+
+.legacy-static-page .about-card-header p,
+.legacy-static-page .static-card-header p,
+.legacy-static-page .legacy-page-hero p {
+  max-width: 620px;
+  margin: 0 auto;
+  color: var(--text-muted);
+}
+
+.legacy-static-page .legacy-page-hero .header-tagline {
+  margin-top: 10px;
+  font-size: 0.88rem;
+}
+
+.legacy-static-page .about-card-body,
+.legacy-static-page .static-card-body {
+  padding: 36px 40px 44px;
+}
+
+.legacy-static-page h2,
+.legacy-static-page h3,
+.legacy-static-page h4,
+.legacy-static-page strong {
+  color: var(--text-main);
+}
+
+.legacy-static-page p,
+.legacy-static-page li,
+.legacy-static-page .pillar-desc,
+.legacy-static-page .legend-item,
+.legacy-static-page .determination-body,
+.legacy-static-page .static-section p,
+.legacy-static-page .static-section li {
+  color: var(--text-muted);
+}
+
+.legacy-static-page .about-section,
+.legacy-static-page .brands-category,
+.legacy-static-page .static-section,
+.legacy-static-page .guide-faq {
+  border-color: var(--border);
+}
+
+.legacy-static-page .pillar,
+.legacy-static-page .brand-pill,
+.legacy-static-page .flow-card,
+.legacy-static-page .guide-card,
+.legacy-static-page .determination-details {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border);
+  color: var(--text-main);
+  box-shadow: none;
+}
+
+.legacy-static-page .brand-pill:hover,
+.legacy-static-page .guide-card:hover {
+  background: rgba(68, 229, 194, 0.07);
+  border-color: rgba(68, 229, 194, 0.45);
+}
+
+.legacy-static-page .pillar-title,
+.legacy-static-page .flow-card h2,
+.legacy-static-page .guide-card h2,
+.legacy-static-page .determination-details summary {
+  color: var(--text-main);
+}
+
+.legacy-static-page .determination-details summary {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.legacy-static-page .determination-details[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.legacy-static-page .determination-body {
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.legacy-static-page .brand-dot,
+.legacy-static-page .legend-dot.green {
+  background: var(--primary);
+}
+
+.legacy-static-page .guide-chip {
+  color: var(--primary);
+  background: rgba(68, 229, 194, 0.08);
+  border-color: rgba(68, 229, 194, 0.28);
+}
+
+.legacy-static-page .guide-chip:hover {
+  color: var(--text-main);
+  background: rgba(68, 229, 194, 0.14);
+  border-color: var(--primary);
+}
+
+.legacy-static-page .brand-intro,
+.legacy-static-page .location-guide-grid,
+.legacy-static-page .flow-strip,
+.legacy-static-page .guide-faq {
+  max-width: 1100px;
+}
+
+.legacy-static-page .brand-intro {
+  padding: 20px 24px;
+  margin: 24px 0;
+  background: rgba(68, 229, 194, 0.05);
+  border: 1px solid rgba(68, 229, 194, 0.18);
+  border-radius: 16px;
+}
+
+.legacy-static-page .brand-intro .eyebrow,
+.legacy-static-page .eyebrow {
+  color: var(--primary);
+}
+
+.legacy-static-page .about-disclaimer,
+.legacy-static-page .brands-note,
+.legacy-static-page .coverage-note,
+.legacy-static-page .disclaimer-block,
+.legacy-static-page .note-block,
+.legacy-static-page .caveat-block {
+  color: var(--text-muted);
+  background: rgba(68, 229, 194, 0.06);
+  border-color: rgba(68, 229, 194, 0.24);
+}
+
+.legacy-static-page .global-category-tabs {
+  border-color: var(--border);
+}
+
+.legacy-static-page .global-category-tab {
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border);
+}
+
+.legacy-static-page .global-category-tab:hover {
+  color: var(--text-main);
+  background: rgba(68, 229, 194, 0.08);
+}
+
+.legacy-static-page .global-category-tab.active {
+  color: #00382d;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+@media (max-width: 768px) {
+  .legacy-static-main {
+    width: min(100% - 32px, 1100px);
+    padding: 32px 0 48px;
+  }
+
+  .legacy-static-page .about-card-header,
+  .legacy-static-page .static-card-header,
+  .legacy-static-page .legacy-page-hero {
+    padding: 32px 20px;
+  }
+
+  .legacy-static-page .about-card-body,
+  .legacy-static-page .static-card-body {
+    padding: 26px 20px 32px;
+  }
+
+  .legacy-static-page .about-pillars,
+  .legacy-static-page .location-guide-grid,
+  .legacy-static-page .flow-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 390px) {
+  .legacy-static-main {
+    width: min(100% - 24px, 1100px);
+    padding: 24px 0 36px;
+  }
+
+  .legacy-static-page .about-card,
+  .legacy-static-page .static-card {
+    border-radius: 14px;
+  }
+
+  .legacy-static-page .about-card-header,
+  .legacy-static-page .static-card-header,
+  .legacy-static-page .legacy-page-hero {
+    padding: 26px 16px;
+  }
+
+  .legacy-static-page .about-card-body,
+  .legacy-static-page .static-card-body {
+    padding: 22px 16px 26px;
+  }
+}

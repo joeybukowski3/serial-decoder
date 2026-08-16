@@ -60,33 +60,32 @@
   }
   </script>
     <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="legacy-static.css">
     <style>
         .policy-tab-panel, .static-card-body, .static-section { min-width: 0; }
         .table-scroll { display: block; width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
-        .table-scroll:focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; border-radius: 4px; }
+        .table-scroll:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; border-radius: 4px; }
         .table-scroll-hint { display: none; margin: 0.35rem 0; color: var(--text-mid); font-size: 0.78rem; }
         .policy-table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 0.85rem; }
-        .policy-table th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--text-main); border-bottom: 2px solid #e2e8f0; }
-        .policy-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #e9edf2; vertical-align: top; color: var(--text-mid); }
+        .policy-table th { background: rgba(68, 229, 194, 0.08); text-align: left; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--text-main); border-bottom: 2px solid var(--border); }
+        .policy-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-mid); }
         .policy-table tr:last-child td { border-bottom: none; }
-        .notice-box { background: #f0f9ff; border-left: 4px solid #2563eb; border-radius: 0 10px 10px 0; padding: 1.1rem 1.25rem; margin: 1rem 0 1.5rem; }
-        .notice-box-title { font-weight: 700; color: #1d4ed8; margin-bottom: 0.5rem; font-size: 0.95rem; }
-        .notice-box p, .notice-box li { color: #1e3a5f; font-size: 0.88rem; line-height: 1.65; }
+        .notice-box { background: rgba(68, 229, 194, 0.06); border-left: 4px solid var(--primary); border-radius: 0 10px 10px 0; padding: 1.1rem 1.25rem; margin: 1rem 0 1.5rem; }
+        .notice-box-title { font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; font-size: 0.95rem; }
+        .notice-box p, .notice-box li { color: var(--text-muted); font-size: 0.88rem; line-height: 1.65; }
         .notice-box ul { margin: 0.4rem 0 0 1.3rem; }
         .tag-yes  { display: inline-block; background: #dcfce7; color: #166534; font-size: 0.72rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 4px; }
         .tag-no   { display: inline-block; background: #fee2e2; color: #991b1b; font-size: 0.72rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 4px; }
         .tag-note { display: inline-block; background: #fef9c3; color: #713f12; font-size: 0.72rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 4px; }
-        .policy-sub { font-size: 0.9rem; font-weight: 600; color: var(--text-dark); margin: 1.25rem 0 0.35rem; padding-bottom: 0.2rem; border-bottom: 1px dashed #cbd5e1; }
-        .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.35rem 0.55rem; max-width: 100%; }
+        .policy-sub { font-size: 0.9rem; font-weight: 600; color: var(--text-main); margin: 1.25rem 0 0.35rem; padding-bottom: 0.2rem; border-bottom: 1px dashed var(--border); }
         @media (max-width: 700px) {
             .table-scroll-hint { display: block; }
-            .footer-links .footer-sep { display: none; }
         }
         .policy-tab-panel { display: none; }
         .policy-tab-panel.active { display: block; }
     </style>
 </head>
-<body>
+<body class="legacy-static-page">
   <nav>
   <a href="/" class="logo" aria-label="Decode My Item home">
     <span class="material-symbols-outlined" style="color:#44e5c2;font-size:26px;flex-shrink:0;line-height:1;">qr_code_scanner</span>
@@ -142,23 +141,7 @@
   <li><a href="/security" class="nav-cta">Security &amp; Data</a></li>
 </ul>
 </nav>
-    <div ></div>
-    <div >
-        <div ></div><div ></div><div ></div><div ></div>
-        <div ></div><div ></div><div ></div><div ></div>
-    </div>
-
-    
-    
-    <main>
-
-        <div class="header">
-            <button 
-            <div class="header-brand">
-                <div class="header-brand-title" style="display:none"><span class="accent">&#9889;</span> Serial Number <span class="accent">Decoder</span></div>
-                <p class="subtitle">Professional Serial Number Age Decoder for Appliances &amp; Equipment</p>
-            </div>
-        </div>
+    <main class="legacy-static-main">
 
         <div class="static-card">
             <div class="static-card-header">
@@ -490,25 +473,6 @@
 
             </div>
         </div>
-
-        <div class="footer">
-            <p class="footer-tagline">Built for fast, reliable equipment age lookups.</p>
-            <div class="footer-links">
-                <a href="/methodology">Methodology</a>
-                <span class="footer-sep">|</span>
-                <a href="/disclaimer">Disclaimer</a>
-                <span class="footer-sep">|</span>
-                <a href="/contact">Contact</a>
-                <span class="footer-sep">|</span>
-                <a href="/privacy-policy">Privacy Policy</a>
-            </div>
-            <p class="footer-verify">Database Last Verified: February 2026. All decoding logic is cross-referenced with manufacturer technical bulletins.</p>
-            <p>&copy; 2026 Serial Number Decoder. Always verify results for accuracy.</p>
-            <p class="footer-db">Database updated February 2026 &nbsp;&middot;&nbsp; Sources: Manufacturer documentation and authorized publications</p>
-        </div>
-
-    </div><!-- /app-container -->
-    </div><!-- /page-shell -->
 
     <script defer src="script.js"></script>
     <script defer src="smart-lookup.js"></script>

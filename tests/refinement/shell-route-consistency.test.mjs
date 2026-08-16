@@ -95,3 +95,26 @@ test('static brand/support pages do not reference missing DecodeMyItem social as
   }
   assert.equal(fs.existsSync(new URL('../../assets/decodemyitem-logo.png', import.meta.url)), true);
 });
+
+test('legacy static page family uses one modernized shell without obsolete header or footer fragments', () => {
+  const pages = [
+    'about.html',
+    'brands.html',
+    'disclaimer.html',
+    'find-model-serial-number.html',
+    'privacy-policy.html'
+  ];
+
+  for (const file of pages) {
+    const html = fs.readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
+    assert.match(html, /<body class="legacy-static-page">/, `${file} must opt into the shared static-page theme`);
+    assert.match(html, /<link rel="stylesheet" href="legacy-static\.css">/, `${file} must load the shared static-page theme`);
+    assert.equal((html.match(/<main\b/g) || []).length, 1, `${file} must have one main element`);
+    assert.equal((html.match(/<\/main>/g) || []).length, 1, `${file} must close its main element once`);
+    assert.doesNotMatch(html, /class="header"/, `${file} must not include the obsolete fixed header`);
+    assert.doesNotMatch(html, /class="footer"/, `${file} must not include the obsolete duplicate footer`);
+    assert.doesNotMatch(html, /<button\s*\n\s*<div/, `${file} must not include the incomplete legacy button`);
+    assert.doesNotMatch(html, /\/app-container|\/page-shell/, `${file} must not include obsolete wrapper closers`);
+    assert.match(html, /<\/main>\s*<footer class="footer-sitemap">/, `${file} sitemap footer must remain outside main`);
+  }
+});
