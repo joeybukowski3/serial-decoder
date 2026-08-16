@@ -16,13 +16,18 @@ const navLinks = `
   <li><a href="/">Home</a></li>
   <li><a href="/decoder-tool">Serial Number Decoder</a></li>
   <li><a href="/smart-lookup">Smart Lookup</a></li>
-  <li><a href="/large-loss-decoder">Large Loss Decoder</a></li>
-  <li><a href="/assistant">AI Assistant</a></li>
   <li class="nav-dropdown-item">
     <button class="nav-dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true">
       Resources <span class="nav-chevron" aria-hidden="true">&#9662;</span>
     </button>
     <div class="nav-dropdown-panel" role="menu">
+      <div class="nav-dropdown-col">
+        <p class="nav-dropdown-label">Tools</p>
+        <a href="/large-loss-decoder" role="menuitem">Large Loss Decoder</a>
+        <a href="/assistant" role="menuitem">AI Assistant</a>
+        <a href="/rcv-acv-calculator" role="menuitem">RCV / ACV Calculator</a>
+        <a href="/sales-tax-decalculator" role="menuitem">Sales Tax De-Calculator</a>
+      </div>
       <div class="nav-dropdown-col">
         <p class="nav-dropdown-label">Age Research</p>
         <a href="/how-old-is-my-appliance" role="menuitem">How Old Is My Appliance?</a>
@@ -1174,6 +1179,8 @@ function renderPage(page) {
     ['/how-old-is-my-electronics', 'How Old Is My Electronics?'],
     ['/serial-number-location-guide', 'Serial Number Location Guide'],
     ['/appliance-age-for-insurance-and-replacement', 'Appliance Age for Insurance'],
+    ['/rcv-acv-calculator', 'RCV / ACV Calculator'],
+    ['/sales-tax-decalculator', 'Sales Tax De-Calculator'],
     ['/how-to-read-serial-number', 'How to Read a Serial Number'],
     ['/methodology', 'Methodology'],
     ['/about', 'About'],

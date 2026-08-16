@@ -1,19 +1,3 @@
-/* RCV/ACV Calculator and Sales Tax De-Calculator: direct desktop-header links, hidden
-   below 1550px so they never contribute to the hamburger-collapse threshold above (the
-   existing link set already needs the full 1290px+ to fit, and on some pages the base nav
-   itself is already right at that edge — verified empirically at 1440px on index.html
-   before settling on this breakpoint) and never appear in the mobile/hamburger dropdown,
-   which reuses this same <ul>. */
-.nav-tool-link {
-  display: none;
-}
-
-@media (min-width: 1550px) {
-  .nav-tool-link {
-    display: list-item;
-  }
-}
-
 /* The complete shared desktop link set needs more than 1290px. */
 @media (min-width: 769px) and (max-width: 1290px) {
   .hamburger {
