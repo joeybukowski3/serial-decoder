@@ -60,17 +60,47 @@ function readPage(file) {
   return fs.readFileSync(path.join(root, file), 'utf8');
 }
 
-test('generator navLinks includes the Resources dropdown and Item History Guides', () => {
+test('generator navLinks includes the Resources dropdown, Item History Guides, and a Tools group', () => {
   assert.match(generator, /nav-dropdown-item/);
   assert.match(generator, /Resources <span class="nav-chevron"/);
   assert.match(generator, /Item History Guides/);
   assert.match(generator, /href="\/item-history-guides"/);
-  assert.match(generator, /href="\/large-loss-decoder">Large Loss Decoder</);
+  assert.match(generator, /nav-dropdown-label">Tools<\/p>/);
+});
+
+test('generator navLinks top-level list does not include Large Loss Decoder, AI Assistant, or the calculators', () => {
+  const navLinksMatch = generator.match(/const navLinks = `([\s\S]*?)`;/);
+  assert.ok(navLinksMatch, 'navLinks const must exist in the generator');
+  const flatTopLevel = navLinksMatch[1].split('<li class="nav-dropdown-item">')[0];
+  assert.doesNotMatch(flatTopLevel, /Large Loss Decoder/);
+  assert.doesNotMatch(flatTopLevel, /AI Assistant/);
+  assert.doesNotMatch(flatTopLevel, /RCV \/ ACV Calculator/);
+  assert.doesNotMatch(flatTopLevel, /Sales Tax De-Calculator/);
+});
+
+test('generator navLinks Tools group includes all four specialized/support tools exactly once', () => {
+  const navLinksMatch = generator.match(/const navLinks = `([\s\S]*?)`;/);
+  assert.ok(navLinksMatch);
+  const navLinks = navLinksMatch[1];
+  for (const [href, label] of [
+    ['/large-loss-decoder', 'Large Loss Decoder'],
+    ['/assistant', 'AI Assistant'],
+    ['/rcv-acv-calculator', 'RCV / ACV Calculator'],
+    ['/sales-tax-decalculator', 'Sales Tax De-Calculator'],
+  ]) {
+    const re = new RegExp(`href="${href.replace(/\//g, '\\/')}" role="menuitem">${label.replace(/[/]/g, '\\/')}</`, 'g');
+    assert.equal((navLinks.match(re) || []).length, 1, `${label} should appear exactly once in the Resources dropdown`);
+  }
 });
 
 test('generator footer includes the Item History Guides column and Large Loss Decoder link', () => {
   assert.match(generator, /footer-col-heading">Item History Guides/);
   assert.match(generator, /href="\/large-loss-decoder">Large Loss Decoder</);
+});
+
+test('generator footerResources includes both calculators', () => {
+  assert.match(generator, /\['\/rcv-acv-calculator', 'RCV \/ ACV Calculator'\]/);
+  assert.match(generator, /\['\/sales-tax-decalculator', 'Sales Tax De-Calculator'\]/);
 });
 
 test('generator does not reference the legacy /where-is-my-serial-number slug', () => {
@@ -121,6 +151,34 @@ for (const file of generatedPages) {
     const html = readPage(file);
     assert.doesNotMatch(html, /href="\/where-is-my-serial-number"/);
     assert.match(html, /href="\/serial-number-location-guide"/);
+  });
+}
+
+for (const file of generatedPages) {
+  test(`${file} applies the approved nav hierarchy: core tools top-level, specialized tools under Resources > Tools`, () => {
+    const html = readPage(file);
+    const navMatch = html.match(/<nav>([\s\S]*?)<\/nav>/);
+    assert.ok(navMatch, `${file} should have a <nav> element`);
+    const flatTopLevel = navMatch[1].split('<li class="nav-dropdown-item">')[0];
+
+    assert.match(flatTopLevel, /href="\/decoder-tool">Serial Number Decoder</);
+    assert.match(flatTopLevel, /href="\/smart-lookup">Smart Lookup</);
+    assert.doesNotMatch(flatTopLevel, /Large Loss Decoder/, `${file} must not show Large Loss Decoder as a top-level nav item`);
+    assert.doesNotMatch(flatTopLevel, /AI Assistant/, `${file} must not show AI Assistant as a top-level nav item`);
+    assert.doesNotMatch(flatTopLevel, /RCV \/ ACV Calculator/, `${file} must not show the RCV/ACV Calculator as a top-level nav item`);
+    assert.doesNotMatch(flatTopLevel, /Sales Tax De-Calculator/, `${file} must not show the Sales Tax De-Calculator as a top-level nav item`);
+
+    assert.equal((navMatch[1].match(/nav-dropdown-label">Tools</g) || []).length, 1, `${file} should have exactly one Tools group`);
+    for (const href of ['/large-loss-decoder', '/assistant', '/rcv-acv-calculator', '/sales-tax-decalculator']) {
+      const re = new RegExp(`href="${href.replace(/\//g, '\\/')}" role="menuitem"`, 'g');
+      assert.equal((navMatch[1].match(re) || []).length, 1, `${file} should link to ${href} exactly once inside Resources`);
+    }
+  });
+
+  test(`${file} exposes both calculators in the footer (discoverability gap fixed)`, () => {
+    const html = readPage(file);
+    assert.match(html, /href="\/rcv-acv-calculator">RCV \/ ACV Calculator</, `${file} footer must link to the RCV/ACV Calculator`);
+    assert.match(html, /href="\/sales-tax-decalculator">Sales Tax De-Calculator</, `${file} footer must link to the Sales Tax De-Calculator`);
   });
 }
 
