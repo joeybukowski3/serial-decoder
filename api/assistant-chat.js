@@ -1,3 +1,23 @@
+import { Redis } from '@upstash/redis';
+import { Ratelimit } from '@upstash/ratelimit';
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, '1 m'),
+  analytics: false,
+});
+
+function getClientIp(req) {
+  const forwarded = req.headers?.['x-forwarded-for'];
+  if (forwarded) return String(forwarded).split(',')[0].trim();
+  return req.socket?.remoteAddress || 'unknown';
+}
+
 function normalizeMessages(messages) {
   return Array.isArray(messages) ? messages
     .filter(function (message) {
@@ -42,6 +62,15 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  try {
+    const ip = getClientIp(req);
+    const { success, reset } = await ratelimit.limit(ip);
+    if (!success) {
+      res.setHeader('Retry-After', Math.max(0, Math.ceil((reset - Date.now()) / 1000)));
+      return res.status(429).json({ error: 'Too many requests. Please try again in a moment.', errorCode: 'RATE_LIMIT' });
+    }
+  } catch (_) {}
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
