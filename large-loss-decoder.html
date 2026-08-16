@@ -1450,7 +1450,7 @@
           return;
         }
         listbox.innerHTML = options.map((opt, i) =>
-          `<li role="option" id="lld-brand-opt-${i}" data-index="${i}">${this.escapeHtml(opt.name)}</li>`
+          `<li role="option" id="lld-brand-opt-${i}" data-index="${i}" aria-selected="false">${this.escapeHtml(opt.name)}</li>`
         ).join('');
       },
 
@@ -1482,7 +1482,11 @@
         const listbox = this.getBrandListboxEl();
         if (!listbox || !listbox.children) return;
         Array.from(listbox.children).forEach((li, i) => {
-          li.classList.toggle('active', i === this.activeBrandIndex);
+          const isActive = i === this.activeBrandIndex;
+          li.classList.toggle('active', isActive);
+          if (li.getAttribute('role') === 'option') {
+            li.setAttribute('aria-selected', isActive ? 'true' : 'false');
+          }
         });
         const activeLi = listbox.children[this.activeBrandIndex];
         const inputEl = this.activeBrandRowId ? document.getElementById(`brand-input-${this.activeBrandRowId}`) : null;
