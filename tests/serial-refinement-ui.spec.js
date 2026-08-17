@@ -839,3 +839,228 @@ test('mobile ranked result has no horizontal overflow and readable targets', asy
     await browser.close();
   }
 });
+
+test('primary result enters a loading state immediately on manual Refine Result and clears it on success', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  await page.route('**/api/refine-serial-date', async (route) => {
+    await gate;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        candidateYears: [2004, 2014, 2024],
+        remainingCandidateYears: [2014],
+        chosenYear: 2014,
+        summary: 'Model evidence leaves 2014.',
+      })),
+    });
+  });
+  try {
+    // Decode with no model so the candidate years remain ambiguous and the
+    // manual "Refine Result" panel (narrowModelInput / narrowDateBtn) is the
+    // path exercised, matching the reported UX problem.
+    await fillDecode(page, 'lg', '412TATG1H105', '');
+    await page.click('#decodeBtn');
+    await expect(page.locator('#serialResults')).toBeVisible({ timeout: 750 });
+    await expect(page.locator('#resultYear')).toHaveText('2004/2014/2024');
+    await expect(page.locator('.serial-result-eyebrow')).toHaveText('Possible Manufacture Years');
+    await expect(page.locator('.rs-years')).toContainText('2004');
+
+    await page.fill('#narrowModelInput', 'WM3470HWA');
+    await page.click('#narrowDateBtn');
+
+    // The candidate years must disappear from the primary result and a clear
+    // loading state must take their place before the API response resolves.
+    await expect(page.locator('.serial-result-eyebrow')).toHaveText('Refining Result');
+    await expect(page.locator('.rs-years')).toHaveClass(/rs-years--loading/);
+    await expect(page.locator('.rs-years')).not.toContainText('2004');
+    await expect(page.locator('.rs-years')).not.toContainText('2014');
+    await expect(page.locator('.rs-years')).not.toContainText('2024');
+    await expect(page.locator('.rs-refining-spinner')).toBeVisible();
+    await expect(page.locator('.rs-refining-spinner')).toHaveCount(1);
+    await expect(page.locator('.rs-notice')).toHaveClass(/\bhidden\b/);
+    await expect(page.locator('#narrowDateOutput')).toContainText('Checking model-era evidence');
+
+    release();
+    await expect(page.locator('#resultYear')).toHaveText('2014');
+    await expect(page.locator('.serial-result-eyebrow')).not.toHaveText('Refining Result');
+    await expect(page.locator('.rs-years')).not.toHaveClass(/rs-years--loading/);
+    await expect(page.locator('.rs-refining-spinner')).toHaveCount(0);
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    release();
+    await context.close();
+    await browser.close();
+  }
+});
+
+test('manual Refine Result exits loading and restores candidate years when refinement cannot narrow the result', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  await page.route('**/api/refine-serial-date', async (route) => {
+    await gate;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        status: 'unavailable',
+        candidateYears: [2004, 2014, 2024],
+        remainingCandidateYears: [2004, 2014, 2024],
+        chosenYear: null,
+        confidence: null,
+        modelProductionRange: null,
+        summary: 'Model evidence could not be checked.',
+        provider: 'none',
+      })),
+    });
+  });
+  try {
+    await fillDecode(page, 'lg', '412TATG1H105', '');
+    await page.click('#decodeBtn');
+    await expect(page.locator('#resultYear')).toHaveText('2004/2014/2024');
+
+    await page.fill('#narrowModelInput', 'WM3470HWA');
+    await page.click('#narrowDateBtn');
+    await expect(page.locator('.serial-result-eyebrow')).toHaveText('Refining Result');
+    await expect(page.locator('.rs-years')).toHaveClass(/rs-years--loading/);
+
+    release();
+    // Unresolved refinement must exit loading and fall back to the original
+    // serial-valid candidate years, not leave the loading state stuck.
+    await expect(page.locator('#resultYear')).toHaveText('2004/2014/2024');
+    await expect(page.locator('.serial-result-eyebrow')).toHaveText('Possible Manufacture Years');
+    await expect(page.locator('.rs-years')).not.toHaveClass(/rs-years--loading/);
+    await expect(page.locator('.rs-years')).toContainText('2004');
+    await expect(page.locator('[data-serial-refinement-retry="1"]')).toBeVisible();
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    release();
+    await context.close();
+    await browser.close();
+  }
+});
+
+test('a second refinement attempt (Retry) re-enters and exits the loading state correctly', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  let calls = 0;
+  let releaseFirst;
+  let releaseSecond;
+  const firstGate = new Promise((resolve) => { releaseFirst = resolve; });
+  const secondGate = new Promise((resolve) => { releaseSecond = resolve; });
+  await page.route('**/api/refine-serial-date', async (route) => {
+    calls += 1;
+    if (calls === 1) {
+      await firstGate;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(response({
+          status: 'unavailable',
+          candidateYears: [2004, 2014, 2024],
+          remainingCandidateYears: [2004, 2014, 2024],
+          chosenYear: null,
+          confidence: null,
+          modelProductionRange: null,
+          summary: 'Model evidence could not be checked.',
+          provider: 'none',
+        })),
+      });
+      return;
+    }
+    await secondGate;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        candidateYears: [2004, 2014, 2024],
+        remainingCandidateYears: [2014],
+        chosenYear: 2014,
+        summary: 'Model evidence leaves 2014.',
+      })),
+    });
+  });
+  try {
+    await fillDecode(page, 'lg', '412TATG1H105', '');
+    await page.click('#decodeBtn');
+    await page.fill('#narrowModelInput', 'WM3470HWA');
+    await page.click('#narrowDateBtn');
+    await expect(page.locator('.serial-result-eyebrow')).toHaveText('Refining Result');
+    await expect(page.locator('.rs-years')).toHaveClass(/rs-years--loading/);
+
+    releaseFirst();
+    await expect(page.locator('[data-serial-refinement-retry="1"]')).toBeVisible();
+    await expect(page.locator('.serial-result-eyebrow')).toHaveText('Possible Manufacture Years');
+    await expect(page.locator('.rs-years')).not.toHaveClass(/rs-years--loading/);
+
+    await page.click('[data-serial-refinement-retry="1"]');
+    await expect(page.locator('.serial-result-eyebrow')).toHaveText('Refining Result');
+    await expect(page.locator('.rs-years')).toHaveClass(/rs-years--loading/);
+    await expect(page.locator('.rs-refining-spinner')).toHaveCount(1);
+
+    releaseSecond();
+    await expect(page.locator('#resultYear')).toHaveText('2014');
+    await expect(page.locator('.rs-years')).not.toHaveClass(/rs-years--loading/);
+    expect(calls).toBe(2);
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    releaseFirst();
+    releaseSecond();
+    await context.close();
+    await browser.close();
+  }
+});
+
+test('primary loading state has no horizontal overflow at ~390px mobile', async () => {
+  const { browser, context, page, diagnostics } = await openPage({ width: 390, height: 844 });
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  await page.route('**/api/refine-serial-date', async (route) => {
+    await gate;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        candidateYears: [2004, 2014, 2024],
+        remainingCandidateYears: [2014],
+        chosenYear: 2014,
+      })),
+    });
+  });
+  try {
+    await fillDecode(page, 'lg', '412TATG1H105', '');
+    await page.click('#decodeBtn');
+    const heroBoxBefore = await page.locator('.serial-result-hero, .rs-primary-card').boundingBox();
+
+    await page.fill('#narrowModelInput', 'WM3470HWA');
+    await page.click('#narrowDateBtn');
+    await expect(page.locator('.serial-result-eyebrow')).toHaveText('Refining Result');
+
+    const overflow = await page.evaluate(() => {
+      const doc = document.documentElement;
+      return doc.scrollWidth > doc.clientWidth + 1;
+    });
+    expect(overflow).toBe(false);
+
+    const heroBoxDuring = await page.locator('.serial-result-hero, .rs-primary-card').boundingBox();
+    expect(heroBoxBefore).toBeTruthy();
+    expect(heroBoxDuring).toBeTruthy();
+    expect(heroBoxDuring.width).toBeLessThanOrEqual(390);
+    // The result panel's approximate height should be preserved, not balloon
+    // into a large layout jump while loading. The three wrapped candidate-year
+    // tokens are naturally taller than the single-line loading row on a narrow
+    // viewport, so the hero is expected to shrink somewhat — bound that shrink
+    // rather than requiring pixel parity.
+    expect(heroBoxBefore.height - heroBoxDuring.height).toBeLessThanOrEqual(160);
+
+    release();
+    await expect(page.locator('#resultYear')).toHaveText('2014');
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    release();
+    await context.close();
+    await browser.close();
+  }
+});

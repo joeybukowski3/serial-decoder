@@ -335,6 +335,29 @@
     renderRefinementOutput(currentRefinementView.response, currentRefinementView.checking, currentRefinementView.slowChecking);
   }
 
+  // The primary hero card (#serialSummaryLayer .serial-result-hero) is fully
+  // rebuilt from #resultYear's textContent by legacy renderSerialSummaryLayer()
+  // on every call, using data that has not been updated yet while a refinement
+  // request is in flight. This overlays a loading state on that freshly-built
+  // hero so the candidate years never sit there looking idle while the request
+  // that will replace them is active.
+  function applyPrimaryLoadingState(checking) {
+    if (!checking) return;
+    var hero = document.querySelector('#serialSummaryLayer .serial-result-hero, #serialSummaryLayer .rs-primary-card');
+    if (!hero) return;
+    var eyebrow = hero.querySelector('.serial-result-eyebrow');
+    var main = hero.querySelector('.serial-result-main, .rs-years');
+    if (!eyebrow || !main) return;
+    var notice = hero.querySelector('.rs-notice');
+    if (notice) notice.classList.add('hidden');
+    eyebrow.textContent = 'Refining Result';
+    main.classList.add('rs-years--loading');
+    main.setAttribute('role', 'status');
+    main.setAttribute('aria-live', 'polite');
+    main.innerHTML = '<span class="rs-refining-spinner" aria-hidden="true"></span>' +
+      '<span class="rs-refining-text">Refining<span class="rs-refining-dots"><span>.</span><span>.</span><span>.</span></span></span>';
+  }
+
   function renderVisibleRefinement(response, checking, sequence, slowChecking) {
     currentRefinementView = {
       response: response || null,
@@ -346,6 +369,7 @@
       window.renderSerialSummaryLayer();
     } else {
       restoreCurrentRefinementView();
+      applyPrimaryLoadingState(Boolean(checking));
     }
   }
 
@@ -672,6 +696,12 @@
         var result = legacyRenderSerialSummaryLayer.apply(this, arguments);
         if (typeof window.reattachItemAssistCard === 'function') window.reattachItemAssistCard();
         restoreCurrentRefinementView();
+        // Legacy code (e.g. refineAmbiguousResult in script.js) also calls
+        // renderSerialSummaryLayer() directly, bypassing renderVisibleRefinement.
+        // Re-apply the loading overlay here so any rebuild that happens while a
+        // refinement request is still in flight keeps it, instead of the fresh
+        // hero briefly showing stale candidate years again.
+        applyPrimaryLoadingState(Boolean(currentRefinementView && currentRefinementView.checking));
         return result;
       };
     }
