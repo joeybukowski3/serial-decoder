@@ -163,6 +163,80 @@ header {
 .mobile-menu a:hover { color: var(--primary); }
 .mobile-menu a.active { color: var(--primary); }
 
+.nav-resources { position: relative; }
+.nav-resources-toggle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-var);
+  white-space: nowrap;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  transition: color 0.2s;
+}
+.nav-resources-toggle:hover,
+.nav-resources.open .nav-resources-toggle { color: var(--primary); }
+.nav-resources-chevron {
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+.nav-resources.open .nav-resources-chevron { transform: rotate(180deg); }
+.nav-resources-panel {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  background: var(--bg);
+  border: 1px solid var(--outline-var);
+  border-radius: var(--radius);
+  padding: 8px;
+  min-width: 220px;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.35);
+  z-index: 20;
+}
+.nav-resources.open .nav-resources-panel { display: flex; }
+.nav-resources-panel a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-var);
+  white-space: nowrap;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s, background 0.2s;
+}
+.nav-resources-panel a:hover { color: var(--primary); background: rgba(68,229,194,0.08); }
+
+.mobile-menu .nav-resources-toggle {
+  font-size: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  width: 100%;
+  justify-content: space-between;
+}
+.mobile-menu .nav-resources-panel {
+  position: static;
+  display: none;
+  border: none;
+  box-shadow: none;
+  min-width: 0;
+  background: none;
+  padding: 4px 0 4px 16px;
+}
+.mobile-menu .nav-resources.open .nav-resources-panel { display: flex; }
+.mobile-menu .nav-resources-panel a {
+  font-size: 11px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
 @media (max-width: 1140px) {
   .nav-links { display: none; }
   .mobile-toggle { display: block; }
@@ -862,10 +936,20 @@ footer {
       <a href="https://www.decodemyitem.com/">Home</a>
       <a href="https://www.decodemyitem.com/decoder-tool" class="active">Serial Number Decoder</a>
       <a href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a>
-      <a href="https://www.decodemyitem.com/assistant">AI Assistant</a>
-      <a href="https://www.decodemyitem.com/methodology">Methodology</a>
+      <div class="nav-resources" id="nav-resources-desktop">
+        <button type="button" class="nav-resources-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="nav-resources-panel-desktop">
+          Resources <span class="nav-resources-chevron" aria-hidden="true">&#9662;</span>
+        </button>
+        <div class="nav-resources-panel" id="nav-resources-panel-desktop" role="menu">
+          <a href="https://www.decodemyitem.com/large-loss-decoder" role="menuitem">Large Loss Decoder</a>
+          <a href="https://www.decodemyitem.com/assistant" role="menuitem">AI Assistant</a>
+          <a href="https://www.decodemyitem.com/rcv-acv-calculator" role="menuitem">RCV / ACV Calculator</a>
+          <a href="https://www.decodemyitem.com/sales-tax-decalculator" role="menuitem">Sales Tax De-Calculator</a>
+          <a href="https://www.decodemyitem.com/methodology" role="menuitem">Methodology</a>
+          <a href="https://www.decodemyitem.com/feedback" role="menuitem">Feedback &amp; Bugs</a>
+        </div>
+      </div>
       <a href="https://www.decodemyitem.com/contact">Contact</a>
-      <a href="https://www.decodemyitem.com/feedback">Feedback &amp; Bugs</a>
       <a href="https://www.decodemyitem.com/security">Security &amp; Data</a>
     </nav>
     <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu">
@@ -876,10 +960,20 @@ footer {
     <a href="https://www.decodemyitem.com/">Home</a>
     <a href="https://www.decodemyitem.com/decoder-tool" class="active">Serial Number Decoder</a>
     <a href="https://www.decodemyitem.com/smart-lookup">Smart Lookup</a>
-    <a href="https://www.decodemyitem.com/assistant">AI Assistant</a>
-    <a href="https://www.decodemyitem.com/methodology">Methodology</a>
+    <div class="nav-resources" id="nav-resources-mobile">
+      <button type="button" class="nav-resources-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="nav-resources-panel-mobile">
+        Resources <span class="nav-resources-chevron" aria-hidden="true">&#9662;</span>
+      </button>
+      <div class="nav-resources-panel" id="nav-resources-panel-mobile" role="menu">
+        <a href="https://www.decodemyitem.com/large-loss-decoder" role="menuitem">Large Loss Decoder</a>
+        <a href="https://www.decodemyitem.com/assistant" role="menuitem">AI Assistant</a>
+        <a href="https://www.decodemyitem.com/rcv-acv-calculator" role="menuitem">RCV / ACV Calculator</a>
+        <a href="https://www.decodemyitem.com/sales-tax-decalculator" role="menuitem">Sales Tax De-Calculator</a>
+        <a href="https://www.decodemyitem.com/methodology" role="menuitem">Methodology</a>
+        <a href="https://www.decodemyitem.com/feedback" role="menuitem">Feedback &amp; Bugs</a>
+      </div>
+    </div>
     <a href="https://www.decodemyitem.com/contact">Contact</a>
-    <a href="https://www.decodemyitem.com/feedback">Feedback &amp; Bugs</a>
     <a href="https://www.decodemyitem.com/security">Security &amp; Data</a>
   </nav>
 </header>
@@ -1102,6 +1196,31 @@ footer {
   const menu = document.getElementById('mobile-menu');
   toggle.addEventListener('click', () => {
     toggle.setAttribute('aria-expanded', String(menu.classList.toggle('open')));
+  });
+
+  document.querySelectorAll('.nav-resources-toggle').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const wrap = btn.closest('.nav-resources');
+      const isOpen = wrap.classList.toggle('open');
+      btn.setAttribute('aria-expanded', String(isOpen));
+    });
+  });
+  document.addEventListener('click', (e) => {
+    document.querySelectorAll('.nav-resources.open').forEach((wrap) => {
+      if (!wrap.contains(e.target)) {
+        wrap.classList.remove('open');
+        wrap.querySelector('.nav-resources-toggle').setAttribute('aria-expanded', 'false');
+      }
+    });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.nav-resources.open').forEach((wrap) => {
+        wrap.classList.remove('open');
+        wrap.querySelector('.nav-resources-toggle').setAttribute('aria-expanded', 'false');
+      });
+    }
   });
 </script>
 </body>
