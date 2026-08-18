@@ -144,6 +144,33 @@ test('refinement re-render of the same result does not duplicate the guide card'
   }
 });
 
+test('decoder guide card renders with MutationObserver neutralized, proving the direct renderSerialSummaryLayer() path does not depend on it', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  try {
+    // Decoder guide cards come entirely from renderSerialSummaryLayer() in
+    // script.js building the card inline; item-history-guide-integration.js
+    // no longer has a decoder-side observer. Neutralizing MutationObserver
+    // before any page script runs proves no leftover/future observer-based
+    // mechanism is silently doing the work instead.
+    await context.addInitScript(() => {
+      window.MutationObserver = function () {
+        return { observe: function () {}, disconnect: function () {} };
+      };
+    });
+    await page.goto('http://localhost:3001/decoder-tool.html', { waitUntil: 'networkidle' });
+
+    await fillDecode(page, 'whirlpool', 'TRD3481274');
+    await page.click('#decodeBtn');
+
+    await expect(page.locator('#serialResults')).toBeVisible({ timeout: 750 });
+    await expect(page.locator('#serialSummaryLayer .item-history-guide-card')).toHaveCount(1);
+
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    await browser.close();
+  }
+});
+
 test('no guide card is injected before any decode runs', async () => {
   const { browser, page, diagnostics } = await openPage();
   try {

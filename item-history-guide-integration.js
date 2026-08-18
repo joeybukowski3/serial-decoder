@@ -8,7 +8,6 @@
   'use strict';
 
   var observerSmartLookup = null;
-  var observerDecoder = null;
 
   // Wait for DOM to be ready
   function initializeGuideIntegration() {
@@ -20,14 +19,13 @@
 
     // Monitor for Smart Lookup results
     monitorSmartLookupResults();
-    
-    // Monitor for Decoder results
-    monitorDecoderResults();
-    
+
+    // Decoder guide cards are rendered directly by renderSerialSummaryLayer()
+    // in script.js on every decode/refinement — no observer needed here.
+
     // Cleanup on page unload
     window.addEventListener('beforeunload', function() {
       if (observerSmartLookup) observerSmartLookup.disconnect();
-      if (observerDecoder) observerDecoder.disconnect();
     });
   }
 
@@ -74,46 +72,6 @@
   }
 
   /**
-   * Monitor Decoder results and inject guide cards.
-   *
-   * #serialSummaryLayer is a static node present in the page markup at load
-   * time (see decoder-tool.html) — decodeSerial()/renderSerialSummaryLayer()
-   * in script.js never remove or replace it, they only overwrite its
-   * innerHTML on every decode and refinement. Watching document.body for the
-   * layer to be *added* therefore never matches past the first paint, so we
-   * observe the persistent layer itself for the childList mutation that
-   * innerHTML replacement actually produces.
-   */
-  function monitorDecoderResults() {
-    try {
-      var summaryLayer = document.getElementById('serialSummaryLayer');
-      if (!summaryLayer) return;
-
-      var observer = new MutationObserver(function(mutations) {
-        for (var i = 0; i < mutations.length; i++) {
-          if (mutations[i].addedNodes.length) {
-            try {
-              injectGuideCardIntoDecoder(summaryLayer);
-            } catch (e) {
-              console.warn('Error processing Decoder result:', e);
-            }
-            break;
-          }
-        }
-      });
-
-      observer.observe(summaryLayer, {
-        childList: true,
-        subtree: false
-      });
-
-      observerDecoder = observer;
-    } catch (e) {
-      console.warn('Failed to initialize Decoder monitoring:', e);
-    }
-  }
-
-  /**
    * Inject guide card into Smart Lookup result
    */
   function injectGuideCardIntoSmartLookup(summaryLayer) {
@@ -137,45 +95,6 @@
       }
       
       summaryLayer.setAttribute('data-guide-injected', 'true');
-    }
-  }
-
-  /**
-   * Inject guide card into Decoder result.
-   *
-   * summaryLayer is the persistent #serialSummaryLayer node, so a
-   * data-guide-injected attribute set on it would survive every future
-   * decode/refinement re-render and permanently block later results from
-   * getting a card. renderSerialSummaryLayer() in script.js already builds
-   * its own .item-history-guide-card inline via the same matcher whenever
-   * one applies, so this only needs to fill the gap on the rare render where
-   * that inline content is absent — checking for that content directly (not
-   * a standing attribute) is what keeps a valid re-render from being skipped
-   * and keeps this from ever appending a second, duplicate card.
-   */
-  function injectGuideCardIntoDecoder(summaryLayer) {
-    if (summaryLayer.classList.contains('hidden')) return;
-
-    var guideSection = summaryLayer.querySelector('.serial-guide-section');
-    if (guideSection && guideSection.querySelector('.item-history-guide-card')) return;
-
-    // Get search context from the page
-    var query = getDecoderQuery();
-    var category = getDecoderCategory();
-
-    // Generate guide card
-    var guideCard = generateGuideCard(query, category);
-    if (guideCard) {
-      // Insert in the serial-guide-section if it exists, or before serial-bottom-grid
-      var bottomGrid = summaryLayer.querySelector('.serial-bottom-grid');
-
-      if (guideSection) {
-        guideSection.appendChild(guideCard);
-      } else if (bottomGrid) {
-        bottomGrid.parentNode.insertBefore(guideCard, bottomGrid);
-      } else {
-        summaryLayer.appendChild(guideCard);
-      }
     }
   }
 
@@ -221,31 +140,6 @@
     var breadcrumb = document.querySelector('.sl-breadcrumb');
     if (breadcrumb) {
       return breadcrumb.textContent.trim();
-    }
-    return '';
-  }
-
-  /**
-   * Get current Decoder search query
-   */
-  function getDecoderQuery() {
-    var serialInput = document.getElementById('serial');
-    if (serialInput && serialInput.value) return serialInput.value;
-    
-    var queryChip = document.querySelector('.serial-query-chip');
-    if (queryChip) {
-      return queryChip.textContent.replace('Search Query: ', '').trim();
-    }
-    return '';
-  }
-
-  /**
-   * Get Decoder category
-   */
-  function getDecoderCategory() {
-    var activeTab = document.querySelector('.search-tab.active');
-    if (activeTab && activeTab.getAttribute('data-cat')) {
-      return activeTab.getAttribute('data-cat');
     }
     return '';
   }
