@@ -74,37 +74,39 @@
   }
 
   /**
-   * Monitor Decoder results and inject guide cards
+   * Monitor Decoder results and inject guide cards.
+   *
+   * #serialSummaryLayer is a static node present in the page markup at load
+   * time (see decoder-tool.html) — decodeSerial()/renderSerialSummaryLayer()
+   * in script.js never remove or replace it, they only overwrite its
+   * innerHTML on every decode and refinement. Watching document.body for the
+   * layer to be *added* therefore never matches past the first paint, so we
+   * observe the persistent layer itself for the childList mutation that
+   * innerHTML replacement actually produces.
    */
   function monitorDecoderResults() {
     try {
+      var summaryLayer = document.getElementById('serialSummaryLayer');
+      if (!summaryLayer) return;
+
       var observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-          if (mutation.addedNodes.length) {
-            mutation.addedNodes.forEach(function(node) {
-              try {
-                // Check if this is a Decoder result container
-                if (node.nodeType === 1 && node.id === 'serialSummaryLayer') {
-                  // Wait a tick for the innerHTML to settle
-                  setTimeout(function() {
-                    injectGuideCardIntoDecoder(node);
-                  }, 50);
-                }
-              } catch (e) {
-                console.warn('Error processing Decoder node:', e);
-              }
-            });
+        for (var i = 0; i < mutations.length; i++) {
+          if (mutations[i].addedNodes.length) {
+            try {
+              injectGuideCardIntoDecoder(summaryLayer);
+            } catch (e) {
+              console.warn('Error processing Decoder result:', e);
+            }
+            break;
           }
-        });
+        }
       });
 
-      var resultsContainer = document.body;
-      observer.observe(resultsContainer, {
+      observer.observe(summaryLayer, {
         childList: true,
-        subtree: true,
-        attributes: false
+        subtree: false
       });
-      
+
       observerDecoder = observer;
     } catch (e) {
       console.warn('Failed to initialize Decoder monitoring:', e);
@@ -139,11 +141,24 @@
   }
 
   /**
-   * Inject guide card into Decoder result
+   * Inject guide card into Decoder result.
+   *
+   * summaryLayer is the persistent #serialSummaryLayer node, so a
+   * data-guide-injected attribute set on it would survive every future
+   * decode/refinement re-render and permanently block later results from
+   * getting a card. renderSerialSummaryLayer() in script.js already builds
+   * its own .item-history-guide-card inline via the same matcher whenever
+   * one applies, so this only needs to fill the gap on the rare render where
+   * that inline content is absent — checking for that content directly (not
+   * a standing attribute) is what keeps a valid re-render from being skipped
+   * and keeps this from ever appending a second, duplicate card.
    */
   function injectGuideCardIntoDecoder(summaryLayer) {
-    if (summaryLayer.hasAttribute('data-guide-injected')) return;
-    
+    if (summaryLayer.classList.contains('hidden')) return;
+
+    var guideSection = summaryLayer.querySelector('.serial-guide-section');
+    if (guideSection && guideSection.querySelector('.item-history-guide-card')) return;
+
     // Get search context from the page
     var query = getDecoderQuery();
     var category = getDecoderCategory();
@@ -152,9 +167,8 @@
     var guideCard = generateGuideCard(query, category);
     if (guideCard) {
       // Insert in the serial-guide-section if it exists, or before serial-bottom-grid
-      var guideSection = summaryLayer.querySelector('.serial-guide-section');
       var bottomGrid = summaryLayer.querySelector('.serial-bottom-grid');
-      
+
       if (guideSection) {
         guideSection.appendChild(guideCard);
       } else if (bottomGrid) {
@@ -162,8 +176,6 @@
       } else {
         summaryLayer.appendChild(guideCard);
       }
-      
-      summaryLayer.setAttribute('data-guide-injected', 'true');
     }
   }
 
