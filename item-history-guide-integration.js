@@ -8,7 +8,6 @@
   'use strict';
 
   var observerSmartLookup = null;
-  var observerDecoder = null;
 
   // Wait for DOM to be ready
   function initializeGuideIntegration() {
@@ -20,14 +19,13 @@
 
     // Monitor for Smart Lookup results
     monitorSmartLookupResults();
-    
-    // Monitor for Decoder results
-    monitorDecoderResults();
-    
+
+    // Decoder guide cards are rendered directly by renderSerialSummaryLayer()
+    // in script.js on every decode/refinement — no observer needed here.
+
     // Cleanup on page unload
     window.addEventListener('beforeunload', function() {
       if (observerSmartLookup) observerSmartLookup.disconnect();
-      if (observerDecoder) observerDecoder.disconnect();
     });
   }
 
@@ -74,44 +72,6 @@
   }
 
   /**
-   * Monitor Decoder results and inject guide cards
-   */
-  function monitorDecoderResults() {
-    try {
-      var observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-          if (mutation.addedNodes.length) {
-            mutation.addedNodes.forEach(function(node) {
-              try {
-                // Check if this is a Decoder result container
-                if (node.nodeType === 1 && node.id === 'serialSummaryLayer') {
-                  // Wait a tick for the innerHTML to settle
-                  setTimeout(function() {
-                    injectGuideCardIntoDecoder(node);
-                  }, 50);
-                }
-              } catch (e) {
-                console.warn('Error processing Decoder node:', e);
-              }
-            });
-          }
-        });
-      });
-
-      var resultsContainer = document.body;
-      observer.observe(resultsContainer, {
-        childList: true,
-        subtree: true,
-        attributes: false
-      });
-      
-      observerDecoder = observer;
-    } catch (e) {
-      console.warn('Failed to initialize Decoder monitoring:', e);
-    }
-  }
-
-  /**
    * Inject guide card into Smart Lookup result
    */
   function injectGuideCardIntoSmartLookup(summaryLayer) {
@@ -130,35 +90,6 @@
       
       if (insertPoint) {
         insertPoint.parentNode.insertBefore(guideCard, insertPoint.nextSibling);
-      } else {
-        summaryLayer.appendChild(guideCard);
-      }
-      
-      summaryLayer.setAttribute('data-guide-injected', 'true');
-    }
-  }
-
-  /**
-   * Inject guide card into Decoder result
-   */
-  function injectGuideCardIntoDecoder(summaryLayer) {
-    if (summaryLayer.hasAttribute('data-guide-injected')) return;
-    
-    // Get search context from the page
-    var query = getDecoderQuery();
-    var category = getDecoderCategory();
-
-    // Generate guide card
-    var guideCard = generateGuideCard(query, category);
-    if (guideCard) {
-      // Insert in the serial-guide-section if it exists, or before serial-bottom-grid
-      var guideSection = summaryLayer.querySelector('.serial-guide-section');
-      var bottomGrid = summaryLayer.querySelector('.serial-bottom-grid');
-      
-      if (guideSection) {
-        guideSection.appendChild(guideCard);
-      } else if (bottomGrid) {
-        bottomGrid.parentNode.insertBefore(guideCard, bottomGrid);
       } else {
         summaryLayer.appendChild(guideCard);
       }
@@ -209,31 +140,6 @@
     var breadcrumb = document.querySelector('.sl-breadcrumb');
     if (breadcrumb) {
       return breadcrumb.textContent.trim();
-    }
-    return '';
-  }
-
-  /**
-   * Get current Decoder search query
-   */
-  function getDecoderQuery() {
-    var serialInput = document.getElementById('serial');
-    if (serialInput && serialInput.value) return serialInput.value;
-    
-    var queryChip = document.querySelector('.serial-query-chip');
-    if (queryChip) {
-      return queryChip.textContent.replace('Search Query: ', '').trim();
-    }
-    return '';
-  }
-
-  /**
-   * Get Decoder category
-   */
-  function getDecoderCategory() {
-    var activeTab = document.querySelector('.search-tab.active');
-    if (activeTab && activeTab.getAttribute('data-cat')) {
-      return activeTab.getAttribute('data-cat');
     }
     return '';
   }
