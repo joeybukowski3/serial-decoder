@@ -364,10 +364,37 @@ test('strict first-party manufacturing start is preserved while approximate timi
     estimatedRange: { startYear: 2013, endYear: null },
     estimateBasis: 'A secondary listing says the product was manufactured beginning in 2013.',
     summary: 'The timing is not confirmed by the manufacturer.',
-    sources: [{ title: 'GE JVM3160 microwave retailer listing', url: 'https://example-retailer.test/jvm3160' }],
+    sources: [{ title: 'GE Appliances JVM3160 Microwave', url: 'https://example-retailer.test/jvm3160' }],
   }));
   assert.deepEqual(secondary.range, { start: 2012, end: null });
   assert.equal(secondary.lowerBoundSemantics, 'approximate-timing');
+
+  const supportLikeTitle = normalizeNativeModelResearch(nativeResult({
+    estimatedRange: { startYear: 2013, endYear: null },
+    estimateBasis: 'The page states the product was manufactured beginning in 2013.',
+    summary: 'Manufactured August, 2013 - Present.',
+    sources: [{
+      title: 'Official GE Appliances JVM3160 Support',
+      url: 'https://secondary-support.example/jvm3160',
+    }],
+  }));
+  assert.deepEqual(supportLikeTitle.range, { start: 2012, end: null });
+  assert.equal(supportLikeTitle.lowerBoundSemantics, 'approximate-timing');
+
+  const shortBrand = normalizeNativeModelResearch(nativeResult({
+    brand: 'LG',
+    product: 'LG appliance',
+    model: 'LGMODEL',
+    estimatedRange: { startYear: 2013, endYear: null },
+    estimateBasis: 'The page states the product was manufactured beginning in 2013.',
+    summary: 'Manufactured in 2013.',
+    sources: [{
+      title: 'LG Official Appliance Support',
+      url: 'https://lgappliances-retailer.example/lgmodel',
+    }],
+  }));
+  assert.deepEqual(shortBrand.range, { start: 2012, end: null });
+  assert.equal(shortBrand.lowerBoundSemantics, 'approximate-timing');
 });
 
 test('GE TZ201988L / JVM3160RF9SS resolves to October 2024 from strict manufacturer production evidence', async () => {
