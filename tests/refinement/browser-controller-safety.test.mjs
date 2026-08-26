@@ -66,6 +66,39 @@ test('row-safe controller refinement uses explicit inputs and constrains the API
   assert.deepEqual(Array.from(result.remainingCandidateYears), [2000]);
 });
 
+test('browser submits and accepts the exact GE JVM3160 refinement fixture', async () => {
+  let request;
+  const controller = loadController(async (_url, options) => {
+    request = JSON.parse(options.body);
+    return {
+      ok: true,
+      text: async () => JSON.stringify({
+        status: 'resolved',
+        candidateYears: [1988, 2000, 2012, 2024],
+        remainingCandidateYears: [2024],
+        chosenYear: 2024,
+        summary: 'Strict model production evidence leaves 2024.',
+      }),
+    };
+  });
+
+  const result = await controller.refine({
+    category: 'appliances',
+    brand: 'GE',
+    serial: 'TZ201988L',
+    model: 'JVM3160RF9SS',
+    candidates: [1988, 2000, 2012, 2024],
+    decodedMonth: 'October',
+  });
+
+  assert.equal(request.model, 'JVM3160RF9SS');
+  assert.deepEqual(request.candidateYears, [1988, 2000, 2012, 2024]);
+  assert.equal(request.decodedMonth, 'October');
+  assert.equal(result.status, 'resolved');
+  assert.equal(result.chosenYear, 2024);
+  assert.deepEqual(Array.from(result.remainingCandidateYears), [2024]);
+});
+
 test('browser controller preserves serial candidates when API selects an incompatible year', () => {
   const controller = loadController();
   const result = controller.constrainResponseToSerialCandidates({
