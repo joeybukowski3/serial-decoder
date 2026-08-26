@@ -82,6 +82,15 @@ test('a single candidate at or after the era start resolves outright, eliminatin
   assert.deepEqual(result.remainingCandidateYears, [2008]);
 });
 
+test('GE 12-year cycle resolves to 2024 at a strict 2013 production lower bound', () => {
+  const result = rankCandidatesByModelLowerBound([1988, 2000, 2012, 2024], 2013);
+
+  assert.equal(result.status, 'resolved');
+  assert.equal(result.chosenYear, 2024);
+  assert.equal(result.preferredCandidateYear, null);
+  assert.deepEqual(result.remainingCandidateYears, [2024]);
+});
+
 test('lowerBoundRankingExplanation states the era start and why the estimate is earliest-after-start', () => {
   const explanation = lowerBoundRankingExplanation(2002, 2008);
   assert.match(explanation, /2002/);

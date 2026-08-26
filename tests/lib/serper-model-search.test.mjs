@@ -51,6 +51,12 @@ test('extractDomain returns null for invalid links', () => {
 
 test('isManufacturerDomain recognizes allowlisted manufacturer domains only', () => {
   assert.equal(isManufacturerDomain('geappliances.com'), true);
+  assert.equal(isManufacturerDomain('products.geappliances.com'), true);
+  assert.equal(isManufacturerDomain('www.lg.com'), true);
+  assert.equal(isManufacturerDomain('support.whirlpool.com'), true);
+  assert.equal(isManufacturerDomain('somegeappliances.com'), false);
+  assert.equal(isManufacturerDomain('lgappliances-retailer.example'), false);
+  assert.equal(isManufacturerDomain('geapplianceparts.com'), false);
   assert.equal(isManufacturerDomain('bestbuy.com'), false);
   assert.equal(isManufacturerDomain(''), false);
 });

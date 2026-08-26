@@ -62,6 +62,23 @@ function nativeResult(overrides = {}) {
   };
 }
 
+function jvm3160StrictProductionResult() {
+  return nativeResult({
+    product: 'GE JVM3160RFSS over-the-range microwave',
+    model: 'JVM3160RFSS',
+    bestEstimateYear: 2013,
+    estimatedRange: { startYear: 2013, endYear: null },
+    precision: 'model_line',
+    confidence: 'high',
+    estimateBasis: 'GE Appliances states this model was manufactured August 2013 to present.',
+    summary: 'Manufactured August, 2013 - Present.',
+    sources: [{
+      title: 'GE Appliances JVM3160RFSS support page',
+      url: 'https://products.geappliances.com/appliance/gea-specs/JVM3160RFSS',
+    }],
+  });
+}
+
 /**
  * Handler with the native path enabled and every other network dependency
  * hard-failed, so a passing test proves the native path produced the result.
@@ -328,6 +345,82 @@ test('normalization drops unit-year fields and gates the upper bound', () => {
   }));
   assert.equal(noStart.usable, false);
   assert.equal(noStart.range, null);
+});
+
+test('strict first-party manufacturing start is preserved while approximate timing keeps grace', () => {
+  const strict = normalizeNativeModelResearch(jvm3160StrictProductionResult());
+  assert.deepEqual(strict.range, { start: 2013, end: null });
+  assert.equal(strict.lowerBoundSemantics, 'strict-production');
+
+  const approximate = normalizeNativeModelResearch(nativeResult({
+    estimatedRange: { startYear: 2013, endYear: null },
+    estimateBasis: 'The model was introduced and became available in 2013.',
+    summary: 'Retailer listings begin in 2013.',
+  }));
+  assert.deepEqual(approximate.range, { start: 2012, end: null });
+  assert.equal(approximate.lowerBoundSemantics, 'approximate-timing');
+
+  const secondary = normalizeNativeModelResearch(nativeResult({
+    estimatedRange: { startYear: 2013, endYear: null },
+    estimateBasis: 'A secondary listing says the product was manufactured beginning in 2013.',
+    summary: 'The timing is not confirmed by the manufacturer.',
+    sources: [{ title: 'GE Appliances JVM3160 Microwave', url: 'https://example-retailer.test/jvm3160' }],
+  }));
+  assert.deepEqual(secondary.range, { start: 2012, end: null });
+  assert.equal(secondary.lowerBoundSemantics, 'approximate-timing');
+
+  const supportLikeTitle = normalizeNativeModelResearch(nativeResult({
+    estimatedRange: { startYear: 2013, endYear: null },
+    estimateBasis: 'The page states the product was manufactured beginning in 2013.',
+    summary: 'Manufactured August, 2013 - Present.',
+    sources: [{
+      title: 'Official GE Appliances JVM3160 Support',
+      url: 'https://secondary-support.example/jvm3160',
+    }],
+  }));
+  assert.deepEqual(supportLikeTitle.range, { start: 2012, end: null });
+  assert.equal(supportLikeTitle.lowerBoundSemantics, 'approximate-timing');
+
+  const shortBrand = normalizeNativeModelResearch(nativeResult({
+    brand: 'LG',
+    product: 'LG appliance',
+    model: 'LGMODEL',
+    estimatedRange: { startYear: 2013, endYear: null },
+    estimateBasis: 'The page states the product was manufactured beginning in 2013.',
+    summary: 'Manufactured in 2013.',
+    sources: [{
+      title: 'LG Official Appliance Support',
+      url: 'https://lgappliances-retailer.example/lgmodel',
+    }],
+  }));
+  assert.deepEqual(shortBrand.range, { start: 2012, end: null });
+  assert.equal(shortBrand.lowerBoundSemantics, 'approximate-timing');
+});
+
+test('GE TZ201988L / JVM3160RF9SS resolves to October 2024 from strict manufacturer production evidence', async () => {
+  const handler = nativeHandler(async (request, options) => {
+    assert.equal(request.model, 'JVM3160RF9SS');
+    return researchModelTiming(request, {
+      ...options,
+      providerLookup: async () => jvm3160StrictProductionResult(),
+    });
+  });
+
+  const res = createResponse();
+  await handler(geRequest({
+    serial: 'TZ201988L',
+    model: 'JVM3160RF9SS',
+    candidateYears: [1988, 2000, 2012, 2024],
+    decodedMonth: 'October',
+  }), res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.payload.status, 'resolved');
+  assert.equal(res.payload.chosenYear, 2024);
+  assert.deepEqual(res.payload.remainingCandidateYears, [2024]);
+  assert.deepEqual(res.payload.candidateYears, [1988, 2000, 2012, 2024]);
+  assert.deepEqual(res.payload.modelProductionRange, { start: 2013, end: null });
+  assert.equal(res.payload.provider, 'gemini-native-search');
 });
 
 test('one research conclusion produces exactly one ranged evidence record', () => {

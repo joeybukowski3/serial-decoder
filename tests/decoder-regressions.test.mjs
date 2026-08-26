@@ -1320,6 +1320,27 @@ test('GE RZ825479 stays ambiguous without model evidence', async () => {
   assert.equal(api.computeEstimatedAge(out.year), '—');
 });
 
+test('GE TZ201988L preserves the October 12-year cycle and stays ambiguous without a model', async () => {
+  const ge = api.decoderData.appliances.decoders.ge;
+  const out = ge.decode('TZ201988L');
+  assert.ok(out);
+  assert.equal(out.year, '1988/2000/2012/2024');
+  assert.equal(out.month, 'October');
+
+  const candidates = api.parseCandidateYears(out.year);
+  assert.deepEqual(Array.from(candidates), [1988, 2000, 2012, 2024]);
+
+  const resolved = await api.resolveSerialYearFromModel({
+    candidates,
+    brand: 'GE',
+    model: '',
+    context: '',
+  });
+
+  assert.equal(resolved.chosenYear, null);
+  assert.equal(api.computeEstimatedAge(out.year), '—');
+});
+
 test('GE GTH18GBCDCRBB with RZ825479 resolves to 2012 from model evidence', async () => {
   ctx.fetch = async () => {
     throw new Error('lookup offline');

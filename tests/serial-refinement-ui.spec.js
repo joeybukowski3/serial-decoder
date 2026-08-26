@@ -150,6 +150,40 @@ test('GE A-code modern serial stays useful without model evidence', async () => 
   }
 });
 
+test('GE JVM3160 exact fixture auto-refines and renders October 2024', async () => {
+  const { browser, context, page, diagnostics } = await openPage();
+  let requestedPayload;
+  await page.route('**/api/refine-serial-date', async (route) => {
+    requestedPayload = route.request().postDataJSON();
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(response({
+        candidateYears: [1988, 2000, 2012, 2024],
+        remainingCandidateYears: [2024],
+        chosenYear: 2024,
+        modelProductionRange: { start: 2013, end: null },
+        summary: 'Strict manufacturer production evidence leaves October 2024.',
+        provider: 'gemini-native-search',
+      })),
+    });
+  });
+  try {
+    await fillDecode(page, 'ge', 'TZ201988L', 'JVM3160RF9SS');
+    await page.click('#decodeBtn');
+
+    await expect(page.locator('#resultYear')).toHaveText('2024');
+    await expect(page.locator('#resultMonth')).toHaveText('October');
+    expect(requestedPayload.model).toBe('JVM3160RF9SS');
+    expect(requestedPayload.candidateYears).toEqual([1988, 2000, 2012, 2024]);
+    expect(requestedPayload.decodedMonth).toBe('October');
+    expectCleanDiagnostics(diagnostics);
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
+
 test('GE dryer label and base model forms refine the serial result to June 2025', async () => {
   const { browser, context, page, diagnostics } = await openPage();
   const requestedModels = [];
