@@ -1842,7 +1842,7 @@ const pages = [
       { label: 'Whirlpool-family refrigerators', pattern: '9 or 10 characters', meaning: 'Year code position changes by serial length, followed by a production week.', confidence: 'Estimated decade. Whirlpool cycles repeat.' },
       { label: 'GE-family refrigerators', pattern: 'Opening month/year letters', meaning: 'The first letters usually carry the useful timing code.', confidence: 'Estimated decade. GE cycles repeat.' },
       { label: 'LG refrigerators', pattern: 'Year digit + month digits', meaning: 'Character 1 is commonly the year digit and characters 2-3 are commonly the month.', confidence: 'Estimated decade. Use model era if needed.' },
-      { label: 'Samsung refrigerators', pattern: '11-char or 15-char serial', meaning: 'Year and month positions depend on serial length.', confidence: 'Estimated if the year letter repeats.' },
+      { label: 'Samsung refrigerators', pattern: '11-char or 15-char serial', meaning: 'Year and month positions depend on serial length; <a href="/samsung-serial-number-lookup">decode your Samsung refrigerator serial number</a> with the Samsung appliance path.', confidence: 'Estimated if the year letter repeats.' },
       { label: 'Kenmore refrigerators', pattern: 'OEM-dependent', meaning: 'The model prefix may route the serial into Whirlpool, GE, LG, or another supported OEM pattern.', confidence: 'Estimated until the OEM is confirmed.' }
     ],
     exampleSectionTitle: 'Refrigerator serial number examples',
