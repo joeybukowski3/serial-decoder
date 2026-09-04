@@ -72,3 +72,46 @@ test('GA4 privacy guard drops oversized approved string values', () => {
   });
   assert.deepEqual(normalize(calls[0][2]), { failure_type: 'unsupported' });
 });
+
+test('GA4 privacy guard preserves approved completion metadata and strips all raw inputs', () => {
+  const { window, calls } = loadGuard();
+  window.gtag('event', 'smart_lookup_complete', {
+    event_version: '2',
+    lookup_type: 'smart-lookup',
+    decoder_path: 'brand-lookup',
+    result_status: 'partial',
+    identity_level: 'model-line',
+    brand: 'Samsung',
+    category: 'electronics',
+    evidence_type: 'deterministic',
+    local_evidence_hit: false,
+    grounded_result: false,
+    deterministic_fallback_used: true,
+    provider_attempted: true,
+    age_result_available: true,
+    replacement_result_available: false,
+    clarification_recommended: true,
+    conflict_detected: false,
+    timeout_with_useful_fallback: true,
+    serial: 'FR31424IN',
+    model: 'QN65Q60RAFXZA',
+    query: 'Samsung QN65Q60RAFXZA',
+    notes: 'private notes fixture',
+    url: 'https://private.example/item',
+    result_id: 'private-result-id',
+    provider_payload: '{raw:true}',
+    error: 'provider raw error fixture',
+    raw_error: 'private stack',
+    attempt_token: 'attempt-secret',
+  });
+
+  const payload = normalize(calls[0][2]);
+  assert.deepEqual(payload, {
+    event_version: '2', lookup_type: 'smart-lookup', decoder_path: 'brand-lookup', result_status: 'partial',
+    identity_level: 'model-line', brand: 'Samsung', category: 'electronics', evidence_type: 'deterministic',
+    local_evidence_hit: false, grounded_result: false, deterministic_fallback_used: true, provider_attempted: true,
+    age_result_available: true, replacement_result_available: false, clarification_recommended: true,
+    conflict_detected: false, timeout_with_useful_fallback: true,
+  });
+  assert.doesNotMatch(JSON.stringify(calls), /FR31424IN|QN65Q60RAFXZA|private notes|private\.example|private-result|raw:true|provider raw error|private stack|attempt-secret/);
+});

@@ -18,7 +18,27 @@
     success: true,
     reason: true,
     provider: true,
-    fallback_used: true
+    fallback_used: true,
+    event_version: true,
+    lookup_type: true,
+    decoder_path: true,
+    result_status: true,
+    result_precision: true,
+    date_precision: true,
+    candidate_year_count: true,
+    ambiguous: true,
+    refinement_used: true,
+    evidence_type: true,
+    identity_level: true,
+    local_evidence_hit: true,
+    grounded_result: true,
+    deterministic_fallback_used: true,
+    provider_attempted: true,
+    age_result_available: true,
+    replacement_result_available: true,
+    clarification_recommended: true,
+    conflict_detected: true,
+    timeout_with_useful_fallback: true
   });
 
   function isSafeGa4Scalar(value) {

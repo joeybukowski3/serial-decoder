@@ -484,6 +484,85 @@
     return 'unavailable-generic';
   }
 
+  function beginAnalyticsAttempt() {
+    var analytics = window.DecodeMyItemAnalytics;
+    return analytics && typeof analytics.beginSmartAttempt === 'function'
+      ? analytics.beginSmartAttempt()
+      : null;
+  }
+
+  function hasReplacementResult(data) {
+    if (!data) return false;
+    if (typeof data.replacementResultAvailable === 'boolean') return data.replacementResultAvailable;
+    if (typeof data.replacement_result_available === 'boolean') return data.replacement_result_available;
+    if (data.replacement && typeof data.replacement.available === 'boolean') return data.replacement.available;
+    return Array.isArray(data.replacementCandidates) && data.replacementCandidates.length > 0;
+  }
+
+  function smartIdentityLevel(data) {
+    var declared = String((data && (data.identityLevel || data.identity_level)) || '').toLowerCase();
+    if (/^(?:exact-model|model-line|product-family|brand-category|weak-description)$/.test(declared)) return declared;
+    if (data && (data.exactModel || data.canonicalModel)) return 'exact-model';
+    if (data && (data.series || data.recognizedSeries || data.seriesLine)) return 'model-line';
+    if (data && (data.productFamily || data.recognizedFamily)) return 'product-family';
+    if (data && data.brand && (data.category || data.itemCategory)) return 'brand-category';
+    return 'weak-description';
+  }
+
+  function smartEvidenceType(data) {
+    var source = String((data && (data.evidenceSource || data.source)) || '').toLowerCase();
+    if (source === 'local-db') return 'local-db';
+    if (isGroundedProviderResult(data)) return 'grounded';
+    if (source === 'user-verified' || source === 'decoder-verified') return 'verified';
+    if (source === 'heuristic' || source === 'static' || /^deterministic-/.test(String((data && data.fallbackKind) || ''))) return 'deterministic';
+    if (data && data.providerAttempted) return 'provider';
+    return 'unknown';
+  }
+
+  function smartResultStatus(data, bucket) {
+    if (data && data.evidenceConflict) return 'conflict';
+    if (bucket === 'conflict') return 'conflict';
+    if (bucket !== 'success') {
+      return bucket === 'network-error' || bucket === 'unavailable-generic' || bucket === 'malformed' || bucket === 'timeout'
+        ? 'error'
+        : 'no-result';
+    }
+    var fallbackKind = String((data && data.fallbackKind) || '');
+    if (/^deterministic-/.test(fallbackKind)
+      || (data && (data.precisionLevel === 'family-range' || data.precisionLevel === 'broad-range' || data.precisionLevel === 'general-guidance'))) {
+      return 'partial';
+    }
+    return 'resolved';
+  }
+
+  function completeAnalyticsAttempt(attempt, data, bucket) {
+    var analytics = window.DecodeMyItemAnalytics;
+    if (!analytics || typeof analytics.completeSmartAttempt !== 'function') return false;
+    var ageAvailable = hasUsableAgeInfo(data);
+    var errorCode = String((data && data.errorCode) || '');
+    var resultStatus = smartResultStatus(data, bucket);
+    var deterministicFallback = Boolean(data && (data.deterministicFallbackUsed || data.deterministic_fallback_used))
+      || /^deterministic-/.test(String((data && data.fallbackKind) || ''));
+    var timeoutFallback = Boolean(data && (data.timeoutWithUsefulFallback || data.timeout_with_useful_fallback))
+      || (ageAvailable && (errorCode === 'PROVIDER_TIMEOUT' || errorCode === 'TOTAL_DEADLINE'));
+    return analytics.completeSmartAttempt(attempt, {
+      result_status: resultStatus,
+      identity_level: smartIdentityLevel(data),
+      brand: (data && (data.recognizedBrand || data.brand)) || 'unknown',
+      category: (data && (data.category || data.itemCategory)) || 'unknown',
+      evidence_type: smartEvidenceType(data),
+      local_evidence_hit: Boolean(data && (data.localEvidenceHit || data.local_evidence_hit || data.source === 'local-db' || data.evidenceSource === 'local-db')),
+      grounded_result: Boolean(data && (data.groundedResult || data.grounded_result)) || isGroundedProviderResult(data),
+      deterministic_fallback_used: deterministicFallback,
+      provider_attempted: Boolean(data && data.providerAttempted),
+      age_result_available: ageAvailable,
+      replacement_result_available: hasReplacementResult(data),
+      clarification_recommended: Boolean(data && (data.clarificationRecommended || data.clarification_recommended || data.refinementSuggestion || (Array.isArray(data.recommendedIdentifiers) && data.recommendedIdentifiers.length))),
+      conflict_detected: Boolean(data && (data.evidenceConflict || data.conflictDetected || data.conflict_detected)) || resultStatus === 'conflict',
+      timeout_with_useful_fallback: timeoutFallback,
+    });
+  }
+
   function copyForAgeOutcome(bucket, data) {
     var base = AGE_OUTCOME_COPY[bucket] || AGE_OUTCOME_COPY['unavailable-generic'];
     if (bucket === 'product-family-recognized') {
@@ -1019,6 +1098,7 @@
     state.lastStartedAt = now;
     if (state.controller) state.controller.abort();
     state.controller = new AbortController();
+    var analyticsAttempt = beginAnalyticsAttempt();
     clearAgeStageTimers();
     state.age = { status: 'loading', data: null, error: null, stageIndex: 0, copy: null };
     setBusy(true);
@@ -1034,11 +1114,13 @@
         ? { status: 'success', data: data, error: null, copy: null }
         : { status: 'error', data: null, error: null, copy: copyForAgeOutcome(bucket, data) };
       render(query);
+      completeAnalyticsAttempt(analyticsAttempt, data, bucket);
     }).catch(function (error) {
       if (sequence !== state.sequence || error.name === 'AbortError') return;
       clearAgeStageTimers();
       state.age = { status: 'error', data: null, error: null, copy: AGE_OUTCOME_COPY['network-error'] };
       render(query);
+      completeAnalyticsAttempt(analyticsAttempt, null, 'network-error');
     }).finally(function () {
       if (sequence === state.sequence && state.fingerprint === nextFingerprint) setBusy(false);
     });
