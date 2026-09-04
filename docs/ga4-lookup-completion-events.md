@@ -1,52 +1,54 @@
-# GA4 lookup completion events
+# GA4 lookup lifecycle events
 
-Decode My Item emits two browser-side GA4 events through the site's existing direct `gtag.js` installation:
+Decode My Item's repaired lookup lifecycle uses `event_version="2"`. Version 2 begins when this code is deployed; reports that span the cutover must segment on `event_version`, because older completion events used DOM inference and different success/failure semantics.
 
-- `decode_complete`
-- `smart_lookup_complete`
+## Attempt semantics
 
-The events are intentionally separate so traditional serial decoding and Smart Lookup can be analyzed independently.
+An attempt begins only after the workflow accepts sufficiently complete input for processing. Each accepted decoder attempt emits one `decode_start`, then at most one terminal `decode_complete`. Each accepted Smart Lookup attempt emits at most one terminal `smart_lookup_complete`. Retries create new in-memory attempts. Rerenders and later refinement of a completed attempt do not emit another completion.
 
-## Firing rules
+Attempt tokens exist only in browser memory for deduplication. They are never included in analytics payloads.
 
-`decode_complete` fires once per logical decoder submission after a useful serial result is visible. Exact, ambiguous candidate-year, and meaningful partial results qualify. Blank, invalid, unsupported, network-error, and empty outcomes do not.
+The lifecycle is emitted explicitly by decoder and Smart Lookup controller branches. It is not inferred from clicks, key presses, rendered text, CSS state, or `MutationObserver` activity.
 
-`smart_lookup_complete` fires once per logical Smart Lookup submission after the age or replacement workflow produces useful content. Local evidence, grounded research, deterministic reserves, model-line/family guidance, and useful timeout fallbacks qualify. Loading, unusable input, and empty unavailable cards do not.
+## Decoder events
 
-Retries and rerenders do not create another completion after a useful result has already been counted. A genuinely new user submission receives a new in-memory completion sequence.
+`decode_start` fields:
 
-## Analytics transport
-
-The helper calls only the existing direct GA path:
-
-```js
-window.gtag('event', eventName, parameters)
-```
-
-It does not add another GA script, does not push a second GTM event, does not await analytics, and silently returns when `gtag` is unavailable or blocked.
-
-## Privacy
-
-Payloads use an explicit parameter allowlist. They never include raw serials, model numbers, Smart Lookup queries, service tags, part numbers, SKUs, notes, source URLs, provider payloads, raw error text, request bodies, or cache keys.
-
-## `decode_complete` parameters
-
-- `lookup_type`
-- `result_status`
-- `result_precision`
-- `brand_category`
-- `date_precision`
-- `candidate_year_count`
-- `ambiguous`
-- `refinement_used`
-- `evidence_type`
+- `event_version="2"`
+- `lookup_type="serial-decode"`
 - `decoder_path`
+- `brand`
+- `category`
 
-## `smart_lookup_complete` parameters
+`decode_complete` fires for every terminal outcome. Its `result_status` is one of:
 
-- `lookup_type`
+- `resolved` — a clearly useful resolved result
+- `ambiguous` — multiple useful candidate years remain
+- `partial` — useful information was returned without a complete resolution
+- `unsupported` — no supported decoding rule applies
+- `invalid` — the decoder rejected the input/result as invalid
+- `no-result` — processing completed without a result
+- `error` — an exception or operational error ended the attempt
+
+Safe completion fields, when available, are `event_version`, `lookup_type`, `decoder_path`, `brand`, `category`, `result_status`, `result_precision`, `date_precision`, `candidate_year_count`, `ambiguous`, `refinement_used`, and `evidence_type`.
+
+`decode_success` remains temporarily for historical compatibility. Version 2 emits it only with `result_status="resolved"`; ambiguous and partial results do not count as success.
+
+`decode_fail` is limited to `unsupported`, `invalid`, `no-result`, and `error`. Its `failure_type` is exactly the corresponding controlled value. Ambiguous and partial results are useful outcomes and are not failures.
+
+## Smart Lookup completion
+
+Every accepted Smart Lookup terminal outcome emits `smart_lookup_complete`. Its `result_status` is one of `resolved`, `partial`, `conflict`, `no-result`, or `error`.
+
+Fields are:
+
+- `event_version="2"`
+- `lookup_type="smart-lookup"`
+- `decoder_path`
 - `result_status`
 - `identity_level`
+- `brand`
+- `category`
 - `evidence_type`
 - `local_evidence_hit`
 - `grounded_result`
@@ -55,45 +57,25 @@ Payloads use an explicit parameter allowlist. They never include raw serials, mo
 - `age_result_available`
 - `replacement_result_available`
 - `clarification_recommended`
-- `brand_category`
 - `conflict_detected`
 - `timeout_with_useful_fallback`
 
-## Local testing
+`replacement_result_available` is derived from structured controller/result state. It is never inferred from rendered copy.
 
-Automated tests mock `window.gtag`. They verify that the helper is non-blocking, drops unknown parameters, rejects unsupported event names, and omits recognizable raw fixture values.
+## Controlled decoder paths
 
-The production property must not be used for automated tests.
+- `homepage` — `/` and `index.html`
+- `brand-lookup` — dedicated `*-serial-number-lookup` or `*-serial-number-decoder` entry points
+- `legacy-brand` — legacy brand routes and other lookup hosts
+- `guide` — guide/how-to entry points
+- `embedded-tool` — the standalone embedded decoder tool
 
-## GA4 administration after deployment
+## Privacy exclusions
 
-1. Verify both event names in GA4 Realtime or DebugView.
-2. In GA4 Admin, mark `decode_complete` and `smart_lookup_complete` as Key Events.
-3. Register only the parameters needed for reporting as event-scoped custom dimensions.
+Analytics intentionally excludes raw serial numbers, model numbers, free-form queries, notes, URLs, result IDs, provider payloads, request bodies, cache keys, error messages/stacks, and attempt tokens. Unknown fields are dropped by both GA4 privacy allowlists. Tests require those allowlists to remain identical.
 
-Recommended custom dimensions:
+## Transport and administration
 
-### Decode
+Events use the existing non-blocking `window.gtag('event', name, parameters)` path. No additional GA installation is added, and blocked/unavailable analytics never blocks a lookup.
 
-- `result_status`
-- `result_precision`
-- `date_precision`
-- `ambiguous`
-- `refinement_used`
-- `evidence_type`
-- `brand_category`
-
-### Smart Lookup
-
-- `result_status`
-- `identity_level`
-- `evidence_type`
-- `local_evidence_hit`
-- `deterministic_fallback_used`
-- `age_result_available`
-- `replacement_result_available`
-- `conflict_detected`
-- `timeout_with_useful_fallback`
-- `brand_category`
-
-Key Event and custom-dimension configuration is an Analytics Admin task and is not performed by repository code.
+After deployment, verify version 2 events in GA4 Realtime/DebugView, segment historical reports at the deployment cutover, mark the desired completion events as Key Events, and register only the approved low-cardinality parameters needed for reporting.
