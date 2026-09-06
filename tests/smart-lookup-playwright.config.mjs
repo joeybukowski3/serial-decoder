@@ -6,7 +6,7 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 
 export default defineConfig({
   testDir: '.',
-  testMatch: 'smart-lookup-ui.spec.js',
+  testMatch: ['smart-lookup-ui.spec.js', 'home-page-tools.spec.js'],
   use: {
     ...PLAYWRIGHT_CONTEXT_OPTIONS,
     baseURL: 'http://127.0.0.1:3001',
