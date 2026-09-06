@@ -713,7 +713,11 @@
         if (!serialDecodeActive) return legacySetLoadingSuccess.apply(this, arguments);
         serialDecodeActive = false;
         if (typeof window.setLoadingHidden === 'function') window.setLoadingHidden();
-        if (typeof callback === 'function') callback();
+        if (window.HomePageUI && typeof window.HomePageUI.runSerialResultCallback === 'function') {
+          window.HomePageUI.runSerialResultCallback(callback);
+        } else if (typeof callback === 'function') {
+          callback();
+        }
         decorateModelOnlyResult();
       };
     }

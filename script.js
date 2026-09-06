@@ -291,7 +291,7 @@ function showGuidedBrandResult(profile,serial,brandId,model,opts){
   if(typeof setLoadingSuccess==="function"){
     setLoadingSuccess(function(){
       var sr=document.getElementById("serialResults");
-      if(sr){sr.classList.remove("hidden");sr.scrollIntoView({behavior:"smooth",block:"nearest"});}
+      if(sr)sr.classList.remove("hidden");
     });
   }else{
     var sr2=document.getElementById("serialResults");
@@ -503,7 +503,7 @@ function decodeMaytagBothEras(serialRaw, modelRaw, brandId, analyticsAttempt) {
 
     setLoadingSuccess(function () {
       document.getElementById("serialResults").classList.remove("hidden");
-      document.getElementById("serialResults").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      if (window.HomePageUI) window.HomePageUI.scrollToResults("serialResults", generateDecodeResultId());
     });
   }, 1400);
 }

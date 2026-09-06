@@ -1038,7 +1038,10 @@
     ensureShell();
     updateSearchSummary(query);
     if (state.age.status === 'loading') setAgePanel(loadingCard(currentAgeStageMessage()));
-    if (state.age.status === 'success') setAgePanel(renderAge(state.age.data));
+    if (state.age.status === 'success') {
+      setAgePanel(renderAge(state.age.data));
+      if (window.HomePageUI) window.HomePageUI.scrollToResults('ageResults', 'smart-' + state.sequence);
+    }
     if (state.age.status === 'error') setAgePanel(noResultCard(state.age.copy, 'age'));
     if (state.age.status === 'success' || state.age.status === 'error') mountUpsell(query, state.age);
     // Excluded from the 'error' branch on purpose: a CTA to estimate depreciation would
