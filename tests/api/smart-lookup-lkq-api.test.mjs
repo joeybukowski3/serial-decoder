@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLkqLookupHandler } from '../../api/lkq-lookup.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function req(query, extra = {}) { return { method: 'POST', body: { query, ...extra }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} }; }
 function res() { return { statusCode: 0, payload: null, status(c) { this.statusCode = c; return this; }, json(p) { this.payload = p; return this; }, setHeader() {} }; }
@@ -33,7 +34,7 @@ const redisMiss = {
 };
 
 test('provider success validates compatible replacement', async () => {
-  const handler = createLkqLookupHandler({ redisFactory: () => redisMiss, providerLookup: async () => validReplacement() });
+  const handler = createLkqLookupHandler({ rateLimiter: allowingRateLimiter, redisFactory: () => redisMiss, providerLookup: async () => validReplacement() });
   const out = res();
   await handler(req('Samsung QN65-Q80A television'), out);
   assert.equal(out.statusCode, 200);
@@ -43,6 +44,7 @@ test('provider success validates compatible replacement', async () => {
 test('LKQ telemetry records provider not attempted on cache hit', async () => {
   const { entries, logger } = loggerCapture();
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     redisFactory: () => ({ get: async () => validReplacement(), set: async () => {} }),
     providerLookup: async () => { throw new Error('provider should not run'); },
     logger,
@@ -58,6 +60,7 @@ test('LKQ telemetry records provider not attempted on cache hit', async () => {
 test('LKQ telemetry records provider attempted without fallback on success', async () => {
   const { entries, logger } = loggerCapture();
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     redisFactory: () => redisMiss,
     providerLookup: async () => withProviderMetadata(validReplacement(), { provider: 'gemini', fallbackUsed: false }),
     logger,
@@ -72,6 +75,7 @@ test('LKQ telemetry records provider attempted without fallback on success', asy
 test('LKQ telemetry records provider fallback used on success', async () => {
   const { entries, logger } = loggerCapture();
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     redisFactory: () => redisMiss,
     providerLookup: async () => withProviderMetadata(validReplacement(), { provider: 'groq', fallbackUsed: true }),
     logger,
@@ -104,6 +108,7 @@ test('LKQ telemetry records rate-limit without provider attempt', async () => {
 test('LKQ telemetry records provider timeout without hardcoded fallback', async () => {
   const { entries, logger } = loggerCapture();
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1500,
     providerBudgetMs: 20,
     redisFactory: () => redisMiss,
@@ -121,6 +126,7 @@ test('LKQ telemetry records provider timeout without hardcoded fallback', async 
 test('LKQ telemetry records malformed provider response using normalized flags', async () => {
   const { entries, logger } = loggerCapture();
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     redisFactory: () => redisMiss,
     providerLookup: async () => withProviderMetadata({ itemSummary: { brand: 'LG', model: 'BAD', category: 'washer' }, replacementOptions: [] }, { provider: 'gemini', fallbackUsed: false }),
     logger,
@@ -136,6 +142,7 @@ test('LKQ telemetry records malformed provider response using normalized flags',
 test('LKQ lookup sends normalized notes as separate untrusted provider context', async () => {
   let seenInfo = null;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     redisFactory: () => redisMiss,
     providerLookup: async (queryInfo) => {
       seenInfo = queryInfo;
@@ -154,6 +161,7 @@ test('LKQ lookup rejects over-limit notes before provider and logs no raw notes'
   let providerCalls = 0;
   const logs = [];
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     redisFactory: () => redisMiss,
     providerLookup: async () => { providerCalls += 1; return validReplacement(); },
     logger: { info: (line) => logs.push(line), warn: () => {}, error: () => {} },
@@ -170,6 +178,7 @@ test('first paid LKQ lookup reserves logical budget and records provider attempt
   let budgetCalls = 0;
   let recordedAttempts = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     redisFactory: () => redisMiss,
     reserveProviderBudget: async () => { budgetCalls += 1; return { allowed: true, status: 'allowed', logicalLookupCount: 1 }; },
     recordProviderAttemptMetrics: async (_redis, _kind, attempts) => { recordedAttempts += attempts; return { status: 'recorded', actualProviderAttemptCount: attempts }; },
@@ -185,6 +194,7 @@ test('first paid LKQ lookup reserves logical budget and records provider attempt
 test('fallback LKQ provider result records two actual provider attempts', async () => {
   let recordedAttempts = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     redisFactory: () => redisMiss,
     reserveProviderBudget: async () => ({ allowed: true, status: 'allowed', logicalLookupCount: 1 }),
     recordProviderAttemptMetrics: async (_redis, _kind, attempts) => { recordedAttempts += attempts; return { status: 'recorded', actualProviderAttemptCount: attempts }; },
@@ -199,6 +209,7 @@ test('fallback LKQ provider result records two actual provider attempts', async 
 test('global LKQ budget exhaustion blocks direct provider calls without exposing quota values', async () => {
   let providerCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     redisFactory: () => redisMiss,
     reserveProviderBudget: async () => ({ allowed: false, status: 'denied', errorCode: 'GLOBAL_BUDGET_EXHAUSTED', logicalLookupCount: 80 }),
     providerLookup: async () => { providerCalls += 1; return validReplacement(); },
@@ -215,6 +226,7 @@ test('global LKQ budget exhaustion blocks direct provider calls without exposing
 test('budget store unavailable blocks paid LKQ provider calls', async () => {
   let providerCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     redisFactory: () => null,
     providerLookup: async () => { providerCalls += 1; return validReplacement(); },
   });
@@ -231,6 +243,7 @@ test('deduplicated LKQ provider requests consume one logical budget unit', async
   let release;
   const blocker = new Promise((resolve) => { release = resolve; });
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     redisFactory: () => redisMiss,
     reserveProviderBudget: async () => { budgetCalls += 1; return { allowed: true, status: 'allowed', logicalLookupCount: budgetCalls }; },
     recordProviderAttemptMetrics: async () => { attemptMetricCalls += 1; return { status: 'recorded', actualProviderAttemptCount: 1 }; },
@@ -247,7 +260,7 @@ test('deduplicated LKQ provider requests consume one logical budget unit', async
 });
 
 test('LG successor fabrication prevention preserves provider model', async () => {
-  const handler = createLkqLookupHandler({ redisFactory: () => redisMiss, providerLookup: async () => ({
+  const handler = createLkqLookupHandler({ rateLimiter: allowingRateLimiter, redisFactory: () => redisMiss, providerLookup: async () => ({
     itemSummary: { brand: 'LG', model: 'OLED65C1PUB', category: 'television' },
     specLabels: ['Size', 'Display', 'Resolution', 'Smart', 'Refresh'],
     replacementOptions: [{ brand: 'LG', model: 'OLED65C2PUA', name: 'LG OLED C2', lkqRating: 'MATCH', evidence: ['same C-series OLED'], notes: 'Provider supplied C2.' }],
@@ -259,7 +272,7 @@ test('LG successor fabrication prevention preserves provider model', async () =>
 });
 
 test('replacement brand/category/model validation rejects unrelated output', async () => {
-  const handler = createLkqLookupHandler({ redisFactory: () => redisMiss, providerLookup: async () => ({
+  const handler = createLkqLookupHandler({ rateLimiter: allowingRateLimiter, redisFactory: () => redisMiss, providerLookup: async () => ({
     itemSummary: { brand: 'LG', model: 'BAD', category: 'washer' }, replacementOptions: [], successorStatus: { type: 'none' },
   }) });
   const out = res();
@@ -268,7 +281,7 @@ test('replacement brand/category/model validation rejects unrelated output', asy
 });
 
 test('partial input is not silently completed to exact model', async () => {
-  const handler = createLkqLookupHandler({ redisFactory: () => redisMiss, providerLookup: async () => validReplacement('QN65Q80C') });
+  const handler = createLkqLookupHandler({ rateLimiter: allowingRateLimiter, redisFactory: () => redisMiss, providerLookup: async () => validReplacement('QN65Q80C') });
   const out = res();
   await handler(req('QN65Q80A'), out);
   assert.equal(out.payload.itemSummary.model, 'QN65Q80A');

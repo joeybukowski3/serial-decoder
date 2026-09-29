@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
 import { buildSmartAgeCacheKey } from '../../lib/smart-lookup/cache.js';
 import { classifySmartLookupQuery } from '../../lib/smart-lookup/normalize.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function req(query, extra = {}) { return { method: 'POST', body: { query, ...extra }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} }; }
 function res() {
@@ -57,6 +58,7 @@ test('grounded lookup runs for exact-model queries when enabled and returns cite
   let groundedCalls = 0;
   let closedBookCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -80,6 +82,7 @@ test('grounded lookup is skipped when the flag is off', async () => {
   let groundedCalls = 0;
   let closedBookCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: false,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -106,6 +109,7 @@ test('grounded lookup is skipped when the flag is off', async () => {
 test('partial model tokens do reach grounded research but keep their token verbatim', async () => {
   let groundedCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -122,6 +126,7 @@ test('local hits bypass grounded research and provider budget', async () => {
   let groundedCalls = 0;
   let budgetCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => ({ brand: 'LG', model: 'WM4000HWA', introductionYear: 2019, productionRange: { start: 2019, end: 2024 } }),
     redisFactory: () => { throw new Error('redis should not run'); },
@@ -146,6 +151,7 @@ test('cache hits bypass grounded research', async () => {
     originSource: 'gemini',
   };
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => null,
     redisFactory: () => ({ get: async (key) => String(key).startsWith('smart-age:') ? cached : null, set: async () => {} }),
@@ -164,6 +170,7 @@ test('cache hits bypass grounded research', async () => {
 
 test('grounded result without sources is downgraded to ungrounded and never fabricates citations', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -179,6 +186,7 @@ test('grounded result without sources is downgraded to ungrounded and never fabr
 
 test('model-authored sources in provider JSON are ignored (server-derived only)', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -195,6 +203,7 @@ test('model-authored sources in provider JSON are ignored (server-derived only)'
 
 test('grounded output for an unrelated model is rejected by validation', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -210,6 +219,7 @@ test('grounded output for an unrelated model is rejected by validation', async (
 test('exhausted daily budget blocks grounded calls', async () => {
   let groundedCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => null,
     redisFactory: () => ({ ...redisMiss, eval: async () => [0, 120, 180] }),
@@ -224,6 +234,7 @@ test('exhausted daily budget blocks grounded calls', async () => {
 test('Redis outage fails closed before any grounded call', async () => {
   let groundedCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => null,
     redisFactory: () => null,
@@ -237,6 +248,7 @@ test('Redis outage fails closed before any grounded call', async () => {
 
 test('grounded timeout returns a safe unavailable result', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1400,
     groundedEnabled: true,
     localLookup: async () => null,
@@ -255,6 +267,7 @@ test('concurrent identical grounded requests share one provider call and one bud
   let groundedCalls = 0;
   let budgetCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -286,6 +299,7 @@ test('grounded and ungrounded modes use distinct cache keys', () => {
 test('grounded telemetry logs source counts but never raw notes or URLs', async () => {
   const logs = [];
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -310,6 +324,7 @@ test('grounded telemetry logs source counts but never raw notes or URLs', async 
 
 test('an exact-model grounded timeout returns the recognized model instead of nothing', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1400,
     groundedStageBudgetMs: 1000,
     groundedFallbackMinRemainingMs: 1000,
@@ -329,6 +344,7 @@ test('an exact-model grounded timeout returns the recognized model instead of no
 
 test('the exact-model reserve never invents a year and is never labeled AI or grounded', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1400,
     groundedStageBudgetMs: 1000,
     groundedFallbackMinRemainingMs: 1000,
@@ -351,6 +367,7 @@ test('a local-database hit still outranks the exact-model reserve', async () => 
   // consulted after a provider attempt has actually failed.
   let groundedCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     localLookup: async () => ({

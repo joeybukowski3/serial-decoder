@@ -8,6 +8,7 @@ import test from 'node:test';
 import { createRefineSerialDateHandler } from '../../api/refine-serial-date.js';
 import { buildSharedModelIdentity } from '../../lib/model-evidence/shared-model-identity.js';
 import { budgetsForRefinementMode } from '../../lib/serial-refinement/budgets.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function createResponse() {
   return {
@@ -71,6 +72,7 @@ test('canary: Whirlpool WED4850HWO ranks modern cycle without inventing exact da
   let openaiCalls = 0;
   let xaiCalls = 0;
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
@@ -106,6 +108,7 @@ test('canary: Whirlpool WED4850HWO ranks modern cycle without inventing exact da
 
 test('canary: Whirlpool WED4850HW0 same canonical identity', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
@@ -128,6 +131,7 @@ test('canary: Whirlpool WED4850HW0 same canonical identity', async () => {
 
 test('canary: VIZIO M321i-A2 preserves identity', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
@@ -157,6 +161,7 @@ test('canary: VIZIO M321i-A2 preserves identity', async () => {
 
 test('canary: LG + M321i-A2 does not invent brand-wrong manufacture year', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
@@ -186,6 +191,7 @@ test('canary: LG + M321i-A2 does not invent brand-wrong manufacture year', async
 test('canary: Lenovo ThinkSystem ST50 / V2 / 7Y48 keep useful context', async () => {
   for (const model of ['Lenovo ThinkSystem ST50', 'Lenovo ThinkSystem ST50 V2', 'Lenovo 7Y48']) {
     const handler = createRefineSerialDateHandler({
+      rateLimitFactory: () => allowingRateLimiter,
       refinementMode: 'deterministic_serper',
       localLookup: async () => ({ evidence: [], normalization: null }),
       modelProductionLookup: async () => null,
@@ -222,6 +228,7 @@ test('canary: Nintendo Switch 2 and Sony Bravia preserve entered models', async 
     ['Sony', 'Sony Bravia'],
   ]) {
     const handler = createRefineSerialDateHandler({
+      rateLimitFactory: () => allowingRateLimiter,
       refinementMode: 'deterministic_serper',
       localLookup: async () => ({ evidence: [], normalization: null }),
       modelProductionLookup: async () => null,
@@ -251,6 +258,7 @@ test('canary: Nintendo Switch 2 and Sony Bravia preserve entered models', async 
 
 test('canary: provider timeout fixture preserves candidates', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
@@ -280,6 +288,7 @@ test('canary: provider timeout fixture preserves candidates', async () => {
 
 test('canary: malformed extraction fixture does not resolve a year', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
@@ -333,6 +342,7 @@ test('canary: redis failure fixture still returns ranked result', async () => {
 
 test('canary: unusable input fixture returns 400 taxonomy', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     logger: silentLogger(),
   });
@@ -350,6 +360,7 @@ test('canary: no sequential heavy providers in deterministic mode', async () => 
   let det = 0;
   let legacy = 0;
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
 import { GeminiSearchProviderError } from '../../lib/smart-lookup/gemini-search-provider.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function req(query) {
   return { method: 'POST', body: { query }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} };
@@ -60,6 +61,7 @@ function legacyResult() {
 function harness({ enabled, native, legacy, budgetResult } = {}) {
   const calls = { native: 0, legacy: 0, grounded: 0, serialRefinement: 0 };
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     env: { SMART_LOOKUP_NATIVE_GEMINI_SEARCH_ENABLED: enabled ? 'true' : 'false' },
     logger: { log() {}, warn() {}, error() {} },
     localLookup: async () => null,
@@ -161,7 +163,7 @@ test('flag off and unavailable budget store blocks native research', async () =>
   assert.equal(out.payload.errorCode, 'BUDGET_STORE_UNAVAILABLE');
 });
 
-test('flag on and unavailable budget store permits one successful native attempt', async () => {
+test('flag on and unavailable budget store blocks native research (paid access fails closed)', async () => {
   const { handler, calls } = harness({
     enabled: true,
     budgetResult: {
@@ -174,12 +176,13 @@ test('flag on and unavailable budget store permits one successful native attempt
   await handler(req('Xbox One X'), out);
 
   assert.equal(out.statusCode, 200);
-  assert.equal(calls.native, 1);
+  assert.equal(calls.native, 0, 'no paid Gemini call without a working budget store');
   assert.equal(calls.legacy, 0);
-  assert.equal(out.payload.summary, nativeResult().summary);
+  assert.equal(out.payload.errorCode, 'BUDGET_STORE_UNAVAILABLE');
+  assert.equal(out.payload.providerAttempted, false);
 });
 
-test('flag on and unavailable budget store does not enter legacy research after native failure', async () => {
+test('flag on and unavailable budget store never reaches native or legacy research', async () => {
   const { handler, calls } = harness({
     enabled: true,
     budgetResult: {
@@ -195,7 +198,7 @@ test('flag on and unavailable budget store does not enter legacy research after 
   await handler(req('Xbox One X'), out);
 
   assert.equal(out.statusCode, 200);
-  assert.equal(calls.native, 1);
+  assert.equal(calls.native, 0);
   assert.equal(calls.legacy, 0);
   assert.equal(calls.grounded, 0);
   assert.equal(out.payload.errorCode, 'BUDGET_STORE_UNAVAILABLE');

@@ -12,6 +12,8 @@ import { applyEraHints, decodeHvacSerial, findLocalModelAgeResult, findVerifiedE
 import { classifySmartLookupQuery, getVerifiedModelKey, normalizeSmartLookupNotes, normalizeWhitespace, SMART_LOOKUP_NOTES_MAX_LENGTH } from '../lib/smart-lookup/normalize.js';
 import {
   callGeminiAgeProvider,
+  callSmartLookupAgeProviderGroqOnly,
+  GEMINI_AGE_MODEL,
   callSmartLookupGroundedAgeProvider,
   getSmartLookupProviderMetadata,
   isGroundedAgeEnabled,
@@ -19,9 +21,10 @@ import {
 } from '../lib/smart-lookup/provider.js';
 import {
   callSmartLookupOpenAiAgeProvider,
+  getOpenAiSmartLookupModel,
   isOpenAiSmartLookupEnabled,
 } from '../lib/smart-lookup/openai-provider.js';
-import { callSmartLookupXaiAgeProvider, isXaiSmartLookupEnabled } from '../lib/smart-lookup/xai-provider.js';
+import { callSmartLookupXaiAgeProvider, getXaiSmartLookupModel, isXaiSmartLookupEnabled } from '../lib/smart-lookup/xai-provider.js';
 import {
   callGeminiSearchProvider,
   GeminiSearchProviderError,
@@ -48,6 +51,17 @@ import {
 } from '../lib/smart-lookup/redis.js';
 import { buildDeterministicBroadResult, buildExactModelReserveResult } from '../lib/smart-lookup/static-results.js';
 import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
+import {
+  classifyProviderFailure,
+  createAttemptRecorder,
+  getActiveAttemptRecorder,
+  isProviderRateLimitError,
+  runWithAttemptRecorder,
+  withAttemptAccounting,
+} from '../lib/smart-lookup/provider-attempts.js';
+import { recordProviderUsage, recordUsageEvent } from '../lib/smart-lookup/provider-usage.js';
+import { createGeminiCooldown } from '../lib/smart-lookup/gemini-cooldown.js';
+import { createQuotaMeter } from '../lib/quota/meter.js';
 
 const TOTAL_BUDGET_MS = 15000;
 const HEAVY_PROVIDER_STAGE_BUDGET_MS = 6500;
@@ -187,6 +201,30 @@ function mapNativeGeminiSearchResult(nativeResult, queryInfo, options = {}) {
   });
 }
 
+// Which bucket a request that never reached a paid provider falls into, for the
+// daily traffic counters (local / cache / deterministic answers are unlimited
+// and never touch a quota counter).
+function classifyLookupOutcome(payload, statusCode) {
+  if (!payload || statusCode === 400 || statusCode === 405) return null;
+  if (payload.source === 'local-db' || payload.source === 'decoder-verified' || payload.evidenceSource === 'local-db') return 'local';
+  if (payload.source === 'cache' || payload.cacheStatus === 'hit') return 'cache';
+  if (payload.source === 'static' || payload.evidenceSource === 'heuristic'
+    || String(payload.fallbackKind || '').startsWith('deterministic-')) return 'deterministic';
+  return 'other';
+}
+
+// Shown only when enforcement is switched on (SMART_LOOKUP_QUOTA_ENFORCE). It
+// deliberately names only AI-assisted lookups: serial decoding is not limited.
+const AI_QUOTA_NOTE = 'You have used the AI-assisted Smart Lookup allowance for now. Serial number decoding and previously found results are still available.';
+
+// Failures where paid research was refused for capacity/safety reasons rather
+// than attempted: the user is told to retry later and no provider call ran.
+const CAPACITY_ERROR_CODES = new Set([
+  'GLOBAL_BUDGET_EXHAUSTED',
+  'BUDGET_STORE_UNAVAILABLE',
+  'RATE_LIMIT_STORE_UNAVAILABLE',
+]);
+
 function validateRequestBody(body) {
   const query = normalizeWhitespace(body?.query);
   const notes = normalizeSmartLookupNotes(body?.notes);
@@ -308,8 +346,31 @@ function logResult(logger, requestId, queryInfo, result, extra = {}) {
     secondaryHeavyProviderSkipped: routing.secondaryHeavyProviderSkipped || false,
     estimateBasis: result?.estimateBasis || null,
     estimatePrecision: result?.precisionLevel || null,
+    ...attemptTelemetryFields(),
+    ...(getActiveAttemptRecorder()?.telemetryExtras() || {}),
+    geminiCooldownActive: extra.geminiCooldownActive,
     timings: result?.timings,
   });
+}
+
+// Per-request provider-attempt roll-up for the request log line (calls per
+// logical lookup, 429s, fallbacks, models, tokens). Only counts/categories.
+function attemptTelemetryFields() {
+  const recorder = getActiveAttemptRecorder();
+  if (!recorder) return {};
+  const summary = recorder.summary();
+  return {
+    route: recorder.route,
+    providerAttemptCount: recorder.totalCount(),
+    geminiAttemptCount: summary.geminiAttemptCount,
+    groqAttemptCount: summary.groqAttemptCount,
+    otherProviderAttemptCount: summary.otherAttemptCount,
+    providerRateLimitCount: summary.providerRateLimitCount,
+    fallbackAttemptCount: summary.fallbackAttemptCount,
+    attemptModels: summary.attemptModels,
+    inputTokens: summary.inputTokens,
+    outputTokens: summary.outputTokens,
+  };
 }
 
 function recordSharedProviderAttempts(providerPromise, recordAttempts, redis, kind, attempts, deadline, options = {}) {
@@ -366,9 +427,18 @@ export function createAgeLookupHandler(dependencies = {}) {
   const groundedFallbackMinRemainingMs = dependencies.groundedFallbackMinRemainingMs || GROUNDED_FALLBACK_MIN_REMAINING_MS;
   const groundedFallbackReserveMs = dependencies.groundedFallbackReserveMs || GROUNDED_FALLBACK_RESERVE_MS;
   const inflightProviderRequests = new Map();
+  // Paid access fails closed when the limiter/budget store is unavailable.
+  const failClosedRateLimit = dependencies.failClosedRateLimit !== false;
+  const geminiCooldown = dependencies.geminiCooldown
+    || createGeminiCooldown({ now, env: dependencies.env || process.env });
+  const usageSink = dependencies.recordProviderUsage || recordProviderUsage;
+  const groqOnlyLookup = dependencies.groqOnlyLookup || callSmartLookupAgeProviderGroqOnly;
+  // Logical AI-lookup metering (shadow by default; both flags are off unless set).
+  const quotaMeter = dependencies.quotaMeter
+    || createQuotaMeter({ env: dependencies.env || process.env, now, accountResolver: dependencies.accountResolver });
 
-  return async function handler(req, res) {
-    const requestId = createRequestId(req, 'age');
+  async function handleAgeRequest(req, res, recorder, session) {
+    const requestId = recorder.requestId;
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     const validation = validateRequestBody(req.body || {});
@@ -388,9 +458,13 @@ export function createAgeLookupHandler(dependencies = {}) {
       userNotes: validation.value.notes,
       notesHash: validation.value.notes ? hashCanonicalQuery(validation.value.notes) : '',
     };
+    recorder.setContext({ queryHash: hashCanonicalQuery(queryInfo.canonicalQuery || queryInfo.normalizedQuery || '') });
     const currentYear = new Date().getFullYear();
     let redis = null;
     let cacheStatus = 'bypass';
+    // Shared by the recorder hook and the provider chain: once any Gemini call
+    // returns 429 (or a cooldown is active) no further Gemini call is made.
+    const geminiState = { rateLimited: false, cooldownActive: false };
     let shadowTask = null;
     let shadowObserved = false;
     const routingTelemetry = {
@@ -407,7 +481,11 @@ export function createAgeLookupHandler(dependencies = {}) {
     };
 
     function logFinalResult(result, extra = {}) {
-      logResult(logger, requestId, queryInfo, result, { routingTelemetry, ...extra });
+      logResult(logger, requestId, queryInfo, result, {
+        routingTelemetry,
+        geminiCooldownActive: geminiState.cooldownActive,
+        ...extra,
+      });
       if (shadowTask && !shadowObserved) {
         shadowObserved = true;
         observeSmartLookupShadow(shadowTask, {
@@ -492,9 +570,11 @@ export function createAgeLookupHandler(dependencies = {}) {
       // needs both what we recognized AND when research can be retried.
       const capacityNote = substitutedErrorCode === 'RATE_LIMIT'
         ? 'Smart Lookup provider capacity is temporarily limited. Local and cached lookups remain available.'
-        : ((substitutedErrorCode === 'GLOBAL_BUDGET_EXHAUSTED' || substitutedErrorCode === 'BUDGET_STORE_UNAVAILABLE')
+        : ((CAPACITY_ERROR_CODES.has(substitutedErrorCode))
           ? 'Smart Lookup provider capacity is temporarily limited. Please try again tomorrow.'
-          : null);
+          : (substitutedErrorCode === 'PROVIDER_RATE_LIMIT'
+            ? 'Live research is briefly rate limited. Please try again in a minute.'
+            : (substitutedErrorCode === 'AI_QUOTA_EXCEEDED' ? AI_QUOTA_NOTE : null)));
       return {
         ...fallback,
         fallbackKind,
@@ -757,6 +837,13 @@ export function createAgeLookupHandler(dependencies = {}) {
       }
 
       redis = dependencies.redis || redisFactory();
+      session.setRedis(redis);
+      recorder.setRedis(redis);
+      recorder.setUsageSink(usageSink);
+      recorder.setGeminiRateLimitHook((attempt) => {
+        geminiState.rateLimited = true;
+        return geminiCooldown.mark(redis, deadline, { retryAfterSeconds: attempt.retryAfterSeconds });
+      });
       // Grounded research covers exact-model queries (as before) plus
       // model-line and product-family queries when grounding is enabled and
       // eligible for this specificity tier -- see queryInfo.groundedEligible.
@@ -851,6 +938,29 @@ export function createAgeLookupHandler(dependencies = {}) {
         return res.status(200).json(result);
       }
 
+      // This request is about to use (or share) a paid provider: it is ONE
+      // logical AI lookup no matter how many internal attempts follow, and a
+      // retry of the same query is not counted again. Shadow mode only logs.
+      const quotaDecision = await session.admit({
+        redis,
+        queryKey: hashCanonicalQuery(`${queryInfo.canonicalQuery || queryInfo.normalizedQuery || ''}|${queryInfo.notesHash || ''}`),
+      });
+      if (quotaDecision?.blocked) {
+        const degraded = degradeToDeterministicFallback('AI_QUOTA_EXCEEDED');
+        const result = finalizeTimings(degraded
+          || createUnavailableSmartAgeResult(queryInfo, {
+              source: 'fallback',
+              evidenceSource: 'none',
+              cacheStatus,
+              providerAttempted: false,
+              timings,
+              errorCode: 'AI_QUOTA_EXCEEDED',
+              notes: AI_QUOTA_NOTE,
+            }), timings, deadline);
+        logResult(logger, requestId, queryInfo, result);
+        return res.status(200).json(result);
+      }
+
       const providerStart = now();
       let rawProvider;
       let providerPromise = inflightProviderRequests.get(cacheKey);
@@ -877,11 +987,13 @@ export function createAgeLookupHandler(dependencies = {}) {
             stage: 'age-provider-rate-limit',
             maxMs: REDIS_CALL_BUDGET_MS,
             reserveMs: 400,
+            failClosed: failClosedRateLimit,
           });
           timings.rateLimitMs = rateResult.elapsedMs || 0;
           if (!rateResult.success) {
-            const error = new Error('RATE_LIMIT');
-            error.code = 'RATE_LIMIT';
+            const code = rateResult.storeUnavailable ? 'RATE_LIMIT_STORE_UNAVAILABLE' : 'RATE_LIMIT';
+            const error = new Error(code);
+            error.code = code;
             throw error;
           }
           budgetResult = await reserveBudget(redis, 'age', deadline, {
@@ -891,31 +1003,47 @@ export function createAgeLookupHandler(dependencies = {}) {
             now,
             env: dependencies.env,
           });
-          const allowNativeOnBudgetStoreUnavailable = !budgetResult.allowed
-            && nativeGeminiSearchEnabled
-            && budgetResult.errorCode === 'BUDGET_STORE_UNAVAILABLE';
-          if (!budgetResult.allowed && !allowNativeOnBudgetStoreUnavailable) {
+          if (!budgetResult.allowed) {
             const error = new Error(budgetResult.errorCode || 'BUDGET_STORE_UNAVAILABLE');
             error.code = budgetResult.errorCode || 'BUDGET_STORE_UNAVAILABLE';
             error.budgetResult = budgetResult;
             throw error;
           }
 
-          if (nativeGeminiSearchEnabled) {
+          recorder.setContext({
+            resultSource: 'provider',
+            cacheStatus,
+            localEvidenceHit: false,
+            deterministicReserveAvailable: Boolean(deterministicFallbackRaw || exactModelReserveRaw || broadReserveRaw),
+          });
+          await recordUsageEvent(redis, 'age', 'paid_lookup');
+          // A recent Gemini 429 (any instance) means skip Gemini entirely.
+          geminiState.cooldownActive = await geminiCooldown.isActive(redis, deadline);
+          if (geminiState.cooldownActive) {
+            geminiState.rateLimited = true;
+            await recordUsageEvent(redis, 'age', 'gemini_cooldown_skip');
+          }
+          // Why the next paid call is a fallback; recorded on that attempt.
+          let fallbackReason = geminiState.cooldownActive ? 'gemini_cooldown' : null;
+
+          if (nativeGeminiSearchEnabled && !geminiState.rateLimited) {
             const nativeStart = now();
             groundedTelemetry.attempted = true;
             try {
-              const nativeResult = await nativeGeminiSearchLookup(
-                queryInfo.providerQuery || queryInfo.query,
-                {
-                  apiKey: dependencies.nativeGeminiApiKey
-                    || dependencies.geminiApiKey
-                    || dependencies.apiKey
-                    || (dependencies.env || process.env).GEMINI_API_KEY,
-                  fetchImpl: dependencies.nativeGeminiFetchImpl || dependencies.fetchImpl,
-                  model: dependencies.nativeGeminiModel || NATIVE_MODEL_RESEARCH_MODEL,
-                  timeoutMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
-                },
+              const nativeResult = await withAttemptAccounting(
+                { provider: 'gemini', model: dependencies.nativeGeminiModel || NATIVE_MODEL_RESEARCH_MODEL },
+                () => nativeGeminiSearchLookup(
+                  queryInfo.providerQuery || queryInfo.query,
+                  {
+                    apiKey: dependencies.nativeGeminiApiKey
+                      || dependencies.geminiApiKey
+                      || dependencies.apiKey
+                      || (dependencies.env || process.env).GEMINI_API_KEY,
+                    fetchImpl: dependencies.nativeGeminiFetchImpl || dependencies.fetchImpl,
+                    model: dependencies.nativeGeminiModel || NATIVE_MODEL_RESEARCH_MODEL,
+                    timeoutMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
+                  },
+                ),
               );
               groundedTelemetry.durationMs = Math.max(0, now() - nativeStart);
               groundedTelemetry.succeeded = Array.isArray(nativeResult.sources) && nativeResult.sources.length > 0;
@@ -923,13 +1051,15 @@ export function createAgeLookupHandler(dependencies = {}) {
             } catch (nativeError) {
               groundedTelemetry.durationMs = Math.max(0, now() - nativeStart);
               groundedTelemetry.failureCode = nativeError?.code || null;
-              if (allowNativeOnBudgetStoreUnavailable) {
-                const error = new Error('BUDGET_STORE_UNAVAILABLE');
-                error.code = 'BUDGET_STORE_UNAVAILABLE';
-                error.budgetResult = budgetResult;
-                throw error;
-              }
               if (!(nativeError instanceof GeminiSearchProviderError)) throw nativeError;
+              // A 429 ends all Gemini use for this request: no second Gemini model.
+              // Malformed/unusable/5xx/timeouts may still use the fallbacks below.
+              if (isProviderRateLimitError(nativeError)) {
+                geminiState.rateLimited = true;
+                fallbackReason = 'gemini_rate_limited';
+              } else {
+                fallbackReason = `native_${classifyProviderFailure(nativeError)}`;
+              }
             }
           }
 
@@ -945,6 +1075,7 @@ export function createAgeLookupHandler(dependencies = {}) {
           const sharedTierEligible = ['exact-model', 'model-line', 'product-family'].includes(queryInfo.querySpecificity)
             || Boolean(queryInfo.modelIdentity);
           const sharedEvidenceEligible = sharedEvidenceEnabled
+            && !geminiState.rateLimited
             && queryInfo.researchEligible
             && sharedTierEligible
             && Boolean(sharedResearchTerm)
@@ -1051,15 +1182,21 @@ export function createAgeLookupHandler(dependencies = {}) {
                 env: dependencies.env || process.env,
                 enableXaiFallback: false,
               };
-              const value = heavyProviderSelected === 'xai'
-                ? await xaiProviderLookup(queryInfo, {
+              const value = await withAttemptAccounting({
+                provider: heavyProviderSelected,
+                model: heavyProviderSelected === 'xai'
+                  ? getXaiSmartLookupModel(commonOptions.env)
+                  : getOpenAiSmartLookupModel(commonOptions.env),
+                fallbackReason,
+              }, () => (heavyProviderSelected === 'xai'
+                ? xaiProviderLookup(queryInfo, {
                     ...commonOptions,
                     xaiMaxMs: Math.min(HEAVY_PROVIDER_STAGE_BUDGET_MS, deadline.remainingMs(350)),
                   })
-                : await openAiProviderLookup(queryInfo, {
+                : openAiProviderLookup(queryInfo, {
                     ...commonOptions,
                     openAiMaxMs: Math.min(HEAVY_PROVIDER_STAGE_BUDGET_MS, deadline.remainingMs(350)),
-                  });
+                  })));
               routingTelemetry.heavyProviderDurationMs = Math.max(0, now() - heavyStart);
               groundedTelemetry.durationMs = routingTelemetry.heavyProviderDurationMs;
               return value;
@@ -1073,6 +1210,39 @@ export function createAgeLookupHandler(dependencies = {}) {
             }
           }
 
+          // Gemini is rate limited (429 this request, or an active cooldown):
+          // answer from Groq closed-book or fall back to the deterministic
+          // reserve. Never make another Gemini request just to fail again.
+          if (geminiState.rateLimited) {
+            const groqEnv = dependencies.env || process.env;
+            const groqMaxMs = Math.min(providerBudgetMs, deadline.remainingMs(350));
+            const groqFallbackReason = geminiState.cooldownActive ? 'gemini_cooldown' : 'gemini_rate_limited';
+            try {
+              return await deadline.run('age-provider-call-groq-only', () => withAttemptAccounting(
+                { provider: 'groq', model: groqEnv.GROQ_MODEL || null, fallbackReason: groqFallbackReason },
+                () => groqOnlyLookup(queryInfo, {
+                  deadline,
+                  groqMaxMs,
+                  reserveMs: 350,
+                  fetchImpl: dependencies.fetchImpl,
+                  env: groqEnv,
+                  groqApiKey: dependencies.groqApiKey,
+                  fallbackReason: groqFallbackReason,
+                }),
+              ), { maxMs: groqMaxMs, reserveMs: 350 });
+            } catch (groqError) {
+              throw new SmartLookupProviderError(
+                'PROVIDER_RATE_LIMIT',
+                'Gemini is rate limited and no alternate provider produced a result.',
+                {
+                  provider: 'gemini',
+                  primaryErrorCode: 'PROVIDER_RATE_LIMIT',
+                  fallbackErrorCode: groqError?.code || 'GROQ_UNAVAILABLE',
+                },
+              );
+            }
+          }
+
           if (sharedEvidenceEnabled) {
             throw new SmartLookupProviderError(
               'PROVIDERS_UNAVAILABLE',
@@ -1081,13 +1251,17 @@ export function createAgeLookupHandler(dependencies = {}) {
           }
 
           if (!useGrounded) {
-            return deadline.run('age-provider-call', () => providerLookup(queryInfo, {
-              deadline,
-              maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
-              reserveMs: 350,
-              fetchImpl: dependencies.fetchImpl,
-              apiKey: dependencies.apiKey,
-            }), {
+            return deadline.run('age-provider-call', () => withAttemptAccounting(
+              { provider: 'gemini', model: GEMINI_AGE_MODEL, fallbackReason },
+              () => providerLookup(queryInfo, {
+                deadline,
+                maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
+                reserveMs: 350,
+                fetchImpl: dependencies.fetchImpl,
+                apiKey: dependencies.apiKey,
+                fallbackReason,
+              }),
+            ), {
               maxMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
               reserveMs: 350,
             });
@@ -1107,13 +1281,17 @@ export function createAgeLookupHandler(dependencies = {}) {
           const groundedStart = now();
           let groundedValue;
           try {
-            groundedValue = await deadline.run('age-provider-call-grounded', () => groundedProviderLookup(queryInfo, {
-              deadline,
-              maxMs: groundedMaxMs,
-              reserveMs: 350,
-              fetchImpl: dependencies.fetchImpl,
-              apiKey: dependencies.apiKey,
-            }), {
+            groundedValue = await deadline.run('age-provider-call-grounded', () => withAttemptAccounting(
+              { provider: 'gemini', model: GEMINI_AGE_MODEL, fallbackReason },
+              () => groundedProviderLookup(queryInfo, {
+                deadline,
+                maxMs: groundedMaxMs,
+                reserveMs: 350,
+                fetchImpl: dependencies.fetchImpl,
+                apiKey: dependencies.apiKey,
+                fallbackReason,
+              }),
+            ), {
               maxMs: groundedMaxMs,
               reserveMs: 350,
             });
@@ -1135,13 +1313,17 @@ export function createAgeLookupHandler(dependencies = {}) {
             const fallbackMaxMs = Math.min(providerBudgetMs, deadline.remainingMs(groundedFallbackReserveMs));
             const fallbackStart = now();
             try {
-              const fallbackValue = await deadline.run('age-provider-call-fallback', () => providerLookup(queryInfo, {
-                deadline,
-                maxMs: fallbackMaxMs,
-                reserveMs: groundedFallbackReserveMs,
-                fetchImpl: dependencies.fetchImpl,
-                apiKey: dependencies.apiKey,
-              }), {
+              const fallbackValue = await deadline.run('age-provider-call-fallback', () => withAttemptAccounting(
+                { provider: 'gemini', model: GEMINI_AGE_MODEL, fallbackReason: 'grounded_timeout' },
+                () => providerLookup(queryInfo, {
+                  deadline,
+                  maxMs: fallbackMaxMs,
+                  reserveMs: groundedFallbackReserveMs,
+                  fetchImpl: dependencies.fetchImpl,
+                  apiKey: dependencies.apiKey,
+                  fallbackReason: 'grounded_timeout',
+                }),
+              ), {
                 maxMs: fallbackMaxMs,
                 reserveMs: groundedFallbackReserveMs,
               });
@@ -1202,9 +1384,11 @@ export function createAgeLookupHandler(dependencies = {}) {
         });
       } catch (error) {
         timings.providerMs = Math.max(0, now() - providerStart);
+        // No AI result was produced: the logical lookup does not spend allowance.
+        await session.refundUnproduced(redis);
         const errorCode = error?.code === 'RATE_LIMIT'
           ? 'RATE_LIMIT'
-          : (error?.code === 'GLOBAL_BUDGET_EXHAUSTED' || error?.code === 'BUDGET_STORE_UNAVAILABLE'
+          : (CAPACITY_ERROR_CODES.has(error?.code)
             ? error.code
           : (isTimeoutError(error)
             ? 'PROVIDER_TIMEOUT'
@@ -1218,11 +1402,10 @@ export function createAgeLookupHandler(dependencies = {}) {
         const fallbackProviderStatus = error?.fallbackStatus || null;
         const fallbackProviderLatencyMs = error?.fallbackLatencyMs ?? null;
         const fallbackProviderModel = error?.fallbackModel || null;
-        // A grounded timeout that also attempted (and failed) a same-deadline
-        // fallback made one additional real provider call beyond what
-        // providerAttemptCountFromMetadata infers from the reported error
-        // alone; account for it so daily attempt metrics are not undercounted.
-        const actualAttempts = providerAttemptCountFromMetadata(null, errorCode) + (groundedTelemetry.fallbackAttempted ? 1 : 0);
+        // Every real provider request this lookup made, including failed native
+        // calls that fell through and calls still in flight when the route
+        // deadline fired (recorded by the providers themselves).
+        const actualAttempts = recorder.totalCount();
         const attemptMetrics = actualAttempts
           ? await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', actualAttempts, deadline, {
               stage: 'age-provider-attempt-metrics',
@@ -1247,15 +1430,19 @@ export function createAgeLookupHandler(dependencies = {}) {
               source: 'fallback',
               evidenceSource: 'none',
               cacheStatus,
-              providerAttempted: errorCode !== 'RATE_LIMIT' && errorCode !== 'GLOBAL_BUDGET_EXHAUSTED' && errorCode !== 'BUDGET_STORE_UNAVAILABLE',
+              providerAttempted: errorCode !== 'RATE_LIMIT'
+                && !CAPACITY_ERROR_CODES.has(errorCode)
+                && (errorCode !== 'PROVIDER_RATE_LIMIT' || actualAttempts > 0),
               fallbackUsed: errorCode === 'PROVIDERS_UNAVAILABLE',
               timings,
               errorCode,
               notes: errorCode === 'RATE_LIMIT'
                 ? 'Smart Lookup provider capacity is temporarily limited. Local and cached lookups remain available.'
-                : (errorCode === 'GLOBAL_BUDGET_EXHAUSTED' || errorCode === 'BUDGET_STORE_UNAVAILABLE'
+                : (CAPACITY_ERROR_CODES.has(errorCode)
                   ? 'Smart Lookup provider capacity is temporarily limited. Please try again tomorrow.'
-                  : undefined),
+                  : (errorCode === 'PROVIDER_RATE_LIMIT'
+                    ? 'Live research is briefly rate limited. Local and cached lookups remain available; please try again in a minute.'
+                    : undefined)),
             }), timings, deadline);
         if (primaryProviderErrorCode) result.providerErrorCode = primaryProviderErrorCode;
         if (fallbackProviderErrorCode) result.fallbackProviderErrorCode = fallbackProviderErrorCode;
@@ -1277,6 +1464,7 @@ export function createAgeLookupHandler(dependencies = {}) {
 
       const nativeResult = rawProvider?.[NATIVE_GEMINI_SEARCH_RESULT];
       if (nativeResult) {
+        session.markAiProduced();
         const postStart = now();
         const result = mapNativeGeminiSearchResult(nativeResult, queryInfo, {
           cacheStatus,
@@ -1284,7 +1472,8 @@ export function createAgeLookupHandler(dependencies = {}) {
           currentYear,
         });
         timings.postProcessMs = Math.max(0, now() - postStart);
-        const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', 1, deadline, {
+        const nativeAttempts = recorder.totalCount();
+        const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', nativeAttempts, deadline, {
           stage: 'age-provider-attempt-metrics',
           maxMs: CACHE_WRITE_BUDGET_MS,
           now,
@@ -1292,7 +1481,7 @@ export function createAgeLookupHandler(dependencies = {}) {
         scheduleAgeCacheWrite(result);
         finalizeTimings(result, timings, deadline);
         logFinalResult(result, {
-          actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? 1,
+          actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? nativeAttempts,
           groundedTelemetry,
           inFlightShared,
         });
@@ -1352,9 +1541,11 @@ export function createAgeLookupHandler(dependencies = {}) {
         const hinted = applyEraHints(validatedProvider, queryInfo.normalizedQuery);
         result = normalizeSmartAgeResult(hinted, providerOptions);
         if (providerMetadata.model) result.providerModel = providerMetadata.model;
+        session.markAiProduced();
       } catch (error) {
         timings.postProcessMs = Math.max(0, now() - postStart);
-        const invalidAttempts = providerAttemptCountFromMetadata(providerMetadata) + (rawProvider && rawProvider.__groundedFallbackRecovered ? 1 : 0);
+        await session.refundUnproduced(redis);
+        const invalidAttempts = recorder.totalCount();
         const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', invalidAttempts, deadline, {
           stage: 'age-provider-attempt-metrics',
           maxMs: CACHE_WRITE_BUDGET_MS,
@@ -1383,9 +1574,9 @@ export function createAgeLookupHandler(dependencies = {}) {
         return res.status(200).json(result);
       }
       timings.postProcessMs = Math.max(0, now() - postStart);
-      // A recovered grounded-timeout result was served by the fallback call,
-      // but the discarded grounded attempt was still one real provider call.
-      const actualAttempts = providerAttemptCountFromMetadata(providerMetadata) + (rawProvider && rawProvider.__groundedFallbackRecovered ? 1 : 0);
+      // Counts every real request (a recovered grounded timeout, a failed native
+      // call that fell through, Groq fallbacks), not one inferred per result.
+      const actualAttempts = recorder.totalCount();
       const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', actualAttempts, deadline, {
         stage: 'age-provider-attempt-metrics',
         maxMs: CACHE_WRITE_BUDGET_MS,
@@ -1404,6 +1595,7 @@ export function createAgeLookupHandler(dependencies = {}) {
       });
       return res.status(200).json(result);
     } catch (error) {
+      await session.refundUnproduced(redis);
       const degraded = degradeToDeterministicFallback(isTimeoutError(error) ? 'TOTAL_DEADLINE' : 'INTERNAL_ERROR');
       const result = finalizeTimings(degraded
         || createUnavailableSmartAgeResult(queryInfo, {
@@ -1417,6 +1609,34 @@ export function createAgeLookupHandler(dependencies = {}) {
       logFinalResult(result, { timeoutStage: isTimeoutError(error) ? error.stage || 'unknown' : null });
       return res.status(200).json(result);
     }
+  }
+
+  return async function handler(req, res) {
+    const recorder = createAttemptRecorder({
+      route: 'age',
+      requestId: createRequestId(req, 'age'),
+      logger,
+    });
+    const session = quotaMeter.createSession({ req, route: 'age' });
+    recorder.setTelemetryExtras(() => session.telemetry());
+    if (!session.enabled) return runWithAttemptRecorder(recorder, () => handleAgeRequest(req, res, recorder, session));
+
+    // Metering on: remember the reply so the request can be bucketed, then
+    // settle (refund an unproduced AI lookup, write traffic counters) once the
+    // handler is done. All best effort; nothing here can change the reply.
+    let payload = null;
+    const sendJson = res.json.bind(res);
+    res.json = (body) => { payload = body; return sendJson(body); };
+    return runWithAttemptRecorder(recorder, async () => {
+      try {
+        return await handleAgeRequest(req, res, recorder, session);
+      } finally {
+        await session.settle({
+          getRedis: () => dependencies.redis || redisFactory(),
+          outcome: classifyLookupOutcome(payload, res.statusCode),
+        });
+      }
+    });
   };
 }
 

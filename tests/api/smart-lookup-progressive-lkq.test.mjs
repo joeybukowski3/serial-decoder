@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLkqLookupHandler } from '../../api/lkq-lookup.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function req(query, extra = {}) { return { method: 'POST', body: { query, ...extra }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} }; }
 function res() {
@@ -80,6 +81,7 @@ function closedBookResult(overrides = {}) {
 test('a model-line query (OptiPlex 9020) is grounded-eligible', async () => {
   let groundedCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedModelLineResult(); },
@@ -93,6 +95,7 @@ test('a model-line query (OptiPlex 9020) is grounded-eligible', async () => {
 test('a high-confidence product-family query (Generic OptiPlex) is grounded-eligible', async () => {
   let groundedCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedModelLineResult({ result: { replacementRelationship: 'functional-equivalent', replacementCandidates: [] } }); },
@@ -107,6 +110,7 @@ test('a low-confidence product-family query (Dell Inspiron 15) stays on the clos
   let groundedCalls = 0;
   let closedBookCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedModelLineResult(); },
@@ -121,6 +125,7 @@ test('a low-confidence product-family query (Dell Inspiron 15) stays on the clos
 test('a bare brand-only query never uses grounded research', async () => {
   let groundedCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedModelLineResult(); },
@@ -134,6 +139,7 @@ test('a bare brand-only query never uses grounded research', async () => {
 test('bare "desktop computer" (category-only) never uses grounded research or names one arbitrary replacement', async () => {
   let groundedCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedModelLineResult(); },
@@ -149,6 +155,7 @@ test('bare "desktop computer" (category-only) never uses grounded research or na
 test('unusable input performs no provider call', async () => {
   let providerCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => { providerCalls += 1; return groundedModelLineResult(); },
@@ -164,6 +171,7 @@ test('unusable input performs no provider call', async () => {
 
 test('direct-successor is downgraded for a model-line query even with manufacturer-grounded evidence', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => groundedModelLineResult(),
@@ -176,6 +184,7 @@ test('direct-successor is downgraded for a model-line query even with manufactur
 
 test('replacementCandidates never carry direct-successor for a model-line query', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => groundedModelLineResult(),
@@ -191,6 +200,7 @@ test('replacementCandidates never carry direct-successor for a model-line query'
 
 test('ranked candidates include a same-brand and a cross-brand candidate when evidence provides them', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => groundedModelLineResult(),
@@ -204,6 +214,7 @@ test('ranked candidates include a same-brand and a cross-brand candidate when ev
 
 test('sources are still derived only from grounding metadata for a model-line result', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => groundedModelLineResult(),
@@ -216,6 +227,7 @@ test('sources are still derived only from grounding metadata for a model-line re
 
 test('a model-line result never claims an exact original configuration', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => groundedModelLineResult(),
@@ -230,6 +242,7 @@ test('a model-line result never claims an exact original configuration', async (
 
 test('a recognized model-line query degrades to deterministic guidance on provider timeout, not an empty panel', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: false,
     redisFactory: () => redisMiss,
     totalBudgetMs: 300,
@@ -246,6 +259,7 @@ test('a recognized model-line query degrades to deterministic guidance on provid
 
 test('deterministic fallback is never labeled grounded or AI-assisted', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: false,
     redisFactory: () => redisMiss,
     totalBudgetMs: 300,
@@ -262,6 +276,7 @@ test('deterministic fallback is never labeled grounded or AI-assisted', async ()
 
 test('deterministic fallback fires on invalid provider output too, not just timeout', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: false,
     redisFactory: () => redisMiss,
     providerLookup: async () => withMetadata({
@@ -277,9 +292,11 @@ test('deterministic fallback fires on invalid provider output too, not just time
 test('deterministic fallback does not consume an extra provider budget reservation', async () => {
   let budgetCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: false,
     redisFactory: () => redisMiss,
-    totalBudgetMs: 300,
+    // Long enough for the (fail-closed) limiter stage to run before the provider hangs.
+    totalBudgetMs: 900,
     reserveProviderBudget: async () => { budgetCalls += 1; return { allowed: true, status: 'allowed', logicalLookupCount: 1 }; },
     providerLookup: () => new Promise(() => {}),
   });
@@ -291,6 +308,7 @@ test('deterministic fallback does not consume an extra provider budget reservati
 
 test('a query with no recognizable identity at all still gets the plain unavailable message, not a fabricated deterministic card', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: false,
     redisFactory: () => redisMiss,
     totalBudgetMs: 300,
@@ -306,6 +324,7 @@ test('a query with no recognizable identity at all still gets the plain unavaila
 
 test('exact-model appliance LKQ (LG WM3900HWA) is unaffected by the progressive-LKQ changes', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => withMetadata({
@@ -330,6 +349,7 @@ test('exact-model appliance LKQ (LG WM3900HWA) is unaffected by the progressive-
 
 test('cross-category candidates remain rejected', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => withMetadata({
@@ -354,6 +374,7 @@ test('Redis failure does not trigger paid-provider work for a model-line query',
     expire: async () => { throw new Error('redis down'); },
   };
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisDown,
     groundedProviderLookup: async () => { providerCalls += 1; return groundedModelLineResult(); },
@@ -369,6 +390,7 @@ test('in-flight duplicate model-line requests share one logical budget reservati
   let budgetCalls = 0;
   let groundedCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     reserveProviderBudget: async () => { budgetCalls += 1; return { allowed: true, status: 'allowed', logicalLookupCount: 1 }; },

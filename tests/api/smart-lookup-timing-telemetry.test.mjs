@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function req(query, extra = {}) { return { method: 'POST', body: { query, ...extra }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} }; }
 function res() {
@@ -20,6 +21,7 @@ function capture() {
 test('a grounded timeout records the failing stage and the time actually left', async () => {
   const { lines, logger } = capture();
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1400,
     groundedStageBudgetMs: 1000,
     groundedFallbackMinRemainingMs: 5000, // force recovery to be skipped
@@ -45,6 +47,7 @@ test('a grounded timeout records the failing stage and the time actually left', 
 test('a deterministic reserve is reported as such and keeps its errorCode', async () => {
   const { lines, logger } = capture();
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1400,
     groundedStageBudgetMs: 1000,
     groundedFallbackMinRemainingMs: 5000,
@@ -65,6 +68,7 @@ test('a local-evidence hit reports no provider attempt', async () => {
   const { lines, logger } = capture();
   let providerCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     redisFactory: () => redisMiss,
     localLookup: async () => ({
       brand: 'LG', model: 'WM3900HWA', category: 'washer', specificityLevel: 'specific',
@@ -84,6 +88,7 @@ test('a local-evidence hit reports no provider attempt', async () => {
 test('telemetry never contains a raw query, model, or serial value', async () => {
   const { lines, logger } = capture();
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1400,
     groundedStageBudgetMs: 1000,
     groundedEnabled: true,
@@ -105,6 +110,7 @@ test('concurrent identical requests flag the shared in-flight call and count one
   let release;
   const blocker = new Promise((resolve) => { release = resolve; });
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     redisFactory: () => redisMiss,
     localLookup: async () => null,
     providerLookup: async () => {

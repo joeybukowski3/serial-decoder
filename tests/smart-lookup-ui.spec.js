@@ -666,3 +666,76 @@ test.describe('Smart Lookup controller', () => {
     }).toBe(1);
   });
 });
+
+test.describe('Smart Lookup anonymous visitor ID', () => {
+  const VALID_ID = /^[A-Za-z0-9_-]{16,64}$/;
+  const fixture = { brand: 'Samsung', model: 'QN65Q80A', introductionYear: 2020, productionRange: { start: 2021, end: 2021 }, notes: 'Model data only.', evidence: [{ detail: 'Fixture evidence' }] };
+
+  async function captureAgeHeaders(page) {
+    const seen = [];
+    await page.route('**/api/age-lookup', async (route) => {
+      seen.push(route.request().headers());
+      await route.fulfill({ json: fixture });
+    });
+    await page.route('**/api/lkq-lookup', (route) => route.fulfill({ json: {} }));
+    return seen;
+  }
+
+  async function submit(page, query) {
+    await page.locator('#smart-lookup-input').fill(query);
+    await Promise.all([
+      page.waitForResponse((response) => response.url().includes('/api/age-lookup') && response.request().method() === 'POST'),
+      page.locator('[data-smart-lookup-submit="1"]').click(),
+    ]);
+  }
+
+  test('a random first-party ID is created once, persists across reloads, and is sent only to /api/age-lookup', async ({ page }) => {
+    const seen = await captureAgeHeaders(page);
+    const otherRequests = [];
+    page.on('request', (request) => {
+      const url = new URL(request.url());
+      if (url.port === '3001' && url.pathname !== '/api/age-lookup') {
+        otherRequests.push(request.headers());
+      }
+    });
+
+    await page.goto('http://localhost:3001/index.html?mode=smart#panel-smart');
+    await submit(page, 'Samsung QN65Q80A');
+    const firstId = seen[0]['x-visitor-id'];
+    expect(firstId).toMatch(VALID_ID);
+    expect(await page.evaluate(() => window.localStorage.getItem('dmi_visitor_v1'))).toBe(firstId);
+
+    await page.reload();
+    await submit(page, 'Samsung QN65Q80B');
+    expect(seen[1]['x-visitor-id']).toBe(firstId);
+
+    // Not derived from the device: two clean browser contexts get different IDs.
+    const second = await page.context().browser().newContext();
+    const otherPage = await second.newPage();
+    const otherSeen = await captureAgeHeaders(otherPage);
+    await otherPage.goto('http://localhost:3001/index.html?mode=smart#panel-smart');
+    await otherPage.locator('#smart-lookup-input').fill('Samsung QN65Q80A');
+    await Promise.all([
+      otherPage.waitForResponse((response) => response.url().includes('/api/age-lookup')),
+      otherPage.locator('[data-smart-lookup-submit="1"]').click(),
+    ]);
+    expect(otherSeen[0]['x-visitor-id']).toMatch(VALID_ID);
+    expect(otherSeen[0]['x-visitor-id']).not.toBe(firstId);
+    await second.close();
+
+    for (const headers of otherRequests) expect(headers['x-visitor-id']).toBeUndefined();
+  });
+
+  test('blocked storage does not break Smart Lookup: the lookup still runs and the ID is simply per-page', async ({ page }) => {
+    const seen = await captureAgeHeaders(page);
+    await page.addInitScript(() => {
+      Object.defineProperty(window, 'localStorage', { get() { throw new Error('storage blocked'); } });
+    });
+    await page.goto('http://localhost:3001/index.html?mode=smart#panel-smart');
+    await submit(page, 'Samsung QN65Q80A');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Model data only');
+    expect(seen).toHaveLength(1);
+    const id = seen[0]['x-visitor-id'];
+    expect(id === undefined || VALID_ID.test(id)).toBe(true);
+  });
+});

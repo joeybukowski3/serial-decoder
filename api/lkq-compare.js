@@ -22,6 +22,45 @@ const MAX_LABEL_LENGTH = 80;
 const GEMINI_MAX_OUTPUT_TOKENS = 2048;
 const GEMINI_TIMEOUT_MS = 7000;
 
+// Per-attempt telemetry + daily usage aggregate. Mirrors
+// lib/smart-lookup/provider-attempts.js and provider-usage.js, which this file
+// cannot import (its tests load it standalone). Categorical/numeric fields
+// only: never a query, message, IP or key.
+function statusFromHttp(status) {
+  if (status === 429) return 'rate_limited';
+  if (status >= 500) return 'server_error';
+  if (status >= 400) return 'http_error';
+  return 'ok';
+}
+
+async function recordGeminiAttempt(route, model, providerStatus, httpStatus, data, startedAt) {
+  try {
+    const usage = (data && data.usageMetadata) || {};
+    const tokens = (value) => (typeof value === 'number' && value >= 0 ? Math.round(value) : null);
+    const inputTokens = tokens(usage.promptTokenCount);
+    const outputTokens = tokens(usage.candidatesTokenCount);
+    console.info(JSON.stringify({
+      event: 'provider_attempt', route, provider: 'gemini', model, attemptNumber: 1,
+      providerStatus, httpStatus, inputTokens, outputTokens, durationMs: Date.now() - startedAt,
+    }));
+    if (typeof redis.pipeline !== 'function') return;
+    const key = 'provider-usage:v1:' + new Date().toISOString().slice(0, 10);
+    const base = route + '|gemini|' + model;
+    const pipeline = redis.pipeline();
+    pipeline.hincrby(key, base + '|calls', 1);
+    pipeline.hincrby(key, base + '|status:' + providerStatus, 1);
+    if (inputTokens > 0) pipeline.hincrby(key, base + '|in_tokens', inputTokens);
+    if (outputTokens > 0) pipeline.hincrby(key, base + '|out_tokens', outputTokens);
+    pipeline.expire(key, 45 * 24 * 60 * 60);
+    const write = pipeline.exec();
+    if (typeof setTimeout === 'function') {
+      await Promise.race([write, new Promise((resolve) => setTimeout(resolve, 150))]);
+    } else {
+      await write;
+    }
+  } catch (_) { /* telemetry must never affect a reply */ }
+}
+
 function getClientIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded) return forwarded.split(',')[0].trim();
@@ -109,7 +148,13 @@ export default async function handler(req, res) {
       res.setHeader('Retry-After', Math.ceil((reset - Date.now()) / 1000));
       return res.status(429).json({ error: 'Too many requests. Please try again later.', errorCode: 'RATE_LIMIT' });
     }
-  } catch (_) {}
+  } catch (_) {
+    // Paid provider: fail closed when the limiter store is unavailable.
+    return res.status(503).json({
+      error: 'Service temporarily unavailable',
+      errorCode: 'RATE_LIMIT_STORE_UNAVAILABLE',
+    });
+  }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -163,6 +208,8 @@ Respond with ONLY valid JSON:
 }`;
 
   const deadline = createDeadlineSignal(GEMINI_TIMEOUT_MS);
+  const startedAt = Date.now();
+  let attemptRecorded = false;
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
@@ -182,10 +229,18 @@ Respond with ONLY valid JSON:
     );
 
     if (!response.ok) {
-      return res.status(502).json({ error: 'AI service unavailable', errorCode: 'PROVIDER_ERROR' });
+      attemptRecorded = true;
+      await recordGeminiAttempt('lkq-compare', 'gemini-2.5-flash', statusFromHttp(response.status), response.status, null, startedAt);
+      // A provider 429 is reported distinctly from our own per-IP limiter.
+      return res.status(502).json({
+        error: 'AI service unavailable',
+        errorCode: response.status === 429 ? 'PROVIDER_RATE_LIMIT' : 'PROVIDER_ERROR',
+      });
     }
 
     const data = await response.json();
+    attemptRecorded = true;
+    await recordGeminiAttempt('lkq-compare', 'gemini-2.5-flash', 'ok', response.status, data, startedAt);
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
       return res.status(502).json({ error: 'AI service unavailable', errorCode: 'EMPTY_RESPONSE' });
@@ -197,6 +252,9 @@ Respond with ONLY valid JSON:
       return res.status(502).json({ error: 'AI service unavailable', errorCode: 'INVALID_RESPONSE' });
     }
   } catch (error) {
+    if (!attemptRecorded) {
+      await recordGeminiAttempt('lkq-compare', 'gemini-2.5-flash', error?.name === 'AbortError' ? 'timeout' : 'network_error', null, null, startedAt);
+    }
     if (error?.name === 'AbortError') {
       return res.status(504).json({ error: 'AI service timed out', errorCode: 'PROVIDER_TIMEOUT' });
     }

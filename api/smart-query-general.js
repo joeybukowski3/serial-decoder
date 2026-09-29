@@ -1,4 +1,4 @@
-import { buildSmartGeneralCacheKey } from '../lib/smart-lookup/cache.js';
+import { buildSmartGeneralCacheKey, hashCanonicalQuery } from '../lib/smart-lookup/cache.js';
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
 import { classifySmartLookupQuery, normalizeWhitespace } from '../lib/smart-lookup/normalize.js';
 import { callGeminiGeneralProvider, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
@@ -12,6 +12,8 @@ import {
 } from '../lib/smart-lookup/redis.js';
 import { buildDeterministicBroadResult } from '../lib/smart-lookup/static-results.js';
 import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
+import { createAttemptRecorder, runWithAttemptRecorder } from '../lib/smart-lookup/provider-attempts.js';
+import { recordProviderUsage } from '../lib/smart-lookup/provider-usage.js';
 
 const TOTAL_BUDGET_MS = 5000;
 const PROVIDER_BUDGET_MS = 3500;
@@ -112,9 +114,12 @@ export function createSmartQueryGeneralHandler(dependencies = {}) {
   const now = dependencies.now || Date.now;
   const logger = dependencies.logger || console;
   const inflightGeneralRequests = new Map();
+  // Paid access fails closed when the limiter store is unavailable.
+  const failClosedRateLimit = dependencies.failClosedRateLimit !== false;
+  const usageSink = dependencies.recordProviderUsage || recordProviderUsage;
 
-  return async function handler(req, res) {
-    const requestId = createRequestId(req, 'general');
+  async function handleGeneralRequest(req, res, recorder) {
+    const requestId = recorder.requestId;
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
     const validation = validateRequest(req.body || {});
     if (validation.error) {
@@ -127,6 +132,7 @@ export function createSmartQueryGeneralHandler(dependencies = {}) {
     const deadline = createDeadline({ totalMs: dependencies.totalBudgetMs || TOTAL_BUDGET_MS, now });
     const timings = { cacheReadMs: 0, rateLimitMs: 0, providerMs: 0, cacheWriteMs: 0, totalMs: 0 };
     const queryInfo = classifySmartLookupQuery(validation.value.query);
+    recorder.setContext({ queryHash: hashCanonicalQuery(queryInfo.canonicalQuery || queryInfo.normalizedQuery || '') });
     let cacheStatus = 'bypass';
 
     try {
@@ -139,6 +145,8 @@ export function createSmartQueryGeneralHandler(dependencies = {}) {
       }
 
       const redis = dependencies.redis || redisFactory();
+      recorder.setRedis(redis);
+      recorder.setUsageSink(usageSink);
       const cacheKey = buildSmartGeneralCacheKey(queryInfo);
       const cacheRead = await boundedRedisGet(redis, cacheKey, deadline, {
         stage: 'general-cache-read',
@@ -168,11 +176,13 @@ export function createSmartQueryGeneralHandler(dependencies = {}) {
             stage: 'general-provider-rate-limit',
             maxMs: REDIS_CALL_BUDGET_MS,
             reserveMs: 250,
+            failClosed: failClosedRateLimit,
           });
           timings.rateLimitMs = rate.elapsedMs || 0;
           if (!rate.success) {
-            const error = new Error('RATE_LIMIT');
-            error.code = 'RATE_LIMIT';
+            const code = rate.storeUnavailable ? 'RATE_LIMIT_STORE_UNAVAILABLE' : 'RATE_LIMIT';
+            const error = new Error(code);
+            error.code = code;
             throw error;
           }
           return deadline.run('general-provider-call', () => providerLookup(queryInfo, {
@@ -203,7 +213,9 @@ export function createSmartQueryGeneralHandler(dependencies = {}) {
         timings.providerMs = Math.max(0, now() - providerStart);
         const errorCode = isTimeoutError(error)
           ? 'PROVIDER_TIMEOUT'
-          : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE');
+          : (error instanceof SmartLookupProviderError || error?.code === 'RATE_LIMIT_STORE_UNAVAILABLE'
+            ? error.code
+            : 'PROVIDER_UNAVAILABLE');
         const result = withMetadata(normalizeGeneralPayload({}, queryInfo), {
           source: 'fallback',
           cacheStatus,
@@ -250,6 +262,15 @@ export function createSmartQueryGeneralHandler(dependencies = {}) {
       logResult(logger, requestId, queryInfo, result, { timeoutStage: isTimeoutError(error) ? error.stage || 'unknown' : null });
       return res.status(200).json(result);
     }
+  }
+
+  return async function handler(req, res) {
+    const recorder = createAttemptRecorder({
+      route: 'general',
+      requestId: createRequestId(req, 'general'),
+      logger,
+    });
+    return runWithAttemptRecorder(recorder, () => handleGeneralRequest(req, res, recorder));
   };
 }
 

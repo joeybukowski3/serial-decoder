@@ -214,6 +214,46 @@
     return body;
   }
 
+  // Anonymous first-party visitor ID. A random value the browser generates and
+  // keeps in its own localStorage: not derived from the device, screen, fonts,
+  // canvas or anything else about the visitor (no fingerprinting), never sent
+  // to analytics or any third party, and only attached to /api/age-lookup so
+  // AI-backed lookups can be metered per visitor. If storage is unavailable it
+  // is simply omitted and the server falls back to a hashed-IP subject.
+  var VISITOR_STORAGE_KEY = 'dmi_visitor_v1';
+  var visitorIdMemo = null;
+
+  function randomVisitorId() {
+    var cryptoApi = window.crypto;
+    if (cryptoApi && typeof cryptoApi.randomUUID === 'function') return cryptoApi.randomUUID().replace(/-/g, '');
+    if (cryptoApi && typeof cryptoApi.getRandomValues === 'function') {
+      var bytes = cryptoApi.getRandomValues(new Uint8Array(16));
+      return Array.prototype.map.call(bytes, function (byte) { return ('0' + byte.toString(16)).slice(-2); }).join('');
+    }
+    return '';
+  }
+
+  function visitorId() {
+    if (visitorIdMemo) return visitorIdMemo;
+    var valid = /^[A-Za-z0-9_-]{16,64}$/;
+    try {
+      var stored = window.localStorage.getItem(VISITOR_STORAGE_KEY);
+      if (stored && valid.test(stored)) { visitorIdMemo = stored; return stored; }
+    } catch (_) { /* storage blocked: fall through */ }
+    var fresh = randomVisitorId();
+    if (!valid.test(fresh)) return '';
+    visitorIdMemo = fresh;
+    try { window.localStorage.setItem(VISITOR_STORAGE_KEY, fresh); } catch (_) { /* memory-only */ }
+    return fresh;
+  }
+
+  function requestHeaders() {
+    var headers = { 'Content-Type': 'application/json' };
+    var id = visitorId();
+    if (id) headers['X-Visitor-Id'] = id;
+    return headers;
+  }
+
   function submitButtons() {
     var buttons = [];
     var legacyButton = $('smartLookupBtn');
@@ -460,7 +500,9 @@
     // treated as a successful result card. Timeout/error codes stay on the
     // payload for telemetry, but they must not erase useful product timing.
     if (hasUsableAgeInfo(data)) return 'success';
-    if (code === 'RATE_LIMIT') return 'rate-limited';
+    // Our per-IP limiter, a provider (Gemini) 429, and a limiter-store outage
+    // all mean "research is temporarily at capacity" to the visitor.
+    if (code === 'RATE_LIMIT' || code === 'PROVIDER_RATE_LIMIT' || code === 'RATE_LIMIT_STORE_UNAVAILABLE') return 'rate-limited';
     if (code === 'PROVIDER_TIMEOUT' || code === 'TOTAL_DEADLINE') return 'timeout';
     if (code === 'INTRODUCTION_AFTER_RANGE' || code === 'REVERSED_RANGE') return 'conflict';
     if (code && MALFORMED_AGE_ERROR_CODES[code]) return 'malformed';
@@ -1056,7 +1098,7 @@
     if (recentHit && Date.now() - recentHit.startedAt < 1000) return recentHit.promise;
     var promise = fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: requestHeaders(),
       body: JSON.stringify(body || {}),
       signal: signal,
     }).then(function (response) {

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
 import { classifySmartLookupQuery } from '../../lib/smart-lookup/normalize.js';
 import { buildDeterministicBroadResult } from '../../lib/smart-lookup/static-results.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function req(query) {
   return { method: 'POST', body: { query }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} };
@@ -50,6 +51,7 @@ function harness({ shared, openai, xai, env = ENV, logs = [], localLookup = asyn
     expire: async () => 1,
   };
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     env,
     localLookup,
     redisFactory: () => redis,

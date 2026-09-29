@@ -4,6 +4,7 @@ import { createAgeLookupHandler } from '../../api/age-lookup.js';
 import { createLkqLookupHandler } from '../../api/lkq-lookup.js';
 import { buildSmartAgeCacheKey } from '../../lib/smart-lookup/cache.js';
 import { classifySmartLookupQuery } from '../../lib/smart-lookup/normalize.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function req(query, extra = {}) { return { method: 'POST', body: { query, ...extra }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} }; }
 function res() {
@@ -49,6 +50,7 @@ const BASE_DEPS = {
 
 test('Acer Nitro 5: grounded failure (no time for ungrounded recovery) degrades to a deterministic-family result, never AI-assisted', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     groundedStageBudgetMs: 30,
     groundedFallbackMinRemainingMs: 5000, // forces "no time for same-deadline fallback"
@@ -75,6 +77,7 @@ test('Acer Nitro 5: grounded failure (no time for ungrounded recovery) degrades 
 
 test('Acer Nitro 5: grounded timeout followed by ungrounded fallback timeout also degrades to deterministic-family, not groundedFallback', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     groundedProviderLookup: async () => { await new Promise((r) => setTimeout(r, 50)); throw timeoutError('age-provider-call-grounded'); },
     providerLookup: async () => { await new Promise((r) => setTimeout(r, 50)); throw timeoutError('age-provider-call-fallback'); },
@@ -92,6 +95,7 @@ test('Acer Nitro 5: grounded timeout followed by ungrounded fallback timeout als
 
 test('Acer Nitro 5: grounded timeout with a successful ungrounded Gemini recovery is marked groundedFallback + fallbackKind ungrounded-provider, with no sources', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     groundedProviderLookup: async () => { await new Promise((r) => setTimeout(r, 50)); throw timeoutError('age-provider-call-grounded'); },
     providerLookup: async () => withMetadata({
@@ -145,6 +149,7 @@ test('mandatory broad product examples classify into useful progressive tiers', 
 
 test('LG TV returns researched brand/category historical context and asks for model refinement', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     openAiEnabled: true,
     openAiProviderLookup: async () => withMetadata({
@@ -188,6 +193,7 @@ test('LG TV returns researched brand/category historical context and asks for mo
 test('LG alone now reaches research and still does not falsely claim television history', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     openAiEnabled: true,
     openAiProviderLookup: async () => {
@@ -218,6 +224,7 @@ test('LG alone now reaches research and still does not falsely claim television 
 test('television now reaches research for category history without pretending to identify a unit', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     openAiEnabled: true,
     openAiProviderLookup: async () => {
@@ -250,6 +257,7 @@ test('television now reaches research for category history without pretending to
 
 test('Dell XPS 15 returns model-line context instead of a dead-end clarification', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     openAiEnabled: true,
     openAiProviderLookup: async () => withMetadata({
@@ -289,6 +297,7 @@ test('Dell XPS 15 returns model-line context instead of a dead-end clarification
 
 test('Dell XPS 15 9530 returns generation-specific model-line context', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     openAiEnabled: true,
     openAiProviderLookup: async () => withMetadata({
@@ -327,6 +336,7 @@ test('Dell XPS 15 9530 returns generation-specific model-line context', async ()
 
 test('Whirlpool top-load washer: a grounded broad-range result can render (known product eras) without selecting an arbitrary exact model', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     groundedProviderLookup: async () => withMetadata({
       brand: 'Whirlpool',
@@ -364,6 +374,7 @@ test('Whirlpool top-load washer: a grounded broad-range result can render (known
 
 test('Whirlpool top-load washer: a provider trying to invent a family or claim one manufacture year is stripped by the schema', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     groundedProviderLookup: async () => withMetadata({
       brand: 'Whirlpool',
@@ -392,6 +403,7 @@ test('Whirlpool top-load washer: a provider trying to invent a family or claim o
 
 test('Whirlpool top-load washer: grounded/provider failure degrades to deterministic brand-category guidance, not an empty timeout card', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     groundedProviderLookup: async () => { await new Promise((r) => setTimeout(r, 50)); throw timeoutError('age-provider-call-grounded'); },
     providerLookup: async () => { await new Promise((r) => setTimeout(r, 50)); throw timeoutError('age-provider-call-fallback'); },
@@ -412,6 +424,7 @@ test('Whirlpool top-load washer: grounded/provider failure degrades to determini
 test('refrigerator (category-only) now reaches research and returns useful category guidance', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     providerLookup: async () => { calls += 1; return withMetadata({}, { provider: 'gemini' }); },
     groundedProviderLookup: async () => {
@@ -453,6 +466,7 @@ test('a bare brand with no category ("Whirlpool" alone) now reaches research', (
 test('unusable (random meaningless) input makes no provider call and returns a clarification result', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     providerLookup: async () => { calls += 1; return withMetadata({}, { provider: 'gemini' }); },
     groundedProviderLookup: async () => { calls += 1; return withMetadata({}, { provider: 'gemini' }); },
@@ -488,6 +502,7 @@ test('a degraded deterministic-family result is short-cached after provider fail
   let cacheOptions = null;
   const redis = { ...redisMiss, set: async (_key, _value, options) => { setCalls += 1; cacheOptions = options; } };
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     redisFactory: () => redis,
     groundedProviderLookup: async () => { await new Promise((r) => setTimeout(r, 20)); throw timeoutError('age-provider-call-grounded'); },
@@ -507,6 +522,7 @@ test('a real ungrounded-provider recovery result IS eligible for caching and is 
   const cachedPayloads = [];
   const redis = { ...redisMiss, set: async (_key, value) => { setCalls += 1; cachedPayloads.push(value); } };
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     redisFactory: () => redis,
     groundedProviderLookup: async () => { await new Promise((r) => setTimeout(r, 50)); throw timeoutError('age-provider-call-grounded'); },
@@ -527,6 +543,7 @@ test('a real ungrounded-provider recovery result IS eligible for caching and is 
 
 test('a grounded success for an exact Acer model is unaffected by the family-degradation ladder', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     groundedProviderLookup: async () => withMetadata({
       brand: 'Acer',
@@ -556,6 +573,7 @@ test('a grounded success for an exact Acer model is unaffected by the family-deg
 test('LKQ: unusable input makes no provider call', async () => {
   let calls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     providerLookup: async () => { calls += 1; return withMetadata({}, { provider: 'gemini' }); },
@@ -569,6 +587,7 @@ test('LKQ: unusable input makes no provider call', async () => {
 
 test('LKQ: a brand-category query never names one arbitrary current product as a direct successor', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: false,
     redisFactory: () => redisMiss,
     providerLookup: async () => withMetadata({
@@ -589,6 +608,7 @@ test('LKQ: a brand-category query never names one arbitrary current product as a
 test('LKQ grounding stays exact-model only -- not expanded to brand-category by this follow-up', async () => {
   let groundedCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => { groundedCalls += 1; return withMetadata({}, { provider: 'gemini', grounded: true, groundedSources: [] }); },
@@ -610,11 +630,13 @@ test('LKQ: an age-lookup failure never affects a concurrent independent replacem
   // paths (no shared mutable state) -- an age timeout must never make LKQ
   // fail too.
   const ageHandler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
     groundedProviderLookup: async () => { throw timeoutError('age-provider-call-grounded'); },
     providerLookup: async () => { throw timeoutError('age-provider-call'); },
   });
   const lkqHandler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: false,
     redisFactory: () => redisMiss,
     providerLookup: async () => withMetadata({

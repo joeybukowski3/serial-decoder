@@ -1,4 +1,4 @@
-import { buildSmartInterpretCacheKey, prepareInterpretForCache } from '../lib/smart-lookup/cache.js';
+import { buildSmartInterpretCacheKey, hashCanonicalQuery, prepareInterpretForCache } from '../lib/smart-lookup/cache.js';
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
 import { classifySmartLookupQuery, normalizeWhitespace } from '../lib/smart-lookup/normalize.js';
 import { callGeminiInterpretProvider, SmartLookupProviderError } from '../lib/smart-lookup/provider.js';
@@ -11,6 +11,8 @@ import {
   getClientIp,
 } from '../lib/smart-lookup/redis.js';
 import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
+import { createAttemptRecorder, runWithAttemptRecorder } from '../lib/smart-lookup/provider-attempts.js';
+import { recordProviderUsage } from '../lib/smart-lookup/provider-usage.js';
 
 const TOTAL_BUDGET_MS = 3500;
 const PROVIDER_BUDGET_MS = 2500;
@@ -108,9 +110,12 @@ export function createSmartQueryInterpretHandler(dependencies = {}) {
   const logger = dependencies.logger || console;
   const now = dependencies.now || Date.now;
   const inflightInterpretRequests = new Map();
+  // Paid access fails closed when the limiter store is unavailable.
+  const failClosedRateLimit = dependencies.failClosedRateLimit !== false;
+  const usageSink = dependencies.recordProviderUsage || recordProviderUsage;
 
-  return async function handler(req, res) {
-    const requestId = createRequestId(req, 'interpret');
+  async function handleInterpretRequest(req, res, recorder) {
+    const requestId = recorder.requestId;
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
     const validation = validateRequest(req.body || {});
     if (validation.error) {
@@ -123,6 +128,7 @@ export function createSmartQueryInterpretHandler(dependencies = {}) {
     const deadline = createDeadline({ totalMs: dependencies.totalBudgetMs || TOTAL_BUDGET_MS, now });
     const timings = { cacheReadMs: 0, rateLimitMs: 0, providerMs: 0, cacheWriteMs: 0, totalMs: 0 };
     const queryInfo = classifySmartLookupQuery(validation.value.query);
+    recorder.setContext({ queryHash: hashCanonicalQuery(queryInfo.canonicalQuery || queryInfo.normalizedQuery || '') });
     const deterministic = deterministicInterpretation(queryInfo);
     if (deterministic) {
       const result = withMetadata(deterministic, { source: 'static', timings });
@@ -137,6 +143,8 @@ export function createSmartQueryInterpretHandler(dependencies = {}) {
 
     try {
     const redis = dependencies.redis || redisFactory();
+    recorder.setRedis(redis);
+    recorder.setUsageSink(usageSink);
     const cacheKey = buildSmartInterpretCacheKey(queryInfo);
     const cacheStart = now();
     const cacheRead = await boundedRedisGet(redis, cacheKey, deadline, {
@@ -162,12 +170,13 @@ export function createSmartQueryInterpretHandler(dependencies = {}) {
       providerPromise = (async () => {
         const limiter = dependencies.rateLimiter || limiterFactory(redis);
         const rate = await boundedRateLimit(limiter, getClientIp(req), deadline, {
-          stage: 'interpret-provider-rate-limit', maxMs: REDIS_CALL_BUDGET_MS, reserveMs: 250,
+          stage: 'interpret-provider-rate-limit', maxMs: REDIS_CALL_BUDGET_MS, reserveMs: 250, failClosed: failClosedRateLimit,
         });
         timings.rateLimitMs = rate.elapsedMs || 0;
         if (!rate.success) {
-          const error = new Error('RATE_LIMIT');
-          error.code = 'RATE_LIMIT';
+          const code = rate.storeUnavailable ? 'RATE_LIMIT_STORE_UNAVAILABLE' : 'RATE_LIMIT';
+          const error = new Error(code);
+          error.code = code;
           throw error;
         }
         return deadline.run('interpret-provider-call', () => providerLookup(queryInfo, {
@@ -217,7 +226,9 @@ export function createSmartQueryInterpretHandler(dependencies = {}) {
       timings.providerMs = Math.max(0, now() - providerStart);
       const errorCode = isTimeoutError(error)
         ? 'PROVIDER_TIMEOUT'
-        : (error instanceof SmartLookupProviderError ? error.code : 'PROVIDER_UNAVAILABLE');
+        : (error instanceof SmartLookupProviderError || error?.code === 'RATE_LIMIT_STORE_UNAVAILABLE'
+          ? error.code
+          : 'PROVIDER_UNAVAILABLE');
       const result = withMetadata({
         action: 'bypass', queryKind: 'specific', confidence: 'low', scopeValid: true,
         message: 'The original query is being used because interpretation was unavailable.',
@@ -254,6 +265,15 @@ export function createSmartQueryInterpretHandler(dependencies = {}) {
       });
       return res.status(200).json(result);
     }
+  }
+
+  return async function handler(req, res) {
+    const recorder = createAttemptRecorder({
+      route: 'interpret',
+      requestId: createRequestId(req, 'interpret'),
+      logger,
+    });
+    return runWithAttemptRecorder(recorder, () => handleInterpretRequest(req, res, recorder));
   };
 }
 

@@ -43,6 +43,15 @@ import {
 } from '../lib/serial-refinement/telemetry.js';
 import { createDeadline, isTimeoutError } from '../lib/smart-lookup/deadline.js';
 import { boundedRateLimit, boundedRedisGet, boundedRedisSet } from '../lib/smart-lookup/redis.js';
+import {
+  createAttemptRecorder,
+  isProviderRateLimitError,
+  runWithAttemptRecorder,
+  withAttemptAccounting,
+} from '../lib/smart-lookup/provider-attempts.js';
+import { recordProviderUsage, recordUsageEvent } from '../lib/smart-lookup/provider-usage.js';
+import { createGeminiCooldown } from '../lib/smart-lookup/gemini-cooldown.js';
+import { evaluateRefinementGate } from '../lib/serial-refinement/refinement-gate.js';
 
 const MAX_CANDIDATES = 12;
 const GROUNDED_RATE_LIMIT_REQUESTS = 10;
@@ -78,6 +87,9 @@ function validateRequestBody(body) {
 
   return {
     value: { brand, category, serial, model, candidateYears, decodedMonth, context },
+    // 'retry' when the user pressed Retry; anything else is the automatic
+    // background refinement. Used for telemetry only.
+    trigger: body?.trigger === 'retry' ? 'retry' : 'background',
   };
 }
 
@@ -173,9 +185,15 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       (dependencies.env || process.env).MODEL_REFINEMENT_SHARED_EVIDENCE_SHADOW_ENABLED,
     );
 
-  return async function handler(req, res) {
+  // Paid access fails closed when the limiter store is unavailable.
+  const failClosedRateLimit = dependencies.failClosedRateLimit !== false;
+  const geminiCooldown = dependencies.geminiCooldown
+    || createGeminiCooldown({ now: clock, env: dependencies.env || process.env });
+  const usageSink = dependencies.recordProviderUsage || recordProviderUsage;
+
+  async function handleRefineRequest(req, res, recorder) {
     const requestStart = clock();
-    const requestId = String(req.headers?.['x-request-id'] || req.headers?.['x-vercel-id'] || `ref-${requestStart}-${Math.random().toString(36).slice(2, 8)}`);
+    const requestId = recorder.requestId;
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     const validation = validateRequestBody(req.body || {});
@@ -194,6 +212,12 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       brand: input.brand,
       model: input.model,
       category: input.category,
+    });
+    // Model hash only: the serial is never part of any telemetry identifier.
+    recorder.setContext({
+      queryHash: hashModelIdentifier(modelIdentity.enteredModel),
+      refinementTrigger: validation.trigger,
+      backgroundRefinementTriggered: validation.trigger === 'background',
     });
     const deadline = createDeadline({ totalMs: totalBudgetMs, now: clock });
     const timings = {
@@ -226,14 +250,21 @@ export function createRefineSerialDateHandler(dependencies = {}) {
     let geminiGroundedRan = false;
     let searchResultCount = null;
     let evidenceFactCount = null;
-    let providerAttemptCount = 0;
     let costSnapshot = null;
+    // Once any Gemini call returns 429 (or a cooldown is active) no further
+    // Gemini call is made for this request.
+    const geminiState = { rateLimited: false, cooldownActive: false };
+    // Single daily-aggregate outcome for this request (see provider-usage.js).
+    let usageOutcome = 'other';
+    let gateSkipReason = null;
     let nativeResearchAttempted = false;
     let nativeResearchAccepted = false;
     let nativeResearchFailureCode = null;
 
-    function finish(response) {
+    async function finish(response) {
       timings.totalMs = Math.max(0, clock() - requestStart);
+      const attemptSummary = recorder.summary();
+      const providerAttemptCount = recorder.totalCount();
       response.timings = { ...timings, ...(response.timings || {}) };
       if (!response.modelIdentity) response.modelIdentity = modelIdentity;
       if (!response.searchedModels) response.searchedModels = modelIdentity.searchModels;
@@ -300,8 +331,24 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         geminiExtractionRan,
         geminiGroundedRan,
         providerAttemptCount,
+        refinementTrigger: validation.trigger,
+        backgroundRefinementTriggered: validation.trigger === 'background',
+        refinementGateSkipReason: gateSkipReason,
+        geminiCooldownActive: geminiState.cooldownActive,
+        geminiAttemptCount: attemptSummary.geminiAttemptCount,
+        groqAttemptCount: attemptSummary.groqAttemptCount,
+        otherProviderAttemptCount: attemptSummary.otherAttemptCount,
+        providerRateLimitCount: attemptSummary.providerRateLimitCount,
+        fallbackAttemptCount: attemptSummary.fallbackAttemptCount,
+        attemptModels: attemptSummary.attemptModels,
+        inputTokens: attemptSummary.inputTokens,
+        outputTokens: attemptSummary.outputTokens,
         cost: costSnapshot,
       });
+      if (redis) {
+        await recordUsageEvent(redis, 'refine', usageOutcome);
+        if (validation.trigger === 'retry') await recordUsageEvent(redis, 'refine', 'retry');
+      }
       if (shadowTask && !shadowObserved) {
         shadowObserved = true;
         observeRefinementShadow(shadowTask, {
@@ -406,7 +453,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
           timings,
           errorCode: null,
         }));
-        return finish(finalResponse);
+        return await finish(finalResponse);
       }
 
       if (localPolicy.sufficient && localDecision.status === 'ambiguous'
@@ -464,7 +511,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
           timings,
           errorCode: null,
         }));
-        return finish(finalResponse);
+        return await finish(finalResponse);
       }
 
       if (modelDecision?.status === 'ambiguous') {
@@ -490,6 +537,31 @@ export function createRefineSerialDateHandler(dependencies = {}) {
             });
       }
 
+      // Paid research only adds value while several candidates remain and the
+      // local evidence is not already a confident, closed window.
+      const gate = evaluateRefinementGate({ workingCandidateYears, localPolicy, localDecision });
+      if (gate.skip && refinementMode !== 'local_only') {
+        gateSkipReason = gate.reason;
+        usageOutcome = `gate_skip:${gate.reason}`;
+        // Client creation does no I/O; it only lets the skip be counted in the
+        // daily usage aggregate (refinement rate).
+        try { redis = redis || redisFactory(); } catch (_) { redis = null; }
+        if (localPolicy.sufficient && localPolicy.range && !localModelRange) {
+          localModelRange = { start: localPolicy.range.start, end: localPolicy.range.end };
+          localConfidence = localConfidence || localPolicy.confidence;
+          localModelEvidence = localModelEvidence || {
+            start: localPolicy.range.start,
+            end: localPolicy.range.end,
+            verifiedExact: localPolicy.confidence === 'high',
+          };
+        }
+        finalResponse = bestAvailable(null, null, 'none', [], {
+          failureStage: 'refinement_gate',
+          estimateBasis: localModelRange ? 'local-model-era' : null,
+        });
+        return await finish(finalResponse);
+      }
+
       if (refinementMode === 'local_only') {
         finalResponse = bestAvailable(
           workingCandidateYears.length < input.candidateYears.length || localModelRange
@@ -500,7 +572,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
           [],
           { failureStage: 'local_only', failureCategory: 'local_evidence_miss' },
         );
-        return finish(finalResponse);
+        return await finish(finalResponse);
       }
 
       const cacheKey = buildSerialRefinementCacheKey(input, {
@@ -524,12 +596,13 @@ export function createRefineSerialDateHandler(dependencies = {}) {
           timings.cacheMs = Math.max(0, clock() - cacheStart);
           const cachedResponse = safeCachedResponse(cached.value, input.candidateYears);
           if (cached.status === 'hit' && cachedResponse) {
+            usageOutcome = 'cache_hit';
             cachedResponse.timings = {
               ...cachedResponse.timings,
               cacheMs: timings.cacheMs,
               totalMs: Math.max(0, clock() - requestStart),
             };
-            return finish(cachedResponse);
+            return await finish(cachedResponse);
           }
           if (cached.status === 'miss') {
             cacheStatus = 'miss';
@@ -550,8 +623,25 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         stage: 'serial-refinement-provider-rate-limit',
         maxMs: modeBudgets.rateLimitMaxMs,
         reserveMs: modeBudgets.providerStartReserveMs,
+        failClosed: failClosedRateLimit,
       });
+      if (!rateLimitResult.success && rateLimitResult.storeUnavailable) {
+        // Never spend on paid research without a working limiter. Local and
+        // cached results above are unaffected.
+        usageOutcome = 'rate_limit_store_unavailable';
+        finalResponse = bestAvailable(
+          'RATE_LIMIT_STORE_UNAVAILABLE',
+          workingCandidateYears.length < input.candidateYears.length
+            ? `Local model-era evidence narrows the serial-valid years to ${workingCandidateYears.join(', ')}, but online refinement is temporarily unavailable.`
+            : 'Online model refinement is temporarily unavailable. The original serial-valid candidate years are preserved.',
+          'none',
+          [],
+          { failureStage: 'rate_limit_store', failureCategory: 'provider_unavailable' },
+        );
+        return await finish(finalResponse);
+      }
       if (!rateLimitResult.success) {
+        usageOutcome = 'rate_limited';
         finalResponse = bestAvailable(
           'GROUNDING_RATE_LIMIT',
           workingCandidateYears.length < input.candidateYears.length
@@ -561,7 +651,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
           [],
           { failureStage: 'rate_limit', failureCategory: 'search_rate_limited' },
         );
-        return finish(finalResponse);
+        return await finish(finalResponse);
       }
 
       if (!deadline.hasTime(modeBudgets.providerStartReserveMs, completionReserveMs)) {
@@ -598,6 +688,26 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         }, { now: clock });
       }
 
+      usageOutcome = 'paid_lookup';
+      recorder.setRedis(redis);
+      recorder.setUsageSink(usageSink);
+      recorder.setContext({
+        resultSource: 'provider',
+        cacheStatus,
+        localEvidenceHit,
+        deterministicReserveAvailable: true,
+      });
+      recorder.setGeminiRateLimitHook((attempt) => {
+        geminiState.rateLimited = true;
+        return geminiCooldown.mark(redis, deadline, { retryAfterSeconds: attempt.retryAfterSeconds });
+      });
+      // A recent Gemini 429 (any instance) means skip Gemini entirely.
+      geminiState.cooldownActive = await geminiCooldown.isActive(redis, deadline);
+      if (geminiState.cooldownActive) {
+        geminiState.rateLimited = true;
+        await recordUsageEvent(redis, 'refine', 'gemini_cooldown_skip');
+      }
+
       const providerStart = clock();
       try {
         // PRIMARY research path: native Gemini + Google Search, identical to
@@ -606,26 +716,28 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         // which fall through to the previous research paths below.
         const runNativeResearch = async () => {
           nativeResearchAttempted = true;
-          providerAttemptCount += 1;
           geminiGroundedRan = true;
           const nativeStart = clock();
           try {
             const research = await deadline.run(
               'serial-refinement-native-gemini-research',
-              ({ budgetMs }) => nativeModelResearchLookup(
-                {
-                  brand: input.brand,
-                  model: modelIdentity.canonicalModel || input.model,
-                  category: input.category,
-                },
-                {
-                  apiKey: dependencies.nativeGeminiApiKey
-                    || dependencies.geminiApiKey
-                    || (dependencies.env || process.env).GEMINI_API_KEY,
-                  fetchImpl: dependencies.nativeGeminiFetchImpl || dependencies.fetchImpl,
-                  model: dependencies.nativeGeminiModel || NATIVE_MODEL_RESEARCH_MODEL,
-                  timeoutMs: budgetMs,
-                },
+              ({ budgetMs }) => withAttemptAccounting(
+                { provider: 'gemini', model: dependencies.nativeGeminiModel || NATIVE_MODEL_RESEARCH_MODEL },
+                () => nativeModelResearchLookup(
+                  {
+                    brand: input.brand,
+                    model: modelIdentity.canonicalModel || input.model,
+                    category: input.category,
+                  },
+                  {
+                    apiKey: dependencies.nativeGeminiApiKey
+                      || dependencies.geminiApiKey
+                      || (dependencies.env || process.env).GEMINI_API_KEY,
+                    fetchImpl: dependencies.nativeGeminiFetchImpl || dependencies.fetchImpl,
+                    model: dependencies.nativeGeminiModel || NATIVE_MODEL_RESEARCH_MODEL,
+                    timeoutMs: budgetMs,
+                  },
+                ),
               ),
               {
                 maxMs: modeBudgets.nativeResearchMaxMs,
@@ -657,12 +769,14 @@ export function createRefineSerialDateHandler(dependencies = {}) {
             timings.geminiMs += Math.max(0, clock() - nativeStart);
             nativeResearchFailureCode = nativeError?.code
               || (isTimeoutError(nativeError) ? 'NATIVE_RESEARCH_TIMEOUT' : 'NATIVE_RESEARCH_ERROR');
+            if (isProviderRateLimitError(nativeError)) geminiState.rateLimited = true;
             return null;
           }
         };
 
         const providerWork = async () => {
           if (nativeModelResearchEnabled
+            && !geminiState.rateLimited
             && deadline.hasTime(
               modeBudgets.providerStartReserveMs,
               modeBudgets.nativeResearchFallbackReserveMs,
@@ -672,13 +786,14 @@ export function createRefineSerialDateHandler(dependencies = {}) {
           }
 
           if (refinementMode === 'legacy_gemini') {
-            providerAttemptCount += 1;
             geminiGroundedRan = true;
             const grounded = await deadline.run(
               'serial-refinement-legacy-gemini',
+              // The legacy chain records its own real attempts (grounded
+              // search, model evidence), so it is not wrapped for inference.
               ({ signal }) => legacyProviderLookup(
                 { ...input, candidateYears: workingCandidateYears },
-                { signal },
+                { signal, geminiRateLimited: geminiState.rateLimited },
               ),
               { maxMs: providerBudgetMs, reserveMs: completionReserveMs },
             );
@@ -733,8 +848,19 @@ export function createRefineSerialDateHandler(dependencies = {}) {
             return degraded;
           }
 
+          // Deterministic mode extracts with Gemini; never do that once Gemini
+          // is known to be rate limited.
+          if (geminiState.rateLimited) {
+            return bestAvailable(
+              'PROVIDER_RATE_LIMIT',
+              null,
+              'none',
+              [],
+              { failureStage: 'gemini_rate_limited', failureCategory: 'search_rate_limited' },
+            );
+          }
+
           sharedEvidenceAttempted = true;
-          providerAttemptCount += 1;
           const deterministic = await deadline.run(
             'serial-refinement-deterministic-serper',
             ({ signal }) => deterministicProviderLookup(
@@ -837,7 +963,9 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       }
     } catch (error) {
       const timedOut = isTimeoutError(error) || /abort|timeout/i.test(String(error?.message || ''));
-      const errorCode = timedOut ? 'REFINEMENT_TIMEOUT' : (error?.code || 'REFINEMENT_UNAVAILABLE');
+      const errorCode = timedOut
+        ? 'REFINEMENT_TIMEOUT'
+        : (geminiState.rateLimited ? 'PROVIDER_RATE_LIMIT' : (error?.code || 'REFINEMENT_UNAVAILABLE'));
       finalResponse = bestAvailable(
         errorCode,
         workingCandidateYears.length < input.candidateYears.length || localModelRange
@@ -849,12 +977,24 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         [],
         {
           failureStage: timedOut ? 'timeout' : 'provider_error',
-          failureCategory: timedOut ? 'global_deadline' : 'provider_unavailable',
+          failureCategory: timedOut
+            ? 'global_deadline'
+            : (geminiState.rateLimited ? 'search_rate_limited' : 'provider_unavailable'),
         },
       );
     }
 
-    return finish(finalResponse);
+    return await finish(finalResponse);
+  }
+
+  return async function handler(req, res) {
+    const startedAt = clock();
+    const recorder = createAttemptRecorder({
+      route: 'refine',
+      requestId: String(req.headers?.['x-request-id'] || req.headers?.['x-vercel-id'] || `ref-${startedAt}-${Math.random().toString(36).slice(2, 8)}`),
+      logger,
+    });
+    return runWithAttemptRecorder(recorder, () => handleRefineRequest(req, res, recorder));
   };
 }
 

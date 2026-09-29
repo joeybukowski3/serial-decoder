@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function req(query, extra = {}) { return { method: 'POST', body: { query, ...extra }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} }; }
 function res() {
@@ -100,6 +101,7 @@ function shadowSharedEvidence() {
 
 test('local results bypass cache, provider, and rate limit', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => ({ brand: 'LG', model: 'WM4000HWA', introductionYear: 2019, productionRange: { start: 2019, end: 2024 } }),
     redisFactory: () => { throw new Error('redis should not run'); },
     providerLookup: async () => { throw new Error('provider should not run'); },
@@ -113,6 +115,7 @@ test('local results bypass cache, provider, and rate limit', async () => {
 test('local age result does not consume provider budget', async () => {
   let budgetCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => ({ brand: 'LG', model: 'WM4000HWA', introductionYear: 2019, productionRange: { start: 2019, end: 2024 } }),
     redisFactory: () => { throw new Error('redis should not run'); },
     reserveProviderBudget: async () => { budgetCalls += 1; throw new Error('budget should not run'); },
@@ -360,6 +363,7 @@ test('Smart Lookup shadow failures do not alter the primary exact-model result',
 test('Smart Lookup shared-evidence shadow bypasses non-exact research', async () => {
   let sharedCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     sharedEvidenceShadowEnabled: true,
     localLookup: async () => null,
     modelEvidenceLookup: async () => {
@@ -399,6 +403,7 @@ test('cache hit does not consume provider budget', async () => {
   let budgetCalls = 0;
   const cached = { brand: 'Samsung', model: 'QN65Q80A', specificityLevel: 'specific', introductionYear: 2020, productionRange: { start: 2021, end: 2021 } };
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => ({ get: async (key) => String(key).startsWith('smart-age:') ? cached : null, set: async () => {} }),
     reserveProviderBudget: async () => { budgetCalls += 1; throw new Error('budget should not run'); },
@@ -413,6 +418,7 @@ test('cache hit does not consume provider budget', async () => {
 test('age lookup sends normalized notes as separate untrusted provider context', async () => {
   let seenInfo = null;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     providerLookup: async (queryInfo) => {
@@ -432,6 +438,7 @@ test('age lookup rejects over-limit notes before provider and logs no raw notes'
   let providerCalls = 0;
   const logs = [];
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     providerLookup: async () => { providerCalls += 1; return {}; },
@@ -447,6 +454,7 @@ test('age lookup rejects over-limit notes before provider and logs no raw notes'
 
 test('verified-unit evidence does not become individual manufacture date for a different unit', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => ({ get: async (key) => key.startsWith('decoder-verified:') ? { brand: 'Samsung', model: 'QN65Q80A', estimatedYear: '2021' } : null, set: async () => {} }),
     providerLookup: async () => { throw new Error('provider should not run'); },
@@ -461,6 +469,7 @@ test('verified-unit evidence does not become individual manufacture date for a d
 test('verified model result does not consume provider budget', async () => {
   let budgetCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => ({ get: async (key) => key.startsWith('decoder-verified:') ? { brand: 'Samsung', model: 'QN65Q80A', estimatedYear: '2021' } : null, set: async () => {} }),
     reserveProviderBudget: async () => { budgetCalls += 1; throw new Error('budget should not run'); },
@@ -476,6 +485,7 @@ test('first paid age lookup reserves logical budget and records one provider att
   let budgetCalls = 0;
   let recordedAttempts = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     reserveProviderBudget: async () => { budgetCalls += 1; return { allowed: true, status: 'allowed', logicalLookupCount: 1 }; },
@@ -492,6 +502,7 @@ test('first paid age lookup reserves logical budget and records one provider att
 test('fallback age provider result records two actual provider attempts', async () => {
   let recordedAttempts = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     reserveProviderBudget: async () => ({ allowed: true, status: 'allowed', logicalLookupCount: 1 }),
@@ -510,6 +521,7 @@ test('fallback age provider result records two actual provider attempts', async 
 test('global age budget exhaustion blocks direct provider calls without exposing quota values', async () => {
   let providerCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     reserveProviderBudget: async () => ({ allowed: false, status: 'denied', errorCode: 'GLOBAL_BUDGET_EXHAUSTED', logicalLookupCount: 120 }),
@@ -527,6 +539,7 @@ test('global age budget exhaustion blocks direct provider calls without exposing
 test('budget store unavailable blocks paid age provider calls but deterministic paths still work', async () => {
   let providerCalls = 0;
   const paidHandler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => null,
     providerLookup: async () => { providerCalls += 1; return {}; },
@@ -537,6 +550,7 @@ test('budget store unavailable blocks paid age provider calls but deterministic 
   assert.equal(paidOut.payload.errorCode, 'BUDGET_STORE_UNAVAILABLE');
 
   const deterministicHandler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => null,
     providerLookup: async () => { providerCalls += 1; return {}; },
@@ -554,6 +568,7 @@ test('deduplicated age provider requests consume one logical budget unit', async
   let release;
   const blocker = new Promise((resolve) => { release = resolve; });
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     reserveProviderBudget: async () => { budgetCalls += 1; return { allowed: true, status: 'allowed', logicalLookupCount: budgetCalls }; },
@@ -572,6 +587,7 @@ test('deduplicated age provider requests consume one logical budget unit', async
 
 test('provider timeout returns safe unavailable response', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 2000, providerBudgetMs: 20, localLookup: async () => null, redisFactory: () => redisMiss,
     providerLookup: async () => new Promise(() => {}),
   });
@@ -582,7 +598,7 @@ test('provider timeout returns safe unavailable response', async () => {
 });
 
 test('malformed provider output is rejected safely', async () => {
-  const handler = createAgeLookupHandler({ localLookup: async () => null, redisFactory: () => redisMiss, providerLookup: async () => ({ brand: 'Other', model: 'BAD' }) });
+  const handler = createAgeLookupHandler({ rateLimiter: allowingRateLimiter, localLookup: async () => null, redisFactory: () => redisMiss, providerLookup: async () => ({ brand: 'Other', model: 'BAD' }) });
   const out = res();
   await handler(req('Samsung QN65-Q80A'), out);
   assert.equal(out.statusCode, 200);
@@ -611,6 +627,7 @@ test('concurrent identical provider requests share one provider and limiter call
 test('HVAC model-only digits are not decoded as serial dates', async () => {
   let providerCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null, redisFactory: () => redisMiss,
     providerLookup: async () => { providerCalls += 1; return { brand: 'Carrier', model: '24ACC636A003', introductionYear: 2018, productionRange: { start: 2018, end: 2023 } }; },
   });
@@ -623,6 +640,7 @@ test('HVAC model-only digits are not decoded as serial dates', async () => {
 test('ordinary four-digit HVAC query text never enters the serial-date shortcut', async () => {
   let providerCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     providerLookup: async (queryInfo) => {
@@ -661,6 +679,7 @@ test('explicit HVAC serial preserves century candidates and asks for model-era r
   const nextTwoDigits = String((currentYear + 1) % 100).padStart(2, '0');
   const serial = `20${nextTwoDigits}`;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     providerLookup: async () => { providerCalls += 1; throw new Error('provider should not run'); },
@@ -684,6 +703,7 @@ test('explicit HVAC serial preserves century candidates and asks for model-era r
 
 test('explicit Goodman HVAC serial still recognizes its supported YYMM pattern without false precision', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     providerLookup: async () => { throw new Error('provider should not run'); },
@@ -701,6 +721,7 @@ test('explicit Goodman HVAC serial still recognizes its supported YYMM pattern w
 test('an explicit Rheem water-heater serial does not enter the HVAC shortcut', async () => {
   let providerCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     providerLookup: async () => {
@@ -727,6 +748,7 @@ test('an explicit Rheem water-heater serial does not enter the HVAC shortcut', a
 test('serial-bearing model queries preserve roles and cannot be spoofed by provider output', async () => {
   const seen = [];
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     providerLookup: async (queryInfo) => {
@@ -773,6 +795,7 @@ test('serial-bearing model queries preserve roles and cannot be spoofed by provi
 test('serial-only input returns decoder guidance without provider decoding', async () => {
   let providerCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     providerLookup: async () => { providerCalls += 1; return {}; },
@@ -790,6 +813,7 @@ test('serial-only input returns decoder guidance without provider decoding', asy
 test('Dell service tag is not treated as a model number or sent to a provider', async () => {
   let providerCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     providerLookup: async () => { providerCalls += 1; return {}; },
@@ -807,6 +831,7 @@ test('Dell service tag is not treated as a model number or sent to a provider', 
 test('Samsung Q60 retailer-title description returns a product-family-recognized result, not brand-needed', async () => {
   let providerCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null, redisFactory: () => redisMiss,
     providerLookup: async () => { providerCalls += 1; throw new Error('provider should not run for a brand-only/partial static result'); },
   });
@@ -838,7 +863,7 @@ test('Samsung Q60 retailer-title description returns a product-family-recognized
 });
 
 test('a Samsung Q60 description with no exact model does not say "Serial numbers are brand-specific" (verified via bucket-relevant fields)', async () => {
-  const handler = createAgeLookupHandler({ localLookup: async () => null, redisFactory: () => redisMiss });
+  const handler = createAgeLookupHandler({ rateLimiter: allowingRateLimiter, localLookup: async () => null, redisFactory: () => redisMiss });
   const out = res();
   await handler(req('Samsung Q60A 65 inch TV'), out);
   assert.equal(out.payload.brand, 'Samsung');
@@ -853,6 +878,7 @@ test('LG C3 family query returns a safe partial result before the legacy C3 alia
   let localCalls = 0;
   let providerCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => {
       localCalls += 1;
       return { brand: 'LG', model: 'OLED55C3PUA', yearRange: '2023-2024' };
@@ -893,6 +919,7 @@ test('LG C3 family query returns a safe partial result before the legacy C3 alia
 
 test('LG OLED C3 uses the same deterministic product-family response', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => { throw new Error('family query must bypass the local exact-model alias'); },
     redisFactory: () => redisMiss,
   });
@@ -906,7 +933,7 @@ test('LG OLED C3 uses the same deterministic product-family response', async () 
 });
 
 test('LG C2 returns 2022 as family context without a manufacture-date claim', async () => {
-  const handler = createAgeLookupHandler({ localLookup: async () => null, redisFactory: () => redisMiss });
+  const handler = createAgeLookupHandler({ rateLimiter: allowingRateLimiter, localLookup: async () => null, redisFactory: () => redisMiss });
   const out = res();
   await handler(req('LG C2 TV'), out);
   assert.equal(out.payload.yearContext.value, 2022);
@@ -918,6 +945,7 @@ test('LG C2 returns 2022 as family context without a manufacture-date claim', as
 
 test('exact LG OLED model returns exact-model context without a unit manufacture year', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => { throw new Error('deterministic exact LG recognition should run first'); },
     redisFactory: () => redisMiss,
   });

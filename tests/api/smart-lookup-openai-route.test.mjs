@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function req(query, extra = {}) {
   return { method: 'POST', body: { query, ...extra }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} };
@@ -55,6 +56,7 @@ function openAiSuccess(overrides = {}) {
 function harness({ openai, groq, env = OPENAI_ENV } = {}) {
   const calls = { openai: 0, gemini: 0, grounded: 0 };
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     env,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
