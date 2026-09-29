@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function req(query) {
   return { method: 'POST', body: { query }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} };
@@ -64,6 +65,7 @@ function evidence({ brand, model, matchType = 'exact', year = 2025, eventType = 
 function harness({ shared, openai, xai, env = ENV, logs = [] } = {}) {
   const calls = { shared: 0, openai: 0, xai: 0 };
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     env,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -169,6 +171,7 @@ test('configured xAI primary is selected directly and OpenAI is skipped', async 
 test('active estimate-first routing skips the legacy provider when no heavyweight is configured', async () => {
   let legacyCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     env: { SMART_LOOKUP_SHARED_MODEL_EVIDENCE_ENABLED: 'true' },
     localLookup: async () => null,
     redisFactory: () => redisMiss,

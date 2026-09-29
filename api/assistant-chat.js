@@ -12,6 +12,45 @@ const ratelimit = new Ratelimit({
   analytics: false,
 });
 
+// Per-attempt telemetry + daily usage aggregate. Mirrors
+// lib/smart-lookup/provider-attempts.js and provider-usage.js, which this file
+// cannot import (its tests load it standalone). Categorical/numeric fields
+// only: never a query, message, IP or key.
+function statusFromHttp(status) {
+  if (status === 429) return 'rate_limited';
+  if (status >= 500) return 'server_error';
+  if (status >= 400) return 'http_error';
+  return 'ok';
+}
+
+async function recordGeminiAttempt(route, model, providerStatus, httpStatus, data, startedAt) {
+  try {
+    const usage = (data && data.usageMetadata) || {};
+    const tokens = (value) => (typeof value === 'number' && value >= 0 ? Math.round(value) : null);
+    const inputTokens = tokens(usage.promptTokenCount);
+    const outputTokens = tokens(usage.candidatesTokenCount);
+    console.info(JSON.stringify({
+      event: 'provider_attempt', route, provider: 'gemini', model, attemptNumber: 1,
+      providerStatus, httpStatus, inputTokens, outputTokens, durationMs: Date.now() - startedAt,
+    }));
+    if (typeof redis.pipeline !== 'function') return;
+    const key = 'provider-usage:v1:' + new Date().toISOString().slice(0, 10);
+    const base = route + '|gemini|' + model;
+    const pipeline = redis.pipeline();
+    pipeline.hincrby(key, base + '|calls', 1);
+    pipeline.hincrby(key, base + '|status:' + providerStatus, 1);
+    if (inputTokens > 0) pipeline.hincrby(key, base + '|in_tokens', inputTokens);
+    if (outputTokens > 0) pipeline.hincrby(key, base + '|out_tokens', outputTokens);
+    pipeline.expire(key, 45 * 24 * 60 * 60);
+    const write = pipeline.exec();
+    if (typeof setTimeout === 'function') {
+      await Promise.race([write, new Promise((resolve) => setTimeout(resolve, 150))]);
+    } else {
+      await write;
+    }
+  } catch (_) { /* telemetry must never affect a reply */ }
+}
+
 function getClientIp(req) {
   const forwarded = req.headers?.['x-forwarded-for'];
   if (forwarded) return String(forwarded).split(',')[0].trim();
@@ -70,7 +109,13 @@ export default async function handler(req, res) {
       res.setHeader('Retry-After', Math.max(0, Math.ceil((reset - Date.now()) / 1000)));
       return res.status(429).json({ error: 'Too many requests. Please try again in a moment.', errorCode: 'RATE_LIMIT' });
     }
-  } catch (_) {}
+  } catch (_) {
+    // Paid provider: fail closed when the limiter store is unavailable.
+    return res.status(503).json({
+      error: 'The assistant is temporarily unavailable. Please try again shortly.',
+      errorCode: 'RATE_LIMIT_STORE_UNAVAILABLE',
+    });
+  }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -84,7 +129,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Messages are required' });
   }
 
+  const startedAt = Date.now();
+  let requestSent = false;
+  let attemptRecorded = false;
   try {
+    requestSent = true;
     const response = await fetch(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey),
       {
@@ -105,6 +154,16 @@ export default async function handler(req, res) {
     );
 
     const data = await response.json().catch(function () { return null; });
+    attemptRecorded = true;
+    await recordGeminiAttempt('assistant', 'gemini-2.5-flash', statusFromHttp(response.status), response.status, data, startedAt);
+    if (response.status === 429) {
+      // The provider (not our per-IP limiter) is throttling: distinct code, no
+      // upstream message, and no second Gemini request.
+      return res.status(429).json({
+        error: 'The assistant is busy right now. Please try again in a minute.',
+        errorCode: 'PROVIDER_RATE_LIMIT',
+      });
+    }
     if (!response.ok) {
       return res.status(response.status || 502).json({
         error: (data && data.error && data.error.message) || 'Gemini request failed',
@@ -123,6 +182,9 @@ export default async function handler(req, res) {
     return res.status(200).json({ reply: text });
   } catch (error) {
     console.error('assistant-chat handler error:', error);
+    if (requestSent && !attemptRecorded) {
+      await recordGeminiAttempt('assistant', 'gemini-2.5-flash', error && error.name === 'AbortError' ? 'timeout' : 'network_error', null, null, startedAt);
+    }
     return res.status(500).json({ error: 'Unable to reach Gemini right now' });
   }
 }

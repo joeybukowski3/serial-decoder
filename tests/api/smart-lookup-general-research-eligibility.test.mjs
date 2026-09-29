@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
 import { classifySmartLookupQuery } from '../../lib/smart-lookup/normalize.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 // Regression cover for the general-search-first eligibility fix: local
 // classification (brand/category/family/model) is now a speed/confidence
@@ -93,6 +94,7 @@ test('a recognized model line or family alongside a service-tag phrase is unaffe
 test('iPhone 14 reaches the provider and returns a useful result, not a pre-provider dead end', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     env: OPENAI_ENV,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -124,6 +126,7 @@ test('iPhone 14 reaches the provider and returns a useful result, not a pre-prov
 test('an obscure alphanumeric model code with no brand still reaches the provider', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     providerLookup: async () => { calls += 1; return withMetadata({ brand: 'Unknown', model: 'DCD791', specificityLevel: 'partial' }, { provider: 'gemini' }); },
@@ -140,6 +143,7 @@ test('empty input and whitespace are rejected at validation before classificatio
   for (const query of ['', '   ']) {
     let calls = 0;
     const handler = createAgeLookupHandler({
+      rateLimiter: allowingRateLimiter,
       localLookup: async () => null,
       redisFactory: () => redisMiss,
       providerLookup: async () => { calls += 1; return {}; },
@@ -155,6 +159,7 @@ test('empty input and whitespace are rejected at validation before classificatio
 test('keyboard mash is classified as unusable and never calls the provider', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     providerLookup: async () => { calls += 1; return {}; },
@@ -170,6 +175,7 @@ test('keyboard mash is classified as unusable and never calls the provider', asy
 test('a trusted serial handoff still never reaches the provider', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     providerLookup: async () => { calls += 1; return {}; },
@@ -186,6 +192,7 @@ test('a trusted serial handoff still never reaches the provider', async () => {
 
 test('a provider-eligible query that runs out of deadline before research starts is labeled a system timeout, not insufficient detail', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 100, // far below the 1200ms the pre-provider gate requires
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -201,6 +208,7 @@ test('a provider-eligible query that runs out of deadline before research starts
 
 test('OpenAI timeout with no xAI fallback configured still returns a safe, non-fabricated result', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     env: OPENAI_ENV,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -215,6 +223,7 @@ test('OpenAI timeout with no xAI fallback configured still returns a safe, non-f
 
 test('a malformed provider response degrades safely without fabricating a result', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
     providerLookup: async () => ({ brand: 'Other', model: 'BAD' }), // brand conflicts with query -- rejected by schema
@@ -228,6 +237,7 @@ test('a malformed provider response degrades safely without fabricating a result
 
 test('both providers unavailable degrades to a deterministic reserve when one exists, and never a raw 5xx', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...{ totalBudgetMs: 2000 },
     localLookup: async () => null,
     redisFactory: () => redisMiss,

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function req(query, extra = {}) {
   return { method: 'POST', body: { query, ...extra }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} };
@@ -21,6 +22,7 @@ const redisMiss = {
 function harness(providerResult, { groundedEnabled = true } = {}) {
   const calls = { grounded: 0, closedBook: 0, prompts: [] };
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled,
     localLookup: async () => null,
     redisFactory: () => redisMiss,

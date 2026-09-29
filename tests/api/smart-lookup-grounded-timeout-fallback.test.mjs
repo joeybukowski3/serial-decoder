@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
 import { normalizeCachedSmartAgeResult } from '../../lib/smart-lookup/result-schema.js';
 import { SmartLookupProviderError } from '../../lib/smart-lookup/provider.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function req(query, extra = {}) { return { method: 'POST', body: { query, ...extra }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} }; }
 function res() {
@@ -81,6 +82,7 @@ test('grounded timeout with sufficient remaining time falls back to closed-book 
   let groundedCalls = 0;
   let fallbackCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_TIMEOUT_DEPS,
     groundedProviderLookup: async () => { groundedCalls += 1; return neverResolvingGrounded()(); },
     providerLookup: async () => { fallbackCalls += 1; return closedBookGeminiSuccess()(); },
@@ -103,6 +105,7 @@ test('grounded timeout falls back to Groq when closed-book Gemini itself immedia
   let groundedCalls = 0;
   let fallbackCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_TIMEOUT_DEPS,
     groundedProviderLookup: async () => { groundedCalls += 1; return neverResolvingGrounded()(); },
     providerLookup: async () => { fallbackCalls += 1; return closedBookGroqSuccess()(); },
@@ -122,6 +125,7 @@ test('grounded timeout falls back to Groq when closed-book Gemini itself immedia
 test('grounded timeout with insufficient remaining budget skips fallback and preserves the safe timeout response', async () => {
   let fallbackCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     // Total budget must still clear the pre-provider hasTime(900,300) gate;
     // the grounded stage then consumes most of it, leaving less than
     // groundedFallbackMinRemainingMs for a fallback attempt.
@@ -154,6 +158,7 @@ test('grounded malformed output does not duplicate fallback (already resolved in
   // recovery. Only a genuine stage timeout gets the new fallback layer.
   let fallbackCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -171,6 +176,7 @@ test('grounded malformed output does not duplicate fallback (already resolved in
 test('grounded sourceless success is downgraded without ever invoking the fallback layer', async () => {
   let fallbackCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -195,6 +201,7 @@ test('no second full timeout chain: the fallback stage budget is capped by remai
   // capturedMaxMs is small proves the fallback used deadline.remainingMs()
   // (the one authoritative route deadline) rather than a fresh full ceiling.
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1800,
     providerBudgetMs: 5000,
     groundedStageBudgetMs: 1400,
@@ -221,6 +228,7 @@ test('no second full timeout chain: the fallback stage budget is capped by remai
 test('grounded timeout and fallback reserve exactly one logical daily budget', async () => {
   let budgetCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_TIMEOUT_DEPS,
     reserveProviderBudget: async () => { budgetCalls += 1; return { allowed: true, status: 'allowed', logicalLookupCount: 1 }; },
     groundedProviderLookup: () => new Promise(() => {}),
@@ -234,6 +242,7 @@ test('grounded timeout and fallback reserve exactly one logical daily budget', a
 
 test('exact model suffix is preserved through a grounded-timeout fallback', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_TIMEOUT_DEPS,
     groundedProviderLookup: () => new Promise(() => {}),
     providerLookup: closedBookGeminiSuccess(),
@@ -246,6 +255,7 @@ test('exact model suffix is preserved through a grounded-timeout fallback', asyn
 
 test('a fallback result that does not match the exact requested model is still rejected by existing validation', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_TIMEOUT_DEPS,
     groundedProviderLookup: () => new Promise(() => {}),
     providerLookup: closedBookGeminiSuccess({ result: { model: 'WM4000HBA' } }),
@@ -279,6 +289,7 @@ test('concurrent identical requests during a grounded timeout share one grounded
   let groundedCalls = 0;
   let fallbackCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_TIMEOUT_DEPS,
     groundedProviderLookup: async () => { groundedCalls += 1; return new Promise(() => {}); },
     providerLookup: async () => { fallbackCalls += 1; return closedBookGeminiSuccess()(); },
@@ -295,6 +306,7 @@ test('concurrent identical requests during a grounded timeout share one grounded
 test('grounded-timeout-fallback telemetry logs summary fields but never raw notes, model text, or a provider payload', async () => {
   const logs = [];
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...BASE_TIMEOUT_DEPS,
     groundedProviderLookup: () => new Promise(() => {}),
     providerLookup: closedBookGeminiSuccess(),
@@ -349,6 +361,7 @@ function latentRedis(latencyMs) {
 test('REGRESSION: grounded timeout + fallback exceeding the old outer provider-result-wait ceiling still recovers within the true route deadline', async () => {
   let fallbackCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1600,
     providerBudgetMs: 500,
     groundedStageBudgetMs: 300,
@@ -384,6 +397,7 @@ test('Samsung-style fast grounded success is unaffected by the outer-wait fix', 
   let groundedCalls = 0;
   let fallbackCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     localLookup: async () => null,
     redisFactory: () => redisMiss,
@@ -414,6 +428,7 @@ test('Samsung-style fast grounded success is unaffected by the outer-wait fix', 
 test('fallback that would exceed the true total route deadline still returns the safe timeout response', async () => {
   let fallbackCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     // Total must comfortably clear the pre-provider hasTime(900,300) gate
     // (needs total >= ~1200 with near-zero elapsed).
     totalBudgetMs: 1300,
@@ -449,6 +464,7 @@ test('fallback that would exceed the true total route deadline still returns the
 test('ungrounded-only requests still use the existing providerBudgetMs outer ceiling, unaffected by the grounded fix', async () => {
   let providerCalls = 0;
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1600,
     providerBudgetMs: 300,
     groundedEnabled: false,
@@ -468,6 +484,7 @@ test('ungrounded-only requests still use the existing providerBudgetMs outer cei
 
 test('ungrounded-only provider timeout is still bounded by providerBudgetMs, not the full route deadline', async () => {
   const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 2000,
     providerBudgetMs: 150,
     groundedEnabled: false,

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createLkqLookupHandler } from '../../api/lkq-lookup.js';
 import { buildSmartLkqCacheKey } from '../../lib/smart-lookup/cache.js';
 import { classifySmartLookupQuery } from '../../lib/smart-lookup/normalize.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function req(query, extra = {}) { return { method: 'POST', body: { query, ...extra }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} }; }
 function res() {
@@ -75,6 +76,7 @@ function closedBookResult(overrides = {}) {
 test('exact model with grounding enabled runs grounded research', async () => {
   let groundedCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedResult(); },
@@ -90,6 +92,7 @@ test('exact model with grounding disabled uses the closed-book path unchanged', 
   let groundedCalls = 0;
   let closedBookCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: false,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedResult(); },
@@ -105,6 +108,7 @@ test('exact model with grounding disabled uses the closed-book path unchanged', 
 test('partial model never uses grounded research', async () => {
   let groundedCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedResult(); },
@@ -118,6 +122,7 @@ test('partial model never uses grounded research', async () => {
 test('broad product family query never uses grounded research', async () => {
   let groundedCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedResult(); },
@@ -131,6 +136,7 @@ test('broad product family query never uses grounded research', async () => {
 test('plain description without a model never uses grounded research', async () => {
   let groundedCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedResult(); },
@@ -144,6 +150,7 @@ test('plain description without a model never uses grounded research', async () 
 test('missing model with only a brand never uses grounded research', async () => {
   let groundedCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedResult(); },
@@ -158,6 +165,7 @@ test('missing model with only a brand never uses grounded research', async () =>
 
 test('mixed-grounded classification (manufacturer + retailer sources) flows through the handler', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => groundedResult({ metadata: { groundedSources: [MANUFACTURER_SOURCE, RETAILER_SOURCE] } }),
@@ -171,6 +179,7 @@ test('mixed-grounded classification (manufacturer + retailer sources) flows thro
 
 test('a grounded result with no sources downgrades to gemini-ungrounded and drops price data', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => groundedResult({ metadata: { grounded: true, groundedSources: [] } }),
@@ -184,6 +193,7 @@ test('a grounded result with no sources downgrades to gemini-ungrounded and drop
 
 test('grounded output for an unrelated model is rejected by existing validation', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => groundedResult({ result: { itemSummary: { brand: 'LG', model: 'WM4000HBA', category: 'washer', name: 'LG WM4000HBA' } } }),
@@ -195,6 +205,7 @@ test('grounded output for an unrelated model is rejected by existing validation'
 
 test('a cross-category grounded replacement is rejected', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => groundedResult({ result: { replacement: { name: 'LG dryer', brand: 'LG', model: 'DLE4000W', category: 'dryer' } } }),
@@ -222,6 +233,7 @@ test('a grounded LKQ timeout with sufficient remaining time falls back to closed
   let groundedCalls = 0;
   let fallbackCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...TIMEOUT_DEPS,
     groundedProviderLookup: async () => { groundedCalls += 1; return new Promise(() => {}); },
     providerLookup: async () => { fallbackCalls += 1; return closedBookResult(); },
@@ -238,6 +250,7 @@ test('a grounded LKQ timeout with sufficient remaining time falls back to closed
 test('a grounded LKQ timeout with insufficient remaining budget skips fallback and preserves the safe timeout response', async () => {
   let fallbackCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1400,
     groundedStageBudgetMs: 1000,
     groundedFallbackMinRemainingMs: 1000,
@@ -257,6 +270,7 @@ test('a grounded LKQ timeout with insufficient remaining budget skips fallback a
 test('no second full timeout chain: the fallback stage budget is capped by remaining route time, not a fresh provider ceiling', async () => {
   let capturedMaxMs = null;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1800,
     providerBudgetMs: 5000,
     groundedStageBudgetMs: 1400,
@@ -278,6 +292,7 @@ test('no second full timeout chain: the fallback stage budget is capped by remai
 test('one logical daily budget reservation for the full grounded-timeout-fallback sequence', async () => {
   let budgetCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...TIMEOUT_DEPS,
     reserveProviderBudget: async () => { budgetCalls += 1; return { allowed: true, status: 'allowed', logicalLookupCount: 1 }; },
     groundedProviderLookup: () => new Promise(() => {}),
@@ -293,6 +308,7 @@ test('concurrent identical grounded requests share one grounded attempt and one 
   let groundedCalls = 0;
   let fallbackCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     ...TIMEOUT_DEPS,
     groundedProviderLookup: async () => { groundedCalls += 1; return new Promise(() => {}); },
     providerLookup: async () => { fallbackCalls += 1; return closedBookResult(); },
@@ -309,6 +325,7 @@ test('concurrent identical grounded requests share one grounded attempt and one 
 test('Redis unavailable fails closed before any grounded call', async () => {
   let groundedCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => null,
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedResult(); },
@@ -322,6 +339,7 @@ test('Redis unavailable fails closed before any grounded call', async () => {
 test('global LKQ provider budget exhausted blocks grounded calls', async () => {
   let groundedCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => ({ ...redisMiss, eval: async () => [0, 80, 180] }),
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedResult(); },
@@ -334,6 +352,7 @@ test('global LKQ provider budget exhausted blocks grounded calls', async () => {
 
 test('grounded 400/429/5xx and malformed JSON are already resolved by the internal Groq path, not duplicated', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => {
@@ -360,6 +379,7 @@ test('grounded 400/429/5xx and malformed JSON are already resolved by the intern
 test('timeout is never cached as a successful result', async () => {
   let setCalls = 0;
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1400,
     groundedStageBudgetMs: 1000,
     groundedFallbackMinRemainingMs: 1000,
@@ -389,6 +409,7 @@ test('cache hit bypasses providers entirely', async () => {
     priceObservations: [],
   };
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => ({ get: async (key) => String(key).startsWith('smart-lkq:') ? cached : null, set: async () => {} }),
     groundedProviderLookup: async () => { groundedCalls += 1; return groundedResult(); },
@@ -414,6 +435,7 @@ test('grounded and ungrounded LKQ modes use distinct cache keys', () => {
 test('grounded LKQ telemetry logs relationship/compatibility/price summary fields but never raw notes, model text, URLs, or a full payload', async () => {
   const logs = [];
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     groundedEnabled: true,
     redisFactory: () => redisMiss,
     groundedProviderLookup: async () => groundedResult(),
@@ -441,6 +463,7 @@ test('grounded LKQ telemetry logs relationship/compatibility/price summary field
 
 test('an exact-model LKQ timeout returns recognized identity instead of an empty panel', async () => {
   const handler = createLkqLookupHandler({
+    rateLimiter: allowingRateLimiter,
     totalBudgetMs: 1400,
     groundedStageBudgetMs: 1000,
     groundedFallbackMinRemainingMs: 1000,

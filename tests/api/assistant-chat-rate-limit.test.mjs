@@ -41,17 +41,17 @@ function makeResponse() {
   };
 }
 
-function loadHandler({ ratelimitClass, envOverrides = {} } = {}) {
+function loadHandler({ ratelimitClass, envOverrides = {}, fetchImpl } = {}) {
   const env = { GEMINI_API_KEY: 'test-key', ...envOverrides };
   const context = vm.createContext({
     __Redis: FakeRedis,
     __Ratelimit: ratelimitClass || makeRatelimitClass(),
-    fetch: async () => ({
+    fetch: fetchImpl || (async () => ({
       ok: true,
       async json() {
         return { candidates: [{ content: { parts: [{ text: 'Hello from the assistant.' }] } }] };
       }
-    }),
+    })),
     process: { env },
     Array,
     String,
@@ -117,15 +117,37 @@ test('forwarded-for header is used as the rate-limit key when present', async ()
   assert.equal(capturedKey, '203.0.113.5');
 });
 
-test('Upstash/Redis failure fails open and still returns a normal assistant reply', async () => {
+test('Upstash/Redis failure fails closed: no Gemini call and a distinct, provider-free error', async () => {
+  let geminiCalls = 0;
   const ratelimitClass = makeRatelimitClass({
     limitImpl: async () => { throw new Error('ECONNREFUSED: redis unreachable'); },
   });
-  const handler = loadHandler({ ratelimitClass });
+  const handler = loadHandler({
+    ratelimitClass,
+    fetchImpl: async () => { geminiCalls += 1; throw new Error('Gemini must not be called'); },
+  });
   const res = await invoke(handler);
 
-  assert.equal(res.statusCode, 200);
-  assert.equal(res.body.reply, 'Hello from the assistant.');
+  assert.equal(geminiCalls, 0, 'a paid Gemini call must not be made without a working limiter');
+  assert.equal(res.statusCode, 503);
+  assert.equal(res.body.errorCode, 'RATE_LIMIT_STORE_UNAVAILABLE');
+  assert.equal(JSON.stringify(res.body).toLowerCase().includes('redis'), false);
+});
+
+test('a Gemini 429 is reported as PROVIDER_RATE_LIMIT (not our limiter), is not retried, and leaks no upstream text', async () => {
+  let geminiCalls = 0;
+  const handler = loadHandler({
+    fetchImpl: async () => {
+      geminiCalls += 1;
+      return { ok: false, status: 429, async json() { return { error: { message: 'Quota exceeded for project 12345' } }; } };
+    },
+  });
+  const res = await invoke(handler);
+
+  assert.equal(geminiCalls, 1, 'no second Gemini request after a 429');
+  assert.equal(res.statusCode, 429);
+  assert.equal(res.body.errorCode, 'PROVIDER_RATE_LIMIT');
+  assert.equal(JSON.stringify(res.body).includes('12345'), false);
 });
 
 test('normal assistant response flow is unaffected: missing Gemini key still returns its original error', async () => {

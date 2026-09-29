@@ -26,6 +26,8 @@ import {
   getClientIp,
 } from '../lib/smart-lookup/redis.js';
 import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
+import { createAttemptRecorder, runWithAttemptRecorder } from '../lib/smart-lookup/provider-attempts.js';
+import { recordProviderUsage } from '../lib/smart-lookup/provider-usage.js';
 
 const TOTAL_BUDGET_MS = 9000;
 const PROVIDER_BUDGET_MS = 7000;
@@ -144,9 +146,12 @@ export function createLkqLookupHandler(dependencies = {}) {
   const groundedFallbackMinRemainingMs = dependencies.groundedFallbackMinRemainingMs || GROUNDED_LKQ_FALLBACK_MIN_REMAINING_MS;
   const groundedFallbackReserveMs = dependencies.groundedFallbackReserveMs || GROUNDED_LKQ_FALLBACK_RESERVE_MS;
   const inflightReplacementRequests = new Map();
+  // Paid access fails closed when the limiter/budget store is unavailable.
+  const failClosedRateLimit = dependencies.failClosedRateLimit !== false;
+  const usageSink = dependencies.recordProviderUsage || recordProviderUsage;
 
-  return async function handler(req, res) {
-    const requestId = createRequestId(req, 'lkq');
+  async function handleLkqRequest(req, res, recorder) {
+    const requestId = recorder.requestId;
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
     const validation = validateRequest(req.body || {});
     if (validation.error) {
@@ -224,6 +229,9 @@ export function createLkqLookupHandler(dependencies = {}) {
     };
 
     const redis = dependencies.redis || redisFactory();
+    recorder.setRedis(redis);
+    recorder.setUsageSink(usageSink);
+    recorder.setContext({ queryHash: hashCanonicalQuery(queryInfo.canonicalQuery || queryInfo.normalizedQuery || '') });
     const cacheKey = buildSmartLkqCacheKey(queryInfo, { grounded: useGrounded });
     let cacheStatus = 'bypass';
 
@@ -280,12 +288,13 @@ export function createLkqLookupHandler(dependencies = {}) {
         providerPromise = (async () => {
           const limiter = dependencies.rateLimiter || limiterFactory(redis);
           const rate = await boundedRateLimit(limiter, getClientIp(req), deadline, {
-            stage: 'lkq-provider-rate-limit', maxMs: REDIS_CALL_BUDGET_MS, reserveMs: 400,
+            stage: 'lkq-provider-rate-limit', maxMs: REDIS_CALL_BUDGET_MS, reserveMs: 400, failClosed: failClosedRateLimit,
           });
           timings.rateLimitMs = rate.elapsedMs || 0;
           if (!rate.success) {
-            const error = new Error('RATE_LIMIT');
-            error.code = 'RATE_LIMIT';
+            const code = rate.storeUnavailable ? 'RATE_LIMIT_STORE_UNAVAILABLE' : 'RATE_LIMIT';
+            const error = new Error(code);
+            error.code = code;
             throw error;
           }
           budgetResult = await reserveBudget(redis, 'lkq', deadline, {
@@ -424,7 +433,7 @@ export function createLkqLookupHandler(dependencies = {}) {
         timings.providerMs = Math.max(0, now() - providerStart);
         const errorCode = error?.code === 'RATE_LIMIT'
           ? 'RATE_LIMIT'
-          : (error?.code === 'GLOBAL_BUDGET_EXHAUSTED' || error?.code === 'BUDGET_STORE_UNAVAILABLE'
+          : (['GLOBAL_BUDGET_EXHAUSTED', 'BUDGET_STORE_UNAVAILABLE', 'RATE_LIMIT_STORE_UNAVAILABLE'].includes(error?.code)
             ? error.code
           : (isTimeoutError(error)
             ? 'PROVIDER_TIMEOUT'
@@ -450,7 +459,8 @@ export function createLkqLookupHandler(dependencies = {}) {
         // failure occurred (Phase 8).
         const providerWasAttempted = errorCode !== 'RATE_LIMIT'
           && errorCode !== 'GLOBAL_BUDGET_EXHAUSTED'
-          && errorCode !== 'BUDGET_STORE_UNAVAILABLE';
+          && errorCode !== 'BUDGET_STORE_UNAVAILABLE'
+          && errorCode !== 'RATE_LIMIT_STORE_UNAVAILABLE';
         const result = buildDeterministicFallback({
           errorCode,
           cacheStatus,
@@ -463,7 +473,7 @@ export function createLkqLookupHandler(dependencies = {}) {
           timings,
           message: errorCode === 'RATE_LIMIT'
             ? 'Replacement provider capacity is temporarily limited. The age result remains available.'
-            : (errorCode === 'GLOBAL_BUDGET_EXHAUSTED' || errorCode === 'BUDGET_STORE_UNAVAILABLE'
+            : (errorCode === 'GLOBAL_BUDGET_EXHAUSTED' || errorCode === 'BUDGET_STORE_UNAVAILABLE' || errorCode === 'RATE_LIMIT_STORE_UNAVAILABLE'
               ? 'Replacement research capacity is temporarily limited. Please try again tomorrow.'
               : undefined),
         }), timings, deadline);
@@ -579,6 +589,15 @@ export function createLkqLookupHandler(dependencies = {}) {
       });
       return res.status(200).json(result);
     }
+  }
+
+  return async function handler(req, res) {
+    const recorder = createAttemptRecorder({
+      route: 'lkq',
+      requestId: createRequestId(req, 'lkq'),
+      logger,
+    });
+    return runWithAttemptRecorder(recorder, () => handleLkqRequest(req, res, recorder));
   };
 }
 

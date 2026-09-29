@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRefineSerialDateHandler } from '../../api/refine-serial-date.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 import {
   normalizeNativeModelResearch,
   nativeModelResearchEvidence,
@@ -90,7 +91,7 @@ function nativeHandler(nativeLookup, extras = {}) {
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
     redisFactory: () => null,
-    rateLimitFactory: () => null,
+    rateLimitFactory: () => allowingRateLimiter,
     logger: silentLogger(),
     legacyProviderLookup: async () => { throw new Error('legacy provider must not run'); },
     deterministicProviderLookup: async () => { throw new Error('deterministic provider must not run'); },
@@ -271,7 +272,7 @@ test('native failure falls back to the legacy refinement research path', async (
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
     redisFactory: () => null,
-    rateLimitFactory: () => null,
+    rateLimitFactory: () => allowingRateLimiter,
     logger: silentLogger(),
     legacyProviderLookup: async () => {
       legacyCalls += 1;

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createRefineSerialDateHandler } from '../../api/refine-serial-date.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function createResponse() {
   return {
@@ -70,6 +71,7 @@ function assertSchemaCompatible(payload) {
 
 test('legacy_gemini and deterministic_serper produce schema-compatible responses', async () => {
   const legacy = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'legacy_gemini',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
@@ -89,6 +91,7 @@ test('legacy_gemini and deterministic_serper produce schema-compatible responses
     logger: silentLogger(),
   });
   const deterministic = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
@@ -149,6 +152,7 @@ test('legacy_gemini and deterministic_serper produce schema-compatible responses
 
 test('deterministic_serper supports ranked result tier', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
@@ -195,6 +199,7 @@ test('deterministic_serper supports ranked result tier', async () => {
 test('timeout returns useful deterministic fallback with failure taxonomy', async () => {
   const logs = [];
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     totalBudgetMs: 50,
     providerBudgetMs: 40,
@@ -244,6 +249,7 @@ test('duplicate concurrent requests share inflight work', async () => {
   let providerCalls = 0;
   const store = new Map();
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     inflightStore: store,
     localLookup: async () => ({ evidence: [], normalization: null }),
@@ -288,6 +294,7 @@ test('duplicate concurrent requests share inflight work', async () => {
 
 test('malformed deterministic provider degrades without inventing an exact year', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,

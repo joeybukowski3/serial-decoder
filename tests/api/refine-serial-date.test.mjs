@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRefineSerialDateHandler } from '../../api/refine-serial-date.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function createResponse() {
   return {
@@ -70,6 +71,7 @@ test('model production lookup narrows candidates before cache and Gemini', async
   let providerCalls = 0;
   let redisFactoryCalls = 0;
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => ({
       narrowedYears: [2024],
@@ -104,6 +106,7 @@ test('model production miss or load failure falls back to Gemini unchanged', asy
   ]) {
     let providerCalls = 0;
     const handler = createRefineSerialDateHandler({
+      rateLimitFactory: () => allowingRateLimiter,
       localLookup: async () => ({ evidence: [], normalization: null }),
       modelProductionLookup,
       providerLookup: async () => {
@@ -126,6 +129,7 @@ test('model production miss or load failure falls back to Gemini unchanged', asy
 test('Model Refinement shared-evidence shadow mode is disabled by default', async () => {
   let shadowCalls = 0;
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
     legacyProviderLookup: async () => ({ evidence: officialEvidence(2023, 2025) }),
@@ -149,6 +153,7 @@ test('Model Refinement shadow comparison cannot replace the legacy response or e
   const logs = [];
   let shadowCalls = 0;
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     env: { MODEL_REFINEMENT_SHARED_EVIDENCE_SHADOW_ENABLED: 'true' },
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
@@ -202,6 +207,7 @@ test('Model Refinement shadow comparison cannot replace the legacy response or e
 test('Model Refinement shadow failures are telemetry-only', async () => {
   const logs = [];
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     sharedEvidenceShadowEnabled: true,
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
@@ -233,6 +239,7 @@ test('deterministic mode passes partial local narrowing into web refinement and 
   let legacyCalls = 0;
   let deterministicCalls = 0;
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => ({
@@ -309,6 +316,7 @@ test('deterministic mode passes partial local narrowing into web refinement and 
 test('deterministic provider failure still ranks a best estimate from partial local narrowing, without legacy fallback', async () => {
   let legacyCalls = 0;
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => ({
@@ -350,6 +358,7 @@ test('local_only ranks a best estimate from partial local narrowing without Redi
   let deterministicCalls = 0;
   let redisCalls = 0;
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'local_only',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => ({
@@ -435,6 +444,7 @@ test('GE GFW850 demonstrated case: FR31424IN + GFW850SPN0DG resolves March seria
 
 test('GE GFW850 canonical family model resolves the same way as the label variant', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     providerLookup: async () => { throw new Error('provider should not run'); },
     redisFactory: () => { throw new Error('redis should not run'); },
     logger: silentLogger(),
@@ -451,6 +461,7 @@ test('GE GFW850 canonical family model resolves the same way as the label varian
 test('GE GFW850 label variant is safe under lowercase, spacing, and whitespace formatting', async () => {
   for (const model of ['gfw850spn0dg', 'GFW 850 SPN0 DG', '  GFW850SPN0DG  ']) {
     const handler = createRefineSerialDateHandler({
+      rateLimitFactory: () => allowingRateLimiter,
       providerLookup: async () => { throw new Error('provider should not run'); },
       redisFactory: () => { throw new Error('redis should not run'); },
       logger: silentLogger(),
@@ -508,6 +519,7 @@ test('GE GFW850: a retryable provider failure preserves candidates and never fab
 
 test('local family heuristic cannot resolve an exact year', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     localLookup: async () => ({ evidence: [{ type: 'heuristic', quality: 'heuristic', yearRange: '2023-2025' }], normalization: null }),
     providerLookup: async () => { const error = new Error('missing'); error.code = 'GROUNDING_NOT_CONFIGURED'; throw error; },
     redisFactory: () => null,
@@ -558,7 +570,7 @@ test('Redis hit bypasses provider and provider rate limit', async () => {
   assert.equal(rateLimitFactoryCalls, 0);
 });
 
-test('Redis and rate-limit failures fail open to grounded provider', async () => {
+test('Redis and rate-limit store failures fail closed: no paid provider call, candidates preserved', async () => {
   let providerCalls = 0;
   const handler = createRefineSerialDateHandler({
     localLookup: async () => ({ evidence: [], normalization: null }),
@@ -576,9 +588,10 @@ test('Redis and rate-limit failures fail open to grounded provider', async () =>
   });
   const res = createResponse();
   await handler(request(), res);
-  assert.equal(res.payload.status, 'resolved');
-  assert.equal(res.payload.provider, 'gemini-google-search');
-  assert.equal(providerCalls, 1);
+  assert.equal(providerCalls, 0, 'paid research must not run without a working limiter');
+  assert.notEqual(res.payload.status, 'resolved');
+  assert.equal(res.payload.errorCode, 'RATE_LIMIT_STORE_UNAVAILABLE');
+  assert.equal(res.payload.failureCategory, 'provider_unavailable');
 });
 
 test('provider-eligible requests are limited to ten per IP per minute', async () => {
@@ -621,6 +634,7 @@ test('provider-eligible requests are limited to ten per IP per minute', async ()
 
 test('two cited secondary sources can resolve a candidate', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     localLookup: async () => ({ evidence: [], normalization: null }),
     providerLookup: async () => ({ evidence: [
       { type: 'retailer', title: 'A', sourceUrl: 'https://a.example/item', quality: 'strong-secondary', availabilityStart: 2023, availabilityEnd: 2025 },
@@ -638,6 +652,7 @@ test('two cited secondary sources can resolve a candidate', async () => {
 
 test('missing citations cannot select a year', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     localLookup: async () => ({ evidence: [], normalization: null }),
     providerLookup: async () => ({ evidence: [{ type: 'manufacturer', title: 'No URL', quality: 'official', productionStart: 2023, productionEnd: 2025 }] }),
     redisFactory: () => null,
@@ -652,6 +667,7 @@ test('missing citations cannot select a year', async () => {
 
 test('conflicting model and serial evidence returns conflict without nearest year', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     localLookup: async () => ({ evidence: officialEvidence(2010, 2012), normalization: null }),
     redisFactory: () => null,
     logger: silentLogger(),
@@ -665,6 +681,7 @@ test('conflicting model and serial evidence returns conflict without nearest yea
 
 test('provider timeout preserves serial candidates', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     localLookup: async () => ({ evidence: [], normalization: null }),
     providerLookup: async () => { const error = new Error('aborted'); error.name = 'AbortError'; throw error; },
     redisFactory: () => null,
@@ -680,6 +697,7 @@ test('provider timeout preserves serial candidates', async () => {
 
 test('endpoint deadline returns even when a provider ignores AbortController', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     localLookup: async () => ({ evidence: [], normalization: null }),
     providerLookup: async () => new Promise(() => {}),
     redisFactory: () => null,
@@ -699,6 +717,7 @@ test('endpoint deadline returns even when a provider ignores AbortController', a
 test('429 and 5xx provider errors do not leak raw errors or choose a year', async () => {
   for (const code of ['GROUNDING_RATE_LIMIT', 'GROUNDING_PROVIDER_ERROR']) {
     const handler = createRefineSerialDateHandler({
+      rateLimitFactory: () => allowingRateLimiter,
       localLookup: async () => ({ evidence: [], normalization: null }),
       providerLookup: async () => { const error = new Error('raw provider body secret'); error.code = code; throw error; },
       redisFactory: () => null,
@@ -714,6 +733,7 @@ test('429 and 5xx provider errors do not leak raw errors or choose a year', asyn
 
 test('strict chosenYear invariant holds for every non-resolved status', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     localLookup: async () => ({ evidence: [], normalization: null }),
     providerLookup: async () => ({ evidence: [] }),
     redisFactory: () => null,
@@ -730,7 +750,7 @@ test('strict chosenYear invariant holds for every non-resolved status', async ()
 });
 
 test('input validation rejects malformed candidates and oversized context', async () => {
-  const handler = createRefineSerialDateHandler({ logger: silentLogger() });
+  const handler = createRefineSerialDateHandler({ rateLimitFactory: () => allowingRateLimiter, logger: silentLogger() });
   const res1 = createResponse();
   await handler(request({ candidateYears: [] }), res1);
   assert.equal(res1.statusCode, 400);
@@ -742,6 +762,7 @@ test('input validation rejects malformed candidates and oversized context', asyn
 test('deterministic mode does not start the broad shared-provider fallback after insufficient evidence', async () => {
   let sharedCalls = 0;
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
@@ -805,7 +826,7 @@ test('cached refinement cannot inject a year outside the current serial candidat
       }),
       set: async () => {},
     }),
-    rateLimitFactory: () => null,
+    rateLimitFactory: () => allowingRateLimiter,
     logger: silentLogger(),
   });
   const res = createResponse();
@@ -824,6 +845,7 @@ test('cached refinement cannot inject a year outside the current serial candidat
 
 test('Whirlpool WED4850HWO canonical-equivalent evidence ranks or resolves 2022 over 1992', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,
@@ -900,6 +922,7 @@ test('Whirlpool WED4850HWO canonical-equivalent evidence ranks or resolves 2022 
 
 test('Whirlpool timeout degrades with model-era lower bound instead of empty usefulness', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => ({
@@ -936,6 +959,7 @@ test('Whirlpool timeout degrades with model-era lower bound instead of empty use
 
 test('deterministic ranking from lower-bound facts without full resolve still prefers modern cycle', async () => {
   const handler = createRefineSerialDateHandler({
+    rateLimitFactory: () => allowingRateLimiter,
     refinementMode: 'deterministic_serper',
     localLookup: async () => ({ evidence: [], normalization: null }),
     modelProductionLookup: async () => null,

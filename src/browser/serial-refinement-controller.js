@@ -547,7 +547,10 @@
     currentRefinementView = null;
     showCheckingWhenReady(sequence);
 
-    var promise = requestRefinement(snapshot, controller.signal).catch(function (error) {
+    // Retry presses are tagged so they are distinguishable from the automatic
+    // background refinement in server telemetry (never affects the result).
+    var requestSnapshot = forceRetry ? Object.assign({}, snapshot, { trigger: 'retry' }) : snapshot;
+    var promise = requestRefinement(requestSnapshot, controller.signal).catch(function (error) {
       return unavailableResponse(candidates, error);
     }).then(function (data) {
       applyResponse(data, sequence, snapshot);
