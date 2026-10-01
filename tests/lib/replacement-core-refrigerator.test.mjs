@@ -39,13 +39,17 @@ test('built-in to freestanding and known physical fit violation are hard failure
   assert.equal(evaluate(tooWide).classification, 'NOT_LKQ');
 });
 
-test('unknown physical opening remains a recommendation with unconfirmed fit', () => {
+test('unknown opening on a freestanding refrigerator is an advisory, not a block: LKQ with reduced confidence', () => {
   const entry = clone();
   original(entry, 'physicalFit', null, 'UNKNOWN');
   const result = evaluate(entry);
-  assert.ok(result.candidate);
-  assert.equal(result.classification, 'UNCONFIRMED');
-  assert.equal(row(result, 'physicalFit').assessment, 'UNVERIFIED');
+  assert.equal(result.classification, 'LKQ');
+  assert.equal(result.confidence, 'MEDIUM');
+  const fit = row(result, 'physicalFit');
+  assert.deepEqual([fit.assessment, fit.reasonCode, fit.advisory], ['UNVERIFIED', 'VERIFY_FIT', true]);
+  assert.equal(result.fitAssessment.status, 'ADVISORY');
+  assert.equal(result.fitAssessment.advisory.message, 'Not verified — confirm available space before purchase');
+  assert.equal(result.decision.eligible, true);
 });
 
 test('French-door to basic top-freezer fails functional floor, not literal door count', () => {

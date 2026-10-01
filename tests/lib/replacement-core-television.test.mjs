@@ -35,14 +35,17 @@ test('65 to 75 passes size and is Above LKQ with known fit; 65 to 55 fails despi
   assert.ok(evaluate(smaller).decision.hardFailures.some((failure) => failure.key === 'screenSizeIn'));
 });
 
-test('larger screen with unknown fit retains candidate and unconfirmed classification', () => {
+test('a larger screen with no known space constraint stays eligible: Above LKQ with a VERIFY_FIT advisory', () => {
   const entry = clone();
   replace(entry, 'screenSizeIn', 75);
   original(entry, 'physicalFit', null, 'UNKNOWN');
   const result = evaluate(entry);
   assert.equal(row(result, 'screenSizeIn').assessment, 'BETTER');
-  assert.equal(result.classification, 'UNCONFIRMED');
-  assert.ok(result.candidate);
+  assert.equal(result.classification, 'ABOVE_LKQ');
+  assert.ok(result.decision.materialUpgrades.includes('MATERIAL_SCREEN_SIZE_UPGRADE'));
+  assert.equal(result.fitAssessment.status, 'ADVISORY');
+  assert.equal(result.fitAssessment.advisory.severity, 'MEANINGFUL');
+  assert.equal(result.confidence, 'MEDIUM');
 });
 
 test('4K to 4K and 1080p to 4K pass; 4K to 1080p fails', () => {

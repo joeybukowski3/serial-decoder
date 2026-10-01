@@ -86,3 +86,15 @@ test('provider rank and price cannot change deterministic primary', async () => 
   assert.equal(before.primaryRecommendation.candidate.candidateId, after.primaryRecommendation.candidate.candidateId);
   assert.equal(before.primaryRecommendation.decision.score.weightedTotal, after.primaryRecommendation.decision.score.weightedTotal);
 });
+
+test('bad input rejects the returned promise instead of throwing synchronously', async () => {
+  const pending = recommendReplacement({ query: '', candidateProvider: createFixtureProvider([]) });
+  assert.ok(pending instanceof Promise);
+  await assert.rejects(pending, TypeError);
+});
+
+test('only documented options are forwarded: a caller cannot override the computed interpretation', async () => {
+  const hijacked = await recommendReplacement({ ...fullTv, candidateProvider: createFixtureProvider([]), originalInterpretation: { normalizedOriginal: null }, input: { query: 'hijack' } });
+  assert.equal(hijacked.input.query, fullTv.query);
+  assert.ok(hijacked.originalInterpretation.normalizedOriginal);
+});
