@@ -20,6 +20,7 @@
   var SMART_TERMINAL_STATUSES = {
     resolved: 1,
     partial: 1,
+    'needs-detail': 1,
     conflict: 1,
     'no-result': 1,
     error: 1,
@@ -75,6 +76,10 @@
       lookup_type: 1,
       decoder_path: 1,
       result_status: 1,
+      outcome_reason: 1,
+      year_signal: 1,
+      route_mode: 1,
+      refinement_of_needs_detail: 1,
       identity_level: 1,
       brand: 1,
       category: 1,
@@ -93,7 +98,7 @@
   var sequence = 0;
 
   function normalizeEnum(value, fallback) {
-    var normalized = String(value || '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+    var normalized = String(value || '').toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
     return normalized || fallback || 'unknown';
   }
 

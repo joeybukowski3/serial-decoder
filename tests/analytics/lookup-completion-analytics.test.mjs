@@ -119,7 +119,7 @@ test('rerender or refinement cannot complete an attempt twice', () => {
 });
 
 test('Smart terminal outcomes complete once with structured replacement availability', () => {
-  for (const status of ['resolved', 'partial', 'conflict', 'no-result', 'error']) {
+  for (const status of ['resolved', 'partial', 'needs-detail', 'conflict', 'no-result', 'error']) {
     for (const replacement of [true, false]) {
       const harness = createHarness('/smart-lookup.html');
       const attempt = harness.api.beginSmartAttempt();
@@ -148,6 +148,33 @@ test('Smart terminal outcomes complete once with structured replacement availabi
       assert.equal(completion[0][2].lookup_type, 'smart-lookup');
     }
   }
+});
+
+test('needs-detail is a terminal Smart status and is never coerced to error', () => {
+  const harness = createHarness('/smart-lookup.html');
+  const attempt = harness.api.beginSmartAttempt();
+  harness.api.completeSmartAttempt(attempt, { result_status: 'needs-detail' });
+  assert.equal(eventCalls(harness.calls, 'smart_lookup_complete')[0][2].result_status, 'needs-detail');
+});
+
+test('outcome_reason, year_signal, route_mode and refinement flag are sent; free text is not', () => {
+  const harness = createHarness('/smart-lookup.html');
+  const attempt = harness.api.beginSmartAttempt({ refinement_of_needs_detail: true });
+  harness.api.completeSmartAttempt(attempt, {
+    result_status: 'needs-detail',
+    outcome_reason: 'general-guidance',
+    year_signal: 'open-ended',
+    route_mode: 'general_guidance',
+    query: 'samsung refrigerator',
+    model: 'RF28R7551SR',
+    notes: 'free text',
+  });
+  const params = eventCalls(harness.calls, 'smart_lookup_complete')[0][2];
+  assert.equal(params.outcome_reason, 'general-guidance');
+  assert.equal(params.year_signal, 'open-ended');
+  assert.equal(params.route_mode, 'general_guidance', 'underscores in route_mode are preserved');
+  assert.equal(params.refinement_of_needs_detail, true);
+  for (const forbidden of ['query', 'model', 'notes']) assert.equal(forbidden in params, false, forbidden);
 });
 
 test('decoder_path is controlled by page context', () => {

@@ -38,7 +38,7 @@ Safe completion fields, when available, are `event_version`, `lookup_type`, `dec
 
 ## Smart Lookup completion
 
-Every accepted Smart Lookup terminal outcome emits `smart_lookup_complete`. Its `result_status` is one of `resolved`, `partial`, `conflict`, `no-result`, or `error`.
+Every accepted Smart Lookup terminal outcome emits `smart_lookup_complete`. Its `result_status` is one of `resolved`, `partial`, `needs-detail`, `conflict`, `no-result`, or `error`. `needs-detail` means the product was recognized but nothing can date it yet; `no-result` is reserved for input with nothing to recognize; technical failures (including 429 and rate limits) are `error`. See `docs/smart-lookup-guidance-mode.md` for the full mapping and the migration note: `no-result` before and after this change is not comparable, and the presence of `outcome_reason` marks the new semantics.
 
 Fields are:
 
@@ -59,6 +59,10 @@ Fields are:
 - `clarification_recommended`
 - `conflict_detected`
 - `timeout_with_useful_fallback`
+- `outcome_reason` (low-cardinality cause of the status, e.g. `general-guidance`, `provider-rate-limited`)
+- `year_signal` (`exact-unit`, `candidates`, `range`, `open-ended`, `year`, `none`)
+- `route_mode` (`general_guidance`, `precision_research`, `none`)
+- `refinement_of_needs_detail` (boolean, only when a different query follows a `needs-detail` result within 10 minutes)
 
 `replacement_result_available` is derived from structured controller/result state. It is never inferred from rendered copy.
 

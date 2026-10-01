@@ -147,7 +147,10 @@ test('mandatory broad product examples classify into useful progressive tiers', 
   }
 });
 
-test('LG TV returns researched brand/category historical context and asks for model refinement', async () => {
+// "LG TV" alone is now GENERAL_GUIDANCE (see smart-lookup-guidance-mode.test.mjs). A
+// distinguishing detail ("65 inch") keeps this test on the PRECISION_RESEARCH path
+// it was written to cover: grounded brand/category history from a provider.
+test('LG TV 65 inch returns researched brand/category historical context and asks for model refinement', async () => {
   const handler = createAgeLookupHandler({
     rateLimiter: allowingRateLimiter,
     ...BASE_DEPS,
@@ -173,9 +176,10 @@ test('LG TV returns researched brand/category historical context and asks for mo
     }),
   });
   const out = res();
-  await handler(req('LG TV'), out);
+  await handler(req('LG TV 65 inch'), out);
   assert.equal(out.statusCode, 200);
   assert.equal(out.payload.brand, 'LG');
+  assert.equal(out.payload.routeMode, 'precision_research');
   assert.equal(out.payload.querySpecificity, 'brand-category');
   assert.equal(out.payload.contextLevel, 'brand-category');
   assert.equal(out.payload.categoryEntryYear, 1966);
@@ -186,11 +190,10 @@ test('LG TV returns researched brand/category historical context and asks for mo
   assert.equal(out.payload.sources.length, 1);
 });
 
-// General-search-first: a bare recognized brand with nothing else is now
-// research-eligible (local classification is a hint, not a gate) -- it must
-// reach the provider, and the response still must not fabricate a category
-// or model that was never given.
-test('LG alone now reaches research and still does not falsely claim television history', async () => {
+// A bare recognized brand names nothing that can be dated, so it is routed to
+// GENERAL_GUIDANCE: no provider call, and the response must not fabricate a
+// category or model that was never given.
+test('LG alone is general guidance and does not falsely claim television history', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
     rateLimiter: allowingRateLimiter,
@@ -212,16 +215,16 @@ test('LG alone now reaches research and still does not falsely claim television 
   const out = res();
   await handler(req('LG'), out);
   assert.equal(out.statusCode, 200);
-  assert.equal(calls, 1);
+  assert.equal(calls, 0, 'general guidance must not call a research provider');
+  assert.equal(out.payload.routeMode, 'general_guidance');
   assert.equal(out.payload.brand, 'LG');
   assert.equal(out.payload.querySpecificity, 'brand-only');
   assert.doesNotMatch(out.payload.notes || '', /television/i);
 });
 
-// General-search-first: a bare recognized category with nothing else is now
-// research-eligible too -- it must reach the provider, and the response must
-// still distinguish category history from a claimed unit-specific date.
-test('television now reaches research for category history without pretending to identify a unit', async () => {
+// A bare recognized category is GENERAL_GUIDANCE too: it returns the trusted local
+// category history (never a unit-specific date) without calling a provider.
+test('television is general guidance with local category history and no unit claim', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
     rateLimiter: allowingRateLimiter,
@@ -248,11 +251,13 @@ test('television now reaches research for category history without pretending to
   const out = res();
   await handler(req('television'), out);
   assert.equal(out.statusCode, 200);
-  assert.equal(calls, 1);
+  assert.equal(calls, 0, 'general guidance must not call a research provider');
+  assert.equal(out.payload.routeMode, 'general_guidance');
   assert.equal(out.payload.querySpecificity, 'category-only');
   assert.equal(out.payload.contextLevel, 'category-history');
   assert.match(out.payload.historicalContext, /television/i);
-  assert.equal(out.payload.yearContext.isExactUnitDate, false);
+  assert.equal(out.payload.yearContext, null, 'no year is claimed for a bare category');
+  assert.equal(out.payload.yearSignal, 'none');
 });
 
 test('Dell XPS 15 returns model-line context instead of a dead-end clarification', async () => {
@@ -357,7 +362,7 @@ test('Whirlpool top-load washer: a grounded broad-range result can render (known
     }),
   });
   const out = res();
-  await handler(req('Whirlpool top-load washer'), out);
+  await handler(req('Whirlpool top-load washer 2015'), out);
   assert.equal(out.statusCode, 200);
   assert.equal(out.payload.evidenceSource, 'gemini-grounded');
   assert.equal(out.payload.precisionLevel, 'broad-range');
@@ -390,7 +395,7 @@ test('Whirlpool top-load washer: a provider trying to invent a family or claim o
     }),
   });
   const out = res();
-  await handler(req('Whirlpool top-load washer'), out);
+  await handler(req('Whirlpool top-load washer 2015'), out);
   assert.equal(out.statusCode, 200);
   assert.equal(out.payload.productFamily, null);
   assert.equal(out.payload.model, null);
@@ -409,7 +414,7 @@ test('Whirlpool top-load washer: grounded/provider failure degrades to determini
     providerLookup: async () => { await new Promise((r) => setTimeout(r, 50)); throw timeoutError('age-provider-call-fallback'); },
   });
   const out = res();
-  await handler(req('Whirlpool top-load washer'), out);
+  await handler(req('Whirlpool top-load washer 2015'), out);
   assert.equal(out.statusCode, 200);
   assert.equal(out.payload.brand, 'Whirlpool');
   assert.equal(out.payload.category, 'washer');
@@ -421,7 +426,7 @@ test('Whirlpool top-load washer: grounded/provider failure degrades to determini
 
 // ── Regression case 4: refrigerator (category-only) now reaches research ───
 
-test('refrigerator (category-only) now reaches research and returns useful category guidance', async () => {
+test('refrigerator (category-only) is general guidance: useful category context, no provider call', async () => {
   let calls = 0;
   const handler = createAgeLookupHandler({
     rateLimiter: allowingRateLimiter,
@@ -446,8 +451,9 @@ test('refrigerator (category-only) now reaches research and returns useful categ
   });
   const out = res();
   await handler(req('refrigerator'), out);
-  assert.equal(calls, 1);
+  assert.equal(calls, 0, 'general guidance must not call a research provider');
   assert.equal(out.statusCode, 200);
+  assert.equal(out.payload.routeMode, 'general_guidance');
   assert.equal(out.payload.querySpecificity, 'category-only');
   assert.equal(out.payload.contextLevel, 'category-history');
   assert.match(out.payload.historicalContext, /refrigerator/i);

@@ -36,6 +36,7 @@ export function createFakeRedis() {
     async hgetall(key) { return hashes.has(key) ? Object.fromEntries(hashes.get(key)) : null; },
     async expire(key, seconds) { ttls.set(key, seconds); return 1; },
     async incrby(_key, amount) { return amount; },
+    async incr(key) { const next = Number(strings.get(key) || 0) + 1; strings.set(key, next); return next; },
     async eval() { return [1, 1, 1]; }, // provider budget: always allowed
   };
 
