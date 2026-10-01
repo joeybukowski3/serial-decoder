@@ -357,6 +357,80 @@ test.describe('Smart Lookup controller', () => {
     await expect(page.locator('#smart-lookup-age-panel')).not.toContainText('PROVIDER_TIMEOUT');
   });
 
+  test('a broad query renders general guidance with what is known, never "No result"', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({
+        json: {
+          brand: 'Samsung', category: 'refrigerator', itemCategory: 'refrigerator', querySpecificity: 'brand-category',
+          routeMode: 'general_guidance', precisionLevel: 'general-guidance', providerAttempted: false, yearSignal: 'none',
+          notes: 'We identified this as a Samsung refrigerator, but there is not enough identifying information yet to estimate a manufacture date.',
+          recommendedIdentifiers: ['Enter the complete model number from the product label.', 'Enter the serial number for a unit-specific manufacture date.'],
+        },
+      });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Samsung Refrigerator');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('General product match');
+    await expect(panel).toContainText('We identified this as a Samsung refrigerator');
+    await expect(panel).toContainText('Manufacturer');
+    await expect(panel).toContainText('Samsung');
+    await expect(panel).toContainText('Exact model');
+    await expect(panel).toContainText('Not identified');
+    await expect(panel).toContainText('Manufacture date');
+    await expect(panel).toContainText('Needs more detail');
+    await expect(panel).toContainText('To narrow it down');
+    await expect(panel).not.toContainText(/no result/i);
+    await expect(panel.locator('[data-smart-lookup-retry]')).toHaveCount(0);
+    await expect(panel.locator('[data-smart-lookup-edit="1"]')).toHaveCount(1);
+  });
+
+  test('a precision answer with no year offers Research again, which asks the server to retry', async ({ page }) => {
+    const bodies = [];
+    await page.route('**/api/age-lookup', async (route) => {
+      bodies.push(route.request().postDataJSON());
+      await route.fulfill({
+        json: {
+          brand: 'Whirlpool', exactModel: 'WRF535SWHZ00', model: 'WRF535SWHZ00', likelyProduct: 'Whirlpool WRF535SWHZ00 refrigerator',
+          category: 'refrigerator', querySpecificity: 'exact-model', routeMode: 'precision_research', providerAttempted: true,
+          evidenceSource: 'gemini-ungrounded', source: 'gemini', yearSignal: 'none', summary: 'A French-door refrigerator.',
+        },
+      });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Whirlpool WRF535SWHZ00');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('Needs more detail');
+    await expect(panel).toContainText('Identified as:');
+    await expect(panel).not.toContainText(/no result/i);
+    await panel.locator('[data-smart-lookup-retry="age"]').click();
+    await expect.poll(() => bodies.length).toBe(2);
+    expect(bodies[0].retry).toBeUndefined();
+    expect(bodies[1].retry).toBe(true);
+  });
+
+  test('an open-ended range renders as a dated result with an "or later" availability row', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({
+        json: {
+          brand: 'Whirlpool', exactModel: 'WRF535SWHZ00', category: 'refrigerator', introductionYear: 2015,
+          yearContext: { type: 'market-introduction', value: 2015, label: 'Estimated introduction year', confidence: 'medium', isExactUnitDate: false },
+          estimatedRange: { start: 2015, end: null, current: true }, openEndedRange: true, rangeLabel: '2015 or later',
+          yearSignal: 'open-ended', routeMode: 'precision_research', providerAttempted: true,
+        },
+      });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Whirlpool WRF535SWHZ00');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('2015');
+    await expect(panel).toContainText('2015 or later');
+    await expect(panel).not.toContainText('Needs more detail');
+  });
+
   test('malformed provider output renders reliability-specific copy, not a raw error', async ({ page }) => {
     await page.route('**/api/age-lookup', async (route) => {
       await route.fulfill({ json: { errorCode: 'UNRELATED_BRAND' } });

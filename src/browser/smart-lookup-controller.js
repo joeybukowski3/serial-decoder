@@ -8,6 +8,7 @@
     age: { status: 'idle', data: null, error: null, stageIndex: 0, copy: null },
     lastStartedAt: 0,
     ageStageTimers: [],
+    lastNeedsDetail: null,
   };
   var inflight = new Map();
   var recent = new Map();
@@ -208,9 +209,12 @@
     return notes ? normalizeNotes(notes.value) : '';
   }
 
-  function requestBody(query, notes) {
+  function requestBody(query, notes, retry) {
     var body = { query: query };
     if (notes) body.notes = notes;
+    // A Retry asks the server to research again instead of replaying a
+    // short-lived cached answer; it is still one logical lookup server-side.
+    if (retry) body.retry = true;
     return body;
   }
 
@@ -526,10 +530,24 @@
     return 'unavailable-generic';
   }
 
-  function beginAnalyticsAttempt() {
+  // A lookup that ended "needs detail" and is followed, shortly after, by a
+  // different query is the user acting on that guidance. Only a boolean is sent
+  // to analytics; the previous query text never leaves memory.
+  var REFINEMENT_WINDOW_MS = 10 * 60 * 1000;
+
+  function beginAnalyticsAttempt(query) {
     var analytics = window.DecodeMyItemAnalytics;
-    return analytics && typeof analytics.beginSmartAttempt === 'function'
-      ? analytics.beginSmartAttempt()
+    if (!analytics || typeof analytics.beginSmartAttempt !== 'function') return null;
+    var last = state.lastNeedsDetail;
+    var refinement = Boolean(last && query && last.query !== query && Date.now() - last.at < REFINEMENT_WINDOW_MS);
+    return refinement
+      ? analytics.beginSmartAttempt({ refinement_of_needs_detail: true })
+      : analytics.beginSmartAttempt();
+  }
+
+  function rememberNeedsDetail(query, outcome) {
+    state.lastNeedsDetail = outcome && outcome.resultStatus === 'needs-detail'
+      ? { query: normalize(query).toLowerCase(), at: Date.now() }
       : null;
   }
 
@@ -561,20 +579,95 @@
     return 'unknown';
   }
 
+  // ---- Outcome classification -------------------------------------------
+  // MIRRORS lib/smart-lookup/outcome.js (the server uses it for logs and Redis
+  // counters). This file is a classic script and cannot import it, so
+  // tests/analytics/smart-lookup-outcome-parity.test.mjs fails if the two drift.
+  var YEAR_SIGNAL_VALUES = { 'exact-unit': 1, candidates: 1, range: 1, 'open-ended': 1, year: 1, none: 1 };
+  var RATE_LIMIT_REASONS = {
+    RATE_LIMIT: 'rate-limited',
+    PROVIDER_RATE_LIMIT: 'provider-rate-limited',
+    RATE_LIMIT_STORE_UNAVAILABLE: 'rate-limit-store-unavailable',
+  };
+  var CAPACITY_CODES = { GLOBAL_BUDGET_EXHAUSTED: 1, BUDGET_STORE_UNAVAILABLE: 1, AI_QUOTA_EXCEEDED: 1 };
+  var NEEDS_DETAIL_REASONS = {
+    'brand-category-recognized': 'brand-category-recognized',
+    'product-family-recognized': 'product-recognized-undated',
+    'product-year-unverified': 'product-recognized-undated',
+    'exact-model-insufficient': 'exact-model-undated',
+    'model-only-insufficient': 'model-recognized-undated',
+    'missing-input': 'brand-recognized',
+    'brand-missing': 'category-recognized',
+    'serial-only-no-brand': 'product-identified-no-year',
+  };
+
+  function yearSignalOf(data) {
+    if (!data) return 'none';
+    if (YEAR_SIGNAL_VALUES[data.yearSignal] === 1) return data.yearSignal;
+    if (data.individualManufactureYear) return 'exact-unit';
+    if (Array.isArray(data.manufactureYearCandidates) && data.manufactureYearCandidates.length) return 'candidates';
+    var context = data.yearContext && data.yearContext.type !== 'unknown' ? data.yearContext : null;
+    var range = data.productionRange;
+    if ((range && range.start && range.end) || (context && context.startYear && context.endYear)) return 'range';
+    var estimated = data.estimatedRange;
+    var hasYear = Boolean((context && context.value) || data.introductionYear || data.familyIntroductionYear
+      || data.lineIntroductionYear || data.categoryEntryYear || (range && (range.start || range.end)));
+    if (!hasYear) return 'none';
+    return estimated && estimated.start && !estimated.end && data.estimateBasis !== 'model-introduction'
+      ? 'open-ended'
+      : 'year';
+  }
+
+  function isRecognizedResult(data) {
+    var brand = Boolean(data.brand) && data.brand !== 'Unknown';
+    return Boolean(brand || data.recognizedBrand || data.category || data.itemCategory || data.recognizedCategory
+      || data.productFamily || data.recognizedFamily || data.exactModel || data.likelyProduct || data.displayName);
+  }
+
+  function classifySmartOutcome(data, bucket) {
+    var resolvedBucket = bucket || classifyAgeOutcome(data);
+    var signal = yearSignalOf(data);
+    var routeMode = (data && data.routeMode) || null;
+    var code = (data && data.errorCode) || null;
+    function out(status, reason) {
+      return { resultStatus: status, outcomeReason: reason, yearSignal: signal, routeMode: routeMode };
+    }
+    if ((data && data.evidenceConflict) || resolvedBucket === 'conflict') return out('conflict', 'evidence-conflict');
+    if (resolvedBucket === 'success') {
+      if (signal === 'none') {
+        if (data.serialDetected && data.serialDetected.action === 'use-decoder') return out('resolved', 'serial-handoff');
+        return out('needs-detail', routeMode === 'general_guidance' ? 'general-guidance' : 'history-only');
+      }
+      if (/^deterministic-/.test(String(data.fallbackKind || ''))) return out('partial', 'deterministic-fallback');
+      if (data.precisionLevel === 'family-range' || data.precisionLevel === 'broad-range' || data.precisionLevel === 'general-guidance') {
+        return out('partial', data.precisionLevel);
+      }
+      return out('resolved', 'dated-result');
+    }
+    // Technical failures are errors, never no-result -- including 429s and
+    // limiter outages, and including a recognized product with a reserve card.
+    if (resolvedBucket === 'network-error') return out('error', 'network-error');
+    if (resolvedBucket === 'timeout') return out('error', 'provider-timeout');
+    if (resolvedBucket === 'rate-limited') return out('error', RATE_LIMIT_REASONS[code] || 'rate-limited');
+    if (resolvedBucket === 'malformed') return out('error', 'provider-malformed');
+    if (resolvedBucket === 'unusable-query') return out('no-result', 'unusable-query');
+    if (code && code !== 'INSUFFICIENT_QUERY_DETAIL') {
+      if (CAPACITY_CODES[code] === 1) return out('error', 'capacity');
+      return out('error', code === 'INTERNAL_ERROR' ? 'internal-error' : 'provider-unavailable');
+    }
+    if (data.yearEvidenceWithheld) return out('needs-detail', 'low-confidence-estimate');
+    if (isRecognizedResult(data)) {
+      return out('needs-detail', routeMode === 'general_guidance'
+        ? 'general-guidance'
+        : (NEEDS_DETAIL_REASONS[resolvedBucket] || 'recognized-undated'));
+    }
+    return out('no-result', code === 'INSUFFICIENT_QUERY_DETAIL' || resolvedBucket === 'missing-input'
+      ? 'insufficient-input'
+      : 'nothing-recognized');
+  }
+
   function smartResultStatus(data, bucket) {
-    if (data && data.evidenceConflict) return 'conflict';
-    if (bucket === 'conflict') return 'conflict';
-    if (bucket !== 'success') {
-      return bucket === 'network-error' || bucket === 'unavailable-generic' || bucket === 'malformed' || bucket === 'timeout'
-        ? 'error'
-        : 'no-result';
-    }
-    var fallbackKind = String((data && data.fallbackKind) || '');
-    if (/^deterministic-/.test(fallbackKind)
-      || (data && (data.precisionLevel === 'family-range' || data.precisionLevel === 'broad-range' || data.precisionLevel === 'general-guidance'))) {
-      return 'partial';
-    }
-    return 'resolved';
+    return classifySmartOutcome(data, bucket).resultStatus;
   }
 
   function completeAnalyticsAttempt(attempt, data, bucket) {
@@ -582,13 +675,17 @@
     if (!analytics || typeof analytics.completeSmartAttempt !== 'function') return false;
     var ageAvailable = hasUsableAgeInfo(data);
     var errorCode = String((data && data.errorCode) || '');
-    var resultStatus = smartResultStatus(data, bucket);
+    var outcome = classifySmartOutcome(data, bucket);
+    var resultStatus = outcome.resultStatus;
     var deterministicFallback = Boolean(data && (data.deterministicFallbackUsed || data.deterministic_fallback_used))
       || /^deterministic-/.test(String((data && data.fallbackKind) || ''));
     var timeoutFallback = Boolean(data && (data.timeoutWithUsefulFallback || data.timeout_with_useful_fallback))
       || (ageAvailable && (errorCode === 'PROVIDER_TIMEOUT' || errorCode === 'TOTAL_DEADLINE'));
     return analytics.completeSmartAttempt(attempt, {
       result_status: resultStatus,
+      outcome_reason: outcome.outcomeReason,
+      year_signal: outcome.yearSignal,
+      route_mode: outcome.routeMode || 'none',
       identity_level: smartIdentityLevel(data),
       brand: (data && (data.recognizedBrand || data.brand)) || 'unknown',
       category: (data && (data.category || data.itemCategory)) || 'unknown',
@@ -1031,6 +1128,7 @@
       (data && (data.series || data.recognizedSeries || data.seriesLine) ? '<div class="result-row"><span class="result-label">Series</span><span class="result-value">' + escapeHtml(data.series || data.recognizedSeries || data.seriesLine) + '</span></div>' : '') +
       (data && data.screenSize ? '<div class="result-row"><span class="result-label">Screen size</span><span class="result-value">' + escapeHtml(data.screenSize) + ' inches</span></div>' : '') +
       (data && data.productionRange ? '<div class="result-row"><span class="result-label">Known production/availability</span><span class="result-value">' + escapeHtml(formatRange(data.productionRange, data.yearRange)) + '</span></div>' : '') +
+      (data && !data.productionRange && data.openEndedRange && data.rangeLabel ? '<div class="result-row"><span class="result-label">Estimated availability</span><span class="result-value">' + escapeHtml(data.rangeLabel) + '</span></div>' : '') +
       (promotedProductionRange && estimatedYearForDetails ? '<div class="result-row"><span class="result-label">Estimated year</span><span class="result-value">Approximately ' + escapeHtml(estimatedYearForDetails) + '</span></div>' : (data && data.bestEstimateYear ? '<div class="result-row"><span class="result-label">Best estimate</span><span class="result-value">Approximately ' + escapeHtml(data.bestEstimateYear) + '</span></div>' : '')) +
       (data && data.estimateBasis ? '<div class="result-row"><span class="result-label">Estimate basis</span><span class="result-value">' + escapeHtml(estimateBasisLabel(data.estimateBasis)) + '</span></div>' : '') +
       (data && data.identityConfidence ? '<div class="result-row"><span class="result-label">Model generation confidence</span><span class="result-value">' + escapeHtml(data.identityConfidence.charAt(0).toUpperCase() + data.identityConfidence.slice(1)) + '</span></div>' : '') +
@@ -1045,6 +1143,59 @@
       refinementHtml +
       evidenceHtml +
       renderGroundedSources(data) +
+      '</div>';
+  }
+
+  // "Needs detail": the product was recognized (or identified) but nothing here
+  // can date it yet. Shown instead of "No result" so the user is told what to
+  // add next. Never states a date it does not have.
+  var NEEDS_DETAIL_DEFAULT_NEXT = 'Enter the model number, serial number, or additional identifying details from the product label.';
+
+  function needsDetailRow(label, value) {
+    return '<div class="result-row"><span class="result-label">' + escapeHtml(label) + '</span><span class="result-value">' + escapeHtml(value) + '</span></div>';
+  }
+
+  function renderNeedsDetail(data, copy) {
+    data = data || {};
+    var isGuidance = data.routeMode === 'general_guidance';
+    var brand = data.brand && data.brand !== 'Unknown' ? data.brand : '';
+    var category = String(data.category || data.itemCategory || '').toLowerCase();
+    var base = copy || AGE_OUTCOME_COPY['unavailable-generic'];
+    var heading = isGuidance || !base.heading ? 'General product match' : base.heading;
+    var body = isGuidance && data.notes ? data.notes : (base.body || data.notes || '');
+    var identifiers = Array.isArray(data.recommendedIdentifiers) ? data.recommendedIdentifiers.slice(0, 4) : [];
+    var nextHtml = identifiers.length
+      ? '<p class="smart-lookup-try-next"><strong>To narrow it down:</strong></p><ul>' +
+        identifiers.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul>'
+      : '<p class="smart-lookup-try-next"><strong>To narrow it down:</strong> ' + escapeHtml(isGuidance ? NEEDS_DETAIL_DEFAULT_NEXT : (data.refinementSuggestion || base.tryNext || NEEDS_DETAIL_DEFAULT_NEXT)) + '</p>';
+    var identified = !isGuidance && data.likelyProduct
+      ? '<p class="smart-lookup-best-product"><strong>Identified as:</strong> ' + escapeHtml(data.likelyProduct) + '</p>'
+      : '';
+    var context = data.summary || data.historicalContext || '';
+    var contextHtml = context
+      ? '<p class="smart-lookup-general-context"><strong>' + (isGuidance ? 'General context:' : 'What we found:') + '</strong> ' + escapeHtml(context) + '</p>'
+      : '';
+    var qualifier = data.providerAttempted ? sourceQualifier(data) : '';
+    var canRetry = Boolean(data.providerAttempted) && !isGuidance;
+    var retryPart = canRetry
+      ? '<button type="button" class="decode-btn" data-smart-lookup-retry="age">Research again</button> '
+      : '';
+    return '<div class="info-block smart-lookup-status smart-lookup-status--needsdetail">' +
+      '<span class="smart-result-kicker">Smart Lookup</span>' +
+      '<h4>' + escapeHtml(heading) + '</h4>' +
+      '<p>' + escapeHtml(body) + '</p>' +
+      identified +
+      '<div class="smart-result-specs" aria-label="What we know">' +
+        needsDetailRow('Manufacturer', brand || 'Not identified') +
+        needsDetailRow('Product type', category || 'Not identified') +
+        needsDetailRow('Exact model', data.exactModel || 'Not identified') +
+        needsDetailRow('Manufacture date', 'Needs more detail') +
+      '</div>' +
+      contextHtml +
+      (qualifier ? '<p class="smart-lookup-source-note">' + escapeHtml(qualifier) + '</p>' : '') +
+      nextHtml +
+      '<p class="smart-lookup-label-guide"><a href="/serial-number-location-guide">Where to find the model and serial number</a></p>' +
+      '<div class="smart-lookup-status-actions">' + retryPart + editSearchButton() + '</div>' +
       '</div>';
   }
 
@@ -1084,8 +1235,12 @@
       setAgePanel(renderAge(state.age.data));
       if (window.HomePageUI) window.HomePageUI.scrollToResults('ageResults', 'smart-' + state.sequence);
     }
+    if (state.age.status === 'needs-detail') {
+      setAgePanel(renderNeedsDetail(state.age.data, state.age.copy));
+      if (window.HomePageUI) window.HomePageUI.scrollToResults('ageResults', 'smart-' + state.sequence);
+    }
     if (state.age.status === 'error') setAgePanel(noResultCard(state.age.copy, 'age'));
-    if (state.age.status === 'success' || state.age.status === 'error') mountUpsell(query, state.age);
+    if (state.age.status === 'success' || state.age.status === 'needs-detail' || state.age.status === 'error') mountUpsell(query, state.age);
     // Excluded from the 'error' branch on purpose: a CTA to estimate depreciation would
     // be misleading when Smart Lookup could not identify the item at all.
     if (state.age.status === 'success') mountRcvAcvLinkout(query, state.age);
@@ -1136,14 +1291,17 @@
     }
     var nextFingerprint = fingerprint(query, notes);
     var now = Date.now();
-    if (state.fingerprint === nextFingerprint && (state.age.status === 'loading' || now - state.lastStartedAt < 750)) return;
+    // The short window absorbs an accidental double submit. An explicit Retry
+    // click on a visible result is deliberate, so only an in-flight lookup blocks it.
+    var isRetry = Boolean(options && options.retry);
+    if (state.fingerprint === nextFingerprint && (state.age.status === 'loading' || (!isRetry && now - state.lastStartedAt < 750))) return;
     state.sequence += 1;
     var sequence = state.sequence;
     state.fingerprint = nextFingerprint;
     state.lastStartedAt = now;
     if (state.controller) state.controller.abort();
     state.controller = new AbortController();
-    var analyticsAttempt = beginAnalyticsAttempt();
+    var analyticsAttempt = beginAnalyticsAttempt(normalize(query).toLowerCase());
     clearAgeStageTimers();
     state.age = { status: 'loading', data: null, error: null, stageIndex: 0, copy: null };
     setBusy(true);
@@ -1151,13 +1309,20 @@
     render(query);
     scheduleAgeStages(sequence, query);
 
-    fetchJson('/api/age-lookup', requestBody(query, notes), state.controller.signal).then(function (data) {
+    fetchJson('/api/age-lookup', requestBody(query, notes, Boolean(options && options.retry)), state.controller.signal).then(function (data) {
       if (sequence !== state.sequence || state.fingerprint !== nextFingerprint) return;
       clearAgeStageTimers();
       var bucket = classifyAgeOutcome(data);
-      state.age = bucket === 'success'
-        ? { status: 'success', data: data, error: null, copy: null }
-        : { status: 'error', data: null, error: null, copy: copyForAgeOutcome(bucket, data) };
+      var outcome = classifySmartOutcome(data, bucket);
+      if (outcome.resultStatus === 'needs-detail') {
+        // Recognized, but not enough detail to date: guidance, never "No result".
+        state.age = { status: 'needs-detail', data: data, error: null, copy: copyForAgeOutcome(bucket, data), outcome: outcome };
+      } else if (bucket === 'success') {
+        state.age = { status: 'success', data: data, error: null, copy: null };
+      } else {
+        state.age = { status: 'error', data: null, error: null, copy: copyForAgeOutcome(bucket, data) };
+      }
+      rememberNeedsDetail(normalize(query).toLowerCase(), outcome);
       render(query);
       completeAnalyticsAttempt(analyticsAttempt, data, bucket);
     }).catch(function (error) {
@@ -1200,7 +1365,7 @@
       if (retry) {
         event.preventDefault();
         event.stopImmediatePropagation();
-        run();
+        run(undefined, { retry: true });
         return;
       }
       var editButton = event.target && event.target.closest ? event.target.closest('[data-smart-lookup-edit="1"]') : null;

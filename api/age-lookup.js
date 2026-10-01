@@ -1,5 +1,10 @@
 import { buildSmartAgeCacheKey, chooseSmartAgeTtl, hashCanonicalQuery, prepareResultForCache } from '../lib/smart-lookup/cache.js';
-import { providerAttemptCountFromMetadata, recordProviderAttemptMetrics, reserveProviderBudget } from '../lib/smart-lookup/budget.js';
+import { providerAttemptCountFromMetadata, recordProviderAttemptMetrics, reserveGuidanceBudget, reserveProviderBudget } from '../lib/smart-lookup/budget.js';
+import { chooseSmartLookupRoute, ROUTE_MODES } from '../lib/smart-lookup/route-mode.js';
+import { buildGeneralGuidance } from '../lib/smart-lookup/guidance.js';
+import { callGuidanceProvider, getGuidanceModel, isGuidanceEnrichmentEnabled } from '../lib/smart-lookup/guidance-provider.js';
+import { classifySmartOutcome } from '../lib/smart-lookup/outcome.js';
+import { buildOutcomeCounterEntries } from '../lib/smart-lookup/outcome-counters.js';
 import { sharedEvidenceToSmartLookupInput } from '../lib/model-evidence/adapters.js';
 import { lookupModelEvidence } from '../lib/model-evidence/service.js';
 import {
@@ -59,7 +64,7 @@ import {
   runWithAttemptRecorder,
   withAttemptAccounting,
 } from '../lib/smart-lookup/provider-attempts.js';
-import { recordProviderUsage, recordUsageEvent } from '../lib/smart-lookup/provider-usage.js';
+import { recordProviderUsage, recordUsageEvent, recordUsageEventCounts } from '../lib/smart-lookup/provider-usage.js';
 import { createGeminiCooldown } from '../lib/smart-lookup/gemini-cooldown.js';
 import { createQuotaMeter } from '../lib/quota/meter.js';
 
@@ -125,6 +130,12 @@ function mapNativeGeminiSearchResult(nativeResult, queryInfo, options = {}) {
   const hasCompleteRange = Number.isInteger(range.startYear) && Number.isInteger(range.endYear);
   const groundedSources = nativeGroundingSources(nativeResult.sources);
   const bestEstimateYear = nativeResult.bestEstimateYear;
+  // Open-ended timing ("introduced 2015, still produced") arrives as a start
+  // year with no end and often no best estimate. The start year is the same
+  // value the normalizer reports as bestEstimateYear, so it anchors the
+  // precision-specific introduction fields instead of being discarded.
+  // Never used for an individual-unit date, which needs an explicit best year.
+  const anchorYear = bestEstimateYear ?? (Number.isInteger(range.startYear) ? range.startYear : null);
   const isIndividualUnitDate = nativeResult.isIndividualUnitDate === true;
   const raw = {
     brand: nativeResult.brand,
@@ -148,7 +159,7 @@ function mapNativeGeminiSearchResult(nativeResult, queryInfo, options = {}) {
     estimatedRange: {
       start: range.startYear,
       end: range.endYear,
-      current: false,
+      current: Number.isInteger(range.startYear) && !Number.isInteger(range.endYear),
       basis: mapping.estimateBasis,
     },
     productionRange: hasCompleteRange
@@ -165,15 +176,15 @@ function mapNativeGeminiSearchResult(nativeResult, queryInfo, options = {}) {
     raw.estimatedYear = bestEstimateYear;
     raw.estimatedYearType = 'individual-manufacture';
   } else if (nativeResult.precision === 'model_line' || nativeResult.precision === 'generation') {
-    raw.lineIntroductionYear = bestEstimateYear;
+    raw.lineIntroductionYear = anchorYear;
     raw.modelLineRange = raw.estimatedRange;
   } else if (nativeResult.precision === 'product_family') {
-    raw.familyIntroductionYear = bestEstimateYear;
+    raw.familyIntroductionYear = anchorYear;
     raw.familyRange = raw.estimatedRange;
   } else if (nativeResult.precision === 'category_era') {
-    raw.categoryEntryYear = bestEstimateYear;
+    raw.categoryEntryYear = anchorYear;
   } else {
-    raw.introductionYear = bestEstimateYear;
+    raw.introductionYear = anchorYear;
   }
 
   const nativeQueryInfo = {
@@ -206,6 +217,9 @@ function mapNativeGeminiSearchResult(nativeResult, queryInfo, options = {}) {
 // and never touch a quota counter).
 function classifyLookupOutcome(payload, statusCode) {
   if (!payload || statusCode === 400 || statusCode === 405) return null;
+  // Cheap ungrounded guidance is its own bucket: it is neither a free local
+  // answer nor a metered AI research lookup.
+  if (payload.routeMode === ROUTE_MODES.GENERAL_GUIDANCE) return 'guidance';
   if (payload.source === 'local-db' || payload.source === 'decoder-verified' || payload.evidenceSource === 'local-db') return 'local';
   if (payload.source === 'cache' || payload.cacheStatus === 'hit') return 'cache';
   if (payload.source === 'static' || payload.evidenceSource === 'heuristic'
@@ -231,7 +245,8 @@ function validateRequestBody(body) {
   if (!query) return { error: 'MISSING_QUERY' };
   if (query.length > 200) return { error: 'QUERY_TOO_LONG' };
   if (notes.length > SMART_LOOKUP_NOTES_MAX_LENGTH) return { error: 'NOTES_TOO_LONG' };
-  return { value: { query, notes } };
+  // A Retry asks for fresh research instead of a short-lived cached answer.
+  return { value: { query, notes, retry: body?.retry === true } };
 }
 
 function normalizeLegacyResult(raw, queryInfo, options = {}) {
@@ -295,6 +310,13 @@ function finalizeTimings(result, timings, deadline) {
   return result;
 }
 
+// Same classification the browser reports to GA4, so logs, counters and GA agree.
+function outcomeTelemetryFields(result) {
+  if (!result) return {};
+  const outcome = classifySmartOutcome(result);
+  return { resultStatus: outcome.resultStatus, outcomeReason: outcome.outcomeReason, yearSignal: outcome.yearSignal };
+}
+
 function logResult(logger, requestId, queryInfo, result, extra = {}) {
   const grounded = extra.groundedTelemetry || {};
   const routing = extra.routingTelemetry || {};
@@ -346,6 +368,13 @@ function logResult(logger, requestId, queryInfo, result, extra = {}) {
     secondaryHeavyProviderSkipped: routing.secondaryHeavyProviderSkipped || false,
     estimateBasis: result?.estimateBasis || null,
     estimatePrecision: result?.precisionLevel || null,
+    ...outcomeTelemetryFields(result),
+    routeMode: result?.routeMode || null,
+    isRetry: routing.isRetry,
+    retryBypassedCache: routing.retryBypassedCache,
+    guidanceEnrichment: routing.guidanceEnrichment || null,
+    guidanceFailureCode: routing.guidanceFailureCode || null,
+    guidanceModel: routing.guidanceModel || null,
     ...attemptTelemetryFields(),
     ...(getActiveAttemptRecorder()?.telemetryExtras() || {}),
     geminiCooldownActive: extra.geminiCooldownActive,
@@ -433,6 +462,12 @@ export function createAgeLookupHandler(dependencies = {}) {
     || createGeminiCooldown({ now, env: dependencies.env || process.env });
   const usageSink = dependencies.recordProviderUsage || recordProviderUsage;
   const groqOnlyLookup = dependencies.groqOnlyLookup || callSmartLookupAgeProviderGroqOnly;
+  // GENERAL_GUIDANCE: optional cheap UNGROUNDED model enrichment (default off).
+  // The deterministic guidance card is served either way.
+  const guidanceEnabled = dependencies.guidanceEnabled
+    ?? isGuidanceEnrichmentEnabled(dependencies.env || process.env);
+  const guidanceProviderLookup = dependencies.guidanceProviderLookup || callGuidanceProvider;
+  const guidanceBudgetReserve = dependencies.reserveGuidanceBudget || reserveGuidanceBudget;
   // Logical AI-lookup metering (shadow by default; both flags are off unless set).
   const quotaMeter = dependencies.quotaMeter
     || createQuotaMeter({ env: dependencies.env || process.env, now, accountResolver: dependencies.accountResolver });
@@ -460,6 +495,10 @@ export function createAgeLookupHandler(dependencies = {}) {
     };
     recorder.setContext({ queryHash: hashCanonicalQuery(queryInfo.canonicalQuery || queryInfo.normalizedQuery || '') });
     const currentYear = new Date().getFullYear();
+    // Decided once, up front, from the query alone. Uncertainty always routes to
+    // PRECISION_RESEARCH; see lib/smart-lookup/route-mode.js.
+    const route = chooseSmartLookupRoute(queryInfo);
+    const isRetry = validation.value.retry === true;
     let redis = null;
     let cacheStatus = 'bypass';
     // Shared by the recorder hook and the provider chain: once any Gemini call
@@ -478,6 +517,11 @@ export function createAgeLookupHandler(dependencies = {}) {
       heavyProviderAttempted: false,
       heavyProviderDurationMs: null,
       secondaryHeavyProviderSkipped: false,
+      isRetry,
+      retryBypassedCache: false,
+      guidanceEnrichment: null,
+      guidanceFailureCode: null,
+      guidanceModel: null,
     };
 
     function logFinalResult(result, extra = {}) {
@@ -850,7 +894,10 @@ export function createAgeLookupHandler(dependencies = {}) {
       const useGrounded = groundedEnabled
         && queryInfo.providerEligible
         && queryInfo.groundedEligible;
-      const cacheKey = buildSmartAgeCacheKey(queryInfo, { grounded: useGrounded || nativeGeminiSearchEnabled });
+      const cacheKey = buildSmartAgeCacheKey(queryInfo, {
+        grounded: useGrounded || nativeGeminiSearchEnabled,
+        routeMode: route.mode,
+      });
       const scheduleAgeCacheWrite = (result) => {
         const ttlSeconds = chooseSmartAgeTtl(result);
         if (ttlSeconds <= 0 || !deadline.hasTime(50)) return;
@@ -886,6 +933,14 @@ export function createAgeLookupHandler(dependencies = {}) {
           reserveMs: 650,
         });
       } catch (_) {}
+      // Retry means "research again": a short-lived cached needs-detail or
+      // yearless answer must not be replayed. The verified-evidence read above
+      // is unaffected, and the logical-lookup de-dup in the quota meter still
+      // treats this as the same user action.
+      if (isRetry && cacheRead.status === 'hit') {
+        cacheRead = { ...cacheRead, status: 'miss', value: null };
+        routingTelemetry.retryBypassedCache = true;
+      }
       const redisPhaseElapsed = Math.max(0, now() - redisPhaseStart);
       timings.cacheReadMs = Math.min(redisPhaseElapsed, cacheRead.elapsedMs || redisPhaseElapsed);
       timings.verifiedLookupMs = verifiedRead.elapsedMs || 0;
@@ -909,6 +964,38 @@ export function createAgeLookupHandler(dependencies = {}) {
         } catch (_) {
           cacheStatus = 'error';
         }
+      }
+
+      // GENERAL_GUIDANCE: a brand and/or category with nothing to date. No
+      // grounded search, no research credit, no global research budget. The
+      // deterministic card is the answer; the cheap ungrounded model call is an
+      // optional, separately budgeted enrichment of it.
+      if (route.mode === ROUTE_MODES.GENERAL_GUIDANCE) {
+        queryInfo.routeMode = ROUTE_MODES.GENERAL_GUIDANCE;
+        const guidance = await buildGeneralGuidance({
+          queryInfo,
+          timings,
+          currentYear,
+          cacheStatus,
+          deadline,
+          redis,
+          rateLimiter: dependencies.rateLimiter || rateLimiterFactory(redis),
+          clientId: getClientIp(req),
+          env: dependencies.env || process.env,
+          enabled: guidanceEnabled,
+          providerLookup: guidanceProviderLookup,
+          reserveBudget: guidanceBudgetReserve,
+          apiKey: dependencies.guidanceApiKey || dependencies.geminiApiKey || dependencies.apiKey,
+          fetchImpl: dependencies.guidanceFetchImpl || dependencies.fetchImpl,
+        });
+        routingTelemetry.guidanceEnrichment = guidance.enrichment;
+        routingTelemetry.guidanceFailureCode = guidance.failureCode;
+        routingTelemetry.guidanceModel = guidance.model;
+        const result = finalizeTimings(guidance.result, timings, deadline);
+        // Only an answer the model actually contributed to is worth caching.
+        if (guidance.enrichment === 'ok' || guidance.enrichment === 'ok-partial') scheduleAgeCacheWrite(result);
+        logFinalResult(result, {});
+        return res.status(200).json(result);
       }
 
       if (!queryInfo.providerEligible || !deadline.hasTime(900, 300)) {
@@ -941,6 +1028,8 @@ export function createAgeLookupHandler(dependencies = {}) {
       // This request is about to use (or share) a paid provider: it is ONE
       // logical AI lookup no matter how many internal attempts follow, and a
       // retry of the same query is not counted again. Shadow mode only logs.
+      // From here on every result this request builds is PRECISION_RESEARCH.
+      queryInfo.routeMode = ROUTE_MODES.PRECISION_RESEARCH;
       const quotaDecision = await session.admit({
         redis,
         queryKey: hashCanonicalQuery(`${queryInfo.canonicalQuery || queryInfo.normalizedQuery || ''}|${queryInfo.notesHash || ''}`),
@@ -1619,25 +1708,53 @@ export function createAgeLookupHandler(dependencies = {}) {
     });
     const session = quotaMeter.createSession({ req, route: 'age' });
     recorder.setTelemetryExtras(() => session.telemetry());
-    if (!session.enabled) return runWithAttemptRecorder(recorder, () => handleAgeRequest(req, res, recorder, session));
 
-    // Metering on: remember the reply so the request can be bucketed, then
-    // settle (refund an unproduced AI lookup, write traffic counters) once the
-    // handler is done. All best effort; nothing here can change the reply.
+    // Remember the reply so the request can be bucketed and its outcome counted
+    // once the handler is done (and, with metering on, settled: an unproduced AI
+    // lookup refunded, traffic counters written). All best effort and after the
+    // reply was built; nothing here can change it.
     let payload = null;
     const sendJson = res.json.bind(res);
     res.json = (body) => { payload = body; return sendJson(body); };
+    // Local, verified and deterministic answers must stay Redis-free (tests pin
+    // this), so a client is only created for the counters when metering is on --
+    // the same rule settle() already follows -- or when this request already
+    // used Redis.
+    const getRedis = () => session.redis || (session.enabled ? (dependencies.redis || redisFactory()) : null);
     return runWithAttemptRecorder(recorder, async () => {
       try {
         return await handleAgeRequest(req, res, recorder, session);
       } finally {
-        await session.settle({
-          getRedis: () => dependencies.redis || redisFactory(),
-          outcome: classifyLookupOutcome(payload, res.statusCode),
-        });
+        if (session.enabled) {
+          await session.settle({
+            getRedis: () => dependencies.redis || redisFactory(),
+            outcome: classifyLookupOutcome(payload, res.statusCode),
+          });
+        }
+        await recordOutcomeCounters({ getRedis, payload, statusCode: res.statusCode, recorder, session, retry: req?.body?.retry === true });
       }
     });
   };
+
+  // Daily outcome counters (status, reason, year signal, route mode and per-mode
+  // cost). Independent of quota metering; best effort, bounded, never throws.
+  async function recordOutcomeCounters({ getRedis, payload, statusCode, recorder, session, retry }) {
+    try {
+      if (!classifyLookupOutcome(payload, statusCode)) return;
+      const summary = recorder.summary();
+      const entries = buildOutcomeCounterEntries({
+        payload,
+        summary,
+        attempts: recorder.totalCount(),
+        creditCounted: Boolean(session.decision?.counted),
+        retry,
+      });
+      if (!entries.length) return;
+      let redis = null;
+      try { redis = getRedis(); } catch (_) { redis = null; }
+      if (redis) await recordUsageEventCounts(redis, 'age', entries, now());
+    } catch (_) { /* counters must never affect a reply */ }
+  }
 }
 
 export default createAgeLookupHandler();

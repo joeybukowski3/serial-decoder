@@ -36,7 +36,11 @@
     replacement_result_available: true,
     clarification_recommended: true,
     conflict_detected: true,
-    timeout_with_useful_fallback: true
+    timeout_with_useful_fallback: true,
+    outcome_reason: true,
+    year_signal: true,
+    route_mode: true,
+    refinement_of_needs_detail: true
   });
 
   function isSafeScalar(value) {

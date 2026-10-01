@@ -58,7 +58,7 @@ for (const day of days) {
   } else {
     const t = report.traffic;
     console.log(`   Smart Lookup attempts:        ${t.totalAttempts}`);
-    for (const name of ['local', 'cache', 'deterministic', 'ai', 'other']) {
+    for (const name of ['local', 'cache', 'deterministic', 'guidance', 'ai', 'other']) {
       console.log(`     ${name.padEnd(14)} ${String(t.outcomes[name]).padStart(6)}  ${pct(t.shares[name])}`);
     }
   }
@@ -86,6 +86,24 @@ for (const day of days) {
     for (const [model, count] of Object.entries(route.models).sort((a, b) => b[1] - a[1])) {
       console.log(`       ${String(count).padStart(5)}  ${model}`);
     }
+  }
+
+  // 6 (printed after 3) -- route mode comparison ---------------------------
+  const r = report.routing;
+  console.log('\n3b. ROUTE MODES (needs the outcome counters; "none" = never routed: local, cache, deterministic, errors before routing)');
+  if (!r.totalRequests) {
+    console.log('   (no outcome counters recorded for this day)');
+  } else {
+    console.log(`   requests: ${r.totalRequests}   general_guidance ${pct(r.shares.general_guidance)}   precision_research ${pct(r.shares.precision_research)}   none ${pct(r.shares.none)}`);
+    for (const mode of ['general_guidance', 'precision_research', 'none']) {
+      const m = r.modes[mode];
+      if (!m.requests) continue;
+      console.log(`   [${mode}] n=${m.requests}  useful ${pct(m.usefulRate)}  needs-detail ${pct(m.needsDetailRate)}  no-result ${pct(m.noResultRate)}  error ${pct(m.errorRate)}`);
+      console.log(`       attempts/request ${num(m.avgProviderAttempts)}  tokens in/out per request ${num(m.avgInputTokens)}/${num(m.avgOutputTokens)}  grounded ${pct(m.groundedShare)}  credits ${m.logicalAiLookups}  retries ${m.retries}`);
+    }
+    const top = (obj) => Object.entries(obj).sort((a, b) => b[1] - a[1]).map(([name, value]) => `${name} ${value}`).join(', ');
+    console.log(`   reasons: ${top(r.reasons)}`);
+    console.log(`   year signal: ${top(r.yearSignals)}`);
   }
 
   // 4 -------------------------------------------------------------------
