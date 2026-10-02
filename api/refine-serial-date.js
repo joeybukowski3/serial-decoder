@@ -49,7 +49,8 @@ import {
   runWithAttemptRecorder,
   withAttemptAccounting,
 } from '../lib/smart-lookup/provider-attempts.js';
-import { recordProviderUsage, recordUsageEvent } from '../lib/smart-lookup/provider-usage.js';
+import { recordProviderUsage, recordUsageEvent, recordUsageEventCounts } from '../lib/smart-lookup/provider-usage.js';
+import { buildRefinementCounterEntries } from '../lib/smart-lookup/outcome-counters.js';
 import { createGeminiCooldown } from '../lib/smart-lookup/gemini-cooldown.js';
 import { evaluateRefinementGate } from '../lib/serial-refinement/refinement-gate.js';
 
@@ -346,8 +347,13 @@ export function createRefineSerialDateHandler(dependencies = {}) {
         cost: costSnapshot,
       });
       if (redis) {
-        await recordUsageEvent(redis, 'refine', usageOutcome);
-        if (validation.trigger === 'retry') await recordUsageEvent(redis, 'refine', 'retry');
+        // One pipelined write: the outcome name, retry flag and the status-joined
+        // spend counters (see outcome-counters.js).
+        await recordUsageEventCounts(redis, 'refine', [
+          [usageOutcome, 1],
+          ...(validation.trigger === 'retry' ? [['retry', 1]] : []),
+          ...buildRefinementCounterEntries({ status: safeResponse.status, summary: attemptSummary, attempts: providerAttemptCount }),
+        ]);
       }
       if (shadowTask && !shadowObserved) {
         shadowObserved = true;
@@ -722,7 +728,7 @@ export function createRefineSerialDateHandler(dependencies = {}) {
             const research = await deadline.run(
               'serial-refinement-native-gemini-research',
               ({ budgetMs }) => withAttemptAccounting(
-                { provider: 'gemini', model: dependencies.nativeGeminiModel || NATIVE_MODEL_RESEARCH_MODEL },
+                { provider: 'gemini', model: dependencies.nativeGeminiModel || NATIVE_MODEL_RESEARCH_MODEL, grounded: true },
                 () => nativeModelResearchLookup(
                   {
                     brand: input.brand,

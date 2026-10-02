@@ -75,11 +75,16 @@ test('the recorder numbers attempts, summarizes them, and logs only allowlisted 
   await recorder.record({ provider: 'groq', model: 'm2', providerStatus: 'ok', fallbackReason: 'gemini_rate_limited', inputTokens: 9, outputTokens: 3 });
 
   assert.deepEqual(recorder.attempts.map((a) => a.attemptNumber), [1, 2]);
-  assert.deepEqual(recorder.summary(), {
+  // byModel / fallbackByModel (cost counters) are covered in cost-report.test.mjs.
+  const { byModel, fallbackByModel, ...summary } = recorder.summary();
+  assert.deepEqual(summary, {
     attemptCount: 2, geminiAttemptCount: 1, groqAttemptCount: 1, otherAttemptCount: 0,
     providerRateLimitCount: 1, geminiRateLimitCount: 1, fallbackAttemptCount: 1,
     attemptModels: ['m1', 'm2'], inputTokens: 9, outputTokens: 3,
+    thinkingTokens: 0, groundedAttemptCount: 0, searchQueryCount: 0,
   });
+  assert.deepEqual(byModel.map((row) => [row.provider, row.model, row.calls]), [['gemini', 'm1', 1], ['groq', 'm2', 1]]);
+  assert.deepEqual(fallbackByModel.map((row) => [row.model, row.calls]), [['m2', 1]]);
   const first = JSON.parse(lines[0]);
   assert.equal(first.event, 'provider_attempt');
   assert.equal('secretField' in first, false);
@@ -195,6 +200,7 @@ test('summarizeUsage yields per-route/model rows with 429 counts and tokens, plu
   assert.deepEqual(summary.rows, [{
     route: 'age', provider: 'gemini', model: 'gemini-3.5-flash-lite',
     calls: 10, rateLimited: 4, otherFailures: 1, inputTokens: 3000, outputTokens: 900, thinkingTokens: 0,
+    groundedCalls: 0, groundedBillable: 0, searchQueries: 0, searchReported: 0,
   }]);
   assert.equal(summary.events['refine|gate_skip:single_candidate'], 7);
   assert.equal(summary.fallbacks['refine|gemini_rate_limited'], 3);

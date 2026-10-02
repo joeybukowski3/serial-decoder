@@ -399,6 +399,9 @@ function attemptTelemetryFields() {
     attemptModels: summary.attemptModels,
     inputTokens: summary.inputTokens,
     outputTokens: summary.outputTokens,
+    thinkingTokens: summary.thinkingTokens,
+    groundedAttemptCount: summary.groundedAttemptCount,
+    providerSearchQueryCount: summary.searchQueryCount,
   };
 }
 
@@ -1120,7 +1123,7 @@ export function createAgeLookupHandler(dependencies = {}) {
             groundedTelemetry.attempted = true;
             try {
               const nativeResult = await withAttemptAccounting(
-                { provider: 'gemini', model: dependencies.nativeGeminiModel || NATIVE_MODEL_RESEARCH_MODEL },
+                { provider: 'gemini', model: dependencies.nativeGeminiModel || NATIVE_MODEL_RESEARCH_MODEL, grounded: true },
                 () => nativeGeminiSearchLookup(
                   queryInfo.providerQuery || queryInfo.query,
                   {
@@ -1277,6 +1280,7 @@ export function createAgeLookupHandler(dependencies = {}) {
                   ? getXaiSmartLookupModel(commonOptions.env)
                   : getOpenAiSmartLookupModel(commonOptions.env),
                 fallbackReason,
+                grounded: true,
               }, () => (heavyProviderSelected === 'xai'
                 ? xaiProviderLookup(queryInfo, {
                     ...commonOptions,
@@ -1371,7 +1375,7 @@ export function createAgeLookupHandler(dependencies = {}) {
           let groundedValue;
           try {
             groundedValue = await deadline.run('age-provider-call-grounded', () => withAttemptAccounting(
-              { provider: 'gemini', model: GEMINI_AGE_MODEL, fallbackReason },
+              { provider: 'gemini', model: GEMINI_AGE_MODEL, fallbackReason, grounded: true },
               () => groundedProviderLookup(queryInfo, {
                 deadline,
                 maxMs: groundedMaxMs,
