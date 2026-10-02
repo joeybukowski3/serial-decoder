@@ -10,6 +10,12 @@
  *   quota:v1:d:<UTC day>         hashed subject -> AI lookups that day (distribution data)
  *   quota:v1:ip:<UTC day>        day-scoped IP hash -> AI lookups (abuse signal)
  *
+ * Sections 7-9 (cost efficiency, unproductive spend, mode comparison) are ESTIMATES:
+ * token counts x rates from COST_* variables (see lib/smart-lookup/cost-estimate.js).
+ * No prices are built in; a missing rate prints "cost unavailable". Not an invoice.
+ *   COST_GEMINI_INPUT_PER_MILLION=... COST_GEMINI_OUTPUT_PER_MILLION=... \
+ *   COST_GROUNDED_REQUEST=... COST_SEARCH_QUERY=... node --env-file=.env.local scripts/report-provider-usage.mjs
+ *
  * Traffic, AI-utilization and distribution sections are only populated once
  * SMART_LOOKUP_QUOTA_METERING is on in the environment being reported. Only
  * hashes are ever read or printed. Needs UPSTASH_REDIS_REST_URL / _TOKEN.
@@ -20,6 +26,9 @@ import { quotaKeys } from '../lib/quota/meter.js';
 import { loadQuotaConfig } from '../lib/quota/config.js';
 import { buildSmartLookupReport } from '../lib/quota/report.js';
 import { buildUsageReport } from '../lib/smart-lookup/provider-usage.js';
+import { loadCostConfig } from '../lib/smart-lookup/cost-estimate.js';
+import { buildCostReport } from '../lib/smart-lookup/cost-report.js';
+import { renderCostReport } from '../lib/smart-lookup/cost-report-format.js';
 
 const url = process.env.UPSTASH_REDIS_REST_URL;
 const token = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -37,6 +46,7 @@ const users = (count, share) => `${count} user${count === 1 ? '' : 's'} (${pct(s
 
 const redis = new Redis({ url, token });
 const config = loadQuotaConfig(process.env);
+const costConfig = loadCostConfig(process.env);
 
 for (const day of days) {
   const usage = await readProviderUsage(redis, day);
@@ -128,4 +138,7 @@ for (const day of days) {
   }
   console.log(`   Lookups flagged would-block (any reason): ${q.wouldBlockAtLeastOnce}`);
   console.log(`   IPs over ${num(q.ipDailyLimit)}/day (all visitor IDs combined): ${q.ipsOverLimit} of ${q.ipsSeen}`);
+
+  // 7-9 -----------------------------------------------------------------
+  for (const line of renderCostReport(buildCostReport(usage, costConfig))) console.log(line);
 }
