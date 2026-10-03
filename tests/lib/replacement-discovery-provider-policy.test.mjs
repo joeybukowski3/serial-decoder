@@ -78,12 +78,12 @@ test('installed physical fit is never researchable: a provider-supplied fit clai
   assert.ok(documented.primaryRecommendation.decision.reasonCodes.includes('HARD_COMPARISON_UNVERIFIED'));
 });
 
-test('tier from price is rejected and the brand/category baseline is kept', async () => {
+test('tier from price is rejected and verified Q80 series uses the product-line registry', async () => {
   const pricey = { ...tv.currentQled55, tier: { value: 'LUXURY', basis: 'PRICE', sources: ['samsung.com'], subjectModel: 'QN55Q80D' } };
   const result = await run([pricey]);
   assert.ok(result.research.warnings.some((warning) => warning.code === 'TIER_FROM_PRICE_REJECTED'));
   const tier = result.primaryRecommendation.candidate.identity.facts.tier;
-  assert.deepEqual([tier.status, tier.basis, tier.value], ['ASSUMED', 'BRAND_CATEGORY_BASELINE', 'PREMIUM']);
+  assert.deepEqual([tier.status, tier.basis, tier.value], ['INFERRED', 'PRODUCT_LINE_REGISTRY', 'PREMIUM']);
 });
 
 test('a tighter match beats an unnecessary larger screen regardless of discovery order', async () => {
