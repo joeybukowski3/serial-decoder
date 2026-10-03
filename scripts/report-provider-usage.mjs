@@ -10,6 +10,9 @@
  *   quota:v1:d:<UTC day>         hashed subject -> AI lookups that day (distribution data)
  *   quota:v1:ip:<UTC day>        day-scoped IP hash -> AI lookups (abuse signal)
  *
+ * Section 10 (provider failure detail) is exact counts: outcomes, HTTP status of failed attempts and
+ * bucketed latency per provider/model. It only covers attempts made after those counters were added.
+ *
  * Sections 7-9 (cost efficiency, unproductive spend, mode comparison) are ESTIMATES:
  * token counts x rates from COST_* variables (see lib/smart-lookup/cost-estimate.js).
  * No prices are built in; a missing rate prints "cost unavailable". Not an invoice.
@@ -29,6 +32,7 @@ import { buildUsageReport } from '../lib/smart-lookup/provider-usage.js';
 import { loadCostConfig } from '../lib/smart-lookup/cost-estimate.js';
 import { buildCostReport } from '../lib/smart-lookup/cost-report.js';
 import { renderCostReport } from '../lib/smart-lookup/cost-report-format.js';
+import { readProviderDiagnostics, renderProviderFailureReport } from '../lib/smart-lookup/provider-failure-report.js';
 
 const url = process.env.UPSTASH_REDIS_REST_URL;
 const token = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -141,4 +145,7 @@ for (const day of days) {
 
   // 7-9 -----------------------------------------------------------------
   for (const line of renderCostReport(buildCostReport(usage, costConfig))) console.log(line);
+
+  // 10 -------------------------------------------------------------------
+  for (const line of renderProviderFailureReport(await readProviderDiagnostics(redis, day))) console.log(line);
 }
