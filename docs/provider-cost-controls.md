@@ -64,6 +64,28 @@ prints, per route: provider calls (Gemini share), calls per paid lookup, 429 rat
 refinement rate (refine), model usage and tokens. Read-only. Not aggregated: locally-resolved refinements
 (no Redis client is created on that path by design).
 
+### Failure diagnosis counters
+
+Added so a failing provider can be diagnosed from the daily hash instead of a one-hour log window. All are
+extra fields under the same `route|provider|model|` prefix; none changes an existing field.
+
+| Field | Meaning |
+|---|---|
+| `http:<code>` | HTTP status of a **non-ok** attempt (e.g. `http:400`, `http:503`, `http:429`). Absent when no response arrived (timeouts, network errors). Named `http:` rather than `status:http_error:<code>` because the summary treats every `status:` field as a failure total |
+| `dur:<status>:<bucket>` | attempt latency per outcome; buckets `lt1s, 1-2s, 2-3s, 3-4s, 4-5s, 5-6s, 6-7s, 7-8s, 8-10s, 10-13s, ge13s` (`lib/smart-lookup/provider-diagnostics.js`) |
+| `cap_hit` / `timeout_route_limited` | a timeout where the stage cap was the binding limit vs. remaining route time |
+| `usable_yes` / `usable_no` | whether a usable response was received (OpenAI stage) |
+| `rem:<bucket>` | route budget left when the stage began (OpenAI stage) |
+
+The heavy-provider (OpenAI/xAI) stage cap is `SMART_LOOKUP_HEAVY_PROVIDER_TIMEOUT_MS`. Default **6500**.
+Only a plain positive integer is accepted (anything else uses the default) and it is clamped to 2000-12000.
+The stage is still bounded by the remaining route deadline, so the route's 15 s limit is unchanged.
+
+The report's section 10 prints, per provider/model, outcome counts, the HTTP status of failures, latency
+buckets with the median bucket, and cap-hit / usable-response / budget-at-start for OpenAI. Counters only exist
+for attempts made after this change; earlier days print "none recorded". Only categorical values and numbers
+are stored: never a response body, query, key or header.
+
 ## Known limits
 
 * `assistant-chat` and `lkq-compare` log their attempts and update the aggregate but do not use the cooldown

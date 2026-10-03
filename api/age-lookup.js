@@ -30,6 +30,7 @@ import {
   isOpenAiSmartLookupEnabled,
 } from '../lib/smart-lookup/openai-provider.js';
 import { callSmartLookupXaiAgeProvider, getXaiSmartLookupModel, isXaiSmartLookupEnabled } from '../lib/smart-lookup/xai-provider.js';
+import { heavyProviderStageBudgetMs } from '../lib/smart-lookup/heavy-provider-budget.js';
 import {
   callGeminiSearchProvider,
   GeminiSearchProviderError,
@@ -69,7 +70,6 @@ import { createGeminiCooldown } from '../lib/smart-lookup/gemini-cooldown.js';
 import { createQuotaMeter } from '../lib/quota/meter.js';
 
 const TOTAL_BUDGET_MS = 15000;
-const HEAVY_PROVIDER_STAGE_BUDGET_MS = 6500;
 const PROVIDER_BUDGET_MS = 6500;
 const REDIS_PHASE_BUDGET_MS = 500;
 const REDIS_CALL_BUDGET_MS = 250;
@@ -1274,6 +1274,11 @@ export function createAgeLookupHandler(dependencies = {}) {
                 env: dependencies.env || process.env,
                 enableXaiFallback: false,
               };
+              // Default 6500 ms; SMART_LOOKUP_HEAVY_PROVIDER_TIMEOUT_MS tunes it (validated + clamped).
+              const heavyStageCapMs = heavyProviderStageBudgetMs(commonOptions.env);
+              // Telemetry sink the provider fills in (budget, status, usable response);
+              // read by the attempt recorder, never used for control flow.
+              const heavyDiagnostics = { stageCapMs: heavyStageCapMs };
               const value = await withAttemptAccounting({
                 provider: heavyProviderSelected,
                 model: heavyProviderSelected === 'xai'
@@ -1281,14 +1286,16 @@ export function createAgeLookupHandler(dependencies = {}) {
                   : getOpenAiSmartLookupModel(commonOptions.env),
                 fallbackReason,
                 grounded: true,
+                diagnostics: heavyDiagnostics,
               }, () => (heavyProviderSelected === 'xai'
                 ? xaiProviderLookup(queryInfo, {
                     ...commonOptions,
-                    xaiMaxMs: Math.min(HEAVY_PROVIDER_STAGE_BUDGET_MS, deadline.remainingMs(350)),
+                    xaiMaxMs: Math.min(heavyStageCapMs, deadline.remainingMs(350)),
                   })
                 : openAiProviderLookup(queryInfo, {
                     ...commonOptions,
-                    openAiMaxMs: Math.min(HEAVY_PROVIDER_STAGE_BUDGET_MS, deadline.remainingMs(350)),
+                    openAiMaxMs: Math.min(heavyStageCapMs, deadline.remainingMs(350)),
+                    diagnostics: heavyDiagnostics,
                   })));
               routingTelemetry.heavyProviderDurationMs = Math.max(0, now() - heavyStart);
               groundedTelemetry.durationMs = routingTelemetry.heavyProviderDurationMs;
