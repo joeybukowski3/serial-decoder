@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { evaluateReplacement } from '../../lib/replacement-core/evaluate.js';
-import { refrigeratorProfile } from '../../lib/replacement-core/profiles/refrigerator.js';
+import { refrigeratorProfile, REFRIGERATOR_CAPACITY_POLICY_VERSION } from '../../lib/replacement-core/profiles/refrigerator.js';
 
 const cases = JSON.parse(fs.readFileSync(new URL('../fixtures/replacement-core/refrigerator-cases.json', import.meta.url)));
 const clone = () => structuredClone(cases.complete25);
@@ -28,6 +28,40 @@ test('25 to 27 passes capacity; 25 to 24 fails without percentage tolerance', ()
   replace(smaller, 'totalCapacityCuFt', 24);
   assert.equal(evaluate(smaller).classification, 'NOT_LKQ');
   assert.ok(evaluate(smaller).decision.hardFailures.some((failure) => failure.key === 'totalCapacityCuFt'));
+});
+
+test('versioned refrigerator total-capacity floor allows exactly 0.2 cu ft with decimal-safe comparisons', () => {
+  assert.equal(REFRIGERATOR_CAPACITY_POLICY_VERSION, '1.0.0');
+  assert.equal(refrigeratorProfile.capacityPolicyVersion, REFRIGERATOR_CAPACITY_POLICY_VERSION);
+  const examples = [
+    [25.2, 25.2, 'MATCH', 'CAPACITY_MATCH'],
+    [25.2, 25.1, 'MATCH', 'CAPACITY_WITHIN_REFRIGERATOR_TOLERANCE'],
+    [25.2, 25.0, 'MATCH', 'CAPACITY_WITHIN_REFRIGERATOR_TOLERANCE'],
+    [25.2, 24.9, 'FAIL', 'CAPACITY_BELOW_ALLOWED_FLOOR'],
+    [25.2, 24.5, 'FAIL', 'CAPACITY_BELOW_ALLOWED_FLOOR'],
+    [25.0, 24.8, 'MATCH', 'CAPACITY_WITHIN_REFRIGERATOR_TOLERANCE'],
+    [25.0, 24.7, 'FAIL', 'CAPACITY_BELOW_ALLOWED_FLOOR'],
+  ];
+  for (const [from, to, assessment, reasonCode] of examples) {
+    const entry = clone();
+    original(entry, 'totalCapacityCuFt', from);
+    replace(entry, 'totalCapacityCuFt', to);
+    const result = evaluate(entry);
+    assert.deepEqual([row(result, 'totalCapacityCuFt').assessment, row(result, 'totalCapacityCuFt').reasonCode],
+      [assessment, reasonCode], `${from} -> ${to}`);
+  }
+});
+
+test('nominal and incompatible capacity evidence cannot use the refrigerator tolerance', () => {
+  for (const capacityBasis of ['NOMINAL_MARKETING', 'INCOMPATIBLE']) {
+    const entry = clone();
+    original(entry, 'totalCapacityCuFt', 25.2);
+    replace(entry, 'totalCapacityCuFt', 25.1);
+    entry.original.facts.totalCapacityCuFt.capacityBasis = 'TOTAL_SPECIFICATION';
+    entry.candidate.identity.facts.totalCapacityCuFt.capacityBasis = capacityBasis;
+    assert.deepEqual([row(evaluate(entry), 'totalCapacityCuFt').assessment, row(evaluate(entry), 'totalCapacityCuFt').reasonCode],
+      ['UNVERIFIED', 'CAPACITY_COMPARISON_UNVERIFIED']);
+  }
 });
 
 test('built-in to freestanding and known physical fit violation are hard failures', () => {
@@ -94,6 +128,7 @@ test('ambiguous original hard capacity remains unconfirmed, never silently match
   const result = evaluate(entry);
   assert.equal(result.classification, 'UNCONFIRMED');
   assert.equal(row(result, 'totalCapacityCuFt').assessment, 'UNVERIFIED');
+  assert.equal(row(result, 'totalCapacityCuFt').reasonCode, 'CAPACITY_COMPARISON_UNVERIFIED');
 });
 
 test('documented hinge requirement can promote a secondary specification', () => {

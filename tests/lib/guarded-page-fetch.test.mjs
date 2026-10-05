@@ -148,6 +148,14 @@ test('binary response is rejected before reading', async () => {
   assert.equal(read, false);
 });
 
+test('manufacturer PDF response yields only bounded visible text', async () => {
+  const pdf = Buffer.from('%PDF-1.4\n<< /Length 30 >>\nstream\nBT (LRFCS25D3S refrigerator) Tj ET\nendstream');
+  const body = await consumePageResponse(htmlResponse([pdf], { 'content-type': 'application/pdf' }));
+  assert.equal(body.usableText, true);
+  assert.match(body.text, /LRFCS25D3S refrigerator/);
+  assert.ok(body.bytesRead < SOFT_EXTRACTION_BYTES);
+});
+
 test('slow stream hits the absolute body timeout', async () => {
   const res = htmlResponse((async function* () { yield '<html>'; await new Promise((resolve) => setTimeout(resolve, 50)); yield '</html>'; })());
   await assert.rejects(consumePageResponse(res, { timeoutMs: 10 }), /SOURCE_TIMEOUT/);

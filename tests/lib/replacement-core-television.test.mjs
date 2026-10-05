@@ -35,6 +35,12 @@ test('65 to 75 passes size and is Above LKQ with known fit; 65 to 55 fails despi
   assert.ok(evaluate(smaller).decision.hardFailures.some((failure) => failure.key === 'screenSizeIn'));
 });
 
+test('refrigerator capacity tolerance does not change the television screen-size floor', () => {
+  const smaller = clone();
+  replace(smaller, 'screenSizeIn', 64.9);
+  assert.equal(row(evaluate(smaller), 'screenSizeIn').assessment, 'FAIL');
+});
+
 test('a larger screen with no known space constraint stays eligible: Above LKQ with a VERIFY_FIT advisory', () => {
   const entry = clone();
   replace(entry, 'screenSizeIn', 75);

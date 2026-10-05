@@ -21,7 +21,7 @@ test('LG side by side refrigerator retains known configuration and unknown capac
   const result = interpret('LG side by side refrigerator');
   assert.deepEqual(result.detectedCategory, { value: 'refrigerator', status: 'KNOWN' });
   assert.equal(fact(result, 'brand').status, 'KNOWN');
-  assert.equal(fact(result, 'configurationFloor').value, 'side-by-side');
+  assert.equal(fact(result, 'configurationFloor').value, 'SIDE_BY_SIDE');
   assert.equal(fact(result, 'configurationFloor').status, 'KNOWN');
   assert.equal(result.candidateDiscoveryHints.minimumCapacity, null);
   assert.ok(result.unknownImportantFacts.some((item) => item.key === 'totalCapacityCuFt'));
@@ -45,7 +45,7 @@ test('OLED category inference and explicit Whirlpool capacity, layout and finish
   assert.equal(fact(oled, 'screenSizeIn').value, 65);
   const fridge = interpret('Whirlpool 25 cu ft French door stainless refrigerator');
   assert.equal(fact(fridge, 'totalCapacityCuFt').value, 25);
-  assert.equal(fact(fridge, 'configurationFloor').value, 'french-door');
+  assert.equal(fact(fridge, 'configurationFloor').value, 'FRENCH_DOOR');
   assert.equal(fact(fridge, 'finish').value, 'stainless');
   assert.equal(fact(fridge, 'tier').status, 'ASSUMED');
 });

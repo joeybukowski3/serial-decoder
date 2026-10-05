@@ -75,7 +75,7 @@ test('broad TV search skips original research, spends one call and never claims 
   assert.ok(result.originalInterpretation.unknownImportantFacts.some((item) => item.key === 'physicalFit'));
 });
 
-test('broad refrigerator search returns the tightest comparable LG and drops wrong-size and wrong-configuration models', async () => {
+test('broad refrigerator search prefers verified HARD capacity and drops wrong-size and wrong-configuration models', async () => {
   const { transport, researchProvider } = setup({ candidates: fridge.fridgeCandidatesResearch, grounding: fridge.fridgeGrounding });
   const result = await recommendWithResearch({ query: 'LG side-by-side refrigerator 25 cu ft', researchProvider });
   assert.equal(transport.calls.length, 1);

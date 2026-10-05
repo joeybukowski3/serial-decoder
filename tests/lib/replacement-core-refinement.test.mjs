@@ -30,7 +30,7 @@ test('feedback-ready output retains IDs, input, candidate and policy versions', 
   assert.equal(result.input, 'LG side-by-side refrigerator');
   assert.equal(result.normalizedOriginal.id, 'fridge-original-incomplete');
   assert.equal(result.decision.candidateId, result.candidate.candidateId);
-  assert.equal(result.profileVersion, '1.0.0');
+  assert.equal(result.profileVersion, refrigeratorProfile.profileVersion);
   assert.equal(result.scoringVersion, '1.0.0');
   assert.ok(result.decisionReasons.length);
 });

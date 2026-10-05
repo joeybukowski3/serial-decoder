@@ -25,3 +25,9 @@ test('future-category hard behaviors fit the same profile contract', () => {
   const hardComparators = new Set(televisionProfile.rules.concat(refrigeratorProfile.rules).filter((rule) => rule.bucket === 'HARD').map((rule) => rule.hardRule));
   assert.deepEqual([...hardComparators].sort(), ['MATCH', 'MINIMUM']);
 });
+
+test('refrigerator capacity comparator cannot be installed on a television profile', () => {
+  const profile = { ...televisionProfile, rules: televisionProfile.rules.map((rule) => rule.key === 'screenSizeIn'
+    ? { ...rule, comparator: 'refrigerator-capacity-minimum' } : rule) };
+  assert.match(validateProfile(profile).join(' '), /refrigerator capacity comparator requires refrigerator total capacity/);
+});
