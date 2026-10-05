@@ -24,6 +24,15 @@ call, that failed native calls were never counted, and that a Redis outage let p
    still research. The browser already only calls the endpoint for ambiguous decodes (candidates > 1 and a
    model entered); the Retry button sends `trigger: "retry"`.
 
+5. **Skip the legacy fallback on a clean native null** (`MODEL_REFINEMENT_SKIP_LEGACY_ON_CLEAN_NULL`, default
+   OFF). In `legacy_gemini` mode, when native Flash-Lite research ran normally but returned
+   `NATIVE_RESEARCH_INSUFFICIENT` or `NATIVE_RESEARCH_NO_NARROWING`, the `gemini-2.5-flash` grounded chain is
+   not called and the existing best-available result is returned (`INSUFFICIENT_EVIDENCE`, stage
+   `native_clean_null`). Native errors, disabled native research, an active cooldown and every other path still
+   use the legacy chain. Daily-aggregate events (`refine|event:*`): `legacy_skipped_clean_null`,
+   `legacy_called_clean_null` (flag OFF, would have been skipped), `legacy_called_native_error`,
+   `legacy_called_other`; the usage report prints them under "Refine legacy fallback".
+
 ## Error codes
 
 | Code | Meaning |
