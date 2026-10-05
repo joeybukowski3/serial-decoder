@@ -58,6 +58,16 @@ const MAX_CANDIDATES = 12;
 const GROUNDED_RATE_LIMIT_REQUESTS = 10;
 const GROUNDED_RATE_LIMIT_WINDOW = '1 m';
 const REFINEMENT_MODES = new Set(['legacy_gemini', 'deterministic_serper', 'local_only']);
+// Native research completed normally but gave nothing to apply. Re-asking the
+// same question of the legacy 2.5-flash grounded chain has not produced a
+// usable answer in production, so it can be skipped behind a flag.
+const NATIVE_CLEAN_NULL_CODES = new Set(['NATIVE_RESEARCH_INSUFFICIENT', 'NATIVE_RESEARCH_NO_NARROWING']);
+
+export function isSkipLegacyOnCleanNullEnabled(env = process.env) {
+  return ['1', 'true', 'yes', 'on'].includes(
+    String(env?.MODEL_REFINEMENT_SKIP_LEGACY_ON_CLEAN_NULL || 'false').trim().toLowerCase(),
+  );
+}
 
 function nowMs() {
   return Date.now();
@@ -191,6 +201,8 @@ export function createRefineSerialDateHandler(dependencies = {}) {
   const geminiCooldown = dependencies.geminiCooldown
     || createGeminiCooldown({ now: clock, env: dependencies.env || process.env });
   const usageSink = dependencies.recordProviderUsage || recordProviderUsage;
+  const skipLegacyOnCleanNull = dependencies.skipLegacyOnCleanNull
+    ?? isSkipLegacyOnCleanNullEnabled(dependencies.env || process.env);
 
   async function handleRefineRequest(req, res, recorder) {
     const requestStart = clock();
@@ -792,6 +804,27 @@ export function createRefineSerialDateHandler(dependencies = {}) {
           }
 
           if (refinementMode === 'legacy_gemini') {
+            const nativeCleanNull = nativeResearchAttempted
+              && NATIVE_CLEAN_NULL_CODES.has(nativeResearchFailureCode);
+            if (nativeCleanNull && skipLegacyOnCleanNull) {
+              await recordUsageEvent(redis, 'refine', 'legacy_skipped_clean_null');
+              return bestAvailable(
+                'INSUFFICIENT_EVIDENCE',
+                null,
+                'gemini-native-search',
+                [],
+                {
+                  failureStage: 'native_clean_null',
+                  failureCategory: 'extraction_no_usable_facts',
+                },
+              );
+            }
+            // Which condition sent this request to the legacy chain, so the
+            // daily aggregate can show whether the skip would have applied.
+            // Best-effort and not awaited: the counter must not delay the call.
+            void recordUsageEvent(redis, 'refine', nativeCleanNull
+              ? 'legacy_called_clean_null'
+              : (nativeResearchAttempted ? 'legacy_called_native_error' : 'legacy_called_other'));
             geminiGroundedRan = true;
             const grounded = await deadline.run(
               'serial-refinement-legacy-gemini',

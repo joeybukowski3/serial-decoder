@@ -94,6 +94,9 @@ for (const day of days) {
   console.log(`   Fallback rate (age):          ${pct(cc.fallbackRate)}   Gemini cooldown skips: ${cc.geminiCooldownSkips}`);
   if (cc.refinement) {
     console.log(`   Refinement rate:              ${pct(cc.refinement.refinementRate)} of ${cc.refinement.requestsCounted} counted requests (${num(cc.refinement.paidLookups)} paid)`);
+    const legacyEvents = ['legacy_skipped_clean_null', 'legacy_called_clean_null', 'legacy_called_native_error', 'legacy_called_other']
+      .map((name) => `${name.replace('legacy_', '')} ${perRoute.events[`refine|${name}`] ?? 0}`);
+    console.log(`   Refine legacy fallback:       ${legacyEvents.join('   ')}`);
   }
   for (const route of perRoute.routes) {
     console.log(`   [${route.route}] provider calls ${route.calls} (Gemini ${route.geminiCalls}), 429 ${pct(route.rateLimitRate)}, other failures ${route.otherFailures}, tokens in ${route.inputTokens} out ${route.outputTokens}`);
