@@ -66,9 +66,44 @@ jobs:
       - name: Start static site for existing browser suites
         shell: bash
         run: |
-          python3 -m http.server 3001 > /tmp/smart-lookup-v2-http.log 2>&1 &
-          echo $! > /tmp/smart-lookup-v2-http.pid
-          sleep 2
+          log=/tmp/smart-lookup-v2-http.log
+          python3 -m http.server 3001 > "$log" 2>&1 &
+          pid=$!
+          echo "$pid" > /tmp/smart-lookup-v2-http.pid
+
+          for i in $(seq 1 30); do
+            if curl -sf -o /dev/null http://localhost:3001/index.html; then
+              break
+            fi
+
+            if ! kill -0 "$pid" 2>/dev/null; then
+              echo "Static server died before becoming ready"
+              cat "$log"
+              exit 1
+            fi
+
+            if [ "$i" -eq 30 ]; then
+              echo "Static server did not become ready"
+              cat "$log"
+              exit 1
+            fi
+
+            sleep 1
+          done
+
+          sleep 1
+
+          if ! kill -0 "$pid" 2>/dev/null; then
+            echo "Static server died after readiness check"
+            cat "$log"
+            exit 1
+          fi
+
+          if ! curl -sf -o /dev/null http://localhost:3001/index.html; then
+            echo "Static server failed final readiness check"
+            cat "$log"
+            exit 1
+          fi
       - name: Run existing browser suites
         # This step chains after the Smart Lookup browser suite in the same
         # job, and both hit a single-threaded `python3 -m http.server`. Under
@@ -78,4 +113,8 @@ jobs:
         # same flake via concurrent Playwright workers against the same
         # server. Retries absorb that CI-only contention without masking a
         # real failure, since a genuine regression will fail on retry too.
-        run: npm run test:playwright -- --reporter=line --retries=2
+        run: npm run test:playwright -- --workers=1 --reporter=line --retries=2
+      - name: Print static server log on browser test failure
+        if: failure()
+        shell: bash
+        run: cat /tmp/smart-lookup-v2-http.log || true
