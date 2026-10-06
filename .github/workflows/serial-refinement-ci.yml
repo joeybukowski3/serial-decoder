@@ -60,19 +60,58 @@ jobs:
       - name: Start static site
         shell: bash
         run: |
-          python3 -m http.server 3001 > /tmp/serial-refinement-http.log 2>&1 &
-          echo $! > /tmp/serial-refinement-http.pid
-          sleep 2
+          log=/tmp/serial-refinement-http.log
+          python3 -m http.server 3001 > "$log" 2>&1 &
+          pid=$!
+          echo "$pid" > /tmp/serial-refinement-http.pid
+
+          for i in $(seq 1 30); do
+            if curl -sf -o /dev/null http://localhost:3001/index.html; then
+              break
+            fi
+
+            if ! kill -0 "$pid" 2>/dev/null; then
+              echo "Static server died before becoming ready"
+              cat "$log"
+              exit 1
+            fi
+
+            if [ "$i" -eq 30 ]; then
+              echo "Static server did not become ready"
+              cat "$log"
+              exit 1
+            fi
+
+            sleep 1
+          done
+
+          sleep 1
+
+          if ! kill -0 "$pid" 2>/dev/null; then
+            echo "Static server died after readiness check"
+            cat "$log"
+            exit 1
+          fi
+
+          if ! curl -sf -o /dev/null http://localhost:3001/index.html; then
+            echo "Static server failed final readiness check"
+            cat "$log"
+            exit 1
+          fi
       - name: Run decoder and refinement browser suites
         id: browser_tests
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          npm run test:playwright -- --reporter=json --trace=retain-on-failure > playwright-results.json
+          npm run test:playwright -- --workers=1 --reporter=json --trace=retain-on-failure > playwright-results.json
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
+      - name: Print static server log on browser test failure
+        if: steps.browser_tests.outputs.exit_code != '0'
+        shell: bash
+        run: cat /tmp/serial-refinement-http.log || true
       - name: Upload Playwright report and traces
         if: always()
         uses: actions/upload-artifact@v4
