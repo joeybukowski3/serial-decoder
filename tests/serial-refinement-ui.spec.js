@@ -218,7 +218,10 @@ test('GE dryer label and base model forms refine the serial result to June 2025'
       await expect(page.locator('.result-warning')).toHaveClass(/\bhidden\b/);
     }
 
-    expect(requestedModels).toEqual(['PFD87ESPV0RS', 'PFD87ESPVRS']);
+    await expect.poll(
+      () => [...requestedModels],
+      { timeout: 5000, message: 'wait for exact and base model refinement requests' },
+    ).toEqual(['PFD87ESPV0RS', 'PFD87ESPVRS']);
     await expect(page.getByRole('button', { name: /Possible Error\? Let Us Know/i }).first()).toBeVisible();
     expectCleanDiagnostics(diagnostics);
   } finally {
@@ -346,7 +349,10 @@ test('GE GFW850 label and family model forms refine FR31424IN to March 2020', as
     await expect(page.locator('.serial-refinement-normalization')).toContainText('GFW850SPNDG');
     await expect(page.locator('.serial-refinement-evidence summary')).toHaveText('Evidence used');
 
-    expect(requestedModels).toEqual(['GFW850SPN0DG', 'GFW850SPNDG', 'GFW850SPN0DG']);
+    await expect.poll(
+      () => [...requestedModels],
+      { timeout: 5000, message: 'wait for label, canonical and label model refinement requests' },
+    ).toEqual(['GFW850SPN0DG', 'GFW850SPNDG', 'GFW850SPN0DG']);
     expectCleanDiagnostics(diagnostics);
   } finally {
     await context.close();
