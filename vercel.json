@@ -499,6 +499,9 @@
     },
     "api/age-lookup.js": {
       "maxDuration": 35
+    },
+    "api/itemassist-replacement.js": {
+      "maxDuration": 30
     }
   }
 }
