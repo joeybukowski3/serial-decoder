@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { searchProducts } from '../../lib/replacement-discovery/providers/explicit-search.js';
 import { runRefrigeratorProof } from '../../lib/replacement-discovery/refrigerator-retrieval.js';
+import { RETAIL_NOW } from '../helpers/retail-evidence.mjs';
 
 const QUERY = 'LRFCS25D3S LG refrigerator specifications site:lg.com';
 const API_KEY = 'offline-secret-key-0123456789';
@@ -84,7 +85,7 @@ test('a timed-out request does not poison the next request: each call gets a fre
 });
 
 test('proof report records a string error code plus diagnostics for a provider timeout', async () => {
-  const report = await runRefrigeratorProof({
+  const report = await runRefrigeratorProof({ retailNow: RETAIL_NOW,
     search: (request) => searchProducts(request, { apiKey: API_KEY, timeoutMs: 20, fetchImpl: async (_url, { signal }) => abortAware(signal) }),
     fetchPage: async () => assert.fail('no page fetch after a failed search'),
   });

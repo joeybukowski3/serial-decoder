@@ -6,24 +6,25 @@ import { runRetrievalProof } from '../../lib/replacement-discovery/retrieval-fir
 import { runRefrigeratorProof, MAX_REFRIGERATOR_SEARCHES } from '../../lib/replacement-discovery/refrigerator-retrieval.js';
 import { interpretReplacementSearch } from '../../lib/replacement-discovery/interpret.js';
 import { fetchSource } from '../../lib/replacement-discovery/providers/guarded-page-fetch.js';
+import { RETAIL_NOW, withPurchasePath } from '../helpers/retail-evidence.mjs';
 
 const fixture = (name) => fs.readFileSync(new URL(`../fixtures/replacement-discovery/${name}`, import.meta.url), 'utf8');
 const result = (title, url, rank = 1) => ({ title, url, domain: new URL(url).hostname.replace(/^www\./, ''), snippet: title, providerRank: rank, sourceProvider: 'serper' });
 
 const q7fPage = fixture('samsung-q7f-page.html');
-const q80cPage = fixture('samsung-q80c-page.html');
+const q80cPage = withPurchasePath(fixture('samsung-q80c-page.html'));
 const q7fUrl = 'https://www.samsung.com/us/tvs/qled-tv/55-class-qled-tv-q7f-sku-qn55q7faafxza/';
 const q80cUrl = 'https://www.samsung.com/us/televisions-home-theater/tvs/qled-4k-tvs/q80c-55-inch-qled-4k-smart-tv-qn55q80cafxza/';
 const q80dUrl = 'https://www.samsung.com/us/tvs/qled-tv/q80d-55-inch-qled-4k-smart-tv-qn55q80dafxza/';
 const q80fUrl = 'https://www.samsung.com/us/tvs/qled-tv/q80f-55-inch-qled-4k-smart-tv-qn55q80fafxza/';
 const qn85fUrl = 'https://www.samsung.com/us/tvs/neo-qled-tv/qn85f-55-inch-neo-qled-4k-smart-tv-qn55qn85fafxza/';
-const syntheticTvPage = (model) => `<html><title>Samsung ${model} 55-inch QLED 4K Smart TV</title><h1>${model}</h1><p>Screen size: 55 inch class</p><p>Actual diagonal: 54.6 inches</p><p>Resolution: 3840 x 2160 4K</p><p>Display QLED</p><p>Native refresh rate: 120 Hz</p><p>Smart TV</p><p>HDR10</p></html>`;
+const syntheticTvPage = (model) => withPurchasePath(`<html><title>Samsung ${model} 55-inch QLED 4K Smart TV</title><h1>${model}</h1><p>Screen size: 55 inch class</p><p>Actual diagonal: 54.6 inches</p><p>Resolution: 3840 x 2160 4K</p><p>Display QLED</p><p>Native refresh rate: 120 Hz</p><p>Smart TV</p><p>HDR10</p></html>`);
 
 const lg = (model, slug) => `https://www.lg.com/us/refrigerators/lg-${model.toLowerCase()}-${slug}`;
 const lfH6200Url = lg('LF25H6200S', 'french-3-door-refrigerator');
 const lfG8330Url = lg('LF25G8330S', 'french-4-door-refrigerator');
 const lfZ6211Url = lg('LF25Z6211S', 'french-3-door-refrigerator');
-const fridgePages = { [lfH6200Url]: fixture('lg-lf25h6200s-page.html'), [lfG8330Url]: fixture('lg-lf25g8330s-page.html'), [lfZ6211Url]: fixture('lg-lf25z6211s-page.html') };
+const fridgePages = { [lfH6200Url]: withPurchasePath(fixture('lg-lf25h6200s-page.html')), [lfG8330Url]: withPurchasePath(fixture('lg-lf25g8330s-page.html')), [lfZ6211Url]: withPurchasePath(fixture('lg-lf25z6211s-page.html')) };
 
 const fakeClock = () => { let now = 0; return { now: () => now, advance: (ms) => { now += ms; } }; };
 const noProvider = () => ({
@@ -38,6 +39,7 @@ function tvProviders({ original = [result('Samsung QN55Q7FAAFXZA 55-inch QLED TV
   return {
     calls,
     deps: {
+      retailNow: RETAIL_NOW,
       search: async (request, options) => { calls.search.push({ ...request, options }); tick('search'); return request.purpose === 'original' ? original : candidates; },
       fetchPage: async (url, options) => { calls.fetch.push({ url, options }); tick('fetch'); return { status: 200, elapsedMs: 3, contentType: 'text/html', text: pages[url] ?? '' }; },
     },
@@ -50,6 +52,7 @@ function fridgeProviders({ candidates = [result('LG LF25G8330S French 4-door ref
   return {
     calls,
     deps: {
+      retailNow: RETAIL_NOW,
       search: async (request) => {
         calls.search.push(request);
         if (request.purpose === 'original') return [result('LG LF25H6200S refrigerator', lfH6200Url)];
@@ -108,13 +111,13 @@ test('2: a second supported LG refrigerator (LF25H6200S) flows through the facad
 
 test('3: legacy proof wrappers still enforce FIXED_TEST_ITEM_ONLY and never reach a provider', async () => {
   const { search, fetchPage } = noProvider();
-  await assert.rejects(runRetrievalProof({ query: 'Samsung QN55Q7F', search, fetchPage }), { message: 'FIXED_TEST_ITEM_ONLY' });
-  await assert.rejects(runRefrigeratorProof({ query: 'LG LF25H6200S refrigerator', search, fetchPage }), { message: 'FIXED_TEST_ITEM_ONLY' });
+  await assert.rejects(runRetrievalProof({ retailNow: RETAIL_NOW, query: 'Samsung QN55Q7F', search, fetchPage }), { message: 'FIXED_TEST_ITEM_ONLY' });
+  await assert.rejects(runRefrigeratorProof({ retailNow: RETAIL_NOW, query: 'LG LF25H6200S refrigerator', search, fetchPage }), { message: 'FIXED_TEST_ITEM_ONLY' });
 });
 
 test('3b: legacy wrappers still run their fixed item with the unchanged single-argument provider calls', async () => {
   const seen = [];
-  const report = await runRetrievalProof({
+  const report = await runRetrievalProof({ retailNow: RETAIL_NOW,
     search: async (...args) => { seen.push(args.length); return []; },
     fetchPage: async () => assert.fail('no fetch without results'),
   });
@@ -360,7 +363,7 @@ test('14: provider, search and discovery rank never change the LKQ order', async
 
 test('refrigerator searches are bounded by a total count', async () => {
   const models = ['LF25A1000S', 'LF25A2000S', 'LF25A3000S', 'LF25A4000S', 'LF25A5000S', 'LF25A6000S'];
-  const minimal = (model) => `<title>LG ${model} French 3-door refrigerator</title><h1>${model} refrigerator</h1>`;
+  const minimal = (model) => withPurchasePath(`<title>LG ${model} French 3-door refrigerator</title><h1>${model} refrigerator</h1>`);
   const urls = Object.fromEntries(models.map((model) => [model, lg(model, 'french-3-door-refrigerator')]));
   const providers = fridgeProviders({
     candidates: models.map((model) => result(`LG ${model} French 3-door refrigerator`, urls[model])),

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createItemAssistReplacementHandler } from '../../api/itemassist-replacement.js';
+import { RETAIL_NOW } from '../helpers/retail-evidence.mjs';
 import { isAuthorized, readRequestBody, validateReplacementRequest, MAX_BODY_BYTES } from '../../lib/replacement-public/request.js';
 import { replacementBudgetKey } from '../../lib/replacement-public/budget.js';
 import { replacementCacheKey } from '../../lib/replacement-public/cache.js';
@@ -209,7 +210,7 @@ test('21: a cache hit avoids the engine and every provider call', async () => {
   const redis = createReplacementRedis();
   let engineCalls = 0;
   const providers = tvProviders();
-  const { handler } = buildHandler({ redis, providers, recommend: async (args) => { engineCalls += 1; const { recommendByRetrieval } = await import('../../lib/replacement-discovery/live-retrieval.js'); return recommendByRetrieval(args); } });
+  const { handler } = buildHandler({ redis, providers, recommend: async (args) => { engineCalls += 1; const { recommendByRetrieval } = await import('../../lib/replacement-discovery/live-retrieval.js'); return recommendByRetrieval({ ...args, deps: { ...args.deps, retailNow: RETAIL_NOW } }); } });
   const first = await invoke(handler);
   assert.equal(first.body.meta.cached, false);
   const callsAfterFirst = providerCalls(providers);

@@ -91,7 +91,8 @@ test('ordinary sourced ranking is unchanged: a properly evidenced cross-brand LK
     const result = await broad(order, { query: 'Samsung QN55Q80C', original: tv.tvOriginalResearchExact, grounding: makeGrounding(['samsung.com', 'sony.com']) });
     assert.equal(result.primaryRecommendation.candidate.identity.facts.brand.value, 'Sony');
     assert.equal(result.primaryRecommendation.classification, 'LKQ');
-    assert.equal(result.rankingExplanation[0].decidedBy, 'classification');
+    // The poor Q60 is a verified 60 Hz against the original's verified 120 Hz: that known downgrade is now named as the deciding reason.
+    assert.equal(result.rankingExplanation[0].decidedBy, 'verified performance regression');
     assert.ok(!result.reasonCodes.includes('PROVISIONAL_UNSOURCED_RECOMMENDATION'));
   }
 });

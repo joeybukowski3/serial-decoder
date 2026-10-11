@@ -22,7 +22,9 @@ const publicFridge = async () => { const outcome = await run(FRIDGE, fridgeProvi
 const PUBLIC_KEYS = new Set(['contractVersion', 'status', 'category', 'retrievalQuality', 'original', 'primary', 'comparison', 'alternatives', 'warnings',
   'needsVerification', 'refinements', 'sources', 'meta', 'brand', 'model', 'displayName', 'facts', 'key', 'label', 'value', 'classification', 'confidence',
   'explanation', 'isBestAvailableOnly', 'importance', 'replacement', 'assessment', 'code', 'note', 'role', 'roleLabel', 'differences', 'severity', 'message',
-  'reason', 'fieldKey', 'prompt', 'domain', 'url', 'requestId', 'elapsedMs', 'engineVersion', 'profileVersion', 'cached']);
+  'reason', 'fieldKey', 'prompt', 'domain', 'url', 'requestId', 'elapsedMs', 'engineVersion', 'profileVersion', 'cached',
+  'recommendationLevel', 'retail', 'statusLabel', 'condition', 'purchaseStatus', 'catalogStatus', 'sellerType', 'sourceName', 'sourceDomain', 'sourceUrl',
+  'observedPrice', 'observedAt', 'amount', 'currency']);
 
 /** Internal strings that must never reach a browser: evidence/candidate IDs, provider names, queries, source ids, cache/Redis hints. */
 function internalStrings(outcome) {
@@ -111,9 +113,14 @@ test('14: a least-bad primary is flagged isBestAvailableOnly and carries a block
   assert.match(response.primary.explanation, /closest available option and not a like-kind-and-quality replacement/);
   assert.ok(response.comparison.some((row) => row.key === 'physicalFit' && row.assessment.code === 'FAIL'));
 
+  // The standard fixture match is weak (assumed tier, unverified refresh), so the quality floor labels it best-available,
+  // but for that reason and not because a required specification failed.
+  assert.equal(response.primary.recommendationLevel, 'BEST_AVAILABLE');
   const normal = (await publicTv()).response;
-  assert.equal(normal.primary.isBestAvailableOnly, false);
+  assert.equal(normal.primary.recommendationLevel, 'BEST_AVAILABLE');
   assert.equal(normal.warnings.some((warning) => warning.code === 'NO_LKQ_CANDIDATE'), false);
+  assert.ok(normal.warnings.some((warning) => warning.code === 'NO_CONFIRMED_LKQ' && warning.severity === 'BLOCKING'));
+  assert.doesNotMatch(normal.primary.explanation, /required specification/);
 });
 
 // ---- 15-17. caps and source filtering --------------------------------------------------------------------------------
@@ -350,7 +357,7 @@ test('cache key: differs by category, brand, model, notes and is stable for equi
   assert.equal(noted, replacementCacheKey({ ...base, notes: '  must FIT a 36   inch opening ' }));
   assert.equal(noted.includes('36'), false, 'raw notes are hashed, not embedded');
   assert.equal(key.includes('smart-'), false);
-  assert.match(key, /^replacement-finder:result:v1:1\+1\.0\.0\+1\.0\.0\+2\.1\.0:television:samsung:qn55q7f:none$/);
+  assert.match(key, /^replacement-finder:result:v1:1\+1\.3\.0\+1\.0\.0\+2\.1\.0\+retail-1\.0\.0:television:samsung:qn55q7f:none$/);
 });
 
 test('cache: stores COMPLETE responses for 24 hours and rejects everything else', async () => {

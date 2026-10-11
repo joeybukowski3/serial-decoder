@@ -1,5 +1,7 @@
 import fs from 'node:fs';
 import { createItemAssistReplacementHandler } from '../../api/itemassist-replacement.js';
+import { recommendByRetrieval } from '../../lib/replacement-discovery/live-retrieval.js';
+import { RETAIL_NOW, withPurchasePath } from './retail-evidence.mjs';
 
 /** Offline doubles shared by the replacement-public contract and API tests. Nothing here can reach the network. */
 
@@ -23,9 +25,9 @@ export const lfG8330Url = lg('LF25G8330S', 'french-4-door-refrigerator');
 export const lfZ6211Url = lg('LF25Z6211S', 'french-3-door-refrigerator');
 
 export const q7fPage = fixture('samsung-q7f-page.html');
-export const q80cPage = fixture('samsung-q80c-page.html');
-const fridgePages = { [lfH6200Url]: fixture('lg-lf25h6200s-page.html'), [lfG8330Url]: fixture('lg-lf25g8330s-page.html'), [lfZ6211Url]: fixture('lg-lf25z6211s-page.html') };
-export const syntheticTvPage = (model) => `<html><title>Samsung ${model} 55-inch QLED 4K Smart TV</title><h1>${model}</h1><p>Screen size: 55 inch class</p><p>Actual diagonal: 54.6 inches</p><p>Resolution: 3840 x 2160 4K</p><p>Display QLED</p><p>Native refresh rate: 120 Hz</p><p>Smart TV</p><p>HDR10</p></html>`;
+export const q80cPage = withPurchasePath(fixture('samsung-q80c-page.html'));
+const fridgePages = { [lfH6200Url]: withPurchasePath(fixture('lg-lf25h6200s-page.html')), [lfG8330Url]: withPurchasePath(fixture('lg-lf25g8330s-page.html')), [lfZ6211Url]: withPurchasePath(fixture('lg-lf25z6211s-page.html')) };
+export const syntheticTvPage = (model) => withPurchasePath(`<html><title>Samsung ${model} 55-inch QLED 4K Smart TV</title><h1>${model}</h1><p>Screen size: 55 inch class</p><p>Actual diagonal: 54.6 inches</p><p>Resolution: 3840 x 2160 4K</p><p>Display QLED</p><p>Native refresh rate: 120 Hz</p><p>Smart TV</p><p>HDR10</p></html>`);
 
 export const fakeClock = () => { let now = 0; return { now: () => now, advance: (ms) => { now += ms; } }; };
 
@@ -36,6 +38,7 @@ export function tvProviders({ original = [result('Samsung QN55Q7FAAFXZA 55-inch 
   return {
     calls,
     deps: {
+      retailNow: RETAIL_NOW,
       search: async (request, options) => { calls.search.push({ ...request, options }); tick('search'); return request.purpose === 'original' ? original : candidates; },
       fetchPage: async (url, options) => { calls.fetch.push({ url, options }); tick('fetch'); return { status: 200, elapsedMs: 3, contentType: 'text/html', text: pages[url] ?? '' }; },
     },
@@ -48,6 +51,7 @@ export function fridgeProviders({ candidates = [result('LG LF25G8330S French 4-d
   return {
     calls,
     deps: {
+      retailNow: RETAIL_NOW,
       search: async (request) => {
         calls.search.push(request);
         if (request.purpose === 'original') return [result('LG LF25H6200S refrigerator', lfH6200Url)];
@@ -98,7 +102,8 @@ export function createLogger() {
 /** Handler wired to counting providers and a fake store. Individual tests override only what they exercise. */
 export function buildHandler({ env = ENV, redis = createReplacementRedis(), providers = tvProviders(), logger = createLogger(), ...rest } = {}) {
   const handler = createItemAssistReplacementHandler({
-    env, logger, redisFactory: async () => redis, search: providers.deps.search, fetchPage: providers.deps.fetchPage, ...rest,
+    env, logger, redisFactory: async () => redis, search: providers.deps.search, fetchPage: providers.deps.fetchPage,
+    recommend: ({ deps, ...args }) => recommendByRetrieval({ ...args, deps: { ...deps, retailNow: RETAIL_NOW } }), ...rest,
   });
   return { handler, redis, providers, logger };
 }

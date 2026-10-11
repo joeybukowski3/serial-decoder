@@ -4,6 +4,7 @@ import { withTierBaseline, TV_PRODUCT_LINE_TIER_VERSION } from '../../lib/replac
 import { evaluateReplacement } from '../../lib/replacement-core/evaluate.js';
 import { televisionProfile } from '../../lib/replacement-core/profiles/television.js';
 import { candidateIdentity, candidateModelYear, discoveryPriority, aggregateCandidateResults, runRetrievalProof } from '../../lib/replacement-discovery/retrieval-first.js';
+import { RETAIL_NOW, withPurchasePath } from '../helpers/retail-evidence.mjs';
 
 const known = (value) => ({ status: 'KNOWN', value, evidenceRefs: ['retrieved-page'] });
 const identity = (model, series, brand = 'Samsung') => ({ contractVersion: '1.0.0', id: model, rawQuery: null, category: 'television',
@@ -62,11 +63,11 @@ test('year changes discovery only; deterministic evaluation and final score are 
 test('retrieved Q80C and Q80D pages establish the same registry tier in the recommendation', async () => {
   const original = result('QN55Q80C', '2023 QLED');
   const candidate = result('QN55Q80D', '2024 QLED');
-  const page = (model, year) => `<html><script type="application/ld+json">{"@type":"Product","sku":"${model}AFXZA"}</script>`
+  const page = (model, year) => withPurchasePath(`<html><script type="application/ld+json">{"@type":"Product","sku":"${model}AFXZA"}</script>`
     + `<title>Samsung ${model} Q80${model.at(-1)} 55-inch QLED 4K Smart TV ${year}</title>`
     + `<h1>Samsung ${model} Q80${model.at(-1)} 55-inch QLED</h1><p>Screen Size: 55 inch</p><p>Resolution: 4K</p>`
-    + '<p>Native Refresh Rate: 120 Hz</p><p>Smart TV</p></html>';
-  const report = await runRetrievalProof({ search: async ({ purpose }) => purpose === 'original' ? [original] : [candidate],
+    + '<p>Native Refresh Rate: 120 Hz</p><p>Smart TV</p></html>');
+  const report = await runRetrievalProof({ retailNow: RETAIL_NOW, search: async ({ purpose }) => purpose === 'original' ? [original] : [candidate],
     fetchPage: async (url) => ({ status: 200, text: url === original.url ? page('QN55Q80C', 2023) : page('QN55Q80D', 2024) }) });
   const recommendation = report.recommendation.primary;
   assert.equal(report.original.facts.tier.basis, 'PRODUCT_LINE_REGISTRY');

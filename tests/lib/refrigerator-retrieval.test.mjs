@@ -10,6 +10,10 @@ import { decidingRankKey, rankEvaluations } from '../../lib/replacement-discover
 import { consumePageResponse, pdfVisibleText } from '../../lib/replacement-discovery/providers/guarded-page-fetch.js';
 import { normalizeSearchResults, searchProducts } from '../../lib/replacement-discovery/providers/explicit-search.js';
 import { interpretReplacementSearch } from '../../lib/replacement-discovery/interpret.js';
+import { RETAIL_NOW, withPurchasePath } from '../helpers/retail-evidence.mjs';
+
+// A candidate page must show a live purchase path; spec-sheet PDFs are not purchase pages and stay untouched.
+const withRetail = (url, text) => (url.endsWith('.pdf') ? text : withPurchasePath(text));
 import {
   extractRefrigeratorFacts, bindRefrigeratorFacts, mergeRefrigeratorSources, planRefrigeratorQueries,
   refrigeratorCandidateIdentity, runRefrigeratorProof,
@@ -219,12 +223,12 @@ test('offline end-to-end search discovers identities; provider rank and price do
   const highUrl = `https://www.lg.com/us/refrigerators/lg-${highModel.toLowerCase()}-french-3-door-refrigerator`;
   const pages = new Map([[originalUrl, fixture], [lowUrl, fixture.replaceAll('LRFCS25D3S', lowModel).replaceAll('25.2', '24.2')],
     [highUrl, fixture.replaceAll('LRFCS25D3S', highModel).replaceAll('25.2', '26.2')]]);
-  const replay = await runRefrigeratorProof({
+  const replay = await runRefrigeratorProof({ retailNow: RETAIL_NOW,
     search: async ({ purpose }) => purpose === 'original'
       ? [result('LG LRFCS25D3S refrigerator specifications', originalUrl)]
       : [result(`LG ${lowModel} French door 24.2 cu ft refrigerator $1`, lowUrl, 1),
         result(`LG ${highModel} French door 26.2 cu ft refrigerator $9999`, highUrl, 9)],
-    fetchPage: async (url) => ({ status: 200, text: pages.get(url), contentType: 'text/html' }),
+    fetchPage: async (url) => ({ status: 200, text: withRetail(url, pages.get(url)), contentType: 'text/html' }),
   });
   assert.equal(replay.candidateSearches.length, 4);
   assert.equal(replay.internalCandidatePool.length, 2);
@@ -246,11 +250,11 @@ test('bounded proof fetches product page and manufacturer sheet for one exact mo
     [specUrl, 'LG LRFCS25D3S French 3-door refrigerator\nTotal Capacity 25.2 cu. ft.\nInstallation Type Freestanding\nDepth Type Standard Depth\nIce & Water Dispenser No\nIce Maker Single\nWidth 32 7/8 in\nHeight 69 7/8 in\nDepth 35 1/2 in'],
     [candidateUrl, fixture.replaceAll('LRFCS25D3S', candidateModel)],
   ]);
-  const replay = await runRefrigeratorProof({
+  const replay = await runRefrigeratorProof({ retailNow: RETAIL_NOW,
     search: async ({ purpose }) => purpose === 'original'
       ? [result('LG LRFCS25D3S refrigerator', originalUrl), result('LG LRFCS25D3S builder spec sheet', specUrl)]
       : purpose === 'candidate' ? [result(`LG ${candidateModel} refrigerator`, candidateUrl)] : [],
-    fetchPage: async (url) => ({ status: 200, text: pages.get(url) || '', contentType: url.endsWith('.pdf') ? 'application/pdf' : 'text/html' }),
+    fetchPage: async (url) => ({ status: 200, text: withRetail(url, pages.get(url) || ''), contentType: url.endsWith('.pdf') ? 'application/pdf' : 'text/html' }),
   });
   assert.equal(replay.selectedSources.filter((item) => item.role === 'original').length, 2);
   assert.equal(replay.original.facts.totalCapacityCuFt.value, 25.2);
@@ -268,7 +272,7 @@ test('four captured LG product pages replay offline with exact layouts and sourc
     LF25G8330S: 'https://www.lg.com/us/refrigerators/lg-lf25g8330s-french-4-door-refrigerator',
     LF25H6200S: 'https://www.lg.com/us/refrigerators/lg-lf25h6200s-french-3-door-refrigerator',
     LF25Z6211S: 'https://www.lg.com/us/refrigerators/lg-lf25z6211s-french-3-door-refrigerator',
-    LF25H6330S: 'https://www.lg.com/ca_en/refrigerators/french-door/lf25h6330s/',
+    LF25H6330S: 'https://www.lg.com/us/refrigerators/french-door/lf25h6330s/',
   };
   const pages = new Map(Object.entries(urls).map(([model, url]) => [url,
     fs.readFileSync(new URL(`../fixtures/replacement-discovery/lg-${model.toLowerCase()}-page.html`, import.meta.url), 'utf8')]));
@@ -291,10 +295,11 @@ test('four captured LG product pages replay offline with exact layouts and sourc
     assert.deepEqual(extractRefrigeratorFacts(pages.get(url), 'LRFCS25D3S', { sourceUrl: url }), {});
   }
   const searchResult = (model) => result(`LG ${model} refrigerator`, urls[model]);
-  const replay = await runRefrigeratorProof({
+  const replay = await runRefrigeratorProof({ retailNow: RETAIL_NOW,
     search: async ({ purpose }) => purpose === 'original' ? [searchResult('LRFCS25D3S')]
       : purpose === 'candidate' ? Object.keys(urls).slice(1).map(searchResult) : [],
-    fetchPage: async (url) => ({ status: 200, text: pages.get(url) || '', contentType: 'text/html' }),
+    // The captured LF25H6330S page is a Canadian (CAD) listing; this test is about layout facts, so it is replayed as a U.S. listing.
+    fetchPage: async (url) => ({ status: 200, text: withRetail(url, (pages.get(url) || '').replaceAll('"CAD"', '"USD"')), contentType: 'text/html' }),
   });
   assert.equal(replay.retrievalQuality, 'RETRIEVED_STRONG');
   assert.equal(replay.candidateDiscovery.length, 4);
@@ -333,7 +338,7 @@ test('supplemental original search uses a valid provider purpose and four valid 
   const candidateUrl = `https://www.lg.com/us/refrigerators/lg-${candidateModel.toLowerCase()}-french-3-door-refrigerator`;
   const supportUrl = 'https://www.lg.com/us/support/product/lg-LRFCS25D3S';
   const calls = [];
-  const replay = await runRefrigeratorProof({
+  const replay = await runRefrigeratorProof({ retailNow: RETAIL_NOW,
     search: async (request) => {
       calls.push(request);
       const organic = request.query.includes('builder spec sheet') ? [{ title: 'LG LRFCS25D3S refrigerator', link: supportUrl }]
@@ -356,7 +361,7 @@ test('supplemental original search uses a valid provider purpose and four valid 
 
 test('usable exact-model URLs with unbound page shells report extraction failure, not retrieval unavailability', async () => {
   const supportUrl = 'https://www.lg.com/us/support/product/lg-LRFCS25D3S';
-  const replay = await runRefrigeratorProof({
+  const replay = await runRefrigeratorProof({ retailNow: RETAIL_NOW,
     search: async ({ purpose }) => purpose === 'original' ? [result(source.title, originalUrl), result(source.title, supportUrl)] : [],
     fetchPage: async () => ({ status: 200, text: '<html><title>LG Appliances</title><body>JavaScript required</body></html>' }),
   });

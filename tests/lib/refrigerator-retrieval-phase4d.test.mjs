@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { searchProducts } from '../../lib/replacement-discovery/providers/explicit-search.js';
+import { RETAIL_NOW } from '../helpers/retail-evidence.mjs';
 import {
   bindRefrigeratorFacts, extractRefrigeratorFacts, inspectRefrigeratorSource, mergeRefrigeratorSources, runRefrigeratorProof,
 } from '../../lib/replacement-discovery/refrigerator-retrieval.js';
@@ -98,7 +99,7 @@ test('extraction diagnostics are deterministic and bounded for oversized pages',
 
 test('proof report records bounded per-source diagnostics, search outcomes and merge counts without raw page bodies', async () => {
   const shell = '<html><head><title>LG Appliances</title></head><body>JavaScript required SECRET_BODY_MARKER</body></html>';
-  const replay = await runRefrigeratorProof({
+  const replay = await runRefrigeratorProof({ retailNow: RETAIL_NOW,
     search: async ({ purpose }) => purpose === 'original' ? [result(`LG ${ORIGINAL} refrigerator`, productUrl), result(`LG ${ORIGINAL} refrigerator`, supportUrl)] : [],
     fetchPage: async () => ({ status: 200, text: shell, contentType: 'text/html', bytesRead: 4321 }),
   });
@@ -119,12 +120,12 @@ test('proof report records bounded per-source diagnostics, search outcomes and m
 
 test('reason codes separate search failure, fetch failure, extraction failure and candidate search failure', async () => {
   const unavailable = () => Object.assign(new Error('SERPER_HTTP_503'), { code: 'WEB_RETRIEVAL_UNAVAILABLE' });
-  const searchDown = await runRefrigeratorProof({ search: async () => { throw unavailable(); }, fetchPage: async () => assert.fail('no fetch') });
+  const searchDown = await runRefrigeratorProof({ retailNow: RETAIL_NOW, search: async () => { throw unavailable(); }, fetchPage: async () => assert.fail('no fetch') });
   assert.deepEqual(searchDown.reasonCodes, ['SEARCH_FAILED', 'ORIGINAL_RESEARCH_INSUFFICIENT', 'BASELINE_FALLBACK_USED']);
   assert.equal(searchDown.error, 'WEB_RETRIEVAL_UNAVAILABLE');
   assert.equal(searchDown.queries[0].ok, false);
 
-  const fetchDown = await runRefrigeratorProof({
+  const fetchDown = await runRefrigeratorProof({ retailNow: RETAIL_NOW,
     search: async () => [result(`LG ${ORIGINAL} refrigerator`, productUrl)],
     fetchPage: async () => { throw Object.assign(new Error('SOURCE_TIMEOUT'), { code: 'SOURCE_TIMEOUT' }); },
   });
@@ -132,7 +133,7 @@ test('reason codes separate search failure, fetch failure, extraction failure an
   assert.equal(fetchDown.reasonCodes.includes('WEB_RETRIEVAL_UNAVAILABLE'), false);
   assert.equal(fetchDown.fetchResults[0].outcome, 'SOURCE_FETCH_FAILED');
 
-  const candidateDown = await runRefrigeratorProof({
+  const candidateDown = await runRefrigeratorProof({ retailNow: RETAIL_NOW,
     search: async ({ purpose }) => { if (purpose === 'candidate') throw unavailable(); return [result(`LG ${ORIGINAL} refrigerator`, productUrl)]; },
     fetchPage: async () => ({ status: 200, text: productPage }),
   });
@@ -144,7 +145,7 @@ test('reason codes separate search failure, fetch failure, extraction failure an
 test('logical purpose original-spec never reaches the provider, which still rejects unsupported roles', async () => {
   const requests = [];
   let providerCalls = 0;
-  const replay = await runRefrigeratorProof({
+  const replay = await runRefrigeratorProof({ retailNow: RETAIL_NOW,
     search: async (request) => {
       requests.push(request);
       const organic = request.query.includes('builder spec sheet') ? [{ title: `LG ${ORIGINAL} refrigerator`, link: supportUrl }]

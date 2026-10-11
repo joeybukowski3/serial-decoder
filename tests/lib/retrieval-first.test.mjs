@@ -8,11 +8,12 @@ import { checkedUrl, fetchSource, isPublicAddress } from '../../lib/replacement-
 import { recommendFromInterpretation } from '../../lib/replacement-discovery/recommend.js';
 import { interpretReplacementSearch } from '../../lib/replacement-discovery/interpret.js';
 import { applyOriginalEnrichment } from '../../lib/replacement-discovery/original-enrichment.js';
+import { RETAIL_NOW, withPurchasePath } from '../helpers/retail-evidence.mjs';
 
 const originalUrl = 'https://www.samsung.com/us/televisions-home-theater/tvs/qled-4k-tvs/q80c-55-inch-qled-4k-smart-tv-qn55q80cafxza/';
 const candidateUrl = 'https://www.samsung.com/us/televisions-home-theater/tvs/qled-4k-tvs/q80d-55-inch-qled-4k-smart-tv-qn55q80dafxza/';
 const result = (title, url, position = 1) => ({ title, url, domain: new URL(url).hostname.replace(/^www\./, ''), snippet: title, providerRank: position, sourceProvider: 'serper' });
-const page = (model) => `<html><title>Samsung ${model} 55-inch QLED 4K Smart TV</title><h1>${model}</h1><p>Screen size: 55 inch class</p><p>Actual diagonal: 54.6 inches</p><p>Resolution: 3840 x 2160 4K</p><p>Display QLED</p><p>Native refresh rate: 120 Hz</p><p>Smart TV</p><p>HDR10</p></html>`;
+const page = (model) => withPurchasePath(`<html><title>Samsung ${model} 55-inch QLED 4K Smart TV</title><h1>${model}</h1><p>Screen size: 55 inch class</p><p>Actual diagonal: 54.6 inches</p><p>Resolution: 3840 x 2160 4K</p><p>Display QLED</p><p>Native refresh rate: 120 Hz</p><p>Smart TV</p><p>HDR10</p></html>`);
 const fetchPage = async (url) => ({ status: 200, elapsedMs: 4, contentType: 'text/html', text: page(url.includes('q80d') ? 'QN55Q80D' : 'QN55Q80C') });
 const search = async ({ purpose }) => purpose === 'original' ? [result('Samsung QN55Q80C specs', originalUrl)] : [result('Samsung QN55Q80D 55 QLED', candidateUrl)];
 const samsungPage = readFileSync(new URL('../fixtures/replacement-discovery/samsung-q80c-page.html', import.meta.url), 'utf8');
@@ -21,7 +22,7 @@ const q7fUrl = 'https://www.samsung.com/us/tvs/qled-tv/55-class-qled-tv-q7f-sku-
 const q7fIdentity = { baseModel: 'QN55Q7F', fullSku: 'QN55Q7FAAFXZA', sourceUrl: q7fUrl };
 
 test('A: exact Samsung page establishes source-bound original facts', async () => {
-  const report = await runRetrievalProof({ search, fetchPage });
+  const report = await runRetrievalProof({ retailNow: RETAIL_NOW, search, fetchPage });
   assert.equal(report.original.facts.resolution.status, 'KNOWN');
   assert.ok(report.original.facts.resolution.evidenceRefs.some((ref) => report.evidence.some((item) => item.evidenceId === ref && item.url === originalUrl)));
   assert.equal(report.original.facts.screenSizeIn.value, 55);
@@ -32,7 +33,7 @@ test('A: exact Samsung page establishes source-bound original facts', async () =
 
 test('B: page text alone cannot create a candidate absent from search results', async () => {
   assert.equal(candidateModel(result('Samsung 55 QLED TVs', 'https://www.samsung.com/us/tvs/')), null);
-  const report = await runRetrievalProof({ search: async ({ purpose }) => purpose === 'original' ? [result('Samsung QN55Q80C specs', originalUrl)] : [], fetchPage });
+  const report = await runRetrievalProof({ retailNow: RETAIL_NOW, search: async ({ purpose }) => purpose === 'original' ? [result('Samsung QN55Q80C specs', originalUrl)] : [], fetchPage });
   assert.equal(report.candidateDiscovery.length, 0);
 });
 
@@ -76,20 +77,20 @@ test('G: hostile page instruction cannot change extraction or create candidates'
 });
 
 test('H: search failure yields baseline interpretation and reason codes', async () => {
-  const report = await runRetrievalProof({ search: async () => { throw new Error('offline'); }, fetchPage });
+  const report = await runRetrievalProof({ retailNow: RETAIL_NOW, search: async () => { throw new Error('offline'); }, fetchPage });
   assert.ok(report.reasonCodes.includes('WEB_RETRIEVAL_UNAVAILABLE'));
   assert.ok(report.reasonCodes.includes('BASELINE_FALLBACK_USED'));
   assert.equal(report.original.facts.model.value, 'QN55Q80C');
 });
 
 test('missing Serper key records an attempt but zero external requests', async () => {
-  const report = await runRetrievalProof({ search: async () => { throw Object.assign(new Error('SERPER_API_KEY_MISSING'), { code: 'SERPER_API_KEY_MISSING' }); }, fetchPage });
+  const report = await runRetrievalProof({ retailNow: RETAIL_NOW, search: async () => { throw Object.assign(new Error('SERPER_API_KEY_MISSING'), { code: 'SERPER_API_KEY_MISSING' }); }, fetchPage });
   assert.equal(report.searchAttemptCount, 1);
   assert.equal(report.searchRequestCount, 0);
 });
 
 test('I: user-facing count remains within three', async () => {
-  const report = await runRetrievalProof({ search, fetchPage });
+  const report = await runRetrievalProof({ retailNow: RETAIL_NOW, search, fetchPage });
   assert.ok(Number(Boolean(report.recommendation.primary)) + report.recommendation.alternatives.length <= 3);
   assert.ok(report.recommendation.internalPoolCount <= 6);
 });
@@ -192,7 +193,7 @@ test('duplicate URLs for one exact model yield one candidate identity in the wor
   const first = candidateResult('Samsung QN55Q80D TV', 'q80d-55-inch-qled-4k-smart-tv-qn55q80dafxza');
   const second = result('Samsung QN55Q80DAFXZA TV', 'https://www.abt.com/product/Samsung-QN55Q80DAFXZA-55-inch-TV.html');
   assert.equal(candidateIdentity(second).identity.baseModel, 'QN55Q80D');
-  const replay = await runRetrievalProof({ search: async ({ purpose }) => purpose === 'original' ? [result('Samsung QN55Q80C', originalUrl)] : [first, second], fetchPage });
+  const replay = await runRetrievalProof({ retailNow: RETAIL_NOW, search: async ({ purpose }) => purpose === 'original' ? [result('Samsung QN55Q80C', originalUrl)] : [first, second], fetchPage });
   assert.equal(replay.candidateDiscovery.length, 1);
   assert.equal(replay.candidateDiscovery[0].model, 'QN55Q80D');
 });
@@ -251,7 +252,7 @@ test('generic Samsung page cannot provide Q7F candidate specs', () => {
 });
 
 test('offline Q7F candidate follows the shared extraction and evidence path', async () => {
-  const report = await runRetrievalProof({ search: async ({ purpose }) => purpose === 'original'
+  const report = await runRetrievalProof({ retailNow: RETAIL_NOW, search: async ({ purpose }) => purpose === 'original'
     ? [result('Samsung QN55Q80C specs', originalUrl)] : [result('55 Inch Class QLED 4K TV (Q7F)', q7fUrl)],
   fetchPage: async (url) => ({ status: 200, text: url === q7fUrl ? q7fPage : samsungPage }) });
   assert.equal(report.candidateDiscovery.length, 1);
@@ -310,7 +311,7 @@ test('realistic search replay deduplicates exact products and fetches Q80 before
 test('discovery priority affects fetch order only; replacement-core still chooses by its own comparison', async () => {
   const q80Page = page('QN55Q80F').replace('</html>', '<p>Q80 Series</p></html>');
   const fetched = [];
-  const report = await runRetrievalProof({
+  const report = await runRetrievalProof({ retailNow: RETAIL_NOW,
     search: async ({ purpose, query }) => purpose === 'original'
       ? [result('Samsung QN55Q80C specs', originalUrl)]
       : query.includes('Q80 55') ? [q7fResult, q80fResult]
