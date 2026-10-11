@@ -1,0 +1,79 @@
+{
+  "complete65": {
+    "original": {
+      "contractVersion": "1.0.0", "id": "tv-original-65", "rawQuery": "Samsung 65 inch QLED 4K TV", "category": "television", "evidenceRefs": ["user-input"],
+      "facts": {
+        "brand": { "status": "KNOWN", "value": "Samsung", "evidenceRefs": ["user-input"] },
+        "model": { "status": "KNOWN", "value": "QN65Q80", "evidenceRefs": ["label"] },
+        "screenSizeIn": { "status": "KNOWN", "value": 65, "evidenceRefs": ["label"] },
+        "resolution": { "status": "KNOWN", "value": "4K", "evidenceRefs": ["spec-sheet"] },
+        "tier": { "status": "KNOWN", "value": "PREMIUM", "evidenceRefs": ["product-line"] },
+        "physicalFit": { "status": "KNOWN", "value": true, "evidenceRefs": ["site-measurement"] },
+        "displayTechnology": { "status": "KNOWN", "value": "QLED", "evidenceRefs": ["spec-sheet"] },
+        "refreshHz": { "status": "KNOWN", "value": 120, "evidenceRefs": ["spec-sheet"] },
+        "smart": { "status": "KNOWN", "value": true, "evidenceRefs": ["spec-sheet"] },
+        "hdr": { "status": "KNOWN", "value": "HDR10+", "evidenceRefs": ["spec-sheet"] },
+        "series": { "status": "KNOWN", "value": "Q80", "evidenceRefs": ["spec-sheet"] },
+        "featurePackage": { "status": "KNOWN", "value": "premium-picture", "evidenceRefs": ["spec-sheet"] },
+        "gamingFeatures": { "status": "KNOWN", "value": "4K120", "evidenceRefs": ["spec-sheet"] },
+        "tuner": { "status": "KNOWN", "value": "ATSC", "evidenceRefs": ["spec-sheet"] },
+        "hdmiCount": { "status": "KNOWN", "value": 4, "evidenceRefs": ["spec-sheet"] }
+      }
+    },
+    "candidate": {
+      "contractVersion": "1.0.0", "candidateId": "tv-replacement-65", "source": { "kind": "CURATED", "name": "test fixture" }, "relationship": "SAME_SERIES", "discoveryConfidence": "HIGH", "evidenceRefs": ["candidate-sheet"], "providerRank": null,
+      "identity": {
+        "contractVersion": "1.0.0", "id": "tv-candidate-65", "rawQuery": null, "category": "television", "evidenceRefs": ["candidate-sheet"],
+        "facts": {
+          "brand": { "status": "KNOWN", "value": "Samsung", "evidenceRefs": ["candidate-sheet"] },
+          "model": { "status": "KNOWN", "value": "QN65Q80NEW", "evidenceRefs": ["candidate-sheet"] },
+          "screenSizeIn": { "status": "KNOWN", "value": 65, "evidenceRefs": ["candidate-sheet"] },
+          "resolution": { "status": "KNOWN", "value": "4K", "evidenceRefs": ["candidate-sheet"] },
+          "tier": { "status": "KNOWN", "value": "PREMIUM", "evidenceRefs": ["candidate-sheet"] },
+          "physicalFit": { "status": "KNOWN", "value": true, "evidenceRefs": ["site-measurement"] },
+          "displayTechnology": { "status": "KNOWN", "value": "QLED", "evidenceRefs": ["candidate-sheet"] },
+          "refreshHz": { "status": "KNOWN", "value": 120, "evidenceRefs": ["candidate-sheet"] },
+          "smart": { "status": "KNOWN", "value": true, "evidenceRefs": ["candidate-sheet"] },
+          "hdr": { "status": "KNOWN", "value": "HDR10+", "evidenceRefs": ["candidate-sheet"] },
+          "series": { "status": "KNOWN", "value": "Q80", "evidenceRefs": ["candidate-sheet"] },
+          "featurePackage": { "status": "KNOWN", "value": "premium-picture", "evidenceRefs": ["candidate-sheet"] },
+          "gamingFeatures": { "status": "KNOWN", "value": "4K120", "evidenceRefs": ["candidate-sheet"] },
+          "tuner": { "status": "KNOWN", "value": "ATSC", "evidenceRefs": ["candidate-sheet"] },
+          "hdmiCount": { "status": "KNOWN", "value": 4, "evidenceRefs": ["candidate-sheet"] }
+        }
+      }
+    },
+    "expected": { "classification": "LKQ", "confidence": "HIGH" }
+  },
+  "incomplete55": {
+    "original": {
+      "contractVersion": "1.0.0", "id": "tv-original-incomplete", "rawQuery": "55 Samsung QLED TV", "category": "television", "evidenceRefs": ["user-input"],
+      "facts": {
+        "brand": { "status": "KNOWN", "value": "Samsung", "evidenceRefs": ["user-input"] },
+        "screenSizeIn": { "status": "KNOWN", "value": 55, "evidenceRefs": ["user-input"] },
+        "displayTechnology": { "status": "KNOWN", "value": "QLED", "evidenceRefs": ["user-input"] },
+        "resolution": { "status": "INFERRED", "value": "4K", "evidenceRefs": ["category-context"] },
+        "refreshHz": { "status": "UNKNOWN", "value": null, "evidenceRefs": [] },
+        "series": { "status": "UNKNOWN", "value": null, "evidenceRefs": [] },
+        "physicalFit": { "status": "UNKNOWN", "value": null, "evidenceRefs": [] }
+      }
+    },
+    "candidate": {
+      "contractVersion": "1.0.0", "candidateId": "tv-baseline-55", "source": { "kind": "CURATED", "name": "test baseline" }, "relationship": "SAME_BRAND_ALTERNATIVE", "discoveryConfidence": "MEDIUM", "evidenceRefs": ["candidate-sheet"], "providerRank": 1,
+      "identity": {
+        "contractVersion": "1.0.0", "id": "tv-candidate-baseline", "rawQuery": null, "category": "television", "evidenceRefs": ["candidate-sheet"],
+        "facts": {
+          "brand": { "status": "KNOWN", "value": "Samsung", "evidenceRefs": ["candidate-sheet"] },
+          "model": { "status": "KNOWN", "value": "QN55QLED-BASELINE", "evidenceRefs": ["candidate-sheet"] },
+          "screenSizeIn": { "status": "KNOWN", "value": 55, "evidenceRefs": ["candidate-sheet"] },
+          "resolution": { "status": "KNOWN", "value": "4K", "evidenceRefs": ["candidate-sheet"] },
+          "tier": { "status": "KNOWN", "value": "PREMIUM", "evidenceRefs": ["candidate-sheet"] },
+          "displayTechnology": { "status": "KNOWN", "value": "QLED", "evidenceRefs": ["candidate-sheet"] },
+          "refreshHz": { "status": "KNOWN", "value": 60, "evidenceRefs": ["candidate-sheet"] },
+          "smart": { "status": "KNOWN", "value": true, "evidenceRefs": ["candidate-sheet"] }
+        }
+      }
+    },
+    "expected": { "classification": "UNCONFIRMED", "confidence": "LOW" }
+  }
+}

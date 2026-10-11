@@ -1,0 +1,81 @@
+{
+  "complete25": {
+    "original": {
+      "contractVersion": "1.0.0", "id": "fridge-original-25", "rawQuery": "LG 25 cu ft French-door refrigerator", "category": "refrigerator", "evidenceRefs": ["user-input"],
+      "facts": {
+        "brand": { "status": "KNOWN", "value": "LG", "evidenceRefs": ["user-input"] },
+        "model": { "status": "KNOWN", "value": "LFX25", "evidenceRefs": ["label"] },
+        "totalCapacityCuFt": { "status": "KNOWN", "value": 25, "evidenceRefs": ["spec-sheet"] },
+        "installationType": { "status": "KNOWN", "value": "freestanding", "evidenceRefs": ["site-measurement"] },
+        "physicalFit": { "status": "KNOWN", "value": true, "evidenceRefs": ["site-measurement"] },
+        "tier": { "status": "KNOWN", "value": "PREMIUM", "evidenceRefs": ["product-line"] },
+        "configurationFloor": { "status": "KNOWN", "value": "french-door", "evidenceRefs": ["label"] },
+        "layout": { "status": "KNOWN", "value": "three-door-french", "evidenceRefs": ["spec-sheet"] },
+        "counterDepth": { "status": "KNOWN", "value": false, "evidenceRefs": ["spec-sheet"] },
+        "capacityBalance": { "status": "KNOWN", "value": "standard-split", "evidenceRefs": ["spec-sheet"] },
+        "dispenser": { "status": "KNOWN", "value": "through-door", "evidenceRefs": ["spec-sheet"] },
+        "iceMaker": { "status": "KNOWN", "value": true, "evidenceRefs": ["spec-sheet"] },
+        "finish": { "status": "KNOWN", "value": "stainless", "evidenceRefs": ["spec-sheet"] },
+        "series": { "status": "KNOWN", "value": "LFX", "evidenceRefs": ["spec-sheet"] },
+        "featurePackage": { "status": "KNOWN", "value": "standard-premium", "evidenceRefs": ["spec-sheet"] }
+      }
+    },
+    "candidate": {
+      "contractVersion": "1.0.0", "candidateId": "fridge-replacement-25", "source": { "kind": "CURATED", "name": "test fixture" }, "relationship": "SAME_SERIES", "discoveryConfidence": "HIGH", "evidenceRefs": ["candidate-sheet"], "providerRank": null,
+      "identity": {
+        "contractVersion": "1.0.0", "id": "fridge-candidate-25", "rawQuery": null, "category": "refrigerator", "evidenceRefs": ["candidate-sheet"],
+        "facts": {
+          "brand": { "status": "KNOWN", "value": "LG", "evidenceRefs": ["candidate-sheet"] },
+          "model": { "status": "KNOWN", "value": "LFX25NEW", "evidenceRefs": ["candidate-sheet"] },
+          "totalCapacityCuFt": { "status": "KNOWN", "value": 25, "evidenceRefs": ["candidate-sheet"] },
+          "installationType": { "status": "KNOWN", "value": "freestanding", "evidenceRefs": ["candidate-sheet"] },
+          "physicalFit": { "status": "KNOWN", "value": true, "evidenceRefs": ["site-measurement"] },
+          "tier": { "status": "KNOWN", "value": "PREMIUM", "evidenceRefs": ["candidate-sheet"] },
+          "configurationFloor": { "status": "KNOWN", "value": "french-door", "evidenceRefs": ["candidate-sheet"] },
+          "layout": { "status": "KNOWN", "value": "three-door-french", "evidenceRefs": ["candidate-sheet"] },
+          "counterDepth": { "status": "KNOWN", "value": false, "evidenceRefs": ["candidate-sheet"] },
+          "capacityBalance": { "status": "KNOWN", "value": "standard-split", "evidenceRefs": ["candidate-sheet"] },
+          "dispenser": { "status": "KNOWN", "value": "through-door", "evidenceRefs": ["candidate-sheet"] },
+          "iceMaker": { "status": "KNOWN", "value": true, "evidenceRefs": ["candidate-sheet"] },
+          "finish": { "status": "KNOWN", "value": "stainless", "evidenceRefs": ["candidate-sheet"] },
+          "series": { "status": "KNOWN", "value": "LFX", "evidenceRefs": ["candidate-sheet"] },
+          "featurePackage": { "status": "KNOWN", "value": "standard-premium", "evidenceRefs": ["candidate-sheet"] }
+        }
+      }
+    },
+    "expected": { "classification": "LKQ", "confidence": "HIGH" }
+  },
+  "incompleteSideBySide": {
+    "original": {
+      "contractVersion": "1.0.0", "id": "fridge-original-incomplete", "rawQuery": "LG side-by-side refrigerator", "category": "refrigerator", "evidenceRefs": ["user-input"],
+      "facts": {
+        "brand": { "status": "KNOWN", "value": "LG", "evidenceRefs": ["user-input"] },
+        "configurationFloor": { "status": "INFERRED", "value": "side-by-side", "evidenceRefs": ["user-input"] },
+        "layout": { "status": "INFERRED", "value": "side-by-side", "evidenceRefs": ["user-input"] },
+        "totalCapacityCuFt": { "status": "UNKNOWN", "value": null, "evidenceRefs": [] },
+        "physicalFit": { "status": "UNKNOWN", "value": null, "evidenceRefs": [] },
+        "dispenser": { "status": "UNKNOWN", "value": null, "evidenceRefs": [] },
+        "finish": { "status": "UNKNOWN", "value": null, "evidenceRefs": [] }
+      }
+    },
+    "candidate": {
+      "contractVersion": "1.0.0", "candidateId": "fridge-baseline-side-by-side", "source": { "kind": "CURATED", "name": "test baseline" }, "relationship": "SAME_BRAND_ALTERNATIVE", "discoveryConfidence": "MEDIUM", "evidenceRefs": ["candidate-sheet"], "providerRank": 2,
+      "identity": {
+        "contractVersion": "1.0.0", "id": "fridge-candidate-baseline", "rawQuery": null, "category": "refrigerator", "evidenceRefs": ["candidate-sheet"],
+        "facts": {
+          "brand": { "status": "KNOWN", "value": "LG", "evidenceRefs": ["candidate-sheet"] },
+          "model": { "status": "KNOWN", "value": "LG-SBS-BASELINE", "evidenceRefs": ["candidate-sheet"] },
+          "totalCapacityCuFt": { "status": "KNOWN", "value": 26, "evidenceRefs": ["candidate-sheet"] },
+          "installationType": { "status": "KNOWN", "value": "freestanding", "evidenceRefs": ["candidate-sheet"] },
+          "tier": { "status": "KNOWN", "value": "PREMIUM", "evidenceRefs": ["candidate-sheet"] },
+          "configurationFloor": { "status": "KNOWN", "value": "side-by-side", "evidenceRefs": ["candidate-sheet"] },
+          "layout": { "status": "KNOWN", "value": "side-by-side", "evidenceRefs": ["candidate-sheet"] },
+          "dispenser": { "status": "KNOWN", "value": "through-door", "evidenceRefs": ["candidate-sheet"] },
+          "iceMaker": { "status": "KNOWN", "value": true, "evidenceRefs": ["candidate-sheet"] },
+          "finish": { "status": "KNOWN", "value": "stainless", "evidenceRefs": ["candidate-sheet"] }
+        }
+      }
+    },
+    "expected": { "classification": "UNCONFIRMED", "confidence": "LOW" }
+  }
+}

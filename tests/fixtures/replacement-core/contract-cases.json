@@ -1,0 +1,6 @@
+{
+  "validFact": { "status": "KNOWN", "value": "Samsung", "evidenceRefs": ["user-input"] },
+  "unknownFact": { "status": "UNKNOWN", "value": null, "evidenceRefs": [] },
+  "ambiguousFact": { "status": "AMBIGUOUS", "value": null, "alternatives": ["60", "120"], "evidenceRefs": ["model-family"] },
+  "invalidFact": { "status": "KNOWN", "value": null, "evidenceRefs": [] }
+}
