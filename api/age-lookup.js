@@ -32,9 +32,11 @@ import {
 import { callSmartLookupXaiAgeProvider, getXaiSmartLookupModel, isXaiSmartLookupEnabled } from '../lib/smart-lookup/xai-provider.js';
 import { heavyProviderStageBudgetMs } from '../lib/smart-lookup/heavy-provider-budget.js';
 import {
+  buildGeminiSearchPrompt,
   callGeminiSearchProvider,
   GeminiSearchProviderError,
 } from '../lib/smart-lookup/gemini-search-provider.js';
+import { LIFECYCLE_RESEARCH_PROMPT } from '../lib/smart-lookup/lifecycle.js';
 // Shared with Serial Refinement so both features enable, and address, the
 // native research provider through one definition.
 import {
@@ -120,7 +122,8 @@ function nativeGroundingSources(sources) {
     let domain = '';
     try { domain = new URL(source.url).hostname; } catch (_) {}
     if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(source.title || '')) domain = source.title.toLowerCase();
-    return { title: source.title, domain, uri: source.url };
+    return { title: source.title, domain, uri: source.url,
+      ...(source.evidenceText?.length ? { evidenceText: source.evidenceText } : {}) };
   });
 }
 
@@ -168,6 +171,8 @@ function mapNativeGeminiSearchResult(nativeResult, queryInfo, options = {}) {
     summary: nativeResult.summary,
     notes: nativeResult.estimateBasis,
     caveats: nativeResult.caveats,
+    endOfRetailAvailability: nativeResult.endOfRetailAvailability,
+    endOfManufacturerSupport: nativeResult.endOfManufacturerSupport,
     serialNeededForExactUnitDate: !isIndividualUnitDate,
   };
 
@@ -1133,6 +1138,7 @@ export function createAgeLookupHandler(dependencies = {}) {
                       || (dependencies.env || process.env).GEMINI_API_KEY,
                     fetchImpl: dependencies.nativeGeminiFetchImpl || dependencies.fetchImpl,
                     model: dependencies.nativeGeminiModel || NATIVE_MODEL_RESEARCH_MODEL,
+                    prompt: `${buildGeminiSearchPrompt(queryInfo.providerQuery || queryInfo.query)}\n${LIFECYCLE_RESEARCH_PROMPT}`,
                     timeoutMs: Math.min(providerBudgetMs, deadline.remainingMs(350)),
                   },
                 ),
@@ -1639,7 +1645,7 @@ export function createAgeLookupHandler(dependencies = {}) {
         };
         const validatedProvider = normalizeSmartAgeResult(rawProvider, providerOptions);
         const hinted = applyEraHints(validatedProvider, queryInfo.normalizedQuery);
-        result = normalizeSmartAgeResult(hinted, providerOptions);
+        result = normalizeSmartAgeResult(hinted, { ...providerOptions, lifecycleAlreadyValidated: true });
         if (providerMetadata.model) result.providerModel = providerMetadata.model;
         session.markAiProduced();
       } catch (error) {
