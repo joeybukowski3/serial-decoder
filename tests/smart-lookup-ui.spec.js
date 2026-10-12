@@ -107,11 +107,39 @@ test.describe('Smart Lookup controller', () => {
     const agePanel = page.locator('#smart-lookup-age-panel');
     await expect(agePanel.locator('.smart-year-context-label')).toHaveText('Model introduced');
     await expect(agePanel).toContainText('Known production/availability');
+    await expect(agePanel).not.toContainText('End of retail availability');
+    await expect(agePanel).not.toContainText('End of manufacturer support');
     await expect(agePanel).toContainText('Individual manufacture date requires serial number');
     await expect(agePanel).not.toContainText('midpoint');
     await expect(page.locator('#panel-smart input[type="checkbox"]')).toHaveCount(0);
     await expect(page.locator('#smart-lookup-replacement-panel')).toHaveCount(0);
     expect(lkqCalls).toBe(0);
+  });
+
+  test('validated lifecycle rows show precision, confidence and source while absent rows stay hidden', async ({ page }) => {
+    const source = { title: 'Manufacturer notice', uri: 'https://www.samsung.com/us/support/qn65q80a' };
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: {
+        brand: 'Samsung', model: 'QN65Q80A', exactModel: 'QN65Q80A', introductionYear: 2020,
+        yearContext: { type: 'market-introduction', value: 2020, label: 'Model introduced', confidence: 'high' },
+        endOfRetailAvailability: {
+          date: '2022', precision: 'year', confidence: 'medium', market: 'US', source,
+        },
+        endOfManufacturerSupport: {
+          date: '2024-06-30', precision: 'day', confidence: 'high', supportCategory: 'software_security_updates', source,
+        },
+      } });
+    });
+    await page.goto('http://localhost:3001/index.html?mode=smart#panel-smart');
+    await page.locator('#smart-lookup-input').fill('Samsung QN65Q80A');
+    await page.locator('[data-smart-lookup-submit="1"]').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel.locator('.smart-year-context-value')).toHaveText('2020');
+    await expect(panel).toContainText('End of retail availability (US)');
+    await expect(panel).toContainText('2022 (year only) · Medium confidence');
+    await expect(panel).toContainText('End of manufacturer support: Software/security updates');
+    await expect(panel).toContainText('2024-06-30 · High confidence');
+    await expect(panel.locator('a[href="https://www.samsung.com/us/support/qn65q80a"]')).toHaveCount(2);
   });
 
   test('VIZIO model-generation estimate renders despite an entered LG brand conflict', async ({ page }) => {

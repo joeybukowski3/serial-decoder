@@ -91,6 +91,53 @@ test('an OpenAI web-search result reaches the API response with identity, confid
   assert.equal(p.alternativeMatches[0].product, 'Nintendo Switch OLED');
 });
 
+test('age API keeps introduction timing when one optional lifecycle claim is rejected', async () => {
+  const lifecycleSource = { title: 'LG lifecycle notice', domain: 'lg.com', uri: 'https://www.lg.com/us/wm3900hwa/lifecycle',
+    evidenceText: ['LG WM3900HWA normal new-product retail sales ended in the US in 2022.'] };
+  const { handler, calls } = harness({ openai: () => withMeta({
+    brand: 'LG', model: 'WM3900HWA', likelyProduct: 'LG WM3900HWA',
+    specificityLevel: 'specific', introductionYear: 2019, confidence: 'high',
+    endOfRetailAvailability: [{
+      product: 'LG WM3900HWA', event: 'normal_new_product_retail_sales_end',
+      date: '2022', market: 'US', confidence: 'medium',
+      evidenceExcerpt: 'Normal new-product retail sales ended in the US in 2022.',
+      sourceUrl: lifecycleSource.uri,
+    }],
+    endOfManufacturerSupport: [{
+      product: 'LG WM3900HWA', event: 'manufacturer_support_end',
+      date: '2024', supportCategory: 'technical_support', confidence: 'high',
+      evidenceExcerpt: 'Technical support ended in 2024.',
+      sourceUrl: 'https://invented.example/unsupported',
+    }],
+  }, {
+    provider: 'openai', fallbackUsed: false, primaryProvider: 'openai',
+    grounded: true, webSearchUsed: true, groundedSources: [lifecycleSource], searchQueryCount: 1,
+  }) });
+  const out = res();
+  await handler(req('LG WM3900HWA USA'), out);
+  assert.equal(out.statusCode, 200);
+  assert.equal(calls.openai, 1, 'lifecycle enrichment must not start another provider request');
+  assert.equal(out.payload.introductionYear, 2019);
+  assert.equal(out.payload.confidence, 'high');
+  assert.equal(out.payload.endOfRetailAvailability?.date, '2022');
+  assert.equal(out.payload.endOfManufacturerSupport, null);
+});
+
+test('uncited fallback output cannot display lifecycle dates', async () => {
+  const { handler } = harness({ openai: () => withMeta({
+    brand: 'LG', model: 'WM3900HWA', introductionYear: 2019,
+    endOfRetailAvailability: [{
+      product: 'LG WM3900HWA', event: 'normal_new_product_retail_sales_end',
+      date: '2022', market: 'US', confidence: 'high',
+      evidenceExcerpt: 'Retail sales ended in 2022.', sourceUrl: 'https://www.lg.com/us/wm3900hwa/lifecycle',
+    }],
+  }, { provider: 'openai', grounded: false, webSearchUsed: false, groundedSources: [] }) });
+  const out = res();
+  await handler(req('LG WM3900HWA USA'), out);
+  assert.equal(out.payload.introductionYear, 2019);
+  assert.equal(out.payload.endOfRetailAvailability, null);
+});
+
 test('Gemini is never called while OpenAI is enabled', async () => {
   const { handler, calls } = harness();
   for (const query of ['Nintendo Switch 2', 'H4080BM miele oven', 'H4080BM', 'LG WM3900HWA']) {
