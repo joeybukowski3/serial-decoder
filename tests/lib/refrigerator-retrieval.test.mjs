@@ -368,7 +368,10 @@ test('usable exact-model URLs with unbound page shells report extraction failure
   assert.equal(replay.selectedSources.length, 2);
   assert.ok(replay.fetchResults.every((item) => item.usableText && item.extractedFields.length === 0));
   assert.deepEqual(replay.reasonCodes, ['SOURCE_EXTRACTION_FAILED', 'ORIGINAL_RESEARCH_INSUFFICIENT', 'BASELINE_FALLBACK_USED']);
-  assert.equal(replay.searchAttemptCount, 2);
+  // One original search; the unfetchable spec-sheet search is skipped and the two exact-model retail fallback searches find no
+  // allowlisted retailer page, so the original stays unverified.
+  assert.deepEqual(replay.queries.map((item) => item.role), ['original', 'original-fallback', 'original-fallback']);
+  assert.equal(replay.searchAttemptCount, 3);
   assert.equal(replay.original.view.researchSupported.length, 0);
 });
 
