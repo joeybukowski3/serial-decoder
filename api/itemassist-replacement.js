@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { DEFAULT_DEADLINE_MS, recommendByRetrieval } from '../lib/replacement-discovery/live-retrieval.js';
 import { searchProducts } from '../lib/replacement-discovery/providers/explicit-search.js';
+import { fetchSource } from '../lib/replacement-discovery/providers/guarded-page-fetch.js';
+import { buildOriginalFetchDiagnostics, createFetchRecorder } from '../lib/replacement-public/fetch-diagnostics.js';
 import { createReplacementBudget, replacementBudgetConfig } from '../lib/replacement-public/budget.js';
 import { createReplacementCache, replacementCacheKey } from '../lib/replacement-public/cache.js';
 import { buildErrorResponse, buildPublicResponse, isValidPublicResponse } from '../lib/replacement-public/contract.js';
@@ -80,10 +82,19 @@ export function createItemAssistReplacementHandler(dependencies = {}) {
     try { return (await redisFactory(env)) || null; } catch { return null; }
   }
 
-  async function execute(request, spend, budget) {
-    const deps = { search: guardSearch(budget, baseSearch, spend), fetchPage: dependencies.fetchPage, now: dependencies.engineNow };
+  // TEMPORARY (debug/itemassist-lg-vercel-fetch): safe per-fetch metadata for original refrigerator pages, never in production.
+  const fetchDiagnosticsEnabled = env.VERCEL_ENV !== 'production';
+  const logFetchDiagnostics = (outcome, records, requestId) => {
+    if (!fetchDiagnosticsEnabled) return;
+    try { for (const entry of buildOriginalFetchDiagnostics({ outcome, records, requestId })) logger.info(JSON.stringify(entry)); } catch { /* never affects a reply */ }
+  };
+
+  async function execute(request, spend, budget, requestId) {
+    const recorder = createFetchRecorder(dependencies.fetchPage || fetchSource);
+    const deps = { search: guardSearch(budget, baseSearch, spend), fetchPage: fetchDiagnosticsEnabled ? recorder.fetchPage : dependencies.fetchPage, now: dependencies.engineNow };
     try {
       const run = await raceGuard(recommend({ ...request, deadlineMs, deps }), guardMs);
+      if (!run.timedOut) logFetchDiagnostics(run.value, recorder.records, requestId);
       return run.timedOut ? { error: 'ENGINE_TIMEOUT' } : { outcome: run.value };
     } catch { return { error: 'ENGINE_ERROR', reason: 'engine_exception' }; }
   }
@@ -126,7 +137,7 @@ export function createItemAssistReplacementHandler(dependencies = {}) {
     if (!allowance.allowed) return fail(allowance.status === 'denied' ? 'BUDGET_EXHAUSTED' : 'BUDGET_UNAVAILABLE', undefined, { ...base, cacheHit: false, searchCount: 0 });
 
     const spend = { reserved: 0, denied: null };
-    const run = await execute(request, spend, budget);
+    const run = await execute(request, spend, budget, requestId);
     const fields = { ...base, cacheHit: false, searchCount: spend.reserved, deadlineReached: run.error === 'ENGINE_TIMEOUT' || run.outcome?.deadline?.reached === true };
     if (run.error) return fail(run.error, undefined, { ...fields, ...(run.reason ? { reason: run.reason } : {}) });
     const refusal = outcomeError(run.outcome, spend);
