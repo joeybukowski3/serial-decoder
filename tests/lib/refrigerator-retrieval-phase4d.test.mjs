@@ -114,7 +114,8 @@ test('proof report records bounded per-source diagnostics, search outcomes and m
     assert.equal(item.extraction.titleSample, 'LG Appliances');
     assert.equal(item.extraction.extractedFactCount, 0);
   }
-  assert.deepEqual(replay.mergeDiagnostics.map((item) => [item.role, item.inputSourceCount, item.outputFactCount]), [['original', 0, 0], ['original', 0, 0]]);
+  // Both original source slots are used, so the spec-sheet search (whose results could not be fetched) is not spent.
+  assert.deepEqual(replay.mergeDiagnostics.map((item) => [item.role, item.inputSourceCount, item.outputFactCount]), [['original', 0, 0]]);
   assert.equal(JSON.stringify(replay).includes('SECRET_BODY_MARKER'), false);
 });
 
