@@ -128,6 +128,32 @@ test('flag true returns native Gemini success without legacy research', async ()
   }]);
 });
 
+test('native Smart Lookup can reuse one grounded call for a cited lifecycle date', async () => {
+  let prompt = '';
+  const { handler, calls } = harness({
+    enabled: true,
+    native: async (_query, options) => {
+      prompt = options.prompt;
+      return nativeResult({ sources: [{ title: 'xbox.com', url: 'https://www.xbox.com/xbox-one-x',
+        evidenceText: ['Microsoft Xbox One X normal new-product retail sales ended in the US in 2021.'] }],
+      endOfRetailAvailability: [{
+        product: 'Microsoft Xbox One X', event: 'normal_new_product_retail_sales_end',
+        date: '2021', market: 'US', confidence: 'medium',
+        evidenceExcerpt: 'Normal new-product retail sales ended in the US in 2021.',
+        sourceUrl: 'https://www.xbox.com/xbox-one-x',
+      }] });
+    },
+  });
+  const out = res();
+  await handler(req('Xbox One X'), out);
+  assert.equal(out.statusCode, 200);
+  assert.equal(calls.native, 1);
+  assert.equal(calls.legacy, 0);
+  assert.match(prompt, /Do not perform another search just for these facts/);
+  assert.equal(out.payload.bestEstimateYear, 2017);
+  assert.equal(out.payload.endOfRetailAvailability?.date, '2021');
+});
+
 test('classified native Gemini failure falls back to legacy Smart Lookup', async () => {
   const { handler, calls } = harness({
     enabled: true,

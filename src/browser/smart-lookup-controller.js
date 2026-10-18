@@ -941,6 +941,32 @@
     return '<details class="determination-details smart-lookup-sources"><summary>Web sources consulted</summary><ul>' + items + '</ul></details>';
   }
 
+  function renderLifecycleRows(data) {
+    var supportLabels = {
+      technical_support: 'Technical support',
+      software_security_updates: 'Software/security updates',
+      warranty_service: 'Warranty service',
+      repair_parts_support: 'Repair-parts support',
+    };
+    function row(field, label) {
+      if (!field || !label || !['high', 'medium'].includes(field.confidence)
+        || !field.source || !/^https:\/\//i.test(field.source.uri || '')
+        || !/^\d{4}(?:-\d{2}(?:-\d{2})?)?$/.test(field.date || '')) return '';
+      var detail = field.precision === 'year' ? field.date + ' (year only)'
+        : (field.precision === 'month' ? field.date + ' (month only)' : field.date);
+      detail += ' · ' + field.confidence.charAt(0).toUpperCase() + field.confidence.slice(1) + ' confidence';
+      return '<div class="result-row"><span class="result-label">' + escapeHtml(label) +
+        '</span><span class="result-value">' + escapeHtml(detail) +
+        ' · <a href="' + escapeHtml(field.source.uri) + '" target="_blank" rel="noopener nofollow">' +
+        escapeHtml(field.source.title || 'Source') + '</a></span></div>';
+    }
+    var retail = data && data.endOfRetailAvailability;
+    var support = data && data.endOfManufacturerSupport;
+    return row(retail, 'End of retail availability' + (retail && retail.market ? ' (' + retail.market + ')' : '')) +
+      row(support, support && supportLabels[support.supportCategory]
+        ? 'End of manufacturer support: ' + supportLabels[support.supportCategory] : '');
+  }
+
   function renderSerialDetected(data) {
     var detected = data && data.serialDetected;
     if (!detected || detected.action !== 'use-decoder' || !detected.token) return '';
@@ -1130,6 +1156,7 @@
       (data && data.productionRange ? '<div class="result-row"><span class="result-label">Known production/availability</span><span class="result-value">' + escapeHtml(formatRange(data.productionRange, data.yearRange)) + '</span></div>' : '') +
       (data && !data.productionRange && data.openEndedRange && data.rangeLabel ? '<div class="result-row"><span class="result-label">Estimated availability</span><span class="result-value">' + escapeHtml(data.rangeLabel) + '</span></div>' : '') +
       (promotedProductionRange && estimatedYearForDetails ? '<div class="result-row"><span class="result-label">Estimated year</span><span class="result-value">Approximately ' + escapeHtml(estimatedYearForDetails) + '</span></div>' : (data && data.bestEstimateYear ? '<div class="result-row"><span class="result-label">Best estimate</span><span class="result-value">Approximately ' + escapeHtml(data.bestEstimateYear) + '</span></div>' : '')) +
+      renderLifecycleRows(data) +
       (data && data.estimateBasis ? '<div class="result-row"><span class="result-label">Estimate basis</span><span class="result-value">' + escapeHtml(estimateBasisLabel(data.estimateBasis)) + '</span></div>' : '') +
       (data && data.identityConfidence ? '<div class="result-row"><span class="result-label">Model generation confidence</span><span class="result-value">' + escapeHtml(data.identityConfidence.charAt(0).toUpperCase() + data.identityConfidence.slice(1)) + '</span></div>' : '') +
       (data && data.timingConfidence ? '<div class="result-row"><span class="result-label">Individual unit timing confidence</span><span class="result-value">' + escapeHtml(data.timingConfidence.charAt(0).toUpperCase() + data.timingConfidence.slice(1)) + '</span></div>' : '') +
