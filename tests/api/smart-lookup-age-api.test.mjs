@@ -783,7 +783,8 @@ test('serial-bearing model queries preserve roles and cannot be spoofed by provi
     assert.equal(out.payload.individualManufactureYear, null, query);
     assert.equal(out.payload.serialRule, null, query);
     assert.equal(out.payload.serialLocation, null, query);
-    assert.equal(out.payload.introductionYear, 2019, 'model-level research remains available');
+    assert.equal(out.payload.introductionYear, model ? 2019 : null,
+      'model-level research remains available; serial-only category research cannot establish product identity');
   }
   assert.equal(seen.length, 3);
   for (const queryInfo of seen) {

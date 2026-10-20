@@ -4,6 +4,10 @@ import assert from 'node:assert/strict';
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
 import { GeminiSearchProviderError } from '../../lib/smart-lookup/gemini-search-provider.js';
 import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
+import { createFakeRedis } from '../helpers/fake-redis.mjs';
+import { buildSmartAgeCacheKey, prepareResultForCache } from '../../lib/smart-lookup/cache.js';
+import { classifySmartLookupQuery } from '../../lib/smart-lookup/normalize.js';
+import { chooseSmartLookupRoute } from '../../lib/smart-lookup/route-mode.js';
 
 function req(query) {
   return { method: 'POST', body: { query }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} };
@@ -50,7 +54,7 @@ function legacyResult() {
   return {
     brand: 'Microsoft',
     model: 'Xbox One X',
-    likelyProduct: 'Legacy Xbox result',
+    likelyProduct: 'Microsoft Xbox One X',
     specificityLevel: 'unknown',
     introductionYear: 2018,
     identityConfidence: 'medium',
@@ -152,6 +156,141 @@ test('native Smart Lookup can reuse one grounded call for a cited lifecycle date
   assert.match(prompt, /Do not perform another search just for these facts/);
   assert.equal(out.payload.bestEstimateYear, 2017);
   assert.equal(out.payload.endOfRetailAvailability?.date, '2021');
+});
+
+test('age route rejects old and mismatched broad cache records and reuses matching records', async () => {
+  const redis = createFakeRedis();
+  const query = 'HP OfficeJet Pro 8710 All-in-One Printer';
+  const info = classifySmartLookupQuery(query);
+  const cacheKey = buildSmartAgeCacheKey(info,
+    { grounded: true, routeMode: chooseSmartLookupRoute(info).mode });
+  const unrelated = prepareResultForCache({ brand: 'HP', likelyProduct: 'HP Envy 6055',
+    identityConfidence: 'high', introductionYear: 2020, source: 'gemini', evidenceSource: 'gemini-ungrounded' },
+  classifySmartLookupQuery('HP Envy 6055 All-in-One Printer'));
+  await redis.set(cacheKey, unrelated);
+  let calls = 0;
+  const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
+    env: { SMART_LOOKUP_NATIVE_GEMINI_SEARCH_ENABLED: 'true' },
+    logger: { log() {}, warn() {}, error() {} },
+    localLookup: async () => null,
+    redisFactory: () => redis,
+    reserveProviderBudget: async () => ({ allowed: true, status: 'allowed', logicalLookupCount: 1 }),
+    nativeGeminiSearchLookup: async () => {
+      calls += 1;
+      return nativeResult({ brand: 'HP', product: 'HP OfficeJet Pro 8710', model: 'OfficeJet Pro 8710',
+        category: 'printer', bestEstimateYear: 2016, estimatedRange: { startYear: 2016, endYear: 2020 },
+        sources: [] });
+    },
+  });
+  const first = res();
+  await handler(req(query), first);
+  assert.equal(first.payload.introductionYear, 2016);
+  assert.equal(calls, 1);
+  const repeat = res();
+  await handler(req('  HP   OfficeJet Pro 8710 All-in-One Printer  '), repeat);
+  assert.equal(repeat.payload.cacheStatus, 'hit');
+  assert.equal(repeat.payload.introductionYear, 2016);
+  assert.equal(calls, 1);
+  await redis.set(cacheKey, prepareResultForCache(unrelated, info));
+  const matchingFingerprintWrongProduct = res();
+  await handler(req(query), matchingFingerprintWrongProduct);
+  assert.equal(matchingFingerprintWrongProduct.payload.introductionYear, 2016);
+  assert.notEqual(matchingFingerprintWrongProduct.payload.likelyProduct, 'HP Envy 6055');
+  assert.equal(calls, 2);
+  const oldEntry = { ...unrelated };
+  delete oldEntry.requestFingerprint;
+  await redis.set(cacheKey, oldEntry);
+  const legacy = res();
+  await handler(req(query), legacy);
+  assert.equal(legacy.payload.introductionYear, 2016);
+  assert.equal(calls, 3);
+});
+
+test('age route never serves a fingerprint-matched cache entry without defensible product identity', async () => {
+  for (const [query, brand, entry] of [
+    ['HP OfficeJet Pro 8710 All-in-One Printer', 'HP', { brand: 'HP', bestEstimateYear: 2020, introductionYear: 2020 }],
+    ['Samsung Galaxy Tab A8 tablet', 'Samsung', { brand: 'Samsung', introductionYear: 2020, bestEstimateYear: 2020 }],
+    ['HP OfficeJet Pro 8710 All-in-One Printer', 'HP', { brand: 'HP', model: '8710', displayName: 'HP Envy 6055',
+      likelyProduct: 'HP OfficeJet Pro 8710', introductionYear: 2020, bestEstimateYear: 2020 }],
+    ['Samsung Galaxy Tab A8 tablet', 'Samsung', { brand: 'Samsung', exactModel: 'Galaxy Tab A8',
+      displayName: 'Samsung Galaxy Tab S9', introductionYear: 2022, bestEstimateYear: 2022 }],
+  ]) {
+    const redis = createFakeRedis();
+    const info = classifySmartLookupQuery(query);
+    const cacheKey = buildSmartAgeCacheKey(info, { grounded: true, routeMode: chooseSmartLookupRoute(info).mode });
+    await redis.set(cacheKey, prepareResultForCache({ source: 'gemini', evidenceSource: 'gemini-ungrounded', ...entry }, info));
+    let calls = 0;
+    const handler = createAgeLookupHandler({
+      rateLimiter: allowingRateLimiter,
+      env: { SMART_LOOKUP_NATIVE_GEMINI_SEARCH_ENABLED: 'true' },
+      logger: { log() {}, warn() {}, error() {} },
+      localLookup: async () => null,
+      redisFactory: () => redis,
+      reserveProviderBudget: async () => ({ allowed: true, status: 'allowed', logicalLookupCount: 1 }),
+      nativeGeminiSearchLookup: async () => {
+        calls += 1;
+        return nativeResult({ brand, product: `${brand} ${query}`, model: query.includes('Tab') ? 'Galaxy Tab A8' : 'OfficeJet Pro 8710',
+          category: 'device', bestEstimateYear: 2016, estimatedRange: { startYear: 2016, endYear: 2020 }, sources: [] });
+      },
+    });
+    const out = res();
+    await handler(req(query), out);
+    assert.notEqual(out.payload.cacheStatus, 'hit', JSON.stringify(entry));
+    assert.notEqual(out.payload.introductionYear, entry.introductionYear, JSON.stringify(entry));
+    assert.equal(calls, 1, JSON.stringify(entry));
+  }
+});
+
+test('age route still reuses a cached entry whose identity matches the request', async () => {
+  for (const [query, brand, model, product, year] of [
+    ['HP OfficeJet Pro 8710 All-in-One Printer', 'HP', 'OfficeJet Pro 8710', 'HP OfficeJet Pro 8710', 2016],
+    ['Samsung Galaxy Tab A8 tablet', 'Samsung', 'Galaxy Tab A8', 'Samsung Galaxy Tab A8', 2022],
+  ]) {
+    const redis = createFakeRedis();
+    const info = classifySmartLookupQuery(query);
+    const cacheKey = buildSmartAgeCacheKey(info, { grounded: true, routeMode: chooseSmartLookupRoute(info).mode });
+    await redis.set(cacheKey, prepareResultForCache({ brand, exactModel: model, likelyProduct: product, displayName: product,
+      identityConfidence: 'high', introductionYear: year, bestEstimateYear: year, source: 'gemini', evidenceSource: 'gemini-ungrounded' }, info));
+    let calls = 0;
+    const handler = createAgeLookupHandler({
+      rateLimiter: allowingRateLimiter,
+      env: { SMART_LOOKUP_NATIVE_GEMINI_SEARCH_ENABLED: 'true' },
+      logger: { log() {}, warn() {}, error() {} },
+      localLookup: async () => null,
+      redisFactory: () => redis,
+      reserveProviderBudget: async () => ({ allowed: true, status: 'allowed', logicalLookupCount: 1 }),
+      nativeGeminiSearchLookup: async () => { calls += 1; return nativeResult(); },
+    });
+    const out = res();
+    await handler(req(query), out);
+    assert.equal(out.payload.cacheStatus, 'hit', query);
+    assert.equal(out.payload.introductionYear, year, query);
+    assert.equal(calls, 0, query);
+  }
+});
+
+test('fresh native research cannot return a different model without an additional provider call', async () => {
+  let calls = 0;
+  const handler = createAgeLookupHandler({
+    rateLimiter: allowingRateLimiter,
+    env: { SMART_LOOKUP_NATIVE_GEMINI_SEARCH_ENABLED: 'true' },
+    logger: { log() {}, warn() {}, error() {} },
+    localLookup: async () => null,
+    redisFactory: () => redisMiss,
+    reserveProviderBudget: async () => ({ allowed: true, status: 'allowed', logicalLookupCount: 1 }),
+    nativeGeminiSearchLookup: async () => {
+      calls += 1;
+      return nativeResult({ brand: 'HP', product: 'HP Envy 6055', model: 'Envy 6055',
+        category: 'printer', bestEstimateYear: 2020, sources: [] });
+    },
+  });
+  const out = res();
+  await handler(req('HP OfficeJet Pro 8710 All-in-One Printer'), out);
+  assert.equal(out.statusCode, 200);
+  assert.notEqual(out.payload.introductionYear, 2020);
+  assert.notEqual(out.payload.likelyProduct, 'HP Envy 6055');
+  assert.equal(calls, 1);
 });
 
 test('classified native Gemini failure falls back to legacy Smart Lookup', async () => {

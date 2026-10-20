@@ -25,10 +25,15 @@ const reply = (status, body, headers = {}) => ({
   async json() { return body; },
 });
 
-const nativeOk = () => reply(200, {
+// The provider answers for the product that was asked about: a request naming
+// "Xbox model N" gets that model back, any other request gets the Xbox One X.
+// A contradicting answer would (correctly) be rejected as UNRELATED_MODEL.
+const productFor = (query = '') => /xbox model \d+/i.exec(query)?.[0] ?? 'Xbox One X';
+
+const nativeOk = (query) => reply(200, {
   candidates: [{
     content: { parts: [{ text: JSON.stringify({
-      brand: 'Microsoft', product: 'Xbox One X', model: 'Xbox One X', category: 'Home video game console',
+      brand: 'Microsoft', product: productFor(query), model: productFor(query), category: 'Home video game console',
       bestEstimateYear: 2017, estimatedRange: { startYear: 2017, endYear: 2020 }, precision: 'exact_model',
       confidence: 'high', estimateBasis: 'Introduced in 2017.', summary: 'Higher-performance Xbox One console.',
       isIndividualUnitDate: false, caveats: [],
@@ -37,9 +42,9 @@ const nativeOk = () => reply(200, {
   }],
   usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 20 },
 });
-const ageJson = { brand: 'Microsoft', model: 'Xbox One X', likelyProduct: 'Microsoft Xbox One X', specificityLevel: 'unknown', introductionYear: 2017, identityConfidence: 'medium', summary: 'Introduced in 2017.' };
-const closedBookOk = () => reply(200, { candidates: [{ content: { parts: [{ text: JSON.stringify(ageJson) }] } }] });
-const groqOk = () => reply(200, { choices: [{ message: { content: JSON.stringify(ageJson) } }], usage: { prompt_tokens: 10, completion_tokens: 5 } });
+const ageJson = (query) => ({ brand: 'Microsoft', model: productFor(query), likelyProduct: `Microsoft ${productFor(query)}`, specificityLevel: 'unknown', introductionYear: 2017, identityConfidence: 'medium', summary: 'Introduced in 2017.' });
+const closedBookOk = (query) => reply(200, { candidates: [{ content: { parts: [{ text: JSON.stringify(ageJson(query)) }] } }] });
+const groqOk = (query) => reply(200, { choices: [{ message: { content: JSON.stringify(ageJson(query)) } }], usage: { prompt_tokens: 10, completion_tokens: 5 } });
 
 function harness(options = {}) {
   const {
@@ -48,14 +53,15 @@ function harness(options = {}) {
   } = options;
   const calls = { native: 0, closedBook: 0, groq: 0 };
   const lines = [];
+  let activeQuery = '';
   const fetchImpl = async (url) => {
     const target = String(url);
-    if (target.includes(NATIVE_MODEL)) { calls.native += 1; return native(); }
-    if (target.includes(CLOSED_BOOK_MODEL)) { calls.closedBook += 1; return closedBook(); }
-    if (target.includes('api.groq.com')) { calls.groq += 1; return groq(); }
+    if (target.includes(NATIVE_MODEL)) { calls.native += 1; return native(activeQuery); }
+    if (target.includes(CLOSED_BOOK_MODEL)) { calls.closedBook += 1; return closedBook(activeQuery); }
+    if (target.includes('api.groq.com')) { calls.groq += 1; return groq(activeQuery); }
     throw new Error(`unexpected provider URL ${target}`);
   };
-  const handler = createAgeLookupHandler({
+  const ageLookup = createAgeLookupHandler({
     env: { SMART_LOOKUP_NATIVE_GEMINI_SEARCH_ENABLED: 'true', GEMINI_API_KEY: 'test-gemini-key', GROQ_API_KEY: 'test-groq-key' },
     apiKey: 'test-gemini-key',
     logger: { info: (line) => lines.push(line), log() {}, warn() {}, error() {} },
@@ -69,6 +75,10 @@ function harness(options = {}) {
     }),
     fetchImpl,
   });
+  const handler = (request, response) => {
+    activeQuery = request.body?.query ?? '';
+    return ageLookup(request, response);
+  };
   const events = () => lines.map((line) => { try { return JSON.parse(line); } catch (_) { return null; } }).filter(Boolean);
   const day = () => new Date(clock.now).toISOString().slice(0, 10);
   const month = () => new Date(clock.now).toISOString().slice(0, 7);
@@ -215,8 +225,8 @@ test('an immediate retry of the same query does not double count, even when the 
 test('a failed lookup is refunded, and the retry that succeeds is the only credit spent', async () => {
   let failing = true;
   const h = harness({
-    native: () => (failing ? reply(429, {}) : nativeOk()),
-    groq: () => (failing ? reply(500, {}) : groqOk()),
+    native: (query) => (failing ? reply(429, {}) : nativeOk(query)),
+    groq: (query) => (failing ? reply(500, {}) : groqOk(query)),
   });
   const failed = await run(h, 'Xbox One X');
   assert.equal(failed.payload.errorCode, 'PROVIDER_RATE_LIMIT');
