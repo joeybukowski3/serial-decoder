@@ -276,12 +276,18 @@ test.describe('Smart Lookup controller', () => {
 
   test('double-click and Enter/click deduplicate requests', async ({ page }) => {
     const ageQueries = [];
+    const releases = new Map();
+    const gates = new Map();
+    const gateFor = (query) => {
+      if (!gates.has(query)) gates.set(query, new Promise((resolve) => releases.set(query, resolve)));
+      return gates.get(query);
+    };
     await page.route('**/api/age-lookup', async (route) => {
       const body = route.request().postDataJSON();
       ageQueries.push(body.query);
-      // Keep the request in flight long enough for both browser events to
-      // exercise the controller's real deduplication path.
-      await new Promise((resolve) => setTimeout(resolve, 75));
+      // Hold each request in flight until the test has delivered every event,
+      // so deduplication never depends on how fast the browser or CI is.
+      await gateFor(body.query);
       await route.fulfill({ json: { brand: 'Samsung', model: body.query, introductionYear: 2020 } });
     });
     await page.goto('http://localhost:3001/index.html?mode=smart#panel-smart');
@@ -293,16 +299,26 @@ test.describe('Smart Lookup controller', () => {
 
     await input.fill(queryA);
     await submit.dblclick();
-    await expect(agePanel).toContainText(queryA);
     await expect.poll(() => ageQueries.filter((query) => query === queryA).length).toBe(1);
+    releases.get(queryA)();
+    await expect(agePanel).toContainText(queryA);
 
     // Start a genuinely independent submission only after Query A has
-    // visibly settled. Enter and click are two events for this one attempt.
+    // visibly settled. The submit button is disabled while a lookup is in
+    // flight, so a separate Playwright click would have to wait for the
+    // response and arrive as a new submission. Deliver Enter, the click and
+    // the shared entry point in one task so all three hit the in-flight lookup.
     await input.fill(queryB);
-    await input.press('Enter');
-    await submit.click();
-    await expect(agePanel).toContainText(queryB);
+    await page.evaluate(() => {
+      document.getElementById('smart-lookup-input').dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+      );
+      document.querySelector('[data-smart-lookup-submit="1"]').click();
+      window.runLKQLookup();
+    });
     await expect.poll(() => ageQueries.filter((query) => query === queryB).length).toBe(1);
+    releases.get(queryB)();
+    await expect(agePanel).toContainText(queryB);
     expect(ageQueries).toEqual([queryA, queryB]);
   });
 
