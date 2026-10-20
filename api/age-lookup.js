@@ -1,4 +1,5 @@
-import { buildSmartAgeCacheKey, chooseSmartAgeTtl, hashCanonicalQuery, prepareResultForCache } from '../lib/smart-lookup/cache.js';
+import { buildSmartAgeCacheKey, chooseSmartAgeTtl, hashCanonicalQuery, matchesSmartAgeCacheRequest, prepareResultForCache } from '../lib/smart-lookup/cache.js';
+import { hasCachedExactModelEvidence, isSmartAgeProductCompatible } from '../lib/smart-lookup/age-identity.js';
 import { providerAttemptCountFromMetadata, recordProviderAttemptMetrics, reserveGuidanceBudget, reserveProviderBudget } from '../lib/smart-lookup/budget.js';
 import { chooseSmartLookupRoute, ROUTE_MODES } from '../lib/smart-lookup/route-mode.js';
 import { buildGeneralGuidance } from '../lib/smart-lookup/guidance.js';
@@ -36,7 +37,7 @@ import {
   callGeminiSearchProvider,
   GeminiSearchProviderError,
 } from '../lib/smart-lookup/gemini-search-provider.js';
-import { LIFECYCLE_RESEARCH_PROMPT } from '../lib/smart-lookup/lifecycle.js';
+import { LIFECYCLE_PROVENANCE, LIFECYCLE_RESEARCH_PROMPT } from '../lib/smart-lookup/lifecycle.js';
 // Shared with Serial Refinement so both features enable, and address, the
 // native research provider through one definition.
 import {
@@ -48,6 +49,7 @@ import {
   createUnavailableSmartAgeResult,
   normalizeCachedSmartAgeResult,
   normalizeSmartAgeResult,
+  SmartLookupValidationError,
 } from '../lib/smart-lookup/result-schema.js';
 import {
   boundedRateLimit,
@@ -125,6 +127,24 @@ function nativeGroundingSources(sources) {
     return { title: source.title, domain, uri: source.url,
       ...(source.evidenceText?.length ? { evidenceText: source.evidenceText } : {}) };
   });
+}
+
+// Only what the provider itself said about identity and dating. Normalization
+// writes the request's own model back into the result, so identity must be
+// judged on this payload first -- never on the normalized result alone.
+function nativeProviderIdentityPayload(nativeResult) {
+  const range = nativeResult.estimatedRange || {};
+  const hasRange = Number.isInteger(range.startYear) || Number.isInteger(range.endYear);
+  return {
+    brand: nativeResult.brand,
+    model: nativeResult.model,
+    likelyProduct: nativeResult.product,
+    displayName: nativeResult.product,
+    bestEstimateYear: nativeResult.bestEstimateYear,
+    ...(hasRange ? { estimatedRange: { start: range.startYear, end: range.endYear } } : {}),
+    endOfRetailAvailability: nativeResult.endOfRetailAvailability,
+    endOfManufacturerSupport: nativeResult.endOfManufacturerSupport,
+  };
 }
 
 function mapNativeGeminiSearchResult(nativeResult, queryInfo, options = {}) {
@@ -909,7 +929,7 @@ export function createAgeLookupHandler(dependencies = {}) {
       const scheduleAgeCacheWrite = (result) => {
         const ttlSeconds = chooseSmartAgeTtl(result);
         if (ttlSeconds <= 0 || !deadline.hasTime(50)) return;
-        const cachePayload = prepareResultForCache(result);
+        const cachePayload = prepareResultForCache(result, queryInfo);
         boundedRedisSet(redis, cacheKey, cachePayload, ttlSeconds, deadline, {
           stage: 'age-cache-write',
           maxMs: CACHE_WRITE_BUDGET_MS,
@@ -949,6 +969,11 @@ export function createAgeLookupHandler(dependencies = {}) {
         cacheRead = { ...cacheRead, status: 'miss', value: null };
         routingTelemetry.retryBypassedCache = true;
       }
+      if (cacheRead.status === 'hit' && (!matchesSmartAgeCacheRequest(cacheRead.value, queryInfo)
+        || !isSmartAgeProductCompatible(cacheRead.value, queryInfo)
+        || !hasCachedExactModelEvidence(cacheRead.value, queryInfo))) {
+        cacheRead = { ...cacheRead, status: 'miss', value: null };
+      }
       const redisPhaseElapsed = Math.max(0, now() - redisPhaseStart);
       timings.cacheReadMs = Math.min(redisPhaseElapsed, cacheRead.elapsedMs || redisPhaseElapsed);
       timings.verifiedLookupMs = verifiedRead.elapsedMs || 0;
@@ -964,7 +989,7 @@ export function createAgeLookupHandler(dependencies = {}) {
 
       if (cacheRead.status === 'hit' && cacheRead.value) {
         try {
-          const result = normalizeCachedSmartAgeResult(cacheRead.value, { queryInfo, currentYear });
+          const result = normalizeCachedSmartAgeResult(cacheRead.value, { queryInfo, currentYear, cacheRequestIdentityValidated: true });
           result.providerAttempted = false;
           result.timings = { ...timings, totalMs: deadline.elapsedMs() };
           logResult(logger, requestId, queryInfo, result);
@@ -1572,11 +1597,20 @@ export function createAgeLookupHandler(dependencies = {}) {
       if (nativeResult) {
         session.markAiProduced();
         const postStart = now();
-        const result = mapNativeGeminiSearchResult(nativeResult, queryInfo, {
-          cacheStatus,
-          timings,
-          currentYear,
-        });
+        // The provider-only payload is judged before normalization can echo the
+        // request's identity into the result; the normalized result is then
+        // checked again as defense in depth.
+        let result = isSmartAgeProductCompatible(nativeProviderIdentityPayload(nativeResult), queryInfo)
+          ? mapNativeGeminiSearchResult(nativeResult, queryInfo, {
+            cacheStatus,
+            timings,
+            currentYear,
+          })
+          : null;
+        if (!result || !isSmartAgeProductCompatible(result, queryInfo)) {
+          result = degradeToDeterministicFallback('UNRELATED_MODEL')
+            || createUnavailableSmartAgeResult(queryInfo, { cacheStatus, errorCode: 'UNRELATED_MODEL', timings });
+        }
         timings.postProcessMs = Math.max(0, now() - postStart);
         const nativeAttempts = recorder.totalCount();
         const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', nativeAttempts, deadline, {
@@ -1644,8 +1678,11 @@ export function createAgeLookupHandler(dependencies = {}) {
           currentYear,
         };
         const validatedProvider = normalizeSmartAgeResult(rawProvider, providerOptions);
+        if (!isSmartAgeProductCompatible(rawProvider, queryInfo)) throw new SmartLookupValidationError('UNRELATED_MODEL');
         const hinted = applyEraHints(validatedProvider, queryInfo.normalizedQuery);
-        result = normalizeSmartAgeResult(hinted, { ...providerOptions, lifecycleAlreadyValidated: true });
+        result = normalizeSmartAgeResult(hinted, { ...providerOptions, lifecycleAlreadyValidated: true,
+          lifecycleProvenance: validatedProvider[LIFECYCLE_PROVENANCE] });
+        if (!isSmartAgeProductCompatible(result, queryInfo)) throw new SmartLookupValidationError('UNRELATED_MODEL');
         if (providerMetadata.model) result.providerModel = providerMetadata.model;
         session.markAiProduced();
       } catch (error) {

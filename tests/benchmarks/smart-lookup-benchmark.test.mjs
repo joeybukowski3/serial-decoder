@@ -58,11 +58,21 @@ test('verified exact-alias benchmark scenarios resolve without providers', async
       query: 'GFW850SPNXDG',
       // Under the usefulness-first research policy an unresolvable model
       // token is researched rather than dead-ended, so a provider call is
-      // expected here. What this case actually guards still holds: the
-      // near-match must never resolve to the verified alias record -- no
-      // matchedBy, no borrowed year range.
+      // expected here. The provider names a different model (Y) than the one
+      // requested, so identity validation must reject it explicitly rather
+      // than let normalization rewrite Y into the requested token. The
+      // near-match must also never resolve to the verified alias record --
+      // no matchedBy, no borrowed year range.
       allowProvider: true,
-      expect: { source: 'gemini', matchedBy: null, range: null, conflict: false },
+      expect: { source: 'static', matchedBy: null, range: null, conflict: false, errorCode: 'UNRELATED_MODEL' },
+    },
+    {
+      label: 'near-match alias researched by a provider that names the requested model',
+      query: 'GFW850SPNXDG',
+      allowProvider: true,
+      provider: { brand: 'GE', model: 'GFW850SPNXDG', likelyProduct: 'GE GFW850SPNXDG front load washer',
+        specificityLevel: 'partial', introductionYear: 2019 },
+      expect: { source: 'gemini', matchedBy: null, range: null, conflict: false, errorCode: null },
     },
     {
       label: 'exact alias with form-factor text',
@@ -76,7 +86,10 @@ test('verified exact-alias benchmark scenarios resolve without providers', async
     const handler = createAgeLookupHandler({
       rateLimiter: allowingRateLimiter,
       redisFactory: () => redisMiss,
-      providerLookup: async () => { providerCalls += 1; return { brand: 'X', model: 'Y', specificityLevel: 'specific' }; },
+      providerLookup: async () => {
+        providerCalls += 1;
+        return testCase.provider || { brand: 'X', model: 'Y', specificityLevel: 'specific' };
+      },
       groundedProviderLookup: async () => { providerCalls += 1; return {}; },
       logger: { info: () => {} },
     });
@@ -88,6 +101,7 @@ test('verified exact-alias benchmark scenarios resolve without providers', async
       assert.equal(providerCalls, 0, `${testCase.label}: no paid provider call expected`);
     }
     assert.equal(payload.source, testCase.expect.source, `${testCase.label}: source`);
+    if ('errorCode' in testCase.expect) assert.equal(payload.errorCode ?? null, testCase.expect.errorCode, `${testCase.label}: errorCode`);
     if (testCase.expect.brand) assert.equal(payload.brand, testCase.expect.brand, `${testCase.label}: brand`);
     if (testCase.expect.identity) assert.equal(payload.querySpecificity, testCase.expect.identity, `${testCase.label}: identity`);
     assert.equal(payload.matchedBy ?? null, testCase.expect.matchedBy ?? null, `${testCase.label}: matchedBy`);

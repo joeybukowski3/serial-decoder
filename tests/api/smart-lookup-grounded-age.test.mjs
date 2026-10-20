@@ -144,6 +144,9 @@ test('cache hits bypass grounded research', async () => {
   let groundedCalls = 0;
   const cached = {
     brand: 'LG', model: 'WM3900HWA', specificityLevel: 'specific',
+    // Provider-dated entries from before the identity guard are only reused when
+    // their own product text names the requested model.
+    likelyProduct: 'LG WM3900HWA front load washer',
     introductionYear: 2019, productionRange: { start: 2019, end: 2022 },
     evidenceSource: 'gemini-grounded',
     sources: GROUNDED_SOURCES,

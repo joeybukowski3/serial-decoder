@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { normalizeLifecycleFields } from '../../lib/smart-lookup/lifecycle.js';
 import { normalizeSmartAgeResult, normalizeCachedSmartAgeResult } from '../../lib/smart-lookup/result-schema.js';
 import { prepareResultForCache } from '../../lib/smart-lookup/cache.js';
+import { classifySmartLookupQuery } from '../../lib/smart-lookup/normalize.js';
 import { extractGeminiSearchSources } from '../../lib/smart-lookup/gemini-search-provider.js';
 import { parseGroundingSources } from '../../lib/smart-lookup/provider.js';
 import { extractOpenAiSources } from '../../lib/smart-lookup/openai-provider.js';
@@ -256,4 +257,84 @@ test('accepted fields survive age normalization and cache; legacy cache records 
   assert.equal(legacy.introductionYear, 2019);
   assert.equal(legacy.endOfRetailAvailability, null);
   assert.equal(legacy.endOfManufacturerSupport, null);
+});
+
+test('validated exact-model lifecycle facts survive a broad-query cache round trip', () => {
+  const broad = classifySmartLookupQuery('HP OfficeJet Pro 8710 All-in-One Printer');
+  const exact = { ...broad, modelIdentity: 'OfficeJet Pro 8710', exactModel: 'OfficeJet Pro 8710',
+    specificityLevel: 'specific', querySpecificity: 'exact-model' };
+  const uri = 'https://example.com/us/officejet-8710/lifecycle';
+  const cited = { title: 'HP lifecycle notice', domain: 'example.com', uri, evidenceText: [
+    'HP OfficeJet Pro 8710 normal new-product retail sales ended in the US in 2022.',
+    'HP OfficeJet Pro 8710 technical support ended June 30, 2024.',
+  ] };
+  const raw = { brand: 'HP', model: 'OfficeJet Pro 8710', likelyProduct: 'HP OfficeJet Pro 8710',
+    identityConfidence: 'high', introductionYear: 2016,
+    endOfRetailAvailability: [{ product: 'HP OfficeJet Pro 8710',
+      event: 'normal_new_product_retail_sales_end', date: '2022', market: 'US',
+      confidence: 'medium', sourceUrl: uri }],
+    endOfManufacturerSupport: [{ product: 'HP OfficeJet Pro 8710', event: 'manufacturer_support_end',
+      date: '2024-06-30', supportCategory: 'technical_support', confidence: 'high', sourceUrl: uri }] };
+  const options = { queryInfo: exact, source: 'gemini', evidenceSource: 'gemini-grounded',
+    groundedSources: [cited], currentYear: 2026 };
+  const fresh = normalizeSmartAgeResult(raw, options);
+  assert.equal(fresh.endOfRetailAvailability?.date, '2022');
+  assert.equal(fresh.endOfManufacturerSupport?.date, '2024-06-30');
+  const secondPass = normalizeSmartAgeResult(fresh, { ...options, queryInfo: broad, lifecycleAlreadyValidated: true });
+  const stored = prepareResultForCache(secondPass, broad);
+  assert.ok(stored.lifecycleProvenance?.sources[0]?.evidenceText?.length);
+  const restore = (value, queryInfo = broad, guarded = true) => normalizeCachedSmartAgeResult(value,
+    { queryInfo, currentYear: 2026, cacheRequestIdentityValidated: guarded });
+  const hit = restore(stored);
+  assert.equal(secondPass.endOfRetailAvailability?.date, '2022');
+  assert.equal(hit.endOfRetailAvailability?.date, '2022');
+  assert.equal(hit.endOfManufacturerSupport?.date, '2024-06-30');
+  assert.equal(hit.introductionYear, fresh.introductionYear);
+  assert.equal(hit.yearContext.value, fresh.yearContext.value);
+  for (const changed of [
+    { lifecycleProvenance: null },
+    { lifecycleProvenance: { validated: true } },
+    { lifecycleProvenance: { ...stored.lifecycleProvenance,
+      claims: { ...stored.lifecycleProvenance.claims, endOfRetailAvailability: [{ ...raw.endOfRetailAvailability[0], date: '2023' }] } } },
+    { lifecycleProvenance: { ...stored.lifecycleProvenance,
+      claims: { ...stored.lifecycleProvenance.claims, endOfRetailAvailability: [{ ...raw.endOfRetailAvailability[0], event: 'production_end' }] } } },
+    { lifecycleProvenance: { ...stored.lifecycleProvenance,
+      claims: { ...stored.lifecycleProvenance.claims, endOfRetailAvailability: [{ ...raw.endOfRetailAvailability[0], market: 'UK' }] } } },
+    { lifecycleProvenance: { ...stored.lifecycleProvenance,
+      claims: { ...stored.lifecycleProvenance.claims, endOfRetailAvailability: [{ ...raw.endOfRetailAvailability[0], sourceUrl: 'https://fake.example' }] } } },
+    { lifecycleProvenance: { ...stored.lifecycleProvenance,
+      exactModel: 'Envy 6055' } },
+    { lifecycleProvenance: { ...stored.lifecycleProvenance,
+      sources: [{ ...cited, evidenceText: ['HP OfficeJet Pro 8710 specifications only.'] }] } },
+  ]) {
+    const result = restore({ ...stored, ...changed });
+    assert.equal(result.endOfRetailAvailability, null);
+    assert.equal(result.introductionYear, 2016);
+  }
+  const alteredSupportProof = { ...stored.lifecycleProvenance,
+    claims: { ...stored.lifecycleProvenance.claims,
+      endOfManufacturerSupport: [{ ...raw.endOfManufacturerSupport[0], supportCategory: 'repair_parts_support' }] } };
+  assert.equal(restore({ ...stored, lifecycleProvenance: alteredSupportProof }).endOfManufacturerSupport, null);
+  for (const changed of [
+    { model: 'Envy 6055' },
+    { identityConfidence: 'low' },
+    { likelyProduct: 'HP Envy 6055' },
+    { exactModel: null },
+    { endOfRetailAvailability: { ...stored.endOfRetailAvailability, source: { uri: 'https://fake.example' } } },
+    { endOfRetailAvailability: { ...stored.endOfRetailAvailability, precision: 'day' } },
+    { endOfRetailAvailability: { ...stored.endOfRetailAvailability, market: 'UK' } },
+    { endOfManufacturerSupport: { ...stored.endOfManufacturerSupport, supportCategory: 'invalid' } },
+  ]) {
+    const result = restore({ ...stored, ...changed });
+    if (changed.endOfManufacturerSupport) assert.equal(result.endOfManufacturerSupport, null);
+    else assert.equal(result.endOfRetailAvailability, null);
+    assert.equal(result.introductionYear, restore({ ...stored, ...changed,
+      endOfRetailAvailability: null, endOfManufacturerSupport: null }).introductionYear);
+  }
+  assert.equal(restore(stored, broad, false).endOfRetailAvailability, null);
+  assert.equal(restore(stored, classifySmartLookupQuery('HP Envy 6055 All-in-One Printer'))
+    .endOfRetailAvailability, null);
+  const uncited = normalizeSmartAgeResult({ ...raw,
+    endOfRetailAvailability: [{ ...raw.endOfRetailAvailability[0], sourceUrl: 'https://fake.example' }] }, options);
+  assert.equal(uncited.endOfRetailAvailability, null);
 });
