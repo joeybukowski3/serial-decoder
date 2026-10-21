@@ -5,6 +5,7 @@ import {
   ANSWER_SOURCE, ERROR_HTTP_STATUS, buildResearchError, buildResearchResponse, isValidResearchResponse,
 } from '../lib/itemassist-research/contract.js';
 import { isAuthorized, readResearchBody, validateResearchRequest } from '../lib/itemassist-research/request.js';
+import { FIXTURE_STATE, createMemoryStore, fixtureModeState, getFixtureAnswer } from '../lib/itemassist-research/fixture.js';
 import { recordResearchUsage } from '../lib/itemassist-research/usage.js';
 import { getQuickAnswer } from '../lib/replacement-quick/quick-answer.js';
 import { ANSWER_STATUS, buildFallbackAnswer } from '../lib/replacement-quick/quick-sanitize.js';
@@ -17,7 +18,8 @@ import { ANSWER_STATUS, buildFallbackAnswer } from '../lib/replacement-quick/qui
  * One provider call per cache miss, never retried, bounded by the engine's own timeout. Cache hits and every rejected request
  * (disabled, unauthorized, invalid, provider not configured, budget denied) spend no provider budget.
  *
- * Fixtures and test doubles enter ONLY through `dependencies`; nothing in the request can select them or bypass the budget.
+ * Test doubles enter through `dependencies`. The one server-side fixture mode (a connected Preview, see lib/itemassist-research/fixture.js)
+ * is chosen by two environment variables only, after the flag check; nothing in the request can select it or bypass the budget.
  * The caller (the ItemAssist proxy) owns per-IP rate limiting and the customer-facing projection; this route's global
  * protection is the daily provider-call budget, which fails CLOSED when its store is unavailable.
  */
@@ -40,6 +42,9 @@ export function createItemAssistResearchHandler(dependencies = {}) {
   const cacheFactory = dependencies.cacheFactory || ((redis) => createResearchCache({ redis }));
   const providerReady = dependencies.providerReady || defaultProviderReady;
   const makeRequestId = dependencies.requestIdFactory || randomUUID;
+  // Fixture mode keeps its budget, cache and usage in memory (per function instance), so it never reads or writes Redis.
+  let fixtureStore = null;
+  const getFixtureStore = () => { fixtureStore = fixtureStore || createMemoryStore({ now }); return fixtureStore; };
 
   /** Structured, secret-free log line: identifiers and counters only (never the query, answer text, headers or exceptions). */
   const log = (fields) => { try { logger.info(JSON.stringify({ event: 'itemassist_research', ...fields })); } catch { /* logging must never affect a reply */ } };
@@ -61,14 +66,20 @@ export function createItemAssistResearchHandler(dependencies = {}) {
   async function handle(req, res, requestId) {
     const startedAt = now();
     let redis = null;
+    // Decided from the environment alone, before the request body is even read.
+    const fixtureState = fixtureModeState(env);
+    const fixture = fixtureState === FIXTURE_STATE.ACTIVE;
+    const tag = fixture ? { fixture: true } : {};
     const fail = async (errorCode, status = ERROR_HTTP_STATUS[errorCode], fields = {}) => {
-      log({ requestId, status: errorCode, httpStatus: status, elapsedMs: now() - startedAt, ...fields });
+      log({ requestId, status: errorCode, httpStatus: status, elapsedMs: now() - startedAt, ...tag, ...fields });
       if (redis) await recordResearchUsage(redis, { outcome: errorCode, providerCalled: Boolean(fields.providerCalled) }, now());
       return res.status(status).json(buildResearchError(errorCode, { requestId }));
     };
 
     if (req.method !== 'POST') { res.setHeader?.('Allow', 'POST'); return fail('INVALID_REQUEST', 405); }
     if (env.ITEMASSIST_RESEARCH_ENABLED !== 'true') return fail('API_DISABLED');
+    // A fixture flag outside the exact Preview combination fails closed: no real provider call, no canned answer, no store.
+    if (fixtureState === FIXTURE_STATE.REFUSED) return fail('API_DISABLED', undefined, { reason: 'fixture_mode_refused' });
     if (!isAuthorized(req.headers?.authorization, env.ITEMASSIST_REPLACEMENT_API_TOKEN)) return fail('UNAUTHORIZED');
 
     const body = readResearchBody(req);
@@ -77,24 +88,26 @@ export function createItemAssistResearchHandler(dependencies = {}) {
     if (!checked.ok) return fail(checked.errorCode, checked.status);
     const { query } = checked.value;
 
-    redis = await openStore();
-    const cache = cacheFactory(redis);
+    if (fixture) res.setHeader?.('X-ItemAssist-Research-Mode', 'fixture');
+    redis = fixture ? getFixtureStore() : await openStore();
+    const cache = fixture ? createResearchCache({ redis, allowFixture: true }) : cacheFactory(redis);
     const cacheKey = researchCacheKey(query);
     const cached = await cache.read(cacheKey);
     if (cached) {
       const elapsedMs = now() - startedAt;
-      log({ requestId, status: cached.status, elapsedMs, cacheHit: true });
+      log({ requestId, status: cached.status, elapsedMs, cacheHit: true, ...tag });
       await recordResearchUsage(redis, { outcome: cached.status, cacheHit: true }, now());
       return res.status(200).json({ ...cached, meta: { ...cached.meta, requestId, elapsedMs, cached: true } });
     }
 
-    if (!providerReady(env)) return fail('PROVIDER_UNAVAILABLE', undefined, { cacheHit: false, reason: 'provider_not_configured' });
+    // A fixture needs no provider key; the budget below still applies in full.
+    if (!fixture && !providerReady(env)) return fail('PROVIDER_UNAVAILABLE', undefined, { cacheHit: false, reason: 'provider_not_configured' });
 
     const budget = budgetFactory(redis);
     const reservation = await budget.reserveCall();
     if (!reservation.allowed) return fail(reservation.status === 'denied' ? 'BUDGET_EXHAUSTED' : 'BUDGET_UNAVAILABLE', undefined, { cacheHit: false });
 
-    const { answer, meta } = await research(query);
+    const { answer, meta } = fixture ? await getFixtureAnswer(query) : await research(query);
     // A reservation is only kept for a call that was actually sent to the provider.
     if (meta.requestSent === false) await budget.releaseCall();
     const providerCalled = meta.requestSent !== false;
@@ -102,13 +115,13 @@ export function createItemAssistResearchHandler(dependencies = {}) {
 
     let response;
     try {
-      response = buildResearchResponse(answer, { requestId, elapsedMs: now() - startedAt, answerSource });
+      response = buildResearchResponse(answer, { requestId, elapsedMs: now() - startedAt, answerSource, fixture });
     } catch { return fail('ENGINE_ERROR', undefined, { cacheHit: false, providerCalled, reason: 'contract_build_failed' }); }
-    if (!isValidResearchResponse(response)) return fail('ENGINE_ERROR', undefined, { cacheHit: false, providerCalled, reason: 'contract_invalid' });
+    if (!isValidResearchResponse(response, { allowFixture: fixture })) return fail('ENGINE_ERROR', undefined, { cacheHit: false, providerCalled, reason: 'contract_invalid' });
 
     if (answerSource === ANSWER_SOURCE.AI) await cache.write(cacheKey, response);
     const elapsedMs = now() - startedAt;
-    log({ requestId, status: response.status, elapsedMs, cacheHit: false, providerCalled, ...(meta.errorCode ? { providerErrorCode: meta.errorCode } : {}) });
+    log({ requestId, status: response.status, elapsedMs, cacheHit: false, providerCalled, ...tag, ...(meta.errorCode ? { providerErrorCode: meta.errorCode } : {}) });
     await recordResearchUsage(redis, { outcome: response.status, providerCalled, providerErrorCode: meta.errorCode || null, usage: meta.usage }, now());
     return res.status(200).json({ ...response, meta: { ...response.meta, elapsedMs } });
   }
