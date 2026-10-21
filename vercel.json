@@ -238,6 +238,10 @@
       "destination": "/assistant.html"
     },
     {
+      "source": "/api/itemassist-research",
+      "destination": "/api/itemassist-replacement"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },

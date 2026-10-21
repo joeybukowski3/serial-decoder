@@ -3,6 +3,7 @@ import { DEFAULT_DEADLINE_MS, recommendByRetrieval } from '../lib/replacement-di
 import { searchProducts } from '../lib/replacement-discovery/providers/explicit-search.js';
 import { createReplacementBudget, replacementBudgetConfig } from '../lib/replacement-public/budget.js';
 import { createReplacementCache, replacementCacheKey } from '../lib/replacement-public/cache.js';
+import { createItemAssistGateway } from '../lib/itemassist-gateway/gateway.js';
 import { buildErrorResponse, buildPublicResponse, isValidPublicResponse } from '../lib/replacement-public/contract.js';
 import { ERROR_HTTP_STATUS } from '../lib/replacement-public/labels.js';
 import { isAuthorized, readRequestBody, validateReplacementRequest } from '../lib/replacement-public/request.js';
@@ -144,4 +145,5 @@ export function createItemAssistReplacementHandler(dependencies = {}) {
   };
 }
 
-export default createItemAssistReplacementHandler();
+// The gateway hands another ItemAssist route (rewritten to this function, see vercel.json) to its own handler; every other request is v1.
+export default createItemAssistGateway({ replacement: createItemAssistReplacementHandler() });

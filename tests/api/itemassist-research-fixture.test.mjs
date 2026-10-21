@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import defaultHandler, { createItemAssistResearchHandler } from '../../api/itemassist-research.js';
+import defaultHandler, { createItemAssistResearchHandler } from '../../lib/itemassist-research/handler.js';
 import { createResearchBudget, researchBudgetKey } from '../../lib/itemassist-research/budget.js';
 import { findResearchClaim, isValidResearchResponse } from '../../lib/itemassist-research/contract.js';
 import {
@@ -270,7 +270,7 @@ test('fixture code imports no provider, Redis or network code, reads no request 
   const imports = [...fixture.matchAll(/from '([^']+)'/g)].map((match) => match[1]);
   assert.deepEqual(imports, ['../replacement-quick/quick-sanitize.js']);
   for (const forbidden of ['fetch(', 'process.env', 'Redis', 'upstash', 'GEMINI', 'gemini', 'req.', 'headers', 'node:http']) assert.equal(fixture.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '').includes(forbidden), false, forbidden);
-  const route = readFileSync('api/itemassist-research.js', 'utf8');
+  const route = readFileSync('lib/itemassist-research/handler.js', 'utf8');
   assert.equal((route.match(/fixtureModeState\(/g) || []).length, 1);
   assert.match(route, /fixtureModeState\(env\)/);
   assert.equal(/fixtureModeState\([^)]*req/.test(route), false);

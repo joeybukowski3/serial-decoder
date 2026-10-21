@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import defaultHandler, { createItemAssistResearchHandler } from '../../api/itemassist-research.js';
+import defaultHandler, { createItemAssistResearchHandler } from '../../lib/itemassist-research/handler.js';
 import { getQuickAnswer } from '../../lib/replacement-quick/quick-answer.js';
 import { CATEGORY_GUIDANCE, ANSWER_STATUS, buildFallbackAnswer } from '../../lib/replacement-quick/quick-sanitize.js';
 import { MAX_QUERY_CHARS } from '../../lib/replacement-quick/quick-prompt.js';
@@ -519,7 +519,7 @@ test('logs and responses never contain the query, the token, the provider key or
 });
 
 test('the research modules are isolated: no import of v1, Smart Lookup or brief code beyond pure helpers, and v1 never imports research', () => {
-  const research = ['api/itemassist-research.js', ...readdirSync('lib/itemassist-research').map((file) => `lib/itemassist-research/${file}`)];
+  const research = [...readdirSync('lib/itemassist-research').map((file) => `lib/itemassist-research/${file}`)];
   const allowedImports = /replacement-quick\/|smart-lookup\/(?:budget|cache)\.js|replacement-public\/request\.js|itemassist-research\/|node:/;
   for (const file of research) {
     for (const [, spec] of readFileSync(file, 'utf8').matchAll(/from '([^']+)'/g)) {

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import defaultHandler, { createItemAssistResearchHandler } from '../../api/itemassist-research.js';
+import defaultHandler, { createItemAssistResearchHandler } from '../../lib/itemassist-research/handler.js';
 import { createResearchCache, researchCacheKey } from '../../lib/itemassist-research/cache.js';
 import { buildResearchResponse, isValidResearchResponse } from '../../lib/itemassist-research/contract.js';
 import { FIXTURE_MODE_ENV, createMemoryStore, getFixtureAnswer } from '../../lib/itemassist-research/fixture.js';
