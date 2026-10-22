@@ -27,7 +27,7 @@ import { Redis } from '@upstash/redis';
 import { readProviderUsage } from '../lib/smart-lookup/provider-usage.js';
 import { quotaKeys } from '../lib/quota/meter.js';
 import { loadQuotaConfig } from '../lib/quota/config.js';
-import { buildSmartLookupReport } from '../lib/quota/report.js';
+import { buildRouteDecisionReport, buildSmartLookupReport } from '../lib/quota/report.js';
 import { buildUsageReport } from '../lib/smart-lookup/provider-usage.js';
 import { loadCostConfig } from '../lib/smart-lookup/cost-estimate.js';
 import { buildCostReport } from '../lib/smart-lookup/cost-report.js';
@@ -57,10 +57,11 @@ for (const day of days) {
   const daily = (await redis.hgetall(quotaKeys.daily(day))) || {};
   const ipDaily = (await redis.hgetall(quotaKeys.ip(day))) || {};
   const report = buildSmartLookupReport({ usage, daily, ipDaily, config });
+  const decisions = buildRouteDecisionReport(usage);
   const perRoute = buildUsageReport(usage);
 
   console.log(`\n=================== ${day} (UTC) ===================`);
-  if (!perRoute.routes.length && !report.metered) {
+  if (!perRoute.routes.length && !report.metered && !decisions.total) {
     console.log('No provider usage or quota metering recorded for this day.');
     continue;
   }
@@ -107,7 +108,7 @@ for (const day of days) {
 
   // 6 (printed after 3) -- route mode comparison ---------------------------
   const r = report.routing;
-  console.log('\n3b. ROUTE MODES (needs the outcome counters; "none" = never routed: local, cache, deterministic, errors before routing)');
+  console.log('\n3b. FINAL ROUTE MODES ("none" includes answers returned before a selected mode was attached)');
   if (!r.totalRequests) {
     console.log('   (no outcome counters recorded for this day)');
   } else {
@@ -121,6 +122,20 @@ for (const day of days) {
     const top = (obj) => Object.entries(obj).sort((a, b) => b[1] - a[1]).map(([name, value]) => `${name} ${value}`).join(', ');
     console.log(`   reasons: ${top(r.reasons)}`);
     console.log(`   year signal: ${top(r.yearSignals)}`);
+  }
+
+  console.log('\n3c. ROUTE DECISIONS (Redis-backed requests; reasons are overlapping counts)');
+  if (!decisions.total) {
+    console.log('   (no route-decision counters recorded for this day)');
+  } else {
+    const pairs = (values) => Object.entries(values).map(([name, count]) => `${name} ${count}`).join(', ') || 'none';
+    console.log(`   selected: general_guidance ${decisions.modes.general_guidance}, precision_research ${decisions.modes.precision_research}`);
+    console.log(`   precision specificity: ${pairs(decisions.precisionSpecificity)}`);
+    console.log(`   precision reasons: ${pairs(decisions.precisionReasons)}`);
+    for (const mode of ['general_guidance', 'precision_research']) {
+      console.log(`   [${mode}] notes_present ${decisions.notesPresent[mode]}, digit_signal ${decisions.digitSignal[mode]}, labeled_identifier ${decisions.labeledIdentifier[mode]}`);
+      console.log(`       distinctive tokens: ${pairs(decisions.distinctiveBuckets[mode])}; model completeness: ${pairs(decisions.modelCompleteness[mode])}`);
+    }
   }
 
   // 4 -------------------------------------------------------------------

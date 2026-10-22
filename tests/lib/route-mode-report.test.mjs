@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 
 import { buildOutcomeCounterEntries } from '../../lib/smart-lookup/outcome-counters.js';
 import { recordUsageEventCounts, summarizeUsage, usageKeyForDate } from '../../lib/smart-lookup/provider-usage.js';
-import { buildRoutingReport, buildSmartLookupReport } from '../../lib/quota/report.js';
+import { buildRouteDecisionReport, buildRoutingReport, buildSmartLookupReport } from '../../lib/quota/report.js';
+import { logSmartLookup, routeDecisionCounterEntries, routeDecisionTelemetryFields } from '../../lib/smart-lookup/telemetry.js';
+import { chooseSmartLookupRoute } from '../../lib/smart-lookup/route-mode.js';
 import { loadQuotaConfig } from '../../lib/quota/config.js';
 import { createFakeRedis } from '../helpers/fake-redis.mjs';
 
@@ -16,6 +18,54 @@ const precisionPayload = {
 };
 
 const toMap = (entries) => Object.fromEntries(entries);
+
+test('arbitrary specificity cannot enter route decision logs or Redis keys', async () => {
+  const privateTier = 'private-serial-ABC123';
+  const queryInfo = { querySpecificity: privateTier, distinctiveTokenCount: 0, hasDigitToken: true, modelCompleteness: 'none' };
+  const route = chooseSmartLookupRoute(queryInfo);
+  assert.ok(route.reasons.includes(`tier:${privateTier}`));
+
+  const lines = [];
+  logSmartLookup({ info: (line) => lines.push(line) }, { event: 'smart_lookup_route_decision', queryInfo, route });
+  const event = JSON.parse(lines[0]);
+  assert.equal(lines.length, 1);
+  assert.equal(event.query_specificity, 'unknown');
+  assert.deepEqual(event.route_reasons, ['digit-token']);
+  assert.ok(!event.route_reasons.includes(`tier:${privateTier}`));
+  assert.doesNotMatch(lines[0], /tier:private-serial-ABC123|private-serial-ABC123/);
+
+  const redis = createFakeRedis();
+  const at = Date.UTC(2026, 9, 1, 12);
+  await recordUsageEventCounts(redis, 'age', routeDecisionCounterEntries(routeDecisionTelemetryFields(queryInfo, route)), at);
+  const keys = Object.keys(redis.hash(usageKeyForDate(at)));
+  assert.ok(!keys.some((key) => key.includes(`tier:${privateTier}`)));
+  assert.ok(!keys.some((key) => key.includes(privateTier)));
+  assert.ok(keys.some((key) => key.endsWith('route_decision:reason:digit-token')));
+  assert.ok(keys.some((key) => key.endsWith('route_decision:specificity:precision_research:unknown')));
+});
+
+test('route decision counters and report keep reasons separate and bounded', async () => {
+  const redis = createFakeRedis();
+  const at = Date.UTC(2026, 9, 1, 12);
+  const decision = routeDecisionTelemetryFields({
+    querySpecificity: 'brand-category', userNotes: 'private notes', hasDigitToken: true,
+    distinctiveTokenCount: 3, modelCompleteness: 'none', hasLabeledIdentifier: false,
+  }, { mode: 'precision_research', reasons: ['digit-token', 'user-notes', 'private model ABC123'] });
+  assert.deepEqual(decision.route_reasons, ['digit-token', 'user-notes']);
+  const entries = routeDecisionCounterEntries(decision);
+  assert.equal(toMap(entries)['route_decision:distinctive:precision_research:2_plus'], 1);
+  assert.doesNotMatch(JSON.stringify(entries), /private|ABC123/);
+  await recordUsageEventCounts(redis, 'age', entries, at);
+  const report = buildRouteDecisionReport(summarizeUsage(redis.hash(usageKeyForDate(at))));
+  assert.equal(report.modes.precision_research, 1);
+  assert.deepEqual(report.precisionSpecificity, { 'brand-category': 1 });
+  assert.deepEqual(report.precisionReasons, { 'digit-token': 1, 'user-notes': 1 });
+  assert.equal(report.notesPresent.precision_research, 1);
+  assert.equal(report.digitSignal.precision_research, 1);
+  assert.equal(report.distinctiveBuckets.precision_research['2_plus'], 1);
+  assert.equal(report.modelCompleteness.precision_research.none, 1);
+  assert.equal(report.labeledIdentifier.precision_research, 0);
+});
 
 test('counter entries carry only categorical names and counts', () => {
   const entries = toMap(buildOutcomeCounterEntries({
