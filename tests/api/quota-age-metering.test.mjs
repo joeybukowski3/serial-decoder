@@ -28,6 +28,10 @@ const reply = (status, body, headers = {}) => ({
 // The provider answers for the product that was asked about: a request naming
 // "Xbox model N" gets that model back, any other request gets the Xbox One X.
 // A contradicting answer would (correctly) be rejected as UNRELATED_MODEL.
+// "Xbox One X" is a recognized model line with a deterministic reserve, so a
+// total provider failure on it degrades to that reserve rather than erroring.
+// The failure-path test below needs a query with no local reserve.
+const NO_RESERVE_QUERY = 'Zorblax Quillon 7';
 const productFor = (query = '') => /xbox model \d+/i.exec(query)?.[0] ?? 'Xbox One X';
 
 const nativeOk = (query) => reply(200, {
@@ -228,7 +232,7 @@ test('a failed lookup is refunded, and the retry that succeeds is the only credi
     native: (query) => (failing ? reply(429, {}) : nativeOk(query)),
     groq: (query) => (failing ? reply(500, {}) : groqOk(query)),
   });
-  const failed = await run(h, 'Xbox One X');
+  const failed = await run(h, NO_RESERVE_QUERY);
   assert.equal(failed.payload.errorCode, 'PROVIDER_RATE_LIMIT');
   assert.equal(total(h.daily()), 0, 'no AI result: no allowance spent');
   assert.equal(h.lastLog().quotaRefunded, true);
@@ -242,6 +246,18 @@ test('a failed lookup is refunded, and the retry that succeeds is the only credi
   const ok = await run(handlerB, 'Xbox One X');
   assert.equal(ok.statusCode, 200);
   assert.equal(total(h.daily()), 1, 'fail + success nets exactly one');
+});
+
+test('a failed lookup on a recognized line that returns a reserve card is also refunded', async () => {
+  const h = harness({ native: () => reply(429, {}), groq: () => reply(500, {}) });
+  const failed = await run(h, 'Xbox One X');
+  assert.equal(failed.statusCode, 200);
+  assert.equal(failed.payload.errorCode, 'PROVIDER_RATE_LIMIT', 'the reserve card keeps the failure visible');
+  assert.equal(failed.payload.fallbackKind, 'deterministic-model-line');
+  assert.equal(failed.payload.bestEstimateYear ?? null, null);
+  assert.equal(total(h.daily()), 0, 'no AI result: no allowance spent');
+  assert.equal(h.lastLog().quotaRefunded, true);
+  assert.equal(h.lastLog().logicalAiLookupCount, 0);
 });
 
 test('a paid-path refusal (rate-limit store outage) never leaves a credit behind', async () => {
