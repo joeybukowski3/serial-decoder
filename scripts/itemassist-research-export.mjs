@@ -14,7 +14,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildResearchResponseV2, isValidResearchResponseV2 } from '../lib/itemassist-research/contract-v2.js';
-import { STOREFRONT_LABELS, SOURCE_REGISTRY } from '../lib/itemassist-research/evidence.js';
+import { EXACT_HOST_ONLY, STOREFRONT_LABELS, SOURCE_REGISTRY } from '../lib/itemassist-research/evidence.js';
 import { fixtureResearch2For } from '../lib/itemassist-research/fixture-v2.js';
 
 const REFERENCE_DATE = '2026-10-22';
@@ -50,7 +50,7 @@ export function goldenText() {
 
 export function registryBlock() {
   const rows = SOURCE_REGISTRY.map(([domain, sourceClass, name]) => `  [${JSON.stringify(domain)}, ${JSON.stringify(sourceClass)}, ${JSON.stringify(name)}],`).join('\n');
-  return `${BEGIN}\nconst REGISTRY = Object.freeze([\n${rows}\n]);\nconst STOREFRONT_LABELS = Object.freeze(${JSON.stringify([...STOREFRONT_LABELS])});\n${END}`;
+  return `${BEGIN}\nconst REGISTRY = Object.freeze([\n${rows}\n]);\nconst STOREFRONT_LABELS = Object.freeze(${JSON.stringify([...STOREFRONT_LABELS])});\nconst EXACT_HOST_ONLY = Object.freeze(${JSON.stringify([...EXACT_HOST_ONLY])});\n${END}`;
 }
 
 /** `sourcesText` with its generated block replaced; throws when the markers are missing. */

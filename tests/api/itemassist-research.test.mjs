@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
+import path from 'node:path';
 import defaultHandler, { createItemAssistResearchHandler } from '../../lib/itemassist-research/handler.js';
 import { getQuickAnswer } from '../../lib/replacement-quick/quick-answer.js';
 import { CATEGORY_GUIDANCE, ANSWER_STATUS, buildFallbackAnswer } from '../../lib/replacement-quick/quick-sanitize.js';
@@ -519,11 +520,16 @@ test('logs and responses never contain the query, the token, the provider key or
 });
 
 test('the research modules are isolated: no import of v1, Smart Lookup or brief code beyond pure helpers, and v1 never imports research', () => {
-  const research = [...readdirSync('lib/itemassist-research').map((file) => `lib/itemassist-research/${file}`)];
-  const allowedImports = /replacement-quick\/|smart-lookup\/(?:budget|cache)\.js|replacement-public\/request\.js|itemassist-research\/|node:/;
+  const research = readdirSync('lib/itemassist-research', { recursive: true, withFileTypes: true }).filter((entry) => entry.isFile())
+    .map((entry) => `${entry.parentPath || entry.path}/${entry.name}`.replaceAll('\\', '/'));
+  // The enrichment stage adds only pure transport helpers: the Gemini fetch/parse helpers, usage parsing and the bounded abort.
+  const allowedImports = /replacement-quick\/|smart-lookup\/(?:budget|cache|gemini-search-provider|provider-attempts)\.js|replacement-public\/request\.js|serial-refinement\/bounded-abort\.js|itemassist-research\/|node:/;
   for (const file of research) {
     for (const [, spec] of readFileSync(file, 'utf8').matchAll(/from '([^']+)'/g)) {
-      if (spec.startsWith('.') && !spec.startsWith('./')) assert.match(spec, allowedImports, `${file} imports ${spec}`); // './x.js' is a sibling in lib/itemassist-research
+      if (!spec.startsWith('.')) continue;
+      const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(file), spec));
+      if (resolved.startsWith('lib/itemassist-research/')) continue; // a sibling or a module inside the research folder
+      assert.match(spec, allowedImports, `${file} imports ${spec}`);
     }
   }
   for (const file of ['api/itemassist-replacement.js', 'api/age-lookup.js', 'api/smart-query-interpret.js', 'lib/replacement-public/budget.js', 'lib/replacement-public/cache.js', 'lib/replacement-public/contract.js']) {
