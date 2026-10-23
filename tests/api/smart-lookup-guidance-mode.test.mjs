@@ -100,12 +100,15 @@ function harness(options = {}) {
     handler, redis, calls, bodies,
     logs: () => lines.map((line) => { try { return JSON.parse(line); } catch (_) { return null; } })
       .filter((event) => event && event.event === 'smart_age_lookup'),
+    decisionLogs: () => lines.map((line) => { try { return JSON.parse(line); } catch (_) { return null; } })
+      .filter((event) => event && event.event === 'smart_lookup_route_decision'),
   };
 }
 
-function req(query, { retry = false, visitor = VISITOR } = {}) {
+function req(query, { retry = false, visitor = VISITOR, notes = '' } = {}) {
   const body = { query };
   if (retry) body.retry = true;
+  if (notes) body.notes = notes;
   return {
     method: 'POST',
     body,
@@ -378,6 +381,38 @@ test('guidance respects its own daily cap and never touches the research budget'
 
 // ── Telemetry ─────────────────────────────────────────────────────────────────
 
+test('route decision logs only bounded signals before later results', async () => {
+  const h = harness();
+  await run(h, 'Samsung refrigerator');
+  await run(h, 'Samsung 55 inch TV', { notes: 'private serial ABC12345' });
+  const [guidance, precision] = h.decisionLogs();
+  assert.deepEqual(guidance, {
+    event: 'smart_lookup_route_decision', route_mode: 'general_guidance', query_specificity: 'brand-category',
+    route_reasons: [], notes_present: false, digit_signal: false, distinctive_token_bucket: '0',
+    model_completeness: 'none', labeled_identifier: false,
+  });
+  assert.deepEqual(precision, {
+    event: 'smart_lookup_route_decision', route_mode: 'precision_research', query_specificity: 'brand-category',
+    route_reasons: ['digit-token', 'user-notes'], notes_present: true, digit_signal: true,
+    distinctive_token_bucket: '0', model_completeness: 'none', labeled_identifier: false,
+  });
+  assert.doesNotMatch(JSON.stringify(h.decisionLogs()), /Samsung|55 inch|private|ABC12345|queryHash|notesHash/i);
+});
+
+test('an early local answer still emits its selected route decision', async () => {
+  const lines = [];
+  const handler = createAgeLookupHandler({
+    logger: { info: (line) => lines.push(JSON.parse(line)), log() {}, warn() {}, error() {} },
+    localLookup: async () => ({ brand: 'LG', model: 'WM4000HWA', introductionYear: 2019, productionRange: { start: 2019, end: 2024 } }),
+    redisFactory: () => { throw new Error('early local answer must remain Redis-free'); },
+  });
+  const out = res();
+  await handler(req('LG WM4000HWA'), out);
+  assert.equal(out.payload.source, 'local-db');
+  assert.equal(lines.filter((line) => line.event === 'smart_lookup_route_decision').length, 1);
+  assert.equal(lines.find((line) => line.event === 'smart_lookup_route_decision').route_mode, 'precision_research');
+});
+
 test('the request log carries route mode, status, reason, year signal and enrichment', async () => {
   const h = harness();
   await run(h, 'Samsung Refrigerator');
@@ -404,6 +439,10 @@ test('daily Redis counters record volume, status and cost per route mode', async
   const usage = usageHash(h.redis);
   assert.equal(usage['age|event:route_mode:general_guidance'], 1);
   assert.equal(usage['age|event:route_mode:precision_research'], 1);
+  assert.equal(usage['age|event:route_decision:mode:general_guidance'], 1);
+  assert.equal(usage['age|event:route_decision:mode:precision_research'], 1);
+  assert.equal(usage['age|event:route_decision:specificity:precision_research:exact-model'], 1);
+  assert.equal(usage['age|event:route_decision:reason:model-like-token'], 1);
   assert.equal(usage['age|event:route_status:general_guidance:needs-detail'], 1);
   assert.equal(usage['age|event:route_status:precision_research:resolved'], 1);
   assert.equal(usage['age|event:result_reason:general-guidance'], 1);

@@ -60,7 +60,7 @@ import {
   getClientIp,
 } from '../lib/smart-lookup/redis.js';
 import { buildDeterministicBroadResult, buildExactModelReserveResult } from '../lib/smart-lookup/static-results.js';
-import { createRequestId, logSmartLookup } from '../lib/smart-lookup/telemetry.js';
+import { createRequestId, logSmartLookup, routeDecisionCounterEntries, routeDecisionTelemetryFields } from '../lib/smart-lookup/telemetry.js';
 import {
   classifyProviderFailure,
   createAttemptRecorder,
@@ -500,7 +500,7 @@ export function createAgeLookupHandler(dependencies = {}) {
   const quotaMeter = dependencies.quotaMeter
     || createQuotaMeter({ env: dependencies.env || process.env, now, accountResolver: dependencies.accountResolver });
 
-  async function handleAgeRequest(req, res, recorder, session) {
+  async function handleAgeRequest(req, res, recorder, session, setRouteDecision) {
     const requestId = recorder.requestId;
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -523,9 +523,12 @@ export function createAgeLookupHandler(dependencies = {}) {
     };
     recorder.setContext({ queryHash: hashCanonicalQuery(queryInfo.canonicalQuery || queryInfo.normalizedQuery || '') });
     const currentYear = new Date().getFullYear();
-    // Decided once, up front, from the query alone. Uncertainty always routes to
+    // Decided once, up front, from the classified query and notes. Uncertainty routes to
     // PRECISION_RESEARCH; see lib/smart-lookup/route-mode.js.
     const route = chooseSmartLookupRoute(queryInfo);
+    const routeDecision = routeDecisionTelemetryFields(queryInfo, route);
+    logSmartLookup(logger, { event: 'smart_lookup_route_decision', queryInfo, route });
+    setRouteDecision(routeDecision);
     const isRetry = validation.value.retry === true;
     let redis = null;
     let cacheStatus = 'bypass';
@@ -1768,6 +1771,7 @@ export function createAgeLookupHandler(dependencies = {}) {
     // lookup refunded, traffic counters written). All best effort and after the
     // reply was built; nothing here can change it.
     let payload = null;
+    let routeDecision = null;
     const sendJson = res.json.bind(res);
     res.json = (body) => { payload = body; return sendJson(body); };
     // Local, verified and deterministic answers must stay Redis-free (tests pin
@@ -1777,7 +1781,7 @@ export function createAgeLookupHandler(dependencies = {}) {
     const getRedis = () => session.redis || (session.enabled ? (dependencies.redis || redisFactory()) : null);
     return runWithAttemptRecorder(recorder, async () => {
       try {
-        return await handleAgeRequest(req, res, recorder, session);
+        return await handleAgeRequest(req, res, recorder, session, (decision) => { routeDecision = decision; });
       } finally {
         if (session.enabled) {
           await session.settle({
@@ -1785,24 +1789,25 @@ export function createAgeLookupHandler(dependencies = {}) {
             outcome: classifyLookupOutcome(payload, res.statusCode),
           });
         }
-        await recordOutcomeCounters({ getRedis, payload, statusCode: res.statusCode, recorder, session, retry: req?.body?.retry === true });
+        await recordOutcomeCounters({ getRedis, payload, statusCode: res.statusCode, recorder, session, retry: req?.body?.retry === true, routeDecision });
       }
     });
   };
 
   // Daily outcome counters (status, reason, year signal, route mode and per-mode
   // cost). Independent of quota metering; best effort, bounded, never throws.
-  async function recordOutcomeCounters({ getRedis, payload, statusCode, recorder, session, retry }) {
+  async function recordOutcomeCounters({ getRedis, payload, statusCode, recorder, session, retry, routeDecision }) {
     try {
-      if (!classifyLookupOutcome(payload, statusCode)) return;
+      const hasOutcome = classifyLookupOutcome(payload, statusCode);
+      if (!hasOutcome && !routeDecision) return;
       const summary = recorder.summary();
-      const entries = buildOutcomeCounterEntries({
+      const entries = [...(hasOutcome ? buildOutcomeCounterEntries({
         payload,
         summary,
         attempts: recorder.totalCount(),
         creditCounted: Boolean(session.decision?.counted),
         retry,
-      });
+      }) : []), ...routeDecisionCounterEntries(routeDecision)];
       if (!entries.length) return;
       let redis = null;
       try { redis = getRedis(); } catch (_) { redis = null; }
