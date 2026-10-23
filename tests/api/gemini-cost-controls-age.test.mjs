@@ -11,6 +11,10 @@ import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
  */
 
 const QUERY = 'Xbox One X';
+// "Xbox One X" is now a recognized model line, so a total provider failure
+// degrades to its deterministic reserve instead of surfacing an error. Tests
+// that need the raw error path use a query with no local reserve.
+const NO_RESERVE_QUERY = 'Zorblax Quillon 7';
 const NATIVE_MODEL = 'gemini-3.5-flash-lite';
 const CLOSED_BOOK_MODEL = 'gemini-2.5-flash';
 
@@ -168,7 +172,7 @@ test('a Gemini 429 plus an unavailable Groq degrades to PROVIDER_RATE_LIMIT, sti
   });
   const ctx = makeHandler({ fetchImpl });
   const out = res();
-  await ctx.handler(req(), out);
+  await ctx.handler(req(NO_RESERVE_QUERY), out);
 
   assert.equal(calls.closedBook, 0);
   assert.equal(out.payload.errorCode, 'PROVIDER_RATE_LIMIT', 'provider 429 is distinct from our own RATE_LIMIT');
@@ -418,4 +422,115 @@ test('an unavailable budget store no longer lets the native path through', async
 
   assert.equal(calls.native, 0);
   assert.equal(out.payload.errorCode, 'BUDGET_STORE_UNAVAILABLE');
+});
+
+// --------------------------------------------------------------------------
+// Recognized-but-undated model lines (Xbox) degrade to a labeled reserve
+// --------------------------------------------------------------------------
+
+// A provider failure on a recognized model line returns a useful card, but the
+// card must never read as completed, verified research: the failure stays
+// visible, the evidence is labeled heuristic, and no year is asserted.
+function assertUnverifiedReserve(payload, expectedErrorCode) {
+  assert.equal(payload.errorCode, expectedErrorCode, 'the substituted provider failure stays visible');
+  assert.equal(payload.fallbackKind, 'deterministic-model-line');
+  assert.equal(payload.evidenceSource, 'heuristic');
+  assert.equal(payload.source, 'static');
+  assert.equal(payload.groundedFallback, false, 'a deterministic card is never reported as a grounded recovery');
+  assert.equal(payload.status, 'partial');
+  assert.equal(payload.confidenceLevel, 'low');
+  assert.equal(payload.refinementNeeded, true);
+  assert.equal(payload.yearContext?.type, 'unknown');
+  for (const field of ['bestEstimateYear', 'introductionYear', 'estimatedYear', 'individualManufactureYear']) {
+    assert.equal(payload[field] ?? null, null, `${field} must not be asserted without evidence`);
+  }
+  assert.deepEqual(payload.sources, [], 'a deterministic reserve cites no research sources');
+}
+
+test('Xbox One X with every provider rate limited returns an unverified, undated reserve with the error visible', async () => {
+  const { fetchImpl, calls } = makeFetch({
+    native: () => reply(429, {}),
+    closedBook: () => { throw new Error('must not be called'); },
+    groq: () => reply(500, {}),
+  });
+  const ctx = makeHandler({ fetchImpl });
+  const out = res();
+  await ctx.handler(req(QUERY), out);
+
+  assert.equal(out.statusCode, 200);
+  assert.equal(calls.native, 1);
+  assert.equal(calls.groq, 1);
+  assertUnverifiedReserve(out.payload, 'PROVIDER_RATE_LIMIT');
+  assert.equal(out.payload.providerErrorCode, 'PROVIDER_RATE_LIMIT', 'a real provider failure is also recorded as providerErrorCode');
+});
+
+test('Xbox One X with an unavailable budget store returns the same labeled reserve, not research', async () => {
+  const { fetchImpl, calls } = makeFetch({
+    native: () => { throw new Error('must not be called'); },
+    closedBook: () => { throw new Error('must not be called'); },
+    groq: () => { throw new Error('must not be called'); },
+  });
+  const handler = createAgeLookupHandler({
+    env: { SMART_LOOKUP_NATIVE_GEMINI_SEARCH_ENABLED: 'true', GEMINI_API_KEY: 'k' },
+    logger: { info() {}, log() {}, warn() {}, error() {} },
+    localLookup: async () => null,
+    redisFactory: () => makeRedis(),
+    rateLimiter: allowingRateLimiter,
+    reserveProviderBudget: async () => ({ allowed: false, status: 'unavailable', errorCode: 'BUDGET_STORE_UNAVAILABLE' }),
+    fetchImpl,
+  });
+  const out = res();
+  await handler(req(QUERY), out);
+
+  assert.equal(calls.native + calls.closedBook + calls.groq, 0);
+  assertUnverifiedReserve(out.payload, 'BUDGET_STORE_UNAVAILABLE');
+});
+
+test('a provider answer for a different console is rejected, never returned as the Xbox result', async () => {
+  const wrongConsole = () => ({
+    brand: 'Sony', product: 'PlayStation 4', model: 'PlayStation 4', category: 'Home video game console',
+    bestEstimateYear: 2013, estimatedRange: { startYear: 2013, endYear: 2020 }, precision: 'exact_model',
+    confidence: 'high', estimateBasis: 'Introduced in 2013.', summary: 'Sony console.',
+    isIndividualUnitDate: false, caveats: [],
+  });
+  const native = () => reply(200, {
+    candidates: [{
+      content: { parts: [{ text: JSON.stringify(wrongConsole()) }] },
+      groundingMetadata: { groundingChunks: [{ web: { uri: 'https://www.playstation.com/ps4', title: 'playstation.com' } }] },
+    }],
+    usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 40 },
+  });
+  const legacy = () => reply(200, {
+    candidates: [{ content: { parts: [{ text: JSON.stringify({
+      brand: 'Sony', model: 'PlayStation 4', likelyProduct: 'Sony PlayStation 4', specificityLevel: 'unknown',
+      introductionYear: 2013, identityConfidence: 'high', summary: 'Introduced in 2013.',
+    }) }] } }],
+  });
+  const { fetchImpl } = makeFetch({ native, closedBook: legacy, groq: legacy });
+  const ctx = makeHandler({ fetchImpl });
+  const out = res();
+  await ctx.handler(req(QUERY), out);
+
+  assert.equal(out.statusCode, 200);
+  assert.notEqual(out.payload.brand, 'Sony');
+  assert.equal(out.payload.bestEstimateYear ?? null, null, 'the other console\'s year is never adopted');
+  assert.equal(out.payload.introductionYear ?? null, null);
+  assert.equal(out.payload.errorCode, 'UNRELATED_MODEL');
+  assert.equal(out.payload.evidenceSource, 'heuristic');
+});
+
+test('the error path itself is still covered by a query with no local reserve', async () => {
+  const { fetchImpl } = makeFetch({
+    native: () => reply(429, {}),
+    closedBook: () => { throw new Error('must not be called'); },
+    groq: () => reply(500, {}),
+  });
+  const ctx = makeHandler({ fetchImpl });
+  const out = res();
+  await ctx.handler(req(NO_RESERVE_QUERY), out);
+
+  assert.equal(out.payload.errorCode, 'PROVIDER_RATE_LIMIT');
+  assert.equal(out.payload.fallbackKind, 'none');
+  assert.equal(out.payload.evidenceSource, 'none');
+  assert.equal(out.payload.providerAttempted, true);
 });
