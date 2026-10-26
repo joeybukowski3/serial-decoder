@@ -194,8 +194,9 @@ test('S1 appliances: recognised sellers are screened by brand, and a family name
   const fridge = listed('samsung-rf28r7351sr', 'Samsung Bespoke 4-Door French Door refrigerator', 'Samsung RF28R7351SR refrigerator', 'refrigerator');
   assert.deepEqual(fridge.items.map((item) => item.seller), ['Home Depot', 'Best Buy', 'PC Richard & Son']);
   const dishwasher = listed('bosch-shpm65z55n', 'Bosch 500 Series dishwasher', 'Bosch SHPM65Z55N dishwasher', 'appliance');
-  assert.deepEqual(dishwasher.items.map((item) => item.host), ['bestbuy.com', 'homedepot.com']);
-  assert.equal(dishwasher.items[1].model, 'SHX65DM5N');
+  // "Bosch Home US" is the maker's own store (bosch-home.com), now a recognised seller, so its listing joins the two retailers.
+  assert.deepEqual(dishwasher.items.map((item) => item.host), ['bosch-home.com', 'bestbuy.com', 'homedepot.com']);
+  assert.equal(dishwasher.items[2].model, 'SHX65DM5N');
   assert.equal(candidateIdentity('Samsung Bespoke 4-Door French Door refrigerator').series.length, 0, '"4-Door" is a count, not a series');
   assert.deepEqual(candidateIdentity('Sony Bravia 8 OLED').series, ['code:8'], 'a single digit that names the line is kept');
 });
@@ -368,7 +369,7 @@ test('source classification: BrandsMart USA and BJ\'s are retailers on their exa
   for (const host of ['bjs.com', 'www.bjs.com', 'brandsmartusa.com', 'www.brandsmartusa.com']) assert.equal(classifyHost(host)?.sourceClass, 'RETAILER', host);
   for (const host of ['shop.bjs.com', 'us.bjs.com', 'm.bjs.com', 'products.bjs.com', 'marketplace.bjs.com', 'seller.bjs.com', 'bjs.com.evil.example', 'notbjs.com', 'evilbjs.com',
     'shop.brandsmartusa.com', 'marketplace.brandsmartusa.com', 'brandsmartusa.com.evil.example', 'evilbrandsmartusa.com', 'brandsmart.com']) assert.equal(classifyHost(host), null, host);
-  assert.deepEqual(EXACT_HOST_ONLY, ['brandsmartusa.com', 'bjs.com']);
+  assert.deepEqual(EXACT_HOST_ONLY, ['brandsmartusa.com', 'bjs.com', 'plessers.com', 'appliancefactory.com', 'townappliance.com', 'applianceleaders.com']);
   assert.equal(safeSourceUrl('https://www.bjs.com/')?.sourceName, 'BJ’s Wholesale Club');
   assert.equal(safeSourceUrl('https://shop.bjs.com/'), null);
   assert.equal(safeSourceUrl('https://www.brandsmartusa.com:8443/'), null);

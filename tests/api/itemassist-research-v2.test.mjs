@@ -635,7 +635,7 @@ test('the export script is deterministic: the golden fixture and the registry bl
   for (const entry of Object.values(golden.scenarios)) assert.equal(isValidResearchResponseV2(entry.engine, { allowFixture: true }), true);
   const block = registryBlock();
   assert.equal(block, registryBlock());
-  assert.equal(block.split('\n').filter((line) => /^  \["/.test(line)).length, 58, 'one row per registered host');
+  assert.equal(block.split('\n').filter((line) => /^  \["/.test(line)).length, 62, 'one row per registered host');
   assert.ok(block.includes('"shop","us","m","products"'), 'the storefront labels travel with the registry');
   const before = `head\n${block}\ntail\n`;
   assert.equal(withRegistryBlock(before), before, 'regenerating an up-to-date file changes nothing');
