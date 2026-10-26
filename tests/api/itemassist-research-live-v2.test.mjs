@@ -64,7 +64,7 @@ test('LG C3 55": a research.2 answer with listing prices from three recognised s
   assert.equal(isValidResearchResponseV2(body), true, 'the validator re-derives every typed block from the response itself');
   assert.deepEqual([body.contractVersion, body.status, body.meta.answerSource], [RESEARCH_CONTRACT_V2, 'OK', 'AI_ESTIMATE']);
 
-  const current = prices(body, 'CURRENT_RETAIL_NEW');
+  const current = prices(body, 'CURRENT_RETAIL_NEW').filter((item) => item.sizeConfirmed !== false);
   assert.deepEqual(current.map((item) => [item.candidate, item.amount.low, item.verification, item.asOf, item.asOfBasis]),
     [['SUCCESSOR', 999.99, 'SEARCH_LISTING', '2026-10-23', 'OBSERVED'], ['SUCCESSOR', 1096, 'SEARCH_LISTING', '2026-10-23', 'OBSERVED'], ['SUCCESSOR', 1449.99, 'SEARCH_LISTING', '2026-10-23', 'OBSERVED']]);
   assert.equal(current[0].model, 'OLED55C6PUA');
@@ -84,7 +84,12 @@ test('LG C3 55": a research.2 answer with listing prices from three recognised s
 
   // Listing evidence names the seller, never a product page: Shopping rows have no page of their own.
   assert.deepEqual(body.pricing.evidence.map((entry) => [entry.sourceName, entry.sourceClass, new URL(entry.sourceUrl).pathname, entry.observedAt, entry.modelRelation]),
-    [['Best Buy', 'RETAILER', '/', '2026-10-23', 'UNKNOWN'], ['Newegg', 'RETAILER', '/', '2026-10-23', 'UNKNOWN'], ['Target', 'RETAILER', '/', '2026-10-23', 'UNKNOWN']]);
+    [['Best Buy', 'RETAILER', '/', '2026-10-23', 'UNKNOWN'], ['Newegg', 'RETAILER', '/', '2026-10-23', 'UNKNOWN'], ['Target', 'RETAILER', '/', '2026-10-23', 'UNKNOWN'], ['P.C. Richard & Son', 'RETAILER', '/', '2026-10-23', 'UNKNOWN']]);
+  // Listings that state no screen size are shown as examples, marked as such; they are not comparables and do not move the range above.
+  const examples = prices(body, 'CURRENT_RETAIL_NEW').filter((item) => item.sizeConfirmed === false);
+  assert.ok(examples.length >= 1 && examples.length <= 2, 'at most the lowest and the highest unsized listing');
+  assert.equal(examples.every((item) => item.verification === 'SEARCH_LISTING' && item.candidate === 'SUCCESSOR'), true);
+  assert.equal(valuation.comparables.some((row) => examples.some((item) => item.id === row.priceId)), false);
   assert.equal(body.successor.modelStatus, 'FAMILY_LEVEL');
 
   // Budget: one identification, one dated search and two Shopping queries (the successor family and the first alternative).
@@ -118,8 +123,11 @@ test('Samsung S90C 65": dated history from the sources that name the S90C 65", c
   assert.deepEqual(body.pricing.tier, { level: 'PREMIUM', basis: 'MSRP_EVIDENCE' });
   assert.deepEqual(body.pricing.evidence.filter((entry) => entry.subject === 'ORIGINAL').map((entry) => [entry.sourceName, entry.publishedAt]), [['CNET', '2023-04-11'], ['PCMag', '2025-05-14']]);
   assert.equal(prices(body, 'AI_ESTIMATE').some((item) => item.subject === 'ORIGINAL'), false, 'no AI estimate beside source-backed history');
-  assert.equal(body.pricing.valuation.method, 'PROVISIONAL_LISTINGS');
-  assert.ok(body.pricing.valuation.reference, 'the history is context for the tier');
+  // Every S90 row from a recognised seller is a protection-plan or mount package, another series, or states another size, so no listing sets a
+  // price and the labelled band from the original's dated price is what remains.
+  assert.equal(prices(body, 'CURRENT_RETAIL_NEW').filter((item) => item.sizeConfirmed !== false).length, 0);
+  assert.equal(body.pricing.valuation.method, 'HISTORICAL_TIER_ESTIMATE');
+  assert.ok(body.pricing.valuation.reference, 'the history anchors the band');
 });
 
 // ---- caching ---------------------------------------------------------------------------------------------------------------------------
@@ -436,7 +444,7 @@ test('cached rows mean zero Serper requests and zero credits', async () => {
   const fetchImpl = lgFetch();
   const result = await researchLiveV2(LG_QUERY, deps({ fetchImpl, enrichCache: cache }));
   assert.deepEqual([fetchImpl.calls.search.length, fetchImpl.calls.shopping.length, result.meta.serperCalls, result.meta.serperCredits, result.meta.cacheable], [0, 0, 0, 0, true]);
-  assert.equal(result.input.pricing.prices.filter((item) => item.kind === 'CURRENT_RETAIL_NEW').length, 3);
+  assert.equal(result.input.pricing.prices.filter((item) => item.kind === 'CURRENT_RETAIL_NEW' && item.sizeConfirmed !== false).length, 3);
 });
 
 test('the deadline: when the time left after the identification is too short, Shopping is skipped (and the answer is not cacheable) but nothing else is lost', async () => {
@@ -455,7 +463,7 @@ test('a Shopping failure for one candidate leaves the other candidate\'s prices 
   const failing = async (url, init) => { try { return await fetchImpl(url, init); } catch { return jsonResponse({}, 500); } };
   failing.calls = fetchImpl.calls;
   const result = await researchLiveV2(LG_QUERY, deps({ fetchImpl: failing }));
-  assert.equal(result.input.pricing.prices.filter((item) => item.kind === 'CURRENT_RETAIL_NEW' && item.candidate === 'SUCCESSOR').length, 3);
+  assert.equal(result.input.pricing.prices.filter((item) => item.kind === 'CURRENT_RETAIL_NEW' && item.candidate === 'SUCCESSOR' && item.sizeConfirmed !== false).length, 3);
   assert.equal(result.meta.enrichment.listings.ALT_1, 'SERPER_HTTP_500');
   assert.equal(result.meta.cacheable, false);
 });

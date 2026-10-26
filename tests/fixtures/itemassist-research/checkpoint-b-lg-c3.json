@@ -1,0 +1,528 @@
+{
+ "note": "Checkpoint B (2026-10-26): the one live request for \"LG C3 OLED TV, 55 inch\". Rows are the normalised Serper results that request cached (history titles/snippets as returned, Shopping titles cut at 100 characters, history URL paths cut at 60 characters except the one price that was kept). The identification is rebuilt from the saved answer (the raw model reply was not stored): its category was \"electronics\" and its comparison rows were empty. estimates were not saved.",
+ "query": "LG C3 OLED TV, 55 inch",
+ "referenceDate": "2026-10-26",
+ "historyQuery": "LG C3 OLED TV, 55 inch launch price MSRP",
+ "history": [
+  {
+   "title": "55 inch Class LG OLED evo C3 4k Smart TV OLED55C3PUA",
+   "url": "https://www.lg.com/us/tvs/lg-oled55c3pua-oled-4k-tv",
+   "snippet": "55-inch C3 OLED evo 4K Smart TV ・ available 83\" $5,299.99 ・ 55\" $1,799.99 48\" $1,399.99 42\" $1,299.99. Display Type 4K OLED Perfect Black",
+   "date": null
+  },
+  {
+   "title": "LG 55\" Class C3 Series OLED evo 4K UHD Smart webOS ...",
+   "url": "https://www.bestbuy.com/product/lg-55-class-c3-series-oled-evo-4k-uhd-smart-webos-t",
+   "snippet": "Class C3 Series OLED evo. This item is no longer available in new condition. condition for $1,009.99!!",
+   "date": null
+  },
+  {
+   "title": "LG C3 65” Display (5600 hrs) for $700 vs brand new at ...",
+   "url": "https://www.reddit.com/r/OLED/comments/1cqec8i/lg_c3_65_display_5600_hrs_for_700_v",
+   "snippet": "LG C3 65” Display (5600 hrs) for $700 vs brand new at Costco for $1600 with 2yr warranty. LG C3 $1499 Best Buy's deal of the day.",
+   "date": null
+  },
+  {
+   "title": "LG OLED evo C3 55 Inch 4K Smart TV 2023",
+   "url": "https://www.videorevolution.com/televisions/oled-tvs/oled-tv/lg_electronics/OLED55C3PUA",
+   "snippet": "C3 55 Inch 4K Smart TV 2023. Call for Our Best Price! Lease for as low as $0/week … 9 AI Processor Gen6-made",
+   "date": null
+  },
+  {
+   "title": "LG OLED evo C3 55 inch 4K Smart TV 2023",
+   "url": "https://www.lg.com/uk/tvs-soundbars/smart-tvs/oled55c34la/",
+   "snippet": "Shop the 55\" OLED evo C3 4K Smart TV at LG UK. Explore detailed tech specs, hi-res pictures and the latest reviews. Free delivery and 5% off your first ...",
+   "date": null
+  },
+  {
+   "title": "LG C3 OLED TV Review | Buy Now, or Wait?",
+   "url": "https://www.youtube.com/watch",
+   "snippet": "LG's C3 OLED is an icon of LG's 10+ years of OLED TV dominance. Long the smartest choice in OLED TV, the LG C-series now has real ...",
+   "date": null
+  },
+  {
+   "title": "LG C3 OLED TV Review",
+   "url": "https://www.rtings.com/tv/reviews/lg/c3-oled",
+   "snippet": "Very good peak brightness in HDR and SDR. Cons. Aggressive ABL can get distracting with large areas of brightness. SEE PRICE.",
+   "date": "2024-11-08"
+  },
+  {
+   "title": "LG unveils C3 and G3 OLED release dates and prices",
+   "url": "https://www.tomsguide.com/news/lg-unveils-c3-and-g3-oled-release-dates-and-prices-what-you-need-to-know",
+   "snippet": "55-inch OLED55G3PUA: $2,499 … 55-inch OLED55C3PUA: $1,899. LG C3 OLED. The cheapest model starts at $1,399 for a 42-inch model and you can even ...",
+   "date": "2023-03-02"
+  },
+  {
+   "title": "LG C3 OLED TV: Top Choice With Superb Picture and Lower ...",
+   "url": "https://www.facebook.com/cnet/videos/lg-c3-oled-tv-review-hits-all-the-right-high-en",
+   "snippet": "LG C5 OLED TVs are now available in 2 SKUs with a 1- year official local warranty, Shipping nationwide. Prices: 65-inch @810,000/- 83-inch @ ...",
+   "date": null
+  },
+  {
+   "title": "Is a barely used 55\" LG C3 worth it? : r/OLED",
+   "url": "https://www.reddit.com/r/OLED/comments/1i4qyje/is_a_barely_used_55_lg_c3_worth_it/",
+   "snippet": "I am considering purchasing a pre-owned 55-inch LG C3 television from Facebook Marketplace for $700. The seller's description indicates minimal use (eight ...",
+   "date": null
+  }
+ ],
+ "listings": {
+  "LG C-series OLED 55 inch": [
+   {
+    "seller": "Best Buy",
+    "price": 999.99,
+    "title": "LG C6 OLED evo AI Smart 4K TV"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 999.99,
+    "title": "LG Oled55c6pua 55 inch Class Oled AI C6 4K Smart TV with 2 Year Amber Protection Plan"
+   },
+   {
+    "seller": "Walmart",
+    "price": 902.99,
+    "title": "LG evo OLED C2 Series 4K Smart TV"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 1109.99,
+    "title": "LG - OLED55C6PUA 55 Inch Class OLED AI C6 4K Smart TV with 5 Year Amber Protection Plan (2026)"
+   },
+   {
+    "seller": "B&H Photo-Video-Audio",
+    "price": 999.99,
+    "title": "LG OLED evo AI C5 4K Smart TV"
+   },
+   {
+    "seller": "Newegg.com",
+    "price": 1096,
+    "title": "LG 55\" OLED evo AI 4K C5 Smart TV w/Dolby Atmos"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 1399.99,
+    "title": "LG OLED evo AI C6 4K Smart webOS TV w/ 26 Months Protection Bundle"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 799.99,
+    "title": "Class LG OLED AI B6E 4K Smart TV 2026"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 1399.99,
+    "title": "LG OLED evo AI C6 4K Smart webOS TV w/ 4 YR Extended Warranty Bundle"
+   },
+   {
+    "seller": "Target",
+    "price": 1485.08,
+    "title": "LG C5 Series OLED evo 4K UHD Smart webOS TV w/ SKM1 Soundbar Bundle"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 1399.99,
+    "title": "LG OLED evo AI C6 4K Smart webOS TV + Samsung Soundbar Bundle"
+   },
+   {
+    "seller": "oboxliquidation.com",
+    "price": 801,
+    "title": "LG 4K UHD OLED evo C4 Smart TV"
+   },
+   {
+    "seller": "Newegg.com",
+    "price": 1799.98,
+    "title": "LG 55\" OLED evo AI 4K C5 Smart TV w/Dolby Atmos, Vision, HDR10, AI Upscaling, Filmmaker Mode, Wow Or"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 1269.99,
+    "title": "LG C5 OLED evo 4K UHD webOS TV 2025 Bundle with CPS Exclusive 26 Month Protection"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 1999.99,
+    "title": "LG G6 OLED evo AI Smart 4K TV"
+   },
+   {
+    "seller": "Beachcamera",
+    "price": 1299.99,
+    "title": "LG OLED evo C3 4K Smart TV"
+   },
+   {
+    "seller": "Coles Computers",
+    "price": 1799.99,
+    "title": "LG 55\" Class LG OLED evo AI C6 4K Smart TV | Cole's Computers"
+   },
+   {
+    "seller": "Silarius",
+    "price": 1599.99,
+    "title": "LG OLED55C5PUA 55\" OLED evo AI C5 4K Smart TV (2025)"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 2249.98,
+    "title": "Package - LG - 55\" Class G5 Series OLED evo AI 4K UHD Smart webOS TV with One Wall Design (2025) and"
+   },
+   {
+    "seller": "Newegg.com - BrandsMart USA",
+    "price": 1517.58,
+    "title": "LG evo G3 4K OLED Smart TV"
+   },
+   {
+    "seller": "Walmart - Beach Camera",
+    "price": 1299.99,
+    "title": "used Lg C3 Series 55-Inch Class Oled evo 4K Processor Smart Flat Screen TV for Gaming with Magic Rem"
+   },
+   {
+    "seller": "Provantage",
+    "price": 12667,
+    "title": "LG Transparent OLED Signage 55\" OLED"
+   },
+   {
+    "seller": "Lowe's",
+    "price": 2499,
+    "title": "LG 4K UHD OLED evo G4 Smart TV"
+   },
+   {
+    "seller": "selfridges.com",
+    "price": 2175,
+    "title": "LG 4K Ultra HD Smart OLED TV"
+   },
+   {
+    "seller": "Jetson's Appliance",
+    "price": 1799.99,
+    "title": "LG OLED evo AI G5 4K Smart TV"
+   },
+   {
+    "seller": "PC Richard",
+    "price": 599.97,
+    "title": "LG QNED 55QNED85T6C TV 139.7 cm 4K Ultra HD Smart TV Wi-Fi Blue"
+   },
+   {
+    "seller": "Commonplace",
+    "price": 1275,
+    "title": "LG OLED TV 55in 4K (2025) - Used - Like New - Akron, OH"
+   },
+   {
+    "seller": "bedstogo.net",
+    "price": 1499.99,
+    "title": "LG OLED55CXPTA - 55\" Diagonal Class CX Series OLED TV - Smart TV - webOS, ThinQ AI - 4K UHD (2160p)"
+   },
+   {
+    "seller": "José Ferreira Andrade Lda",
+    "price": 299,
+    "title": "LG 55-inch OLED 4K TV"
+   },
+   {
+    "seller": "SHI International",
+    "price": 9956,
+    "title": "LG 55EH5C Digital signage flat panel 139.7 cm (55\") LCD Wi-Fi 400 cd/m² Full HD Silver 12/7"
+   },
+   {
+    "seller": "Neobits.com",
+    "price": 3030.49,
+    "title": "LG evo ol1c Smart OLED TV"
+   },
+   {
+    "seller": "Avendor",
+    "price": 1394.99,
+    "title": "LG Smart OLED TV"
+   },
+   {
+    "seller": "Bstock.net",
+    "price": 999.99,
+    "title": "LG 55\" C5 Oled TV (4K) (2025)"
+   },
+   {
+    "seller": "selfridges.com",
+    "price": 2295,
+    "title": "LG OLED evo 4K HDR Smart TV"
+   },
+   {
+    "seller": "DOW Technologies",
+    "price": 1999.99,
+    "title": "LG 55\" Objet Collection Posé 4K OLED Smart TV"
+   },
+   {
+    "seller": "protechzone.lv",
+    "price": 1368.09,
+    "title": "OLED55C6P LG Electronics 55\" Curved 4K UHD Smart OLED TV"
+   },
+   {
+    "seller": "ABiAN",
+    "price": 803.12,
+    "title": "LG QNED AI 55QNED85A3C TV 139.7 cm (55\") 4K Ultra HD Smart TV Wi-Fi Black"
+   },
+   {
+    "seller": "inpexopcion.com",
+    "price": 1395.5,
+    "title": "LG 4K OLED evo Smart TV with Dolby Atmos"
+   },
+   {
+    "seller": "McGrocer",
+    "price": 1732.61,
+    "title": "LG 55 Inch OLED55C55LA Smart 4K UHD HDR OLED TV"
+   },
+   {
+    "seller": "AVProSupply",
+    "price": 3499,
+    "title": "SEALOC WLCLGQNED85-55 Weatherloc treated 55in LG QNED evo AI 4K Smart TV QNED85"
+   }
+  ],
+  "Sony Bravia 8 OLED 55 inch": [
+   {
+    "seller": "Best Buy",
+    "price": 1398,
+    "title": "Sony BRAVIA 8 4K HDR Smart OLED TV"
+   },
+   {
+    "seller": "Walmart - Video & Audio Center",
+    "price": 1998,
+    "title": "Sony BRAVIA 8 II QD-OLED 4K HDR Google TV"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 1399.99,
+    "title": "Sony BRAVIA XR8B 4K OLED HDR Google TV"
+   },
+   {
+    "seller": "Target",
+    "price": 2359.41,
+    "title": "Sony BRAVIA 8 II Class QD-OLED 4K HDR Google TV"
+   },
+   {
+    "seller": "NFM",
+    "price": 2799.98,
+    "title": "Sony 55-Inch BRAVIA 8 OLED 4K HDR Google TV Bundle XR OLED Contrast"
+   },
+   {
+    "seller": "Abed Tahan",
+    "price": 2099,
+    "title": "Sony Bravia 8 55 Inch 4K OLED Smart TV"
+   },
+   {
+    "seller": "Walmart - Walts TV",
+    "price": 2399.99,
+    "title": "Sony Bravia 8 Qd-oled 4K HDR Google TV with an Austere 5s-ps4-us1 4-Outlet Power"
+   },
+   {
+    "seller": "Walts TV",
+    "price": 2169.99,
+    "title": "Sony K55XR80M2 55 Inch Bravia 8 QD-OLED 4K HDR Google TV with an AudioQuest Cinnamon 48 1.5M 8K-10K"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 3999.99,
+    "title": "Sony K55XR80 55 Inch Imax Enhanced Bravia Oled 4K HDR Google TV with a Sony Ht-A9M2 4.0.4 Ch Bravia"
+   },
+   {
+    "seller": "Newegg.com - Walts TV",
+    "price": 2319.99,
+    "title": "Sony Bravia 8 QD-OLED 4K HDR Google TV with a Kanto PMX800 Full Motion Dual Stud Mount"
+   },
+   {
+    "seller": "McGrocer",
+    "price": 2361.09,
+    "title": "Sony BRAVIA 8 4K OLED Smart TV"
+   },
+   {
+    "seller": "Walmart - Walts TV",
+    "price": 2379.99,
+    "title": "Sony Bravia 8 Qd-oled 4K HDR Google TV with an Austere 5s-4khd2-2.5m V-Series 2.5m Premium 4K HDR HD"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 2799.99,
+    "title": "Sony Imax Enhanced Bravia Oled 4K HDR Google TV with a Sony Ht-A9000 Bravia Theater Bar Soundbar"
+   },
+   {
+    "seller": "Walts TV",
+    "price": 2634.99,
+    "title": "Sony Bravia 8 Qd-oled 4K Hdr Google Tv with an AudioQuest PQ505NA PowerQuest 505 12 Outlet Surge Pro"
+   },
+   {
+    "seller": "Beachcamera",
+    "price": 2297.99,
+    "title": "Sony BRAVIA 8 II QD-OLED 4K HDR Google TV w/ Samsung All-in-One Soundbar"
+   },
+   {
+    "seller": "Walmart - Walts TV",
+    "price": 2469.99,
+    "title": "Sony Bravia 8 QD-OLED 4K HDR Google TV with a Kanto PMX700 Pro Series Full Motion Dual Stud Mount"
+   },
+   {
+    "seller": "McGrocer",
+    "price": 3148.65,
+    "title": "Sony Bravia 8 II QD-OLED 4K Smart TV"
+   },
+   {
+    "seller": "Silarius",
+    "price": 1631.99,
+    "title": "Sony BRAVIA 8"
+   },
+   {
+    "seller": "Walts TV",
+    "price": 2109.99,
+    "title": "Sony Bravia 8 QD-OLED 4K HDR Google TV with an AudioQuest G8 8-Outlet USB-A/USB-C AC Power Surge Pro"
+   },
+   {
+    "seller": "Walmart - Walts TV",
+    "price": 2389.99,
+    "title": "Sony K55xr80m2 55 Inch Bravia 8 Qd-oled 4K HDR Google TV with a Kanto R300 Recessed Low Profile Full"
+   },
+   {
+    "seller": "St-Barth Electronique",
+    "price": 2429.76,
+    "title": "Sony K-55XR8M2 139.7 cm 4K Ultra HD Smart TV Wi-Fi"
+   },
+   {
+    "seller": "Shop - Shop app",
+    "price": 2599.99,
+    "title": "Sony 139 cm BRAVIA 8 II 4K Ultra HD AI Technology Smart OLED Google TV"
+   },
+   {
+    "seller": "Walts TV",
+    "price": 2124.99,
+    "title": "Sony Bravia 8 QD-OLED 4K HDR Google TV with an Austere 7S-8KHD2-2.5M VII Series 2.5m Premium Braided"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 1999.99,
+    "title": "Sony BRAVIA 8 II QD-OLED 4K Google TV with Wall Mount and Kit"
+   },
+   {
+    "seller": "Walmart - Walts TV",
+    "price": 1869.99,
+    "title": "Sony K55xr80 55 Inch Imax Enhanced Bravia Oled 4K HDR Google TV with a Sanus Vlf728-b2 Full Motion W"
+   },
+   {
+    "seller": "Walts TV",
+    "price": 2229.99,
+    "title": "Sony Bravia 8 Qd-oled 4K Hdr Google Tv with an AudioQuest PowerQuest2 Power Filter/Surge Protector 6"
+   },
+   {
+    "seller": "St-Barth Electronique",
+    "price": 1567.19,
+    "title": "Sony Bravia 8A 55Inch 4K UHD HDR OLED Google TV"
+   },
+   {
+    "seller": "McGrocer",
+    "price": 2361.09,
+    "title": "Sony 55 Inch K55XR80 BRAVIA 8 Smart 4K HDR OLED Freeview TV"
+   },
+   {
+    "seller": "WorldEyeCam",
+    "price": 2431.24,
+    "title": "Sony KD-55AF8 139.7 cm (55\") 4K Ultra HD Smart TV Wi-Fi Black"
+   },
+   {
+    "seller": "Walmart - Walts TV",
+    "price": 1714.99,
+    "title": "Sony Imax Enhanced Bravia Oled 4K HDR Google TV with an Austere 7s-ps4-us1 4-Outlet Power with Omnip"
+   },
+   {
+    "seller": "Walts TV",
+    "price": 2299.99,
+    "title": "Sony Imax Enhanced Bravia Oled 4K HDR Google TV with a Sony Ht-A8000 Bravia Theater Bar Soundbar"
+   },
+   {
+    "seller": "Best Buy",
+    "price": 1998,
+    "title": "Sony BRAVIA 8 II QD-OLED 4K HDR Google TV & Extended Protection Plan"
+   },
+   {
+    "seller": "McGrocer",
+    "price": 2676.11,
+    "title": "Sony Bravia 8 55-Inch 4K OLED TV"
+   },
+   {
+    "seller": "Walmart - Walts TV",
+    "price": 1679.99,
+    "title": "Sony Imax Enhanced Bravia Oled 4K HDR Google TV with an Austere 5s-4khd2-2.5m V-Series 2.5m Premium"
+   },
+   {
+    "seller": "McGrocer",
+    "price": 2991.14,
+    "title": "Sony Bravia 8 II OLED TV 55 Inch"
+   },
+   {
+    "seller": "Walmart - Walts TV",
+    "price": 1724.99,
+    "title": "Sony Imax Enhanced Bravia Oled 4K HDR TV with Austere 7s-8khd2-2.5m 8K HDMI Cable"
+   },
+   {
+    "seller": "Newegg.com - Walts TV",
+    "price": 2049.99,
+    "title": "Sony K55xr80m2 55 Inch Bravia 8 QD-OLED 4K HDR Google TV and Amber Protection"
+   },
+   {
+    "seller": "Walmart - Walts TV",
+    "price": 1699.99,
+    "title": "Sony K55xr80 55 Inch Imax Enhanced Bravia Oled 4K HDR Google TV with an Austere 5s-ps4-us1 4-Outlet"
+   },
+   {
+    "seller": "Target",
+    "price": 2338,
+    "title": "Sony K55XR80M2 BRAVIA 8 II 55 Inch QD-OLED 4K HDR TV with AudioQuest SKY 3m HDMI Cable"
+   },
+   {
+    "seller": "AVLgear.com",
+    "price": 1145,
+    "title": "Sony BRAVIA 4K Ultra HD HDR Professional"
+   }
+  ]
+ },
+ "identification": {
+  "category": "electronics",
+  "profile": "electronics",
+  "original": {
+   "identity": "LG C3 55-inch OLED TV",
+   "confidence": "high",
+   "characteristics": [
+    "55 inch screen size",
+    "4K resolution",
+    "OLED display technology",
+    "120Hz refresh rate"
+   ],
+   "uncertainty": null
+  },
+  "tier": "PREMIUM",
+  "requirements": [
+   {
+    "text": "55 inch screen size",
+    "importance": "IMPORTANT"
+   },
+   {
+    "text": "OLED display technology",
+    "importance": "IMPORTANT"
+   }
+  ],
+  "successor": {
+   "name": "LG C-series OLED",
+   "why": "Direct continuation of the C-series OLED line",
+   "differences": "Incremental brightness and processor updates",
+   "concern": null,
+   "confidence": "high",
+   "comparison": []
+  },
+  "suggestions": [
+   {
+    "name": "Sony Bravia 8 OLED",
+    "why": "Matches display technology and premium performance class",
+    "differences": "Different image processing engine and software platform",
+    "concern": null,
+    "confidence": "high",
+    "comparison": []
+   },
+   {
+    "name": "Samsung S90 OLED",
+    "why": "Matches screen size and high refresh rate OLED performance",
+    "differences": "Uses QD-OLED panel technology instead of W-OLED",
+    "concern": null,
+    "confidence": "high",
+    "comparison": []
+   }
+  ],
+  "estimates": null,
+  "clarify": []
+ }
+}

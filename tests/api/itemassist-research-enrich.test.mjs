@@ -237,8 +237,10 @@ test('one price per seller (the lowest), and rows that state the right size win 
   const rows = [lr(BASE, 'Best Buy', 1300), lr(BASE, 'Best Buy', 1000), lr('LG OLED evo C6 4K Smart TV', 'Target', 800), lr(BASE, 'Newegg', 1100)];
   const result = screenListings(rows, { name: 'LG C-series OLED' }, cfg);
   assert.deepEqual(result.items.map((item) => [item.seller, item.amount]), [['Best Buy', 1000], ['Newegg', 1100]], 'the unsized Target row is set aside');
+  // A television title that states no size has not confirmed one: with only one sized seller the unsized price is context, never a price.
   const lone = screenListings([lr(BASE, 'Best Buy', 1000), lr('LG OLED evo C6 4K Smart TV', 'Target', 800)], { name: 'LG C-series OLED' }, cfg);
-  assert.deepEqual(amounts(lone), [800, 1000], 'with only one sized seller the unsized one is kept');
+  assert.deepEqual(amounts(lone), [1000]);
+  assert.deepEqual(lone.context.map((item) => [item.seller, item.amount, item.reason]), [['Target', 800, 'SIZE_NOT_STATED']]);
 });
 
 test('sellers: only recognised first-party sellers map to a registered host; marketplace sub-sellers do not', () => {
@@ -277,8 +279,11 @@ test('identification: the model\'s reply becomes engine input; a candidate that 
 });
 
 test('identification: bad estimates, an unknown category or tier, and an unidentified item are handled without guessing', () => {
-  const bad = normalizeIdentification({ ...TV_REPLY, tier: 'GOLD', category: 'spaceship', estimates: { originalNew: { low: 100, high: 5000 }, replacementNew: { low: 900, high: 800 } } }, 'LG C3 55 inch OLED');
+  // The reply's own text still names a television ("LG C3 series 4K OLED smart TV"), so even a nonsense category is settled by code; with
+  // nothing to go on (no category word in the query or the description) it stays unknown, never a guess.
+  const bad = normalizeIdentification({ ...TV_REPLY, original: { identity: 'An Acme thing', confidence: 'low' }, tier: 'GOLD', category: 'spaceship', estimates: { originalNew: { low: 100, high: 5000 }, replacementNew: { low: 900, high: 800 } } }, 'Acme X1');
   assert.deepEqual([bad.category, bad.profile, bad.tier, bad.estimates], ['unknown', 'unknown', 'UNKNOWN', { original: null, replacement: null }]);
+  assert.deepEqual(normalizeIdentification({ ...TV_REPLY, category: 'spaceship' }, 'Acme X1').category, 'tv');
   const none = normalizeIdentification({ ...TV_REPLY, original: { identity: null, confidence: 'low' } }, 'thing');
   assert.deepEqual([none.input.original.identity, none.input.successor, none.input.suggestions, none.estimates], [null, null, [], { original: null, replacement: null }]);
   assert.deepEqual(normalizeIdentification('nonsense', 'x').input.suggestions, []);

@@ -238,8 +238,14 @@ test('multiple verified qualifying comparables set a range; confidence depends o
   assert.deepEqual([v.method, v.basis, v.verified, v.confidence], ['VERIFIED_MULTI', 'VERIFIED_CURRENT_RETAIL', true, 'HIGH']);
   assert.deepEqual(v.range, { currency: 'USD', low: 1000, high: 1100 });
   assert.equal(v.asOf, ago(1), 'the latest observation');
-  const wide = valuation([current('p1', 'SUCCESSOR', 1000, 'e1'), current('p2', 'ALT_1', 2500, 'e2')]);
-  assert.deepEqual([wide.method, wide.confidence], ['VERIFIED_MULTI', 'LOW']);
+  // Two prices for ONE family that disagree widely still make a wide, low-confidence range ...
+  const wide = valuation([current('p1', 'SUCCESSOR', 1000, 'e1'), current('p2', 'SUCCESSOR', 2500, 'e1')]);
+  assert.deepEqual([wide.method, wide.confidence, wide.range], ['VERIFIED_MULTI', 'LOW', { currency: 'USD', low: 1000, high: 2500 }]);
+  // ... but prices of different families that do not agree never share one interval: the successor sets the range, the other family is shown apart.
+  const split = valuation([current('p1', 'SUCCESSOR', 1000, 'e1'), current('p2', 'ALT_1', 2500, 'e2')]);
+  assert.deepEqual([split.method, split.range, split.comparables.map((row) => row.candidate)], ['VERIFIED_SINGLE', { currency: 'USD', low: 1000, high: 1000 }, ['SUCCESSOR']]);
+  assert.deepEqual(split.excluded, [], 'the other family is not excluded: its price is simply not the headline');
+  assert.ok(split.notes.some((note) => note.code === 'OTHER_FAMILIES_SEPARATE' && note.count === 1));
 });
 
 test('ONE verified comparable is enough; three are never required', () => {
