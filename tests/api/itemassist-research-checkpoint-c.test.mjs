@@ -92,7 +92,8 @@ test('the refrigerator: counter-depth and a Family Hub touchscreen are not found
 test('the dishwasher: CrystalDry/Zeolith and a "flush" handle are not mandatory; the checked width stays', () => {
   const vetted = vetIdentification(identified(DISHWASHER).input, evidenceFor(DISHWASHER));
   assert.deepEqual(vetted.input.requirements, []);
-  assert.match(vetted.input.original.uncertainty, /^Not found in the sources checked: CrystalDry technology/);
+  // "Stainless steel" alone no longer supports "Stainless steel pocket handle": generic words cannot satisfy a feature claim.
+  assert.match(vetted.input.original.uncertainty, /^Not found in the sources checked: Stainless steel pocket handle; CrystalDry technology/);
   assert.ok(vetted.input.original.characteristics.includes('24-inch built-in'));
   assert.deepEqual(originalSpec('appliance', vetted.input.original, vetted.available), { kind: 'inches', value: 24 });
 });
@@ -298,7 +299,7 @@ test('a candidate that was never priced is still flagged when its name states a 
 test('replay of the saved Bosch SHPM65Z55N request: width and the 500 Series line decide eligibility, the original\'s listings are undated context, the false series name is dropped', async () => {
   const { response } = await replay(DISHWASHER);
   assert.equal(isValidResearchResponseV2(response), true);
-  assert.match(response.original.uncertainty, /^Not found in the sources checked: CrystalDry technology/);
+  assert.match(response.original.uncertainty, /^Not found in the sources checked: Stainless steel pocket handle; CrystalDry technology/);
   assert.deepEqual(response.requirements.map((item) => item.origin), Array(5).fill('CATEGORY_RULE'));
   const original = response.pricing.prices.filter((price) => price.subject === 'ORIGINAL');
   assert.deepEqual(original.map((price) => [price.kind, price.amount.low, price.asOf, sellerOf(response, price) || 'no source']),

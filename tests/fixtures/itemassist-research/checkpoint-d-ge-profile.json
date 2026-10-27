@@ -1,0 +1,400 @@
+{
+ "note": "Checkpoint D (2026-10-27): the one live request for \"GE Profile PFE28KYNFS refrigerator\". history and listings are the normalised Serper rows that request cached (public text only). The raw Gemini reply was not stored, so identification is RECONSTRUCTED from the answer; the dropped capacity claim (\"27.8 cubic feet capacity\") is inferred from the uncertainty line it produced. Replaying the old code from this reproduces the live prices exactly.",
+ "products": {
+  "refrigerator": {
+   "query": "GE Profile PFE28KYNFS refrigerator",
+   "historyQuery": "GE Profile PFE28KYNFS refrigerator launch price MSRP",
+   "history": [
+    {
+     "title": "GE Profile™ ENERGY STAR® 27.7 Cu. Ft. Fingerprint ...",
+     "url": "https://www.geappliances.com/appliance/GE-Profile-ENERGY-STAR-27-7-Cu-Ft-Fingerprint-Resistant-French-Door-Refrigerator-with-Hands-Free-AutoFill-PFE28KYNFS",
+     "snippet": "GE Profile™ ENERGY STAR® 27.7 Cu. Ft. Fingerprint Resistant French-Door Refrigerator with Hands-Free AutoFill. Model #: PFE28KYNFS.",
+     "date": null
+    },
+    {
+     "title": "GE Profile French Door Refrigeration PFE28KYNFS",
+     "url": "https://www.abwappliances.com/GE-Profile-PFE28KYNFS-GE-Profile-Series-ENERGY-STAR-27-7-Cu-Ft-French-Door-Refrigerator-with-Hands-Free-AutoFill",
+     "snippet": "French-Door Refrigerator. PFE28KYNFS. Model #: PFE28KYNFS. Our Price: $3,329.10 Was: $3,699.00 You Save: $369.90 Rebates Available (2) Extended under $3,500.00 ...",
+     "date": null
+    },
+    {
+     "title": "PFE28KYNFS GE Profile French Door Refrigerator 27 Cu Ft",
+     "url": "https://www.brayandscarff.com/appliances/refrigeration/french-door/french-door-bottom-freezer-refrigerators/ge-profile/PFE28KYNFS",
+     "snippet": "27 cu ft French door refrigerator, PFE28KYNFS … 3 Year $549.95 Installation Options Basic Refrigerator Installation with Water $39.95. Call for best price!",
+     "date": null
+    },
+    {
+     "title": "GE Profile PFE28KYNFS Review: Capacity, Clearance, and ...",
+     "url": "https://www.youtube.com/watch",
+     "snippet": "The GE Profile PFE28KYNFS is a 27.7 cu. ft. standard-depth French-door refrigerator built around storage capacity and immediate external water ...",
+     "date": null
+    },
+    {
+     "title": "Replacing a fridge with basically the same model?",
+     "url": "https://www.reddit.com/r/Appliances/comments/1wzus25/replacing_a_fridge_with_basically_the_same_model/",
+     "snippet": "This is my first time replacing a refrigerator so apologies if this is a basic question that's been asked before. I bought my house in 2015 and it came ...",
+     "date": null
+    },
+    {
+     "title": "GE PFE28KYNFS Fingerprint Resistant Stainless",
+     "url": "https://www.plessers.com/ge/pfe28kynfs",
+     "snippet": "36 Inch French Door Refrigerator with 27.8 cu. ft. Regular Price: $3,699.00 Nationwide. Today's Price :$3,323.00 Promotions low as$276.92/month. Price: $3,699. ...",
+     "date": null
+    },
+    {
+     "title": "Model #PFE28KYNFS GE Profile Standard-Depth 27.8-Cu. ...",
+     "url": "https://www.wlappliance.com/products/model-pfe28kynfs-ge-profile-standard-depth-27-8-cu-feet-3-door-french-door-refrigerator-with-ice-maker-with-water-and-ice-dispenser-fingerprint-resistant-stainless-steel-energy-star-certified",
+     "snippet": "3 -Door French Door Refrigerator with Ice Maker. Regular price $1,028.97 USD Regular price $3,397.97 USD Sale price $1,028.97 USD. From $92.87/mo with Item ...",
+     "date": null
+    },
+    {
+     "title": "GE Profile PFE28KYNFS Refrigerator Review",
+     "url": "https://www.consumerreports.org/appliances/refrigerators/ge-profile-pfe28kynfs/m405722/",
+     "snippet": "The GE GFE28GYNFS is a French-door refrigerator that measures 70\" high, 36\" wide, and 32\" deep. It is Energy Star certified. This refrigerator comes with an ...",
+     "date": null
+    },
+    {
+     "title": "User Manual & Care for PFE28KYNFS - GE Kitchen Appliances",
+     "url": "https://products.geappliances.com/appliance/gea-specs/PFE28KYNFS/support",
+     "snippet": "Model PFE28KYNFS. GE Profile™ ENERGY STAR® 27.7 Cu. Ft. Fingerprint Resistant French-Door Refrigerator with Hands-Free AutoFill. Manufactured February, 2020 ...",
+     "date": null
+    },
+    {
+     "title": "GE's Profile Series fridge has a killer filler feature",
+     "url": "https://www.cnet.com/reviews/ge-profile-series-review/",
+     "snippet": "This year's refreshed lineup includes new models with that same Autofill water dispenser, including the $3,000 GE PFE28KMKES. It's a good- ...",
+     "date": "2016-06-03"
+    }
+   ],
+   "listings": {
+    "LG LFXS26973S French Door Refrigerator": [
+     {
+      "title": "LG 26 Cu. Ft. Smart Wi-fi Enabled French Door Refrigerator",
+      "seller": "Discount Appliances",
+      "price": 1995
+     },
+     {
+      "title": "LG 25.5 Cu ft Counter Depth French Door Refrigerator",
+      "seller": "Lowe's",
+      "price": 3199
+     },
+     {
+      "title": "LG 26 Cu. Ft. Smart Counter-Depth MAX French Door Refrigerator with Dual Ice Makers",
+      "seller": "Best Buy",
+      "price": 2499.99
+     },
+     {
+      "title": "LG 26 Cu. Ft. Stainless French Door Refrigerator",
+      "seller": "Advantage Appliance",
+      "price": 1949.99
+     },
+     {
+      "title": "LG 28 Cu.Ft Stainless Steel French Door Refrigerator with Ice & Water",
+      "seller": "Best Buy",
+      "price": 1899.99
+     },
+     {
+      "title": "LG Counter-Depth French Door Refrigerator 26 Cu. ft",
+      "seller": "Mazer Appliance",
+      "price": 3049
+     },
+     {
+      "title": "LG 26.5 Cu. ft Stainless Steel Smart Counter Depth French Door Refrigerator",
+      "seller": "Best Buy",
+      "price": 1949.99
+     },
+     {
+      "title": "LG 36\" 23.7 Cu. Ft. PrintProof Stainless Steel Counter Depth MAX with Zero Clearance French Door Refrigerator",
+      "seller": "Lowe's",
+      "price": 2599
+     },
+     {
+      "title": "LG 28 cu.ft 3 Door French Door",
+      "seller": "Home Depot",
+      "price": 1999
+     },
+     {
+      "title": "LG 26 Cu. Ft. Counter-Depth Max French Door Refrigerator",
+      "seller": "Mazer Appliance",
+      "price": 2299
+     },
+     {
+      "title": "LG 29-cu ft Smart French Door Refrigerator with Ice Maker (Printproof Platinum Silver) ENERGY STAR",
+      "seller": "Everything's Yours Appliances",
+      "price": 1345
+     },
+     {
+      "title": "LG 25 Cu. Ft. Stainless French Door Zero Clearance Counter-Depth Refrigerator",
+      "seller": "Southeast Steel",
+      "price": 3239.95
+     },
+     {
+      "title": "LG 29 Cu. Ft. Smart Standard-Depth MAX 4-Door French Door Refrigerator with Full-Convert Drawer",
+      "seller": "Wagner Appliance Sales",
+      "price": 2499.95
+     },
+     {
+      "title": "LG 27 Cu. Ft. Side-by-Side Refrigerator With Craft Ice",
+      "seller": "Home Depot",
+      "price": 1699
+     },
+     {
+      "title": "LG 28 Cu. ft. Stainless French Door Refrigerator",
+      "seller": "Siesta Sleep & Living Outlet",
+      "price": 2699.1
+     },
+     {
+      "title": "LG 29 Cu. Ft. Smart InstaView Door-in-Door Standard-Depth MAX 4-Door French Door Refrigerator with MyColor",
+      "seller": "Roby's Furniture & Appliance",
+      "price": 3499
+     },
+     {
+      "title": "LG 25 Cu. Ft. Smart Standard-Depth MAX French Door Refrigerator with InstaView Door-in-Door and Craft Ice",
+      "seller": "Colder's",
+      "price": 2499.95
+     },
+     {
+      "title": "LG 29 Cu.Ft. French Door Refrigerator",
+      "seller": "Gerhards Appliances",
+      "price": 2059.2
+     },
+     {
+      "title": "LG 26 Cu. Ft. Bottom Freezer Refrigerator lb26h2200s",
+      "seller": "Frank's Appliance Center and SleepSource",
+      "price": 1599
+     },
+     {
+      "title": "LG 3-Door French Door Refrigerator 25 cu. ft",
+      "seller": "Hometown Appliance",
+      "price": 2299
+     },
+     {
+      "title": "LG 26 Cu. Ft. Smart InstaView Counter-Depth French Door Refrigerator",
+      "seller": "Mazer Appliance",
+      "price": 3199
+     },
+     {
+      "title": "LG 30 Cu. Ft. Stainless Smart French Door Refrigerator",
+      "seller": "Southeast Steel",
+      "price": 1998.95
+     },
+     {
+      "title": "LG 28 Cu. Ft. French Door Refrigerator",
+      "seller": "Contra Costa Appliance & Kitchen Center",
+      "price": 1999
+     },
+     {
+      "title": "LG 27 Cu. Ft. Smart Counter-Depth MAX French Door Refrigerator lrflc2726s",
+      "seller": "Southeastern Appliances and More",
+      "price": 1949.99
+     },
+     {
+      "title": "LG Studio 27 Cu. Ft. Smart Counter-Depth Max French Door Refrigerator",
+      "seller": "BrandsMart USA",
+      "price": 2799
+     },
+     {
+      "title": "LG 26 Cu. Ft. Bottom Freezer Refrigerator",
+      "seller": "Gerhards Appliances",
+      "price": 1979.1
+     },
+     {
+      "title": "24 Cu. Ft. Counter-Depth MAX with Zero Clearance 3-Door French Door Refrigerator LG",
+      "seller": "Charm City Appliance",
+      "price": 2299
+     },
+     {
+      "title": "LG 27 Cu. Ft. Side-by-Side Door-in-Door Refrigerator with Craft Ice",
+      "seller": "Everything's Yours Appliances",
+      "price": 1295
+     },
+     {
+      "title": "LG 29 Cu. Ft. 4-Door French Door Refrigerator with Mini Craft Ice in Stainless Steel lf29h9730s",
+      "seller": "SuperStore Appliances",
+      "price": 4049.95
+     },
+     {
+      "title": "LG 30 Cu. Ft. Smart Instaview Door-in-Door Refrigerator with Craft Ice",
+      "seller": "Siano Appliances",
+      "price": 3079.99
+     },
+     {
+      "title": "LG 20 Cu. Ft. 3-Door French Door Refrigerator",
+      "seller": "Southeastern Appliances and More",
+      "price": 2299
+     },
+     {
+      "title": "LG French Door Refrigerator",
+      "seller": "Mazer Appliance",
+      "price": 2399
+     },
+     {
+      "title": "LG 26 cu. ft. 3 Door French Door, Counter Depth, Ice and Water with Craft Ice",
+      "seller": "Slyman Bros",
+      "price": 2787
+     },
+     {
+      "title": "LG 4-Door French Door Refrigerator 26 cu. ft. Counter-Depth",
+      "seller": "Brown's TV and Appliance",
+      "price": 2449.99
+     },
+     {
+      "title": "LG 27 Cu. Ft. Side-by-Side InstaView Refrigerator",
+      "seller": "Canales Furniture",
+      "price": 2099.99
+     },
+     {
+      "title": "LG 4 Piece Kitchen Appliances Package with French Door Refrigerator, Dual Fuel Range, Dishwasher and Over the Range Microwave in Stainless Steel",
+      "seller": "Homery",
+      "price": 6480
+     },
+     {
+      "title": "LG LFXS26973D 26 cu.ft. French Door Refrigerator",
+      "seller": "Appliances 4 Less Concord",
+      "price": 1449
+     },
+     {
+      "title": "LG 30 Cu. Ft. Smart Wi-fi Enabled French Door Refrigerator With Door-in-Door LRFDS3006S",
+      "seller": "Spencer's Appliance",
+      "price": 3415.1
+     },
+     {
+      "title": "LG 27 Cu. Ft. Smart InstaView Counter-Depth French Door Refrigerator",
+      "seller": "Hi Tech Appliances",
+      "price": 1949
+     },
+     {
+      "title": "LG 24.5 Cu. Ft. 3-Door French Door Refrigerator",
+      "seller": "Big Tex",
+      "price": 2699
+     }
+    ],
+    "Whirlpool WRF555SZDZ French Door Refrigerator": [
+     {
+      "title": "36-inch Wide French Door Refrigerator Whirlpool",
+      "seller": "Express Appliance and Mattress",
+      "price": 1499.99
+     },
+     {
+      "title": "Whirlpool WRF555SDFZ — Scratch & Dent Grade B",
+      "seller": "Appliance Direct",
+      "price": 1016.25
+     },
+     {
+      "title": "Whirlpool 36 Door Refrigerator",
+      "seller": "Direct Appliances",
+      "price": 1699
+     },
+     {
+      "title": "Whirlpool 36\" 24.3 Cu. ft Counter Depth French Door Refrigerator",
+      "seller": "Greentoe - Appliances",
+      "price": 1773.21
+     },
+     {
+      "title": "36-inch Wide French Door Refrigerator - 25 cu. ft.",
+      "seller": "Contractors Home Appliances",
+      "price": 1495
+     },
+     {
+      "title": "36-inch Wide True Counter Depth 4-Door French Door Refrigerator",
+      "seller": "Harpers Appliance",
+      "price": 3999.99
+     },
+     {
+      "title": "Whirlpool 36\" 23.4 Cu. ft Stainless Steel Counter Depth French Door Refrigerator with In-Door Water",
+      "seller": "Homery",
+      "price": 2298
+     }
+    ]
+   },
+   "identification": {
+    "category": "refrigerator",
+    "profile": "refrigerator",
+    "tier": "UPPER_PREMIUM",
+    "original": {
+     "identity": "GE Profile PFE28KYNFS French Door Refrigerator",
+     "confidence": "high",
+     "characteristics": [
+      "French door layout",
+      "Door-in-door storage",
+      "Fingerprint resistant stainless steel",
+      "27.8 cubic feet capacity"
+     ],
+     "uncertainty": null
+    },
+    "requirements": [
+     {
+      "text": "Must be a French door refrigerator with similar capacity",
+      "importance": "IMPORTANT"
+     },
+     {
+      "text": "Must include a water and ice dispenser in the door",
+      "importance": "IMPORTANT"
+     }
+    ],
+    "successor": null,
+    "suggestions": [
+     {
+      "name": "LG LFXS26973S French Door Refrigerator",
+      "why": "Offers a similar French door layout and capacity.",
+      "differences": "Uses different internal cooling technology and shelving design.",
+      "concern": null,
+      "confidence": "high",
+      "comparison": [
+       {
+        "requirementKey": "capacity",
+        "status": "MEETS",
+        "basis": "AI_ESTIMATE"
+       },
+       {
+        "requirementKey": "layout",
+        "status": "MEETS",
+        "basis": "AI_ESTIMATE"
+       },
+       {
+        "requirementKey": "fit",
+        "status": "MEETS",
+        "basis": "AI_ESTIMATE"
+       }
+      ]
+     },
+     {
+      "name": "Whirlpool WRF555SZDZ French Door Refrigerator",
+      "why": "Matches the French door configuration and exterior finish.",
+      "differences": "Slightly smaller total capacity and simpler interior features.",
+      "concern": null,
+      "confidence": "high",
+      "comparison": [
+       {
+        "requirementKey": "capacity",
+        "status": "SHORTFALL",
+        "basis": "AI_ESTIMATE"
+       },
+       {
+        "requirementKey": "layout",
+        "status": "MEETS",
+        "basis": "AI_ESTIMATE"
+       },
+       {
+        "requirementKey": "fit",
+        "status": "MEETS",
+        "basis": "AI_ESTIMATE"
+       }
+      ]
+     }
+    ],
+    "estimates": {
+     "originalNew": {
+      "low": 2800,
+      "high": 3400
+     },
+     "replacementNew": {
+      "low": 2500,
+      "high": 3200
+     }
+    },
+    "clarify": []
+   }
+  }
+ }
+}
