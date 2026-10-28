@@ -171,7 +171,7 @@ test('a full model code in the query gives the evidence a model relation; a shor
 
 // ---- listings: provisional current prices ------------------------------------------------------------------------------------------------
 
-const listed = (id, name, query, category) => screenListings(S1_ROWS.listings[id].rows, { name }, { category, spec: sizeSpec(category, query), focuses: focusTokens(query) });
+const listed = (id, name, query, category, spec = sizeSpec(category, query)) => screenListings(S1_ROWS.listings[id].rows, { name }, { category, spec, focuses: focusTokens(query) });
 
 test('LG C-series 55": three recognised sellers remain from 40 rows, spanning a plausible range, with no bundle, rental, used or wrong-size listing', () => {
   const result = listed('lg-c3-55', 'LG C-series OLED, current generation', 'LG C3 55 inch OLED', 'tv');
@@ -191,8 +191,12 @@ test('the original itself is not a replacement candidate: a listing of the C3 is
 });
 
 test('S1 appliances: recognised sellers are screened by brand, and a family name with no series code matches on brand alone', () => {
-  const fridge = listed('samsung-rf28r7351sr', 'Samsung Bespoke 4-Door French Door refrigerator', 'Samsung RF28R7351SR refrigerator', 'refrigerator');
+  const fridge = listed('samsung-rf28r7351sr', 'Samsung Bespoke 4-Door French Door refrigerator', 'Samsung RF28R7351SR refrigerator', 'refrigerator', { kind: 'capacity', value: 27.7, atLeast: true });
   assert.deepEqual(fridge.items.map((item) => item.seller), ['Home Depot', 'Best Buy', 'PC Richard & Son']);
+  // With no known size for the original, nothing can be shown to fit: the same listings are labelled examples, never prices.
+  const unknown = listed('samsung-rf28r7351sr', 'Samsung Bespoke 4-Door French Door refrigerator', 'Samsung RF28R7351SR refrigerator', 'refrigerator');
+  assert.deepEqual(unknown.items, []);
+  assert.deepEqual(unknown.context.map((item) => item.seller), ['Home Depot', 'PC Richard & Son']);
   const dishwasher = listed('bosch-shpm65z55n', 'Bosch 500 Series dishwasher', 'Bosch SHPM65Z55N dishwasher', 'appliance');
   // "Bosch Home US" is the maker's own store (bosch-home.com), now a recognised seller, so its listing joins the two retailers.
   assert.deepEqual(dishwasher.items.map((item) => item.host), ['bosch-home.com', 'bestbuy.com', 'homedepot.com']);

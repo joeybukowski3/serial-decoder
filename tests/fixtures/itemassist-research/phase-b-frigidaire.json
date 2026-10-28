@@ -1,0 +1,572 @@
+{
+ "note": "Phase B (2026-10-28): the one live request for \"Frigidaire Gallery FGHB2868TF refrigerator\" (backend ee085d7 / frontend 2756f66). history and listings are the normalised Serper rows that request cached (public text only). The raw Gemini reply was not stored, so identification is RECONSTRUCTED from the answer: the three characteristics are the claims named in its \"Not found in the sources checked\" line, the candidates are its three cards, the replacement estimate is unknown (the answer suppressed it because listings existed). Replaying ee085d7 from this reproduces the live prices exactly.",
+ "query": "Frigidaire Gallery FGHB2868TF refrigerator",
+ "referenceDate": "2026-10-28",
+ "historyQuery": "Frigidaire Gallery FGHB2868TF refrigerator launch price MSRP",
+ "history": [
+  {
+   "title": "26.8 Cu. Ft. French Door Refrigerator",
+   "url": "https://www.frigidaire.com/en/p/owner-center/product-support/FGHB2868TF",
+   "snippet": "French Door Refrigerator. FGHB2868TF. DISCONTINUED. Slide 1 of 7. 1 of 7. 26.8 Cu ... Join our Family Store to unlock our best prices on your next appliance.",
+   "date": null
+  },
+  {
+   "title": "Frigidaire Gallery® 26.8 Cu. Ft. Stainless Steel French ...",
+   "url": "https://www.appliancefactory.com/product/frigidaire-gallery-268-cu-ft-stainless-steel-french-door-refrigerator-fghb2868tf-120447",
+   "snippet": "Open Box: starting at $1,499.50. Quantity. 1. Quantity. Add To Cart. Frigidaire Gallery. Model #: FGHB2868TF. Availability. Call for Availability. For delivery ...",
+   "date": null
+  },
+  {
+   "title": "Frigidaire - Gallery 26.8 Cu. Ft. French Door Refrigerator",
+   "url": "https://www.bestbuy.com/site/reviews/frigidaire-gallery-26-8-cu-ft-french-door-refrigerator-stainless-steel/5948560",
+   "snippet": "Customers are saying. Customers highly value the spaciousness, adjustable shelves, and price of the Gallery 26.8 Cu. Ft. French Door Refrigerator.",
+   "date": null
+  },
+  {
+   "title": "Frigidaire Gallery 36-inch, 26.8 cu.ft. Freestanding French ...",
+   "url": "https://aaappliancecenter.com/products/frigidaire-gallery-36-inch-268-cuft-freestanding-french-3-door-refrigerator-with-eventemp-system-fghb2868tf",
+   "snippet": "Frigidaire Gallery 36-inch, 26.8 cu.ft. Freestanding French 3-Door Refrigerator with EvenTemp™ System FGHB2868TF ; Control Lock. Yes ; Digital Display. Yes ; Door ...",
+   "date": null
+  },
+  {
+   "title": "Frigidaire vs Frigidaire Gallery Refrigerator",
+   "url": "https://www.townappliance.com/blogs/town-appliance-official/frigidaire-vs-frigidaire-gallery",
+   "snippet": "Gallery refrigerators in stock at Town Appliance run about $1,440 to $3,230. Standard full-size Frigidaire refrigerators run about $590 to ...",
+   "date": "2025-02-24"
+  },
+  {
+   "title": "Frigidaire Gallery FGHB2868TF Refrigerator Review",
+   "url": "https://www.consumerreports.org/appliances/refrigerators/frigidaire-gallery-fghb2868tf/m393752/",
+   "snippet": "We've tested and reviewed products since 1936. Read CR's review of the Frigidaire Gallery FGHB2868TF refrigerator to find out if it's worth it.",
+   "date": null
+  },
+  {
+   "title": "Frigidaire Gallery FGHB2868TF 26.8 Cu. Ft. Stainless French ...",
+   "url": "https://www.youtube.com/watch",
+   "snippet": "Check the current price here: https://geni.us/DOUGandNIKIStoreFront ... After living with the Frigidaire Gallery French Door Refrigerator ...",
+   "date": null
+  },
+  {
+   "title": "Frigidaire Gallery Refrigerator Reviews ...",
+   "url": "https://www.spencerstv.com/blog/frigidaire-gallery-refrigerator-reviews",
+   "snippet": "Frigidaire Gallery French Door Refrigerator: This 36 inch Frigidaire French door refrigerator (FGHB2868TF) comes with a 26.8 cubic feet ...",
+   "date": "2021-05-19"
+  },
+  {
+   "title": "Frigidaire Gallery® 26.8 Cu. Ft. Stainless Steel French ...",
+   "url": "https://www.applianceandelectronics.com/product/frigidaire-gallery-268-cu-ft-stainless-steel-french-door-refrigerator-fghb2868t-150902",
+   "snippet": "The Frigidaire Gallery 36 in. French Door Refrigerator comes with 26.8 cu. ft. capacity and2 Easy Glide Humidity-Controlled Crisper Drawers with CrispSeal ...",
+   "date": null
+  },
+  {
+   "title": "Frigidaire: Kitchen Appliances, Filters & Accessories",
+   "url": "https://www.frigidaire.com/en/",
+   "snippet": "Explore feature-packed and energy efficient home appliances. Shop Frigidaire refrigerators, ranges & stoves, dishwashers, ACs, filters, accessories & more.",
+   "date": null
+  }
+ ],
+ "listings": {
+  "Frigidaire Gallery French Door Series refrigerator": [
+   {
+    "title": "Frigidaire Gallery 21.5 Cu. Ft. Counter-Depth 4-Door French Door Refrigerator",
+    "seller": "beautyesthetic.cz",
+    "price": 1399.5
+   },
+   {
+    "title": "Frigidaire Gallery 27.8 Cu. Ft. French Door Refrigerator",
+    "seller": "Town Appliance",
+    "price": 2292.01
+   },
+   {
+    "title": "Frigidaire Gallery 23.3 Cu. Ft. Counter-Depth French Door Refrigerator",
+    "seller": "Best Buy",
+    "price": 2299.99
+   },
+   {
+    "title": "Frigidaire Gallery - 22 Cu. Ft. Counter-Depth 4-Door French Door Refrigerator with Free Additional Filter Kit",
+    "seller": "Frigidaire",
+    "price": 2999
+   },
+   {
+    "title": "Frigidaire Gallery 20.0 Cu. Ft. Standard-Depth French Door Refrigerator",
+    "seller": "AJ Madison",
+    "price": 1593
+   },
+   {
+    "title": "Frigidaire Gallery 22.6 Cu ft Counter Depth French Door Refrigerator",
+    "seller": "Schaefer's",
+    "price": 2249.99
+   },
+   {
+    "title": "Frigidaire Gallery - 28 Cu. Ft. Standard-Depth French Door Refrigerator with Free Additional Filter Kit",
+    "seller": "Frigidaire",
+    "price": 2789
+   },
+   {
+    "title": "Frigidaire Gallery - 27 Cu. Ft. Standard-Depth 4-Door French Door Refrigerator with Free Additional Filter Kit",
+    "seller": "Frigidaire",
+    "price": 2299
+   },
+   {
+    "title": "Frigidaire Gallery 20 Cu. Ft. Standard-Depth French Door Refrigerator grfs2023af",
+    "seller": "NFM",
+    "price": 1693
+   },
+   {
+    "title": "Frigidaire Gallery 22.1 Cu. Ft. Counter-Depth 4-Door French Door Refrigerator",
+    "seller": "Town Appliance",
+    "price": 2392.01
+   },
+   {
+    "title": "22 Cu. Ft. Counter-Depth 4-Door French Door Refrigerator with Free Additional Filter Kit",
+    "seller": "Frigidaire",
+    "price": 2399
+   },
+   {
+    "title": "Frigidaire Gallery 22.6 Cu. Ft. French Door Counter-Depth Refrigerator FGHG2366PF",
+    "seller": "Crane Appliance",
+    "price": 2899.99
+   },
+   {
+    "title": "Frigidaire Gallery 26.3 Cu. Ft. 4-Door French Door Refrigerator",
+    "seller": "Hagedorn's Appliances",
+    "price": 2498.97
+   },
+   {
+    "title": "Frigidaire Gallery 22.4 Cu. Ft. Counter-Depth French Door Refrigerator",
+    "seller": "Spencer's Appliance",
+    "price": 2380.1
+   },
+   {
+    "title": "Frigidaire Gallery 22.6 Cu. Ft. Counter-Depth French Door Refrigerator",
+    "seller": "Walmart - ECO SK Products LLC",
+    "price": 3059
+   },
+   {
+    "title": "Frigidaire 28 Cu. Ft. Standard-Depth French Door Refrigerator grfs287daf",
+    "seller": "Merlin's TV & Appliance",
+    "price": 2099.99
+   },
+   {
+    "title": "Frigidaire Gallery 21.5 Cu. Ft. Counter-Depth 4-Door Refrigerator",
+    "seller": "Greentoe",
+    "price": 2100.95
+   },
+   {
+    "title": "Frigidaire 28.8 Cu. Ft. Standard-Depth French Door Refrigerator",
+    "seller": "KT Appliance",
+    "price": 1698
+   },
+   {
+    "title": "Frigidaire 26 Cu. Ft. Standard-Depth 4-Door French Door Refrigerator frms2733av",
+    "seller": "Town Appliance",
+    "price": 2192.01
+   },
+   {
+    "title": "Model GRMC2273CF Frigidaire Counter-Depth 21.5-Cu. Feet 4 -Door French Door Refrigerator with Ice Maker with water and Ice dispenser ( Smudge-Proof",
+    "seller": "wonderful life appliances",
+    "price": 925.97
+   },
+   {
+    "title": "Frigidaire 22.6 Cu. Ft. Counter-Depth French Door Refrigerator",
+    "seller": "Standard Appliance Gallery",
+    "price": 2099
+   },
+   {
+    "title": "Frigidaire Gallery Series 36 Inch French Door Refrigerator - Stainless Steel - GRFN2853AF",
+    "seller": "Express Kitchens",
+    "price": 2267.85
+   },
+   {
+    "title": "Frigidaire 19 Cu. Ft. Standard-Depth French Door Refrigerator frfn1801af",
+    "seller": "Plesser's Appliances",
+    "price": 1393
+   },
+   {
+    "title": "Frigidaire Gallery Counter-Depth 4-Door French Door Refrigerator •",
+    "seller": "Checked Appliances",
+    "price": 2200
+   },
+   {
+    "title": "Frigidaire 20 Cu. Ft. Counter-Depth French Door Refrigerator frfg2033av",
+    "seller": "Town Appliance",
+    "price": 1692.01
+   },
+   {
+    "title": "Frigidaire Gallery FG4H2272UF 21.8 Cu. Ft. Counter-Depth 4-Door French Door Refrigerator –",
+    "seller": "A & A Appliance Center",
+    "price": 3299.99
+   },
+   {
+    "title": "Frigidaire 28 Cu. Ft. Standard-Depth French Door Refrigerator",
+    "seller": "Overstock Appliances",
+    "price": 1998
+   },
+   {
+    "title": "Frigidaire Professional 26 Cu. Ft. Standard-Depth 4-Door French Door Refrigerator prms2790bf",
+    "seller": "Walmart - Empire Appliances",
+    "price": 2579
+   },
+   {
+    "title": "Frigidaire 17.6 Cu. Ft. Counter-Depth French Door Refrigerator",
+    "seller": "Brown's TV and Appliance",
+    "price": 1499.99
+   },
+   {
+    "title": "Frigidaire 20 Cu. Ft. Counter-Depth French Door Refrigerator",
+    "seller": "Appliance Solutions",
+    "price": 1699
+   },
+   {
+    "title": "Frigidaire 27.8 Cu. ft French Door Refrigerator",
+    "seller": "Varouj",
+    "price": 1999
+   },
+   {
+    "title": "Frigidaire 18 Cu. Ft. Counter-Depth French Door Refrigerator",
+    "seller": "Baillio's",
+    "price": 1799
+   },
+   {
+    "title": "Frigidaire Professional 22 Cu. Ft. Counter-Depth 4-Door French Door Refrigerator",
+    "seller": "Hagedorn's Appliances",
+    "price": 2599
+   },
+   {
+    "title": "Frigidaire FRQG1721AV 33\" 17.4 Cu. Ft. Brushed Steel Counter-Depth French Door Refrigerator",
+    "seller": "Appliance Leaders",
+    "price": 1499
+   },
+   {
+    "title": "Frigidaire Professional 27.8 Cu. Ft. French Door Refrigerator",
+    "seller": "ABC Warehouse",
+    "price": 2543
+   },
+   {
+    "title": "Frigidaire Professional 23.3 Cu. Ft. Counter-Depth French Door Refrigerator",
+    "seller": "Homery",
+    "price": 2643
+   },
+   {
+    "title": "Frigidaire Gallery 22.3 Cu. Ft. 33\" Standard Depth Side by Side Refrigerator",
+    "seller": "Myers Appliance",
+    "price": 1549
+   },
+   {
+    "title": "Frigidaire Gallery 20.3 Cu. Ft. Standard-Depth Bottom Freezer Refrigerator",
+    "seller": "Direct Supply",
+    "price": 1485.99
+   },
+   {
+    "title": "Frigidaire 28 Cu. Ft. Standard-Depth French Door Refrigerator-White",
+    "seller": "meredithsappliances.com",
+    "price": 2399
+   },
+   {
+    "title": "Frigidaire Gallery 26 Cu. Ft. Standard-Depth 4-Door French Door Refrigerator",
+    "seller": "ABC Appliances",
+    "price": 980
+   }
+  ],
+  "Whirlpool French Door Series refrigerator": [
+   {
+    "title": "Whirlpool French Door Refrigerator with Ice Maker",
+    "seller": "Plesser's Appliances",
+    "price": 1738
+   },
+   {
+    "title": "Whirlpool 36\" French Door Refrigerator with Dual Ice Makers",
+    "seller": "Mike’s Appliance Center",
+    "price": 1395
+   },
+   {
+    "title": "Whirlpool 24.5 Cu. ft French Door Refrigerator",
+    "seller": "AJ Madison",
+    "price": 2298
+   },
+   {
+    "title": "Whirlpool 36\" 29.6 Cu. ft French Door Refrigerator with In-Door Water Dispenser and Ice Maker",
+    "seller": "Schaefer's",
+    "price": 1999.99
+   },
+   {
+    "title": "Whirlpool 19.7 Cu. ft French Door Refrigerator",
+    "seller": "Sargents Maytag",
+    "price": 1799
+   },
+   {
+    "title": "Whirlpool 36\" 28.9 Cu. ft French Door Refrigerator with Flexible Temperature Drawer",
+    "seller": "Best Buy",
+    "price": 2399.99
+   },
+   {
+    "title": "Whirlpool 22.1 Cu. ft Freestanding French Door Refrigerator",
+    "seller": "Plesser's Appliances",
+    "price": 1738
+   },
+   {
+    "title": "Whirlpool 36 Inch French Door Refrigerator",
+    "seller": "Prime Tech Essentials",
+    "price": 526.85
+   },
+   {
+    "title": "Whirlpool 36-inch Wide French Door Refrigerator with Dual Ice Makers wrfc5236rz",
+    "seller": "Lowe's",
+    "price": 2649
+   },
+   {
+    "title": "Whirlpool 36\" 29.8 Cu. Ft. FingerPrint Resistant Stainless French Door Refrigerator with Flexible Temperature Drawer",
+    "seller": "Plesser's Appliances",
+    "price": 2018
+   },
+   {
+    "title": "Whirlpool 36\" 30.5 Cu. ft French Door Refrigerator with Internal Water Dispenser",
+    "seller": "AJ Madison",
+    "price": 1998
+   },
+   {
+    "title": "Whirlpool 20.0 Cu. ft Counter Depth French Door Refrigerator",
+    "seller": "Shop Appliances",
+    "price": 2098
+   },
+   {
+    "title": "Model #WRF767SDHZ Whirlpool Standard-Depth 26.8-Cu. Feet 3 -Door French Door Refrigerator with Dual Ice Maker with water and Ice dispenser (",
+    "seller": "wonderful life appliances",
+    "price": 1337.97
+   },
+   {
+    "title": "Whirlpool 36\" 23.4 Cu. ft Stainless Steel Counter Depth French Door Refrigerator with In-Door Water",
+    "seller": "Greentoe - In Stock!",
+    "price": 2228.8
+   },
+   {
+    "title": "Whirlpool 36\" 24.3 Cu. ft Counter Depth French Door Refrigerator",
+    "seller": "Appliance Trends",
+    "price": 2299
+   },
+   {
+    "title": "Whirlpool 36-inch Wide French Door Refrigerator",
+    "seller": "Hometown Appliance",
+    "price": 1349
+   },
+   {
+    "title": "Whirlpool Counter Depth 4 Door Refrigerator",
+    "seller": "Plesser's Appliances",
+    "price": 1928
+   },
+   {
+    "title": "Whirlpool 36-Inch Counter Depth 4 Door Refrigerator with Ice Maker in Door",
+    "seller": "Made Appliance Outlet",
+    "price": 1499
+   },
+   {
+    "title": "Whirlpool 22 Cu. Ft. Counter Depth 4-Door French Door Refrigerator",
+    "seller": "Appliance Trends",
+    "price": 2799
+   },
+   {
+    "title": "Whirlpool 36 French Door Refrigerator",
+    "seller": "Sargent Appliance",
+    "price": 2969.1
+   },
+   {
+    "title": "Whirlpool 36 in. 25.2 Cu. ft French Door Refrigerator",
+    "seller": "Nordam Appliance",
+    "price": 1561.99
+   },
+   {
+    "title": "Whirlpool — French Door, 26 cu ft — Stainless Steel",
+    "seller": "Americana Appliance",
+    "price": 650
+   },
+   {
+    "title": "Whirlpool 36 in. 24.7 Cu. ft French Door Refrigerator",
+    "seller": "Shop Appliances",
+    "price": 2278
+   },
+   {
+    "title": "Whirlpool French Door Refrigerator WRX735SDB",
+    "seller": "H & H Lifestyles",
+    "price": 2849
+   },
+   {
+    "title": "Whirlpool 33-Inch Wide French Door Refrigerator",
+    "seller": "Appliance Solutions",
+    "price": 2068.99
+   },
+   {
+    "title": "Whirlpool 36-inch Wide French Door Refrigerator With Crisper Drawer",
+    "seller": "QualityAppliancetvs",
+    "price": 1709
+   },
+   {
+    "title": "Whirlpool 36-inch True Counter Depth 3-Door French Door Refrigerator with Nugget Ice",
+    "seller": "Plesser's Appliances",
+    "price": 2896.16
+   },
+   {
+    "title": "Whirlpool 36\" Counter Depth French Door Refrigerator",
+    "seller": "Schaefer's",
+    "price": 2799.99
+   },
+   {
+    "title": "Whirlpool French Door Refrigerator",
+    "seller": "Shop Appliances",
+    "price": 2058
+   },
+   {
+    "title": "Whirlpool WRF989SDAH Ice Collection 28.6 cu. ft",
+    "seller": "L&D Appliance",
+    "price": 1639
+   },
+   {
+    "title": "Whirlpool 36-inch True Counter Depth 4-Door French Door Refrigerator with Nugget Ice",
+    "seller": "Plesser's Appliances",
+    "price": 3310.16
+   },
+   {
+    "title": "WRF532SMB Whirlpool 33\" 22 Cu. Ft. French Door Refrigerator",
+    "seller": "Martin Appliance",
+    "price": 1899.95
+   },
+   {
+    "title": "Whirlpool 30-inch Wide Contemporary Handle French Door Refrigerator",
+    "seller": "Appliance Solutions",
+    "price": 1649.99
+   },
+   {
+    "title": "Whirlpool French Door Refrigerator and",
+    "seller": "NFM",
+    "price": 3419.1
+   },
+   {
+    "title": "Whirlpool 36-Inch Wide Counter Depth French Door Refrigerator",
+    "seller": "L&D Appliance",
+    "price": 2179
+   },
+   {
+    "title": "Whirlpool 36-inch W 24.5 cu.ft. French Door Refrigerator",
+    "seller": "220-Electronics.com",
+    "price": 2755
+   },
+   {
+    "title": "Whirlpool 30 Cu. Ft. Family-Sized Capacity French Door Refrigerator with Flexible Temperature Drawer",
+    "seller": "Cowboy Maloney",
+    "price": 2299
+   },
+   {
+    "title": "Whirlpool 23.8 Cu. Ft. Fingerprint Resistant Stainless Steel French Door Refrigerator",
+    "seller": "Shop Appliances",
+    "price": 3798
+   },
+   {
+    "title": "Whirlpool 36 Door Refrigerator",
+    "seller": "Albert Lee",
+    "price": 3419.99
+   },
+   {
+    "title": "Whirlpool 29 Cu. Ft. Family-Sized Capacity French Door Refrigerator with Flexible Temperature Drawer",
+    "seller": "Appliance Warehouse",
+    "price": 2990.99
+   }
+  ]
+ },
+ "identification": {
+  "category": "refrigerator",
+  "profile": "refrigerator",
+  "tier": "STANDARD",
+  "original": {
+   "identity": "Frigidaire Gallery FGHB2868TF French Door Refrigerator",
+   "confidence": "high",
+   "characteristics": [
+    "27.8 cu ft capacity",
+    "French door layout with bottom freezer",
+    "Smudge-proof stainless steel finish"
+   ],
+   "uncertainty": null
+  },
+  "requirements": [],
+  "successor": {
+   "name": "Frigidaire Gallery French Door Series",
+   "why": "It continues Frigidaire's core mid-tier multi-door lineup with similar feature sets.",
+   "differences": "Updated internal shelving and slightly refined exterior styling.",
+   "concern": "Ice maker reliability has been a historical pain point in this line.",
+   "confidence": "medium",
+   "comparison": [
+    {
+     "requirementKey": "capacity",
+     "status": "UNKNOWN",
+     "basis": "AI_ESTIMATE"
+    },
+    {
+     "requirementKey": "layout",
+     "status": "MEETS",
+     "basis": "AI_ESTIMATE"
+    },
+    {
+     "requirementKey": "fit",
+     "status": "MEETS",
+     "basis": "AI_ESTIMATE"
+    }
+   ]
+  },
+  "suggestions": [
+   {
+    "name": "Whirlpool French Door Series",
+    "why": "Matches the capacity, French door layout, and external water dispenser.",
+    "differences": "Different internal bin layout and cooling system design.",
+    "concern": null,
+    "confidence": "high",
+    "comparison": [
+     {
+      "requirementKey": "capacity",
+      "status": "UNKNOWN",
+      "basis": "AI_ESTIMATE"
+     },
+     {
+      "requirementKey": "layout",
+      "status": "MEETS",
+      "basis": "AI_ESTIMATE"
+     },
+     {
+      "requirementKey": "fit",
+      "status": "MEETS",
+      "basis": "AI_ESTIMATE"
+     }
+    ]
+   },
+   {
+    "name": "LG French Door Series",
+    "why": "Offers comparable large capacity and standard 36-inch width with water dispensing.",
+    "differences": "Uses dual evaporator cooling and linear compressor technology.",
+    "concern": "Linear compressors have had long-term reliability concerns.",
+    "confidence": "high",
+    "comparison": [
+     {
+      "requirementKey": "capacity",
+      "status": "MEETS",
+      "basis": "AI_ESTIMATE"
+     },
+     {
+      "requirementKey": "layout",
+      "status": "MEETS",
+      "basis": "AI_ESTIMATE"
+     },
+     {
+      "requirementKey": "fit",
+      "status": "MEETS",
+      "basis": "AI_ESTIMATE"
+     }
+    ]
+   }
+  ],
+  "estimates": {
+   "originalNew": {
+    "low": 1800,
+    "high": 2400
+   },
+   "replacementNew": null
+  },
+  "clarify": []
+ }
+}
