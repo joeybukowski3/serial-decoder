@@ -1273,6 +1273,34 @@
     if (state.age.status === 'success') mountRcvAcvLinkout(query, state.age);
   }
 
+  function acknowledgeRenderedResult(data, rawQuery) {
+    if (!data || !data.auditId) return;
+    var panel = $('smart-lookup-age-panel');
+    if (!panel) return;
+    var displayedText = typeof panel.innerText === 'string' ? panel.innerText : panel.textContent;
+    if (!String(displayedText || '').trim()) return;
+    var body = JSON.stringify({
+      auditId: data.auditId,
+      displayedResultText: String(displayedText || '').slice(0, 12000),
+      displayStatus: state.age.status,
+      rendererVersion: 'smart-lookup-controller-v1',
+      rawQuery: String(rawQuery == null ? '' : rawQuery).slice(0, 1000),
+    });
+    function send(attempt) {
+      return fetch('/api/smart-lookup-audit-ack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: body,
+      }).then(function (response) {
+        if (response.status === 202 && attempt === 0) setTimeout(function () { send(1).catch(function () {}); }, 200);
+      });
+    }
+    try {
+      send(0).catch(function () {});
+    } catch (_) { /* audit must never affect the result */ }
+  }
+
   function fetchJson(url, body, signal) {
     var key = url + '|' + JSON.stringify(body || {});
     if (inflight.has(key)) return inflight.get(key);
@@ -1301,7 +1329,8 @@
   }
 
   function run(requestedQuery, options) {
-    var query = normalize(requestedQuery != null ? requestedQuery : ($('smart-lookup-input') || {}).value);
+    var rawQuery = requestedQuery != null ? requestedQuery : ($('smart-lookup-input') || {}).value;
+    var query = normalize(rawQuery);
     var notes = normalizeNotes(options && options.notes != null ? options.notes : lookupNotes());
     if (!query) {
       if (state.controller) state.controller.abort();
@@ -1351,6 +1380,7 @@
       }
       rememberNeedsDetail(normalize(query).toLowerCase(), outcome);
       render(query);
+      acknowledgeRenderedResult(data, rawQuery);
       completeAnalyticsAttempt(analyticsAttempt, data, bucket);
     }).catch(function (error) {
       if (sequence !== state.sequence || error.name === 'AbortError') return;

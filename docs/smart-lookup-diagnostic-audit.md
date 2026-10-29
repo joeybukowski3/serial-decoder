@@ -1,0 +1,17 @@
+# Private Smart Lookup diagnostic audit
+
+Set `SMART_LOOKUP_DIAGNOSTIC_AUDIT=1` only for a short review window. It defaults off. When enabled, accepted `/api/age-lookup` requests receive a server-generated `auditId`. The API writes one private Redis record after forming the response, with a seven-day TTL. The browser then sends the displayed age-card text and original query to `/api/smart-lookup-audit-ack`. Until that acknowledgement is saved, the export says `DISPLAY_UNCONFIRMED`, `SYSTEM_RESULT_UNAVAILABLE`, and, for browser requests, `RAW_QUERY_UNAVAILABLE`. The normal lookup request body and browser deduplication key are unchanged. An explicit `smartLookupAuditId` on a serial-refinement request can attach its result to an existing record; ordinary decoder refinement remains separate.
+
+The acknowledgement endpoint is write-only. It accepts a valid random audit ID and same-origin JSON POST, with a 16 KiB body limit and an explicit field allowlist. The first nonempty displayed result wins. It creates no record for unknown or expired IDs and does not refresh record expiry. It returns 202 if persistence has not finished; the browser retries once. No audit data is sent to GA4 or ordinary logs. Provider HTTP error bodies are never captured. Successful provider response bodies and parsed model output are bounded before serialization and have common secret formats redacted.
+
+Run the operator export with Redis credentials available to the local process:
+
+```sh
+node --env-file=.env.local scripts/export-smart-lookup-diagnostics.mjs YYYY-MM-DD ../review.csv ../restricted.csv
+```
+
+Both output paths must resolve outside the site repository, and existing files are not overwritten. `review.csv` begins with `User search query,System result` and omits raw JSON. `restricted.csv` contains provider diagnostics and the final API response keyed by Request ID. Protect and delete both files after review; the restricted file can contain user-entered model or serial numbers. Estimated cost is blank unless all required `COST_*` rates are configured; zero-attempt responses cost zero by this estimate.
+
+Reviewer classification is left blank for manual work. Use one of `USEFUL_RESULT`, `USER_INPUT_ERROR`, `INSUFFICIENT_INPUT`, `CLASSIFIER_ERROR`, `ROUTING_ERROR`, `PROVIDER_ERROR`, `PARSER_ERROR`, `LOW_QUALITY_PROVIDER_RESULT`, `SUCCESSFUL_BUT_UNDATED`, or `OTHER`.
+
+Record creation uses one `SET EX` operation, so a created record expires seven days after the write even if an index write fails. Display/refinement updates use atomic update-only operations with `KEEPTTL`. Daily index entries are split across 16 shards, each capped at 2,000 IDs. Each index shard has an eight-day TTL from its latest write; it can outlive its records, but cannot retain their private contents. Index writes are retried once. A persistent index failure leaves an expiring orphan record that the date export cannot discover and emits the categorical `smart_lookup_diagnostic_index_write_failed` warning. Audit writes are best effort and bounded to 150 ms after the response is built. A Redis failure can leave an API response with an audit ID but no stored row. A missing acknowledgement does not prove the user saw the result. Raw provider and final API fields are truncated with an explicit marker when they exceed their limits. Refinement keeps up to four linked attempts and records a visible truncation count beyond that.

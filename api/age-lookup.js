@@ -70,6 +70,7 @@ import {
   withAttemptAccounting,
 } from '../lib/smart-lookup/provider-attempts.js';
 import { recordProviderUsage, recordUsageEvent, recordUsageEventCounts } from '../lib/smart-lookup/provider-usage.js';
+import { auditEnabled, createDiagnosticAudit } from '../lib/smart-lookup/diagnostic-audit.js';
 import { createGeminiCooldown } from '../lib/smart-lookup/gemini-cooldown.js';
 import { createQuotaMeter } from '../lib/quota/meter.js';
 
@@ -500,7 +501,7 @@ export function createAgeLookupHandler(dependencies = {}) {
   const quotaMeter = dependencies.quotaMeter
     || createQuotaMeter({ env: dependencies.env || process.env, now, accountResolver: dependencies.accountResolver });
 
-  async function handleAgeRequest(req, res, recorder, session, setRouteDecision) {
+  async function handleAgeRequest(req, res, recorder, session, setRouteDecision, audit) {
     const requestId = recorder.requestId;
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -526,6 +527,7 @@ export function createAgeLookupHandler(dependencies = {}) {
     // Decided once, up front, from the classified query and notes. Uncertainty routes to
     // PRECISION_RESEARCH; see lib/smart-lookup/route-mode.js.
     const route = chooseSmartLookupRoute(queryInfo);
+    audit?.setClassification(queryInfo, route);
     const routeDecision = routeDecisionTelemetryFields(queryInfo, route);
     logSmartLookup(logger, { event: 'smart_lookup_route_decision', queryInfo, route });
     setRouteDecision(routeDecision);
@@ -1490,6 +1492,10 @@ export function createAgeLookupHandler(dependencies = {}) {
             && groundedMeta.groundedSources.length > 0;
           return groundedValue;
         })();
+        if (audit) providerPromise.then(
+          () => { providerPromise.__auditDiagnostics = recorder.diagnostics; },
+          () => { providerPromise.__auditDiagnostics = recorder.diagnostics; },
+        );
         inflightProviderRequests.set(cacheKey, providerPromise);
         providerPromise.finally(() => {
           if (inflightProviderRequests.get(cacheKey) === providerPromise) inflightProviderRequests.delete(cacheKey);
@@ -1516,7 +1522,13 @@ export function createAgeLookupHandler(dependencies = {}) {
           maxMs: providerWaitMaxMs,
           reserveMs: 300,
         });
+        if (inFlightShared && audit) {
+          for (const item of providerPromise.__auditDiagnostics || []) recorder.captureDiagnostic(item);
+        }
       } catch (error) {
+        if (inFlightShared && audit) {
+          for (const item of providerPromise.__auditDiagnostics || []) recorder.captureDiagnostic(item);
+        }
         timings.providerMs = Math.max(0, now() - providerStart);
         // No AI result was produced: the logical lookup does not spend allowance.
         await session.refundUnproduced(redis);
@@ -1758,10 +1770,26 @@ export function createAgeLookupHandler(dependencies = {}) {
   }
 
   return async function handler(req, res) {
+    let audit = null;
+    try {
+      if (auditEnabled(dependencies.env || process.env)) {
+        if (req.method === 'POST' && !validateRequestBody(req.body || {}).error) {
+          audit = createDiagnosticAudit({
+            env: dependencies.env || process.env,
+            redisFactory: dependencies.redisFactory || createRedisClient,
+            redis: dependencies.auditRedis || dependencies.redis || null,
+            now,
+          });
+          audit?.setInput(typeof req.body.rawQuery === 'string' ? req.body.rawQuery : '', req.body.notes);
+        }
+      }
+    } catch (_) { audit = null; }
     const recorder = createAttemptRecorder({
       route: 'age',
-      requestId: createRequestId(req, 'age'),
+      requestId: audit?.id || createRequestId(req, 'age'),
       logger,
+      auditEnabled: Boolean(audit),
+      auditEnv: dependencies.env || process.env,
     });
     const session = quotaMeter.createSession({ req, route: 'age' });
     recorder.setTelemetryExtras(() => session.telemetry());
@@ -1773,7 +1801,12 @@ export function createAgeLookupHandler(dependencies = {}) {
     let payload = null;
     let routeDecision = null;
     const sendJson = res.json.bind(res);
-    res.json = (body) => { payload = body; return sendJson(body); };
+    res.json = (body) => {
+      payload = audit && body && typeof body === 'object'
+        ? { ...body, auditId: audit.id }
+        : body;
+      return sendJson(payload);
+    };
     // Local, verified and deterministic answers must stay Redis-free (tests pin
     // this), so a client is only created for the counters when metering is on --
     // the same rule settle() already follows -- or when this request already
@@ -1781,8 +1814,22 @@ export function createAgeLookupHandler(dependencies = {}) {
     const getRedis = () => session.redis || (session.enabled ? (dependencies.redis || redisFactory()) : null);
     return runWithAttemptRecorder(recorder, async () => {
       try {
-        return await handleAgeRequest(req, res, recorder, session, (decision) => { routeDecision = decision; });
+        return await handleAgeRequest(
+          req,
+          res,
+          recorder,
+          session,
+          (decision) => { routeDecision = decision; },
+          audit,
+        );
       } finally {
+        if (audit) {
+          try {
+            await audit.finish(payload, res.statusCode, recorder);
+          } catch (_) {
+            /* diagnostic only */
+          }
+        }
         if (session.enabled) {
           await session.settle({
             getRedis: () => dependencies.redis || redisFactory(),

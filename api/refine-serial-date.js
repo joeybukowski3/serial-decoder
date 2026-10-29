@@ -50,6 +50,8 @@ import {
   withAttemptAccounting,
 } from '../lib/smart-lookup/provider-attempts.js';
 import { recordProviderUsage, recordUsageEvent, recordUsageEventCounts } from '../lib/smart-lookup/provider-usage.js';
+import { randomUUID } from 'node:crypto';
+import { attachRefinement, auditEnabled, validAuditId } from '../lib/smart-lookup/diagnostic-audit.js';
 import { buildRefinementCounterEntries } from '../lib/smart-lookup/outcome-counters.js';
 import { createGeminiCooldown } from '../lib/smart-lookup/gemini-cooldown.js';
 import { evaluateRefinementGate } from '../lib/serial-refinement/refinement-gate.js';
@@ -378,7 +380,15 @@ export function createRefineSerialDateHandler(dependencies = {}) {
           logger,
         });
       }
-      return res.status(200).json(safeResponse);
+      const sent = res.status(200).json(safeResponse);
+      const parentAuditId = req.body?.smartLookupAuditId;
+      if (auditEnabled(dependencies.env || process.env) && validAuditId(parentAuditId)) {
+        try {
+          const auditRedis = redis || redisFactory();
+          if (auditRedis) await attachRefinement(auditRedis, parentAuditId, safeResponse, recorder.diagnostics, randomUUID());
+        } catch (_) { /* diagnostic only */ }
+      }
+      return sent;
     }
 
     function bestAvailable(errorCode, summary, attemptedProvider = 'none', extraEvidence = [], extra = {}) {
@@ -1032,6 +1042,8 @@ export function createRefineSerialDateHandler(dependencies = {}) {
       route: 'refine',
       requestId: String(req.headers?.['x-request-id'] || req.headers?.['x-vercel-id'] || `ref-${startedAt}-${Math.random().toString(36).slice(2, 8)}`),
       logger,
+      auditEnabled: auditEnabled(dependencies.env || process.env) && validAuditId(req.body?.smartLookupAuditId),
+      auditEnv: dependencies.env || process.env,
     });
     return runWithAttemptRecorder(recorder, () => handleRefineRequest(req, res, recorder));
   };
