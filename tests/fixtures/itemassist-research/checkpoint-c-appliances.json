@@ -1,0 +1,945 @@
+{
+ "note": "Checkpoint C (2026-10-26): two live requests. Rows are the normalised Serper results those requests cached (history titles and snippets as returned, history URL paths cut at 70 characters, Shopping titles cut at 110). The identification is rebuilt from each saved answer (the raw model reply was not stored): its category, characteristics, AI requirements, candidates and original-price estimate. The replacement estimate was not saved.",
+ "referenceDate": "2026-10-26",
+ "products": {
+  "refrigerator": {
+   "query": "Samsung RF28R7351SR refrigerator",
+   "historyQuery": "Samsung RF28R7351SR refrigerator launch price MSRP",
+   "history": [
+    {
+     "title": "Shop our Best Refrigerators | Stainless Steel | Samsung USA",
+     "url": "https://www.samsung.com/us/refrigerators/all-refrigerators/",
+     "snippet": "From $3,599.00 or $149.96/mo. Price: $4,699.00. From $1,999.00 or $83.29/mo. Price: $2,999.00 Save $1000.00",
+     "date": null
+    },
+    {
+     "title": "Samsung RF28R7351SR-FA 28 Cu Ft 220 Volt 50 Hz ...",
+     "url": "https://www.220-electronics.com/products/samsung-rf28r7351sr-fa-28-cu-ft-220-volt-50-hz-french-door-r",
+     "snippet": "Sale price $4,199.00 USD Regular price $4,899.00 USD. From $378.99/mo. Cu Ft Capacity Twin Cooling System",
+     "date": null
+    },
+    {
+     "title": "Samsung's Large Capacity Refrigerator #RF28R7351SR",
+     "url": "https://www.youtube.com/watch",
+     "snippet": "Product Review: Samsung's Large Capacity Refrigerator #RF28R7351SR Shop here: experiences and opinions with consumers. 126K views6 years ago",
+     "date": null
+    },
+    {
+     "title": "Samsung RF28R7351SR 27.8 cu. ft. Food Showcase ...",
+     "url": "https://olaretaildeals.com/products/samsung-rf28r7351sr-27-8-cu-ft-food-showcase-refrigerator-3",
+     "snippet": "Samsung RF28R7351SR 27.8 cu. ft. $1,700.00 USD Price Regular price $3,05900 $3,059.00 Sale price$1,70000. Refrigerator Sale price$1,40000 $1,400.00 Regular ...",
+     "date": null
+    },
+    {
+     "title": "8 reasons why your Samsung refrigerator is not cooling",
+     "url": "https://www.samsung.com/my/support/home-appliances/8-reasons-why-your-samsung-refrigerator-is",
+     "snippet": "8 reasons why your Samsung refrigerator is not cooling · 1 Appliance is not plugged in properly · 2 Door are closed properly · 3 Door seal are ...",
+     "date": "2026-05-10"
+    },
+    {
+     "title": "Samsung RF28R7351SR/AA Refrigerator Parts",
+     "url": "https://samsungpartsusa.com/products/rf28r7351sr-aa",
+     "snippet": "Samsung RF28R7351SR/AA 28 Cu. Ft. Food Showcase 4-Door French Door Refrigerator In Stainless Steel! Elevate your kitchen with this stunning and innovative ...",
+     "date": null
+    },
+    {
+     "title": "Reviews for Samsung RF28R7351SR French Door ...",
+     "url": "https://www.lowes.com/reviews/samsung-rf28r7351sr-french-door-refrigerators/1000854710",
+     "snippet": "The refrigerator has a spacious interior with flexible storage options like a middle drawer and water pitcher. Customers appreciate the energy efficiency and ...",
+     "date": null
+    },
+    {
+     "title": "Refrigerators - Buy Fridges Online at Best Prices",
+     "url": "https://www.samsung.com/in/refrigerators/all-refrigerators/",
+     "snippet": "Buy Samsung fridges online in various colors, sizes the best prices in India. Samsung offers up to 48% flat discounts on refrigerators, discount of up to ₹3, ...",
+     "date": null
+    },
+    {
+     "title": "Samsung Fridge Price list Samsung Fridge RT26 liters 208L",
+     "url": "https://www.instagram.com/reel/DPT3p20jCuV/",
+     "snippet": "price @ 1,750,000. Key Specifications & Features Capacity: 305-310 liters total capacity (ideal for families, apartments, or offices). Cooling ...",
+     "date": null
+    },
+    {
+     "title": "28 cu. ft. 4-Door French Door Refrigerator with Food Showcase",
+     "url": "https://www.applianceleaders.com/Samsung-RF28R7351SR-28-cu-ft-4-Door-French-Door-Refrigerator-with-Foo",
+     "snippet": "Shop Samsung - RF28R7351SR - 28 cu. ft. 4-Door French Door Refrigerator with Food Showcase-RF28R7351SR by Samsung ... Sale Price. $2,575.00. Extended Service ...",
+     "date": null
+    }
+   ],
+   "listings": {
+    "Samsung Bespoke 3-Door French Door Refrigerator with Family Hub": [
+     {
+      "seller": "The Appliances Outlet",
+      "price": 1899.99,
+      "title": "Samsung 24 cu. Ft. Bespoke Counter Depth 3-Door French Door Refrigerator with Family Hub"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 3599.99,
+      "title": "Samsung 24 cu. ft Bespoke Counter Depth 3-Door French Door Refrigerator with Family Hub"
+     },
+     {
+      "seller": "AJ Madison",
+      "price": 3624,
+      "title": "Samsung Bespoke 30 Cu ft French Door Refrigerator"
+     },
+     {
+      "seller": "Samsung",
+      "price": 1999,
+      "title": "Samsung Bespoke 30 Cu. Ft. 3-Door French Door Refrigerator with Beverage Center"
+     },
+     {
+      "seller": "Metro Appliances & More",
+      "price": 1999.95,
+      "title": "Samsung 30 cu. ft. Bespoke 3-Door French Door Refrigerator with Family Hub RF30BB6900AW"
+     },
+     {
+      "seller": "Home Depot",
+      "price": 3599,
+      "title": "Samsung Bespoke 28.6 Cu. ft Glass French Door Refrigerator with AI Family"
+     },
+     {
+      "seller": "Mrs. G Appliances",
+      "price": 1999,
+      "title": "Samsung Bespoke 3-Door French Door Refrigerator"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 3599.99,
+      "title": "Samsung 28.6 Cu. Ft. Bespoke 4-Door French Door Refrigerator with AI Family Hub+ & AI Vision Inside in Charcoa"
+     },
+     {
+      "seller": "Samsung",
+      "price": 2399,
+      "title": "Samsung Bespoke AI 24 cu. ft. Counter Depth 3-Door French Door Refrigerator with Zero Clearance Fit & Sphere I"
+     },
+     {
+      "seller": "Samsung",
+      "price": 2499,
+      "title": "Samsung Bespoke AI 29 Cu. Ft. 3-Door French Door Refrigerator"
+     },
+     {
+      "seller": "Samsung",
+      "price": 1899,
+      "title": "Samsung Bespoke AI 30 cu. ft. 3-Door French Door Refrigerator"
+     },
+     {
+      "seller": "Budget Appliance & Mattress Co",
+      "price": 4499.1,
+      "title": "Samsung 29 Cu. Ft. Bespoke 4-Door Flex Refrigerator with Family Hub+"
+     },
+     {
+      "seller": "The Appliance Depot",
+      "price": 3509.1,
+      "title": "Samsung Bespoke French Door Refrigerator"
+     },
+     {
+      "seller": "Home Depot",
+      "price": 3099,
+      "title": "Samsung 25 cu. ft. Counter Depth French Door Refrigerator with Family Hub"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 3699.99,
+      "title": "Samsung RF90F23AECR 36\" Bespoke Counter Depth 4-Door French Door Refrigerator with AI Family Hub 23 Cu. ft"
+     },
+     {
+      "seller": "Universal Appliance and Kitchen Center",
+      "price": 3332,
+      "title": "Samsung 36\" 3-Door French Door SpaceMax Counter Depth Refrigerator with Family Hub Fridge rf27cg5900srac"
+     },
+     {
+      "seller": "SK Lavery Appliance",
+      "price": 2110.99,
+      "title": "Samsung Bespoke AI 29 cu. ft. 3-Door French Door Refrigerator with Zero Clearance Fit & Dual Auto Ice Maker"
+     },
+     {
+      "seller": "Appliance Home Store",
+      "price": 4199,
+      "title": "Samsung 29 cu. Ft. Bespoke 4-Door French Door Refrigerator with Family Hub"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 3699.99,
+      "title": "Samsung Bespoke 22.5 Cu. ft Glass Counter Depth French Door Refrigerator with AI Family Hub"
+     },
+     {
+      "seller": "Appliance Liquidators",
+      "price": 2399,
+      "title": "Samsung Bespoke 29 Cu. ft 4-Door French Door Refrigerator with Beverage Center"
+     },
+     {
+      "seller": "bordonas.com",
+      "price": 1599.99,
+      "title": "Samsung Bespoke AI 32 cu ft 3-Door French Door Refrigerator"
+     },
+     {
+      "seller": "Appliance Trends",
+      "price": 2499,
+      "title": "Samsung Bespoke 22.8 Cu. ft French Door Refrigerator"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 1799.99,
+      "title": "Samsung Bespoke AI 36\" 30.5 Cu. Ft. Fingerprint Resistant Stainless Steel French Door Refrigerator with Extern"
+     },
+     {
+      "seller": "National Appliance Warehouse",
+      "price": 2099,
+      "title": "Samsung Bespoke 24 Cu. ft Counter Depth 3-Door French Door Refrigerator with Beverage Center"
+     },
+     {
+      "seller": "Samsung",
+      "price": 3806,
+      "title": "Samsung Bespoke Kitchen Package with AI 3-Door French Door Fridge"
+     },
+     {
+      "seller": "St. Louis Appliance Outlet",
+      "price": 2497,
+      "title": "Samsung Bespoke 29 cu. ft. 4-Door French Door Refrigerator with Family Hub 32\" + & Inner Beverage Center"
+     },
+     {
+      "seller": "Park Ave Appliance",
+      "price": 1815,
+      "title": "Samsung Bespoke 30 Cu. Ft. Panel Ready French Door Refrigerator"
+     },
+     {
+      "seller": "Merlin's TV & Appliance",
+      "price": 2399.99,
+      "title": "Samsung 36\" 29 Cu. Ft. Fingerprint Resistant Steel Bespoke AI French Door Refrigerator with Sphere Ice"
+     },
+     {
+      "seller": "Klearview Appliance",
+      "price": 1998,
+      "title": "Samsung Bespoke 30 Cu. Ft. Stainless Steel 3-Door French Door Refrigerator with Beverage Center"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 6649.97,
+      "title": "Package - Samsung - 36 in. Wide 30 cu. ft. Bespoke AI 3-Door French Door Smart Refrigerator with Family Hub -"
+     },
+     {
+      "seller": "Berríos",
+      "price": 2945,
+      "title": "Samsung 25' Refrigerator Bespoke AI 3-Door French DoorAutoView"
+     },
+     {
+      "seller": "National Appliance Warehouse",
+      "price": 3699,
+      "title": "Samsung Bespoke 23 cu. Ft. French-Door Refrigerator with Family Hub"
+     },
+     {
+      "seller": "Express Appliance and Mattress",
+      "price": 2429.99,
+      "title": "Samsung Bespoke 30 cu. ft 3-Door French Door Refrigerator with AutoFill Water Pitcher rf30bb6200ap"
+     },
+     {
+      "seller": "wonderful life appliances",
+      "price": 2161.97,
+      "title": "Model #RF29BB890012 Samsung Bespoke Standard-Depth Family Hub 28.6-Cu. Feet 4 -Door Smart Compatible French Do"
+     },
+     {
+      "seller": "Samsung",
+      "price": 1599,
+      "title": "Samsung 27 cu. ft. 3-Door French Door Refrigerator Counter Depth rf27cg5010s9"
+     },
+     {
+      "seller": "PC Richard & Son",
+      "price": 3798.97,
+      "title": "Samsung 4-Door Counter Depth Refrigerator"
+     },
+     {
+      "seller": "The Appliance Barn",
+      "price": 2989,
+      "title": "Samsung Bespoke 4-Door Flex French Door Refrigerator with Family Hub, Beverage Center & Dual Ice Maker – White"
+     },
+     {
+      "seller": "Everything's Yours Appliances",
+      "price": 2075,
+      "title": "Samsung Bespoke 3-Door French Door Refrigerator with AutoFill Water Pitcher"
+     },
+     {
+      "seller": "bordonas.com",
+      "price": 1899.99,
+      "title": "Bespoke AI 3-Door French Door Zero Clearance Fit In-Door Tall Dispenser 30 cu.ft."
+     },
+     {
+      "seller": "Appliance Liquidators",
+      "price": 2699,
+      "title": "Samsung Bespoke 4-Door Flex Refrigerator 29 Cu. Ft. Stainless Steel"
+     }
+    ],
+    "LG Smart 3-Door French Door Refrigerator with Instaview and ThinQ": [
+     {
+      "seller": "Best Buy",
+      "price": 3299.99,
+      "title": "LG 29.5 Cu ft French Door Refrigerator"
+     },
+     {
+      "seller": "Greentoe - Appliances",
+      "price": 2119.82,
+      "title": "LG 25 Cu. Ft. Smart Standard-Depth MAX French Door Refrigerator with InstaView Door-in-Door and Craft Ice"
+     },
+     {
+      "seller": "Lowe's",
+      "price": 1999,
+      "title": "LG 22 cu. ft. French Door Refrigerator lfds22520s"
+     },
+     {
+      "seller": "Plesser's Appliances",
+      "price": 2114,
+      "title": "LG 20 Cu. Ft. 3-Door French Door Refrigerator"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 1899.99,
+      "title": "LG 3-Door French Door Refrigerator 25 Cu. ft"
+     },
+     {
+      "seller": "Home Appliance",
+      "price": 3899.99,
+      "title": "LG 30 Cu. Ft. Smart InstaView Door-in-Door Refrigerator with Craft Ice lrmvs3006s"
+     },
+     {
+      "seller": "Thornberry's Appliance",
+      "price": 1998.98,
+      "title": "26 cu. ft. Counter Depth MAX 3-Door French Door Refrigerator with Ice and Water Dispenser LG"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 1949.99,
+      "title": "LG 26.5 Cu. ft Stainless Steel Smart Counter Depth French Door Refrigerator"
+     },
+     {
+      "seller": "Lowe's",
+      "price": 3199,
+      "title": "LG 25.5 Cu. Ft. Stainless Steel French Door Counter Depth Smart Refrigerator"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 2049.99,
+      "title": "LG 24 Cu. Ft. Counter-depth Max with Zero Clearance 3-Door French Door Refrigerator"
+     },
+     {
+      "seller": "Home Depot",
+      "price": 3099,
+      "title": "LG 29 cu. ft. Smart InstaView Door-in-Door Standard-Depth MAX 4-Door French Door Refrigerator with MyColor and"
+     },
+     {
+      "seller": "Park Ave Appliance",
+      "price": 2801,
+      "title": "LG 27 Cu. Ft. Smart InstaView Counter-Depth French Door Refrigerator"
+     },
+     {
+      "seller": "Sears",
+      "price": 3799.99,
+      "title": "LG 28 Cu. Ft. Smart Wi-fi Enabled InstaView Door-in-Door Refrigerator"
+     },
+     {
+      "seller": "LG",
+      "price": 2299,
+      "title": "LG 3-Door French Door Refrigerator 25 cu. ft"
+     },
+     {
+      "seller": "Mrs. G Appliances",
+      "price": 4499.99,
+      "title": "LG Counter-Depth French Door Refrigerator 26 Cu. ft"
+     },
+     {
+      "seller": "wonderful life appliances",
+      "price": 2160.94,
+      "title": "model LRFS28XBS LG Standard-Depth 27.7-cu ft 3 -Door Smart Compatible French Door Refrigerator with Ice Maker"
+     },
+     {
+      "seller": "Appliance Leaders",
+      "price": 3345,
+      "title": "LG 28 Cu. Ft. Smart Wi-fi Enabled Instaview Door-in-Door Refrigerator LFXS28596S"
+     },
+     {
+      "seller": "Sears",
+      "price": 2899.99,
+      "title": "LG 26 Cu. Ft. Smart Wi-fi Enabled French Door Refrigerator"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 2599.99,
+      "title": "LG 25 Cu. Ft. Stainless 4-Door French Door Counter Depth MAX Smart Refrigerator"
+     },
+     {
+      "seller": "Neu Appliance Outlet",
+      "price": 2125,
+      "title": "LG 31 Cu.Ft. Smart Standard Depth MAX French Door Refrigerator with Door-in-Door InstaView"
+     },
+     {
+      "seller": "Home Depot",
+      "price": 1999,
+      "title": "LG 28 cu.ft 3 Door French Door"
+     },
+     {
+      "seller": "Merlin's TV & Appliance",
+      "price": 3099.99,
+      "title": "LG Standard-Depth Max 30.7 Cu. Ft. French Door Smart Refrigerator with InstaView"
+     },
+     {
+      "seller": "wonderful life appliances",
+      "price": 925.97,
+      "title": "Model #LRFXC2606S LG Counter-Depth MAX 25.5-Cu. Feet 3 -Door Smart Compatible French Door Refrigerator with Du"
+     },
+     {
+      "seller": "Park Ave Appliance",
+      "price": 3357,
+      "title": "LG Lrfoc2606d French Door Refrigerator"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 2272.75,
+      "title": "LG 26 Cu. Ft. Smart Counter-Depth MAX French Door Refrigerator with Dual Ice Makers"
+     },
+     {
+      "seller": "Sears",
+      "price": 1199.99,
+      "title": "LG 29 Cu.Ft. French Door Refrigerator"
+     },
+     {
+      "seller": "Arbor",
+      "price": 1599,
+      "title": "LG 27 Cu. Ft. InstaView Door-in-Door Refrigerator"
+     },
+     {
+      "seller": "Planet TV & Appliances",
+      "price": 7358.99,
+      "title": "LG Signature 31 Cu. Ft. Smart Wi-fi Enabled InstaView Door-in-Door Refrigerator"
+     },
+     {
+      "seller": "wonderful life appliances",
+      "price": 925.97,
+      "title": "Model LRFCS29D6S LG Standard-Depth Cooling Door+ 28.7-Cu. Feet 3 -Door French Door Refrigerator with Ice Maker"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 2183.01,
+      "title": "LG 28 Cu.Ft French Door Refrigerator"
+     },
+     {
+      "seller": "Plesser's Appliances",
+      "price": 4324,
+      "title": "LG 23 Cu. Ft. Smart Instaview Door-in-Door Counter-Depth Refrigerator with Craft Ice"
+     },
+     {
+      "seller": "Sears",
+      "price": 3499.99,
+      "title": "LG 26 Cu. Ft. Smart Wi-fi Enabled InstaView Door-in-Door Refrigerator"
+     },
+     {
+      "seller": "Made Appliance Outlet",
+      "price": 2499,
+      "title": "LG* Counter-Depth MAX Mirror InstaView 4 Types of Ice 25.5-cu ft 3 -Door 36-in Wide French Door Refrigerator w"
+     },
+     {
+      "seller": "olaretaildeals.com",
+      "price": 2000,
+      "title": "LG 30 cu. ft. Smart French Door Refrigerator llmxs3006s"
+     },
+     {
+      "seller": "wonderful life appliances",
+      "price": 1646.97,
+      "title": "Model #LF29S8365S LG Standard-Depth InstaView MyColor 28.6-Cu. Feet 4 -Door Smart Compatible French Door Refri"
+     },
+     {
+      "seller": "Appliance Palace",
+      "price": 2299,
+      "title": "24 Cu. Ft. Counter-Depth MAX with Zero Clearance 3-Door French Door Refrigerator LG"
+     },
+     {
+      "seller": "Plesser's Appliances",
+      "price": 2209,
+      "title": "LG 24.5 Cu. Ft. 3-Door French Door Refrigerator"
+     },
+     {
+      "seller": "AJ Madison",
+      "price": 1895,
+      "title": "LG 32 Cu. Ft. 36 Inch MAX French Door Refrigerator"
+     },
+     {
+      "seller": "wonderful life appliances",
+      "price": 1028.97,
+      "title": "Model #LRFS28XBS LG 28 cu. ft. 3 Door French Door Refrigerator with Ice and Water with Single Ice in Stainless"
+     },
+     {
+      "seller": "Sears",
+      "price": 3399.99,
+      "title": "LG 26 Cu. Ft. Stainless InstaView Door-in-Door French Door Refrigerator"
+     }
+    ]
+   },
+   "identification": {
+    "category": "refrigerator",
+    "profile": "refrigerator",
+    "original": {
+     "identity": "Samsung RF28R7351SR 3-Door French Door Refrigerator",
+     "confidence": "high",
+     "characteristics": [
+      "28 cu ft capacity",
+      "French door layout",
+      "Counter-depth design",
+      "Family Hub touchscreen"
+     ],
+     "uncertainty": null
+    },
+    "tier": "UPPER_PREMIUM",
+    "requirements": [
+     {
+      "text": "Must include a smart touchscreen interface",
+      "importance": "IMPORTANT"
+     },
+     {
+      "text": "Must have counter-depth installation fit",
+      "importance": "IMPORTANT"
+     }
+    ],
+    "successor": {
+     "name": "Samsung Bespoke 3-Door French Door Refrigerator with Family Hub",
+     "why": "It directly continues Samsung's counter-depth French door line with the Family Hub smart display feature.",
+     "differences": "Updated exterior panel design and refined software interface.",
+     "concern": null,
+     "confidence": "high",
+     "comparison": []
+    },
+    "suggestions": [
+     {
+      "name": "LG Smart 3-Door French Door Refrigerator with Instaview and ThinQ",
+      "why": "Matches the large French door capacity and smart connected features.",
+      "differences": "Uses LG ThinQ smart platform instead of Samsung Family Hub.",
+      "concern": null,
+      "confidence": "high",
+      "comparison": []
+     },
+     {
+      "name": "Whirlpool Smart 3-Door French Door Refrigerator",
+      "why": "Offers similar multi-door French door layout and smart home integration.",
+      "differences": "Simpler touch control panel instead of a full tablet interface.",
+      "concern": null,
+      "confidence": "medium",
+      "comparison": []
+     }
+    ],
+    "estimates": {
+     "originalNew": {
+      "low": 3000,
+      "high": 3500
+     },
+     "replacementNew": null
+    },
+    "clarify": []
+   }
+  },
+  "dishwasher": {
+   "query": "Bosch SHPM65Z55N dishwasher",
+   "historyQuery": "Bosch SHPM65Z55N dishwasher launch price MSRP",
+   "history": [
+    {
+     "title": "Bosch SHPM65Z55N 24 Inch Built-In Dishwasher Stainless ...",
+     "url": "https://www.plessers.com/bosch/shpm65z55n",
+     "snippet": "24 Inch Built-In Dishwasher. Price:$1,099.00 Item Discontinued. Please Contact the Experts at 877-957-5377 for Possible Replacements.",
+     "date": null
+    },
+    {
+     "title": "Bosch® 500 Series 24\" Stainless Steel Top Control Built In ...",
+     "url": "https://www.appliancefactory.com/product/bosch-500-series-24-stainless-steel-top-control-built-in-dish",
+     "snippet": "Bosch® 500 Series 24\" Stainless Steel Top Control Built In Dishwasher … starting at $899.96 Quantity. Bosch Model #: SHPM65Z55N",
+     "date": null
+    },
+    {
+     "title": "Reviews for Bosch SHPM65Z55N Built-In Dishwashers",
+     "url": "https://www.lowes.com/reviews/bosch-shpm65z55n-built-in-dishwashers/5002074485",
+     "snippet": "What Customers Are Saying. The Bosch 500 Series dishwasher offers exceptional cleaning power that leaves dishes sparkling clean without pre-rinsing.",
+     "date": null
+    },
+    {
+     "title": "Bosch SHPM65Z55N Built In Dishwasher",
+     "url": "https://www.townappliance.com/products/bosch-shpm65z55n-built-in-dishwasher",
+     "snippet": "- $1,239.94 DISCONTINUED Call us at (800) 288-1647 for expert assistance in finding the perfect alternative.",
+     "date": null
+    },
+    {
+     "title": "Product Review: Bosch Dishwasher SHP865ZD5N or ...",
+     "url": "https://www.youtube.com/watch",
+     "snippet": "Prices in the video are subject to change … honor prices listed within 30 days from publish date. Model SHPM65Z55N is very similar with all the ...",
+     "date": null
+    },
+    {
+     "title": "Appliance Information - Dishwasher | SHPM65Z55N/01",
+     "url": "https://www.bosch-home.com/us/supportdetail/product/SHPM65Z55N/01",
+     "snippet": "User manuals, repair services, spare parts, accessories, cleaning and care products for your BOSCH - Dishwasher SHPM65Z55N/01 - Check out now.",
+     "date": null
+    },
+    {
+     "title": "Bosch 500 Series SHPM65Z55N Dishwasher Review",
+     "url": "https://www.reviewed.com/dishwashers/content/bosch-500-series-shpm65z55n-dishwasher-review",
+     "snippet": "The Bosch 500 series SHPM65Z55N dishwasher offers most of the features and cleaning ability of the higher-end 800 series at a fraction of ...",
+     "date": "2024-04-03"
+    },
+    {
+     "title": "Bosch SHPM65Z55N Manuals, Certifications & Specs",
+     "url": "https://device.report/bosch/shpm65z55n",
+     "snippet": "BOSCH DISHWASHER MSRP: 1099.99 Best Buy Rating: 4.5 Stars Release Date: 2019-07-29 s & product documents Open Bosch SHPM65Z55N manuals, guides, and reference ...",
+     "date": null
+    },
+    {
+     "title": "Bosch Shpm65z55n Dishwasher Reviews",
+     "url": "https://www.facebook.com/fb-answers/bosch-shpm65z55n-dishwasher-reviews/",
+     "snippet": "The 100 Series is the cheapest at around $700 but has flimsier racks. For the SHPM65Z55N, watch for the delay-start quirk — you have to hit start again after ...",
+     "date": null
+    },
+    {
+     "title": "Bosch dish washers SHPM65Z55N vs SHP865ZD5N",
+     "url": "https://www.reddit.com/r/Appliances/comments/p7plg2/bosch_dish_washers_shpm65z55n_vs_shp865z",
+     "snippet": "I am scratching my head trying to find out what the differences between these models are. I cannot find any, even if I compare them directly ...",
+     "date": null
+    }
+   ],
+   "listings": {
+    "Bosch 500 Series dishwasher": [
+     {
+      "seller": "Home Depot",
+      "price": 1249,
+      "title": "Bosch 500 Series Built-under Dishwasher"
+     },
+     {
+      "seller": "Bosch Home US",
+      "price": 1249,
+      "title": "Bosch 500 Series Dishwasher 24"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 1299.99,
+      "title": "Bosch 500 Series Built-under Dishwasher shx65dm5n"
+     },
+     {
+      "seller": "Home Depot",
+      "price": 1349,
+      "title": "Bosch 500 Series Built-under Dishwasher shp95cm5n"
+     },
+     {
+      "seller": "AuroraCirc",
+      "price": 500,
+      "title": "Bosch 500 Series 24\" Dishwasher | SHX45M05UC Stainless"
+     },
+     {
+      "seller": "Alabama Appliance Outlet",
+      "price": 899,
+      "title": "Bosch 500 Series 24\" Built In Dishwasher"
+     },
+     {
+      "seller": "Appliance Liquidators",
+      "price": 1299,
+      "title": "Bosch 500 Series Dishwasher 24\" Stainless Steel"
+     },
+     {
+      "seller": "Best Buy",
+      "price": 1249.99,
+      "title": "Bosch 500 Series 24\" Built-In Dishwasher"
+     },
+     {
+      "seller": "CG Appliance",
+      "price": 1349,
+      "title": "Bosch 500 Series Dishwasher 24\" Stainless Steel SHP95CM5N"
+     },
+     {
+      "seller": "Albo Appliance",
+      "price": 1249.95,
+      "title": "Bosch 500 Series Dishwasher"
+     },
+     {
+      "seller": "Ferguson Home",
+      "price": 1249,
+      "title": "Bosch 500 Series 24\" Built In Dishwasher shp65cm6n"
+     },
+     {
+      "seller": "slymanbros.com",
+      "price": 799,
+      "title": "Bosch 24\" Recessed Handle Dishwasher 500 Series SHE65T56UC"
+     },
+     {
+      "seller": "Bray & Scarff",
+      "price": 1249,
+      "title": "Bosch 500 Series Dishwasher 24\""
+     },
+     {
+      "seller": "littlewoods",
+      "price": 140.09,
+      "title": "Bosch Dishwasher SMS50M18GB"
+     },
+     {
+      "seller": "Mark's Appliance",
+      "price": 1249,
+      "title": "Bosch Dishwasher 500 Series SHP65T"
+     },
+     {
+      "seller": "Martin Appliance",
+      "price": 1249.95,
+      "title": "500 Series, built-under dishwasher, 24'', Brushed steel anti-fingerprint | BOSCH"
+     },
+     {
+      "seller": "Mr. Appliance Sales GA",
+      "price": 1299,
+      "title": "500 Series Dishwasher 24''"
+     },
+     {
+      "seller": "Mark's Appliance",
+      "price": 1249,
+      "title": "Bosch 24\" Pocket Handle Dishwasher 500 Series SHP65TL6UC"
+     },
+     {
+      "seller": "Ferguson Home",
+      "price": 1149,
+      "title": "Bosch 60 cm Top Control Dishwasher shs53cm5n"
+     },
+     {
+      "seller": "Merlin's TV & Appliance",
+      "price": 1249.99,
+      "title": "Bosch Built-in Dishwasher with Zone Wash SHP65DM6N"
+     },
+     {
+      "seller": "220-Electronics.com",
+      "price": 977.55,
+      "title": "Bosch 12 Place Settings Dishwasher SMS50D08GC"
+     },
+     {
+      "seller": "Varouj",
+      "price": 1129,
+      "title": "Bosch SHP65DM5N 16 Place Settings Built-In Dishwasher, 24 in. - Anti-Fingerprint Stainless Steel"
+     },
+     {
+      "seller": "Merlin's TV & Appliance",
+      "price": 1099.99,
+      "title": "Bosch Built-in Dishwasher with Wi-Fi SHP53EM6N"
+     },
+     {
+      "seller": "AJ Madison",
+      "price": 6696,
+      "title": "Bosch 500 4 Piece Kitchen Appliances Package with Dishwasher in Stainless Steel borectrhdwwo41"
+     },
+     {
+      "seller": "Shop Appliances",
+      "price": 849,
+      "title": "Bosch 100 Premium Dishwasher 24\" White"
+     },
+     {
+      "seller": "Original Repair Parts",
+      "price": 99999,
+      "title": "Bosch SHX5ER55UC/C6 Dishwasher 24'' Stainless Steel"
+     },
+     {
+      "seller": "Five Brothers Appliance",
+      "price": 599,
+      "title": "Bosch 500 Series Dishwasher 24'' Stainless Steel Anti-fingerprint SHP65CC5UC"
+     },
+     {
+      "seller": "Merlin's TV & Appliance",
+      "price": 1099.99,
+      "title": "Bosch Built-in Dishwasher with PrecisionWash SGV43C53UC"
+     },
+     {
+      "seller": "Plesser's Appliances",
+      "price": 1709,
+      "title": "Bosch Benchmark Built-In Dishwasher"
+     },
+     {
+      "seller": "Watertown Appliance",
+      "price": 19.99,
+      "title": "500 Series, built-under dishwasher, 24'', Brushed steel anti-fingerprint"
+     },
+     {
+      "seller": "All Make Appliance",
+      "price": 1999,
+      "title": "Bosch Benchmark 24\" Built-In Dishwasher"
+     },
+     {
+      "seller": "Shop Appliances",
+      "price": 849,
+      "title": "Bosch 100 Premium Dishwasher 24\" Black"
+     },
+     {
+      "seller": "Valley Oak Home Appliance Center",
+      "price": 1799,
+      "title": "50 Series 24\" Dishwasher DBI565IXXLS 40 dB(A) - Stainless Steel"
+     },
+     {
+      "seller": "Original Repair Parts",
+      "price": 99999,
+      "title": "Bosch SHX5AVL5UC/01 Dishwasher 24'' Stainless Steel"
+     },
+     {
+      "seller": "Martin Appliance",
+      "price": 1299.95,
+      "title": "Bosch Benchmark Dishwasher 24\" Stainless Steel"
+     },
+     {
+      "seller": "220-Electronics.com",
+      "price": 1424.05,
+      "title": "Bosch 220-240V Built-In Fully Integrated Dishwasher - Wi-Fi - 6 Programmes - Home Connect - 50Hz"
+     },
+     {
+      "seller": "Original Repair Parts",
+      "price": 99999,
+      "title": "Bosch SHS5AVL5UC/22 Dishwasher 24'' Stainless Steel"
+     },
+     {
+      "seller": "Voomi Supply",
+      "price": 43.34,
+      "title": "Ascenta Dishwasher 24'' Black"
+     },
+     {
+      "seller": "Shop Appliances",
+      "price": 899,
+      "title": "Bosch 100 Premium Dishwasher 24\" Stainless Steel Shx5aem5n"
+     },
+     {
+      "seller": "DNJ",
+      "price": 1749,
+      "title": "Bosch 500 Series 24\" Brushed Stainless Steel Top Control Built In Dishwasher"
+     }
+    ],
+    "KitchenAid 300 Series dishwasher": [
+     {
+      "seller": "Lowe's",
+      "price": 899,
+      "title": "KitchenAid 360 Max Jets Third Rack Dishwasher with ProDry System"
+     },
+     {
+      "seller": "Home Depot",
+      "price": 1099,
+      "title": "KitchenAid 24\" 360 Max Jets Third Rack Top Control Built-In Dishwasher with Advanced ProDry System"
+     },
+     {
+      "seller": "Home Depot",
+      "price": 699,
+      "title": "KitchenAid 24\" PrintShield Stainless Steel Third Level Utensil Rack Top Control Built-In Dishwasher with ProWa"
+     },
+     {
+      "seller": "Yale Appliance",
+      "price": 849.99,
+      "title": "KitchenAid 24\" Third Level Jet Rack Top Control Built-In Dishwasher with 40+ Total Wash Jets"
+     },
+     {
+      "seller": "ABC Warehouse",
+      "price": 849,
+      "title": "KitchenAid 24\" Front Control Built-In Dishwasher with Third Level Jet Rack 40+ Total Wash Jets"
+     },
+     {
+      "seller": "Shop Appliances",
+      "price": 1113,
+      "title": "KitchenAid Built In Dishwasher"
+     },
+     {
+      "seller": "Harclerode & McGee Appliance",
+      "price": 1214.1,
+      "title": "KitchenAid 44 dBA Panel-Ready Two-Rack Flush Dishwasher with Door-Open Dry System"
+     },
+     {
+      "seller": "Cowboy Maloney",
+      "price": 1098,
+      "title": "KitchenAid 24\" 360 Max Jets Third Rack Top Control Built-In Dishwasher with Advanced ProDry System and Ultra-b"
+     },
+     {
+      "seller": "NFM",
+      "price": 899.1,
+      "title": "KitchenAid 360 Max Jets Third Rack Dishwasher with ProDry System kdps424sps"
+     },
+     {
+      "seller": "Plugs Appliance Center",
+      "price": 1099.99,
+      "title": "300 Series, built-under dishwasher, 17 3/4'', Brushed steel anti-fingerprint"
+     },
+     {
+      "seller": "Rodenbaugh's Flooring America Kitchen",
+      "price": 1394.1,
+      "title": "KitchenAid 360 Max Jets Third Rack Dishwasher with Advanced ProDry System"
+     },
+     {
+      "seller": "Driskell's Appliance",
+      "price": 1199,
+      "title": "300 Series, built-under dishwasher, 24'', Brushed steel anti-fingerprint"
+     },
+     {
+      "seller": "Appliance Alliance",
+      "price": 1889.1,
+      "title": "KitchenAid Dishwasher"
+     },
+     {
+      "seller": "All Make Appliance",
+      "price": 1478,
+      "title": "KitchenAid 24\" 360° Max Jets Third Rack Top Control Built-In Dishwasher with Advanced ProDry System and Ultra-"
+     },
+     {
+      "seller": "Filco Superstore - Sacramento, CA",
+      "price": 944.99,
+      "title": "KitchenAid 24\" Front Control Built-In Dishwasher with Third Level Utensil Rack 30+ Total Wash Jets"
+     }
+    ]
+   },
+   "identification": {
+    "category": "appliance",
+    "profile": "dishwasher",
+    "original": {
+     "identity": "Bosch 500 Series SHPM65Z55N dishwasher",
+     "confidence": "high",
+     "characteristics": [
+      "24-inch built-in",
+      "Stainless steel pocket handle",
+      "CrystalDry technology",
+      "Third rack"
+     ],
+     "uncertainty": null
+    },
+    "tier": "STANDARD",
+    "requirements": [
+     {
+      "text": "Must have a flush pocket handle design",
+      "importance": "IMPORTANT"
+     },
+     {
+      "text": "Must include advanced drying technology like Zeolith or CrystalDry",
+      "importance": "IMPORTANT"
+     }
+    ],
+    "successor": {
+     "name": "Bosch 500 Series dishwasher",
+     "why": "It is the direct generational continuation of the Bosch 500 line with pocket handle.",
+     "differences": "Updated interior layout and refined control panel.",
+     "concern": null,
+     "confidence": "high",
+     "comparison": []
+    },
+    "suggestions": [
+     {
+      "name": "KitchenAid 300 Series dishwasher",
+      "why": "Offers similar quiet operation and premium third rack features.",
+      "differences": "Uses traditional heated drying rather than zeolite-based drying.",
+      "concern": null,
+      "confidence": "medium",
+      "comparison": []
+     },
+     {
+      "name": "Miele G 5000 Series dishwasher",
+      "why": "Matches the high build quality and premium cleaning performance.",
+      "differences": "Higher price point and distinct German engineering features.",
+      "concern": null,
+      "confidence": "medium",
+      "comparison": []
+     }
+    ],
+    "estimates": {
+     "originalNew": {
+      "low": 900,
+      "high": 1100
+     },
+     "replacementNew": null
+    },
+    "clarify": []
+   }
+  }
+ }
+}
