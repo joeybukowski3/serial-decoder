@@ -657,7 +657,7 @@ test('a cache entry that is valid but not an AI answer (guidance source, UNAVAIL
 
 test('cache keys change with the answer/prompt version, contract version, model and query, and never contain the query text', () => {
   const base = researchCacheKey(QUERY);
-  assert.match(base, /^itemassist-research:answer:v1:answer-\d+-prompt-\d+:research-1:gemini-3-5-flash-lite:[0-9a-f]{24}$/);
+  assert.match(base, /^itemassist-research:answer:v2:answer-\d+-prompt-\d+:research-1:gemini-3-5-flash-lite:[0-9a-f]{24}$/);
   assert.notEqual(base, researchCacheKey(QUERY, { model: 'another-model' }));
   assert.notEqual(base, researchCacheKey('LG C4 OLED TV'));
   assert.equal(researchCacheKey('  LG  c3 oled TV '), base);
