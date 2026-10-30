@@ -90,8 +90,9 @@ test('render acknowledgement sends displayed card text only when an audit ID exi
   api.state.age.status = 'success';
   api.acknowledgeRenderedResult({ auditId: 'audit-test' });
   assert.equal(api.fetchCalls.length, 1);
-  assert.equal(api.fetchCalls[0].url, '/api/smart-lookup-audit-ack');
+  assert.equal(api.fetchCalls[0].url, '/api/age-lookup');
   const body = JSON.parse(api.fetchCalls[0].options.body);
+  assert.equal(body.action, 'diagnostic_audit_ack');
   assert.equal(body.displayedResultText, 'Displayed age result');
   assert.equal(body.displayStatus, 'success');
   assert.equal(body.rendererVersion, 'smart-lookup-controller-v1');

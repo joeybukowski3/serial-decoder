@@ -1280,6 +1280,7 @@
     var displayedText = typeof panel.innerText === 'string' ? panel.innerText : panel.textContent;
     if (!String(displayedText || '').trim()) return;
     var body = JSON.stringify({
+      action: 'diagnostic_audit_ack',
       auditId: data.auditId,
       displayedResultText: String(displayedText || '').slice(0, 12000),
       displayStatus: state.age.status,
@@ -1287,7 +1288,7 @@
       rawQuery: String(rawQuery == null ? '' : rawQuery).slice(0, 1000),
     });
     function send(attempt) {
-      return fetch('/api/smart-lookup-audit-ack', {
+      return fetch('/api/age-lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         keepalive: true,

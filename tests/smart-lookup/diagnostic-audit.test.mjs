@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
 import { createRefineSerialDateHandler } from '../../api/refine-serial-date.js';
-import { createSmartLookupAuditAckHandler } from '../../api/smart-lookup-audit-ack.js';
 import { callGeminiSearchProvider } from '../../lib/smart-lookup/gemini-search-provider.js';
 import { createAttemptRecorder, runWithAttemptRecorder } from '../../lib/smart-lookup/provider-attempts.js';
 import {
@@ -49,6 +48,8 @@ function fakeRedis() {
   };
   return db;
 }
+
+const ACK = 'diagnostic_audit_ack';
 
 function response() {
   return { statusCode: 200, payload: null, status(code) { this.statusCode = code; return this; }, json(body) { this.payload = body; return this; }, end() { return this; }, setHeader() {} };
@@ -180,22 +181,22 @@ test('only an explicitly linked refinement attaches its result to an existing lo
   assert.equal(redis.hashes.size, 1);
 });
 
-test('ack endpoint is write-only and storage failure cannot alter API response', async () => {
+test('ack action is write-only and storage failure cannot alter API response', async () => {
   const redis = fakeRedis();
   const audit = createDiagnosticAudit({ env: { SMART_LOOKUP_DIAGNOSTIC_AUDIT: '1' }, redis });
   audit.setInput('LG TV', '');
   await audit.finish({ status: 'partial-success' }, 200, { attempts: [], summary: () => ({}) });
-  const ack = createSmartLookupAuditAckHandler({ env: { SMART_LOOKUP_DIAGNOSTIC_AUDIT: '1' }, redisFactory: () => redis });
+  const ack = ageHandler(redis);
   const res = response();
-  await ack({ method: 'POST', headers: { 'content-type': 'application/json', host: 'localhost' }, body: { auditId: audit.id, displayedResultText: 'Shown card', displayStatus: 'success', rendererVersion: 'v1' } }, res);
+  await ack({ method: 'POST', headers: { 'content-type': 'application/json', host: 'localhost' }, body: { action: ACK, auditId: audit.id, displayedResultText: 'Shown card', displayStatus: 'success', rendererVersion: 'v1' } }, res);
   assert.equal(res.statusCode, 204);
   assert.equal(exportRows(audit.id, await redis.hgetall(auditKey(audit.id))).review[1], 'Shown card');
   const rejected = response();
-  await ack({ method: 'POST', headers: { 'content-type': 'application/json', host: 'localhost', origin: 'https://elsewhere.example' }, body: { auditId: audit.id, displayedResultText: 'Tampered', displayStatus: 'success' } }, rejected);
+  await ack({ method: 'POST', headers: { 'content-type': 'application/json', host: 'localhost', origin: 'https://elsewhere.example' }, body: { action: ACK, auditId: audit.id, displayedResultText: 'Tampered', displayStatus: 'success' } }, rejected);
   assert.equal(rejected.statusCode, 403);
   assert.equal(exportRows(audit.id, await redis.hgetall(auditKey(audit.id))).review[1], 'Shown card');
   const unknown = response();
-  await ack({ method: 'POST', headers: { 'content-type': 'application/json', host: 'localhost' }, body: { auditId: '851e61c9-9dec-401e-af85-02b6e57ca056', displayedResultText: 'No record', displayStatus: 'success', rendererVersion: 'v1' } }, unknown);
+  await ack({ method: 'POST', headers: { 'content-type': 'application/json', host: 'localhost' }, body: { action: ACK, auditId: '851e61c9-9dec-401e-af85-02b6e57ca056', displayedResultText: 'No record', displayStatus: 'success', rendererVersion: 'v1' } }, unknown);
   assert.equal(unknown.statusCode, 202);
   assert.equal(redis.hashes.size, 1);
 
@@ -258,13 +259,13 @@ test('first nonempty display wins; oversized and extra acknowledgement fields ar
   const redis = fakeRedis();
   const audit = createDiagnosticAudit({ env: { SMART_LOOKUP_DIAGNOSTIC_AUDIT: '1' }, redis });
   await audit.finish({}, 200, { attempts: [], summary: () => ({}) });
-  const ack = createSmartLookupAuditAckHandler({ env: { SMART_LOOKUP_DIAGNOSTIC_AUDIT: '1' }, redisFactory: () => redis });
+  const ack = ageHandler(redis);
   const send = async (body, headers = {}) => {
     const out = response();
     await ack({ method: 'POST', headers: { 'content-type': 'application/json', host: 'localhost', ...headers }, body }, out);
     return out.statusCode;
   };
-  const body = { auditId: audit.id, displayedResultText: 'Visible', displayStatus: 'success', rendererVersion: 'v1', rawQuery: '  LG TV  ' };
+  const body = { action: ACK, auditId: audit.id, displayedResultText: 'Visible', displayStatus: 'success', rendererVersion: 'v1', rawQuery: '  LG TV  ' };
   assert.equal(await send({ ...body, displayedResultText: '  ' }), 400);
   assert.equal(await send(body, { 'content-length': '20000' }), 413);
   assert.equal(await send({ ...body, secret: 'x' }), 400);
@@ -348,4 +349,111 @@ test('refinement attempts are capped with a visible count and bounded server IDs
   assert.equal(stored.refinementTruncated, 2);
   assert.ok(stored.refinements[0].requestId.length < 100);
   assert.match(exportRows(audit.id, stored).review[27], /TRUNCATED 2 ATTEMPTS/);
+});
+
+test('ack action through /api/age-lookup never runs lookup, provider, quota or telemetry work', async () => {
+  const redis = fakeRedis();
+  const audit = createDiagnosticAudit({ env: { SMART_LOOKUP_DIAGNOSTIC_AUDIT: '1' }, redis });
+  await audit.finish({}, 200, { attempts: [], summary: () => ({}) });
+  const forbidden = [];
+  const trap = (name) => async () => { forbidden.push(name); throw new Error(`${name} must not run`); };
+  const handler = createAgeLookupHandler({
+    env: { SMART_LOOKUP_DIAGNOSTIC_AUDIT: '1' },
+    auditRedis: redis,
+    redisFactory: () => redis,
+    localLookup: trap('localLookup'),
+    providerLookup: trap('providerLookup'),
+    groqOnlyLookup: trap('groqOnlyLookup'),
+    recordProviderUsage: trap('recordProviderUsage'),
+    recordProviderAttemptMetrics: trap('recordProviderAttemptMetrics'),
+    reserveProviderBudget: trap('reserveProviderBudget'),
+    quotaMeter: { createSession() { forbidden.push('quotaMeter'); throw new Error('quota must not run'); } },
+    logger: { info(line) { forbidden.push(`log:${line}`); } },
+  });
+  const res = response();
+  await handler({ method: 'POST', headers: { 'content-type': 'application/json', host: 'localhost' }, body: {
+    action: ACK, auditId: audit.id, displayedResultText: 'Shown', displayStatus: 'success', rendererVersion: 'v1',
+  } }, res);
+  assert.equal(res.statusCode, 204);
+  assert.equal(res.payload, null);
+  assert.deepEqual(forbidden, []);
+  assert.equal(redis.hashes.get(auditKey(audit.id)).display.text, 'Shown');
+  assert.equal(redis.hashes.size, 1);
+});
+
+test('ack action respects the flag, method, content type and body validation', async () => {
+  const redis = fakeRedis();
+  const audit = createDiagnosticAudit({ env: { SMART_LOOKUP_DIAGNOSTIC_AUDIT: '1' }, redis });
+  await audit.finish({}, 200, { attempts: [], summary: () => ({}) });
+  const valid = { action: ACK, auditId: audit.id, displayedResultText: 'Shown', displayStatus: 'success', rendererVersion: 'v1' };
+  const headers = { 'content-type': 'application/json', host: 'localhost' };
+  const send = async (handler, req) => { const out = response(); await handler(req, out); return out.statusCode; };
+
+  assert.equal(await send(ageHandler(redis, '0'), { method: 'POST', headers, body: valid }), 204);
+  assert.equal(redis.hashes.get(auditKey(audit.id)).display, undefined);
+  assert.equal(await send(ageHandler(redis), { method: 'POST', headers: { host: 'localhost' }, body: valid }), 415);
+  assert.equal(await send(ageHandler(redis), { method: 'POST', headers: { ...headers, 'sec-fetch-site': 'cross-site' }, body: valid }), 403);
+  assert.equal(await send(ageHandler(redis), { method: 'POST', headers, body: { ...valid, auditId: 'x'.repeat(37) } }), 400);
+  assert.equal(await send(ageHandler(redis), { method: 'POST', headers, body: { ...valid, displayedResultText: 'x'.repeat(12001) } }), 400);
+  assert.equal(await send(ageHandler(redis), { method: 'POST', headers, body: { ...valid, rawQuery: 'x'.repeat(1001) } }), 400);
+  assert.equal(await send(ageHandler(redis), { method: 'POST', headers, body: { ...valid, displayStatus: 5 } }), 400);
+  assert.equal(await send(ageHandler(redis), { method: 'GET', headers, body: valid }), 405);
+  assert.equal(redis.hashes.get(auditKey(audit.id)).display, undefined);
+  assert.equal(await send(ageHandler(redis), { method: 'POST', headers, body: valid }), 204);
+  assert.equal(redis.hashes.get(auditKey(audit.id)).display.text, 'Shown');
+});
+
+test('ack action preserves the record TTL and never recreates an expired record', async () => {
+  const redis = fakeRedis();
+  const audit = createDiagnosticAudit({ env: { SMART_LOOKUP_DIAGNOSTIC_AUDIT: '1' }, redis });
+  await audit.finish({}, 200, { attempts: [], summary: () => ({}) });
+  const key = auditKey(audit.id);
+  const before = redis.ttls.get(key);
+  const headers = { 'content-type': 'application/json', host: 'localhost' };
+  const body = { action: ACK, auditId: audit.id, displayedResultText: 'Shown', displayStatus: 'success', rendererVersion: 'v1' };
+  const first = response();
+  await ageHandler(redis)({ method: 'POST', headers, body }, first);
+  assert.equal(first.statusCode, 204);
+  assert.equal(redis.ttls.get(key), before);
+  redis.hashes.delete(key);
+  const late = response();
+  await ageHandler(redis)({ method: 'POST', headers, body: { ...body, displayedResultText: 'Late' } }, late);
+  assert.equal(late.statusCode, 202);
+  assert.equal(redis.hashes.has(key), false);
+});
+
+test('ordinary lookup bodies without an action keep their behavior and audit linkage', async () => {
+  const redis = fakeRedis();
+  const out = response();
+  await ageHandler(redis)({ method: 'POST', body: { query: '???', rawQuery: '???' }, headers: {} }, out);
+  assert.equal(out.statusCode, 200);
+  assert.ok(out.payload.auditId);
+  assert.equal(redis.hashes.size, 1);
+  const off = response();
+  await ageHandler(redis, '0')({ method: 'POST', body: { query: '???' }, headers: {} }, off);
+  assert.equal(off.statusCode, 200);
+  assert.equal(off.payload.auditId, undefined);
+});
+
+test('ack body size is bounded with or without Content-Length; ordinary lookups are not', async () => {
+  const redis = fakeRedis();
+  const audit = createDiagnosticAudit({ env: { SMART_LOOKUP_DIAGNOSTIC_AUDIT: '1' }, redis });
+  await audit.finish({}, 200, { attempts: [], summary: () => ({}) });
+  const headers = { 'content-type': 'application/json', host: 'localhost' };
+  const valid = { action: ACK, auditId: audit.id, displayedResultText: 'Shown', displayStatus: 'success', rendererVersion: 'v1' };
+  const send = async (req) => { const out = response(); await ageHandler(redis)(req, out); return out; };
+  const oversized = { ...valid, padding: 'x'.repeat(17000) };
+
+  assert.equal((await send({ method: 'POST', headers: { ...headers, 'content-length': '20000' }, body: valid })).statusCode, 413);
+  assert.equal((await send({ method: 'POST', headers, body: oversized })).statusCode, 413);
+  // Multi-byte characters count as UTF-8 bytes, not string length.
+  assert.equal((await send({ method: 'POST', headers, body: { ...valid, displayedResultText: '€'.repeat(6000) } })).statusCode, 413);
+  assert.equal(redis.hashes.get(auditKey(audit.id)).display, undefined);
+
+  const lookup = await send({ method: 'POST', headers: {}, body: { query: '???', padding: 'x'.repeat(17000) } });
+  assert.equal(lookup.statusCode, 200);
+  assert.ok(lookup.payload.auditId);
+
+  assert.equal((await send({ method: 'POST', headers, body: valid })).statusCode, 204);
+  assert.equal(redis.hashes.get(auditKey(audit.id)).display.text, 'Shown');
 });

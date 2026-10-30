@@ -71,6 +71,7 @@ import {
 } from '../lib/smart-lookup/provider-attempts.js';
 import { recordProviderUsage, recordUsageEvent, recordUsageEventCounts } from '../lib/smart-lookup/provider-usage.js';
 import { auditEnabled, createDiagnosticAudit } from '../lib/smart-lookup/diagnostic-audit.js';
+import { handleDiagnosticAuditAck, isDiagnosticAuditAck } from '../lib/smart-lookup/diagnostic-ack.js';
 import { createGeminiCooldown } from '../lib/smart-lookup/gemini-cooldown.js';
 import { createQuotaMeter } from '../lib/quota/meter.js';
 
@@ -1770,6 +1771,16 @@ export function createAgeLookupHandler(dependencies = {}) {
   }
 
   return async function handler(req, res) {
+    // Diagnostic-audit display acknowledgement shares this function (Hobby plan
+    // function cap). Dispatched before audit creation, quota, recorder, routing
+    // and provider work, so it can only run the update-only acknowledgement.
+    if (isDiagnosticAuditAck(req)) {
+      const ackEnv = dependencies.env || process.env;
+      return handleDiagnosticAuditAck(req, res, {
+        env: ackEnv,
+        getRedis: () => dependencies.auditRedis || dependencies.redis || redisFactory(ackEnv),
+      });
+    }
     let audit = null;
     try {
       if (auditEnabled(dependencies.env || process.env)) {
