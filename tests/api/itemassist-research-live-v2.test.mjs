@@ -270,15 +270,27 @@ test('Gemini budget exhausted: the call is refused before any Gemini or Serper r
   assert.deepEqual([fetchImpl.calls.gemini.length, fetchImpl.calls.search.length, fetchImpl.calls.shopping.length], [0, 0, 0]);
 });
 
-test('Gemini fails: a guidance answer in research.2, not cached; the parallel dated search is the one Serper credit spent', async () => {
+test('Gemini fails: the product is recognised from the results the parallel search returned, not reported as unknown; not cached; one Serper credit spent', async () => {
   const fetchImpl = lgFetch({ gemini: () => jsonResponse({}, 503) });
   const { handler, redis } = build({ fetchImpl });
   const res = await ask(handler);
   assert.equal(res.statusCode, 200);
   assert.equal(isValidResearchResponseV2(res.body), true);
-  assert.deepEqual([res.body.status, res.body.meta.answerSource, res.body.warnings.includes('PROVIDER_UNAVAILABLE')], ['GUIDANCE_ONLY', 'CATEGORY_GUIDANCE', true]);
+  // The request failed at the provider, so it is reported as that: PROVIDER_UNAVAILABLE and never PRODUCT_NOT_IDENTIFIED. The sites agree it is a real
+  // product, so it is named at low confidence, with no replacement, no specification and no price.
+  assert.deepEqual([res.body.status, res.body.meta.answerSource, res.body.warnings.includes('PROVIDER_UNAVAILABLE'), res.body.warnings.includes('PRODUCT_NOT_IDENTIFIED')], ['PARTIAL', 'CATEGORY_GUIDANCE', true, false]);
+  assert.deepEqual([res.body.original.confidence, res.body.successor, res.body.suggestions, res.body.pricing.prices], ['LOW', null, [], []]);
+  assert.match(res.body.original.identity, /^LG C3/);
   assert.deepEqual([fetchImpl.calls.shopping.length, credits(redis)], [0, 1]);
   assert.equal(redis.store.has(researchCacheKey(LG_QUERY, { contractVersion: RESEARCH_CONTRACT_V2 })), false);
+});
+
+test('Gemini fails and the results do not agree on the name: guidance only, still reported as a provider failure and not as an unknown product', async () => {
+  const fetchImpl = lgFetch({ gemini: () => jsonResponse({}, 503) });
+  const { handler } = build({ fetchImpl });
+  const res = await ask(handler, 'quasar widget frobnicator 9000');
+  assert.equal(isValidResearchResponseV2(res.body), true);
+  assert.deepEqual([res.body.status, res.body.original.identity, res.body.warnings.includes('PROVIDER_UNAVAILABLE'), res.body.warnings.includes('PRODUCT_NOT_IDENTIFIED')], ['GUIDANCE_ONLY', null, true, false]);
 });
 
 test('an item the model cannot identify gets guidance and no prices at all', async () => {
