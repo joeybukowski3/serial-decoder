@@ -9,6 +9,7 @@ import vm from 'node:vm';
 // wrapper and re-running the body with a small test-only export attached.
 // This does not touch the production file or the built bundle.
 function loadSmartLookupController() {
+  const fetchCalls = [];
   function createMockElement() {
     return {
       value: '',
@@ -32,14 +33,14 @@ function loadSmartLookupController() {
     console,
     setTimeout: (fn) => { fn(); return 0; },
     clearTimeout: () => {},
-    fetch: async () => ({ ok: false, status: 0, json: async () => ({}) }),
+    fetch: async (url, options) => { fetchCalls.push({ url, options }); return { ok: true, status: 204, json: async () => ({}) }; },
     AbortController: class { constructor() { this.signal = {}; } abort() {} },
     document: {
       readyState: 'complete',
       addEventListener: () => {},
       querySelector: () => null,
       querySelectorAll: () => [],
-      getElementById: () => null,
+      getElementById: (id) => id === 'smart-lookup-age-panel' ? { innerText: 'Displayed age result' } : null,
       createElement: () => createMockElement(),
     },
   };
@@ -74,14 +75,35 @@ function loadSmartLookupController() {
       requestBody,
       evidenceHeading,
       sourceQualifier,
+      acknowledgeRenderedResult,
+      state,
     };
   }());`;
   vm.runInContext(wrapped, ctx);
 
-  return ctx.__smartLookupTestApi;
+  return { ...ctx.__smartLookupTestApi, fetchCalls };
 }
 
 const api = loadSmartLookupController();
+
+test('render acknowledgement sends displayed card text only when an audit ID exists', () => {
+  api.state.age.status = 'success';
+  api.acknowledgeRenderedResult({ auditId: 'audit-test' });
+  assert.equal(api.fetchCalls.length, 1);
+  assert.equal(api.fetchCalls[0].url, '/api/age-lookup');
+  const body = JSON.parse(api.fetchCalls[0].options.body);
+  assert.equal(body.action, 'diagnostic_audit_ack');
+  assert.equal(body.displayedResultText, 'Displayed age result');
+  assert.equal(body.displayStatus, 'success');
+  assert.equal(body.rendererVersion, 'smart-lookup-controller-v1');
+  api.acknowledgeRenderedResult({});
+  assert.equal(api.fetchCalls.length, 1);
+});
+
+test('request body keeps the pre-audit shape and dedupe key', () => {
+  assert.equal(api.requestBody('LG TV', '', false, '  LG   TV  ').query, 'LG TV');
+  assert.deepEqual(JSON.parse(JSON.stringify(api.requestBody('LG TV', '', false, '  LG   TV  '))), { query: 'LG TV' });
+});
 
 // ── classifyAgeOutcome ───────────────────────────────────────────────────────
 
