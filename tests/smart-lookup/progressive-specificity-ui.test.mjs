@@ -160,6 +160,8 @@ test('serial metadata renders a prefilled deterministic-decoder handoff without 
   assert.match(html, /Serial number detected/);
   assert.match(html, /Use the Serial Number Decoder for unit-specific manufacture-date decoding/);
   assert.match(html, /\/index\.html\?serial=FR31424IN#decoder-tool/);
+  assert.match(html, /class="smart-lookup-decoder-cta"[^>]*>Open Serial Number Decoder/);
+  assert.doesNotMatch(html, /class="decode-btn"/);
   assert.doesNotMatch(html, /serial (?:was|has been) decoded/i);
 });
 
@@ -167,6 +169,8 @@ test('identifier clarification has a decoder CTA and no retry', () => {
   const html = api.renderNeedsDetail({ resultType: 'identifier-clarification', identifierToken: '0011579166' });
   assert.match(html, /This looks like an item identifier/);
   assert.match(html, /Open Serial Number Decoder/);
+  assert.match(html, /class="smart-lookup-decoder-cta"[^>]*>Open Serial Number Decoder/);
+  assert.doesNotMatch(html, /class="decode-btn"/);
   assert.match(html, /GE microwave 0011579166/);
   assert.doesNotMatch(html, /Retry|Research again|data-smart-lookup-retry/);
 });
@@ -188,7 +192,13 @@ test('contextual serial handoff keeps GE microwave context in the decoder link',
     brand: 'GE', category: 'microwave', serialDetected: { token: '010TAKK03877', action: 'use-decoder' },
   });
   assert.match(html, /serial=010TAKK03877&amp;cat=appliances&amp;brand=ge&amp;itemType=microwave#decoder-tool/);
-  assert.match(html, /class="decode-btn"[^>]*>Open Serial Number Decoder/);
+  assert.match(html, /You entered a serial number for a GE microwave/);
+  assert.match(html, /Brand<\/span>.*GE<\/span>/);
+  assert.match(html, /Product type<\/span>.*microwave<\/span>/);
+  assert.match(html, /Serial<\/span>.*010TAKK03877<\/span>/);
+  assert.match(html, /class="smart-lookup-decoder-cta"[^>]*>Decode This Serial Number/);
+  assert.match(html, /Edit your search/);
+  assert.doesNotMatch(html, /class="decode-btn"|Not established|Estimate basis|Heuristic|Broad brand\/category guidance|Research again|smart-year-context-primary/i);
 });
 
 test('HVAC serial candidates render as ambiguous rather than one exact manufacture year', () => {

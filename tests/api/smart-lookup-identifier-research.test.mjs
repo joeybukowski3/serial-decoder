@@ -41,6 +41,40 @@ test('research can expand an unrecognized model code, including punctuation vari
   }
 });
 
+test('live-like descriptive original identifiers corroborate matching provider products', async () => {
+  for (const [query, result] of [
+    ['mvwx655dw1', { brand: 'Maytag', model: 'MVWX655DW1', likelyProduct: 'Maytag MVWX655DW1 top-load washer', originalIdentifier: 'Maytag MVWX655DW1' }],
+    ['mvwx655dw1', { brand: 'Maytag', exactModel: 'MVWX655DW1', likelyProduct: 'Maytag MVWX655DW1 washer', originalIdentifier: 'Maytag washer model MVWX655DW1' }],
+    ['RUNHOOD EB324', { brand: 'Runhood', model: 'EB324', likelyProduct: 'Runhood Energy Bar EB324', originalIdentifier: 'Runhood Energy Bar EB324' }],
+    ['RUNHOOD EB324', { brand: 'Runhood', exactModel: 'EB324', likelyProduct: 'Runhood Energy Bar EB324 battery module', originalIdentifier: 'EB324 battery module' }],
+    ['RUNHOOD EB324', { brand: 'Runhood', model: 'EB324', likelyProduct: 'Runhood Energy Bar EB324', originalIdentifier: 'Runhood EB324 324Wh battery' }],
+  ]) {
+    const { payload, providerCalls } = await lookup(query, { ...result, identityConfidence: 'medium' });
+    assert.equal(providerCalls, 1, query);
+    assert.equal(payload.errorCode, null, JSON.stringify(result));
+    assert.equal(payload.likelyProduct, result.likelyProduct, query);
+    assert.equal(classifySmartOutcome(payload).resultStatus, 'needs-detail', query);
+  }
+});
+
+test('descriptive provider metadata cannot launder an unrelated replacement model', async () => {
+  for (const originalIdentifier of ['Maytag MVWX655DW1', 'Samsung WF45T6000AW']) {
+    const { payload } = await lookup('mvwx655dw1', {
+      brand: 'Samsung', model: 'WF45T6000AW', likelyProduct: 'Samsung WF45T6000AW washer',
+      originalIdentifier, introductionYear: 2020,
+    });
+    assert.equal(payload.errorCode, 'UNRELATED_MODEL', originalIdentifier);
+  }
+});
+
+test('a contradictory original identifier still rejects an otherwise matching product', async () => {
+  const { payload } = await lookup('mvwx655dw1', {
+    brand: 'Maytag', model: 'MVWX655DW1', likelyProduct: 'Maytag MVWX655DW1 washer',
+    originalIdentifier: 'Samsung WF45T6000AW',
+  });
+  assert.equal(payload.errorCode, 'UNRELATED_MODEL');
+});
+
 test('research cannot replace the supplied model with another product', async () => {
   const { payload } = await lookup('mvwx655dw1', {
     brand: 'Samsung', model: 'WF45T6000AW', likelyProduct: 'Samsung WF45T6000AW washer',
