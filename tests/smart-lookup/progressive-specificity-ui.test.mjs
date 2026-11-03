@@ -40,7 +40,7 @@ function loadSmartLookupController() {
   const body = source.slice(openMarker.length, source.length - closeMarker.length);
   const wrapped = `(function () {\n${body}\n
     globalThis.__smartLookupTestApi = {
-      classifyAgeOutcome, copyForAgeOutcome, AGE_OUTCOME_COPY, renderAge, escapeHtml,
+      classifyAgeOutcome, copyForAgeOutcome, AGE_OUTCOME_COPY, renderAge, renderNeedsDetail, escapeHtml,
       sourceQualifier, isGroundedProviderResult, isGroundedTimeoutFallbackResult,
       isDeterministicDegradedResult, isUngroundedProviderResult,
     };
@@ -160,7 +160,45 @@ test('serial metadata renders a prefilled deterministic-decoder handoff without 
   assert.match(html, /Serial number detected/);
   assert.match(html, /Use the Serial Number Decoder for unit-specific manufacture-date decoding/);
   assert.match(html, /\/index\.html\?serial=FR31424IN#decoder-tool/);
+  assert.match(html, /class="smart-lookup-decoder-cta"[^>]*>Open Serial Number Decoder/);
+  assert.doesNotMatch(html, /class="decode-btn"/);
   assert.doesNotMatch(html, /serial (?:was|has been) decoded/i);
+});
+
+test('identifier clarification has a decoder CTA and no retry', () => {
+  const html = api.renderNeedsDetail({ resultType: 'identifier-clarification', identifierToken: '0011579166' });
+  assert.match(html, /This looks like an item identifier/);
+  assert.match(html, /Open Serial Number Decoder/);
+  assert.match(html, /class="smart-lookup-decoder-cta"[^>]*>Open Serial Number Decoder/);
+  assert.doesNotMatch(html, /class="decode-btn"/);
+  assert.match(html, /GE microwave 0011579166/);
+  assert.doesNotMatch(html, /Retry|Research again|data-smart-lookup-retry/);
+});
+
+test('yearless product identity displays separate confidence and source information', () => {
+  const html = api.renderNeedsDetail({
+    brand: 'Runhood', likelyProduct: 'Runhood Energy Bar EB324', productType: 'modular lithium-ion battery module',
+    exactModel: 'EB324', identityConfidence: 'high', timingConfidence: 'uncertain',
+    originalIdentifier: 'EB324', identifierType: 'model number',
+  });
+  assert.match(html, /Product identified; date unverified/);
+  assert.match(html, /Product identification confidence/);
+  assert.match(html, /Product\/date confidence/);
+  assert.doesNotMatch(html, /RESULT NOT RELIABLE ENOUGH/);
+});
+
+test('contextual serial handoff keeps GE microwave context in the decoder link', () => {
+  const html = api.renderAge({
+    brand: 'GE', category: 'microwave', serialDetected: { token: '010TAKK03877', action: 'use-decoder' },
+  });
+  assert.match(html, /serial=010TAKK03877&amp;cat=appliances&amp;brand=ge&amp;itemType=microwave#decoder-tool/);
+  assert.match(html, /You entered a serial number for a GE microwave/);
+  assert.match(html, /Brand<\/span>.*GE<\/span>/);
+  assert.match(html, /Product type<\/span>.*microwave<\/span>/);
+  assert.match(html, /Serial<\/span>.*010TAKK03877<\/span>/);
+  assert.match(html, /class="smart-lookup-decoder-cta"[^>]*>Decode This Serial Number/);
+  assert.match(html, /Edit your search/);
+  assert.doesNotMatch(html, /class="decode-btn"|Not established|Estimate basis|Heuristic|Broad brand\/category guidance|Research again|smart-year-context-primary/i);
 });
 
 test('HVAC serial candidates render as ambiguous rather than one exact manufacture year', () => {
@@ -491,8 +529,8 @@ test('VIZIO model-generation result renders estimate, conflict, confidence, and 
   assert.match(html, /Approximately 2013/);
   assert.match(html, /Series[\s\S]*M-Series/);
   assert.match(html, /Estimate basis[\s\S]*Verified exact-model generation/);
-  assert.match(html, /Model generation confidence[\s\S]*High/);
-  assert.match(html, /Individual unit timing confidence[\s\S]*Medium/);
+  assert.match(html, /Product identification confidence[\s\S]*High/);
+  assert.match(html, /Product\/date confidence[\s\S]*Medium/);
   assert.match(html, /entered brand was LG/i);
   assert.match(html, /Recognized model brand[\s\S]*VIZIO/);
   assert.match(html, /Individual manufacture date[\s\S]*requires serial number/i);

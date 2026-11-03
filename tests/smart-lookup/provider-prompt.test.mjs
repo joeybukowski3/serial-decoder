@@ -47,6 +47,16 @@ test('every age research prompt carries the shared trust guardrails', () => {
   }
 });
 
+test('age prompts ask for identifier role and useful yearless identity without guessed dates', () => {
+  for (const buildPrompt of [buildAgeProviderPrompt, buildGroundedAgeProviderPrompt, buildOpenAiAgeProviderPrompt]) {
+    const prompt = buildPrompt(queryInfo);
+    assert.match(prompt, /exact model, model line, serial number, service tag, part number, SKU/);
+    assert.match(prompt, /"originalIdentifier"/);
+    assert.match(prompt, /"identifierMatchExplanation"/);
+    assert.match(prompt, /Omit unsupported year fields; never guess a year/);
+  }
+});
+
 test('provider prompts with a labeled serial omit its token and retain model research context', () => {
   const serialQuery = {
     ...queryInfo,
