@@ -498,6 +498,7 @@
 
   function classifyAgeOutcome(data) {
     if (!data) return 'network-error';
+    if (data.resultType === 'identifier-clarification') return 'identifier-clarification';
     var code = data.errorCode || null;
     // Estimate-first: a payload that already carries a defensible age estimate
     // (including a deterministic reserve substituted after a timeout) must be
@@ -650,6 +651,7 @@
     if (resolvedBucket === 'timeout') return out('error', 'provider-timeout');
     if (resolvedBucket === 'rate-limited') return out('error', RATE_LIMIT_REASONS[code] || 'rate-limited');
     if (resolvedBucket === 'malformed') return out('error', 'provider-malformed');
+    if (resolvedBucket === 'identifier-clarification') return out('needs-detail', 'identifier-clarification');
     if (resolvedBucket === 'unusable-query') return out('no-result', 'unusable-query');
     if (code && code !== 'INSUFFICIENT_QUERY_DETAIL') {
       if (CAPACITY_CODES[code] === 1) return out('error', 'capacity');
@@ -970,12 +972,32 @@
   function renderSerialDetected(data) {
     var detected = data && data.serialDetected;
     if (!detected || detected.action !== 'use-decoder' || !detected.token) return '';
-    var href = '/index.html?serial=' + encodeURIComponent(detected.token) + '#decoder-tool';
+    var href = '/index.html?serial=' + encodeURIComponent(detected.token);
+    var category = String(data.category || data.itemCategory || data.productType || '').toLowerCase();
+    var decoderCategory = /hvac|furnace|heat pump|air conditioner/.test(category) ? 'hvac'
+      : /water heater/.test(category) ? 'waterHeaters'
+      : /tv|television|phone|computer|laptop|tablet/.test(category) ? 'electronics'
+      : category ? 'appliances' : '';
+    if (decoderCategory) href += '&cat=' + encodeURIComponent(decoderCategory);
+    if (decoderCategory && data.brand && data.brand !== 'Unknown') href += '&brand=' + encodeURIComponent(data.brand.toLowerCase());
+    if (category) href += '&itemType=' + encodeURIComponent(category);
+    href += '#decoder-tool';
     return '<div class="info-block smart-lookup-serial-notice">' +
       '<h4>Serial number detected</h4>' +
-      '<p>Use the Serial Number Decoder for unit-specific manufacture-date decoding. ' +
-      '<a href="' + escapeHtml(href) + '">Open Serial Number Decoder</a></p>' +
+      '<p>Use the Serial Number Decoder for unit-specific manufacture-date decoding.</p>' +
+      '<a class="decode-btn" href="' + escapeHtml(href) + '">Open Serial Number Decoder</a>' +
       '</div>';
+  }
+
+  function renderIdentifierClarification(data) {
+    var token = data.identifierToken || '';
+    var href = '/index.html?serial=' + encodeURIComponent(token) + '#decoder-tool';
+    return '<div class="info-block smart-lookup-status smart-lookup-status--needsdetail">' +
+      '<h4>This looks like an item identifier</h4>' +
+      '<p>It may be a model number, serial number, service tag, or part number. Add the brand or product type so we can identify it safely.</p>' +
+      '<p>If this is a serial number:</p><a class="decode-btn" href="' + escapeHtml(href) + '">Open Serial Number Decoder</a>' +
+      '<p>If this is a model or part number, add the brand or product type. For example: GE microwave ' + escapeHtml(token) + ', Trane HVAC ' + escapeHtml(token) + ', or Samsung TV model ' + escapeHtml(token) + '.</p>' +
+      editSearchButton() + '</div>';
   }
 
   function renderAge(data) {
@@ -1158,8 +1180,8 @@
       (promotedProductionRange && estimatedYearForDetails ? '<div class="result-row"><span class="result-label">Estimated year</span><span class="result-value">Approximately ' + escapeHtml(estimatedYearForDetails) + '</span></div>' : (data && data.bestEstimateYear ? '<div class="result-row"><span class="result-label">Best estimate</span><span class="result-value">Approximately ' + escapeHtml(data.bestEstimateYear) + '</span></div>' : '')) +
       renderLifecycleRows(data) +
       (data && data.estimateBasis ? '<div class="result-row"><span class="result-label">Estimate basis</span><span class="result-value">' + escapeHtml(estimateBasisLabel(data.estimateBasis)) + '</span></div>' : '') +
-      (data && data.identityConfidence ? '<div class="result-row"><span class="result-label">Model generation confidence</span><span class="result-value">' + escapeHtml(data.identityConfidence.charAt(0).toUpperCase() + data.identityConfidence.slice(1)) + '</span></div>' : '') +
-      (data && data.timingConfidence ? '<div class="result-row"><span class="result-label">Individual unit timing confidence</span><span class="result-value">' + escapeHtml(data.timingConfidence.charAt(0).toUpperCase() + data.timingConfidence.slice(1)) + '</span></div>' : '') +
+      (data && data.identityConfidence ? '<div class="result-row"><span class="result-label">Product identification confidence</span><span class="result-value">' + escapeHtml(data.identityConfidence.charAt(0).toUpperCase() + data.identityConfidence.slice(1)) + '</span></div>' : '') +
+      (data && data.timingConfidence ? '<div class="result-row"><span class="result-label">Product/date confidence</span><span class="result-value">' + escapeHtml(data.timingConfidence.charAt(0).toUpperCase() + data.timingConfidence.slice(1)) + '</span></div>' : '') +
       '<div class="result-row"><span class="result-label">Individual manufacture date</span><span class="result-value">' + escapeHtml(manufactureMessage) + '</span></div>' +
       '</div>' +
       variantsHtml +
@@ -1184,11 +1206,13 @@
 
   function renderNeedsDetail(data, copy) {
     data = data || {};
+    if (data.resultType === 'identifier-clarification') return renderIdentifierClarification(data);
     var isGuidance = data.routeMode === 'general_guidance';
     var brand = data.brand && data.brand !== 'Unknown' ? data.brand : '';
-    var category = String(data.category || data.itemCategory || '').toLowerCase();
+    var category = String(data.productType || data.category || data.itemCategory || '').toLowerCase();
     var base = copy || AGE_OUTCOME_COPY['unavailable-generic'];
-    var heading = isGuidance || !base.heading ? 'General product match' : base.heading;
+    var heading = data.likelyProduct && data.identityConfidence ? 'Product identified; date unverified'
+      : (isGuidance || !base.heading ? 'General product match' : base.heading);
     var body = isGuidance && data.notes ? data.notes : (base.body || data.notes || '');
     var identifiers = Array.isArray(data.recommendedIdentifiers) ? data.recommendedIdentifiers.slice(0, 4) : [];
     var nextHtml = identifiers.length
@@ -1216,11 +1240,18 @@
         needsDetailRow('Manufacturer', brand || 'Not identified') +
         needsDetailRow('Product type', category || 'Not identified') +
         needsDetailRow('Exact model', data.exactModel || 'Not identified') +
+        (data.model && !data.exactModel ? needsDetailRow('Model / part number', data.model) : '') +
+        (data.originalIdentifier ? needsDetailRow('Supplied identifier', data.originalIdentifier) : '') +
+        (data.identifierType ? needsDetailRow('Likely identifier type', data.identifierType) : '') +
+        (data.identityConfidence ? needsDetailRow('Product identification confidence', data.identityConfidence) : '') +
+        needsDetailRow('Product/date confidence', data.timingConfidence || 'Unverified') +
         needsDetailRow('Manufacture date', 'Needs more detail') +
       '</div>' +
+      (data.identifierMatchExplanation ? '<p>' + escapeHtml(data.identifierMatchExplanation) + '</p>' : '') +
       contextHtml +
       (qualifier ? '<p class="smart-lookup-source-note">' + escapeHtml(qualifier) + '</p>' : '') +
       nextHtml +
+      renderGroundedSources(data) +
       '<p class="smart-lookup-label-guide"><a href="/serial-number-location-guide">Where to find the model and serial number</a></p>' +
       '<div class="smart-lookup-status-actions">' + retryPart + editSearchButton() + '</div>' +
       '</div>';

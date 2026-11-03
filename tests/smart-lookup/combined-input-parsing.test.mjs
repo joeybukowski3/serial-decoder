@@ -56,6 +56,31 @@ test('a labeled serial is never reconsidered as a model', () => {
   assert.equal(result.providerQuery, 'Samsung TV');
 });
 
+test('a labeled serial with only brand/category context is not research eligible', () => {
+  for (const [query, brand, category, serial] of [
+    ['serial 0011579166', '', null, '0011579166'],
+    ['GE microwave serial 010TAKK03877', 'GE', 'microwave', '010TAKK03877'],
+    ['Trane HVAC serial 12345678', 'Trane', 'hvac system', '12345678'],
+    ['Samsung refrigerator serial ABC12345', 'Samsung', 'refrigerator', 'ABC12345'],
+  ]) {
+    const result = info(query);
+    assert.equal(result.brand, brand, query);
+    assert.equal(result.productType, category, query);
+    assert.equal(result.serialToken, serial, query);
+    assert.equal(result.researchEligible, false, query);
+    assert.equal(result.groundedEligible, false, query);
+    assert.equal(result.providerEligible, false, query);
+  }
+});
+
+test('an exact model and labeled serial keep product research eligible', () => {
+  const result = info('Maytag MVWX655DW1 serial C12345678');
+  assert.equal(result.exactModel, 'MVWX655DW1');
+  assert.equal(result.serialToken, 'C12345678');
+  assert.equal(result.researchEligible, true);
+  assert.equal(result.groundedEligible, true);
+});
+
 test('an unlabeled second identifier stays ambiguous rather than being guessed into a serial', () => {
   const result = info('GE FR31424IN GFW850SPN0DG');
   assert.equal(result.serialIdentity, '');

@@ -742,7 +742,7 @@ test('an explicit Rheem water-heater serial does not enter the HVAC shortcut', a
   assert.deepEqual(out.payload.manufactureYearCandidates, []);
   assert.equal(out.payload.serialRule, null);
   assert.deepEqual(out.payload.serialDetected, { token: 'X4502XXXX', action: 'use-decoder' });
-  assert.equal(providerCalls, 1);
+  assert.equal(providerCalls, 0);
 });
 
 test('serial-bearing model queries preserve roles and cannot be spoofed by provider output', async () => {
@@ -786,7 +786,7 @@ test('serial-bearing model queries preserve roles and cannot be spoofed by provi
     assert.equal(out.payload.introductionYear, model ? 2019 : null,
       'model-level research remains available; serial-only category research cannot establish product identity');
   }
-  assert.equal(seen.length, 3);
+  assert.equal(seen.length, 2);
   for (const queryInfo of seen) {
     assert.ok(queryInfo.serialIdentity);
     assert.doesNotMatch(queryInfo.providerQuery, new RegExp(queryInfo.serialIdentity, 'i'));
