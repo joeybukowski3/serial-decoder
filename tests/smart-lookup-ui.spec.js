@@ -121,6 +121,7 @@ test.describe('Smart Lookup controller', () => {
       await route.fulfill({ json: {
         brand: 'Maytag', model: 'MVWX655DW1', exactModel: 'MVWX655DW1', likelyProduct: 'Maytag MVWX655DW1 washer',
         introductionYear: 2016, estimatedIntroductionYear: 2016, introductionYearConfidence: 'medium',
+        introductionYearReason: 'Exact-model dated evidence places this washer in the market by 2016.',
         introductionYearEvidence: { description: 'Maytag technical documentation for MVWX655DW1 dated May 2016',
           sourceUrl: 'https://maytag.com/manual' },
         yearContext: { value: 2016, type: 'market-introduction', label: 'Estimated introduction year', isExactUnitDate: false },
@@ -132,6 +133,8 @@ test.describe('Smart Lookup controller', () => {
     const panel = page.locator('#smart-lookup-age-panel');
     await expect(panel.locator('.smart-year-context-label')).toHaveText('Estimated introduction year of the model');
     await expect(panel).toContainText('Estimate confidence');
+    await expect(panel).toContainText('Why');
+    await expect(panel).toContainText('Exact-model dated evidence places this washer in the market by 2016.');
     await expect(panel).toContainText('Maytag technical documentation for MVWX655DW1 dated May 2016');
     await expect(panel).toContainText('Your individual unit’s manufacture date may differ');
     await expect(panel).not.toContainText('Manufactured in 2016');

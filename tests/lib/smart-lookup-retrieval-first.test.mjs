@@ -26,7 +26,8 @@ function synthesis(fixture, overrides = {}) {
     originalIdentifier: fixture.code, identifierType: fixture.query.startsWith('Ametek') ? 'part-number' : 'model',
     productType: fixture.type, likelyProduct: `${fixture.brand} ${fixture.code} ${fixture.type}`,
     description: `${fixture.brand} ${fixture.type}`, identityConfidence: 'high', identityBasis: 'Matching independent results',
-    introductionYear: null, productionRange: null, dateConfidence: 'unknown', needsMoreDetail: false,
+    estimatedIntroductionYear: null, introductionYearConfidence: 'unknown', introductionYearReason: null,
+    introductionYearEvidence: null, productionRange: null, needsMoreDetail: false,
     refinementSuggestion: null, ...overrides };
 }
 
@@ -77,63 +78,80 @@ test('unsupported and unrelated model codes are rejected even when AI returns JS
   assert.equal(description.reason, 'UNSUPPORTED_DESCRIPTIVE_CODE');
 });
 
-test('unsupported year is removed without rejecting a supported identity', () => {
+test('year without a retrieved citation is removed without rejecting a supported identity', () => {
   const fixture = fixtures[0];
   const validated = validateSynthesis(parseRetrievalQuery(fixture.query),
     scoreResults(parseRetrievalQuery(fixture.query), fixture.rows),
-    synthesis(fixture, { introductionYear: 2018, productionRange: '2018-2020', dateConfidence: 'high' }));
+    synthesis(fixture, { estimatedIntroductionYear: 2018, introductionYearConfidence: 'high',
+      introductionYearReason: 'Uncited estimate', productionRange: '2018-2020' }));
   assert.equal(validated.accepted, true);
   assert.equal(validated.result.introductionYear, null);
   assert.equal(validated.result.productionRange, null);
   assert.equal(validated.result.dateConfidence, 'unknown');
 });
 
-test('MVWX655DW1 uses dated exact-model technical documentation as a medium-confidence model estimate', () => {
+test('MVWX655DW1 accepts Gemini medium-confidence estimate from dated exact-model evidence', () => {
   const fixture = fixtures[0];
   const rows = [row('Maytag MVWX655DW1 washer technical documentation', 'maytag.com',
     'Maytag/Whirlpool technical documentation for MVWX655DW1 dated May 2016'), ...fixture.rows];
   const parsed = parseRetrievalQuery(fixture.query);
-  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture)).result;
+  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture, {
+    estimatedIntroductionYear: 2016, introductionYearConfidence: 'medium',
+    introductionYearReason: 'Exact-model dated evidence places this washer in the market by 2016.',
+    introductionYearEvidence: { description: 'Maytag MVWX655DW1 dated evidence', sourceUrl: 'https://maytag.com/product' },
+  })).result;
   assert.equal(result.brand, 'Maytag');
   assert.equal(result.productType, 'washer');
   assert.equal(result.estimatedIntroductionYear, 2016);
   assert.equal(result.introductionYearConfidence, 'medium');
-  assert.match(result.introductionYearEvidence.description, /documentation.*2016/i);
+  assert.match(result.introductionYearReason, /2016/);
   assert.doesNotMatch(result.introductionYearEvidence.description, /manufactured in 2016/i);
 });
 
-test('explicit manufacturer launch is high confidence and outranks later documentation', () => {
+test('explicit manufacturer launch supports Gemini high confidence', () => {
   const fixture = fixtures[0];
   const parsed = parseRetrievalQuery(fixture.query);
   const rows = [
-    row('Maytag MVWX655DW1 washer technical manual', 'maytag.com', 'Maytag MVWX655DW1 manual dated May 2017'),
     row('Maytag MVWX655DW1 washer launch', 'maytag.com', 'Maytag MVWX655DW1 washer launched in 2016'),
+    row('Maytag MVWX655DW1 washer technical manual', 'parts.example', 'Maytag MVWX655DW1 manual dated May 2017'),
   ];
-  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture)).result;
+  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture, {
+    estimatedIntroductionYear: 2016, introductionYearConfidence: 'high',
+    introductionYearReason: 'Manufacturer states this exact model launched in 2016.',
+    introductionYearEvidence: { description: 'Manufacturer launch statement', sourceUrl: 'https://maytag.com/product' },
+  })).result;
   assert.equal(result.estimatedIntroductionYear, 2016);
   assert.equal(result.introductionYearConfidence, 'high');
 });
 
-test('earliest dated exact-model service document wins among same-tier documents', () => {
+test('multiple dated exact-model sources support a Gemini estimate', () => {
   const fixture = fixtures[0];
   const parsed = parseRetrievalQuery(fixture.query);
   const rows = [
     row('Maytag MVWX655DW1 washer service manual', 'repairclinic.com', 'Maytag MVWX655DW1 service manual dated June 2018'),
     row('Maytag MVWX655DW1 washer technical bulletin', 'parts.example', 'Maytag MVWX655DW1 technical bulletin dated May 2016'),
   ];
-  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture)).result;
+  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture, {
+    estimatedIntroductionYear: 2016, introductionYearConfidence: 'medium',
+    introductionYearReason: 'The 2016 bulletin predates a 2018 exact-model manual.',
+    introductionYearEvidence: { description: '2016 exact-model bulletin', sourceUrl: 'https://parts.example/product' },
+  })).result;
   assert.equal(result.estimatedIntroductionYear, 2016);
   assert.equal(result.introductionYearConfidence, 'medium');
 });
 
-test('earlier service document beats later manufacturer documentation when neither states a launch', () => {
+test('Gemini can cite the earlier of two exact-model documents', () => {
   const fixture = fixtures[0];
   const parsed = parseRetrievalQuery(fixture.query);
   const rows = [
     row('Maytag MVWX655DW1 washer manual', 'maytag.com', 'Maytag MVWX655DW1 manual dated May 2018'),
     row('Maytag MVWX655DW1 washer service bulletin', 'parts.example', 'Maytag MVWX655DW1 service bulletin dated May 2016'),
   ];
-  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture)).result;
+  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture, {
+    estimatedIntroductionYear: 2016, introductionYearConfidence: 'medium',
+    introductionYearReason: 'A 2016 service bulletin places this model in use by then.',
+    introductionYearEvidence: { description: '2016 service bulletin', sourceUrl: 'https://parts.example/product' },
+  })).result;
   assert.equal(result.estimatedIntroductionYear, 2016);
   assert.equal(result.introductionYearConfidence, 'medium');
 });
@@ -154,6 +172,55 @@ for (const [name, rows] of [
     assert.equal(validated.result.introductionYearConfidence, 'unknown');
   });
 }
+
+test('one credible exact-model listing allows a low-confidence estimate without date keywords', () => {
+  const fixture = fixtures[0];
+  const parsed = parseRetrievalQuery(fixture.query);
+  const rows = [row('Maytag MVWX655DW1 top load washer, 2016 listing', 'retailer.example')];
+  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture, {
+    estimatedIntroductionYear: 2016, introductionYearConfidence: 'low',
+    introductionYearReason: 'A dated exact-model retailer listing places it in the market by 2016.',
+    introductionYearEvidence: { description: '2016 exact-model listing', sourceUrl: 'https://retailer.example/product' },
+  })).result;
+  assert.equal(result.estimatedIntroductionYear, 2016);
+  assert.equal(result.introductionYearConfidence, 'low');
+});
+
+for (const [name, year, url] of [
+  ['future year', new Date().getFullYear() + 1, 'https://maytag.com/product'],
+  ['impossible year', 1800, 'https://maytag.com/product'],
+  ['unretrieved URL', 2016, 'https://invented.example/product'],
+  ['unrelated model URL', 2016, 'https://other.example/product'],
+]) {
+  test(`${name} cannot become a model introduction estimate`, () => {
+    const fixture = fixtures[0];
+    const parsed = parseRetrievalQuery(fixture.query);
+    const rows = [...fixture.rows, row('Maytag MVWX655DW2 washer 2016', 'other.example')];
+    const validated = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture, {
+      estimatedIntroductionYear: year, introductionYearConfidence: 'medium',
+      introductionYearReason: 'A claimed estimate.',
+      introductionYearEvidence: { description: 'Claimed support', sourceUrl: url },
+    }));
+    assert.equal(validated.accepted, true);
+    assert.equal(validated.result.estimatedIntroductionYear, null);
+    assert.equal(validated.result.introductionYearConfidence, 'unknown');
+  });
+}
+
+test('a different model in the cited title cannot support the exact-model estimate', () => {
+  const fixture = fixtures[0];
+  const parsed = parseRetrievalQuery(fixture.query);
+  const rows = [
+    ...fixture.rows,
+    row('Maytag MVWX655DW2 washer listing', 'other.example', 'Maytag MVWX655DW1 may also appear here in 2016'),
+  ];
+  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture, {
+    estimatedIntroductionYear: 2016, introductionYearConfidence: 'low',
+    introductionYearReason: 'Claimed 2016 listing.',
+    introductionYearEvidence: { description: 'Listing', sourceUrl: 'https://other.example/product' },
+  })).result;
+  assert.equal(result.estimatedIntroductionYear, null);
+});
 
 test('ambiguous bare numeric identifier cannot become an asserted product', async () => {
   const report = await retrievalFirstLookup('0011579166', { live: true,

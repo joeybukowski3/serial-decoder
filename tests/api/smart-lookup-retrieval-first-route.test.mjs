@@ -88,7 +88,7 @@ for (const [query, fixture] of Object.entries(fixtures)) {
   });
 }
 
-test('dated Maytag documentation reaches the API and survives a cache read', async () => {
+test('Gemini Maytag introduction estimate reaches the API and survives a cache read', async () => {
   const fixture = fixtures.mvwx655dw1;
   const redis = fakeRedis();
   const app = setup({ redis, lookup: (text) => retrievalFirstLookup(text, {
@@ -97,15 +97,21 @@ test('dated Maytag documentation reaches the API and survives a cache read', asy
         'Maytag MVWX655DW1 washer technical documentation dated May 2016'),
       ...fixture.rows,
     ],
-    synthesisImpl: async () => ({ ok: true, result: synthesis(fixture), requestCount: 1 }),
+    synthesisImpl: async () => ({ ok: true, result: { ...synthesis(fixture),
+      estimatedIntroductionYear: 2016, introductionYearConfidence: 'medium',
+      introductionYearReason: 'Exact-model dated documentation places this washer in the market by 2016.',
+      introductionYearEvidence: { description: 'Maytag MVWX655DW1 documentation dated May 2016',
+        sourceUrl: 'https://maytag.com/item' } }, requestCount: 1 }),
   }) });
   const result = await call(app, 'mvwx655dw1');
   assert.equal(result.estimatedIntroductionYear, 2016);
   assert.equal(result.introductionYearConfidence, 'medium');
+  assert.match(result.introductionYearReason, /2016/);
   assert.match(result.introductionYearEvidence.description, /MVWX655DW1.*2016/);
   assert.equal(result.individualManufactureYear, null);
   const cached = await call(app, 'mvwx655dw1');
   assert.equal(cached.estimatedIntroductionYear, 2016);
+  assert.equal(cached.introductionYearReason, result.introductionYearReason);
   assert.equal(cached.introductionYearEvidence.sourceUrl, result.introductionYearEvidence.sourceUrl);
 });
 

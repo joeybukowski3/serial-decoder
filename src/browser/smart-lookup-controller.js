@@ -1212,6 +1212,7 @@
       '<div class="smart-result-specs" aria-label="Result details">' +
       (introductionEstimate ? '<div class="result-row"><span class="result-label">Estimated introduction year</span><span class="result-value">' + escapeHtml(data.estimatedIntroductionYear) + '</span></div>' +
         '<div class="result-row"><span class="result-label">Estimate confidence</span><span class="result-value">' + escapeHtml(data.introductionYearConfidence.charAt(0).toUpperCase() + data.introductionYearConfidence.slice(1)) + '</span></div>' +
+        '<div class="result-row"><span class="result-label">Why</span><span class="result-value">' + escapeHtml(data.introductionYearReason) + '</span></div>' +
         '<div class="result-row"><span class="result-label">Evidence example</span><span class="result-value"><a href="' + escapeHtml(data.introductionYearEvidence.sourceUrl) + '">' + escapeHtml(data.introductionYearEvidence.description) + '</a></span></div>' : '') +
       '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + escapeHtml(data && data.brand && data.brand !== 'Unknown' ? data.brand : 'Not identified') + '</span></div>' +
       (data && data.evidenceConflict && data.recognizedBrand ? '<div class="result-row"><span class="result-label">Recognized model brand</span><span class="result-value">' + escapeHtml(data.recognizedBrand) + '</span></div>' : '') +
