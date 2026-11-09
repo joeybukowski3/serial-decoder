@@ -69,13 +69,44 @@ test('unsupported and unrelated model codes are rejected even when AI returns JS
   const scored = scoreResults(parsed, fixture.rows);
   const unrelated = validateSynthesis(parsed, scored, synthesis(fixture, { model: 'MVWX655DW2' }));
   assert.equal(unrelated.accepted, false);
-  assert.equal(unrelated.reason, 'UNSUPPORTED_IDENTIFIER');
+  assert.equal(unrelated.reason, 'IDENTIFIER_CHANGED');
   const hidden = validateSynthesis(parsed, scored, synthesis(fixture, { exactModel: 'UNRELATED123' }));
   assert.equal(hidden.accepted, false);
-  assert.equal(hidden.reason, 'UNSUPPORTED_IDENTIFIER');
+  assert.equal(hidden.reason, 'IDENTIFIER_CHANGED');
   const description = validateSynthesis(parsed, scored, synthesis(fixture, { likelyProduct: 'Maytag XYZ123 washer' }));
   assert.equal(description.accepted, false);
   assert.equal(description.reason, 'UNSUPPORTED_DESCRIPTIVE_CODE');
+});
+
+test('exact identifiers survive normalized model and product display names', () => {
+  for (const [query, brand, code, type, model, exactModel] of [
+    ['mvwx655dw1', 'Maytag', 'MVWX655DW1', 'washer', 'mvwx 655 dw1', 'MVWX655DW1'],
+    ['Samsung UN55NU7100', 'Samsung', 'UN55NU7100', 'television', 'Samsung UN55-NU7100', 'UN55NU7100'],
+    ['Samsung UN55NU7100', 'Samsung', 'UN55NU7100', 'television', 'SamsungUN55NU7100', 'UN55NU7100'],
+    ['RUNHOOD EB324', 'Runhood', 'EB324', 'battery module', 'RUNHOOD EB324 Energy Bar', 'EB324'],
+    ['ASUS C301SA', 'ASUS', 'C301SA', 'chromebook', 'ASUS Chromebook C301SA', 'C301SA'],
+  ]) {
+    const fixture = { query, brand, code, type };
+    const parsed = parseRetrievalQuery(query);
+    const scored = scoreResults(parsed, [row(`${brand} ${code} ${type}`, 'manufacturer.example'),
+      row(`${brand} ${code} ${type} support`, 'support.example')]);
+    const validated = validateSynthesis(parsed, scored, synthesis(fixture, { model, exactModel }));
+    assert.equal(validated.accepted, true, `${query}: ${validated.reason}`);
+  }
+});
+
+test('genuine exact-model substitutions are rejected', () => {
+  for (const [query, brand, code, substitute, type] of [
+    ['Samsung UN55NU7100', 'Samsung', 'UN55NU7100', 'UN55TU7000', 'television'],
+    ['MVWX655DW1', 'Maytag', 'MVWX655DW1', 'MVWX655DW0', 'washer'],
+    ['RUNHOOD EB324', 'Runhood', 'EB324', 'EB325', 'battery module'],
+  ]) {
+    const fixture = { query, brand, code, type };
+    const parsed = parseRetrievalQuery(query);
+    const scored = scoreResults(parsed, [row(`${brand} ${code} ${type}`, 'manufacturer.example')]);
+    const validated = validateSynthesis(parsed, scored, synthesis(fixture, { model: substitute, exactModel: substitute }));
+    assert.equal(validated.reason, 'IDENTIFIER_CHANGED', query);
+  }
 });
 
 test('year without a retrieved citation is removed without rejecting a supported identity', () => {
@@ -106,6 +137,33 @@ test('MVWX655DW1 accepts Gemini medium-confidence estimate from dated exact-mode
   assert.equal(result.introductionYearConfidence, 'medium');
   assert.match(result.introductionYearReason, /2016/);
   assert.doesNotMatch(result.introductionYearEvidence.description, /manufactured in 2016/i);
+});
+
+test('MVWX655DW1 accepts a knowledge-based estimate with exact-model corroboration but no snippet year', () => {
+  const fixture = fixtures[0];
+  const parsed = parseRetrievalQuery(fixture.query);
+  const validated = validateSynthesis(parsed, scoreResults(parsed, fixture.rows), synthesis(fixture, {
+    estimatedIntroductionYear: 2016, introductionYearConfidence: 'medium',
+    introductionYearReason: "The model's known mid-2010s market position and retrieved exact-model evidence support a 2016 estimate.",
+    introductionYearEvidence: { description: 'Retrieved exact-model support', sourceUrl: 'https://maytag.com/product' },
+  }));
+  assert.equal(validated.accepted, true);
+  assert.equal(validated.result.exactModel, 'MVWX655DW1');
+  assert.equal(validated.result.estimatedIntroductionYear, 2016);
+  assert.equal(validated.result.introductionYearConfidence, 'medium');
+  assert.match(validated.result.introductionYearReason, /2016 estimate/);
+  assert.equal(validated.result.introductionYearEvidence.sourceUrl, 'https://maytag.com/product');
+});
+
+test('weak identity can still return an unknown introduction year', () => {
+  const fixture = fixtures[0];
+  const parsed = parseRetrievalQuery(fixture.query);
+  const scored = scoreResults(parsed, [row('MVWX655DW1', 'unknown.example')]);
+  const validated = validateSynthesis(parsed, scored, synthesis(fixture, { brand: null, identityConfidence: 'low' }));
+  assert.equal(scored.retrievalQuality, 'WEAK');
+  assert.equal(validated.accepted, true);
+  assert.equal(validated.result.estimatedIntroductionYear, null);
+  assert.equal(validated.result.introductionYearConfidence, 'unknown');
 });
 
 test('explicit manufacturer launch supports Gemini high confidence', () => {
@@ -261,6 +319,8 @@ test('Gemini synthesis request contains supplied evidence and no search tools', 
   assert.equal(endpoint, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent');
   assert.equal(Object.hasOwn(request, 'tools'), false);
   assert.equal(request.contents[0].parts[0].text.includes('RUNHOOD EB324'), true);
+  assert.match(request.contents[0].parts[0].text, /Your primary objective is to identify the model and provide the best reasonable estimate/);
+  assert.match(request.contents[0].parts[0].text, /Use both the retrieved evidence below and your own general product knowledge/);
 });
 
 test('Gemini synthesis uses the configured retrieval model', async () => {
