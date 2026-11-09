@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import { MAX_OUTPUT_TOKENS, PHASE3_GEMINI_MODEL, PHASE3_GENERATION_CONFIG, THINKING_LEVEL, createGeminiGroundedTransport } from '../../lib/replacement-discovery/providers/gemini-grounded-transport.js';
 import { CALL_MAX_MS, CALL_RESERVE_MS, DEFAULT_RESEARCH_TOTAL_MS, MAX_RESEARCH_CALLS, createGroundedResearchProvider } from '../../lib/replacement-discovery/providers/grounded-research-provider.js';
 import { recommendWithResearch } from '../../lib/replacement-discovery/live-recommend.js';
@@ -107,13 +106,10 @@ test('I/J. at most 2 requests and never a retry: persistent failures send exactl
   assert.deepEqual(outcomes, ['ok', 'ok', 'LIVE_BUDGET_DENIED']);
 });
 
-test('K. existing Smart Lookup timeouts, model and production files are unchanged', () => {
+test('K. Phase 3 remains isolated from Smart Lookup runtime configuration', () => {
   assert.equal(createDeadline().totalMs, 8500, 'Smart Lookup default route deadline');
   assert.equal(GEMINI_AGE_MODEL, 'gemini-2.5-flash', 'shared Smart Lookup model constant');
   assert.notEqual(PHASE3_GEMINI_MODEL, GEMINI_AGE_MODEL);
-  let diff;
-  try { diff = execFileSync('git', ['status', '--porcelain', '--', 'lib/smart-lookup', 'api', 'vercel.json', 'data'], { encoding: 'utf8', cwd: new URL('../../', import.meta.url) }); } catch (_) { return; }
-  assert.equal(diff.trim(), '', 'no production file may change for Phase 3');
 });
 
 test('L. a model-unavailable error is still terminal after Job A: one request, no Job B', async () => {

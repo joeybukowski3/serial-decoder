@@ -116,6 +116,30 @@ test.describe('Smart Lookup controller', () => {
     expect(lkqCalls).toBe(0);
   });
 
+  test('dated exact-model result leads with introduction estimate and serial caveat', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: {
+        brand: 'Maytag', model: 'MVWX655DW1', exactModel: 'MVWX655DW1', likelyProduct: 'Maytag MVWX655DW1 washer',
+        introductionYear: 2016, estimatedIntroductionYear: 2016, introductionYearConfidence: 'medium',
+        introductionYearReason: 'Exact-model dated evidence places this washer in the market by 2016.',
+        introductionYearEvidence: { description: 'Maytag technical documentation for MVWX655DW1 dated May 2016',
+          sourceUrl: 'https://maytag.com/manual' },
+        yearContext: { value: 2016, type: 'market-introduction', label: 'Estimated introduction year', isExactUnitDate: false },
+      } });
+    });
+    await page.goto('http://localhost:3001/index.html?mode=smart#panel-smart');
+    await page.locator('#smart-lookup-input').fill('mvwx655dw1');
+    await page.locator('[data-smart-lookup-submit="1"]').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel.locator('.smart-year-context-label')).toHaveText('Estimated introduction year of the model');
+    await expect(panel).toContainText('Estimate confidence');
+    await expect(panel).toContainText('Why');
+    await expect(panel).toContainText('Exact-model dated evidence places this washer in the market by 2016.');
+    await expect(panel).toContainText('Maytag technical documentation for MVWX655DW1 dated May 2016');
+    await expect(panel).toContainText('Your individual unit’s manufacture date may differ');
+    await expect(panel).not.toContainText('Manufactured in 2016');
+  });
+
   test('validated lifecycle rows show precision, confidence and source while absent rows stay hidden', async ({ page }) => {
     const source = { title: 'Manufacturer notice', uri: 'https://www.samsung.com/us/support/qn65q80a' };
     await page.route('**/api/age-lookup', async (route) => {

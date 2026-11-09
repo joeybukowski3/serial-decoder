@@ -263,6 +263,21 @@ test('renderAge success output is unchanged for a normal result (no regressions)
   assert.match(html, /Individual manufacture date requires serial number/);
 });
 
+test('retrieval result leads with model introduction year and distinguishes unit manufacture date', () => {
+  const html = api.renderAge({ brand: 'Maytag', model: 'MVWX655DW1', exactModel: 'MVWX655DW1',
+    likelyProduct: 'Maytag MVWX655DW1 washer', introductionYear: 2016, estimatedIntroductionYear: 2016,
+    introductionYearConfidence: 'medium', introductionYearReason: 'Exact-model evidence places this washer in the market by 2016.', introductionYearEvidence: {
+      description: 'Maytag technical documentation for MVWX655DW1 dated May 2016',
+      sourceUrl: 'https://maytag.com/manual',
+    } });
+  assert.match(html, /Estimated introduction year of the model/);
+  assert.match(html, /Estimate confidence.*Medium/);
+  assert.match(html, /Why.*Exact-model evidence places this washer in the market by 2016/);
+  assert.match(html, /Evidence example.*Maytag technical documentation/);
+  assert.match(html, /individual unit’s manufacture date may differ/i);
+  assert.doesNotMatch(html, /Manufactured in 2016/);
+});
+
 test('renderAge labels ungrounded provider results as AI-assisted analysis, not live research', () => {
   const html = api.renderAge({
     source: 'gemini',

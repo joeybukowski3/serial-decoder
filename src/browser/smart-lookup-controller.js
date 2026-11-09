@@ -1063,6 +1063,11 @@
       primaryYear = promotedProductionRange;
       yearLabel = 'PRODUCT FAMILY PRODUCTION RANGE';
     }
+    var introductionEstimate = data && data.estimatedIntroductionYear && data.introductionYearEvidence;
+    if (introductionEstimate) {
+      primaryYear = String(data.estimatedIntroductionYear);
+      yearLabel = 'Estimated introduction year of the model';
+    }
     var exactModel = data && data.exactModel
       ? data.exactModel
       : (data && !data.productFamily && data.model ? data.model : 'Not provided');
@@ -1151,7 +1156,7 @@
     // is never buried under a "complete model required" clarification.
     // identifiedProduct is computed above, ahead of the precision badge.
     var bestAvailableHtml = '';
-    if (identifiedProduct || broadHistoricalTitle) {
+    if ((identifiedProduct || broadHistoricalTitle) && !introductionEstimate) {
       var timingText = data.releaseDate || data.estimatedEra
         || data.generationRange
         || (data.lineIntroductionYear ? String(data.lineIntroductionYear) : '')
@@ -1205,6 +1210,10 @@
       precisionNoteHtml +
       fallbackNote +
       '<div class="smart-result-specs" aria-label="Result details">' +
+      (introductionEstimate ? '<div class="result-row"><span class="result-label">Estimated introduction year</span><span class="result-value">' + escapeHtml(data.estimatedIntroductionYear) + '</span></div>' +
+        '<div class="result-row"><span class="result-label">Estimate confidence</span><span class="result-value">' + escapeHtml(data.introductionYearConfidence.charAt(0).toUpperCase() + data.introductionYearConfidence.slice(1)) + '</span></div>' +
+        '<div class="result-row"><span class="result-label">Why</span><span class="result-value">' + escapeHtml(data.introductionYearReason) + '</span></div>' +
+        '<div class="result-row"><span class="result-label">Evidence example</span><span class="result-value"><a href="' + escapeHtml(data.introductionYearEvidence.sourceUrl) + '">' + escapeHtml(data.introductionYearEvidence.description) + '</a></span></div>' : '') +
       '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + escapeHtml(data && data.brand && data.brand !== 'Unknown' ? data.brand : 'Not identified') + '</span></div>' +
       (data && data.evidenceConflict && data.recognizedBrand ? '<div class="result-row"><span class="result-label">Recognized model brand</span><span class="result-value">' + escapeHtml(data.recognizedBrand) + '</span></div>' : '') +
       (data && data.productFamily ? '<div class="result-row"><span class="result-label">Product family</span><span class="result-value">' + escapeHtml(productFamily) + '</span></div>' : '') +
@@ -1220,6 +1229,7 @@
       (data && data.timingConfidence ? '<div class="result-row"><span class="result-label">Product/date confidence</span><span class="result-value">' + escapeHtml(data.timingConfidence.charAt(0).toUpperCase() + data.timingConfidence.slice(1)) + '</span></div>' : '') +
       '<div class="result-row"><span class="result-label">Individual manufacture date</span><span class="result-value">' + escapeHtml(manufactureMessage) + '</span></div>' +
       '</div>' +
+      (introductionEstimate ? '<p class="smart-lookup-unit-caveat">This estimates when the model entered the market. Your individual unit’s manufacture date may differ. Add the serial number to narrow the date.</p>' : '') +
       variantsHtml +
       bestAvailableHtml +
       (data && data.notes ? '<div class="info-block notes"><h4>What this year means</h4><p>' + escapeHtml(data.notes) + '</p></div>' : '') +

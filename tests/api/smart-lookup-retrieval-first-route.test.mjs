@@ -16,6 +16,14 @@ const fixtures = {
     row('Runhood EB324 Energy Bar battery', 'runhoodpower.com'),
     row('Runhood EB324 modular battery', 'battery.example'),
   ] },
+  'Samsung UN55NU7100': { brand: 'Samsung', code: 'UN55NU7100', productType: 'television', rows: [
+    row('Samsung UN55NU7100 television', 'samsung.com'),
+    row('Samsung UN55NU7100 television support', 'support.example'),
+  ] },
+  'ASUS C301SA': { brand: 'ASUS', code: 'C301SA', productType: 'chromebook', rows: [
+    row('ASUS C301SA Chromebook', 'asus.com'),
+    row('ASUS C301SA Chromebook support', 'support.example'),
+  ] },
 };
 
 function synthesis(fixture) {
@@ -26,6 +34,26 @@ function synthesis(fixture) {
     identityConfidence: 'high', identityBasis: 'Matching source results', introductionYear: null,
     productionRange: null, dateConfidence: 'unknown', needsMoreDetail: false, refinementSuggestion: null };
 }
+
+test('normalized model display names stay on retrieval-first without fallback', async () => {
+  for (const [query, model] of [
+    ['Samsung UN55NU7100', 'Samsung UN55-NU7100'],
+    ['RUNHOOD EB324', 'RUNHOOD EB324 Energy Bar'],
+    ['ASUS C301SA', 'ASUS Chromebook C301SA'],
+  ]) {
+    const fixture = fixtures[query];
+    const app = setup({ lookup: (text) => retrievalFirstLookup(text, {
+      searchImpl: async () => fixture.rows,
+      synthesisImpl: async () => ({ ok: true, result: { ...synthesis(fixture), model, exactModel: fixture.code }, requestCount: 1 }),
+    }) });
+    const result = await call(app, query);
+    assert.equal(result.resultType, 'retrieval-identity', query);
+    assert.equal(app.counts().providers, 0, query);
+    const log = app.logs.find((entry) => entry.event === 'smart_age_lookup');
+    assert.equal(log.retrievalFirstSucceeded, true, query);
+    assert.equal(log.retrievalFirstFailureReason, null, query);
+  }
+});
 
 function fakeRedis(initial = null) {
   let stored = initial;
@@ -87,6 +115,34 @@ for (const [query, fixture] of Object.entries(fixtures)) {
     assert.ok(app.redis.writes.length > 0);
   });
 }
+
+test('Gemini Maytag introduction estimate reaches the API and survives a cache read', async () => {
+  const fixture = fixtures.mvwx655dw1;
+  const redis = fakeRedis();
+  const app = setup({ redis, lookup: (text) => retrievalFirstLookup(text, {
+    searchImpl: async () => [
+      row('Maytag MVWX655DW1 washer technical documentation', 'maytag.com',
+        'Maytag MVWX655DW1 washer technical documentation'),
+      ...fixture.rows,
+    ],
+    synthesisImpl: async () => ({ ok: true, result: { ...synthesis(fixture),
+      estimatedIntroductionYear: 2016, introductionYearConfidence: 'medium',
+      introductionYearReason: 'Known mid-2010s market position and retrieved exact-model documentation support a 2016 estimate.',
+      introductionYearEvidence: { description: 'Maytag MVWX655DW1 exact-model documentation',
+        sourceUrl: 'https://maytag.com/item' } }, requestCount: 1 }),
+  }) });
+  const result = await call(app, 'mvwx655dw1');
+  assert.equal(result.estimatedIntroductionYear, 2016);
+  assert.equal(result.exactModel, 'MVWX655DW1');
+  assert.equal(result.introductionYearConfidence, 'medium');
+  assert.match(result.introductionYearReason, /2016/);
+  assert.match(result.introductionYearEvidence.description, /MVWX655DW1/);
+  assert.equal(result.individualManufactureYear, null);
+  const cached = await call(app, 'mvwx655dw1');
+  assert.equal(cached.estimatedIntroductionYear, 2016);
+  assert.equal(cached.introductionYearReason, result.introductionYearReason);
+  assert.equal(cached.introductionYearEvidence.sourceUrl, result.introductionYearEvidence.sourceUrl);
+});
 
 test('retrieval error and timeout fail open to the existing provider', async () => {
   for (const failureReason of ['RETRIEVAL_ERROR', 'SERPER_TIMEOUT']) {
