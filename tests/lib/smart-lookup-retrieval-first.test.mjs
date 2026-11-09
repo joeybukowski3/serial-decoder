@@ -88,6 +88,73 @@ test('unsupported year is removed without rejecting a supported identity', () =>
   assert.equal(validated.result.dateConfidence, 'unknown');
 });
 
+test('MVWX655DW1 uses dated exact-model technical documentation as a medium-confidence model estimate', () => {
+  const fixture = fixtures[0];
+  const rows = [row('Maytag MVWX655DW1 washer technical documentation', 'maytag.com',
+    'Maytag/Whirlpool technical documentation for MVWX655DW1 dated May 2016'), ...fixture.rows];
+  const parsed = parseRetrievalQuery(fixture.query);
+  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture)).result;
+  assert.equal(result.brand, 'Maytag');
+  assert.equal(result.productType, 'washer');
+  assert.equal(result.estimatedIntroductionYear, 2016);
+  assert.equal(result.introductionYearConfidence, 'medium');
+  assert.match(result.introductionYearEvidence.description, /documentation.*2016/i);
+  assert.doesNotMatch(result.introductionYearEvidence.description, /manufactured in 2016/i);
+});
+
+test('explicit manufacturer launch is high confidence and outranks later documentation', () => {
+  const fixture = fixtures[0];
+  const parsed = parseRetrievalQuery(fixture.query);
+  const rows = [
+    row('Maytag MVWX655DW1 washer technical manual', 'maytag.com', 'Maytag MVWX655DW1 manual dated May 2017'),
+    row('Maytag MVWX655DW1 washer launch', 'maytag.com', 'Maytag MVWX655DW1 washer launched in 2016'),
+  ];
+  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture)).result;
+  assert.equal(result.estimatedIntroductionYear, 2016);
+  assert.equal(result.introductionYearConfidence, 'high');
+});
+
+test('earliest dated exact-model service document wins among same-tier documents', () => {
+  const fixture = fixtures[0];
+  const parsed = parseRetrievalQuery(fixture.query);
+  const rows = [
+    row('Maytag MVWX655DW1 washer service manual', 'repairclinic.com', 'Maytag MVWX655DW1 service manual dated June 2018'),
+    row('Maytag MVWX655DW1 washer technical bulletin', 'parts.example', 'Maytag MVWX655DW1 technical bulletin dated May 2016'),
+  ];
+  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture)).result;
+  assert.equal(result.estimatedIntroductionYear, 2016);
+  assert.equal(result.introductionYearConfidence, 'medium');
+});
+
+test('earlier service document beats later manufacturer documentation when neither states a launch', () => {
+  const fixture = fixtures[0];
+  const parsed = parseRetrievalQuery(fixture.query);
+  const rows = [
+    row('Maytag MVWX655DW1 washer manual', 'maytag.com', 'Maytag MVWX655DW1 manual dated May 2018'),
+    row('Maytag MVWX655DW1 washer service bulletin', 'parts.example', 'Maytag MVWX655DW1 service bulletin dated May 2016'),
+  ];
+  const result = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture)).result;
+  assert.equal(result.estimatedIntroductionYear, 2016);
+  assert.equal(result.introductionYearConfidence, 'medium');
+});
+
+for (const [name, rows] of [
+  ['generic brand and family page', [row('Maytag washer family', 'maytag.com', 'Maytag washers introduced in 2016'), ...fixtures[0].rows]],
+  ['unrelated model date', [row('Maytag MVWX655DW2 washer manual', 'maytag.com', 'Maytag MVWX655DW2 manual dated May 2016'), ...fixtures[0].rows]],
+  ['page footer date', [row('Maytag MVWX655DW1 washer manual', 'maytag.com', 'Maytag MVWX655DW1 manual copyright 2016'), ...fixtures[0].rows]],
+  ['page update date', [row('Maytag MVWX655DW1 washer manual', 'maytag.com', 'Maytag MVWX655DW1 manual last updated May 2016'), ...fixtures[0].rows]],
+  ['no credible date', fixtures[0].rows],
+]) {
+  test(`${name} cannot date the exact model, but identity still succeeds`, () => {
+    const fixture = fixtures[0];
+    const parsed = parseRetrievalQuery(fixture.query);
+    const validated = validateSynthesis(parsed, scoreResults(parsed, rows), synthesis(fixture));
+    assert.equal(validated.accepted, true);
+    assert.equal(validated.result.estimatedIntroductionYear, null);
+    assert.equal(validated.result.introductionYearConfidence, 'unknown');
+  });
+}
+
 test('ambiguous bare numeric identifier cannot become an asserted product', async () => {
   const report = await retrievalFirstLookup('0011579166', { live: true,
     searchImpl: async () => [
