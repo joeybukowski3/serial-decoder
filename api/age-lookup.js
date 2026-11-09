@@ -74,6 +74,7 @@ import { auditEnabled, createDiagnosticAudit } from '../lib/smart-lookup/diagnos
 import { handleDiagnosticAuditAck, isDiagnosticAuditAck } from '../lib/smart-lookup/diagnostic-ack.js';
 import { createGeminiCooldown } from '../lib/smart-lookup/gemini-cooldown.js';
 import { createQuotaMeter } from '../lib/quota/meter.js';
+import { isRetrievalFirstEligible, retrievalFirstLookup, retrievalFirstResponseInput, retrievalFirstSerperTimeoutMs } from '../lib/smart-lookup/retrieval-first.js';
 
 const TOTAL_BUDGET_MS = 15000;
 const PROVIDER_BUDGET_MS = 6500;
@@ -89,6 +90,7 @@ const GROUNDED_STAGE_BUDGET_MS = 4200;
 const GROUNDED_FALLBACK_MIN_REMAINING_MS = 1200;
 const GROUNDED_FALLBACK_RESERVE_MS = 300;
 const NATIVE_GEMINI_SEARCH_RESULT = Symbol('native-gemini-search-result');
+const RETRIEVAL_FIRST_RESULT = Symbol('retrieval-first-result');
 
 const isNativeGeminiSearchEnabled = isNativeModelResearchEnabled;
 
@@ -387,6 +389,14 @@ function logResult(logger, requestId, queryInfo, result, extra = {}) {
     sharedEvidenceAccepted: routing.sharedEvidenceAccepted || false,
     sharedEvidenceFailureCode: routing.sharedEvidenceFailureCode || null,
     sharedEvidenceDurationMs: routing.sharedEvidenceDurationMs ?? null,
+    retrievalFirstAttempted: routing.retrievalFirstAttempted || false,
+    retrievalFirstSucceeded: routing.retrievalFirstSucceeded || false,
+    retrievalFirstPrimaryQuality: routing.retrievalFirstPrimaryQuality || null,
+    retrievalFirstSecondaryUsed: routing.retrievalFirstSecondaryUsed || false,
+    retrievalFirstSerperRequests: routing.retrievalFirstSerperRequests ?? 0,
+    retrievalFirstGeminiRequests: routing.retrievalFirstGeminiRequests ?? 0,
+    retrievalFirstFailureReason: routing.retrievalFirstFailureReason || null,
+    retrievalFirstLatencyMs: routing.retrievalFirstLatencyMs ?? null,
     serperDurationMs: routing.serperDurationMs ?? null,
     geminiDurationMs: routing.geminiDurationMs ?? null,
     heavyProviderSelected: routing.heavyProviderSelected || null,
@@ -445,6 +455,9 @@ export function createAgeLookupHandler(dependencies = {}) {
   const providerLookup = dependencies.providerLookup || callGeminiAgeProvider;
   const groundedProviderLookup = dependencies.groundedProviderLookup || callSmartLookupGroundedAgeProvider;
   const nativeGeminiSearchLookup = dependencies.nativeGeminiSearchLookup || callGeminiSearchProvider;
+  const retrievalLookup = dependencies.retrievalFirstLookup || retrievalFirstLookup;
+  const retrievalFirstEnabled = dependencies.retrievalFirstEnabled
+    ?? ['1', 'true', 'yes', 'on'].includes(String((dependencies.env || process.env).SMART_LOOKUP_RETRIEVAL_FIRST_ENABLED || '').trim().toLowerCase());
   // OpenAI is the default heavyweight provider; xAI can be selected directly.
   // The normal route never chains one after the other.
   const openAiProviderLookup = dependencies.openAiProviderLookup || callSmartLookupOpenAiAgeProvider;
@@ -542,6 +555,14 @@ export function createAgeLookupHandler(dependencies = {}) {
     let shadowObserved = false;
     const routingTelemetry = {
       sharedEvidenceAttempted: false,
+      retrievalFirstAttempted: false,
+      retrievalFirstSucceeded: false,
+      retrievalFirstPrimaryQuality: null,
+      retrievalFirstSecondaryUsed: false,
+      retrievalFirstSerperRequests: 0,
+      retrievalFirstGeminiRequests: 0,
+      retrievalFirstFailureReason: null,
+      retrievalFirstLatencyMs: null,
       sharedEvidenceAccepted: false,
       sharedEvidenceFailureCode: null,
       sharedEvidenceDurationMs: null,
@@ -977,7 +998,8 @@ export function createAgeLookupHandler(dependencies = {}) {
       }
       if (cacheRead.status === 'hit' && (!matchesSmartAgeCacheRequest(cacheRead.value, queryInfo)
         || !isSmartAgeProductCompatible(cacheRead.value, queryInfo)
-        || !hasCachedExactModelEvidence(cacheRead.value, queryInfo))) {
+        || !hasCachedExactModelEvidence(cacheRead.value, queryInfo)
+        || (!retrievalFirstEnabled && String(cacheRead.value?.resultType || '').startsWith('retrieval-')))) {
         cacheRead = { ...cacheRead, status: 'miss', value: null };
       }
       const redisPhaseElapsed = Math.max(0, now() - redisPhaseStart);
@@ -1150,6 +1172,46 @@ export function createAgeLookupHandler(dependencies = {}) {
           if (geminiState.cooldownActive) {
             geminiState.rateLimited = true;
             await recordUsageEvent(redis, 'age', 'gemini_cooldown_skip');
+          }
+          if (retrievalFirstEnabled && isRetrievalFirstEligible(queryInfo, route)
+            && !geminiState.rateLimited && deadline.hasTime(retrievalFirstSerperTimeoutMs(dependencies.env || process.env), 6500)) {
+            routingTelemetry.retrievalFirstAttempted = true;
+            const retrievalStart = now();
+            let report;
+            try {
+              report = await retrievalLookup(queryInfo.query, {
+                serperApiKey: dependencies.serperApiKey || (dependencies.env || process.env).SERPER_API_KEY,
+                geminiApiKey: dependencies.geminiApiKey || dependencies.apiKey || (dependencies.env || process.env).GEMINI_API_KEY,
+                serperFetchImpl: dependencies.serperFetchImpl || dependencies.fetchImpl,
+                geminiFetchImpl: dependencies.geminiFetchImpl || dependencies.fetchImpl,
+                env: dependencies.env || process.env,
+                synthesisTimeoutMs: 2500,
+              });
+            } catch (_) { report = { failureReason: 'RETRIEVAL_ERROR' }; }
+            routingTelemetry.retrievalFirstLatencyMs = Math.max(0, now() - retrievalStart);
+            routingTelemetry.retrievalFirstPrimaryQuality = report.primaryRetrievalQuality || null;
+            routingTelemetry.retrievalFirstSecondaryUsed = Boolean(report.secondarySearchQuery);
+            routingTelemetry.retrievalFirstSerperRequests = Math.min(2, report.serperRequestCount || 0);
+            routingTelemetry.retrievalFirstGeminiRequests = Math.min(1, report.geminiRequestCount || 0);
+            for (let index = 0; index < routingTelemetry.retrievalFirstSerperRequests; index += 1) {
+              await recorder.record({ provider: 'serper', model: 'search', providerStatus: report.failureReason?.startsWith('SERPER_') && index === routingTelemetry.retrievalFirstSerperRequests - 1
+                ? classifyProviderFailure({ code: report.failureReason }) : 'ok', durationMs: routingTelemetry.retrievalFirstLatencyMs, usableResponse: Boolean(report.evidencePackage?.topResults?.length) });
+            }
+            if (routingTelemetry.retrievalFirstGeminiRequests) await recorder.record({ provider: 'gemini', model: report.geminiModel || 'retrieval-synthesis',
+              providerStatus: report.failureReason?.startsWith('GEMINI_') ? classifyProviderFailure({ code: report.failureReason }) : 'ok',
+              inputTokens: report.providerUsage?.gemini?.inputTokens, outputTokens: report.providerUsage?.gemini?.outputTokens,
+              thinkingTokens: report.providerUsage?.gemini?.thinkingTokens, grounded: false,
+              durationMs: routingTelemetry.retrievalFirstLatencyMs, usableResponse: Boolean(report.validation?.accepted) });
+            const mapped = retrievalFirstResponseInput(report);
+            if (mapped) {
+              try {
+                const result = normalizeSmartAgeResult(mapped, { queryInfo, currentYear, source: 'serper', evidenceSource: 'serper-extracted',
+                  groundedSources: mapped.sources, cacheStatus, providerAttempted: true, timings });
+                routingTelemetry.retrievalFirstSucceeded = true;
+                return { [RETRIEVAL_FIRST_RESULT]: result };
+              } catch (_) { routingTelemetry.retrievalFirstFailureReason = 'RESULT_MAPPING_REJECTED'; }
+            }
+            if (!routingTelemetry.retrievalFirstSucceeded) routingTelemetry.retrievalFirstFailureReason ||= report.failureReason || 'NO_USEFUL_RESULT';
           }
           // Why the next paid call is a fallback; recorded on that attempt.
           let fallbackReason = geminiState.cooldownActive ? 'gemini_cooldown' : null;
@@ -1516,7 +1578,7 @@ export function createAgeLookupHandler(dependencies = {}) {
         // exhausted, the inner stages' own deadline.run calls (and this
         // outer wait, now watching the same remaining time) time out at
         // that same real boundary either way.
-        const providerWaitMaxMs = useGrounded || nativeGeminiSearchEnabled
+        const providerWaitMaxMs = useGrounded || nativeGeminiSearchEnabled || (retrievalFirstEnabled && isRetrievalFirstEligible(queryInfo, route))
           ? deadline.remainingMs(300)
           : Math.min(providerBudgetMs, deadline.remainingMs(300));
         rawProvider = await deadline.run('provider-result-wait', () => providerPromise, {
@@ -1608,6 +1670,23 @@ export function createAgeLookupHandler(dependencies = {}) {
         return res.status(degraded ? 200 : (errorCode === 'RATE_LIMIT' ? 429 : 200)).json(result);
       }
       timings.providerMs = Math.max(0, now() - providerStart);
+
+      const retrievalResult = rawProvider?.[RETRIEVAL_FIRST_RESULT];
+      if (retrievalResult) {
+        session.markAiProduced();
+        const actualAttempts = recorder.totalCount();
+        const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', actualAttempts, deadline, {
+          stage: 'age-provider-attempt-metrics', maxMs: CACHE_WRITE_BUDGET_MS, now,
+        });
+        if (retrievalResult.resultType === 'retrieval-identity' && retrievalResult.identityConfidence === 'high'
+          && retrievalResult.sources.length) scheduleAgeCacheWrite(retrievalResult);
+        finalizeTimings(retrievalResult, timings, deadline);
+        logFinalResult(retrievalResult, { budgetStatus: budgetResult?.status || null,
+          logicalLookupCount: budgetResult?.logicalLookupCount ?? null,
+          actualProviderAttemptCount: attemptMetrics.actualProviderAttemptCount ?? actualAttempts,
+          inFlightShared });
+        return res.status(200).json(retrievalResult);
+      }
 
       const nativeResult = rawProvider?.[NATIVE_GEMINI_SEARCH_RESULT];
       if (nativeResult) {
