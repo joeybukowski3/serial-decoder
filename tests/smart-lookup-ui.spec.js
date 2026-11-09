@@ -563,6 +563,27 @@ test.describe('Smart Lookup controller', () => {
     await expect(sourceLink).toHaveAttribute('rel', 'noopener nofollow');
   });
 
+  test('retrieval-first partial shows unresolved identifier and concise source links', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: {
+        source: 'serper', evidenceSource: 'serper-extracted', resultType: 'retrieval-partial',
+        brand: 'Ametek', model: null, exactModel: null, originalIdentifier: '78570R',
+        identityConfidence: 'low', needsMoreDetail: true,
+        summary: 'Some label information appears related to Ametek, but 78570R remains unverified.',
+        refinementSuggestion: 'The 78570R identifier could not be verified as a model or part number.',
+        sources: [{ title: 'Ametek 46E motor parts', domain: 'parts.example', uri: 'https://parts.example/item' }],
+      } });
+    });
+    await page.goto('http://localhost:3001/smart-lookup.html');
+    await page.locator('#smart-lookup-input').fill('Ametek 46e 78570r');
+    await page.locator('#smartLookupBtn').click();
+    const panel = page.locator('#smart-lookup-age-panel');
+    await expect(panel).toContainText('78570R remains unverified');
+    await expect(panel).toContainText('Web sources checked by Smart Lookup');
+    await expect(panel.locator('.smart-lookup-sources a')).toHaveCount(1);
+    await expect(panel.locator('.smart-lookup-sources a')).toContainText('parts.example');
+  });
+
   test('grounded response without sources falls back to ungrounded wording', async ({ page }) => {
     await page.route('**/api/age-lookup', async (route) => {
       await route.fulfill({ json: {

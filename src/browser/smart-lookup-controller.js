@@ -828,7 +828,7 @@
   function isGroundedProviderResult(data) {
     var evidence = data ? String(data.evidenceSource || '').toLowerCase() : '';
     return Boolean(data)
-      && (evidence === 'gemini-grounded' || evidence === 'openai-web' || evidence === 'xai-web')
+      && (evidence === 'gemini-grounded' || evidence === 'openai-web' || evidence === 'xai-web' || evidence === 'serper-extracted')
       && Array.isArray(data.sources)
       && data.sources.length > 0;
   }
@@ -887,6 +887,9 @@
 
   function sourceQualifier(data) {
     if (!data) return '';
+    if (data.evidenceSource === 'serper-extracted' && isGroundedProviderResult(data)) {
+      return 'Identity checked against web sources retrieved by Smart Lookup; review the cited sources below.';
+    }
     if (isGroundedProviderResult(data)) {
       var retrievedOn = retrievedDateLabel(data);
       // Provider-neutral wording: this path now serves OpenAI web search as
@@ -933,14 +936,15 @@
     if (!isGroundedProviderResult(data)) return '';
     var items = data.sources.slice(0, 5).map(function (item) {
       if (!item || !item.title) return '';
-      var label = escapeHtml(item.title);
+      var label = escapeHtml(item.title) + (item.domain ? ' (' + escapeHtml(item.domain) + ')' : '');
       if (item.uri && /^https:\/\//i.test(item.uri)) {
         return '<li><a href="' + escapeHtml(item.uri) + '" target="_blank" rel="noopener nofollow">' + label + '</a></li>';
       }
       return '<li>' + label + '</li>';
     }).filter(Boolean).join('');
     if (!items) return '';
-    return '<details class="determination-details smart-lookup-sources"><summary>Web sources consulted</summary><ul>' + items + '</ul></details>';
+    var heading = data.evidenceSource === 'serper-extracted' ? 'Web sources checked by Smart Lookup' : 'Web sources consulted';
+    return '<details class="determination-details smart-lookup-sources"><summary>' + heading + '</summary><ul>' + items + '</ul></details>';
   }
 
   function renderLifecycleRows(data) {
