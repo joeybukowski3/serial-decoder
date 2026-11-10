@@ -5,9 +5,11 @@ import vm from 'node:vm';
 // Every name must exist in script.js or the export bootstrap throws a ReferenceError.
 const API_EXPORTS = [
   'parseCandidateYears',
+  'filterYearsByEra',
   'computeEstimatedAge',
   'hasSingleResolvedYear',
   'buildAmbiguousYearMessage',
+  'setEstimatedAgeVisibility',
   'updateSerialResultNotes',
   'chooseCandidateFromLookup',
   'resolveSerialYearFromModel',
