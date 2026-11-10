@@ -70,6 +70,10 @@ test('category decoder bundles preserve decoder output parity with decoder-data.
     plain(api.decoderData.appliances.decoders.ge.decode('GM028928Q'))
   );
   assert.deepEqual(
+    plain(splitData.appliances.decoders.maytag_pre_2006.decode('859395AN')),
+    plain(api.decoderData.appliances.decoders.maytag_pre_2006.decode('859395AN'))
+  );
+  assert.deepEqual(
     plain(splitData.hvac.decoders.goodman.decode('1404123456')),
     plain(api.decoderData.hvac.decoders.goodman.decode('1404123456'))
   );
@@ -1613,6 +1617,67 @@ test('Pre-2006 Maytag family still decodes a mapped year letter', () => {
   assert.ok(out);
   assert.equal(out.year, '1999/2023');
   assert.equal(out.month, 'January');
+});
+
+test('Maytag legacy A code retains the 1978, 2002, and 2026 raw cycles', () => {
+  const out = api.decoderData.appliances.decoders.maytag_pre_2006.decode('859395AN');
+  assert.ok(out);
+  assert.equal(out.year, '1978/2002/2026');
+  assert.equal(out.month, 'July');
+  assert.deepEqual(Array.from(api.parseCandidateYears(out.year)), [1978, 2002, 2026]);
+});
+
+test('Maytag legacy A code stays ambiguous after pre-2006 era filtering', () => {
+  const raw = api.decoderData.appliances.decoders.maytag_pre_2006.decode('859395AN');
+  const year = api.filterYearsByEra(raw.year, 'pre');
+  const candidates = api.parseCandidateYears(year);
+  const ageRow = { style: {} };
+  const ageValue = { textContent: 'previous age', closest: () => ageRow };
+  const originalGetById = ctx.document.getElementById;
+
+  assert.equal(year, '1978/2002');
+  assert.deepEqual(Array.from(candidates), [1978, 2002]);
+  assert.equal(api.hasSingleResolvedYear(year), false);
+  assert.equal(api.sanitizeDecodeResult({ year }).valid, true);
+  assert.equal(
+    api.buildAmbiguousYearMessage(candidates, { modelAttempted: false }),
+    'Possible manufacture years: 1978 or 2002. Add a model number to narrow the date.'
+  );
+
+  try {
+    ctx.document.getElementById = (id) => id === 'resultEstimatedAge' ? ageValue : originalGetById(id);
+    api.setEstimatedAgeVisibility(api.hasSingleResolvedYear(year), api.computeEstimatedAge(year));
+    assert.equal(ageRow.style.display, 'none');
+    assert.equal(ageValue.textContent, '');
+  } finally {
+    ctx.document.getElementById = originalGetById;
+  }
+});
+
+test('Maytag legacy A candidates narrow only when model range leaves one year', () => {
+  const raw = api.decoderData.appliances.decoders.maytag_pre_2006.decode('859395AN');
+  const candidates = api.parseCandidateYears(api.filterYearsByEra(raw.year, 'pre'));
+
+  for (const [yearRange, expectedStatus, expectedYear, expectedCandidates] of [
+    ['1976-1981', 'resolved', 1978, [1978]],
+    ['2000-2004', 'resolved', 2002, [2002]],
+    ['1976-2004', 'ambiguous', null, [1978, 2002]]
+  ]) {
+    const result = api.narrowCandidatesWithEvidence(candidates, { yearRange });
+    assert.equal(result.status, expectedStatus, yearRange);
+    assert.equal(result.chosenYear, expectedYear, yearRange);
+    assert.deepEqual(Array.from(result.remainingCandidateYears), expectedCandidates, yearRange);
+  }
+});
+
+test('Maytag legacy A candidates remain ambiguous without a model', async () => {
+  const raw = api.decoderData.appliances.decoders.maytag_pre_2006.decode('859395AN');
+  const candidates = api.parseCandidateYears(api.filterYearsByEra(raw.year, 'pre'));
+  const result = await api.resolveSerialYearFromModel({ candidates, brand: 'Maytag', model: '', context: '' });
+
+  assert.equal(result.chosenYear, null);
+  assert.equal(result.summary, 'Possible manufacture years: 1978 or 2002. Add a model number to narrow the date.');
+  assert.deepEqual(Array.from(candidates), [1978, 2002]);
 });
 
 test('resolveDecoderId routes both the Alliance and Speed Queen dropdown selections to their respective decoders', () => {
