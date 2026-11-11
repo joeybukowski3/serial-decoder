@@ -55,6 +55,31 @@ test('normalized model display names stay on retrieval-first without fallback', 
   }
 });
 
+test('Apple and Cummins descriptive identities reach the API without a second provider', async () => {
+  for (const [query, brand, code, model, productType, year, domain] of [
+    ['A2901', 'Apple', 'A2901', 'Mac Studio', 'desktop computer', 2023, 'apple.com'],
+    ['cummins onan rs20a model 20gsbb-6714a', 'Cummins Onan', '20GSBB-6714A', 'RS20A', 'standby generator', 2019, 'cummins.com'],
+  ]) {
+    const fixture = { brand, code, productType };
+    const app = setup({ lookup: (text) => retrievalFirstLookup(text, {
+      searchImpl: async () => [row(`${brand} ${model} ${code} ${productType}`, domain),
+        row(`${brand} ${code} ${model} ${productType} support`, 'support.example')],
+      synthesisImpl: async () => ({ ok: true, requestCount: 1, result: {
+        ...synthesis(fixture), model, likelyProduct: `${brand} ${productType}`,
+        estimatedIntroductionYear: year, introductionYearConfidence: 'medium',
+        introductionYearReason: `Approximate ${year} model-era estimate from the retrieved identity.`,
+        introductionYearEvidence: { description: 'Exact-model support', sourceUrl: `https://${domain}/item` },
+      } }),
+    }) });
+    const result = await call(app, query);
+    assert.equal(result.resultType, 'retrieval-identity', query);
+    assert.equal(result.model, model, query);
+    assert.equal(result.exactModel, code, query);
+    assert.equal(result.estimatedIntroductionYear, year, query);
+    assert.equal(app.counts().providers, 0, query);
+  }
+});
+
 function fakeRedis(initial = null) {
   let stored = initial;
   const writes = [];

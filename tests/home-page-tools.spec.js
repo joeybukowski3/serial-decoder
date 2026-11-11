@@ -19,6 +19,22 @@ async function resultScrolls(page, id) {
 }
 
 test.describe('home page immediate tool access', () => {
+  test('randomized Apple serial shows an incomplete date and one Item Assist card', async ({ page }) => {
+    await page.goto('/index.html?cat=electronics', { waitUntil: 'networkidle' });
+    await page.selectOption('#brand', 'apple');
+    await page.fill('#serial', 'JXJQYGDQP3');
+    await page.click('#decodeBtn');
+    await expect(page.locator('#serialResults')).toBeVisible();
+    const hero = page.locator('#serialSummaryLayer .serial-result-hero');
+    await expect(hero).toContainText('Manufacture date unavailable');
+    await expect(hero).toContainText('Randomized Apple serial');
+    await expect(hero).toContainText('A2901');
+    await expect(hero).toContainText('Smart Lookup');
+    await expect(hero.locator('.rs-years')).toHaveCount(0);
+    await expect(page.locator('#resultEstimatedAge')).toHaveText('—');
+    await expect(page.locator('#serialResults #itemAssistUpsellCard')).toHaveCount(1);
+  });
+
   test('mobile explanation tiles default collapsed and toggle by pointer and keyboard', async ({ page }) => {
     await openHome(page);
     const toggles = page.locator('[data-home-explainers] .hero-path-toggle');

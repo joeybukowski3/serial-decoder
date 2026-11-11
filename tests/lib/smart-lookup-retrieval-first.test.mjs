@@ -95,11 +95,34 @@ test('exact identifiers survive normalized model and product display names', () 
   }
 });
 
+test('A2901 and Cummins Onan accept descriptive model names with exact-code anchors', async () => {
+  for (const [query, brand, code, model, type, likelyProduct, year, domain] of [
+    ['A2901', 'Apple', 'A2901', 'Mac Studio', 'desktop computer', 'Apple Mac Studio desktop computer', 2023, 'apple.com'],
+    ['cummins onan rs20a model 20gsbb-6714a', 'Cummins Onan', '20GSBB-6714A', 'RS20A', 'standby generator', '20 kW residential standby generator', 2019, 'cummins.com'],
+  ]) {
+    const fixture = { query, brand, code, type };
+    const report = await retrievalFirstLookup(query, { searchImpl: async () => [
+      row(`${brand} ${model} ${code} ${type}`, domain),
+      row(`${brand} ${code} ${model} ${type} support`, 'support.example'),
+    ], synthesisImpl: async () => ({ ok: true, requestCount: 1, result: synthesis(fixture, {
+      model, likelyProduct, estimatedIntroductionYear: year, introductionYearConfidence: 'medium',
+      introductionYearReason: `Model-era evidence supports an approximate ${year} introduction.`,
+      introductionYearEvidence: { description: 'Exact-model support', sourceUrl: `https://${domain}/product` },
+    }) }) });
+    assert.equal(report.validation.accepted, true, `${query}: ${report.failureReason}`);
+    assert.equal(report.finalRetrievalFirstResult.model, model);
+    assert.equal(report.finalRetrievalFirstResult.exactModel, code);
+    assert.equal(report.finalRetrievalFirstResult.estimatedIntroductionYear, year);
+  }
+});
+
 test('genuine exact-model substitutions are rejected', () => {
   for (const [query, brand, code, substitute, type] of [
     ['Samsung UN55NU7100', 'Samsung', 'UN55NU7100', 'UN55TU7000', 'television'],
     ['MVWX655DW1', 'Maytag', 'MVWX655DW1', 'MVWX655DW0', 'washer'],
     ['RUNHOOD EB324', 'Runhood', 'EB324', 'EB325', 'battery module'],
+    ['A2901', 'Apple', 'A2901', 'A2900', 'desktop computer'],
+    ['20GSBB-6714A', 'Cummins Onan', '20GSBB-6714A', '20GSBB-6715A', 'standby generator'],
   ]) {
     const fixture = { query, brand, code, type };
     const parsed = parseRetrievalQuery(query);
@@ -319,8 +342,8 @@ test('Gemini synthesis request contains supplied evidence and no search tools', 
   assert.equal(endpoint, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent');
   assert.equal(Object.hasOwn(request, 'tools'), false);
   assert.equal(request.contents[0].parts[0].text.includes('RUNHOOD EB324'), true);
-  assert.match(request.contents[0].parts[0].text, /Your primary objective is to identify the model and provide the best reasonable estimate/);
-  assert.match(request.contents[0].parts[0].text, /Use both the retrieved evidence below and your own general product knowledge/);
+  assert.match(request.contents[0].parts[0].text, /Identify the physical product and give the best reasonable estimate/);
+  assert.match(request.contents[0].parts[0].text, /Use retrieved evidence, the user's literal identifiers, general product knowledge/);
 });
 
 test('Gemini synthesis uses the configured retrieval model', async () => {
