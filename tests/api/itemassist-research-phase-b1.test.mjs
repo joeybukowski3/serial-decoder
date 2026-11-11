@@ -208,6 +208,8 @@ test('regression: the saved GE, Samsung, Bosch and LG C3 requests keep the same 
 
   const b = fixture('checkpoint-b-lg-c3.json');
   const lg = (await replay(b, { now: Date.parse(`${b.referenceDate}T12:00:00Z`) })).response;
-  assert.deepEqual(outcome(lg), ['PROVISIONAL_LISTINGS', [1096, 1096], 'LOW', ['p2'], [{ candidate: 'ALT_1', reason: 'NO_CURRENT_PRICE' }, { candidate: 'ALT_2', reason: 'NO_CURRENT_PRICE' }]]);
+  // The saved LG C3 request used to price its successor from a Newegg listing of the C5. The C6 is the newest generation with a 55-inch listing, but no clean
+  // listing of it can be priced in this data (protection-plan bundles and unlisted sellers), so no price is attached and the valuation is a labelled estimate.
+  assert.deepEqual(outcome(lg), ['HISTORICAL_TIER_ESTIMATE', [760, 1710], 'LOW', [], [{ candidate: 'SUCCESSOR', reason: 'NO_CURRENT_PRICE' }, { candidate: 'ALT_1', reason: 'NO_CURRENT_PRICE' }, { candidate: 'ALT_2', reason: 'NO_CURRENT_PRICE' }]]);
   for (const response of [samsung, bosch, lg]) assert.equal(isValidResearchResponseV2(response), true);
 });

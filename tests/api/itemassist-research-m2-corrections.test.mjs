@@ -309,19 +309,29 @@ test('replay of the saved LG C3 55" request: television category, the 55-inch la
   assert.deepEqual(prices.filter((item) => item.subject === 'ORIGINAL').map((item) => [item.kind, item.amount.low, item.model]), [['HISTORICAL_RETAIL', 1899, 'OLED55C3PUA']]);
   assert.equal(JSON.stringify(prices).includes('1399'), false, 'the 42-inch price is gone');
   const replacement = prices.filter((item) => item.subject === 'REPLACEMENT');
-  assert.deepEqual(replacement.filter((item) => item.sizeConfirmed !== false).map((item) => [item.candidate, item.amount.low, item.verification]), [['SUCCESSOR', 1096, 'SEARCH_LISTING']]);
-  // The unsized listings are examples marked "size not confirmed" (the unsized Target Sony listing among them); none is a comparable.
-  assert.deepEqual(replacement.filter((item) => item.sizeConfirmed === false).map((item) => [item.candidate, item.amount.low]).sort(), [['ALT_1', 1398], ['ALT_1', 2359.41], ['SUCCESSOR', 999.99], ['SUCCESSOR', 999.99]]);
-  assert.equal(valuation.comparables.length, 1);
-  assert.deepEqual(response.pricing.evidence.filter((entry) => entry.subject === 'SUCCESSOR').map((entry) => entry.sourceDomain), ['newegg.com', 'bestbuy.com', 'bhphotovideo.com'], 'B&H Photo-Video-Audio is now a recognised seller');
-  assert.deepEqual([valuation.method, valuation.range, valuation.confidence, valuation.verified], ['PROVISIONAL_LISTINGS', { currency: 'USD', low: 1096, high: 1096 }, 'LOW', false]);
-  assert.deepEqual(valuation.excluded.map((item) => [item.candidate, item.reason]), [['ALT_1', 'NO_CURRENT_PRICE'], ['ALT_2', 'NO_CURRENT_PRICE']]);
+  // The saved request used to price its successor from a Newegg listing of the C5. The C6 is the newest generation with a 55-inch listing (the Best Buy
+  // OLED55C6PUA protection-plan listings, and sellers outside the accepted list), but no clean listing of it can be priced here, so no price is attached
+  // to it and the C5 listing is never presented as the successor's price.
+  assert.deepEqual(replacement.filter((item) => item.sizeConfirmed !== false).map((item) => [item.candidate, item.amount.low, item.verification]), []);
+  assert.equal(JSON.stringify(prices).includes('1096'), false, 'the C5 listing at 1096 is another generation');
+  // The unsized Sony listings are examples marked "size not confirmed"; none is a comparable. The successor's own unsized C6 listing states no model code, so it cannot
+  // be tied to the exact model the successor is named by and is not shown.
+  assert.deepEqual(replacement.filter((item) => item.sizeConfirmed === false).map((item) => [item.candidate, item.amount.low]).sort(), [['ALT_1', 1398], ['ALT_1', 2359.41]]);
+  assert.equal(valuation.comparables.length, 0);
+  assert.deepEqual(response.pricing.evidence.filter((entry) => entry.subject === 'SUCCESSOR').map((entry) => entry.sourceDomain), []);
+  assert.deepEqual([valuation.method, valuation.range, valuation.confidence, valuation.verified], ['HISTORICAL_TIER_ESTIMATE', { currency: 'USD', low: 760, high: 1710 }, 'LOW', false]);
+  assert.deepEqual(valuation.excluded.map((item) => [item.candidate, item.reason]), [['SUCCESSOR', 'NO_CURRENT_PRICE'], ['ALT_1', 'NO_CURRENT_PRICE'], ['ALT_2', 'NO_CURRENT_PRICE']]);
   assert.deepEqual(valuation.reference, { priceId: 'p1', kind: 'HISTORICAL_RETAIL' }, 'a launch-announcement price is past retail, not an MSRP');
-  assert.ok(valuation.notes.some((note) => note.code === 'CURRENT_BELOW_ORIGINAL'));
+  assert.ok(valuation.notes.some((note) => note.code === 'TIER_ESTIMATE_BAND'), 'with no current price the figure is a labelled band scaled from the original');
   assert.equal(prices.some((item) => item.verification === 'VERIFIED_PAGE'), false);
-  assert.deepEqual([response.successor, ...response.suggestions].map((item) => item.modelStatus), ['FAMILY_LEVEL', 'FAMILY_LEVEL', 'FAMILY_LEVEL'], 'no model identity is invented');
+  // The successor names the C6 55-inch and the code a recognised seller states, but nothing confirms the code: it is unverified, never priced from another model.
+  assert.deepEqual([response.successor, ...response.suggestions].map((item) => item.modelStatus), ['UNVERIFIED_MODEL', 'FAMILY_LEVEL', 'FAMILY_LEVEL']);
+  assert.equal(response.successor.name, 'LG C6 OLED 55-inch (OLED55C6PUA)');
+  assert.deepEqual(response.successor.lineage, { relation: 'SAME_SERIES_NEWER', generation: 'C6', basis: 'LISTINGS', tier: 'UNKNOWN' });
+  assert.match(response.successor.concern, /no price is attached/);
+  assert.equal(response.successor.standing, 'CONDITIONAL');
   // The listings that were set aside are counted as context for the researcher, never priced.
-  assert.deepEqual(result.meta.enrichment.sizeNotStated, { SUCCESSOR: 2, ALT_1: 2 });
+  assert.deepEqual(result.meta.enrichment.sizeNotStated, { SUCCESSOR: 1, ALT_1: 2 });
   assert.deepEqual(response.requirements.map((item) => item.origin), Array(7).fill('CATEGORY_RULE'), 'the model\'s restatements of the television criteria are dropped, and every code-owned criterion is kept');
   assert.equal(result.meta.enrichment.category, CATEGORY_SOURCE.QUERY);
 });
@@ -333,7 +343,7 @@ test('replay: the focus tokens and size asked about are read from the user\'s ow
   for (const wrong of ['Amber', 'Protection', 'Warranty', '1399']) assert.equal(text.includes(wrong), false, wrong);
   // The prices the unsized listings carry are present only as examples, each marked so; none is in the valuation.
   const marked = response.pricing.prices.filter((item) => [999.99, 1398, 2359.41].includes(item.amount.low));
-  assert.equal(marked.length, 4);
+  assert.equal(marked.length, 2);
   assert.equal(marked.every((item) => item.sizeConfirmed === false), true);
   assert.equal(marked.some((item) => response.pricing.valuation.comparables.some((row) => row.priceId === item.id)), false);
 });
