@@ -587,14 +587,19 @@ function buildItemAssistReportUrl(context) {
 // listeners and _itemAssistContext/_lastUpsellViewSignature state intact) —
 // reattachItemAssistCard() below re-appends that same node into the fresh
 // mount instead of letting it get silently dropped.
-var lastUpsellCardEl = null;
+var lastUpsellCards = {};
 
 function reattachItemAssistCard(resultsContainerId, mountId) {
-  if (!lastUpsellCardEl) return;
-  var container = document.getElementById(resultsContainerId || "serialResults");
+  var resultId = resultsContainerId || "serialResults";
+  var container = document.getElementById(resultId);
   if (!container) return;
   var mount = container.querySelector("#" + (mountId || "itemAssistMount"));
-  if (mount && !mount.contains(lastUpsellCardEl)) mount.appendChild(lastUpsellCardEl);
+  var cards = container.querySelectorAll(".ia-upsell-card");
+  var card = cards[0] || lastUpsellCards[resultId];
+  if (!card) return;
+  for (var i = 1; i < cards.length; i++) cards[i].remove();
+  if (mount && !mount.contains(card)) mount.appendChild(card);
+  lastUpsellCards[resultId] = card;
 }
 window.reattachItemAssistCard = reattachItemAssistCard;
 
@@ -609,8 +614,17 @@ function ensureUpsellCard(opts) {
   if (!container) return null;
   var body = container.querySelector(".results-body");
   if (!body) return null;
-  var existing = body.querySelector("#" + cardId);
-  if (existing) { lastUpsellCardEl = existing; return existing; }
+  var cards = container.querySelectorAll(".ia-upsell-card");
+  var existing = cards[0] || lastUpsellCards[resultsContainerId];
+  for (var i = 1; i < cards.length; i++) cards[i].remove();
+  if (existing) {
+    var pricingDetails = existing.querySelector(".determination-details");
+    if (pricingDetails) pricingDetails.remove();
+    var existingMount = body.querySelector("#" + mountId);
+    if (existingMount && !existingMount.contains(existing)) existingMount.appendChild(existing);
+    lastUpsellCards[resultsContainerId] = existing;
+    return existing;
+  }
   var card = document.createElement("div");
   card.className = "info-block ia-upsell-card";
   card.id = cardId;
@@ -625,34 +639,6 @@ function ensureUpsellCard(opts) {
     "<p class=\"ia-upsell-intro\">Advanced Research for Item Age Verification, Replacement Value, and ACV/RCV Calculation by a field expert.</p>" +
     "<p id=\"" + bodyId + "\"></p>" +
     "<a href=\"" + ITEM_ASSIST_REPORT_URL + "\" id=\"" + ctaId + "\" class=\"ia-upsell-cta\" target=\"_blank\" rel=\"noopener\">Request Expert Review</a>" +
-    "<details class=\"determination-details\">" +
-      "<summary>Pricing &amp; details</summary>" +
-      "<div class=\"determination-body\">" +
-        "<p class=\"ia-upsell-pricing\">Starting at $35 &mdash; $25 professional review plus $10 per item.</p>" +
-        "<p><strong>Free Automated Result</strong></p>" +
-        "<ul>" +
-          "<li>Instant serial-number decoding</li>" +
-          "<li>Candidate manufacture year(s)</li>" +
-          "<li>General educational use</li>" +
-        "</ul>" +
-        "<p><strong>Human-Reviewed Age Verification &mdash; Starting at $35</strong></p>" +
-        "<ul>" +
-          "<li>Human reviewer confirms or narrows the estimate</li>" +
-          "<li>Documented model/serial research</li>" +
-          "<li>Supporting sources included</li>" +
-          "<li>Confidence level explained</li>" +
-          "<li>Good for: insurance documentation, resale, personal records</li>" +
-        "</ul>" +
-        "<p><strong>Full Item Valuation Report &mdash; Item Assist</strong></p>" +
-        "<ul>" +
-          "<li>Everything in Age Verification, plus:</li>" +
-          "<li>Current replacement pricing</li>" +
-          "<li>Like-kind-and-quality comparisons</li>" +
-          "<li>RCV/ACV valuation support</li>" +
-          "<li>Best for: insurance claims, multi-item loss, disputes</li>" +
-        "</ul>" +
-      "</div>" +
-    "</details>" +
     "<p class=\"ia-upsell-trust\">Reviewed by a person. 24&ndash;48 hour turnaround. Not a manufacturer certification.</p>";
   // Mounted into the primary-row mount point (alongside the primary result
   // card) when the caller's summary layer has built that mount point;
@@ -660,7 +646,7 @@ function ensureUpsellCard(opts) {
   // the summary layer renders) so the card never gets lost.
   var mount = body.querySelector("#" + mountId);
   (mount || body).appendChild(card);
-  lastUpsellCardEl = card;
+  lastUpsellCards[resultsContainerId] = card;
 
   // Listeners are bound once at creation time (this branch only runs once per
   // page, since ensureUpsellCard() returns the cached card on later calls),
@@ -675,14 +661,6 @@ function ensureUpsellCard(opts) {
         category: c.category,
         resultStatus: c.resultStatus
       });
-    });
-  }
-  var detailsEl = card.querySelector(".determination-details");
-  if (detailsEl) {
-    detailsEl.addEventListener("toggle", function () {
-      if (detailsEl.open) {
-        trackAnalyticsEvent("item_assist_upsell_details_expanded", { context: "item-assist-upsell" });
-      }
     });
   }
 

@@ -278,6 +278,18 @@ test('retrieval result leads with model introduction year and distinguishes unit
   assert.doesNotMatch(html, /Manufactured in 2016/);
 });
 
+test('low-confidence introduction estimate renders without a dated citation', () => {
+  const html = api.renderAge({ brand: 'Apple', model: 'Mac Studio', exactModel: 'A2901',
+    likelyProduct: 'Apple Mac Studio', estimatedIntroductionYear: 2023,
+    introductionYear: 2023, introductionYearConfidence: 'low', identityConfidence: 'low',
+    timingConfidence: 'low', individualManufactureYear: null });
+  assert.match(html, /Estimated introduction year of the model/);
+  assert.match(html, /2023/);
+  assert.match(html, /Estimate confidence.*Low/);
+  assert.match(html, /individual unit’s manufacture date may differ/i);
+  assert.doesNotMatch(html, /Product\/date confidence/);
+});
+
 test('renderAge labels ungrounded provider results as AI-assisted analysis, not live research', () => {
   const html = api.renderAge({
     source: 'gemini',

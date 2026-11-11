@@ -669,29 +669,6 @@
   opacity: 1 !important;
 }
 
-.ia-upsell-card .determination-details {
-  margin-top: auto;
-  border-top: 1px solid rgba(246, 169, 74, 0.25);
-  padding-top: 10px;
-}
-
-.ia-upsell-card .determination-details summary {
-  color: var(--rs-text) !important;
-  font-weight: 700 !important;
-}
-
-.ia-upsell-card .determination-body {
-  color: var(--rs-text-mid) !important;
-  background: transparent !important;
-  border-top-color: rgba(246, 169, 74, 0.25) !important;
-}
-
-.ia-upsell-pricing {
-  font-weight: 700 !important;
-  color: var(--rs-text) !important;
-  margin-bottom: 8px !important;
-}
-
 .ia-upsell-trust {
   font-size: 11px !important;
   color: var(--rs-text-dim) !important;
@@ -787,10 +764,6 @@
 
 .results-card .determination-body {
   color: var(--rs-text-mid) !important;
-}
-
-.ia-upsell-card .determination-details summary {
-  color: var(--rs-text) !important;
 }
 
 /* ─── Smart Lookup: neutralize legacy light-card overrides ───

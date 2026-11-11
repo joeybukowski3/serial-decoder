@@ -33,6 +33,63 @@ test.describe('home page immediate tool access', () => {
     await expect(hero.locator('.rs-years')).toHaveCount(0);
     await expect(page.locator('#resultEstimatedAge')).toHaveText('—');
     await expect(page.locator('#serialResults #itemAssistUpsellCard')).toHaveCount(1);
+    await expect(page.locator('#serialResults .ia-upsell-card')).toHaveCount(1);
+    await expect(page.locator('#serialResults .ia-upsell-cta')).toHaveText('Request Expert Review');
+    await expect(page.locator('#serialResults .ia-upsell-card details')).toHaveCount(0);
+    await expect(page.locator('#serialResults')).not.toContainText('Pricing & details');
+    await page.evaluate(() => renderSerialSummaryLayer());
+    await expect(page.locator('#serialResults .ia-upsell-card')).toHaveCount(1);
+  });
+
+  test('serial searches, refinement rerender, and Smart Lookup keep one card per result', async ({ page }) => {
+    await page.route('**/api/age-lookup', async (route) => {
+      await route.fulfill({ json: { brand: 'Apple', model: 'Mac Studio', exactModel: 'A2901',
+        likelyProduct: 'Apple Mac Studio', identityConfidence: 'low',
+        introductionYear: 2023, estimatedIntroductionYear: 2023, introductionYearConfidence: 'low',
+        estimateBasis: 'model-introduction', yearSignal: 'year', status: 'success',
+        individualManufactureYear: null } });
+    });
+    await page.goto('/index.html?mode=smart#panel-smart', { waitUntil: 'networkidle' });
+    await page.fill('#smart-lookup-input', 'A2901');
+    await page.locator('[data-smart-lookup-submit="1"]').click();
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('Estimated introduction year of the model');
+    await expect(page.locator('#smart-lookup-age-panel')).toContainText('2023');
+    await expect(page.locator('#ageResults .ia-upsell-card')).toHaveCount(1);
+    await page.locator('.search-tab[data-cat="electronics"]').first().click();
+    await page.selectOption('#brand', 'apple');
+    await page.fill('#serial', 'JXJQYGDQP3');
+    await page.click('#decodeBtn');
+    await expect(page.locator('#serialResults .ia-upsell-card')).toHaveCount(1);
+    await page.evaluate(() => renderSerialSummaryLayer());
+    await expect(page.locator('#serialResults .ia-upsell-card')).toHaveCount(1);
+    await page.locator('.search-tab[data-cat="appliances"]').first().click();
+    await page.selectOption('#brand', 'ge');
+    await page.fill('#serial', 'GM028928Q');
+    await page.click('#decodeBtn');
+    await expect(page.locator('#serialResults .ia-upsell-card')).toHaveCount(1);
+    await page.evaluate(() => renderSerialSummaryLayer());
+    await expect(page.locator('#serialResults .ia-upsell-card')).toHaveCount(1);
+    await page.fill('#serial', 'LA208110G');
+    await page.click('#decodeBtn');
+    await expect(page.locator('#serialResults .ia-upsell-card')).toHaveCount(1);
+  });
+
+  test('ambiguous serial model refinement keeps one Item Assist card', async ({ page }) => {
+    await page.route('**/api/refine-serial-date', async (route) => {
+      await route.fulfill({ json: { status: 'resolved', candidateYears: [2004, 2014, 2024],
+        remainingCandidateYears: [2014], chosenYear: 2014, confidence: 'high',
+        resolutionBasis: 'serial-plus-model', modelProductionRange: { start: 2013, end: 2016 },
+        evidence: [], summary: 'Model evidence leaves 2014.', provider: 'local-db', errorCode: null } });
+    });
+    await page.goto('/index.html?cat=appliances', { waitUntil: 'networkidle' });
+    await page.selectOption('#brand', 'lg');
+    await page.fill('#serial', '412TATG1H105');
+    await page.click('#decodeBtn');
+    await expect(page.locator('#serialResults .ia-upsell-card')).toHaveCount(1);
+    await page.fill('#narrowModelInput', 'WM3470HWA');
+    await page.click('#narrowDateBtn');
+    await expect(page.locator('#resultYear')).toHaveText('2014');
+    await expect(page.locator('#serialResults .ia-upsell-card')).toHaveCount(1);
   });
 
   test('mobile explanation tiles default collapsed and toggle by pointer and keyboard', async ({ page }) => {

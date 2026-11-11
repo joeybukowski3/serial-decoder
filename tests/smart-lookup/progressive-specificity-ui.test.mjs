@@ -183,7 +183,7 @@ test('yearless product identity displays separate confidence and source informat
   });
   assert.match(html, /Product identified; date unverified/);
   assert.match(html, /Product identification confidence/);
-  assert.match(html, /Product\/date confidence/);
+  assert.match(html, /Estimate confidence[\s\S]*Unverified/);
   assert.doesNotMatch(html, /RESULT NOT RELIABLE ENOUGH/);
 });
 
@@ -530,7 +530,7 @@ test('VIZIO model-generation result renders estimate, conflict, confidence, and 
   assert.match(html, /Series[\s\S]*M-Series/);
   assert.match(html, /Estimate basis[\s\S]*Verified exact-model generation/);
   assert.match(html, /Product identification confidence[\s\S]*High/);
-  assert.match(html, /Product\/date confidence[\s\S]*Medium/);
+  assert.match(html, /Timing confidence[\s\S]*Medium/);
   assert.match(html, /entered brand was LG/i);
   assert.match(html, /Recognized model brand[\s\S]*VIZIO/);
   assert.match(html, /Individual manufacture date[\s\S]*requires serial number/i);

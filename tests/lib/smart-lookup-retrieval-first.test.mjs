@@ -132,16 +132,17 @@ test('genuine exact-model substitutions are rejected', () => {
   }
 });
 
-test('year without a retrieved citation is removed without rejecting a supported identity', () => {
+test('plausible introduction year without a dated citation remains a qualified estimate', () => {
   const fixture = fixtures[0];
   const validated = validateSynthesis(parseRetrievalQuery(fixture.query),
     scoreResults(parseRetrievalQuery(fixture.query), fixture.rows),
     synthesis(fixture, { estimatedIntroductionYear: 2018, introductionYearConfidence: 'high',
       introductionYearReason: 'Uncited estimate', productionRange: '2018-2020' }));
   assert.equal(validated.accepted, true);
-  assert.equal(validated.result.introductionYear, null);
+  assert.equal(validated.result.introductionYear, 2018);
   assert.equal(validated.result.productionRange, null);
-  assert.equal(validated.result.dateConfidence, 'unknown');
+  assert.equal(validated.result.dateConfidence, 'high');
+  assert.equal(validated.result.introductionYearEvidence, null);
 });
 
 test('MVWX655DW1 accepts Gemini medium-confidence estimate from dated exact-model evidence', () => {
