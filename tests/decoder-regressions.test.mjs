@@ -477,14 +477,44 @@ test('Vizio V505-J09 returns model-year context without claiming a serial decode
   assert.match(result.method, /model number year code/i);
 });
 
-test('Apple legacy and randomized serial paths remain explicitly different', () => {
+test('Apple legacy and randomized serial paths remain explicitly different', async () => {
   const apple = api.decoderData.electronics.decoders.apple;
   const legacy = apple.decode('C02X12ABCDEF');
-  const randomized = apple.decode('AB12CD34EF');
+  const randomized = apple.decode('JXJQYGDQP3');
 
   assert.deepEqual({ year: legacy.year, month: legacy.month }, { year: '2019/2029', month: 'Week 12' });
-  assert.equal(randomized.year, 'Post-2021 (Randomized)');
-  assert.match(randomized.month, /may be randomized/i);
+  assert.deepEqual(Array.from(api.parseCandidateYears(legacy.year)), [2019, 2029]);
+  assert.equal(randomized.year, 'Randomized serial — date unavailable');
+  assert.doesNotMatch(randomized.year, /\b\d{4}\b/);
+  assert.equal(randomized.yearCode, undefined);
+  assert.deepEqual(Array.from(api.parseCandidateYears(randomized.year)), []);
+  assert.equal(api.classifyDecodeResult(randomized, apple).status, 'incomplete');
+  assert.equal(api.computeEstimatedAge(randomized.year), '—');
+  assert.equal(api.hasSingleResolvedYear(randomized.year), false);
+  assert.match(randomized.month, /manufacture date cannot be decoded directly/i);
+  assert.match(randomized.month, /A2901.*model generation and approximate product era/i);
+  const modelResolution = await api.resolveSerialYearFromModel({ candidates: api.parseCandidateYears(randomized.year), brand: 'Apple', model: 'A2901' });
+  assert.equal(modelResolution.chosenYear, null);
+  assert.equal(modelResolution.source, 'not-needed');
+
+  const ageRow = { style: {} };
+  const ageValue = { textContent: 'previous age', closest: () => ageRow };
+  const originalGetById = ctx.document.getElementById;
+  try {
+    ctx.document.getElementById = (id) => id === 'resultEstimatedAge' ? ageValue : originalGetById(id);
+    api.setEstimatedAgeVisibility(api.hasSingleResolvedYear(randomized.year), api.computeEstimatedAge(randomized.year));
+    assert.equal(ageRow.style.display, 'none');
+    assert.equal(ageValue.textContent, '');
+  } finally {
+    ctx.document.getElementById = originalGetById;
+  }
+});
+
+test('randomized Apple status strings never produce manufacture-year candidates', () => {
+  for (const status of ['Randomized serial — date unavailable', 'Post-2021 (Randomized)', 'Randomized serial, model generation 2023']) {
+    assert.deepEqual(Array.from(api.parseCandidateYears(status)), [], status);
+    assert.equal(api.computeEstimatedAge(status), '—', status);
+  }
 });
 
 test('HP CNX7120BXX preserves decade ambiguity and production week', () => {
@@ -1813,7 +1843,8 @@ test('sanitizeDecodeResult only accepts explicit year formats and approved senti
   assert.equal(isValid('2004/2014/2024'), true);
   assert.equal(isValid('1983/1995/2007/2019'), true);
   assert.equal(isValid('2009/2029'), true, 'one candidate in plausible range is enough');
-  assert.equal(isValid('Post-2021 (Randomized)'), true, 'approved Apple sentinel');
+  assert.equal(isValid('Randomized serial — date unavailable'), true, 'approved Apple sentinel');
+  assert.equal(isValid('Post-2021 (Randomized)'), false, 'old year-like sentinel is rejected');
 
   assert.equal(isValid('Unknown code: 6'), false);
   assert.equal(isValid('19AB'), false);
@@ -2223,8 +2254,8 @@ test('collapseImpossibleFutureYears drops future-only candidates without mutatin
   const allPast = api.collapseImpossibleFutureYears({ year: '1989/1999/2009/2019' });
   assert.equal(allPast.year, '1989/1999/2009/2019', 'plausible candidate sets are untouched');
 
-  const sentinel = api.collapseImpossibleFutureYears({ year: 'Post-2021 (Randomized)' });
-  assert.equal(sentinel.year, 'Post-2021 (Randomized)', 'sentinel years are untouched');
+  const sentinel = api.collapseImpossibleFutureYears({ year: 'Randomized serial — date unavailable' });
+  assert.equal(sentinel.year, 'Randomized serial — date unavailable', 'sentinel years are untouched');
 
   assert.equal(api.collapseImpossibleFutureYears(null), null);
 });
