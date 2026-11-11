@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAgeLookupHandler } from '../../api/age-lookup.js';
 import { retrievalFirstLookup } from '../../lib/smart-lookup/retrieval-first.js';
+import { classifySmartOutcome } from '../../lib/smart-lookup/outcome.js';
 import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 const request = (query) => ({ method: 'POST', body: { query }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} });
@@ -53,6 +54,76 @@ test('normalized model display names stay on retrieval-first without fallback', 
     assert.equal(log.retrievalFirstSucceeded, true, query);
     assert.equal(log.retrievalFirstFailureReason, null, query);
   }
+});
+
+test('Apple and Cummins descriptive identities reach the API without a second provider', async () => {
+  for (const [query, brand, code, model, productType, year, domain] of [
+    ['A2901', 'Apple', 'A2901', 'Mac Studio', 'desktop computer', 2023, 'apple.com'],
+    ['cummins onan rs20a model 20gsbb-6714a', 'Cummins Onan', '20GSBB-6714A', 'RS20A', 'standby generator', 2012, 'cummins.com'],
+  ]) {
+    const fixture = { brand, code, productType };
+    const app = setup({ lookup: (text) => retrievalFirstLookup(text, {
+      searchImpl: async () => [row(`${brand} ${model} ${code} ${productType}`, domain),
+        row(`${brand} ${code} ${model} ${productType} support`, 'support.example')],
+      synthesisImpl: async () => ({ ok: true, requestCount: 1, result: {
+        ...synthesis(fixture), model, likelyProduct: `${brand} ${productType}`,
+        estimatedIntroductionYear: year, introductionYearConfidence: 'medium',
+        introductionYearReason: `Approximate ${year} model-era estimate from the retrieved identity.`,
+        introductionYearEvidence: { description: 'Exact-model support', sourceUrl: `https://${domain}/item` },
+      } }),
+    }) });
+    const result = await call(app, query);
+    assert.equal(result.resultType, 'retrieval-identity', query);
+    assert.equal(result.model, model, query);
+    assert.equal(result.exactModel, code, query);
+    assert.equal(result.estimatedIntroductionYear, year, query);
+    assert.equal(result.introductionYearConfidence, 'medium', query);
+    assert.equal(result.identityConfidence, 'high', query);
+    assert.equal(result.individualManufactureYear, null, query);
+    assert.equal(app.counts().providers, 0, query);
+  }
+});
+
+test('A2901 keeps a low-confidence model introduction estimate without a dated citation', async () => {
+  const fixture = { brand: 'Apple', code: 'A2901', productType: 'desktop computer' };
+  const app = setup({ lookup: (text) => retrievalFirstLookup(text, {
+    searchImpl: async () => [row('Apple Mac Studio A2901 desktop computer', 'apple.com'),
+      row('Apple A2901 Mac Studio support', 'support.example')],
+    synthesisImpl: async () => ({ ok: true, requestCount: 1, result: {
+      ...synthesis(fixture), model: 'Mac Studio', exactModel: 'A2901',
+      likelyProduct: 'Apple Mac Studio', identityConfidence: 'low',
+      estimatedIntroductionYear: 2023, introductionYearConfidence: 'low',
+      introductionYearReason: 'Approximate model introduction based on the identified generation.',
+      introductionYearEvidence: null,
+    } }),
+  }) });
+  const result = await call(app, 'A2901');
+  assert.equal(classifySmartOutcome(result).resultStatus, 'resolved');
+  assert.equal(result.estimatedIntroductionYear, 2023);
+  assert.equal(result.introductionYearConfidence, 'low');
+  assert.equal(result.estimateBasis, 'model-introduction');
+  assert.equal(result.yearSignal, 'year');
+  assert.equal(result.identityConfidence, 'low');
+  assert.equal(result.individualManufactureYear, null);
+  assert.equal(result.timingConfidence, 'low');
+  assert.equal(app.counts().providers, 0);
+});
+
+test('supported identity with no reasonable year stays undated', async () => {
+  const fixture = { brand: 'Apple', code: 'A2901', productType: 'desktop computer' };
+  const app = setup({ lookup: (text) => retrievalFirstLookup(text, {
+    searchImpl: async () => [row('Apple Mac Studio A2901 desktop computer', 'apple.com')],
+    synthesisImpl: async () => ({ ok: true, requestCount: 1, result: {
+      ...synthesis(fixture), model: 'Mac Studio', likelyProduct: 'Apple Mac Studio',
+      estimatedIntroductionYear: null, introductionYearConfidence: 'unknown',
+    } }),
+  }) });
+  const result = await call(app, 'A2901');
+  assert.equal(result.exactModel, 'A2901');
+  assert.equal(result.estimatedIntroductionYear, null);
+  assert.equal(result.introductionYear, null);
+  assert.equal(result.yearSignal, 'none');
+  assert.equal(classifySmartOutcome(result).resultStatus, 'needs-detail');
 });
 
 function fakeRedis(initial = null) {

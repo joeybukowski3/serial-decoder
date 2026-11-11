@@ -174,6 +174,23 @@ test('ensureUpsellCard is idempotent: repeated decodes never duplicate the card'
   assert.equal(cards.length, 1);
 });
 
+test('ensureUpsellCard reuses a mounted card when the mock has no querySelectorAll or cached reference', () => {
+  const { ctx, resultsBody } = loadUpsellContext();
+  const card = vm.runInContext('ensureUpsellCard()', ctx);
+  vm.runInContext('lastUpsellCards = {}', ctx);
+  assert.equal(vm.runInContext('ensureUpsellCard()', ctx), card);
+  assert.equal(resultsBody.children.filter((child) => child.id === 'itemAssistUpsellCard').length, 1);
+});
+
+test('ensureUpsellCard removes duplicate mounted cards when querySelectorAll is available', () => {
+  const { ctx } = loadUpsellContext();
+  const card = vm.runInContext('ensureUpsellCard()', ctx);
+  const duplicate = { remove() { this.removed = true; } };
+  ctx.document.getElementById('serialResults').querySelectorAll = () => [card, duplicate];
+  assert.equal(vm.runInContext('ensureUpsellCard()', ctx), card);
+  assert.equal(duplicate.removed, true);
+});
+
 test('renderUpsellCard updates the same card in place for a second decoded item', () => {
   const { ctx, resultsBody } = loadUpsellContext();
   vm.runInContext(
@@ -235,11 +252,12 @@ test('none of the upsell copy variants promise a specific manufacture year', () 
   }
 });
 
-test('the card markup states the updated pricing and does not promise certification', () => {
+test('the card has the review CTA and disclaimer without pricing details', () => {
   const { ctx } = loadUpsellContext();
   const card = vm.runInContext('ensureUpsellCard()', ctx);
-  assert.ok(card.innerHTML.includes('Starting at $35'));
-  assert.ok(card.innerHTML.includes('$25 professional review plus $10 per item'));
+  assert.ok(card.innerHTML.includes('Request Expert Review'));
+  assert.ok(!card.innerHTML.includes('Pricing &amp; details'));
+  assert.ok(!card.innerHTML.includes('<details'));
   assert.ok(card.innerHTML.includes('Not a manufacturer certification'));
 });
 
@@ -276,33 +294,21 @@ test('analytics: a "viewed" event is not duplicated by an incidental rerender of
   assert.equal(viewedAfterNewDecode.length, 2, 'a new decode result must fire a new "viewed" event');
 });
 
-test('analytics: CTA click and details-expanded hooks fire exactly once each, without duplication across renders', () => {
+test('analytics: card view and CTA click fire once without duplicate handlers across rerenders', () => {
   const { ctx, analyticsCalls } = loadUpsellContext();
-  vm.runInContext(
-    'renderUpsellCard("resolved", { brand: "GE", category: "appliances", resultId: "r1" })',
-    ctx
-  );
-  // Simulate a second decode re-rendering the same, already-created card.
-  vm.runInContext(
-    'renderUpsellCard("ambiguous", { brand: "Whirlpool", category: "appliances", resultId: "r2" })',
-    ctx
-  );
+  const render = 'renderUpsellCard("resolved", { brand: "GE", category: "appliances", resultId: "r1" })';
+  vm.runInContext(render, ctx);
+  vm.runInContext(render, ctx);
+  vm.runInContext(render, ctx);
   vm.runInContext(`
     var cta = document.getElementById("serialResults").querySelector(".results-body").querySelector("#itemAssistUpsellCard").querySelector("#itemAssistUpsellCta");
     cta.dispatchEvent("click");
-    cta.dispatchEvent("click");
-    var details = document.getElementById("serialResults").querySelector(".results-body").querySelector("#itemAssistUpsellCard").querySelector(".determination-details");
-    details.open = true;
-    details.dispatchEvent("toggle");
   `, ctx);
 
+  const viewed = analyticsCalls.filter((c) => c.name === 'item_assist_upsell_viewed');
   const clicked = analyticsCalls.filter((c) => c.name === 'item_assist_upsell_clicked');
-  const expanded = analyticsCalls.filter((c) => c.name === 'item_assist_upsell_details_expanded');
-  // Listener is bound once at card creation, so 2 manual clicks fire the
-  // handler twice (expected — that's 2 real clicks), but never more than the
-  // number of dispatched events, proving no duplicate bindings accumulated
-  // across the two renderUpsellCard() calls above.
-  assert.equal(clicked.length, 2);
-  assert.equal(clicked[clicked.length - 1].props.resultStatus, 'ambiguous', 'click handler reads the latest render context, not stale data');
-  assert.equal(expanded.length, 1);
+  assert.equal(viewed.length, 1);
+  assert.equal(clicked.length, 1);
+  assert.equal(clicked[0].props.resultStatus, 'resolved');
+  assert.deepEqual(analyticsCalls.map((call) => call.name), ['item_assist_upsell_viewed', 'item_assist_upsell_clicked']);
 });

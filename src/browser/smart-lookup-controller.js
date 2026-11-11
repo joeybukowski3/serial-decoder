@@ -319,7 +319,8 @@
     var data = ageState.data || {};
     var variant = ageState.status === 'success' ? 'resolved' : 'noMatch';
     var signature = variant + '|' + query;
-    if (lastUpsellSignature === signature) return;
+    var root = resultsRoot();
+    if (lastUpsellSignature === signature && root && root.querySelector('.ia-upsell-card')) return;
     lastUpsellSignature = signature;
     window.renderUpsellCard(variant, {
       brand: data.brand || '',
@@ -1063,7 +1064,7 @@
       primaryYear = promotedProductionRange;
       yearLabel = 'PRODUCT FAMILY PRODUCTION RANGE';
     }
-    var introductionEstimate = data && data.estimatedIntroductionYear && data.introductionYearEvidence;
+    var introductionEstimate = data && data.estimatedIntroductionYear;
     if (introductionEstimate) {
       primaryYear = String(data.estimatedIntroductionYear);
       yearLabel = 'Estimated introduction year of the model';
@@ -1212,8 +1213,8 @@
       '<div class="smart-result-specs" aria-label="Result details">' +
       (introductionEstimate ? '<div class="result-row"><span class="result-label">Estimated introduction year</span><span class="result-value">' + escapeHtml(data.estimatedIntroductionYear) + '</span></div>' +
         '<div class="result-row"><span class="result-label">Estimate confidence</span><span class="result-value">' + escapeHtml(data.introductionYearConfidence.charAt(0).toUpperCase() + data.introductionYearConfidence.slice(1)) + '</span></div>' +
-        '<div class="result-row"><span class="result-label">Why</span><span class="result-value">' + escapeHtml(data.introductionYearReason) + '</span></div>' +
-        '<div class="result-row"><span class="result-label">Evidence example</span><span class="result-value"><a href="' + escapeHtml(data.introductionYearEvidence.sourceUrl) + '">' + escapeHtml(data.introductionYearEvidence.description) + '</a></span></div>' : '') +
+        (data.introductionYearReason ? '<div class="result-row"><span class="result-label">Why</span><span class="result-value">' + escapeHtml(data.introductionYearReason) + '</span></div>' : '') +
+        (data.introductionYearEvidence ? '<div class="result-row"><span class="result-label">Evidence example</span><span class="result-value"><a href="' + escapeHtml(data.introductionYearEvidence.sourceUrl) + '">' + escapeHtml(data.introductionYearEvidence.description) + '</a></span></div>' : '') : '') +
       '<div class="result-row"><span class="result-label">Brand</span><span class="result-value">' + escapeHtml(data && data.brand && data.brand !== 'Unknown' ? data.brand : 'Not identified') + '</span></div>' +
       (data && data.evidenceConflict && data.recognizedBrand ? '<div class="result-row"><span class="result-label">Recognized model brand</span><span class="result-value">' + escapeHtml(data.recognizedBrand) + '</span></div>' : '') +
       (data && data.productFamily ? '<div class="result-row"><span class="result-label">Product family</span><span class="result-value">' + escapeHtml(productFamily) + '</span></div>' : '') +
@@ -1226,7 +1227,7 @@
       renderLifecycleRows(data) +
       (data && data.estimateBasis ? '<div class="result-row"><span class="result-label">Estimate basis</span><span class="result-value">' + escapeHtml(estimateBasisLabel(data.estimateBasis)) + '</span></div>' : '') +
       (data && data.identityConfidence ? '<div class="result-row"><span class="result-label">Product identification confidence</span><span class="result-value">' + escapeHtml(data.identityConfidence.charAt(0).toUpperCase() + data.identityConfidence.slice(1)) + '</span></div>' : '') +
-      (data && data.timingConfidence ? '<div class="result-row"><span class="result-label">Product/date confidence</span><span class="result-value">' + escapeHtml(data.timingConfidence.charAt(0).toUpperCase() + data.timingConfidence.slice(1)) + '</span></div>' : '') +
+      (data && data.timingConfidence && !introductionEstimate ? '<div class="result-row"><span class="result-label">Timing confidence</span><span class="result-value">' + escapeHtml(data.timingConfidence.charAt(0).toUpperCase() + data.timingConfidence.slice(1)) + '</span></div>' : '') +
       '<div class="result-row"><span class="result-label">Individual manufacture date</span><span class="result-value">' + escapeHtml(manufactureMessage) + '</span></div>' +
       '</div>' +
       (introductionEstimate ? '<p class="smart-lookup-unit-caveat">This estimates when the model entered the market. Your individual unit’s manufacture date may differ. Add the serial number to narrow the date.</p>' : '') +
@@ -1291,7 +1292,7 @@
         (data.originalIdentifier ? needsDetailRow('Supplied identifier', data.originalIdentifier) : '') +
         (data.identifierType ? needsDetailRow('Likely identifier type', data.identifierType) : '') +
         (data.identityConfidence ? needsDetailRow('Product identification confidence', data.identityConfidence) : '') +
-        needsDetailRow('Product/date confidence', data.timingConfidence || 'Unverified') +
+        needsDetailRow('Estimate confidence', data.introductionYearConfidence && data.introductionYearConfidence !== 'unknown' ? data.introductionYearConfidence : 'Unverified') +
         needsDetailRow('Manufacture date', 'Needs more detail') +
       '</div>' +
       (data.identifierMatchExplanation ? '<p>' + escapeHtml(data.identifierMatchExplanation) + '</p>' : '') +
