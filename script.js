@@ -594,8 +594,8 @@ function reattachItemAssistCard(resultsContainerId, mountId) {
   var container = document.getElementById(resultId);
   if (!container) return;
   var mount = container.querySelector("#" + (mountId || "itemAssistMount"));
-  var cards = container.querySelectorAll(".ia-upsell-card");
-  var card = cards[0] || lastUpsellCards[resultId];
+  var cards = typeof container.querySelectorAll === "function" ? container.querySelectorAll(".ia-upsell-card") : [];
+  var card = cards[0] || container.querySelector(".ia-upsell-card") || lastUpsellCards[resultId];
   if (!card) return;
   for (var i = 1; i < cards.length; i++) cards[i].remove();
   if (mount && !mount.contains(card)) mount.appendChild(card);
@@ -614,8 +614,8 @@ function ensureUpsellCard(opts) {
   if (!container) return null;
   var body = container.querySelector(".results-body");
   if (!body) return null;
-  var cards = container.querySelectorAll(".ia-upsell-card");
-  var existing = cards[0] || lastUpsellCards[resultsContainerId];
+  var cards = typeof container.querySelectorAll === "function" ? container.querySelectorAll(".ia-upsell-card") : [];
+  var existing = cards[0] || container.querySelector(".ia-upsell-card") || body.querySelector("#" + cardId) || lastUpsellCards[resultsContainerId];
   for (var i = 1; i < cards.length; i++) cards[i].remove();
   if (existing) {
     var pricingDetails = existing.querySelector(".determination-details");
