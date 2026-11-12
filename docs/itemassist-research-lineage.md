@@ -44,6 +44,24 @@ Lineage is not comparability (the comparison rows) and not evidence confidence (
 
 **Rollout order:** the frontend that projects the block and words the labels deploys first; the engine second. A frontend that predates the block ignores it.
 
+## Evidence integrity (Release 1)
+
+Four statements stay separate, and one label never implies the others: **identification** (`original.confidence`), **lineage** (`lineage.basis`),
+**comparability** (`comparison[].basis`) and **pricing evidence** (`pricing.valuation.confidence`).
+
+- **Candidate confidence is capped at `MEDIUM`** unless a cited page confirms the model (`modelStatus === VERIFIED_LISTING`). One retailer listing naming a model
+  supports "this model exists in a listing", not "this is the right replacement". The builder lowers a `HIGH`; the validator rejects `HIGH` on anything else. An answer cached before the
+  cap (HIGH on an unconfirmed model, at most one day old) is served with that one label lowered to `MEDIUM` (`lowerUnsupportedConfidence`, applied on read in `cache.js`)
+  only if the lowered copy passes the full validator; the stored entry is not rewritten (its expiry stands), no provider is called and no budget is used. An entry
+  that is invalid for any other reason is a miss, as before. No cache prefix change.
+- **Samsung television model years** are one table, `SAMSUNG_TV_MODEL_YEAR` in `lineage.js` (R 2019, T 2020, A 2021, B 2022, C 2023, D 2024, F 2025, H 2026). `N` (2018)
+  was removed: nothing evidences it. A letter outside the table is never guessed. A test compares the table with the classic pipeline through its exports.
+- **The original's own manufacturer page** (`original.manufacturerPages`, optional, at most two): taken only from the search results the engine already fetched about
+  the original (`enrich/original-source.js`). The address must be exactly one a result carried (nothing is built from a naming pattern), a registered manufacturer
+  of the original's brand, the US storefront, and carry exactly one model code that is the model asked about (not a regional, family, comparison or other-size page).
+  It evidences only that the maker lists that model. It is never read for specifications or prices, never opened, and never used for a successor. The validator
+  re-derives every field from the address and refuses an edited or unrecognised page.
+
 ## Cache
 
 `RESEARCH_CACHE_PREFIX` is `v3`. Answers cached under `v2` (a generic family, mixed-generation prices, `RECOMMENDED` on confidence) are never read;
