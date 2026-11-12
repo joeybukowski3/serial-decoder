@@ -48,7 +48,8 @@ test('1. LG C3 55-inch resolves to the C6 55-inch (OLED55C6PUA) from the capture
   assert.deepEqual(asked.filter(([kind]) => kind === 'shopping').map(([, text]) => text), ['LG C-series OLED 55 inch TV', 'Sony Bravia 8 OLED 55 inch TV']);
   assert.equal(response.successor.name, 'LG C6 OLED 55-inch (OLED55C6PUA)');
   assert.deepEqual(response.successor.lineage, { relation: 'SAME_SERIES_NEWER', generation: 'C6', basis: 'LISTINGS', tier: 'SAME' });
-  assert.deepEqual(stats.generations.SUCCESSOR, { chosen: 'C6', newest: 'C6', skipped: null, seen: ['C6', 'C5', 'C4'] });
+  // (The C4 appears only in an unsized listing from an unlisted seller: no evidence about the requested size, so it is not counted as seen.)
+  assert.deepEqual(stats.generations.SUCCESSOR, { chosen: 'C6', newest: 'C6', skipped: null, seen: ['C6', 'C5'] });
   assert.deepEqual([response.successor.modelStatus, response.successor.standing, response.successor.verified], ['LISTED_PROVISIONAL', 'CONDITIONAL', false]);
   const prices = current(response);
   assert.deepEqual(prices.map((item) => [item.amount.low, item.model, item.verification]), [[999.99, 'OLED55C6PUA', 'SEARCH_LISTING']]);
@@ -135,11 +136,14 @@ test('6. the model naming an older or a non-existent generation does not overrid
 });
 
 test('6b. with no listing evidence at all, the model\'s generation stays a labelled hypothesis: it filters nothing and prices nothing', async () => {
-  const { response } = await run({ reply: identification('LG C7 OLED'), rows: [] });
-  assert.equal(response.successor.name, 'LG C7 OLED');
-  assert.deepEqual(response.successor.lineage, { relation: 'SAME_SERIES_NEWER', generation: 'C7', basis: 'AI_HYPOTHESIS', tier: 'SAME' });
+  const { response } = await run({ reply: identification('LG C5 OLED'), rows: [] });
+  assert.equal(response.successor.name, 'LG C5 OLED');
+  assert.deepEqual(response.successor.lineage, { relation: 'SAME_SERIES_NEWER', generation: 'C5', basis: 'AI_HYPOTHESIS', tier: 'SAME' });
   assert.equal(response.successor.modelStatus, 'FAMILY_LEVEL');
   assert.equal(current(response).length, 0);
+  // A digit past the current model year cannot be told from its namesake of ten years earlier (a C7 is 2027, or the 2017 C7), so no "newer" is claimed for it.
+  const future = await run({ reply: identification('LG C7 OLED'), rows: [] });
+  assert.deepEqual(future.response.successor.lineage, { relation: 'UNKNOWN', generation: 'C7', basis: 'AI_HYPOTHESIS', tier: 'SAME' });
 });
 
 // ---- 7 & 8. one listing stays provisional; unconfirmed family prices are not exact-model prices ---------------------------------------------------
@@ -201,7 +205,8 @@ test('a television grammar is never applied to another category, nor to a maker 
   assert.equal(resolveLineage({ category: 'tv', query: 'Sony A80J', candidateName: 'Sony Bravia 8 OLED' }), null, 'no Sony grammar');
   assert.equal(resolveLineage({ category: 'tv', query: 'LG C3', candidateName: 'LG OLED evo' }), null, 'a name with no series is not a series');
   const lineage = resolveLineage({ category: 'tv', query: 'LG C3 55 inch', identity: 'LG C3 OLED', candidateName: 'LG C4 OLED' });
-  assert.deepEqual([lineage.series, lineage.originalOrdinal, lineage.sameSeries, lineage.hypothesisOrdinal], ['C', 3, true, 4]);
+  // Generations are model years: the C3 is 2023 and the C4 is 2024.
+  assert.deepEqual([lineage.series, lineage.originalOrdinal, lineage.sameSeries, lineage.hypothesisOrdinal], ['C', 2023, true, 2024]);
   assert.equal(generalisedName('LG C4 OLED', lineage), 'LG C-series OLED');
   const other = resolveLineage({ category: 'tv', query: 'LG C3 55 inch', identity: 'LG C3 OLED', candidateName: 'LG G-series OLED' });
   assert.deepEqual([other.series, other.sameSeries, other.originalOrdinal], ['G', false, null], 'another series of the same maker is not the original\'s series');

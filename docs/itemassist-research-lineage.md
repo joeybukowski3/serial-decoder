@@ -12,12 +12,18 @@ generation census reads the Shopping rows that were already fetched. No provider
    original's own generation, uncertainty, and a tier estimate. Exact model codes are still forbidden.
 2. The Shopping query is the **series**, not a generation the model guessed (`generalisedName`): "LG C4 OLED" is queried as "LG C-series OLED", so
    the rows span generations and the listings decide which is newest.
-3. Each row is parsed with the maker's grammar into series, generation, size and model code. A listing of another generation, another model code, another
+3. Each row is parsed with the maker's grammar into series, generation, size and model code. **A generation is ordered by its model year, never by the
+   digit or letter**: those wrap (LG C9 is 2019 and C1 is 2021; Samsung T is 2020 and A is 2021). LG's digit is `2020 + digit`, minus ten when that is after
+   the request's year; Samsung's letter is read from an explicit table (R 2019 ... H 2026) and a letter not in it is not guessed. Consequently a digit past the
+   current year (a C7 in 2026) cannot be told from its 2010s namesake, and no "newer" is claimed for it until the year turns. A listing of another generation, another model code, another
    size (including a model code that contradicts the title), or one that states no generation is never priced for the candidate.
 4. `chooseGeneration` presents the **newest generation with a listing in the requested size**. It is priced only if a clean listing of it exists (new,
    single unit, recognised seller). An older generation is presented only when the newer one has no listing in the size, or its listings fail an
    essential requirement (for a television: resolution below 4K, wrong display class). A newer generation is never skipped merely because its listings are
    bundles, protection plans or from sellers outside the accepted list; then it is presented unpriced, with a stated reason.
+   A row counts as evidence about a generation only if it is a television: a title that names a generation but no full model code must also read like
+   one (4K, UHD or Smart), and an accessory "for" a series is not one. Rows rejected as used, import, rental or part create no generation at all, and a
+   title that only omits the word OLED is not a failed essential requirement (one that names QLED or LED is).
 5. A model code stated by one seller is kept (provisional). One seller is not corroboration and the status never reaches `VERIFIED_LISTING`; only a cited
    page can do that, and no live stage fetches pages.
 
