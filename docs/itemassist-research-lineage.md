@@ -50,8 +50,10 @@ Four statements stay separate, and one label never implies the others: **identif
 **comparability** (`comparison[].basis`) and **pricing evidence** (`pricing.valuation.confidence`).
 
 - **Candidate confidence is capped at `MEDIUM`** unless a cited page confirms the model (`modelStatus === VERIFIED_LISTING`). One retailer listing naming a model
-  supports "this model exists in a listing", not "this is the right replacement". The builder lowers a `HIGH`; the validator rejects `HIGH` on anything else, so an
-  answer cached before the cap fails validation and is a cache miss (no cache prefix change).
+  supports "this model exists in a listing", not "this is the right replacement". The builder lowers a `HIGH`; the validator rejects `HIGH` on anything else. An answer cached before the
+  cap (HIGH on an unconfirmed model, at most one day old) is served with that one label lowered to `MEDIUM` (`lowerUnsupportedConfidence`, applied on read in `cache.js`)
+  only if the lowered copy passes the full validator; the stored entry is not rewritten (its expiry stands), no provider is called and no budget is used. An entry
+  that is invalid for any other reason is a miss, as before. No cache prefix change.
 - **Samsung television model years** are one table, `SAMSUNG_TV_MODEL_YEAR` in `lineage.js` (R 2019, T 2020, A 2021, B 2022, C 2023, D 2024, F 2025, H 2026). `N` (2018)
   was removed: nothing evidences it. A letter outside the table is never guessed. A test compares the table with the classic pipeline through its exports.
 - **The original's own manufacturer page** (`original.manufacturerPages`, optional, at most two): taken only from the search results the engine already fetched about

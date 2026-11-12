@@ -62,7 +62,7 @@ test('live: one retailer listing naming the model leaves identification, lineage
   assert.equal(response.successor.standing, 'CONDITIONAL');
 });
 
-test('an answer cached before the cap (HIGH on a listing-backed model) is not served: it fails validation and is a miss', async () => {
+test('an answer cached before the cap (HIGH on a listing-backed model) is never served with HIGH: it is served lowered to MEDIUM (see the cached-confidence tests)', async () => {
   const response = JSON.parse(JSON.stringify(built('LG C3 OLED TV')));
   delete response.meta.fixture;
   const key = researchCacheKey('lg c3 oled tv', { contractVersion: 'research.2' });
@@ -71,5 +71,6 @@ test('an answer cached before the cap (HIGH on a listing-backed model) is not se
   const redis = createRedis();
   redis.store.set(key, JSON.stringify({ key, contractVersion: 'research.2', response: old }));
   const cache = createResearchCache({ redis, contractVersion: 'research.2', allowFixture: false });
-  assert.equal(await cache.read(key), null, 'a miss: the question is researched again rather than served with the old label');
+  assert.equal(isValidResearchResponseV2(old), false, 'as stored it fails validation');
+  assert.equal((await cache.read(key)).successor.confidence, 'MEDIUM', 'what is served is the validated copy with the label lowered');
 });
