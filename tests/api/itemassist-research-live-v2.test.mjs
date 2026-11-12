@@ -66,13 +66,17 @@ test('LG C3 55": a research.2 answer with listing prices from three recognised s
 
   const current = prices(body, 'CURRENT_RETAIL_NEW').filter((item) => item.sizeConfirmed !== false);
   assert.deepEqual(current.map((item) => [item.candidate, item.amount.low, item.verification, item.asOf, item.asOfBasis]),
-    [['SUCCESSOR', 999.99, 'SEARCH_LISTING', '2026-10-23', 'OBSERVED'], ['SUCCESSOR', 1096, 'SEARCH_LISTING', '2026-10-23', 'OBSERVED'], ['SUCCESSOR', 1449.99, 'SEARCH_LISTING', '2026-10-23', 'OBSERVED']]);
+    // One listing: the only priced C6 55-inch listing that states its model code. The C5 (Newegg) and the C6 that states no code (Target) are not
+    // part of this model's price, and the listings of the two generations are never combined into one range.
+    [['SUCCESSOR', 999.99, 'SEARCH_LISTING', '2026-10-23', 'OBSERVED']]);
   assert.equal(current[0].model, 'OLED55C6PUA');
+  assert.equal(body.successor.name, 'LG C6 OLED 55-inch (OLED55C6PUA)');
+  assert.deepEqual([body.successor.modelStatus, body.successor.standing], ['LISTED_PROVISIONAL', 'CONDITIONAL'], 'one seller names the model: provisional, never confirmed or recommended');
   assert.equal(body.pricing.prices.some((item) => item.verification === 'VERIFIED_PAGE'), false, 'nothing is page-confirmed: no page was fetched');
 
   const { valuation } = body.pricing;
-  assert.deepEqual([valuation.method, valuation.basis, valuation.verified, valuation.confidence], ['PROVISIONAL_LISTINGS', 'PROVISIONAL_LISTINGS', false, 'MEDIUM']);
-  assert.deepEqual(valuation.range, { currency: 'USD', low: 999.99, high: 1449.99 });
+  assert.deepEqual([valuation.method, valuation.basis, valuation.verified, valuation.confidence], ['PROVISIONAL_LISTINGS', 'PROVISIONAL_LISTINGS', false, 'LOW']);
+  assert.deepEqual(valuation.range, { currency: 'USD', low: 999.99, high: 999.99 }, 'one listing is an anchor for one model, not a range across generations');
   assert.equal(valuation.asOf, '2026-10-23');
   assert.equal(valuation.reference, null, 'an AI estimate of the original is never the reference price');
   assert.equal(valuation.notes.some((note) => note.code === 'MSRP_CONTEXT_ONLY'), false);
@@ -84,13 +88,13 @@ test('LG C3 55": a research.2 answer with listing prices from three recognised s
 
   // Listing evidence names the seller, never a product page: Shopping rows have no page of their own.
   assert.deepEqual(body.pricing.evidence.map((entry) => [entry.sourceName, entry.sourceClass, new URL(entry.sourceUrl).pathname, entry.observedAt, entry.modelRelation]),
-    [['Best Buy', 'RETAILER', '/', '2026-10-23', 'UNKNOWN'], ['Newegg', 'RETAILER', '/', '2026-10-23', 'UNKNOWN'], ['Target', 'RETAILER', '/', '2026-10-23', 'UNKNOWN'], ['P.C. Richard & Son', 'RETAILER', '/', '2026-10-23', 'UNKNOWN']]);
-  // Listings that state no screen size are shown as examples, marked as such; they are not comparables and do not move the range above.
-  const examples = prices(body, 'CURRENT_RETAIL_NEW').filter((item) => item.sizeConfirmed === false);
-  assert.ok(examples.length >= 1 && examples.length <= 2, 'at most the lowest and the highest unsized listing');
-  assert.equal(examples.every((item) => item.verification === 'SEARCH_LISTING' && item.candidate === 'SUCCESSOR'), true);
-  assert.equal(valuation.comparables.some((row) => examples.some((item) => item.id === row.priceId)), false);
-  assert.equal(body.successor.modelStatus, 'FAMILY_LEVEL');
+    [['Best Buy', 'RETAILER', '/', '2026-10-23', 'EXACT']]);
+  // The one listing's evidence carries the model code its own title states, so the relation is code-derived (EXACT), and it is still only a listing.
+  assert.deepEqual([body.pricing.evidence[0].subjectModel, body.pricing.evidence[0].expectedModel], ['OLED55C6PUA', 'OLED55C6PUA']);
+  // Listings that state no screen size, or no model code, cannot be tied to the exact model the successor is named by, so they are not shown as its examples either.
+  assert.equal(prices(body, 'CURRENT_RETAIL_NEW').some((item) => item.sizeConfirmed === false && item.candidate === 'SUCCESSOR'), false);
+  assert.equal(body.successor.modelStatus, 'LISTED_PROVISIONAL');
+  assert.deepEqual(body.successor.lineage, { relation: 'SAME_SERIES_NEWER', generation: 'C6', basis: 'LISTINGS', tier: 'UNKNOWN' });
 
   // Budget: one identification, one dated search and two Shopping queries (the successor family and the first alternative).
   assert.equal(fetchImpl.calls.gemini.length, 1);
@@ -384,11 +388,14 @@ test('forged confirmation in the model\'s reply never becomes a confirmed row, a
   const { body } = await ask(handler);
   assert.equal(isValidResearchResponseV2(body), true);
   assert.deepEqual(rowsOf(body).map((row) => [row.basis, row.evidenceId]), [['AI_ESTIMATE', null], ['AI_ESTIMATE', null]]);
-  assert.deepEqual([body.successor.modelStatus, body.successor.verified], ['FAMILY_LEVEL', false]);
+  // One seller names the model, so it is provisional; nothing the reply forged makes it verified.
+  assert.deepEqual([body.successor.modelStatus, body.successor.verified], ['LISTED_PROVISIONAL', false]);
   assert.equal(body.pricing.prices.some((item) => item.verification === 'VERIFIED_PAGE' || item.amount.low === 1), false);
   assert.equal(body.pricing.valuation.verified, false);
   assert.notEqual(body.pricing.valuation.method, 'VERIFIED_SINGLE');
-  assert.equal(body.pricing.evidence.some((entry) => entry.modelRelation !== 'UNKNOWN'), false, 'no source in the answer carries a model match the reply could have supplied');
+  // A model relation now exists, but only from the model code a retailer's own listing title states (a code, not the reply), and only as a listing.
+  assert.deepEqual(body.pricing.evidence.filter((entry) => entry.modelRelation !== 'UNKNOWN').map((entry) => [entry.sourceClass, entry.subjectModel, entry.modelRelation]), [['RETAILER', 'OLED55C6PUA', 'EXACT']]);
+  assert.equal(JSON.stringify(body).includes('VERIFIED_LISTING'), false, 'no candidate is page-confirmed');
 });
 
 test('the builder itself refuses a CONFIRMED row on the live path, even with exact-model evidence in hand; a demo fixture still keeps it', async () => {
@@ -456,7 +463,7 @@ test('cached rows mean zero Serper requests and zero credits', async () => {
   const fetchImpl = lgFetch();
   const result = await researchLiveV2(LG_QUERY, deps({ fetchImpl, enrichCache: cache }));
   assert.deepEqual([fetchImpl.calls.search.length, fetchImpl.calls.shopping.length, result.meta.serperCalls, result.meta.serperCredits, result.meta.cacheable], [0, 0, 0, 0, true]);
-  assert.equal(result.input.pricing.prices.filter((item) => item.kind === 'CURRENT_RETAIL_NEW' && item.sizeConfirmed !== false).length, 3);
+  assert.equal(result.input.pricing.prices.filter((item) => item.kind === 'CURRENT_RETAIL_NEW' && item.sizeConfirmed !== false).length, 1, 'the same single C6 listing as a live request');
 });
 
 test('the deadline: when the time left after the identification is too short, Shopping is skipped (and the answer is not cacheable) but nothing else is lost', async () => {
@@ -475,7 +482,7 @@ test('a Shopping failure for one candidate leaves the other candidate\'s prices 
   const failing = async (url, init) => { try { return await fetchImpl(url, init); } catch { return jsonResponse({}, 500); } };
   failing.calls = fetchImpl.calls;
   const result = await researchLiveV2(LG_QUERY, deps({ fetchImpl: failing }));
-  assert.equal(result.input.pricing.prices.filter((item) => item.kind === 'CURRENT_RETAIL_NEW' && item.candidate === 'SUCCESSOR' && item.sizeConfirmed !== false).length, 3);
+  assert.equal(result.input.pricing.prices.filter((item) => item.kind === 'CURRENT_RETAIL_NEW' && item.candidate === 'SUCCESSOR' && item.sizeConfirmed !== false).length, 1);
   assert.equal(result.meta.enrichment.listings.ALT_1, 'SERPER_HTTP_500');
   assert.equal(result.meta.cacheable, false);
 });

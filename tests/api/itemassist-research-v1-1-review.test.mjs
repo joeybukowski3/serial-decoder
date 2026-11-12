@@ -119,17 +119,17 @@ test('a name recognised while the provider failed claims no specification, no pr
 
 // ---- the answer cache version ------------------------------------------------------------------------------------------------------------------
 
-test('the research answer cache moved to v2 without touching any entry: an old v1 entry is simply never read, nothing is deleted, and only this namespace changed', async () => {
-  assert.equal(RESEARCH_CACHE_PREFIX, 'itemassist-research:answer:v2');
+test('the research answer cache moved to v3 without touching any entry: an old v1 or v2 entry is simply never read, nothing is deleted, and only this namespace changed', async () => {
+  assert.equal(RESEARCH_CACHE_PREFIX, 'itemassist-research:answer:v3');
   const key = researchCacheKey('Asus vivobook 15', { contractVersion: 'research.2' });
-  assert.match(key, /^itemassist-research:answer:v2:/);
+  assert.match(key, /^itemassist-research:answer:v3:/);
   // A real answer, cached by a first run.
   const first = await ask('Asus vivobook 15', { gemini: () => jsonResponse(geminiBody(VIVO.identification)), history: () => VIVO.history, listings: () => [] });
   const cachedEntry = first.redis.store.get(key);
-  assert.ok(cachedEntry, 'a successful answer is cached under the v2 key');
+  assert.ok(cachedEntry, 'a successful answer is cached under the v3 key');
   // The same entry sitting under the v1 key (what V1 wrote) is not served.
   const redis = createRedis();
-  const v1Key = key.replace(':answer:v2:', ':answer:v1:');
+  const v1Key = key.replace(':answer:v3:', ':answer:v1:');
   redis.store.set(v1Key, cachedEntry);
   const second = await ask('Asus vivobook 15', { redis, gemini: () => jsonResponse(geminiBody(VIVO.identification)), history: () => VIVO.history, listings: () => [] });
   assert.equal(second.fetchImpl.calls.gemini.length, 1, 'a miss: the provider is asked once');
