@@ -188,6 +188,9 @@ test('non-LG: Samsung S90C 65-inch finds the S90H in the captured rows, names it
   // The S90D listings (a factory-reconditioned set, bundles, an unlisted seller) are another generation and never priced here.
   for (const other of ['1949.99', '1497.99', '1697.99']) assert.equal(JSON.stringify(response.pricing).includes(other), false, other);
   assert.notEqual(response.successor.modelStatus, 'VERIFIED_LISTING');
+  // Retailers truncate a model code (QN65S90HAE, QN65S90HAEXZ): short spellings of one code are the same model, and the fullest spelling is kept.
+  assert.equal(response.successor.name, 'Samsung S90H OLED 65-inch (QN65S90HAEXZA)');
+  assert.equal(response.successor.modelStatus, 'UNVERIFIED_MODEL', 'a code seen only in bundle and protection-plan titles names the model but confirms nothing');
 });
 
 // ---- non-TV: the grammars are not applied to appliances ---------------------------------------------------------------------------------------------
