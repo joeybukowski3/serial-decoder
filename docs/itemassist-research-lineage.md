@@ -62,6 +62,27 @@ Four statements stay separate, and one label never implies the others: **identif
   It evidences only that the maker lists that model. It is never read for specifications or prices, never opened, and never used for a successor. The validator
   re-derives every field from the address and refuses an edited or unrecognised page.
 
+## Model evidence and specification comparison (Release 2)
+
+Two optional, additive candidate blocks (television candidates with a generation grammar), built only from rows already retrieved. No provider call is added.
+
+- **`modelObservations`** `{conflict, items[]}`: model codes that recognised sellers' listing titles state for the presented generation in the size asked about, kept apart from
+  price evidence and from verified identity. Each item: `model`, `status` (`PRICED_LISTING` or `EXCLUDED_FROM_PRICE`), `listings`, `retailers` (registry names of recognised
+  sellers), a bounded claim-free `excerpt`, `exclusion` (`PROTECTION_PLAN`, `BUNDLE`, `NOT_USED_IN_PRICE`, `CONFLICTING_CODES`) and `retrievedAt`/`retrievedBasis`.
+  A bundle or protection-plan listing shows that a model exists but never sets a price. An accessory kit "for" a model is not observed. Variants of one code are one model; codes
+  that are not variants are a **conflict**: none is chosen, the candidate is named without a code, and its listings are priced only as the family. An observed code never raises a
+  model status (when nothing can be priced the existing UNVERIFIED_MODEL naming from an observed code is unchanged).
+- **Retrieval time:** the Serper row cache now stores `at` with each entry. A fresh lookup is stamped with its retrieval time, a cache hit carries its entry's stored time, and an entry
+  stored before this existed is `UNKNOWN`. It is never a source's own publication time, and price `asOf` is unchanged.
+- **`specComparison`** `{rows[], compared[], notEstablished[]}`: per attribute (`SCREEN_SIZE`, `DISPLAY_CLASS`, `RESOLUTION`, `REFRESH_RATE` always; `DOLBY_VISION`, `HDMI_2_1` only
+  when a source states them) the original's value and the candidate's value, each with its basis, and `MATCH` / `DIFFERENT` / `NOT_ESTABLISHED`. The original's value comes from the
+  person's own words (not when they say what they *want*), the original manufacturer page's result **title** (Release 1, not opened) or listing titles of the original model; the
+  candidate's only from listing titles of the presented generation. Two sources that disagree leave a side not established. The model's own reply is never a source, and nothing is
+  inferred from a generation.
+- **Validation:** `evidence-blocks.js` normalizes each block and the validator requires equality with it (null blocks, extra keys, free text, results that do not follow, a candidate
+  value from a page or the person, a page basis with no `original.manufacturerPages`, a priced model the name does not carry, implausible retrieval dates all fail).
+  A response without the blocks is as valid as before; a web that predates them ignores them.
+
 ## Cache
 
 `RESEARCH_CACHE_PREFIX` is `v3`. Answers cached under `v2` (a generic family, mixed-generation prices, `RECOMMENDED` on confidence) are never read;
