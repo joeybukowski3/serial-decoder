@@ -99,7 +99,12 @@ test('the page is attached to the original only: no successor, price or evidence
   assert.equal(isValidResearchResponseV2(withPage), true);
   assert.deepEqual(withPage.original.manufacturerPages.map((page) => page.model), ['OLED55C3PUA']);
   assert.equal(without.original.manufacturerPages, undefined);
-  const strip = (response) => JSON.stringify({ successor: response.successor, suggestions: response.suggestions, prices: response.pricing.prices.filter((p) => p.subject === 'REPLACEMENT'), valuation: response.pricing.valuation.method });
+  // Release 2: the page's title may state the ORIGINAL's side of a specification comparison (labelled as such); nothing on the candidate's side or in a price changes.
+  const noComparison = (candidate) => { if (!candidate) return candidate; const { specComparison, ...rest } = candidate; return rest; };
+  const candidateSides = (candidate) => (candidate?.specComparison?.rows || []).map((row) => [row.attribute, row.candidate]);
+  assert.deepEqual(candidateSides(withPage.successor), candidateSides(without.successor), 'the candidate side of a comparison never takes anything from the original page');
+  for (const row of withPage.successor.specComparison?.rows || []) if (row.candidate) assert.equal(row.candidate.basis, 'LISTING_TITLE');
+  const strip = (response) => JSON.stringify({ successor: noComparison(response.successor), suggestions: response.suggestions.map(noComparison), prices: response.pricing.prices.filter((p) => p.subject === 'REPLACEMENT'), valuation: response.pricing.valuation.method });
   assert.equal(strip(withPage), strip(without), 'the successor, its prices and the valuation are identical with and without the original\'s page');
   assert.equal(withPage.pricing.evidence.some((entry) => entry.sourceUrl.includes('oled55c3pua-oled-4k-tv')), false, 'the page is not a price citation');
 });
