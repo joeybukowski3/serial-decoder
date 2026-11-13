@@ -126,6 +126,208 @@ test('supported identity with no reasonable year stays undated', async () => {
   assert.equal(classifySmartOutcome(result).resultStatus, 'needs-detail');
 });
 
+// Production diagnostic audit (Nov 9-12 2026) queries through the full handler.
+test('audit identities resolve on retrieval-first without a second provider; KDPS624PS substitution does not', async () => {
+  const cases = [
+    ['UN65RU800DFXZA', 'Samsung', 'UN65RU800D', 'television', 2019, 'family',
+      [row('Samsung UN65RU800DFXZA 65" Class RU800D TV', 'samsung.com'), row('Samsung UN65RU800DFXZA television', 'bestbuy.com')]],
+    ['Cummins Onan RS20A model 20GSBB-6714A', 'Cummins Onan', 'RS20A', 'standby generator', 2012, 'descriptive',
+      [row('Cummins Onan RS20A 20GSBB-6714A standby generator', 'cummins.com'), row('Cummins 20GSBB-6714A generator', 'parts.example')]],
+    // HA-B5T / EBT1-21044 / FCC ID 2ATF51604783 is externally documented; the row carries it.
+    ['EBT1-21044', 'JVC', 'HA-B5T', 'earbuds', 2021, 'evidence-alias',
+      [row('JVC HA-B5T True Wireless Earbuds', 'fccid.example', 'JVC HA-B5T, Model EBT1-21044, FCC ID 2ATF51604783'), row('EBT1-21044 JVC earbuds', 'support.example')]],
+    ['GDF550PGR7WW', 'GE', 'GDF550PGRWW', 'dishwasher', 2018, 'evidence-alias',
+      [row('GE GDF550PGR7WW dishwasher', 'partselect.ca', 'GE GDF550PGR7WW (GDF550PGRWW) dishwasher parts'), row('GE GDF550PGR7WW Dishwasher', 'searspartsdirect.com')]],
+  ];
+  for (const [query, brand, model, productType, year, anchor, rows] of cases) {
+    const code = query.split(' ').pop();
+    const app = setup({ lookup: (text) => retrievalFirstLookup(text, { searchImpl: async () => rows,
+      synthesisImpl: async () => ({ ok: true, requestCount: 1, result: { ...synthesis({ brand, code, productType }), model,
+        likelyProduct: `${brand} ${productType}`, identityConfidence: 'medium', estimatedIntroductionYear: year,
+        introductionYearConfidence: 'medium', introductionYearReason: 'Model-era estimate.' } }) }) });
+    const result = await call(app, query);
+    assert.equal(result.resultType, 'retrieval-identity', query);
+    assert.equal(result.model, model, query);
+    assert.equal(result.exactModel.replace(/[^A-Z0-9]/g, ''), code.toUpperCase().replace(/[^A-Z0-9]/g, ''), query);
+    assert.equal(result.estimatedIntroductionYear, year, query);
+    assert.equal(app.counts().providers, 0, query);
+    const log = app.logs.find((entry) => entry.event === 'smart_age_lookup');
+    assert.equal(log.retrievalFirstIdentityAnchor, anchor, query);
+    assert.equal(JSON.stringify(log).includes(code), false, `${query} raw code stays out of telemetry`);
+  }
+  const app = setup({ lookup: (text) => retrievalFirstLookup(text, {
+    searchImpl: async () => [row('KitchenAid KDPS624PS KDPS624SPS dishwasher', 'ebay.com'), row('KDPS624PS dishwasher', 'parts.example')],
+    synthesisImpl: async () => ({ ok: true, requestCount: 1, result: { ...synthesis({ brand: 'KitchenAid', code: 'KDPS624PS', productType: 'dishwasher' }),
+      model: 'KDPS624SPS', estimatedIntroductionYear: 2021, introductionYearConfidence: 'medium' } }) }) });
+  const result = await call(app, 'KDPS624PS');
+  assert.notEqual(result.resultType, 'retrieval-identity');
+  const log = app.logs.find((entry) => entry.event === 'smart_age_lookup');
+  assert.equal(log.retrievalFirstFailureReason, 'IDENTIFIER_CHANGED');
+  assert.equal(log.retrievalFirstIdentityAnchor, 'competing-identifier');
+});
+
+test('a remote part number does not inherit the TV it fits from a bracketed listing', async () => {
+  const app = setup({ lookup: (text) => retrievalFirstLookup(text, {
+    searchImpl: async () => [row('Remote Control for LG 55UH6150 (AKB75095307)', 'shop.example'), row('LG 55UH6150 55" 4K UHD TV', 'lg.com')],
+    synthesisImpl: async () => ({ ok: true, requestCount: 1, result: { ...synthesis({ brand: 'LG', code: 'AKB75095307', productType: 'television' }),
+      model: '55UH6150', likelyProduct: 'LG 55UH6150 55-inch 4K TV', estimatedIntroductionYear: 2016, introductionYearConfidence: 'medium' } }) }) });
+  const result = await call(app, 'AKB75095307');
+  assert.notEqual(result.resultType, 'retrieval-identity');
+  assert.notEqual(result.model, '55UH6150');
+  assert.doesNotMatch(String(result.likelyProduct ?? ''), /55UH6150/);
+  const log = app.logs.find((entry) => entry.event === 'smart_age_lookup');
+  assert.equal(log.retrievalFirstFailureReason, 'IDENTIFIER_CHANGED');
+  assert.equal(log.retrievalFirstIdentityAnchor, 'unsupported-alias');
+});
+
+// Formatting equivalence may prevent UNRELATED_MODEL but must not create
+// product or year evidence. WF7200 is not an established Epson model.
+async function formattingHandlerCall(query, rows, native, { synthesis } = {}) {
+  const calls = { native: 0 };
+  const handler = createAgeLookupHandler({ rateLimiter: allowingRateLimiter,
+    env: { SMART_LOOKUP_RETRIEVAL_FIRST_ENABLED: 'true', SMART_LOOKUP_NATIVE_GEMINI_SEARCH_ENABLED: 'true' },
+    logger: { info() {}, log() {}, warn() {}, error() {} }, localLookup: async () => null, redis: fakeRedis(),
+    reserveProviderBudget: async () => ({ allowed: true, status: 'allowed', logicalLookupCount: 1 }),
+    recordProviderAttemptMetrics: async (_redis, _kind, count) => ({ actualProviderAttemptCount: count }),
+    retrievalFirstLookup: (text) => retrievalFirstLookup(text, { searchImpl: async () => rows,
+      synthesisImpl: async () => ({ ok: true, requestCount: 1, result: synthesis || { identified: true, brand: native.brand,
+        model: native.model, exactModel: native.model, originalIdentifier: query, identifierType: 'model',
+        productType: native.category, likelyProduct: native.product, identityConfidence: 'medium', identityBasis: 'Provider match',
+        estimatedIntroductionYear: native.bestEstimateYear, introductionYearConfidence: 'medium',
+        introductionYearReason: 'Model-era estimate.', needsMoreDetail: false } }) }),
+    nativeGeminiSearchLookup: async () => { calls.native += 1; return native; },
+    providerLookup: async () => { throw new Error('legacy research must not run'); },
+  });
+  const out = response();
+  await handler(request(query), out);
+  return { result: out.payload, calls };
+}
+
+const nativeAnswer = (brand, model, category, sourceTitle, year) => ({ brand, model, product: `${brand} ${model} ${category}`, category,
+  bestEstimateYear: year, estimatedRange: { startYear: year, endYear: year + 2 }, precision: 'exact_model', confidence: 'medium',
+  estimateBasis: 'Model-era estimate.', summary: 'Provider summary.', isIndividualUnitDate: false, caveats: [],
+  sources: [{ title: sourceTitle, url: 'https://maker.example/item', evidenceText: [`${sourceTitle} launched ${year}`] }] });
+
+test('WF7200 with only neighbouring Epson evidence stays qualified and undated, never UNRELATED_MODEL', async () => {
+  const { result, calls } = await formattingHandlerCall('WF7200',
+    [row('Epson WorkForce WF-7210 wide-format printer', 'epson.com'), row('Epson WorkForce WF-7720 all-in-one', 'rtings.com')],
+    nativeAnswer('Epson', 'WF-7200', 'printer', 'Epson WorkForce WF-7210', 2017));
+  assert.equal(calls.native, 1);
+  assert.notEqual(result.errorCode, 'UNRELATED_MODEL');
+  assert.notEqual(result.resultType, 'retrieval-identity');
+  for (const field of ['estimatedIntroductionYear', 'introductionYear', 'bestEstimateYear']) assert.equal(result[field] ?? null, null, field);
+  assert.equal(classifySmartOutcome(result).resultStatus, 'needs-detail');
+});
+
+test('a formatting-only match keeps its year only when a cited source names the code', async () => {
+  // Fictional code: the control proves the gate, not any real product's date.
+  const { result } = await formattingHandlerCall('ZX4100', [row('Acme ZX-3100 widget', 'maker.example')],
+    nativeAnswer('Acme', 'ZX-4100', 'widget', 'Acme ZX-4100 widget', 2016));
+  assert.notEqual(result.errorCode, 'UNRELATED_MODEL');
+  assert.equal(result.bestEstimateYear ?? result.introductionYear, 2016);
+});
+
+// B3: production shape. Grounding titles are bare domains, URLs are redirects,
+// and evidenceText is the provider's own sentence attributed to a chunk, so it
+// cannot vouch for the code the provider wrote.
+const REDIRECT = 'https://vertexaisearch.cloud.google.com/grounding-api-redirect/a';
+const EPSON_NEIGHBOUR_ROWS = [row('Epson WorkForce WF-7210 wide-format printer', 'epson.com'), row('Epson WorkForce WF-7720 all-in-one', 'rtings.com')];
+const productionNative = () => ({ ...nativeAnswer('Epson', 'WF-7200', 'printer', 'epson.com', 2017),
+  summary: 'Epson WorkForce wide-format printer. The Epson WF-7200 launched in 2017.',
+  estimateBasis: 'The WF-7200 was introduced in 2017.',
+  sources: [{ title: 'epson.com', url: REDIRECT, evidenceText: ['The Epson WF-7200 launched in 2017.'] }] });
+
+function assertUndated(result) {
+  assert.notEqual(result.errorCode, 'UNRELATED_MODEL');
+  for (const field of ['estimatedIntroductionYear', 'introductionYear', 'bestEstimateYear']) assert.equal(result[field] ?? null, null, field);
+  assert.equal(classifySmartOutcome(result).resultStatus, 'needs-detail');
+  for (const field of ['summary', 'notes', 'introductionYearReason', 'historicalContext']) assert.doesNotMatch(String(result[field] ?? ''), /2017/, field);
+  for (const item of result.evidence || []) assert.doesNotMatch(String(item?.detail ?? ''), /2017/, 'evidence detail');
+}
+
+// Round 4: a search-results page echoes the query; it is not independent evidence.
+const ECHO_ROW = { title: 'Wf7200 for sale | eBay', snippet: 'Find great deals on eBay for wf7200.', url: 'https://www.ebay.com/sch/i.html?_nkw=wf7200' };
+
+test('native: a search page echoing WF7200 cannot establish a formatting-only year', async () => {
+  const { result, calls } = await formattingHandlerCall('WF7200', [...EPSON_NEIGHBOUR_ROWS, ECHO_ROW], productionNative(),
+    { synthesis: { identified: false } });
+  assert.equal(calls.native, 1);
+  assertUndated(result);
+  assert.equal(result.confidence ?? result.confidenceLevel, 'low');
+});
+
+test('native: a genuine content page listing WF-7200 among other models still counts', async () => {
+  const { result } = await formattingHandlerCall('WF7200',
+    [...EPSON_NEIGHBOUR_ROWS, ECHO_ROW, row('Ink cartridges for WF-7210, WF-7710, WF-7200 printers', 'ink.example')], productionNative(),
+    { synthesis: { identified: false } });
+  assert.notEqual(result.errorCode, 'UNRELATED_MODEL');
+  assert.equal(result.bestEstimateYear ?? result.introductionYear, 2017);
+});
+
+test('native: the provider\'s own attributed sentence cannot establish a formatting-only year', async () => {
+  const { result, calls } = await formattingHandlerCall('WF7200', EPSON_NEIGHBOUR_ROWS, productionNative());
+  assert.equal(calls.native, 1);
+  assertUndated(result);
+  assert.equal(result.confidence ?? result.confidenceLevel, 'low');
+});
+
+test('native: a retrieved Serper row naming the code allows the formatting-only year', async () => {
+  const { result, calls } = await formattingHandlerCall('WF7200',
+    [row('Epson WorkForce WF-7200 printer', 'epson.com'), ...EPSON_NEIGHBOUR_ROWS], productionNative(),
+    { synthesis: { identified: false } });
+  assert.equal(calls.native, 1);
+  assert.notEqual(result.errorCode, 'UNRELATED_MODEL');
+  assert.equal(result.bestEstimateYear ?? result.introductionYear, 2017);
+});
+
+// The legacy provider path (native search off) applies the same gate.
+const legacyAnswer = (sources) => {
+  const value = { brand: 'Epson', model: 'WF-7200', likelyProduct: 'Epson WorkForce WF-7200 printer', specificityLevel: 'specific',
+    introductionYear: 2017, productionRange: { start: 2017, end: 2019, basis: 'model-availability' },
+    summary: 'Epson WorkForce wide-format printer. The Epson WF-7200 launched in 2017.', notes: 'Introduced in 2017.',
+    historicalContext: 'Part of the 2017 WorkForce refresh.', evidence: [{ detail: 'Introduced in 2017 per Epson.', source: 'Epson' }] };
+  Object.defineProperty(value, Symbol.for('smart-lookup-provider-metadata'), { enumerable: false, value: Object.freeze({
+    provider: 'gemini', fallbackUsed: false, primaryProvider: 'gemini', primaryErrorCode: null, grounded: true,
+    groundedSources: sources, searchQueryCount: 1 }) });
+  return value;
+};
+
+async function legacyHandlerCall(query, rows, answer) {
+  const calls = { legacy: 0 };
+  const handler = createAgeLookupHandler({ rateLimiter: allowingRateLimiter,
+    env: { SMART_LOOKUP_RETRIEVAL_FIRST_ENABLED: 'true', SMART_LOOKUP_NATIVE_GEMINI_SEARCH_ENABLED: 'false' },
+    logger: { info() {}, log() {}, warn() {}, error() {} }, localLookup: async () => null, redis: fakeRedis(),
+    reserveProviderBudget: async () => ({ allowed: true, status: 'allowed', logicalLookupCount: 1 }),
+    recordProviderAttemptMetrics: async (_redis, _kind, count) => ({ actualProviderAttemptCount: count }),
+    retrievalFirstLookup: (text) => retrievalFirstLookup(text, { searchImpl: async () => rows,
+      synthesisImpl: async () => ({ ok: true, requestCount: 1, result: { identified: false } }) }),
+    nativeGeminiSearchLookup: async () => { throw new Error('native search must not run'); },
+    providerLookup: async () => { calls.legacy += 1; return answer; },
+  });
+  const out = response();
+  await handler(request(query), out);
+  return { result: out.payload, calls };
+}
+
+test('legacy: attributed provider text cannot establish a formatting-only year', async () => {
+  const { result, calls } = await legacyHandlerCall('WF7200', EPSON_NEIGHBOUR_ROWS,
+    legacyAnswer([{ title: 'epson.com', domain: 'epson.com', uri: REDIRECT, evidenceText: ['The Epson WF-7200 launched in 2017.'] }]));
+  assert.equal(calls.legacy, 1);
+  assertUndated(result);
+});
+
+test('legacy: a cited page title naming the code leaves the answer ungated', async () => {
+  const { result, calls } = await legacyHandlerCall('WF7200', EPSON_NEIGHBOUR_ROWS,
+    legacyAnswer([{ title: 'Epson WorkForce WF-7200 Printer', domain: 'epson.com', uri: 'https://epson.com/wf-7200' }]));
+  assert.equal(calls.legacy, 1);
+  assert.notEqual(result.errorCode, 'UNRELATED_MODEL');
+  // The gate leaves this answer whole (its year prose survives). The structured
+  // year itself is then withheld by the normalizer's existing rule for a
+  // brandless partial legacy query, exactly as on main.
+  assert.match(result.summary, /2017/);
+  assert.match(result.notes, /2017/);
+});
+
 function fakeRedis(initial = null) {
   let stored = initial;
   const writes = [];

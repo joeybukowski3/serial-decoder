@@ -1,5 +1,5 @@
 import { buildSmartAgeCacheKey, chooseSmartAgeTtl, hashCanonicalQuery, matchesSmartAgeCacheRequest, prepareResultForCache } from '../lib/smart-lookup/cache.js';
-import { hasCachedExactModelEvidence, isSmartAgeProductCompatible } from '../lib/smart-lookup/age-identity.js';
+import { hasCachedExactModelEvidence, isSmartAgeProductCompatible, matchesOnlyByFormatting, withoutYearClaims, withoutYearSentences } from '../lib/smart-lookup/age-identity.js';
 import { providerAttemptCountFromMetadata, recordProviderAttemptMetrics, reserveGuidanceBudget, reserveProviderBudget } from '../lib/smart-lookup/budget.js';
 import { chooseSmartLookupRoute, ROUTE_MODES } from '../lib/smart-lookup/route-mode.js';
 import { buildGeneralGuidance } from '../lib/smart-lookup/guidance.js';
@@ -74,7 +74,7 @@ import { auditEnabled, createDiagnosticAudit } from '../lib/smart-lookup/diagnos
 import { handleDiagnosticAuditAck, isDiagnosticAuditAck } from '../lib/smart-lookup/diagnostic-ack.js';
 import { createGeminiCooldown } from '../lib/smart-lookup/gemini-cooldown.js';
 import { createQuotaMeter } from '../lib/quota/meter.js';
-import { isRetrievalFirstEligible, retrievalFirstLookup, retrievalFirstResponseInput, retrievalFirstSerperTimeoutMs } from '../lib/smart-lookup/retrieval-first.js';
+import { containsIdentifier, isRetrievalFirstEligible, retrievalFirstLookup, retrievalFirstResponseInput, retrievalFirstSerperTimeoutMs } from '../lib/smart-lookup/retrieval-first.js';
 
 const TOTAL_BUDGET_MS = 15000;
 const PROVIDER_BUDGET_MS = 6500;
@@ -149,6 +149,45 @@ function nativeProviderIdentityPayload(nativeResult) {
     endOfRetailAvailability: nativeResult.endOfRetailAvailability,
     endOfManufacturerSupport: nativeResult.endOfManufacturerSupport,
   };
+}
+
+// A punctuation-only match ("WF-7200" for "WF7200") makes the provider's
+// identity compatible, but it is not evidence that the product exists. Its
+// dated claims are kept only when independent text names the code: a cited
+// page's own title or URL, or the title/snippet of a row retrieval-first
+// already fetched. A source's evidenceText is a slice of the provider's own
+// answer, so it never counts, and a search-results page only echoes the query.
+// Each field is checked alone so two adjacent fields cannot spell the code.
+const SEARCH_PAGE_PATH = /(?:^|\/)(?:s|sch|search[^/]*)(?:\/|$)/i;
+const SEARCH_PAGE_PARAMS = ['q', 'k', '_nkw', 'query', 'keyword', 'keywords', 'search', 'searchterm', 'st'];
+
+function isSearchPageUrl(value) {
+  if (typeof value !== 'string' || !value) return false;
+  let url;
+  try { url = new URL(value); } catch (_) { return false; }
+  return SEARCH_PAGE_PATH.test(url.pathname)
+    || [...url.searchParams.keys()].some((key) => SEARCH_PAGE_PARAMS.includes(key.toLowerCase()));
+}
+
+function textsNameIdentifier(texts, identifier) {
+  return texts.some((text) => typeof text === 'string' && containsIdentifier(text, identifier));
+}
+
+function hasUnsupportedFormattingOnlyMatch(payload, queryInfo, sources, retrievedRows = []) {
+  const identifier = queryInfo.modelIdentity || queryInfo.model;
+  return matchesOnlyByFormatting(payload, queryInfo)
+    && !(Array.isArray(sources) ? sources : []).some((source) => source
+      && !isSearchPageUrl(source.url || source.uri)
+      && textsNameIdentifier([source.title, source.url, source.uri], identifier))
+    && !retrievedRows.some((row) => row && !isSearchPageUrl(row.url)
+      && textsNameIdentifier([row.title, row.snippet], identifier));
+}
+
+function withoutNativeYearClaims(nativeResult) {
+  return { ...nativeResult, bestEstimateYear: null, estimatedRange: null, isIndividualUnitDate: false,
+    endOfRetailAvailability: null, endOfManufacturerSupport: null, confidence: 'low',
+    summary: withoutYearSentences(nativeResult.summary), estimateBasis: withoutYearSentences(nativeResult.estimateBasis),
+    caveats: withoutYearSentences(nativeResult.caveats) };
 }
 
 function mapNativeGeminiSearchResult(nativeResult, queryInfo, options = {}) {
@@ -396,6 +435,7 @@ function logResult(logger, requestId, queryInfo, result, extra = {}) {
     retrievalFirstSerperRequests: routing.retrievalFirstSerperRequests ?? 0,
     retrievalFirstGeminiRequests: routing.retrievalFirstGeminiRequests ?? 0,
     retrievalFirstFailureReason: routing.retrievalFirstFailureReason || null,
+    retrievalFirstIdentityAnchor: routing.retrievalFirstIdentityAnchor || null,
     retrievalFirstLatencyMs: routing.retrievalFirstLatencyMs ?? null,
     serperDurationMs: routing.serperDurationMs ?? null,
     geminiDurationMs: routing.geminiDurationMs ?? null,
@@ -553,6 +593,10 @@ export function createAgeLookupHandler(dependencies = {}) {
     const geminiState = { rateLimited: false, cooldownActive: false };
     let shadowTask = null;
     let shadowObserved = false;
+    // Rows retrieval-first fetched for this request; independent support for
+    // the formatting-only year gate. A request sharing another's in-flight
+    // provider call has none, so its gate fails closed.
+    let retrievalEvidenceRows = [];
     const routingTelemetry = {
       sharedEvidenceAttempted: false,
       retrievalFirstAttempted: false,
@@ -562,6 +606,7 @@ export function createAgeLookupHandler(dependencies = {}) {
       retrievalFirstSerperRequests: 0,
       retrievalFirstGeminiRequests: 0,
       retrievalFirstFailureReason: null,
+      retrievalFirstIdentityAnchor: null,
       retrievalFirstLatencyMs: null,
       sharedEvidenceAccepted: false,
       sharedEvidenceFailureCode: null,
@@ -1202,6 +1247,8 @@ export function createAgeLookupHandler(dependencies = {}) {
               inputTokens: report.providerUsage?.gemini?.inputTokens, outputTokens: report.providerUsage?.gemini?.outputTokens,
               thinkingTokens: report.providerUsage?.gemini?.thinkingTokens, grounded: false,
               durationMs: routingTelemetry.retrievalFirstLatencyMs, usableResponse: Boolean(report.validation?.accepted) });
+            routingTelemetry.retrievalFirstIdentityAnchor = report.validation?.identityAnchor || null;
+            retrievalEvidenceRows = report.evidencePackage?.topResults || [];
             const mapped = retrievalFirstResponseInput(report);
             if (mapped) {
               try {
@@ -1695,8 +1742,11 @@ export function createAgeLookupHandler(dependencies = {}) {
         // The provider-only payload is judged before normalization can echo the
         // request's identity into the result; the normalized result is then
         // checked again as defense in depth.
-        let result = isSmartAgeProductCompatible(nativeProviderIdentityPayload(nativeResult), queryInfo)
-          ? mapNativeGeminiSearchResult(nativeResult, queryInfo, {
+        const nativeIdentity = nativeProviderIdentityPayload(nativeResult);
+        const nativeInput = hasUnsupportedFormattingOnlyMatch(nativeIdentity, queryInfo, nativeResult.sources, retrievalEvidenceRows)
+          ? withoutNativeYearClaims(nativeResult) : nativeResult;
+        let result = isSmartAgeProductCompatible(nativeIdentity, queryInfo)
+          ? mapNativeGeminiSearchResult(nativeInput, queryInfo, {
             cacheStatus,
             timings,
             currentYear,
@@ -1772,8 +1822,10 @@ export function createAgeLookupHandler(dependencies = {}) {
           timings,
           currentYear,
         };
-        const validatedProvider = normalizeSmartAgeResult(rawProvider, providerOptions);
-        if (!isSmartAgeProductCompatible(rawProvider, queryInfo)) throw new SmartLookupValidationError('UNRELATED_MODEL');
+        const providerInput = hasUnsupportedFormattingOnlyMatch(rawProvider, queryInfo, providerOptions.groundedSources, retrievalEvidenceRows)
+          ? withoutYearClaims(rawProvider) : rawProvider;
+        const validatedProvider = normalizeSmartAgeResult(providerInput, providerOptions);
+        if (!isSmartAgeProductCompatible(providerInput, queryInfo)) throw new SmartLookupValidationError('UNRELATED_MODEL');
         const hinted = applyEraHints(validatedProvider, queryInfo.normalizedQuery);
         result = normalizeSmartAgeResult(hinted, { ...providerOptions, lifecycleAlreadyValidated: true,
           lifecycleProvenance: validatedProvider[LIFECYCLE_PROVENANCE] });
