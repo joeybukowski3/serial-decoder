@@ -303,7 +303,8 @@ test('MSRP supplies context only: it never sets, nudges or qualifies a range, ho
   assert.deepEqual(high.range, low.range);
   assert.deepEqual([high.comparables, high.excluded], [low.comparables, low.excluded], 'MSRP never changes which candidates qualify');
   assert.ok(noteCodes(high).includes('MSRP_CONTEXT_ONLY'));
-  assert.deepEqual(high.notes.find((n) => n.code === 'CURRENT_BELOW_ORIGINAL'), { code: 'CURRENT_BELOW_ORIGINAL', ratio: 0.13 });
+  // Release 2.1: a replacement is a different model, so its present-day price is never expressed as a share of the original's older list price.
+  assert.equal(noteCodes(high).includes('CURRENT_BELOW_ORIGINAL'), false);
   assert.equal(noteCodes(low).includes('CURRENT_BELOW_ORIGINAL'), false);
   assert.deepEqual(high.reference, { priceId: 'p9', kind: 'MSRP' });
 });
@@ -380,7 +381,7 @@ test('every fixture scenario builds a valid research.2 response with the intende
 test('the fixture illustrates the required cases: MSRP context, essential-shortfall exclusion, retail evidence, sparse and ambiguous inputs', () => {
   const tv = scenarioResponse(QUERIES['tv-premium-oled']).response;
   assert.deepEqual(tv.pricing.tier, { level: 'PREMIUM', basis: 'MSRP_EVIDENCE' });
-  assert.ok(noteCodes(tv.pricing.valuation).includes('CURRENT_BELOW_ORIGINAL') && noteCodes(tv.pricing.valuation).includes('MSRP_CONTEXT_ONLY'));
+  assert.ok(noteCodes(tv.pricing.valuation).includes('MSRP_CONTEXT_ONLY') && !noteCodes(tv.pricing.valuation).includes('CURRENT_BELOW_ORIGINAL'));
   const fridge = scenarioResponse(QUERIES['fridge-constraints']).response;
   assert.deepEqual(fridge.pricing.valuation.excluded.map((e) => [e.candidate, e.reason]), [['ALT_1', 'NO_CURRENT_PRICE'], ['ALT_2', 'CONFIRMED_ESSENTIAL_SHORTFALL']]);
   assert.equal(fridge.pricing.valuation.range.high, 2399, 'the 3,299 price of the side-by-side never counts');

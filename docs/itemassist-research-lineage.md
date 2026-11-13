@@ -83,6 +83,31 @@ Two optional, additive candidate blocks (television candidates with a generation
   value from a page or the person, a page basis with no `original.manufacturerPages`, a priced model the name does not carry, implausible retrieval dates all fail).
   A response without the blocks is as valid as before; a web that predates them ignores them.
 
+## Release 2.1 corrections
+
+- **"Your description" is what the person wrote, not what a model code implies.** The person's words are read with every model identifier removed (`withoutModelIdentifiers`: letters, digits,
+  then more letters, as in `OLED55C3PUA` or `QN65S90C`), so the `OLED` in `OLED55C3PUA` is not a `USER_STATED` display class and the `55` is not a stated size. Shorthand such as `OLED55`
+  is not an identifier and is still the person's description. With no page or listing of the original to read, that side is `NOT_ESTABLISHED`. This reads only the person's words:
+  a listing or page title that contains nothing but a code (`OLED55C6PUA`) can still yield a display class, labelled as that title's wording.
+- **No cross-model price comparison.** The original's list price stays as dated context (`MSRP_CONTEXT_ONLY`: it never sets the range). The engine no longer emits
+  `CURRENT_BELOW_ORIGINAL` (a present-day listing as a share of an older list price): a replacement is a different model. The validator rebuilds the valuation and so rejects an answer
+  that carries the note; an answer cached by the Release 2 engine does, so the cache read removes the note from the copy it serves (`withoutRetiredValuationNotes`, the same pattern as
+  `lowerUnsupportedConfidence`: validated before serving, the stored entry never rewritten, no price, range or confidence touched). Without that, every such cached answer would have become a
+  miss and a fresh provider call. The web no longer words the note.
+- **Cache tail and rollback.** The answer-cache key is unchanged, so an answer cached by the Release 2 engine is served for up to 24 h as it was built (including a `USER_STATED` display
+  class read from a model code); only the retired note is removed. Rolling the engine back is safe but not free: the Release 2 engine rejects a cached 2.1 answer that lacks the note when the
+  list price is under 75% of the listing, which is a cache miss (one extra provider call), not an error.
+- **Observation diagnostics (internal).** `enrichment.observations.<candidate>` in the structured log line explains why a `modelObservations` block is or is not emitted. They are never
+  in the public response and carry only small integers, booleans and fixed labels (never a title, seller, link, model code or query). Fields, in the order a block can be lost:
+  `rowsConsidered` (Shopping rows screened) → `sellersRecognised` → `rowsOfSeries` → `rowsObservable` (size asked, recognised seller, reads as a television) →
+  `rowsOfPresentedGeneration` (rows judged to be the original model itself are not counted in `rowsOfSeries`); `rowsWithCodeToken` (rows with anything shaped like a model code, whatever the seller or generation); `identifiersRecognised` (distinct codes the maker's
+  grammar read, any generation); `accessoryRowsSkipped`; `observationsRetained` (at most 3) with `observationsExcluded` by reason (`PROTECTION_PLAN`, `BUNDLE`, `NOT_USED_IN_PRICE`,
+  `CONFLICTING_CODES`); `conflict`; and `emitted` (added from the response actually built: `observationsRetained > 0` with `emitted: false` means the contract dropped the block; `ALT_n` is matched to the n-th suggestion by position, so for
+  an alternative it is a close approximation). The counters are best effort: if they cannot be computed they are absent and the answer is unaffected. The same log line already carries
+  other enrichment fields (for example `unsupportedCodes`); the counters themselves hold only integers, booleans and fixed labels.
+  Typical absences: `rowsWithCodeToken: 0` (Shopping titles state no code), `identifiersRecognised: 0` with code tokens present (a code the grammar does not read), or
+  `rowsOfPresentedGeneration: 0` (no listing of the presented generation in the size asked).
+
 ## Cache
 
 `RESEARCH_CACHE_PREFIX` is `v3`. Answers cached under `v2` (a generic family, mixed-generation prices, `RECOMMENDED` on confidence) are never read;
