@@ -220,3 +220,21 @@ test('only an undatable letter that may be NEWER adds the "newer model may exist
   assert.deepEqual(lg.unread('LG 55" UM7570 Series 4K 55UM7570PUA'), { series: '75', newer: false }, 'M (2019) is older');
   assert.deepEqual(lg.unread('LG 55" UB7570 Series 4K 55UB7570PUA'), { series: '75', newer: true }, 'B follows the 2025 reset');
 });
+
+test('a television\'s own feature words ("Full Array Backlight", "Legs Included", "Inverter") never make it a part', async () => {
+  const sony = await runOne('Sony KD-55X80J', 'Sony X80J 55-inch 4K LED TV (2021)', 'Sony X80-series', [
+    { title: 'Sony 55" Class X80L 4K HDR LED Smart Google TV with Direct LED Backlight KD55X80L', seller: 'Best Buy', price: 649.99 },
+    { title: 'Sony 55 inch X80L 4K Smart TV Black Legs Included KD-55X80L', seller: 'Crutchfield', price: 629 },
+  ]);
+  assert.deepEqual(sony.prices, [629, 649.99]);
+  const lg = await runOne('LG 55UN7300PUF', 'LG UN7300 55-inch 4K LED TV (2020)', 'LG UT75', [
+    { title: 'LG 55" Class UT75 Series LED 4K UHD Smart webOS TV with Full Array Backlight 55UT7570PUB', seller: 'Best Buy', price: 379.99 },
+    { title: 'LG 55 inch UT75 4K UHD Smart TV Inverter Technology Wi-Fi module 55UT7570PUB', seller: 'Walmart', price: 369 },
+  ]);
+  assert.deepEqual(lg.prices, [369, 379.99]);
+  const samsung = await runOne('Samsung QN55Q80B', 'Samsung Q80B 55-inch 4K QLED TV (2022)', 'Samsung Q80-series', [
+    { title: 'Samsung 55" Class Q80C QLED 4K Smart TV Direct Full Array Backlight QN55Q80CAFXZA', seller: 'Best Buy', price: 899.99 },
+    { title: 'Samsung QN55Q80CAFXZA 55" 4K Smart TV, Adjustable Feet, Full Array LED backlight', seller: 'Walmart', price: 879 },
+  ]);
+  assert.deepEqual(samsung.prices, [879, 899.99], 'the existing S/Q grammar keeps these listings too');
+});
