@@ -10,6 +10,7 @@ import {
 } from '../../lib/smart-lookup/diagnostic-audit.js';
 import { REVIEW_COLUMNS, collectExportRows, csvCell, csvRow, exportRows } from '../../lib/smart-lookup/diagnostic-export.js';
 import { diagnosticJson } from '../../lib/smart-lookup/diagnostic-projector.js';
+import { allowingRateLimiter } from '../helpers/allowing-rate-limiter.mjs';
 
 function fakeRedis() {
   const hashes = new Map();
@@ -456,4 +457,43 @@ test('ack body size is bounded with or without Content-Length; ordinary lookups 
 
   assert.equal((await send({ method: 'POST', headers, body: valid })).statusCode, 204);
   assert.equal(redis.hashes.get(auditKey(audit.id)).display.text, 'Shown');
+});
+
+test('a native identity rejection records the retrieval-first reason, the native reason, the branch and the outcome', async () => {
+  const redis = fakeRedis();
+  const routeRedis = { get: async () => null, set: async () => 'OK', eval: async () => [1, 1, 1], incrby: async (_key, n) => n, expire: async () => 1 };
+  let nativeCalls = 0;
+  const handler = createAgeLookupHandler({
+    env: { SMART_LOOKUP_DIAGNOSTIC_AUDIT: '1', SMART_LOOKUP_RETRIEVAL_FIRST_ENABLED: 'true', SMART_LOOKUP_NATIVE_GEMINI_SEARCH_ENABLED: 'true' },
+    auditRedis: redis, redis: routeRedis, redisFactory: () => routeRedis,
+    logger: { info() {}, log() {}, warn() {}, error() {} }, localLookup: async () => null,
+    rateLimiter: allowingRateLimiter,
+    reserveProviderBudget: async () => ({ allowed: true, status: 'allowed', logicalLookupCount: 1 }),
+    recordProviderAttemptMetrics: async (_redis, _kind, count) => ({ actualProviderAttemptCount: count }),
+    retrievalFirstLookup: async () => ({ failureReason: 'NO_EXACT_EVIDENCE', validation: { accepted: false, reason: 'NO_EXACT_EVIDENCE' } }),
+    // Fictional code; the product name names a rival line, so identity is rejected.
+    nativeGeminiSearchLookup: async () => { nativeCalls += 1; return { brand: 'Acme', model: 'ZQ55AB1234X',
+      product: 'Acme ZQ77 Widget', category: 'widget', bestEstimateYear: 2019, precision: 'exact_model', confidence: 'medium',
+      summary: 'Provider summary.', caveats: [], sources: [{ title: 'Acme ZQ77', url: 'https://maker.example/zq77' }] }; },
+    providerLookup: async () => { throw new Error('legacy research must not run'); },
+  });
+  const out = response();
+  await handler({ method: 'POST', body: { query: 'ZQ55AB1234X', rawQuery: 'ZQ55AB1234X' }, headers: { 'x-forwarded-for': '127.0.0.1' }, socket: {} }, out);
+  assert.equal(nativeCalls, 1);
+  assert.equal(out.payload.errorCode, 'UNRELATED_MODEL');
+  const hash = await redis.hgetall(auditKey(out.payload.auditId));
+  const final = parseAuditField(hash.final);
+  assert.equal(final.resultBranch, 'native');
+  assert.equal(final.retrievalFirstValidationReason, 'NO_EXACT_EVIDENCE');
+  assert.equal(final.retrievalFirstFailureReason, 'NO_EXACT_EVIDENCE');
+  assert.equal(final.nativeRejectionReason, 'UNRELATED_MODEL:provider-identity');
+  assert.equal(final.outcomeReason, 'identity-rejected');
+  const row = exportRows(out.payload.auditId, hash);
+  const column = (name) => row.review[REVIEW_COLUMNS.indexOf(name)];
+  assert.equal(column('Outcome reason'), 'identity-rejected');
+  assert.equal(column('Result branch'), 'native');
+  assert.equal(column('Retrieval-first validation reason'), 'NO_EXACT_EVIDENCE');
+  assert.equal(column('Native rejection reason'), 'UNRELATED_MODEL:provider-identity');
+  assert.equal(row.diagnostic.at(-1).nativeRejectionReason, 'UNRELATED_MODEL:provider-identity');
+  assert.equal(row.review.length, REVIEW_COLUMNS.length);
 });

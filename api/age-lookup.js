@@ -1256,9 +1256,14 @@ export function createAgeLookupHandler(dependencies = {}) {
                   groundedSources: mapped.sources, cacheStatus, providerAttempted: true, timings });
                 routingTelemetry.retrievalFirstSucceeded = true;
                 return { [RETRIEVAL_FIRST_RESULT]: result };
-              } catch (_) { routingTelemetry.retrievalFirstFailureReason = 'RESULT_MAPPING_REJECTED'; }
+              } catch (mappingError) {
+                routingTelemetry.retrievalFirstFailureReason = 'RESULT_MAPPING_REJECTED';
+                audit?.setDecision({ retrievalFirstErrorCode: mappingError?.code || mappingError?.name || 'UNKNOWN' });
+              }
             }
             if (!routingTelemetry.retrievalFirstSucceeded) routingTelemetry.retrievalFirstFailureReason ||= report.failureReason || 'NO_USEFUL_RESULT';
+            audit?.setDecision({ retrievalFirstValidationReason: report.validation?.reason || null,
+              retrievalFirstFailureReason: routingTelemetry.retrievalFirstFailureReason });
           }
           // Why the next paid call is a fallback; recorded on that attempt.
           let fallbackReason = geminiState.cooldownActive ? 'gemini_cooldown' : null;
@@ -1720,6 +1725,7 @@ export function createAgeLookupHandler(dependencies = {}) {
 
       const retrievalResult = rawProvider?.[RETRIEVAL_FIRST_RESULT];
       if (retrievalResult) {
+        audit?.setDecision({ resultBranch: 'retrieval-first' });
         session.markAiProduced();
         const actualAttempts = recorder.totalCount();
         const attemptMetrics = await recordSharedProviderAttempts(providerPromise, recordAttempts, redis, 'age', actualAttempts, deadline, {
@@ -1745,14 +1751,18 @@ export function createAgeLookupHandler(dependencies = {}) {
         const nativeIdentity = nativeProviderIdentityPayload(nativeResult);
         const nativeInput = hasUnsupportedFormattingOnlyMatch(nativeIdentity, queryInfo, nativeResult.sources, retrievalEvidenceRows)
           ? withoutNativeYearClaims(nativeResult) : nativeResult;
-        let result = isSmartAgeProductCompatible(nativeIdentity, queryInfo)
+        const providerIdentityOk = isSmartAgeProductCompatible(nativeIdentity, queryInfo);
+        let result = providerIdentityOk
           ? mapNativeGeminiSearchResult(nativeInput, queryInfo, {
             cacheStatus,
             timings,
             currentYear,
           })
           : null;
+        audit?.setDecision({ resultBranch: 'native' });
         if (!result || !isSmartAgeProductCompatible(result, queryInfo)) {
+          audit?.setDecision({ nativeRejectionReason: providerIdentityOk
+            ? 'UNRELATED_MODEL:normalized-result' : 'UNRELATED_MODEL:provider-identity' });
           result = degradeToDeterministicFallback('UNRELATED_MODEL')
             || createUnavailableSmartAgeResult(queryInfo, { cacheStatus, errorCode: 'UNRELATED_MODEL', timings });
         }
@@ -1776,6 +1786,7 @@ export function createAgeLookupHandler(dependencies = {}) {
       const postStart = now();
       let result;
       let providerMetadata = null;
+      audit?.setDecision({ resultBranch: 'legacy' });
       try {
         // Read which provider actually served this result instead of assuming
         // the primary provider succeeded.
@@ -1833,6 +1844,7 @@ export function createAgeLookupHandler(dependencies = {}) {
         if (providerMetadata.model) result.providerModel = providerMetadata.model;
         session.markAiProduced();
       } catch (error) {
+        audit?.setDecision({ legacyRejectionReason: error?.code || 'INVALID_PROVIDER_RESULT' });
         timings.postProcessMs = Math.max(0, now() - postStart);
         await session.refundUnproduced(redis);
         const invalidAttempts = recorder.totalCount();

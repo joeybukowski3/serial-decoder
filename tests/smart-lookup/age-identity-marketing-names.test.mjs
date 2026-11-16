@@ -158,6 +158,46 @@ test('the XPS 15 to XPS 15 9530 upgrade is preserved', () => {
   rejects('Dell XPS 15', { brand: 'Dell', model: 'Latitude 9530', likelyProduct: 'Dell Latitude 9530' });
 });
 
+// --- Native Gemini payloads (2026-11-14 production UNRELATED_MODEL rejections) --
+// Mirrors nativeProviderIdentityPayload() in api/age-lookup.js: the provider's
+// marketing `product` text becomes both likelyProduct and displayName.
+function nativePayload({ brand, model, product }) {
+  return { brand, model, likelyProduct: product, displayName: product };
+}
+
+test('a brandless request accepts a native marketing name when the provider model equals the request', () => {
+  accepts('UN55JU6700F', nativePayload({ brand: 'Samsung', model: 'UN55JU6700F',
+    product: 'Samsung 55" JU6700 Curved 4K Smart LED TV' }));
+  accepts('S9V2B080U4VSABC', nativePayload({ brand: 'Trane', model: 'S9V2B080U4VSABC',
+    product: 'Trane S9V2 96% Two-Stage Variable Speed Gas Furnace' }));
+});
+
+// The request (UN65RU800DFXZA) and the marketing line (RU8000) differ in one
+// character, which is the same shape as Q60B vs Q600 that must stay rejected.
+test('UN65RU800DFXZA with an RU8000 marketing name', { todo: 'RU8000 vs RU800D conflicts with the Q600-vs-Q60 rival rule; PR 2' }, () => {
+  accepts('UN65RU800DFXZA', nativePayload({ brand: 'Samsung', model: 'UN65RU800DFXZA',
+    product: 'Samsung 65-Inch Class RU8000 Premium Smart 4K UHD TV' }));
+});
+
+test('a native result for a different model is still rejected', () => {
+  rejects('KDPS624PS', nativePayload({ brand: 'KitchenAid',
+    model: 'KDPS624SPS (frequently referenced or searched as KDPS624PS)', product: 'KitchenAid 24" Dishwasher' }));
+  for (const product of ['Apple iPad Pro', 'Apple A2901', 'Apple MacBook Pro 14-inch']) {
+    rejects('A2901', nativePayload({ brand: 'Apple', model: 'A2900', product }));
+  }
+  rejects('20GSBB-6714A', nativePayload({ brand: 'LG', model: '20GSBB-6715A', product: 'LG Refrigerator Water Valve' }));
+  rejects('GDF550PGR7WW', nativePayload({ brand: 'GE', model: 'GDF550PGR7BB', product: 'GE Built-In Dishwasher' }));
+});
+
+test('a matching native model does not launder a rival code or brand', () => {
+  rejects('UN65RU8000FXZA', nativePayload({ brand: 'Samsung', model: 'UN65RU8000FXZA', product: 'Samsung 65" RU7100 4K TV' }));
+  rejects('UN55JU6700F', { ...nativePayload({ brand: 'Samsung', model: 'UN55JU6700F',
+    product: 'Samsung 55" JU6700 Curved 4K Smart LED TV' }), series: 'TU7000 series' });
+  rejects('Samsung UN55JU6700F', nativePayload({ brand: 'LG', model: 'UN55JU6700F', product: 'LG 55" 4K Smart LED TV' }));
+  // A part code returned as its host appliance names the appliance's own line.
+  rejects('DA29-00020B', nativePayload({ brand: 'Samsung', model: 'DA29-00020B', product: 'Samsung RF28 French Door Refrigerator' }));
+});
+
 test('the three-letter line rule does not add false rejects for other families', () => {
   accepts('HP OfficeJet Pro 8710', { brand: 'HP', model: 'OfficeJet Pro 8710', likelyProduct: 'HP OfficeJet Pro 8710 All-in-One Printer' });
   accepts('HP Envy 6055', { brand: 'HP', model: 'Envy 6055', likelyProduct: 'HP Envy 6055 All-in-One Printer' });

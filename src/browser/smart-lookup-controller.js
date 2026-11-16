@@ -651,7 +651,9 @@
     if (resolvedBucket === 'network-error') return out('error', 'network-error');
     if (resolvedBucket === 'timeout') return out('error', 'provider-timeout');
     if (resolvedBucket === 'rate-limited') return out('error', RATE_LIMIT_REASONS[code] || 'rate-limited');
-    if (resolvedBucket === 'malformed') return out('error', 'provider-malformed');
+    if (resolvedBucket === 'malformed') {
+      return out('error', code === 'UNRELATED_BRAND' || code === 'UNRELATED_MODEL' ? 'identity-rejected' : 'provider-malformed');
+    }
     if (resolvedBucket === 'identifier-clarification') return out('needs-detail', 'identifier-clarification');
     if (resolvedBucket === 'unusable-query') return out('no-result', 'unusable-query');
     if (code && code !== 'INSUFFICIENT_QUERY_DETAIL') {
