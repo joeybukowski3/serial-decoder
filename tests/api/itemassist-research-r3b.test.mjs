@@ -190,3 +190,33 @@ test('outside televisions, a series designation also gives way to a full code th
   assert.equal(skuOf('Whirlpool WRF555-Series French Door Refrigerator'), 'WRF555-SERIES', 'no full code: unchanged');
   assert.equal(skuOf('HP 15-dw3033dx Laptop'), 'DW3033DX', 'laptop codes read as before');
 });
+
+test('television parts and stands that print the set\'s full code are never its price', async () => {
+  const sets = SONY_ROWS.filter((row) => /X80L/.test(row.title) && /55/.test(row.title));
+  const parts = [
+    { title: 'Sony KD-55X80L Main Board Power Supply 55 inch', seller: 'Walmart', price: 40 },
+    { title: 'Sony KD-55X80L LED Backlight Strip Replacement 55 inch', seller: 'Best Buy', price: 42 },
+    { title: 'TV Stand Base Pedestal Sony KD55X80L 55" 4K', seller: 'Target', price: 35 },
+    { title: 'Sony 55" KD55X80L T-Con Board Smart TV', seller: 'Crutchfield', price: 30 },
+  ];
+  const { response, prices } = await runOne('Sony KD-55X80J', 'Sony X80J 55-inch 4K LED TV (2021)', 'Sony X80-series', [...parts, ...sets]);
+  assert.equal(response.successor.name, 'Sony X80L 55-inch (KD55X80L)');
+  assert.deepEqual(prices, [629, 649.99], 'only the television listings');
+});
+
+test('only an undatable letter that may be NEWER adds the "newer model may exist" note; an older undatable letter does not', async () => {
+  const dated = [
+    { title: 'Samsung 55" Class DU8000 Crystal UHD UN55DU8000FXZA', seller: 'Best Buy', price: 429.99 },
+    { title: 'Samsung 55 inch DU8000 Crystal UHD UN55DU8000FXZA', seller: 'Walmart', price: 419 },
+  ];
+  const older = await runOne('Samsung UN55JU6700F', 'Samsung JU6700 55-inch 4K LED TV (2015)', 'Samsung Crystal UHD U8000', [...dated, { title: 'Samsung 55" Class KU8000 4K UHD Smart TV UN55KU8000FXZA', seller: 'Target', price: 300 }]);
+  assert.equal(older.response.successor.name, 'Samsung Crystal UHD DU8000 55-inch (UN55DU8000FXZA)');
+  assert.equal(/newer model may exist/.test(older.response.successor.concern || ''), false, 'K (2016) is undatable but not newer');
+  assert.deepEqual(older.prices, [419, 429.99]);
+  const newer = await runOne('Samsung UN55JU6700F', 'Samsung JU6700 55-inch 4K LED TV (2015)', 'Samsung Crystal UHD U8000', [...dated, { title: 'Samsung 55" Class U8000H Crystal UHD 4K UN55U8000HFXZA', seller: 'Target', price: 399.99 }]);
+  assert.match(newer.response.successor.concern, /newer model may exist/);
+  assert.deepEqual(newer.prices, [419, 429.99], 'the undated U8000H is never priced');
+  const lg = lineageFor('LG 55UN7300PUF', 'LG UT75');
+  assert.deepEqual(lg.unread('LG 55" UM7570 Series 4K 55UM7570PUA'), { series: '75', newer: false }, 'M (2019) is older');
+  assert.deepEqual(lg.unread('LG 55" UB7570 Series 4K 55UB7570PUA'), { series: '75', newer: true }, 'B follows the 2025 reset');
+});
