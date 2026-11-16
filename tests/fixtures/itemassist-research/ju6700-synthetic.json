@@ -1,0 +1,55 @@
+{
+  "_provenance": "SYNTHETIC. No Production response, Gemini reply or Serper capture of the Samsung UN55JU6700F case exists in this repository or the ItemAssist repository. The reply below is shaped after what the Production answer was reported to contain (generic families 'LG UR8000 or UT75' and 'Sony X75WL', one LG candidate given a display-technology fail); the listing rows are titled the way retailers title listings, with illustrative prices. This does not reproduce the actual Production response.",
+  "query": "Samsung UN55JU6700F",
+  "reply": {
+    "category": "tv",
+    "profile": "tv",
+    "original": {
+      "identity": "Samsung JU6700 curved 55-inch 4K UHD LED smart TV (2015)",
+      "confidence": "high",
+      "characteristics": ["Curved LED-backlit LCD panel", "4K UHD", "Smart TV"],
+      "uncertainty": null
+    },
+    "tier": "MID",
+    "requirements": [],
+    "successor": {
+      "name": "LG UR8000 or UT75",
+      "why": "Current mid-range 4K LED televisions.",
+      "differences": "Flat rather than curved.",
+      "concern": null,
+      "confidence": "medium",
+      "tierVsOriginal": "SAME",
+      "comparison": [{ "requirementKey": "displayClass", "status": "SHORTFALL" }]
+    },
+    "suggestions": [
+      {
+        "name": "Sony X75WL",
+        "why": "Entry 4K LED television from another maker.",
+        "differences": "Flat panel.",
+        "concern": null,
+        "confidence": "medium",
+        "tierVsOriginal": "SAME",
+        "comparison": [{ "requirementKey": "displayClass", "status": "MEETS" }]
+      }
+    ],
+    "estimates": { "originalNew": { "low": 1100, "high": 1500 }, "replacementNew": { "low": 350, "high": 600 } },
+    "clarify": []
+  },
+  "listings": {
+    "UR8000": [
+      { "title": "LG 55\" Class UR8000 Series LED 4K UHD Smart webOS TV 55UR8000AUA", "seller": "Best Buy", "price": 349.99 },
+      { "title": "LG 55 inch UR8000 4K UHD LED Smart TV 55UR8000AUA", "seller": "Walmart", "price": 348.00 },
+      { "title": "LG 65\" Class UR8000 Series LED 4K UHD Smart webOS TV 65UR8000AUA", "seller": "Target", "price": 479.99 },
+      { "title": "LG UR8000 Series 4K UHD LED Smart TV", "seller": "Abt", "price": 399.00 }
+    ],
+    "UT75": [
+      { "title": "LG 55\" Class UT75 Series LED 4K UHD Smart webOS TV", "seller": "Best Buy", "price": 379.99 },
+      { "title": "LG 55 inch UT75 4K UHD LED Smart TV", "seller": "Abt", "price": 389.00 },
+      { "title": "LG 43\" Class UT75 Series LED 4K UHD Smart webOS TV", "seller": "Walmart", "price": 248.00 }
+    ],
+    "X75WL": [
+      { "title": "Sony 55\" Class BRAVIA X75WL 4K HDR LED Google TV KD55X75WL", "seller": "Best Buy", "price": 498.00 },
+      { "title": "Sony BRAVIA 55 inch X75WL 4K LED Smart Google TV KD55X75WL", "seller": "Crutchfield", "price": 478.00 }
+    ]
+  }
+}

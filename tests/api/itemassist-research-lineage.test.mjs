@@ -161,7 +161,8 @@ test('8. a family with no grammar (another maker) keeps its family-level price h
   const sony = [{ title: 'Sony 55" Class BRAVIA 8 OLED 4K HDR Smart TV', seller: 'Best Buy', price: 1698 }, { title: 'Sony 55 inch BRAVIA 8 OLED 4K Google TV', seller: 'Abt', price: 1749 }];
   const { response } = await run({ rows: sony, only: /^Sony/ });
   const alt = response.suggestions[0];
-  assert.equal(alt.name, 'Sony Bravia 8 OLED');
+  // Both priced listings state 55 inches, so the family is presented at that size; it stays a family (no model code, FAMILY_LEVEL), see candidate-label.js.
+  assert.equal(alt.name, 'Sony Bravia 8 OLED 55-inch');
   assert.equal(alt.modelStatus, 'FAMILY_LEVEL');
   assert.deepEqual(alt.lineage, { relation: 'OTHER_BRAND', generation: null, basis: 'NONE', tier: 'HIGHER' });
   assert.deepEqual(amounts(current(response, 'ALT_1')), [1698, 1749]);

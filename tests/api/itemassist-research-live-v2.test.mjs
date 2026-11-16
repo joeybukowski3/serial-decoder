@@ -309,7 +309,8 @@ test('an item the model cannot identify gets guidance and no prices at all', asy
 // ---- the contract's own limits still hold -----------------------------------------------------------------------------------------------
 
 test('a candidate with a suspected essential shortfall does not set the range, however cheap its listings', async () => {
-  const reply = tv({ suggestions: [{ name: 'LG C-series OLED budget line', why: 'A cheaper line.', confidence: 'medium', comparison: [{ requirementKey: 'displayClass', status: 'SHORTFALL' }] }],
+  // (A display-class shortfall between two OLED televisions is now corrected by code, see display-class.js; resolution is a shortfall code does not settle.)
+  const reply = tv({ suggestions: [{ name: 'LG C-series OLED budget line', why: 'A cheaper line.', confidence: 'medium', comparison: [{ requirementKey: 'resolution', status: 'SHORTFALL' }] }],
     successor: { name: 'Sony Bravia 8 OLED', why: 'Similar tier.', confidence: 'medium' } });
   const fetchImpl = routedFetch({ gemini: reply, history: history('lg-c3-55'), listings: listings('lg-c3-55', 'C-series') });
   const { handler } = build({ fetchImpl });
