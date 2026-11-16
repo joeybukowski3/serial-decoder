@@ -315,6 +315,11 @@ test('a listing code that is only the series the candidate is named by is the fa
   assert.equal(isFamilySeriesCode('KD55X75WL', 'Sony KD55X75WL'), false, 'an exact model the candidate names keeps its code');
   assert.equal(isFamilySeriesCode('55U8K', 'Hisense 55U8K'), false);
   assert.equal(isFamilySeriesCode('UT7570', 'LG UT75'), false, 'a code the name does not contain');
+  assert.equal(isFamilySeriesCode('V555M-K01', 'Vizio V555M-K01', 'VIZIO 55" Class V-Series V555M-K01 4K'), false, 'an exact code with no size grammar stays a model');
+  assert.equal(isFamilySeriesCode('M55Q6-J01', 'Vizio M55Q6-J01'), false);
+  assert.equal(isFamilySeriesCode('UR8000', 'LG UR8000-Series'), true, 'a hyphenated series name');
+  assert.equal(isFamilySeriesCode('UR8000', 'LG 55UR8000', 'LG 55" Class UR8000 Series LED 4K'), true, 'the listing calls it a series');
+  assert.equal(isFamilySeriesCode('UR8000', 'LG 55UR8000', 'LG 55" UR8000-Series 4K'), true);
 });
 
 test('"UR8000 Series" at two retailers with no full code does not make the LG UR8000 a listed model', async () => {
