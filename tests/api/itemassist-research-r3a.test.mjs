@@ -320,6 +320,12 @@ test('a listing code that is only the series the candidate is named by is the fa
   assert.equal(isFamilySeriesCode('UR8000', 'LG UR8000-Series'), true, 'a hyphenated series name');
   assert.equal(isFamilySeriesCode('UR8000', 'LG 55UR8000', 'LG 55" Class UR8000 Series LED 4K'), true, 'the listing calls it a series');
   assert.equal(isFamilySeriesCode('UR8000', 'LG 55UR8000', 'LG 55" UR8000-Series 4K'), true);
+  // Through the real code reader: a hyphenated "UR8000-Series" title is read as the token "UR8000-SERIES".
+  for (const title of ['LG 55" Class UR8000-Series LED 4K UHD Smart webOS TV', 'LG 55 inch UR8000-Series 4K TV', 'LG 55" Class UR8000 Series LED 4K UHD']) {
+    for (const name of ['LG UR8000', 'LG UR8000-Series', 'LG 55UR8000']) assert.equal(isFamilySeriesCode(skuOf(title), name, title), true, `${title} / ${name}`);
+  }
+  const full = 'LG 55" Class UR8000 Series LED 4K UHD Smart webOS TV 55UR8000AUA';
+  assert.equal(isFamilySeriesCode(skuOf(full), 'LG UR8000', full), false, 'the full model code in the same title stays a model');
 });
 
 test('"UR8000 Series" at two retailers with no full code does not make the LG UR8000 a listed model', async () => {
