@@ -100,7 +100,8 @@ test('replay of the saved GE request: the supported capacity and layout stay, do
 
 test('replay of the saved GE request: the invented Whirlpool code is not presented as a product; the real-looking LG code is kept; nothing is substituted', async () => {
   const { response, result } = await replay();
-  const [lg, whirlpool] = response.suggestions;
+  // The LG's capacity shortfall is stated by its own listings; the Whirlpool's is only the model's estimate, so the Whirlpool ranks first (candidate-ranking.js).
+  const [whirlpool, lg] = response.suggestions;
   assert.equal(lg.name, 'LG LFXS26973S French Door Refrigerator');
   assert.equal(lg.modelStatus, 'UNVERIFIED_MODEL', 'a listing of a finish variant does not verify the exact model');
   assert.equal(whirlpool.name, 'Whirlpool French Door Refrigerator', 'the code is removed, the family stays');
@@ -109,7 +110,7 @@ test('replay of the saved GE request: the invented Whirlpool code is not present
   assert.equal(whirlpool.why, 'Matches the French door configuration and exterior finish.', 'useful family-level guidance is kept');
   assert.equal(JSON.stringify(response).includes('WRF555SDFZ'), false, 'no other model number is assumed in its place');
   assert.equal(JSON.stringify(response).includes('WRF555SZDZ'), false);
-  assert.deepEqual(result.meta.enrichment.unsupportedCodes, { ALT_2: ['WRF555SZDZ'] });
+  assert.deepEqual(result.meta.enrichment.unsupportedCodes, { ALT_1: ['WRF555SZDZ'] }, 'the diagnostic follows the Whirlpool to its ranked key');
   assert.deepEqual(response.warnings, ['CANDIDATE_EXCLUDED_ESSENTIAL', 'MODEL_NOT_VERIFIED', 'VALUATION_ESTIMATE_ONLY']);
 });
 
@@ -287,7 +288,7 @@ const rowStatus = (response, candidate, key) => candidate.comparison.find((row) 
 
 test('replay of the saved GE request: the LG LFXS26973S is a capacity shortfall (26 against 27.8), is excluded from the valuation, and the shortfall is stated', async () => {
   const { response } = await replay();
-  const [lg, whirlpool] = response.suggestions;
+  const [whirlpool, lg] = response.suggestions;
   assert.equal(rowStatus(response, lg, 'capacity'), 'SHORTFALL');
   assert.equal(lg.concern, 'Listings show 26 cu ft, below the original\'s 27.8 cu ft.');
   assert.equal(rowStatus(response, whirlpool, 'capacity'), 'SHORTFALL', 'the model\'s own shortfall, with nothing behind it, still only keeps a candidate out');

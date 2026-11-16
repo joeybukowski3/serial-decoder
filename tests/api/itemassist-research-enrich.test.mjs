@@ -276,6 +276,7 @@ test('identification: the model\'s reply becomes engine input; a candidate that 
   assert.deepEqual([result.category, result.profile, result.tier], ['tv', 'tv', 'PREMIUM']);
   assert.equal(result.input.successor.standing, 'RECOMMENDED');
   assert.deepEqual(result.input.successor.comparison, [{ requirementKey: 'screenSize', status: 'MEETS', basis: 'AI_ESTIMATE' }], 'unknown keys and statuses are dropped');
+  // The S90's essential shortfall is only the model's estimate: it does not drop the S90 before it is looked up (see candidate-ranking.js).
   assert.deepEqual(result.input.suggestions.map((item) => item.name), ['Samsung S90-series QD-OLED', 'Sony Bravia 8 OLED'], 'the C3 itself is dropped and at most two remain');
   assert.equal(result.input.suggestions[0].concern, 'Check ports.');
   assert.deepEqual(result.input.requirements, [{ text: 'Four HDMI 2.1 ports', importance: 'MINOR' }, { text: 'webOS apps', importance: 'MINOR' }], 'ESSENTIAL is for code to decide');
