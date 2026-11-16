@@ -190,7 +190,14 @@ Read as unknown:
 - The Shopping query text is unchanged for these makers. `generalise` returns the name as given, so the provider is asked the same queries as before.
 - A listing whose generation is unknown is never priced as a generation. Listings of another size, another generation, bundles and accessories are
   excluded exactly as for LG OLED and Samsung S/Q.
-- A listing that states both a series designation and a full code ("UR8000-Series … 55UR8000AUA") is read by its full code.
+- For these three grammars, the grammar's own reading of a row's series decides series membership. So "Sony X80K" still matches an X80L listing and the
+  newest dated generation can be found, while the Shopping query keeps the name the model gave. LG OLED and Samsung S/Q keep their previous matching.
+- A listing of the series at the requested size whose model year cannot be read (an unsourced letter, such as Samsung's 2026 "H") is never priced. It
+  adds a note that a newer model may exist, so an older dated generation is not presented as certainly the newest.
+- A listing that states both a series designation and a full code ("UR8000-Series … 55UR8000AUA") is read by its full code. This applies in every
+  category: a refrigerator title "WRF555-Series … WRF555SDFZ" now reads WRF555SDFZ. A title with no full code is read as before.
+- A "successor" the model names from another maker is an alternative replacement, never the manufacturer's successor, in every category. This applies
+  only when both makers are recognised names.
 
 ## Adding a maker
 
