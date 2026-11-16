@@ -244,7 +244,7 @@ test('the lineage block is strict, optional, and built by code: unknown values, 
 
 test('a response without any lineage block is as valid as before (older responses stay compatible)', async () => {
   const { response } = await run({ reply: identification('Sony Bravia 8 OLED'), rows: [] });
-  for (const candidate of [response.successor, ...response.suggestions]) delete candidate.lineage;
+  for (const candidate of [response.successor, ...response.suggestions].filter(Boolean)) delete candidate.lineage;
   assert.equal(isValidResearchResponseV2(response), true);
 });
 

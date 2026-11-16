@@ -113,9 +113,89 @@ Two optional, additive candidate blocks (television candidates with a generation
 `RESEARCH_CACHE_PREFIX` is `v3`. Answers cached under `v2` (a generic family, mixed-generation prices, `RECOMMENDED` on confidence) are never read;
 nothing is deleted. The Serper row caches hold raw rows keyed by query text and are unchanged.
 
+## Model-year rules (Release 3b)
+
+Release 3b adds three television grammars: Samsung UHD / Crystal UHD, LG UHD (LED/LCD) and Sony. A model-year letter is read only when at least one
+source states the model year of a specific model printed with that letter. Most of these are the maker's own pages, a major retailer or a test lab.
+Letters with no such source are left out of the tables. So are letters whose sources disagree. A title carrying one of them states no generation and is
+not priced as a generation. The tables are `SAMSUNG_UHD_YEAR`, `LG_UHD_YEAR` and `SONY_TV_YEAR` in `lineage.js`.
+
+General scheme, from consumer guides; these do not date any single letter:
+- [Which?: TV model names explained](https://www.which.co.uk/news/article/dont-buy-the-wrong-tv-model-names-explained-a3kZl6F8vd8X) covers four points:
+  - LG LCD letters after the size relate to the year, with "A" for 2025.
+  - Samsung's final letter is the year, with F for 2025.
+  - Sony's "K-" prefix has been standard since 2024.
+  - Letters reset, as LG's did in 2025.
+- [Expert Reviews: Sony TV model numbers explained](https://www.expertreviews.co.uk/technology/tvs-home-cinema/sony-tv-model-numbers-explained) covers the K- prefix since 2024, and the 2024–2025 BRAVIA names (K-65XR90, K-55XR8M2, …).
+
+### Samsung UHD / Crystal UHD
+
+Through 2024 the year letter comes before "U": `UN55JU6700F`, `UN55DU7200FXZA`. From 2025 it comes after the four-digit number: `UN55U8000FFXZA`.
+The series is the four digits.
+
+| Letter | Year | Model-specific sources |
+|---|---|---|
+| J | 2015 | UN55JU6700: [DisplayDB](https://www.displaydb.com/tv/samsung-un55ju6700), [TV Parts Today](https://tvpartstoday.com/products/tv-samsung-un55ju6700) |
+| M | 2017 | UN55MU8000: [DisplayDB](https://www.displaydb.com/tv/samsung-un55mu8000), [Takespec](https://takespec.com/tv/samsung-mu8000-un55mu8000fxza) |
+| N | 2018 | UN55NU7100: [DisplayDB](https://displaydb.com/tv/samsung-un55nu7100), [Takespec](https://takespec.com/tv/samsung-un55nu7100-un55nu7100fxza) |
+| R | 2019 | UN55RU7100: [TV Parts Today](https://tvpartstoday.com/products/tv-samsung-un55ru7100), [DisplayDB](https://www.displaydb.com/compare/samsung-un55nu7100/samsung-un55ru7100) |
+| T | 2020 | 55" TU7000: [Best Buy (Model Year 2020)](https://www.bestbuy.com/site/samsung-55-class-7-series-led-4k-uhd-smart-tizen-tv/6401735.p), [Takespec](https://takespec.com/tv/samsung-tu7000-un55tu7000bxza) |
+| A | 2021 | AU8000: [Samsung (2021)](https://www.samsung.com/sa_en/business/tvs/uhd-4k-tv/au8000-crystal-uhd-4k-smart-tv-ua55au8000uxum), [RTINGS](https://www.rtings.com/tv/reviews/samsung/au8000) |
+| B | 2022 | UN55BU8000: [DisplayDB](https://www.displaydb.com/compare/samsung-un55bu8000). This is the weakest row: one database, consistent with the general guides. |
+| C | 2023 | 55" CU8000: [Best Buy](https://www.bestbuy.com/site/samsung-55-class-cu8000-crystal-uhd-4k-smart-tizen-tv/6537378.p) |
+| D | 2024 | UN55DU7200: [P.C. Richard (Model Year 2024)](https://www.pcrichard.com/samsung-55-class-du7200-series-led-4k-uhd-smart-tizen-tv/UN55DU7200.html), [Walts (2024)](https://walts.com/product/un55du7200bxza) |
+| F (after the number) | 2025 | UN55U8000FFXZA: [Samsung US (2025)](https://www.samsung.com/us/tvs/uhd-4k-tv/u8000f-55-inch-crystal-uhd-4k-smart-tv-un55u8000ffxza/), [Best Buy (Model Year 2025)](https://www.bestbuy.com/site/6619250.p) |
+
+Read as unknown:
+- K (2016): no model-specific source was found.
+- H after the number (2026): no citable model-specific source in this shape.
+- Earlier letters.
+- Any letter in another shape.
+
+### LG UHD (LED/LCD)
+
+Codes are size, then "U", then the year letter, then four digits, then a suffix: `55UR8000AUA`, `55UT7570PUB`, `75UA7700PUA`. The series is the first
+two digits, which also appear in the marketing name (UT75, UA77).
+
+| Letter | Year | Model-specific sources |
+|---|---|---|
+| N | 2020 | 55UN7300PUF: [DisplayDB](https://displaydb.com/tv/lg-55un7300puf), [RTINGS](https://www.rtings.com/tv/reviews/lg/un7300) |
+| P | 2021 | 55UP7000PUA: [LG US (2021 Model)](https://www.lg.com/us/tvs/lg-55up7000pua-uhd-4k-tv), [Datavision](https://datavision.com/products/lg-up7000pua-55-in-4k-uhd-4k-uhd-60hz-smart-tv-55up7000pua-2021) |
+| Q | 2022 | 55UQ7570PUJ: [Best Buy (2022)](https://www.bestbuy.com/site/questions/lg-55-class-uq75-series-led-4k-uhd-smart-webos-tv-2022/6501939), [TV Reviews](https://tvreviews.net/lg-uq7570/) |
+| R | 2023 | 55UR8000AUA: [LG US (webOS 23)](https://www.lg.com/us/tvs/lg-55ur8000aua), [DisplayDB](https://www.displaydb.com/tv/lg-55ur8000aua) |
+| T | 2024 | 55UT7570PUB: [LG US (webOS 24)](https://www.lg.com/us/tvs/lg-55ut7570pub-4k-uhd-tv), [Best Buy (2024)](https://www.bestbuy.com/site/questions/lg-55-class-ut75-series-led-4k-uhd-smart-webos-tv-2024/6578186) |
+| A | 2025 | 55UA7000PUB and 75UA7700PUA: [LG US (2025)](https://www.lg.com/us/tvs/lg-55ua7000pub-4k-uhd-tv), [LG US (2025)](https://www.lg.com/us/tvs/lg-75ua7700pua-4k-uhd-tv) |
+
+Read as unknown: M (2019) and earlier. NanoCell and QNED codes, which carry the year elsewhere in the suffix, are not read by this grammar.
+
+### Sony (X LED and A OLED with a year suffix)
+
+Codes are KD, XR or XBR, then the size, then the series, then the year letter: `KD-55X80K`, `XR-65A80L`, `KD-55X7500H`. The series is the letter plus
+the first two digits (X80, X75, A80).
+
+| Letter | Year | Model-specific sources |
+|---|---|---|
+| H | 2020 | X7500H series listed under 2020 in [Sony's wall-mount compatibility article](https://www.sony-asia.com/electronics/support/televisions-projectors-lcd-tvs/articles/00228847). The article returns 403 to automated fetches; this was read from search results. |
+| J | 2021 | X80J series listed under 2021 in the same Sony article |
+| K | 2022 | X80K series listed under 2022 in the same Sony article; [Sony Support on Best Buy: "KD55X75K is a 2022 model"](https://www.bestbuy.com/site/questions/sony-55-class-x75k-led-4k-uhd-smart-google-tv/6505137) |
+| L | 2023 | X80L: [Sony NZ spec (2023)](https://sony.co.nz/bravia/products/x80l-x81bl-series/spec), [Sony MEA spec](https://www.sony-mea.com/en/bravia/products/x80l-x81bl-series/spec); X85L: [Sony Philippines](https://www.sony.com.ph/bravia/products/x85l-series) |
+
+Read as unknown:
+- The two-letter "W" suffix (KD-55X75WL). Sony's own pages disagree on its year: the wall-mount article lists it under 2022, the UK spec page says 2023.
+- 2024-and-later BRAVIA names (K-55S30, K-65XR80, K-55XR8M2). They carry no year letter.
+- G (2019) and earlier.
+
+### What the grammars do and do not change
+
+- The Shopping query text is unchanged for these makers. `generalise` returns the name as given, so the provider is asked the same queries as before.
+- A listing whose generation is unknown is never priced as a generation. Listings of another size, another generation, bundles and accessories are
+  excluded exactly as for LG OLED and Samsung S/Q.
+- A listing that states both a series designation and a full code ("UR8000-Series … 55UR8000AUA") is read by its full code.
+
 ## Adding a maker
 
-Grammars exist for LG OLED and Samsung television only. Any other maker or category has none and behaves exactly as before (a family; prices as before).
+Grammars exist for LG OLED, LG UHD, Samsung S/Q, Samsung UHD / Crystal UHD and Sony (year-suffix X and A series) televisions. Any other maker or
+category has none and behaves exactly as before: a family, priced as before.
 To add one, in `lineage.js`:
 
 1. Add a grammar object to `GRAMMARS[category]` with `brand`, `parse(title)` (series, ordinal, label, size, sku from a retailer title), `seriesOf(text)`,
