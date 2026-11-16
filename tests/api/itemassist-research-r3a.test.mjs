@@ -272,3 +272,97 @@ test('the size label keeps a remark after a comma and skips a name that already 
   assert.equal(sizedFamilyName('Samsung S90D 55-inch, QD-OLED', { category: 'tv', size: 55, screened: PRICED_55 }), 'Samsung S90D 55-inch, QD-OLED');
   assert.equal(sizedFamilyName('Hisense 55U8K', { category: 'tv', size: 55, screened: PRICED_55 }), 'Hisense 55U8K');
 });
+
+// ---- sign-off review 1: an estimated shortfall is not a sourced incompatibility ------------------------------------------------------------------
+
+test('an AI-only shortfall is counted apart from a settled one: settled shortfalls rank first, estimates only break the last tie', () => {
+  const ai = { name: 'A', tierVsOriginal: 'SAME', comparison: [{ requirementKey: 'displayClass', status: 'SHORTFALL', basis: 'AI_ESTIMATE' }] };
+  const settledRows = withSettledDisplayClass([{ requirementKey: 'displayClass', status: 'MEETS', basis: 'AI_ESTIMATE' }], 'LED', 'OLED');
+  const settled = { name: 'B', tierVsOriginal: 'SAME', comparison: settledRows };
+  assert.deepEqual([rankingFacts(ai, null, 'tv').shortfalls, rankingFacts(ai, null, 'tv').estimated], [0, 1]);
+  assert.deepEqual([rankingFacts(settled, null, 'tv').shortfalls, rankingFacts(settled, null, 'tv').estimated], [1, 0], 'OLED for an LED original is read from the name');
+  assert.equal(rankingFacts({ name: 'C', comparison: [] }, { capacity: { concern: 'Listings show 26 cu ft.' } }, 'refrigerator').shortfalls, 1, 'a capacity its listings show is short');
+  const facts = (over) => ({ shortfalls: 0, tier: 0, generation: null, model: 0, price: 0, estimated: 0, ...over });
+  assert.ok(compareFacts(facts({ estimated: 1, model: 2 }), facts({ estimated: 0 })) < 0, 'sourced model evidence outranks an estimated shortfall');
+  assert.ok(compareFacts(facts({ estimated: 1, price: 2 }), facts({ estimated: 0 })) < 0, 'sourced price evidence outranks an estimated shortfall');
+  assert.ok(compareFacts(facts({ estimated: 1 }), facts({ shortfalls: 1 })) < 0, 'an estimate never ranks below a settled shortfall');
+  assert.ok(compareFacts(facts({ estimated: 0 }), facts({ estimated: 1 })) < 0, 'with everything else equal, the estimate orders them');
+});
+
+test('an AI-only shortfall does not drop a suggestion before it is looked up, and still keeps it out of the valuation', async () => {
+  const reply = tvReply('Samsung S90D QD-OLED', {
+    suggestions: [
+      { name: 'Samsung S90D QD-OLED', why: 'Comparable panel.', confidence: 'medium', tierVsOriginal: 'SAME', comparison: [{ requirementKey: 'resolution', status: 'SHORTFALL' }] },
+      { name: 'Sony Bravia 8 OLED', why: 'Similar tier.', confidence: 'medium', tierVsOriginal: 'SAME', comparison: [] },
+      { name: 'Panasonic Z95', why: 'A third.', confidence: 'low', tierVsOriginal: 'SAME', comparison: [] },
+    ],
+  });
+  assert.deepEqual(normalizeIdentification(reply, 'LG C3 55-inch TV').input.suggestions.map((entry) => entry.name), ['Samsung S90D QD-OLED', 'Sony Bravia 8 OLED']);
+  const rows = { Samsung: [{ title: 'Samsung 55" Class S90D OLED 4K Smart TV', seller: 'Best Buy', price: 1299 }, { title: 'Samsung 55 inch S90D OLED 4K TV', seller: 'Abt', price: 1349 }] };
+  const { response } = await run({ query: 'LG C3 55-inch TV', reply, route: (text) => rows[Object.keys(rows).find((key) => text.startsWith(key))] || [] });
+  const samsung = response.suggestions.find((entry) => /S90D/.test(entry.name));
+  const key = `ALT_${response.suggestions.indexOf(samsung) + 1}`;
+  assert.deepEqual(response.pricing.valuation.excluded.find((entry) => entry.candidate === key), { candidate: key, reason: 'SUSPECTED_ESSENTIAL_SHORTFALL' }, 'the pricing safeguard is unchanged');
+});
+
+// ---- sign-off review 2: a product family never becomes an exact model --------------------------------------------------------------------------
+
+test('a listing code that is only the series the candidate is named by is the family, not a model', async () => {
+  const { isFamilySeriesCode } = await import('../../lib/itemassist-research/enrich/config.js');
+  assert.equal(isFamilySeriesCode('UR8000', 'LG UR8000'), true);
+  assert.equal(isFamilySeriesCode('DU7200', 'Samsung Crystal UHD DU7200'), true);
+  assert.equal(isFamilySeriesCode('55UR8000AUA', 'LG UR8000'), false, 'a code with a size is a model');
+  assert.equal(isFamilySeriesCode('KD55X75WL', 'Sony KD55X75WL'), false, 'an exact model the candidate names keeps its code');
+  assert.equal(isFamilySeriesCode('55U8K', 'Hisense 55U8K'), false);
+  assert.equal(isFamilySeriesCode('UT7570', 'LG UT75'), false, 'a code the name does not contain');
+});
+
+test('"UR8000 Series" at two retailers with no full code does not make the LG UR8000 a listed model', async () => {
+  const listings = { UR8000: [
+    { title: 'LG 55" Class UR8000 Series LED 4K UHD Smart webOS TV', seller: 'Best Buy', price: 349.99 },
+    { title: 'LG 55 inch UR8000 Series 4K UHD LED Smart TV', seller: 'Walmart', price: 348 },
+  ], UT75: JU6700.listings.UT75 };
+  const route = (text) => listings[Object.keys(listings).find((name) => text.includes(name))] || [];
+  const { response } = await run({ query: JU6700.query, reply: JU6700.reply, route });
+  const lg = response.successor;
+  assert.match(lg.name, /^LG UR8000\b/);
+  assert.notEqual(lg.modelStatus, 'LISTED_PROVISIONAL');
+  assert.notEqual(lg.modelStatus, 'VERIFIED_LISTING');
+  assert.equal(lg.verified, false);
+  assert.equal(replacementPrices(response).some((item) => item.model === 'UR8000'), false, 'no price is presented as the "UR8000" model');
+  assert.equal(response.pricing.evidence.some((entry) => entry.subjectModel === 'UR8000'), false);
+});
+
+// ---- sign-off review 3: replacement priority is not manufacturer lineage -----------------------------------------------------------------------
+
+const lgOriginal = (successor, suggestions = []) => ({
+  ...tvReply('x'), successor: { name: successor, why: 'Continues the line.', differences: null, concern: null, confidence: 'high', tierVsOriginal: 'SAME', comparison: [] }, suggestions,
+});
+
+test('the successor slot keeps the original maker\'s product from the reply, in the reply\'s order, never the best-ranked one', () => {
+  const first = normalizeIdentification(lgOriginal('LG C4 or Sony Bravia 8'), 'LG C3 55-inch TV').input;
+  assert.equal(first.successor.name, 'LG C4');
+  assert.deepEqual(first.suggestions.map((entry) => entry.name), ['Sony Bravia 8']);
+  assert.equal('standing' in first.suggestions[0], false, 'a part moved to the suggestions is not given the successor\'s standing');
+  const reversed = normalizeIdentification(lgOriginal('Sony Bravia 8 or LG C4'), 'LG C3 55-inch TV').input;
+  assert.equal(reversed.successor.name, 'LG C4', 'another maker named first is not made the LG successor');
+  const lower = { ...lgOriginal('LG B4 OLED or LG C4 OLED'), successor: { ...lgOriginal('x').successor, name: 'LG B4 OLED or LG C4 OLED', tierVsOriginal: 'LOWER' } };
+  assert.equal(normalizeIdentification(lower, 'LG C3 55-inch TV').input.successor.name, 'LG B4 OLED', 'among the maker\'s own parts, the reply\'s order decides, not the ranking');
+});
+
+test('ranking after the lookups never moves a better-evidenced suggestion into the successor slot', () => {
+  const successor = { name: 'LG C-series OLED', why: 'Continues the line.', tierVsOriginal: 'LOWER', standing: 'CONDITIONAL', comparison: [] };
+  const rival = { name: 'Sony Bravia 8 OLED', why: 'Similar tier.', tierVsOriginal: 'SAME', comparison: [] };
+  const screenedWith = (over) => ({ items: [], context: [], displayTitles: [], ...over });
+  const input = { successor, suggestions: [rival] };
+  const arranged = rankShopped(input, [['SUCCESSOR', successor, screenedWith({})], ['ALT_1', rival, screenedWith({ sku: 'K55XR80', items: [{ amount: 1 }] })]], { category: 'tv', profile: 'tv' });
+  assert.equal(arranged.input.successor.name, 'LG C-series OLED');
+  assert.deepEqual(arranged.shopped.map(([key, candidate]) => [key, candidate.name]), [['SUCCESSOR', 'LG C-series OLED'], ['ALT_1', 'Sony Bravia 8 OLED']]);
+});
+
+test('a cross-brand successor named by the reply is labelled by its lineage as another brand, never as the same series', async () => {
+  const route = (text) => { const key = Object.keys(JU6700.listings).find((name) => text.includes(name)); return key ? JU6700.listings[key] : []; };
+  const { response } = await run({ query: JU6700.query, reply: JU6700.reply, route });
+  assert.equal(response.successor.lineage.relation, 'OTHER_BRAND', 'an LG television for a Samsung original');
+  assert.notEqual(response.successor.standing, 'RECOMMENDED');
+});
