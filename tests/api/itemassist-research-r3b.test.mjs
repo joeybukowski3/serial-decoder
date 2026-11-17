@@ -116,6 +116,9 @@ test('Sony KD-55X80J (SYNTHETIC rows): the newest dated generation at 55 inches 
 
 // ---- review findings (Release 3b) ------------------------------------------------------------------------------------------------------------------
 
+// The two synthetic 55-inch X80L television listings ($629, $649.99).
+const SONY_SETS_55 = SONY_ROWS.filter((row) => /X80L/.test(row.title) && /55/.test(row.title));
+
 /** The live pipeline with one successor and Shopping rows for every query; returns the response and the queries asked. */
 async function runOne(query, identity, successor, rows) {
   const reply = { ...sonyReply, original: { ...sonyReply.original, identity }, successor: { ...sonyReply.successor, name: successor }, suggestions: [] };
@@ -237,4 +240,81 @@ test('a television\'s own feature words ("Full Array Backlight", "Legs Included"
     { title: 'Samsung QN55Q80CAFXZA 55" 4K Smart TV, Adjustable Feet, Full Array LED backlight', seller: 'Walmart', price: 879 },
   ]);
   assert.deepEqual(samsung.prices, [879, 899.99], 'the existing S/Q grammar keeps these listings too');
+});
+
+test('standalone TV replacement parts that print the set\'s series and full code are never its price (Speaker Board, Open Cell, Y-Sus, IR board)', async () => {
+  // Each part is tried alone and priced between the two sets ($639), so the price cluster cannot hide a part that slips through.
+  for (const title of [
+    'Sony 55" X80L 4K Smart TV Speaker Board KD55X80L',
+    'Sony 55" X80L 4K Smart TV Speakers Board KD55X80L',
+    'Sony X80L 55 inch 4K UHD Open Cell LCD Screen KD-55X80L',
+    'Sony X80L 55 inch 4K UHD Open-Cell Panel KD-55X80L',
+    'Sony KD55X80L 55" Smart TV Y-Sus Board X80L',
+    'Sony KD55X80L 55" Smart TV Y Sus Board X80L',
+    'Sony KD55X80L 55" Smart TV YSUS Board X80L',
+    'Sony KD55X80L 55" Smart TV Z-Sus Board X80L',
+    'Sony KD55X80L 55" Smart TV Y-Sustain Board X80L',
+    'Sony X80L 4K Smart TV IR Sensor Board KD-55X80L 55 inch',
+    'Sony X80L 4K Smart TV Logic Board KD-55X80L 55 inch',
+    'Sony 55" X80L 4K Smart TV Replacement Speakers KD55X80L',
+    'Sony KD-55X80L 4K Smart TV Power Supply Unit 55 inch',
+  ]) {
+    const { response, prices } = await runOne('Sony KD-55X80J', 'Sony X80J 55-inch 4K LED TV (2021)', 'Sony X80-series', [{ title, seller: 'Walmart', price: 639 }, ...SONY_SETS_55]);
+    assert.equal(response.successor.name, 'Sony X80L 55-inch (KD55X80L)', title);
+    assert.deepEqual(prices, [629, 649.99], title);
+  }
+});
+
+test('a set\'s own speakers are not a part: "Dolby Atmos Speakers" and "Built-in Speakers" titles are priced', async () => {
+  const { prices } = await runOne('Sony KD-55X80J', 'Sony X80J 55-inch 4K LED TV (2021)', 'Sony X80-series', [
+    { title: 'Sony 55" Class X80L 4K HDR Smart Google TV Dolby Atmos Speakers KD55X80L', seller: 'Best Buy', price: 649.99 },
+    { title: 'Sony 55 inch X80L 4K Smart TV Built-in Speakers KD-55X80L', seller: 'Crutchfield', price: 629 },
+  ]);
+  assert.deepEqual(prices, [629, 649.99]);
+});
+
+test('a complete set that states what it includes or is built with ("Stand Base Included", "Built-in Power Supply Design") is still priced', async () => {
+  const sony = await runOne('Sony KD-55X80J', 'Sony X80J 55-inch 4K LED TV (2021)', 'Sony X80-series', [
+    { title: 'Sony 55" Class X80L 4K HDR Smart Google TV Pedestal Stand Base Included KD55X80L', seller: 'Best Buy', price: 649.99 },
+    { title: 'Sony 55 inch X80L 4K Smart TV Built-in Power Supply Design KD-55X80L', seller: 'Crutchfield', price: 629 },
+  ]);
+  assert.deepEqual(sony.prices, [629, 649.99]);
+  const lg = await runOne('LG 55UN7300PUF', 'LG UN7300 55-inch 4K LED TV (2020)', 'LG UT75', [
+    { title: 'LG 55" Class UT75 Series 4K UHD Smart webOS TV Stand Base Included 55UT7570PUB', seller: 'Best Buy', price: 379.99 },
+    { title: 'LG 55 inch UT75 4K UHD Smart TV Power Supply Design Slim 55UT7570PUB', seller: 'Walmart', price: 369 },
+  ]);
+  assert.deepEqual(lg.prices, [369, 379.99]);
+  // Without the qualifier, or with a part word the qualifier must not swallow, it is still a part (each alone, priced between the sets).
+  for (const title of [
+    'Sony KD-55X80L 4K Smart TV Power Supply 55 inch',
+    'Sony 55" X80L 4K Smart TV Stand Base KD55X80L',
+    'Sony KD-55X80L 4K Smart TV Main Board Stand Base Included 55 inch',
+    'Sony KD-55X80L 4K Smart TV T-Con Board Legs Included 55 inch',
+    'Sony KD-55X80L 4K Smart TV Built-in Power Supply Board 55 inch',
+    'Sony KD-55X80L 4K Smart TV Power Supply Design Board 55 inch',
+    'Sony KD-55X80L 4K Smart TV Power Supply Board Built-in Power Supply Design 55 inch',
+  ]) {
+    const { prices } = await runOne('Sony KD-55X80J', 'Sony X80J 55-inch 4K LED TV (2021)', 'Sony X80-series', [{ title, seller: 'Walmart', price: 639 }, ...SONY_SETS_55]);
+    assert.deepEqual(prices, [629, 649.99], title);
+  }
+});
+
+test('a television successor named from another maker is an alternative, never the successor; one from the original\'s maker keeps the slot', () => {
+  const reply = { ...sonyReply, original: { ...sonyReply.original, identity: 'Samsung JU6700 55-inch 4K LED TV (2015)' } };
+  const crossBrand = normalizeIdentification({ ...reply, successor: { ...sonyReply.successor, name: 'LG UT75 55-inch' }, suggestions: [] }, 'Samsung UN55JU6700F').input;
+  assert.equal(crossBrand.successor, null);
+  assert.equal(crossBrand.suggestions[0].name, 'LG UT75 55-inch');
+  const promoted = normalizeIdentification({ ...reply, successor: { ...sonyReply.successor, name: 'LG UT75 55-inch' }, suggestions: [{ ...sonyReply.successor, name: 'Samsung Crystal UHD DU8000 55-inch' }] }, 'Samsung UN55JU6700F').input;
+  assert.equal(promoted.successor, null, 'a suggestion is never promoted into the successor slot');
+  assert.deepEqual(promoted.suggestions.map((entry) => entry.name).sort(), ['LG UT75 55-inch', 'Samsung Crystal UHD DU8000 55-inch']);
+  const sameBrand = normalizeIdentification({ ...reply, successor: { ...sonyReply.successor, name: 'Samsung Crystal UHD DU8000 55-inch' }, suggestions: [{ ...sonyReply.successor, name: 'LG UT75 55-inch' }] }, 'Samsung UN55JU6700F').input;
+  assert.equal(sameBrand.successor.name, 'Samsung Crystal UHD DU8000 55-inch', 'the original\'s maker keeps the successor slot');
+  assert.equal(sameBrand.suggestions[0].name, 'LG UT75 55-inch');
+});
+
+test('a valid full model code takes precedence over a series name in any title position; a series name alone is the family', () => {
+  assert.equal(skuOf('55UR8000AUA LG 55" UR8000-Series 4K UHD'), '55UR8000AUA');
+  assert.equal(skuOf('Samsung UN55DU8000FXZA 55" DU8000-Series Crystal UHD'), 'UN55DU8000FXZA');
+  assert.equal(skuOf('Samsung 55" DU8000-Series Crystal UHD'), 'DU8000-SERIES');
+  assert.equal(skuOf('LG 55" UT7570-Series 4K UHD 55UR8000AUA'), 'UT7570-SERIES', 'a code of another series is not taken as this series\' full code');
 });
