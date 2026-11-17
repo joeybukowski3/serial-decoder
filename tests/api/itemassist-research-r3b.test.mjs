@@ -69,7 +69,8 @@ test('the identification prompt asks for one series per candidate, the original\
   const prompt = buildIdentifyPrompt('Samsung UN55JU6700F');
   assert.match(prompt, /never "A or B" in a name/);
   assert.match(prompt, /Keep the original's screen size/);
-  assert.match(prompt, /recent model years over discontinued ones, but never at the cost of an essential specification or the original's market tier/);
+  assert.match(prompt, /model years nearest the request date over discontinued ones, but never at the cost of an essential specification or the original's market tier/);
+  assert.match(prompt, /Retailer listings, not you, decide what is on sale now/);
   assert.match(prompt, /never another maker's/);
   assert.match(prompt, /Never write an exact model code/);
   assert.match(prompt, /Never say anything is current, in stock or available/);
@@ -135,10 +136,11 @@ async function runOne(query, identity, successor, rows) {
   return { response, asked, prices };
 }
 
-test('a generation the model named does not pin the answer: "Sony X80K" finds the newer X80L, and the Shopping query keeps the name as given', async () => {
+test('a generation the model named does not pin the answer: "Sony X80K" finds the newer X80L; a stale nomination is looked up as the maker\'s current range', async () => {
   const rows = SONY_ROWS.filter((row) => /X80/.test(row.title));
   const { response, asked, prices } = await runOne('Sony KD-55X80J', 'Sony X80J 55-inch 4K LED TV (2021)', 'Sony X80K', rows);
-  assert.deepEqual(asked.map(([, text]) => text), ['Sony KD-55X80J launch price MSRP', 'Sony X80K 55 inch TV']);
+  // X80K is dated 2022, no longer current in 2026: the successor's lookup is the maker's current range at the size (market discovery, see discovery.js).
+  assert.deepEqual(asked.map(([, text]) => text), ['Sony KD-55X80J launch price MSRP', 'Sony 55 inch 4K LED TV']);
   assert.equal(response.successor.name, 'Sony X80L 55-inch (KD55X80L)');
   assert.deepEqual(prices, [629, 649.99]);
 });
