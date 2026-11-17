@@ -1,0 +1,511 @@
+{
+ "_provenance": "SYNTHETIC. Written for the R3b market-discovery benchmark on 2026-11-17; NOT captured from Serper. Titles follow the retailer styles seen in the real S1 captures (s1-rows.json); prices are illustrative. Model codes: UN55CU7000FXZA (2023) and UN55U8000HFXZA (2026) are the reference products the owner supplied; the others are Samsung/LG/Sony codes used only as realistic strings. Seller mixes for the \"targeted\" sets imitate the live 2026-11-17 diagnostics (14 and 7 rows, no recognised seller).",
+ "ju6700Reply": {
+  "category": "tv",
+  "profile": "tv",
+  "tier": "PREMIUM",
+  "requirements": [],
+  "clarify": [],
+  "original": {
+   "identity": "Samsung JU6700 55-inch curved 4K LED TV (2015)",
+   "confidence": "high",
+   "characteristics": [
+    "55-inch curved LED-LCD",
+    "4K UHD"
+   ],
+   "uncertainty": null
+  },
+  "successor": {
+   "name": "Samsung CU7000",
+   "why": "Continues the maker's 4K LED line.",
+   "differences": null,
+   "concern": null,
+   "confidence": "medium",
+   "tierVsOriginal": "SAME",
+   "comparison": []
+  },
+  "suggestions": [
+   {
+    "name": "LG UR8000",
+    "why": "Comparable 4K LED television.",
+    "differences": null,
+    "concern": null,
+    "confidence": "medium",
+    "tierVsOriginal": "SAME",
+    "comparison": []
+   },
+   {
+    "name": "Sony X75L",
+    "why": "Comparable 4K LED television.",
+    "differences": null,
+    "concern": null,
+    "confidence": "medium",
+    "tierVsOriginal": "SAME",
+    "comparison": []
+   }
+  ],
+  "estimates": {
+   "originalNew": {
+    "low": 1000,
+    "high": 1500
+   },
+   "replacementNew": {
+    "low": 350,
+    "high": 550
+   }
+  }
+ },
+ "targeted": {
+  "Samsung CU7000 55 inch TV": [
+   {
+    "title": "Samsung UN55CU7000FXZA 55\" CU7000 Crystal UHD 4K Smart TV",
+    "seller": "eBay",
+    "price": 289
+   },
+   {
+    "title": "SAMSUNG 55-Inch Class Crystal UHD CU7000 4K UN55CU7000FXZA",
+    "seller": "Amazon.com",
+    "price": 347.99
+   },
+   {
+    "title": "Samsung 55\" CU7000 4K Crystal UHD Smart TV (Renewed)",
+    "seller": "Amazon.com - Seller",
+    "price": 259
+   },
+   {
+    "title": "Samsung UN55CU7000 55 Inch 4K TV Refurbished",
+    "seller": "Back Market",
+    "price": 239
+   },
+   {
+    "title": "Samsung 55\" Class CU7000 Crystal UHD 4K UN55CU7000FXZA",
+    "seller": "Walmart - Electronic Express Deals",
+    "price": 329
+   },
+   {
+    "title": "Samsung CU7000 55 inch TV with Wall Mount Bundle",
+    "seller": "Walmart - Walts TV",
+    "price": 399.99
+   },
+   {
+    "title": "Samsung 43\" Class CU7000 Crystal UHD 4K UN43CU7000FXZA",
+    "seller": "Walmart - Beach Camera",
+    "price": 249
+   },
+   {
+    "title": "Samsung 65\" CU7000 Crystal UHD 4K",
+    "seller": "eBay",
+    "price": 399
+   },
+   {
+    "title": "Samsung UN55CU7000FXZA Open Box",
+    "seller": "Beachcamera",
+    "price": 279
+   },
+   {
+    "title": "Samsung CU7000 Remote Control for UN55CU7000FXZA",
+    "seller": "eBay",
+    "price": 19.99
+   },
+   {
+    "title": "Samsung 55 Inch CU7000 Crystal UHD Smart TV 2023",
+    "seller": "Silarius",
+    "price": 359
+   },
+   {
+    "title": "Samsung 50\" CU7000 Crystal UHD UN50CU7000FXZA",
+    "seller": "Amazon.com",
+    "price": 297.99
+   },
+   {
+    "title": "Samsung 55\" Class Crystal UHD 4K TV",
+    "seller": "Fireowls Corporation",
+    "price": 341
+   },
+   {
+    "title": "Samsung CU7000 TV Stand Base Legs UN55CU7000",
+    "seller": "eBay",
+    "price": 24.5
+   }
+  ],
+  "LG UR8000 55 inch TV": [
+   {
+    "title": "LG 55\" UR8000 4K UHD Smart TV 55UR8000AUA",
+    "seller": "Amazon.com",
+    "price": 329.99
+   },
+   {
+    "title": "LG 55UR8000AUA 55 Inch 4K TV Refurbished",
+    "seller": "Back Market",
+    "price": 249
+   },
+   {
+    "title": "LG UR8000 Series 55\" 4K Smart TV",
+    "seller": "eBay",
+    "price": 279
+   },
+   {
+    "title": "LG 55\" UR8000 with Soundbar Bundle",
+    "seller": "Walmart - Walts TV",
+    "price": 499.99
+   },
+   {
+    "title": "LG 65\" UR8000 4K UHD 65UR8000AUA",
+    "seller": "Amazon.com",
+    "price": 449.99
+   },
+   {
+    "title": "LG 55UR8000AUA Open Box",
+    "seller": "Beachcamera",
+    "price": 289
+   },
+   {
+    "title": "LG Magic Remote for 55UR8000AUA",
+    "seller": "eBay",
+    "price": 29.99
+   }
+  ]
+ },
+ "samsungMarket": [
+  {
+   "title": "Samsung 55\" Class U8000F Crystal UHD 4K Smart TV UN55U8000FFXZA",
+   "seller": "Best Buy",
+   "price": 379.99
+  },
+  {
+   "title": "Samsung 55\" Class U8000F Crystal UHD 4K Smart TV UN55U8000FFXZA (2025)",
+   "seller": "Walmart",
+   "price": 369.99
+  },
+  {
+   "title": "Samsung 55\" Class U8000H Crystal UHD 4K Smart TV UN55U8000HFXZA (2026)",
+   "seller": "Samsung",
+   "price": 429.99
+  },
+  {
+   "title": "Samsung 55\" Class U8000H Crystal UHD 4K Smart TV UN55U8000HFXZA",
+   "seller": "Best Buy",
+   "price": 429.99
+  },
+  {
+   "title": "Samsung 55\" Class DU7200 Crystal UHD 4K Smart TV UN55DU7200FXZA",
+   "seller": "Target",
+   "price": 329.99
+  },
+  {
+   "title": "Samsung - 55\" Class Q60F QLED 4K Smart Tizen TV QN55Q60FAFXZA",
+   "seller": "Best Buy",
+   "price": 499.99
+  },
+  {
+   "title": "SAMSUNG 55\" Class Q60F QLED 4K Smart TV QN55Q60FAFXZA",
+   "seller": "Walmart",
+   "price": 489
+  },
+  {
+   "title": "Samsung 55\" Class Neo QLED 4K QN90F Smart TV QN55QN90FAFXZA",
+   "seller": "Best Buy",
+   "price": 1199.99
+  },
+  {
+   "title": "Samsung 65\" Class U8000F Crystal UHD 4K Smart TV UN65U8000FFXZA",
+   "seller": "Samsung",
+   "price": 499.99
+  },
+  {
+   "title": "Samsung 43\" Class U8000F Crystal UHD 4K Smart TV UN43U8000FFXZA",
+   "seller": "Target",
+   "price": 249.99
+  },
+  {
+   "title": "Samsung 55\" U8000F Crystal UHD with Wall Mount Bundle UN55U8000FFXZA",
+   "seller": "Walmart - Walts TV",
+   "price": 429.99
+  },
+  {
+   "title": "Samsung - 55\" Class U8000F Crystal UHD 4K TV UN55U8000FFXZA with 2 Year Protection Plan",
+   "seller": "Best Buy",
+   "price": 419.99
+  },
+  {
+   "title": "SAMSUNG 55-Inch Class Crystal UHD 4K DU8000 Smart TV UN55DU8000FXZA",
+   "seller": "Amazon.com",
+   "price": 349
+  },
+  {
+   "title": "Samsung Remote Control for UN55U8000FFXZA Smart TV",
+   "seller": "Walmart",
+   "price": 14.99
+  },
+  {
+   "title": "Samsung UN55CU7000FXZA 55\" CU7000 Crystal UHD 4K",
+   "seller": "eBay",
+   "price": 289
+  }
+ ],
+ "samsungMarketAdversarial": {
+  "newerInferior": [
+   {
+    "title": "Samsung 55\" Class U8000F Crystal UHD 4K Smart TV UN55U8000FFXZA (Renewed)",
+    "seller": "Walmart",
+    "price": 289
+   },
+   {
+    "title": "Samsung 55\" Class U8000F Crystal UHD 4K Smart TV UN55U8000FFXZA - Open Box",
+    "seller": "Best Buy",
+    "price": 309.99
+   },
+   {
+    "title": "Samsung 55\" Class DU8000 Crystal UHD 4K Smart TV UN55DU8000FXZA",
+    "seller": "Best Buy",
+    "price": 399.99
+   },
+   {
+    "title": "Samsung 55\" Class DU8000 Crystal UHD 4K Smart TV UN55DU8000FXZA",
+    "seller": "Target",
+    "price": 389.99
+   }
+  ],
+  "premiumNewer": [
+   {
+    "title": "Samsung - 55\" Class Q60F QLED 4K Smart Tizen TV QN55Q60FAFXZA",
+    "seller": "Best Buy",
+    "price": 499.99
+   },
+   {
+    "title": "SAMSUNG 55\" Class Q60F QLED 4K Smart TV QN55Q60FAFXZA",
+    "seller": "Walmart",
+    "price": 489
+   },
+   {
+    "title": "Samsung 55\" Class Neo QLED 4K QN90F Smart TV QN55QN90FAFXZA",
+    "seller": "Best Buy",
+    "price": 1199.99
+   },
+   {
+    "title": "Samsung 55\" Class Neo QLED 4K QN90F QN55QN90FAFXZA",
+    "seller": "Crutchfield",
+    "price": 1179.99
+   },
+   {
+    "title": "Samsung 55\" Class DU8000 Crystal UHD 4K Smart TV UN55DU8000FXZA",
+    "seller": "Best Buy",
+    "price": 399.99
+   },
+   {
+    "title": "Samsung 55\" Class DU8000 Crystal UHD 4K Smart TV UN55DU8000FXZA",
+    "seller": "Target",
+    "price": 389.99
+   }
+  ],
+  "accessories": [
+   {
+    "title": "Wall Mount for Samsung UN55DU8000FXZA 55\" Crystal UHD 4K",
+    "seller": "Walmart",
+    "price": 39.99
+   },
+   {
+    "title": "Samsung Remote Control for UN55DU8000FXZA 4K Smart TV",
+    "seller": "Best Buy",
+    "price": 19.99
+   },
+   {
+    "title": "TV Stand Base Legs for Samsung 55\" DU8000 UN55DU8000FXZA",
+    "seller": "Target",
+    "price": 24.99
+   },
+   {
+    "title": "Samsung 55\" DU8000 4K Smart TV Main Board UN55DU8000FXZA",
+    "seller": "Walmart",
+    "price": 59
+   },
+   {
+    "title": "Samsung 55\" Class DU8000 Crystal UHD 4K Smart TV UN55DU8000FXZA",
+    "seller": "Best Buy",
+    "price": 399.99
+   },
+   {
+    "title": "Samsung 55\" Class DU8000 Crystal UHD 4K Smart TV UN55DU8000FXZA",
+    "seller": "Target",
+    "price": 389.99
+   }
+  ],
+  "mixedSizes": [
+   {
+    "title": "Samsung 43\" Class U8000F Crystal UHD 4K Smart TV UN43U8000FFXZA",
+    "seller": "Best Buy",
+    "price": 249.99
+   },
+   {
+    "title": "Samsung 50\" Class U8000F Crystal UHD 4K Smart TV UN50U8000FFXZA",
+    "seller": "Walmart",
+    "price": 279.99
+   },
+   {
+    "title": "Samsung 65\" Class U8000F Crystal UHD 4K Smart TV UN65U8000FFXZA",
+    "seller": "Target",
+    "price": 479.99
+   },
+   {
+    "title": "Samsung 75\" Class U8000F Crystal UHD 4K Smart TV UN75U8000FFXZA",
+    "seller": "Best Buy",
+    "price": 649.99
+   },
+   {
+    "title": "Samsung 55\" Class DU8000 Crystal UHD 4K Smart TV UN55DU8000FXZA",
+    "seller": "Best Buy",
+    "price": 399.99
+   },
+   {
+    "title": "Samsung 55\" Class DU8000 Crystal UHD 4K Smart TV UN55DU8000FXZA",
+    "seller": "Target",
+    "price": 389.99
+   },
+   {
+    "title": "Samsung 65\" Class DU8000 Crystal UHD 4K Smart TV UN65DU8000FXZA",
+    "seller": "Walmart",
+    "price": 529.99
+   }
+  ],
+  "noApprovedRetailer": [
+   {
+    "title": "Samsung 55\" Class U8000F Crystal UHD 4K Smart TV UN55U8000FFXZA",
+    "seller": "Amazon.com",
+    "price": 369
+   },
+   {
+    "title": "Samsung 55\" Class U8000F Crystal UHD 4K Smart TV UN55U8000FFXZA",
+    "seller": "eBay",
+    "price": 340
+   },
+   {
+    "title": "Samsung 55\" Class DU8000 Crystal UHD 4K Smart TV UN55DU8000FXZA",
+    "seller": "Walmart - Beach Camera",
+    "price": 379
+   },
+   {
+    "title": "Samsung 55\" Class DU8000 Crystal UHD 4K Smart TV UN55DU8000FXZA",
+    "seller": "Fireowls Corporation",
+    "price": 401
+   }
+  ],
+  "ambiguousYear": [
+   {
+    "title": "Samsung 55\" Class U8000H Crystal UHD 4K Smart TV UN55U8000HFXZA (2026)",
+    "seller": "Samsung",
+    "price": 429.99
+   },
+   {
+    "title": "Samsung 55\" Class U8000H Crystal UHD 4K Smart TV UN55U8000HFXZA",
+    "seller": "Best Buy",
+    "price": 429.99
+   }
+  ]
+ },
+ "broadMisses": {
+  "successor": "Samsung DU7200",
+  "targeted": [
+   {
+    "title": "Samsung 55\" Class DU7200 Crystal UHD 4K Smart TV UN55DU7200FXZA",
+    "seller": "Best Buy",
+    "price": 329.99
+   },
+   {
+    "title": "Samsung 55\" Class DU7200 Crystal UHD 4K Smart TV UN55DU7200FXZA",
+    "seller": "Walmart",
+    "price": 319.99
+   },
+   {
+    "title": "Samsung 55\" Class DU7200 Crystal UHD 4K Smart TV UN55DU7200FXZA",
+    "seller": "Target",
+    "price": 324.99
+   }
+  ],
+  "market": [
+   {
+    "title": "Samsung 55\" DU7200 Crystal UHD with Wall Mount Bundle UN55DU7200FXZA",
+    "seller": "Walmart - Walts TV",
+    "price": 399.99
+   },
+   {
+    "title": "Samsung 55\" Class DU7200 Crystal UHD 4K Smart TV UN55DU7200FXZA",
+    "seller": "Amazon.com",
+    "price": 309
+   },
+   {
+    "title": "Samsung 55\" Class U8000F Crystal UHD 4K Smart TV UN55U8000FFXZA",
+    "seller": "Best Buy",
+    "price": 379.99
+   },
+   {
+    "title": "Samsung 65\" Class U8000F Crystal UHD 4K Smart TV UN65U8000FFXZA",
+    "seller": "Walmart",
+    "price": 499.99
+   }
+  ]
+ },
+ "currentSamsung": {
+  "query": "Samsung UN55DU8000FXZA",
+  "identity": "Samsung DU8000 55-inch Crystal UHD 4K LED TV (2024)",
+  "successor": "Samsung U8000F",
+  "targeted": [
+   {
+    "title": "Samsung 55\" Class U8000F Crystal UHD 4K Smart TV UN55U8000FFXZA",
+    "seller": "Best Buy",
+    "price": 379.99
+   },
+   {
+    "title": "Samsung 55\" Class U8000F Crystal UHD 4K Smart TV UN55U8000FFXZA",
+    "seller": "Walmart",
+    "price": 369.99
+   },
+   {
+    "title": "Samsung 55\" Class U8000H Crystal UHD 4K Smart TV UN55U8000HFXZA",
+    "seller": "Samsung",
+    "price": 429.99
+   },
+   {
+    "title": "Samsung 65\" Class U8000F Crystal UHD 4K Smart TV UN65U8000FFXZA",
+    "seller": "Target",
+    "price": 499.99
+   }
+  ]
+ },
+ "sonyMarket": [
+  {
+   "title": "Sony 55\" Class X80L 4K HDR LED Google TV KD-55X80L",
+   "seller": "Best Buy",
+   "price": 649.99
+  },
+  {
+   "title": "Sony BRAVIA 55 inch X80L 4K LED Google TV KD55X80L",
+   "seller": "Crutchfield",
+   "price": 629
+  },
+  {
+   "title": "Sony 55\" Class X77L 4K HDR LED Google TV KD-55X77L",
+   "seller": "Walmart",
+   "price": 498
+  },
+  {
+   "title": "Sony 55\" X77L 4K LED Smart TV KD55X77L",
+   "seller": "Target",
+   "price": 499.99
+  },
+  {
+   "title": "Sony BRAVIA 3 55\" 4K HDR LED Google TV K-55S30",
+   "seller": "Best Buy",
+   "price": 599.99
+  },
+  {
+   "title": "Sony BRAVIA 3 55 inch 4K LED K-55S30",
+   "seller": "Sony",
+   "price": 599.99
+  },
+  {
+   "title": "Sony 65\" Class X80L 4K HDR LED Google TV KD-65X80L",
+   "seller": "Best Buy",
+   "price": 799.99
+  }
+ ]
+}

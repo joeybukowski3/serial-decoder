@@ -211,6 +211,49 @@ To add one, in `lineage.js`:
    that must not match.
 3. Do not reuse a television grammar for appliances: model-year codes there are different and are not generations of a "series".
 
+## Market discovery (Release 3b follow-up)
+
+A successor the model names can be a generation that is no longer sold. "Samsung CU7000" is an example: it dates to 2023, and the request was made in 2026. A Shopping lookup pinned to that series then returns old stock at marketplace sellers, and the newer models a shopper would be offered are never retrieved (live request, 2026-11-17).
+
+**When it applies** (`discoveryPlan` in `discovery.js`), all of the following must hold:
+- The product is a television of a maker with a generation grammar (Samsung, LG, Sony).
+- The size is known.
+- The successor is that maker's own.
+- The successor's name dates it to a model year more than **two** years before the request year.
+- Its grammar keeps the named generation in the Shopping query (Samsung Crystal UHD, LG UHD, Sony). LG OLED and Samsung QLED/OLED queries already span every year, so they are not replaced.
+
+A successor that is current, or has no date in its name, keeps its targeted lookup. A broad lookup can miss a model that a targeted lookup finds.
+
+**What it does**
+- **The lookup:** the successor's one Shopping lookup becomes `<maker> <size> inch [4K] [display type] TV`. It is built from the original's own attributes. The number of calls is unchanged: one Gemini call, one search about the original and two Shopping lookups.
+- **The successor:** it is screened against those rows exactly as before (its series, its newest dated generation at the size). A code that the broad rows do not show is not treated as invented. If the series is not found, the successor keeps its name, is not priced, and says so.
+- **One same-brand alternative:** this can come from the same rows. Each series in the rows is screened as its own candidate, with every existing safeguard:
+  - recognised sellers only
+  - new single units
+  - the stated size
+  - a dated generation
+  - the model's own code
+  - the outlier band
+
+  A model qualifies only if:
+  - **at least two** recognised sellers price that exact code at the size;
+  - its display type is in the original's family and not a recognised step below it (a plain-LED model is never offered for a QLED or Mini-LED original);
+  - its model year is no more than two years before the request.
+
+  Candidates are ordered as follows:
+  1. The original's display type first.
+  2. Then the newest model year.
+  3. Then the number of sellers.
+  4. Then listing order.
+
+  The newest model or the cheapest model alone never decides.
+- **How the alternative is shown:** it takes the place of the suggestion that was never looked up. It is never the successor, it is `LISTED_PROVISIONAL` (never verified), and its text says it is a same-brand alternative.
+
+**Benchmark:** offline, with synthetic and saved fixtures; the fixture states its provenance in `tests/fixtures/itemassist-research/market-discovery-synthetic.json`. Tests are in `tests/api/itemassist-research-discovery.test.mjs`.
+- **Improves:** the live-shaped JU6700 case goes from no priced candidate to a priced same-brand model (U8000F, two sellers). The adversarial cases also improve: a newer model offered only renewed, newer premium types, accessories carrying the code, and mixed sizes.
+- **Unchanged:** current nominations, undated nominations (LG C3, S90C), LG OLED and Samsung QLED/OLED nominations (their query already spans every year), the Sony benchmark result (a stale "X80K" nomination is now looked up broadly and still finds the X80L) and appliances.
+- **Known loss:** a 2023 nomination that is still stocked cleanly is no longer looked up by name.
+
 ## Offline reproduction
 
 `tests/api/itemassist-research-lineage.test.mjs` runs the whole live pipeline over captured rows with a mocked model reply. Nothing calls a provider.
