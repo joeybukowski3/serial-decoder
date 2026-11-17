@@ -237,7 +237,7 @@ A successor that is current, or has no date in its name, keeps its targeted look
 
   A model qualifies only if:
   - **at least two** recognised sellers price that exact code at the size;
-  - its display type is in the original's family;
+  - its display type is in the original's family and not a recognised step below it (a plain-LED model is never offered for a QLED or Mini-LED original);
   - its model year is no more than two years before the request.
 
   Candidates are ordered as follows:

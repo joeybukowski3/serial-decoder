@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { researchLiveV2 } from '../../lib/itemassist-research/enrich/orchestrate.js';
 import { buildIdentifyPrompt, normalizeIdentification } from '../../lib/itemassist-research/enrich/identify.js';
 import { buildResearchResponseV2, isValidResearchResponseV2 } from '../../lib/itemassist-research/contract-v2.js';
-import { DISCOVERY_MODE, discoveryMaker, discoveryPlan, discoveryQuery } from '../../lib/itemassist-research/enrich/discovery.js';
+import { DISCOVERY_MODE, discoverAlternative, discoveryMaker, discoveryPlan, discoveryQuery } from '../../lib/itemassist-research/enrich/discovery.js';
 import { resolveLineage } from '../../lib/itemassist-research/enrich/lineage.js';
 
 // OFFLINE ONLY. Market discovery (Release 3b follow-up, see discovery.js). Every Shopping row here is SYNTHETIC (market-discovery-synthetic.json states its
@@ -86,6 +86,42 @@ test('discovery ranks the original\'s display type and current model years first
   assert.match(sizes.response.suggestions[1].concern, /newer generation \(U8000F\) was seen in listings, but not in the requested 55-inch size/);
   const parts = await run({ market: A.accessories });
   assert.deepEqual(parts.prices('ALT_2'), [389.99, 399.99], 'mounts, remotes, stands and boards that print the code are never its price');
+});
+
+test('a discovered model with a known lower display type is never offered, however new or well priced; a higher or equal one carries its settled row', () => {
+  const discover = (originalDisplay) => discoverAlternative(M.samsungMarketAdversarial.premiumNewer, {
+    maker: 'samsung', query: 'Samsung UN55JU6700F', identity: M.ju6700Reply.original.identity, spec: { kind: 'inches', value: 55 }, focuses: [],
+    retrievedAt: '2026-11-17', originalDisplay, requestYear: 2026, now: NOW,
+  });
+  const qled = discover('QLED');
+  assert.equal(qled.diagnostics.chosen, 'Q60F', 'a QLED original: the plain-LED DU8000 is a known display shortfall and is not offered');
+  assert.equal(qled.diagnostics.verdicts.LOWER_DISPLAY_TYPE, 1);
+  assert.deepEqual(qled.candidate.comparison, [{ requirementKey: 'displayClass', status: 'MEETS' }]);
+  const mini = discover('MINI_LED');
+  assert.equal(mini.candidate, null, 'a Mini-LED original: neither the QLED nor the LED model is offered as its replacement');
+  assert.equal(mini.diagnostics.verdicts.LOWER_DISPLAY_TYPE, 2);
+  const led = discover('LED');
+  assert.equal(led.diagnostics.chosen, 'DU8000');
+  assert.deepEqual(led.candidate.comparison, [{ requirementKey: 'displayClass', status: 'MEETS' }]);
+  assert.deepEqual(discover(null).candidate.comparison, [], 'with the original\'s display type unknown no row is stated');
+});
+
+test('a discovered model\'s prices are provisional listing evidence: never verified, never an LKQ claim, its tier unknown', async () => {
+  const { response } = await run({ market: M.samsungMarket });
+  const found = response.suggestions[1];
+  const { valuation } = response.pricing;
+  assert.equal(valuation.method, 'PROVISIONAL_LISTINGS');
+  assert.equal(valuation.verified, false);
+  assert.deepEqual(valuation.range, { currency: 'USD', low: 369.99, high: 379.99 }, 'its clearly attributed retailer prices are kept as evidence');
+  assert.equal(valuation.notes.some((note) => note.code === 'LISTINGS_NOT_CONFIRMED'), true);
+  assert.equal(valuation.notes.some((note) => note.code === 'NOT_AN_APPRAISAL'), true);
+  assert.notEqual(valuation.confidence, 'HIGH');
+  assert.equal(found.verified, false);
+  assert.equal(found.modelStatus, 'LISTED_PROVISIONAL');
+  assert.notEqual(found.confidence, 'HIGH');
+  assert.equal(found.lineage.tier, 'UNKNOWN', 'its market tier against the original is not claimed');
+  assert.deepEqual(found.comparison.map((row) => [row.status, row.basis]), [['MEETS', 'AI_ESTIMATE']], 'only the display class the titles settle, as an estimate');
+  assert.doesNotMatch(JSON.stringify(found), /lkq|like[-\s_]*kind/i);
 });
 
 test('discovery claims nothing it cannot support: no recognised retailer, an undatable model year, or one seller', async () => {
