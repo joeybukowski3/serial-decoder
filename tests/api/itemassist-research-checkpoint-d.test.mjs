@@ -297,13 +297,15 @@ test('replay of the saved GE request: the LG LFXS26973S is a capacity shortfall 
   assert.equal(isValidResearchResponseV2(response), true);
 });
 
-test('a successor with a capacity shortfall is conditional, carries the shortfall and cannot set the valuation', async () => {
+test('an LG named as the GE original\'s successor is an alternative, not the successor; it still carries its capacity shortfall and cannot set the valuation', async () => {
   const successor = { name: 'LG LFXS26973S French Door Refrigerator', why: 'Offers a similar French door layout and capacity.', differences: 'Different cooling technology.', concern: null, confidence: 'high', comparison: [{ requirementKey: 'capacity', status: 'MEETS' }] };
   const response = await replayWith({ ...GE.identification, successor, suggestions: [] });
-  assert.equal(response.successor.standing, 'CONDITIONAL', 'a high-confidence successor with a concern is not recommended');
-  assert.match(response.successor.concern, /below the original's 27.8 cu ft/);
-  assert.equal(rowStatus(response, response.successor, 'capacity'), 'SHORTFALL');
-  assert.deepEqual(response.pricing.valuation.excluded, [{ candidate: 'SUCCESSOR', reason: 'SUSPECTED_ESSENTIAL_SHORTFALL' }]);
+  assert.equal(response.successor, null, 'another maker is never the GE successor (Release 3b)');
+  const [lg] = response.suggestions;
+  assert.equal('standing' in lg, false, 'an alternative is not given the successor\'s standing');
+  assert.match(lg.concern, /below the original's 27.8 cu ft/);
+  assert.equal(rowStatus(response, lg, 'capacity'), 'SHORTFALL');
+  assert.deepEqual(response.pricing.valuation.excluded, [{ candidate: 'ALT_1', reason: 'SUSPECTED_ESSENTIAL_SHORTFALL' }]);
   assert.equal(response.pricing.valuation.comparables.every((entry) => entry.candidate === null), true, 'only the labelled AI estimate remains');
 });
 

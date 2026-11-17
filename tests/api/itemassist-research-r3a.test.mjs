@@ -199,15 +199,17 @@ test('Samsung UN55JU6700F (SYNTHETIC fixture, not the Production response): 55 i
   assert.deepEqual(asked, [['search', 'Samsung UN55JU6700F launch price MSRP'], ['shopping', 'LG UR8000 55 inch TV'], ['shopping', 'LG UT75 55 inch TV']]);
   assert.equal(meta.serperCalls, 3, 'the same one search and two Shopping queries as before R3a');
   const list = candidates(response);
+  // Release 3b: an LG television is never the Samsung successor; both LG parts are alternatives (the two suggestions kept), ranked after the lookups. The LG UHD
+  // grammar reads the UT75 listings as 2024 and the UR8000 as 2023, so the newer one ranks first (generation comes after essential fit and tier, which tie).
+  assert.equal(response.successor, null);
   assert.deepEqual(list.map((entry) => [entry.name, entry.modelStatus]), [
-    ['LG 55UR8000AUA', 'LISTED_PROVISIONAL'], // an exact code two recognised sellers list at 55 inches (still provisional, never verified)
-    ['LG UT75 55-inch', 'FAMILY_LEVEL'], // a family the listings show at 55 inches, with no single model code
-    ['Sony X75WL', 'FAMILY_LEVEL'], // not looked up (two Shopping queries), so neither sized nor priced
+    ['LG UT75 55-inch', 'FAMILY_LEVEL'], // the 2024 UT75, shown at 55 inches by its listings, with no single model code
+    ['LG UR8000 55-inch (55UR8000AUA)', 'LISTED_PROVISIONAL'], // the exact code two recognised sellers list at 55 inches (still provisional, never verified)
   ]);
   assert.ok(list.every((entry) => entry.verified === false));
   // The reply's display-class SHORTFALL for "LG UR8000 or UT75" is not attributed to either; their own LED listings settle LED-vs-LED as MEETS (an estimate).
-  assert.deepEqual(list.map((entry) => displayRow(response, entry) && [displayRow(response, entry).status, displayRow(response, entry).basis]), [['MEETS', 'AI_ESTIMATE'], ['MEETS', 'AI_ESTIMATE'], ['MEETS', 'AI_ESTIMATE']]);
-  assert.deepEqual(sized(replacementPrices(response, 'SUCCESSOR')), [348, 349.99]);
+  assert.deepEqual(list.map((entry) => displayRow(response, entry) && [displayRow(response, entry).status, displayRow(response, entry).basis]), [['MEETS', 'AI_ESTIMATE'], ['MEETS', 'AI_ESTIMATE']]);
+  assert.deepEqual(sized(replacementPrices(response, 'ALT_2')), [348, 349.99]);
   assert.deepEqual(sized(replacementPrices(response, 'ALT_1')), [379.99, 389]);
   assert.equal(replacementPrices(response).some((item) => [479.99, 248].includes(item.amount.low)), false, 'the 65- and 43-inch listings are not priced');
   assert.equal(response.pricing.valuation.method, 'PROVISIONAL_LISTINGS');
@@ -335,7 +337,7 @@ test('"UR8000 Series" at two retailers with no full code does not make the LG UR
   ], UT75: JU6700.listings.UT75 };
   const route = (text) => listings[Object.keys(listings).find((name) => text.includes(name))] || [];
   const { response } = await run({ query: JU6700.query, reply: JU6700.reply, route });
-  const lg = response.successor;
+  const lg = candidates(response).find((entry) => /UR8000/.test(entry.name));
   assert.match(lg.name, /^LG UR8000\b/);
   assert.notEqual(lg.modelStatus, 'LISTED_PROVISIONAL');
   assert.notEqual(lg.modelStatus, 'VERIFIED_LISTING');
@@ -371,9 +373,17 @@ test('ranking after the lookups never moves a better-evidenced suggestion into t
   assert.deepEqual(arranged.shopped.map(([key, candidate]) => [key, candidate.name]), [['SUCCESSOR', 'LG C-series OLED'], ['ALT_1', 'Sony Bravia 8 OLED']]);
 });
 
-test('a cross-brand successor named by the reply is labelled by its lineage as another brand, never as the same series', async () => {
+test('a cross-brand "successor" named by the reply is an alternative replacement, never the maker\'s successor (Release 3b)', async () => {
   const route = (text) => { const key = Object.keys(JU6700.listings).find((name) => text.includes(name)); return key ? JU6700.listings[key] : []; };
   const { response } = await run({ query: JU6700.query, reply: JU6700.reply, route });
-  assert.equal(response.successor.lineage.relation, 'OTHER_BRAND', 'an LG television for a Samsung original');
-  assert.notEqual(response.successor.standing, 'RECOMMENDED');
+  assert.equal(response.successor, null, 'no LG television is the Samsung successor');
+  for (const entry of response.suggestions) {
+    assert.equal(entry.lineage.relation, 'OTHER_BRAND', entry.name);
+    assert.equal('standing' in entry, false);
+  }
+  const known = normalizeIdentification(lgOriginal('Sony Bravia 8'), 'LG C3 55-inch TV').input;
+  assert.equal(known.successor, null);
+  assert.deepEqual(known.suggestions.map((entry) => entry.name), ['Sony Bravia 8']);
+  const unknown = normalizeIdentification(lgOriginal('C-series OLED'), 'LG C3 55-inch TV').input;
+  assert.equal(unknown.successor.name, 'C-series OLED', 'a successor whose maker is not stated stays in the slot');
 });
